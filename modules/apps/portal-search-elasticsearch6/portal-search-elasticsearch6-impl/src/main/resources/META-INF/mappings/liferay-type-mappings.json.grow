@@ -544,7 +544,7 @@
 				"type": "keyword"
 			},
 			"content": {
-				"analyzer": "gsearch_standard_analyzer",
+				"analyzer": "gsearch_grow_analyzer",
 				"store": true,
 				"term_vector": "with_positions_offsets",
 				"type": "text"
@@ -576,7 +576,7 @@
 				"type": "keyword"
 			},
 			"description": {
-				"analyzer": "gsearch_standard_analyzer",
+				"analyzer": "gsearch_grow_analyzer",
 				"store": true,
 				"term_vector": "with_positions_offsets",
 				"type": "text"
@@ -772,7 +772,7 @@
 				"type": "keyword"
 			},
 			"subtitle": {
-				"analyzer": "gsearch_standard_analyzer",
+				"analyzer": "gsearch_grow_analyzer",
 				"store": true,
 				"type": "text"
 			},
@@ -785,7 +785,7 @@
 				"type": "keyword"
 			},
 			"title": {
-				"analyzer": "gsearch_standard_analyzer",
+				"analyzer": "gsearch_grow_analyzer",
 				"store": true,
 				"term_vector": "with_positions_offsets",
 				"type": "text"

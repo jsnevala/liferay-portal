@@ -203,8 +203,10 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		}
 	}
 
+	// GSearch modified
+	
 	@Override
-	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
+	@Reference(target = "(search.engine.impl=GSearch)", unbind = "-")
 	public void setQuerySuggester(QuerySuggester querySuggester) {
 		super.setQuerySuggester(querySuggester);
 	}
