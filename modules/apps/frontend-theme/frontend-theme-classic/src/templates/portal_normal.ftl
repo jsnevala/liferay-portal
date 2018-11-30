@@ -39,7 +39,9 @@
 						<div class="autofit-col autofit-col-expand">
 							<#if show_header_search>
 								<div class="justify-content-md-end mr-4 navbar-form" role="search">
-									<@liferay.search_bar default_preferences="${preferences}" />
+
+									<#-- GSEARCH -->
+					                                <#include "${full_templates_path}/gsearch_search.ftl" />
 								</div>
 							</#if>
 						</div>
@@ -61,7 +63,7 @@
 						</#if>
 					</a>
 
-					<#include "${full_templates_path}/navigation.ftl" />
+		                        <#include "${full_templates_path}/navigation.ftl" />
 				</div>
 			</div>
 		</header>

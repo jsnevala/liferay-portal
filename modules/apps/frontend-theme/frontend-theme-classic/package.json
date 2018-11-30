@@ -14,12 +14,12 @@
 	"license": "LGPL",
 	"liferayTheme": {
 		"baseTheme": "styled",
-		"distName": "classic-theme",
+		"distName": "classic-theme-gsearch",
 		"rubySass": false,
 		"version": "7.0"
 	},
 	"main": "package.json",
-	"name": "liferay-classic-theme",
+	"name": "liferay-classic-theme-gsearch",
 	"repository": "liferay/liferay-portal",
 	"version": "3.0.0"
 }
