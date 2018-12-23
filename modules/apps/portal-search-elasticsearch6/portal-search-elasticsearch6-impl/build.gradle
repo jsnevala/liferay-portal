@@ -121,12 +121,11 @@ dependencies {
 
 	// Custom QueryStringQuery and GSearchCloserTheBetter query types
 
-	compileOnly files('gsearch-libs/fi.soveltia.liferay.gsearch.query-3.0.0.jar')
-	
+	compileOnly files('gsearch-libs/fi.soveltia.liferay.gsearch.query-3.1.0.jar')
 
 	// Needed for the blacklister
 	
-	provided group: "org.osgi", name: "org.osgi.service.component", version: "1.3.0"
+	compileOnly group: 'com.liferay', name: 'com.liferay.portal.bundle.blacklist.api', version: '1.0.1'
 }
 
 deployDependencies {
@@ -150,29 +149,29 @@ processResources {
 if ( !System.getenv().containsKey("GITHUB_TOKEN") ) {
         gradle.taskGraph.whenReady { graph ->
 
-                        def disabledTasks = [
-                                "findbugsMain"  ,
-                                "compileTestIntegrationJava",
-                                "findbugsTestIntegration",
-                                "unzipJar",
-                                "generateJSPJava",
-                                "writeFindBugsProject",
-                                "compileTestJava",
-                                "findSecurityBugs",
-                                "findbugsTest"
-                        ]
+        def disabledTasks = [
+                "findbugsMain"  ,
+                "compileTestIntegrationJava",
+                "findbugsTestIntegration",
+                "unzipJar",
+                "generateJSPJava",
+                "writeFindBugsProject",
+                "compileTestJava",
+                "findSecurityBugs",
+                "findbugsTest"
+        ]
 
-            graph.allTasks.findAll {
-                
-                if (disabledTasks.contains(it.name)) {
-                        println "Disabled : " + it.name
-                        it.enabled=false
-                }
-                else {
-                      println "Enabled : " + it.name
-                }       
+        graph.allTasks.findAll {
+            
+            if (disabledTasks.contains(it.name)) {
+                    println "Disabled : " + it.name
+                    it.enabled=false
             }
+            else {
+                  println "Enabled : " + it.name
+            }       
         }
+    }
 }
 else {
         apply from: "build-ext.gradle"

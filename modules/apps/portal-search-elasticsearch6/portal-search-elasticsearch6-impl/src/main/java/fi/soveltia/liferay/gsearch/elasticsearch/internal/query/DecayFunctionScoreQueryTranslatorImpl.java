@@ -9,6 +9,7 @@ import org.elasticsearch.index.query.functionscore.GaussDecayFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.LinearDecayFunctionBuilder;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
+import org.elasticsearch.search.MultiValueMode;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -28,6 +29,7 @@ import fi.soveltia.liferay.gsearch.query.DecayFunctionScoreQuery;
 public class DecayFunctionScoreQueryTranslatorImpl implements DecayFunctionScoreQueryTranslator {
 
 	public QueryBuilder translate(DecayFunctionScoreQuery query) {
+		
 
 		DecayFunctionBuilder decayFunctionBuilder;
 
@@ -45,7 +47,27 @@ public class DecayFunctionScoreQueryTranslatorImpl implements DecayFunctionScore
 					query.getScale(), query.getOffset(), query.getDecay());
 		}
 		
-		decayFunctionBuilder.setWeight(query.getWeight());
+		// Multivalue mode
+		
+		if (query.getMultiValueMode() != null) {
+			
+			if (query.getMultiValueMode().equals("avg")) {
+
+				decayFunctionBuilder.setMultiValueMode(MultiValueMode.AVG);
+
+			} else if (query.getMultiValueMode().equals("max")) {
+				
+				decayFunctionBuilder.setMultiValueMode(MultiValueMode.MAX);
+
+			} else if (query.getMultiValueMode().equals("min")) {
+
+				decayFunctionBuilder.setMultiValueMode(MultiValueMode.MIN);
+
+			} else if (query.getMultiValueMode().equals("sum")) {
+
+				decayFunctionBuilder.setMultiValueMode(MultiValueMode.SUM);
+			}
+		}
 
 		FunctionScoreQueryBuilder functionScoreQueryBuilder = QueryBuilders.functionScoreQuery(decayFunctionBuilder);
 
@@ -66,7 +88,7 @@ public class DecayFunctionScoreQueryTranslatorImpl implements DecayFunctionScore
 		if (query.getMinScore() != null) {
 			functionScoreQueryBuilder.setMinScore(query.getMinScore());
 		}
-
+	
 		return functionScoreQueryBuilder;
 	}
 }

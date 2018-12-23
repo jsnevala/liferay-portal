@@ -322,8 +322,12 @@ public class GSearchQuerySuggester implements QuerySuggester {
 			String message = ee.getMessage();
 
 			if (message.startsWith("no mapping found for field")) {
+				
 				if (_log.isWarnEnabled()) {
-					_log.warn("No dictionary indexed", ee);
+					_log.warn("No dictionary indexed. This might happen because you don't have any suggester data yet.");
+				}
+				if (_log.isDebugEnabled()) {
+					_log.debug(ee);
 				}
 
 				return null;
