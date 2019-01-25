@@ -12,6 +12,7 @@
                     "lowercase",
 		            "gsearch_finnish_stop",
 		            "gsearch_finnish_stemmer",
+                    "gsearch_finnish_voikko",
                     "asciifolding" 
                 ]
             },
@@ -65,6 +66,11 @@
 			"gsearch_finnish_stop": {
               "type":       "stop",
               "stopwords":  "_finnish_"
+	        },
+	       	"gsearch_finnish_voikko": {
+	          "type": "voikko",
+	          "libraryPath": "/usr/lib/x86_64-linux-gnu",
+			  "dictionaryPath": "/opt/software/voikko/dictionary"
 	        },
 	        "gsearch_swedish_stemmer": {
 	          "type":       "stemmer",

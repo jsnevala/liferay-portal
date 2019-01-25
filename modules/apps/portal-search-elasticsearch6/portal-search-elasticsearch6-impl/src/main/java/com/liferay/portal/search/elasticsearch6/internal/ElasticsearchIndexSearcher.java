@@ -100,6 +100,8 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Michael C. Han
@@ -116,7 +118,7 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 	public String getQueryString(SearchContext searchContext, Query query) {
 		QueryBuilder queryBuilder = queryTranslator.translate(
 			query, searchContext);
-
+		
 		return queryBuilder.toString();
 	}
 
@@ -226,12 +228,25 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		}
 	}
 
+	// GSearch modified
+	
 	@Override
-	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
+	@Reference(
+		cardinality = ReferenceCardinality.MANDATORY,
+		policyOption = ReferencePolicyOption.GREEDY,
+		target = "(search.engine.impl=GSearch)", 
+		unbind = "unsetQuerySuggester"
+	)
 	public void setQuerySuggester(QuerySuggester querySuggester) {
+		_log.info("Setting query suggester " + querySuggester.getClass().getName());
 		super.setQuerySuggester(querySuggester);
 	}
-
+	
+	protected void unsetQuerySuggester(QuerySuggester querySuggester) {
+		_log.info("Unsetting query suggester " + querySuggester.getClass().getName());
+		super.setQuerySuggester(null);
+	}
+	
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
@@ -356,26 +371,34 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		Document document, Map<String, HighlightField> highlightFields,
 		String fieldName, Locale locale) {
 
-		String snippetFieldName = DocumentImpl.getLocalizedName(
-			locale, fieldName);
+		// GSearch: catch exceptions
+		
+		try {
+		
+			String snippetFieldName = DocumentImpl.getLocalizedName(
+				locale, fieldName);
+	
+			HighlightField highlightField = highlightFields.get(snippetFieldName);
+	
+			if (highlightField == null) {
+				highlightField = highlightFields.get(fieldName);
+	
+				snippetFieldName = fieldName;
+			}
+	
+			if (highlightField == null) {
+				return;
+			}
+	
+			Object[] array = highlightField.fragments();
+			
+			document.addText(
+				Field.SNIPPET.concat(StringPool.UNDERLINE).concat(snippetFieldName),
+				StringUtil.merge(array, StringPool.TRIPLE_PERIOD));
 
-		HighlightField highlightField = highlightFields.get(snippetFieldName);
-
-		if (highlightField == null) {
-			highlightField = highlightFields.get(fieldName);
-
-			snippetFieldName = fieldName;
+		} catch (Exception e) {
+			_log.error(e, e);
 		}
-
-		if (highlightField == null) {
-			return;
-		}
-
-		Object[] array = highlightField.fragments();
-
-		document.addText(
-			Field.SNIPPET.concat(StringPool.UNDERLINE).concat(snippetFieldName),
-			StringUtil.merge(array, StringPool.TRIPLE_PERIOD));
 	}
 
 	protected void addSnippets(
