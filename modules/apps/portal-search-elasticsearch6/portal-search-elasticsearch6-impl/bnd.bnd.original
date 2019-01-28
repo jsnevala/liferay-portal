@@ -1,4 +1,3 @@
-Bundle-Activator: fi.soveltia.liferay.gsearch.elasticsearch.bundle.GSearchBundleActivator
 Bundle-Name: Liferay Portal Search Elasticsearch 6 Implementation
 Bundle-SymbolicName: com.liferay.portal.search.elasticsearch6.GSEARCH-PATCHED-IMPL-71-CE-GA2
 Bundle-Version: 2.0.24

@@ -51,6 +51,8 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Michael C. Han
@@ -257,11 +259,26 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		}
 	}
 
+	// GSearch modified
+	
 	@Override
-	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
+	@Reference(
+		cardinality = ReferenceCardinality.MANDATORY,
+		policyOption = ReferencePolicyOption.GREEDY,
+		target = "(search.engine.impl=GSearch)", 
+		unbind = "unsetQuerySuggester"
+	)
 	public void setQuerySuggester(QuerySuggester querySuggester) {
+		_log.info("Setting query suggester " + querySuggester.getClass().getName());
 		super.setQuerySuggester(querySuggester);
 	}
+	
+	protected void unsetQuerySuggester(QuerySuggester querySuggester) {
+		_log.info("Unsetting query suggester " + querySuggester.getClass().getName());
+		super.setQuerySuggester(null);
+	}
+	
+	
 
 	@Activate
 	@Modified

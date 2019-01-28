@@ -99,14 +99,6 @@ dependencies {
 	testCompile project(":core:petra:petra-process")
 	testCompile project(":core:petra:petra-reflect")
 	testCompile project(":core:registry-api")
-	
-	// GSearch: custom query types
-
-	compileOnly files('gsearch-libs/fi.soveltia.liferay.gsearch.query-4.0.0.jar')
-
-	// GSearch: needed for the blacklister
-	
-	compileOnly group: 'com.liferay', name: 'com.liferay.portal.bundle.blacklist.api', version: '1.0.1'	
 }
 
 deployDependencies {
@@ -123,37 +115,4 @@ processResources {
 	into("plugins") {
 		from configurations.elasticsearchPlugins
 	}
-}
-
-// GSearch: These exludes make build to succeed. Thanks to Sampsa Sohlman (https://github.com/sammso/game-of-liferay/blob/master/build.gradle) :)
-
-if ( !System.getenv().containsKey("GITHUB_TOKEN") ) {
-        gradle.taskGraph.whenReady { graph ->
-
-        def disabledTasks = [
-                "findbugsMain"  ,
-                "compileTestIntegrationJava",
-                "findbugsTestIntegration",
-                "unzipJar",
-                "generateJSPJava",
-                "writeFindBugsProject",
-                "compileTestJava",
-                "findSecurityBugs",
-                "findbugsTest"
-        ]
-
-        graph.allTasks.findAll {
-            
-            if (disabledTasks.contains(it.name)) {
-                    println "Disabled : " + it.name
-                    it.enabled=false
-            }
-            else {
-                  println "Enabled : " + it.name
-            }       
-        }
-    }
-}
-else {
-        apply from: "build-ext.gradle"
 }
