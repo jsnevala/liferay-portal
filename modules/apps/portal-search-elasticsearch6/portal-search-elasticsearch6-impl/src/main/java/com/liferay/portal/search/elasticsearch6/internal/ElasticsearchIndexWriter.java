@@ -239,8 +239,10 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 		searchEngineAdapter.execute(bulkDocumentRequest);
 	}
 
+	// GSearch modified
+	
 	@Override
-	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
+	@Reference(target = "(search.engine.impl=GSearch)", unbind = "-")
 	public void setSpellCheckIndexWriter(
 		SpellCheckIndexWriter spellCheckIndexWriter) {
 
