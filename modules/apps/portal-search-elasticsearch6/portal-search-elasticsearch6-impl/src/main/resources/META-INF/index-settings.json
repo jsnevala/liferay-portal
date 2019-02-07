@@ -15,7 +15,28 @@
 					"asciifolding"
 				]
 			},
+			"gsearch_finnish_search_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"lowercase",
+					"gsearch_finnish_stop",
+					"gsearch_finnish_stemmer",
+					"asciifolding"
+				]
+			},
 			"gsearch_english_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"gsearch_english_possessive_stemmer",
+					"lowercase",
+					"gsearch_english_stop",
+					"gsearch_english_light_stemmer",
+					"asciifolding"
+				]
+			},
+			"gsearch_english_search_analyzer": {
 				"type": "custom",
 				"tokenizer": "standard",
 				"filter": [
@@ -36,7 +57,25 @@
 					"asciifolding"
 				]
 			},
+			"gsearch_swedish_search_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"lowercase",
+					"gsearch_swedish_stop",
+					"gsearch_swedish_stemmer",
+					"asciifolding"
+				]
+			},
 			"gsearch_standard_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"lowercase",
+					"asciifolding"
+				]
+			},
+			"gsearch_standard_search_analyzer": {
 				"type": "custom",
 				"tokenizer": "standard",
 				"filter": [
