@@ -1,85 +1,140 @@
 {
-    "analysis": {
-        "analyzer": {
-            "keyword_lowercase": {
-                "filter": "lowercase",
-                "tokenizer": "keyword"
-            },
-            "gsearch_finnish_analyzer": {
-                "type": "custom",
-                "tokenizer": "standard",
-                "filter": [
-                    "lowercase",
-		            "gsearch_finnish_stop",
-		            "gsearch_finnish_stemmer",
+	"analysis": {
+		"analyzer": {
+			"keyword_lowercase": {
+				"filter": "lowercase",
+				"tokenizer": "keyword"
+			},
+			"gsearch_finnish_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"lowercase",
+					"gsearch_finnish_stop",
+					"gsearch_finnish_stemmer",
                     "gsearch_finnish_voikko",
-                    "asciifolding" 
-                ]
-            },
-            "gsearch_english_analyzer": {
-                "type": "custom",
-                "tokenizer": "standard",
-                "filter": [
-                    "gsearch_english_possessive_stemmer",
-                    "lowercase",
-                    "gsearch_english_stop",
-                    "gsearch_english_light_stemmer", 
-                    "asciifolding" 
-                ]
-            },
-            "gsearch_swedish_analyzer": {
-                "type": "custom",
-                "tokenizer": "standard",
-                "filter": [
+					"asciifolding"
+				]
+			},
+			"gsearch_finnish_search_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"lowercase",
+					"gsearch_finnish_stop",
+					"gsearch_finnish_stemmer",
+                    "gsearch_finnish_voikko",
+					"gsearch_finnish_synonyms",
+					"asciifolding"
+				]
+			},
+			"gsearch_english_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"gsearch_english_possessive_stemmer",
+					"lowercase",
+					"gsearch_english_stop",
+					"gsearch_english_light_stemmer",
+					"asciifolding"
+				]
+			},
+			"gsearch_english_search_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"gsearch_english_possessive_stemmer",
+					"lowercase",
+					"gsearch_english_stop",
+					"gsearch_english_light_stemmer",
+					"gsearch_english_synonyms",
+					"asciifolding"
+				]
+			},
+			"gsearch_swedish_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
 					"lowercase",
 					"gsearch_swedish_stop",
 					"gsearch_swedish_stemmer",
-                    "asciifolding" 
-                ]
-            },
-            "gsearch_standard_analyzer": {
-                "type": "custom",
-                "tokenizer": "standard",
-                "filter": [
-                    "lowercase",
-                    "asciifolding"
-                ]
-            }
-        },
-        "filter": {
-            "gsearch_english_light_stemmer": {
-              "type":       "stemmer",
-              "language":   "light_english" 
-            },
-            "gsearch_english_possessive_stemmer": {
-              "type":       "stemmer",
-              "language":   "possessive_english"
-            },
-            "gsearch_english_stop": {
-              "type":       "stop",
-              "stopwords":  "_english_"
-            },
+					"asciifolding"
+				]
+			},
+			"gsearch_swedish_search_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"lowercase",
+					"gsearch_swedish_stop",
+					"gsearch_swedish_stemmer",
+					"gsearch_swedish_synonyms",
+					"asciifolding"
+				]
+			},
+			"gsearch_standard_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"lowercase",
+					"asciifolding"
+				]
+			},
+			"gsearch_standard_search_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"lowercase",
+					"asciifolding"
+				]
+			}
+		},
+		"filter": {
+			"gsearch_english_light_stemmer": {
+				"type": "stemmer",
+				"language": "light_english"
+			},
+			"gsearch_english_possessive_stemmer": {
+				"type": "stemmer",
+				"language": "possessive_english"
+			},
+			"gsearch_english_stop": {
+				"type": "stop",
+				"stopwords": "_english_"
+			},
+			"gsearch_english_synonyms": {
+				"type": "synonym",
+				"synonyms_path": "gsearch-synonyms/english-synonyms.txt"
+			},
 			"gsearch_finnish_stemmer": {
-			  "type":       "stemmer",
-			  "language":   "finnish"
+				"type": "stemmer",
+				"language": "finnish"
 			},
 			"gsearch_finnish_stop": {
-              "type":       "stop",
-              "stopwords":  "_finnish_"
-	        },
+				"type": "stop",
+				"stopwords": "_finnish_"
+			},
+			"gsearch_finnish_synonyms": {
+				"type": "synonym",
+				"synonyms_path": "gsearch-synonyms/finnish-synonyms.txt"
+			},
 	       	"gsearch_finnish_voikko": {
 	          "type": "voikko",
 	          "libraryPath": "/usr/lib/x86_64-linux-gnu",
 			  "dictionaryPath": "/opt/software/voikko/dictionary"
 	        },
-	        "gsearch_swedish_stemmer": {
-	          "type":       "stemmer",
-	          "language":   "swedish"
-	        },
-	        "gsearch_swedish_stop": {
-	          "type":       "stop",
-	          "stopwords":  "_swedish_" 
-	        }
-        }         
-    }
+			"gsearch_swedish_stemmer": {
+				"type": "stemmer",
+				"language": "swedish"
+			},
+			"gsearch_swedish_stop": {
+				"type": "stop",
+				"stopwords": "_swedish_"
+			},
+			"gsearch_swedish_synonyms": {
+				"type": "synonym",
+				"synonyms_path": "gsearch-synonyms/swedish-synonyms.txt"
+			}
+		}
+	}
 }

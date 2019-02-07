@@ -164,6 +164,7 @@
 				"template_en": {
 					"mapping": {
 						"analyzer": "gsearch_english_analyzer",
+						"search_analyzer": "gsearch_english_search_analyzer",
 						"store": true,
 						"term_vector": "with_positions_offsets",
 						"type": "text"
@@ -203,6 +204,7 @@
 				"template_fi": {
 					"mapping": {
 						"analyzer": "gsearch_finnish_analyzer",
+						"search_analyzer": "gsearch_finnish_search_analyzer",
 						"store": true,
 						"term_vector": "with_positions_offsets",
 						"type": "text"
@@ -410,6 +412,7 @@
 				"template_sv": {
 					"mapping": {
 						"analyzer": "gsearch_swedish_analyzer",
+						"search_analyzer": "gsearch_swedish_search_analyzer",
 						"store": true,
 						"term_vector": "with_positions_offsets",
 						"type": "text"
@@ -545,6 +548,7 @@
 			},
 			"content": {
 				"analyzer": "gsearch_standard_analyzer",
+				"search_analyzer": "gsearch_standard_search_analyzer",
 				"store": true,
 				"term_vector": "with_positions_offsets",
 				"type": "text"
@@ -577,6 +581,7 @@
 			},
 			"description": {
 				"analyzer": "gsearch_standard_analyzer",
+				"search_analyzer": "gsearch_standard_search_analyzer",
 				"store": true,
 				"term_vector": "with_positions_offsets",
 				"type": "text"
@@ -773,6 +778,7 @@
 			},
 			"subtitle": {
 				"analyzer": "gsearch_standard_analyzer",
+				"search_analyzer": "gsearch_standard_search_analyzer",
 				"store": true,
 				"type": "text"
 			},
@@ -786,6 +792,7 @@
 			},
 			"title": {
 				"analyzer": "gsearch_standard_analyzer",
+				"search_analyzer": "gsearch_standard_search_analyzer",
 				"store": true,
 				"term_vector": "with_positions_offsets",
 				"type": "text"

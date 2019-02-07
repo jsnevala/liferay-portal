@@ -26,7 +26,7 @@
 				"template_geolocation": {
 					"mapping": {
 						"fields": {
-							"geopoint" : {
+							"geopoint": {
 								"store": true,
 								"type": "keyword"
 							}
@@ -61,7 +61,7 @@
 			{
 				"template_expando_keyword": {
 					"mapping": {
-						"analyzer" : "keyword_lowercase",
+						"analyzer": "keyword_lowercase",
 						"store": true,
 						"type": "text"
 					},
@@ -163,7 +163,8 @@
 			{
 				"template_en": {
 					"mapping": {
-						"analyzer": "english",
+						"analyzer": "gsearch_english_analyzer",
+						"search_analyzer": "gsearch_english_search_analyzer",
 						"store": true,
 						"term_vector": "with_positions_offsets",
 						"type": "text"
@@ -202,7 +203,8 @@
 			{
 				"template_fi": {
 					"mapping": {
-						"analyzer": "finnish",
+						"analyzer": "gsearch_finnish_analyzer",
+						"search_analyzer": "gsearch_finnish_search_analyzer",
 						"store": true,
 						"term_vector": "with_positions_offsets",
 						"type": "text"
@@ -409,7 +411,8 @@
 			{
 				"template_sv": {
 					"mapping": {
-						"analyzer": "swedish",
+						"analyzer": "gsearch_swedish_analyzer",
+						"search_analyzer": "gsearch_swedish_search_analyzer",
 						"store": true,
 						"term_vector": "with_positions_offsets",
 						"type": "text"
@@ -507,7 +510,7 @@
 			},
 			"assetTagNames": {
 				"fields": {
-					"raw" : {
+					"raw": {
 						"type": "keyword"
 					}
 				},
@@ -544,7 +547,8 @@
 				"type": "keyword"
 			},
 			"content": {
-				"analyzer": "gsearch_grow_analyzer",
+				"analyzer": "gsearch_english_analyzer",
+				"search_analyzer": "gsearch_english_search_analyzer",
 				"store": true,
 				"term_vector": "with_positions_offsets",
 				"type": "text"
@@ -576,7 +580,8 @@
 				"type": "keyword"
 			},
 			"description": {
-				"analyzer": "gsearch_grow_analyzer",
+				"analyzer": "gsearch_english_analyzer",
+				"search_analyzer": "gsearch_english_search_analyzer",
 				"store": true,
 				"term_vector": "with_positions_offsets",
 				"type": "text"
@@ -625,7 +630,7 @@
 			},
 			"geoLocation": {
 				"fields": {
-					"geopoint" : {
+					"geopoint": {
 						"store": true,
 						"type": "keyword"
 					}
@@ -772,7 +777,8 @@
 				"type": "keyword"
 			},
 			"subtitle": {
-				"analyzer": "gsearch_grow_analyzer",
+				"analyzer": "gsearch_english_analyzer",
+				"search_analyzer": "gsearch_english_search_analyzer",
 				"store": true,
 				"type": "text"
 			},
@@ -785,7 +791,8 @@
 				"type": "keyword"
 			},
 			"title": {
-				"analyzer": "gsearch_grow_analyzer",
+				"analyzer": "gsearch_english_analyzer",
+				"search_analyzer": "gsearch_english_search_analyzer",
 				"store": true,
 				"term_vector": "with_positions_offsets",
 				"type": "text"
@@ -825,6 +832,14 @@
 			"visible": {
 				"store": true,
 				"type": "keyword"
+			},
+			"gsearch_version_count": {
+				"store": true,
+				"type": "double"
+			},
+			"gsearch_content_length": {
+				"store": true,
+				"type": "integer"
 			}
 		}
 	}
