@@ -125,7 +125,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected String getNewTypeSettings(
@@ -208,6 +208,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 
 			while (rs.next()) {
 				long groupId = rs.getLong("groupId");
+
 				String typeSettings = rs.getString("typeSettings");
 
 				String newTypeSettings = getNewTypeSettings(
@@ -243,6 +244,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 
 			while (rs.next()) {
 				long portletPreferencesId = rs.getLong("portletPreferencesId");
+
 				String portletId = rs.getString("portletId");
 
 				String newPortletId = StringUtil.replaceFirst(
@@ -334,6 +336,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 
 			while (rs.next()) {
 				long layoutRevisionId = rs.getLong("layoutRevisionId");
+
 				String typeSettings = rs.getString("typeSettings");
 
 				String newTypeSettings = getNewTypeSettings(
@@ -359,6 +362,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 
 			while (rs.next()) {
 				long plid = rs.getLong("plid");
+
 				String typeSettings = rs.getString("typeSettings");
 
 				String newTypeSettings = getNewTypeSettings(
@@ -476,6 +480,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 
 			while (rs.next()) {
 				long companyId = rs.getLong("companyId");
+
 				String oldPrimKey = rs.getString("primKey");
 
 				int pos = oldPrimKey.indexOf(PortletConstants.LAYOUT_SEPARATOR);

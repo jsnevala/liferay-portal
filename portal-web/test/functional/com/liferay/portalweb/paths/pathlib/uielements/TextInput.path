@@ -9,18 +9,8 @@
 </thead>
 <tbody>
 <tr>
-	<td>ALERT</td>
-	<td>//div[contains(@class,'has-error')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>ANSWER</td>
 	<td>//div[label[contains(.,'Answer')]]/input[@type='text']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>BODY</td>
-	<td>//body</td>
 	<td></td>
 </tr>
 <tr>
@@ -34,18 +24,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>CURRENT_PARENT</td>
-	<td>//input[contains(@id,'currentParent')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>CURRENT_PASSWORD</td>
 	<td>//div[label[contains(.,'Current Password')]]/input</td>
-	<td></td>
-</tr>
-<tr>
-	<td>CURRENT_TITLE</td>
-	<td>//input[contains(@id,'currentTitle')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -56,6 +36,16 @@
 <tr>
 	<td>DATA_DEFINITION</td>
 	<td>//div[label[contains(.,'Data Definition')]]/input[@type='text']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DDM</td>
+	<td>//div[@data-fieldname='${key_fieldName}']//input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DDM_FUZZY</td>
+	<td>//div[contains(@data-fieldname,'${key_fieldName}')]//input</td>
 	<td></td>
 </tr>
 <tr>
@@ -79,13 +69,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>DISPLAY_DATE_MINUTE</td>
-	<td>//input[contains(@id,'displayDateMinute')]</td>
+	<td>DISPLAY_DATE_MERIDIAN</td>
+	<td>//input[contains(@id,'displayDateAmPm')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>DISPLAY_DATE_MERIDIAN</td>
-	<td>//input[contains(@id,'displayDateAmPm')]</td>
+	<td>DISPLAY_DATE_MINUTE</td>
+	<td>//input[contains(@id,'displayDateMinute')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -114,13 +104,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>EMAIL_ADDRESS_PNG</td>
-	<td>portal/fields/email_address_field.png</td>
+	<td>EMAIL_FROM_ADDRESS</td>
+	<td>//input[contains(@id,'emailFromAddress')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>EXTENSION</td>
-	<td>//div[label[contains(.,'Extension')]]//input[@type='text']</td>
+	<td>EMAIL_FROM_NAME</td>
+	<td>//input[contains(@id,'emailFromName')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -134,13 +124,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>EXPIRATION_DATE_TIME</td>
-	<td>//input[contains(@id,'expirationDateTime')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>FACEBOOK</td>
-	<td>//div[label[contains(.,'Facebook')]]//input[@type='text']</td>
+	<td>EXTERNAL_PASSWORD_FIELD</td>
+	<td>//input[@id='password']</td>
 	<td></td>
 </tr>
 <tr>
@@ -149,23 +134,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>FILE</td>
+	<td>//input[contains(@id,'file') and @type='file'] | //input[@type='file']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FIRST_NAME</td>
 	<td>//div[label[contains(.,'First Name')]]/input[@type='text']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>FILE</td>
-	<td>//input[contains(@id,'file') and @type='file']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>FRIENDLY_URL</td>
 	<td>//input[contains(@id,'friendlyURL')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>FROM</td>
-	<td>//div[label[contains(.,'From')]]//input[@type='number']</td>
 	<td></td>
 </tr>
 <tr>
@@ -179,13 +159,18 @@
 	<td></td>
 </tr>
 <tr>
-	<td>IMAGE_ID</td>
-	<td>//input[contains(@id,'newUuid')]</td>
+	<td>GOOGLE_APPS_API_KEY</td>
+	<td>//div[label[contains(.,'Google Apps API Key')]]/input[@type='text']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>IMAGE_URL</td>
-	<td>//div[label[contains(.,'Image URL')]]//input[@type='text']</td>
+	<td>GOOGLE_CLIENT_ID</td>
+	<td>//input[contains(@id,'googleClientId')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>IMAGE_ID</td>
+	<td>//input[contains(@id,'newUuid')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -204,43 +189,28 @@
 	<td></td>
 </tr>
 <tr>
-	<td>JABBER</td>
-	<td>//div[label[contains(.,'Jabber')]]//input[@type='text']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>KEY</td>
-	<td>//div[label[contains(.,'Key')]]//input[@type='text']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>LAST_NAME</td>
 	<td>//div[label[contains(.,'Last Name')]]/input[@type='text']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>GOOGLE_APPS_API_KEY</td>
-	<td>//div[label[contains(.,'Google Apps API Key')]]/input[@type='text']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>GOOGLE_CLIENT_ID</td>
-	<td>//input[contains(@id,'googleClientId')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>GOOGLE_CLIENT_SECRET</td>
-	<td>//input[contains(@id,'google-client-secret')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>KEYWORDS</td>
-	<td>//input[contains(@title,'keywords')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>LOAN_AMOUNT</td>
 	<td>//input[@type='text' and contains(@name,'loanAmount')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>LOGIN_EMAIL_FIELD</td>
+	<td>//input[contains(@type,'email')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>LOGIN_PASSWORD_FIELD</td>
+	<td>//input[contains(@type,'password')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>LOGIN_USER_NAME</td>
+	<td>//input[@id='username']</td>
 	<td></td>
 </tr>
 <tr>
@@ -314,13 +284,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>NEW_PARENT</td>
-	<td>//input[contains(@id,'newParent')]</td>
+	<td>NAME_INVALID</td>
+	<td>//div[label[contains(.,'Name')]]//input[@type='text' and contains(@aria-invalid,'true')] | //input[contains(@id,'name') and contains(@aria-invalid,'true')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>NEW_PASSWORD</td>
-	<td>//div[label[contains(.,'New Password')]]/input</td>
+	<td>NAME_MARGIN</td>
+	<td>//div[label[contains(.,'Name')]]//input[@type='text'] | //input[contains(@id,'name')]/..</td>
 	<td></td>
 </tr>
 <tr>
@@ -329,28 +299,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>NEW_PASSWORD</td>
+	<td>//div[label[contains(.,'New Password')]]/input</td>
+	<td></td>
+</tr>
+<tr>
 	<td>NEW_TITLE</td>
 	<td>//input[contains(@id,'newTitle')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>NUMBER</td>
-	<td>//div[label[contains(.,'Number')]]//input[@type='text']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>PAGE_NAME_FIELD</td>
-	<td>//span[contains(@class,'input-localized-input')]/input[contains(@id,'addLayoutName')]</td>
-	<td>New Page Name Field</td>
-</tr>
-<tr>
 	<td>PASSWORD</td>
 	<td>//div[label[contains(.,'Password')]]/input | //div[label[contains(.,'Contraseña')]]/input | //div[label[contains(.,'パスワード')]]/input | //div[label[contains(.,'密码')]]/input | //div[contains(.,'Kennwort')]//input[@type='password']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>PASSWORD_PNG</td>
-	<td>portal/fields/password_field.png</td>
 	<td></td>
 </tr>
 <tr>
@@ -389,11 +349,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>REVIEW_DATE</td>
-	<td>//input[contains(@id,'reviewDate')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>REQUIRED_ALERT</td>
 	<td>//div[contains(@class,'has-error')]</td>
 	<td></td>
@@ -411,11 +366,6 @@
 <tr>
 	<td>SEARCH_2</td>
 	<td>xpath=(//input[@title='Search'])[2]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SELECT_FILES</td>
-	<td>//div[contains(@id,'uploaderContent') and contains(.,'Select Files')]/input</td>
 	<td></td>
 </tr>
 <tr>
@@ -439,11 +389,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SKYPE</td>
-	<td>//div[label[contains(.,'Skype')]]//input[@type='text']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>SOURCE_URL</td>
 	<td>//input[contains(@id,'_src')]</td>
 	<td></td>
@@ -454,18 +399,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>STRUCTURE</td>
-	<td>//div[label[contains(.,'Structure')]]/input[@type='text']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>SUBJECT</td>
 	<td>//input[contains(@id,'subject')] | //input[contains(@id,'Subject')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>TEXT_VERIFICATION</td>
-	<td>//div[label[contains(.,'Text Verification')]]//input[@type='text']</td>
 	<td></td>
 </tr>
 <tr>
@@ -474,8 +409,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>TITLE_LOCALIZED</td>
-	<td>//input[contains(@id,'title')]/../div[contains(.,'${key_languageName} Translation')]</td>
+	<td>TITLE_INVALID</td>
+	<td>//input[contains(@id,'title') and contains(@aria-invalid,'true')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TITLE_MARGIN</td>
+	<td>//input[contains(@id,'title')]/../..</td>
 	<td></td>
 </tr>
 <tr>
@@ -486,11 +426,6 @@
 <tr>
 	<td>TOTAL_PAID</td>
 	<td>//input[@type='text' and contains(@name,'totalPaid')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>TRASH_ENTRIES_MAX_AGE</td>
-	<td>//input[contains(@id,'trashEntriesMaxAge')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -514,6 +449,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>USER_NAME</td>
+	<td>//input[@type='text']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>VIRTUAL_HOST</td>
 	<td>//input[contains(@id,'virtualHostname') and contains(@class,'input-text')]</td>
 	<td></td>
@@ -531,11 +471,6 @@
 <tr>
 	<td>YEARS</td>
 	<td>//input[@type='text' and contains(@name,'years')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>YIM</td>
-	<td>//div[label[contains(.,'YIM')]]//input[@type='text']</td>
 	<td></td>
 </tr>
 </tbody>

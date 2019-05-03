@@ -132,4 +132,28 @@ long userId = user2.getUserId();
 			</c:choose>
 		</c:if>
 	</c:if>
+
+	<%
+	UserActionDisplayContext userActionDisplayContext = new UserActionDisplayContext(request, liferayPortletRequest, user, user2);
+
+	UserActionContributor[] filteredUserActionContributors = userActionDisplayContext.getFilteredUserActionContributors();
+	%>
+
+	<c:if test="<%= filteredUserActionContributors.length > 0 %>">
+		<li aria-hidden="true" class="divider" role="presentation"></li>
+
+		<%
+		for (UserActionContributor userActionContributor : filteredUserActionContributors) {
+		%>
+
+			<liferay-ui:icon
+				message="<%= userActionContributor.getMessage(liferayPortletRequest) %>"
+				url="<%= userActionContributor.getURL(liferayPortletRequest, liferayPortletResponse, user, user2) %>"
+			/>
+
+		<%
+		}
+		%>
+
+	</c:if>
 </liferay-ui:icon-menu>

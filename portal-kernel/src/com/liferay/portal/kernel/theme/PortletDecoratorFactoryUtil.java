@@ -18,7 +18,7 @@ import com.liferay.portal.kernel.model.PortletDecorator;
 import com.liferay.portal.kernel.security.pacl.permission.PortalRuntimePermission;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class PortletDecoratorFactoryUtil {
 

@@ -7,17 +7,6 @@ AUI.add(
 		var Lang = A.Lang;
 		var UA = A.UA;
 
-		var contentFilter = new CKEDITOR.filter(
-			{
-				$1: {
-					attributes: ['alt', 'aria-*', 'height', 'href', 'src', 'width'],
-					classes: false,
-					elements: CKEDITOR.dtd,
-					styles: false
-				}
-			}
-		);
-
 		var KEY_ENTER = 13;
 
 		var LiferayAlloyEditor = A.Component.create(
@@ -79,6 +68,8 @@ AUI.add(
 							srcNode = A.one('#' + srcNode);
 						}
 
+						editorConfig.pasteFilter = 'plain-text';
+
 						instance._alloyEditor = AlloyEditor.editable(srcNode.attr('id'), editorConfig);
 						instance._srcNode = srcNode;
 					},
@@ -93,8 +84,9 @@ AUI.add(
 
 						var nativeEditor = instance.getNativeEditor();
 
-						nativeEditor.on('paste', instance._onPaste, instance);
+						nativeEditor.on('dataReady', instance._onDataReady, instance);
 						nativeEditor.on('instanceReady', instance._onInstanceReady, instance);
+						nativeEditor.on('setData', instance._onSetData, instance);
 
 						if (instance.get('onBlurMethod')) {
 							nativeEditor.on('blur', instance._onBlur, instance);
@@ -186,7 +178,12 @@ AUI.add(
 					setHTML: function(value) {
 						var instance = this;
 
-						instance.getNativeEditor().setData(value);
+						if (window[instance.get('namespace')]._dataReady) {
+							instance.getNativeEditor().setData(value);
+						}
+						else {
+							instance._pendingData = value;
+						}
 					},
 
 					_afterGet: function(attrName) {
@@ -257,6 +254,21 @@ AUI.add(
 						}
 					},
 
+					_onDataReady: function(event) {
+						var instance = this;
+
+						if (instance._pendingData) {
+							var pendingData = instance._pendingData;
+
+							instance._pendingData = null;
+
+							instance.getNativeEditor().setData(pendingData);
+						}
+						else {
+							window[instance.get('namespace')]._dataReady = true;
+						}
+					},
+
 					_onFocus: function(event) {
 						var instance = this;
 
@@ -272,10 +284,8 @@ AUI.add(
 
 						setTimeout(
 							function() {
-								if (activeElement) {
-									nativeEditor.focusManager.blur(true);
-									activeElement.focus();
-								}
+								nativeEditor.focusManager.blur(true);
+								activeElement.focus();
 							},
 							100
 						);
@@ -308,6 +318,22 @@ AUI.add(
 
 						instance.getNativeEditor().editable().$.addEventListener('compositionend', A.bind('_onChange', instance));
 
+						// LPS-71967 and LPS-75512
+
+						if (contents && UA.edge && parseInt(UA.edge, 10) >= 14) {
+							A.soon(
+								function() {
+									if (document.activeElement && document.activeElement !== document.body) {
+										var nativeEditor = instance.getNativeEditor();
+
+										nativeEditor.once('focus', A.bind('_onFocusFix', instance, document.activeElement, nativeEditor));
+
+										nativeEditor.focus();
+									}
+								}
+							);
+						}
+
 						// LPS-72963
 
 						var editorConfig = instance.getNativeEditor().config;
@@ -324,19 +350,6 @@ AUI.add(
 
 							doc.designMode = 'off';
 						}
-
-						// LPS-71967
-
-						if (UA.edge && parseInt(UA.edge) >= 14) {
-							A.soon(
-								function() {
-									var nativeEditor = instance.getNativeEditor();
-
-									nativeEditor.once('focus', A.bind('_onFocusFix', instance, document.activeElement, nativeEditor));
-									nativeEditor.focus();
-								}
-							);
-						}
 					},
 
 					_onKey: function(event) {
@@ -345,16 +358,10 @@ AUI.add(
 						}
 					},
 
-					_onPaste: function(event) {
-						var fragment = CKEDITOR.htmlParser.fragment.fromHtml(event.data.dataValue);
+					_onSetData: function(event) {
+						var instance = this;
 
-						var writer = new CKEDITOR.htmlParser.basicWriter();
-
-						contentFilter.applyTo(fragment);
-
-						fragment.writeHtml(writer);
-
-						event.data.dataValue = writer.getHtml();
+						window[instance.get('namespace')]._dataReady = false;
 					},
 
 					_validateEditorMethod: function(method) {

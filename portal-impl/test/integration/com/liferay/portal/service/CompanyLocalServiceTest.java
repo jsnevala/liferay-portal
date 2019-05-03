@@ -674,12 +674,9 @@ public class CompanyLocalServiceTest {
 
 		nameMap.put(LocaleUtil.getDefault(), name);
 
-		LayoutSetPrototype layoutSetPrototype =
-			LayoutSetPrototypeLocalServiceUtil.addLayoutSetPrototype(
-				userId, companyId, nameMap, new HashMap<Locale, String>(), true,
-				true, getServiceContext(companyId));
-
-		return layoutSetPrototype;
+		return LayoutSetPrototypeLocalServiceUtil.addLayoutSetPrototype(
+			userId, companyId, nameMap, new HashMap<Locale, String>(), true,
+			true, getServiceContext(companyId));
 	}
 
 	protected User addUser(
@@ -752,7 +749,7 @@ public class CompanyLocalServiceTest {
 
 			CompanyLocalServiceUtil.updateCompany(
 				company.getCompanyId(), company.getVirtualHostname(), mx,
-				company.getMaxUsers(), company.getActive());
+				company.getMaxUsers(), company.isActive());
 
 			company = CompanyLocalServiceUtil.getCompany(
 				company.getCompanyId());
@@ -787,7 +784,7 @@ public class CompanyLocalServiceTest {
 			try {
 				CompanyLocalServiceUtil.updateCompany(
 					company.getCompanyId(), virtualHostName, company.getMx(),
-					company.getMaxUsers(), company.getActive());
+					company.getMaxUsers(), company.isActive());
 
 				Assert.assertFalse(expectFailure);
 			}

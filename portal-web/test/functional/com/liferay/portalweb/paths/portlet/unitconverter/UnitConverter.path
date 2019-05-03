@@ -33,11 +33,6 @@
 	<td>//select[@id='_com_liferay_unit_converter_web_portlet_UnitConverterPortlet_type']</td>
 	<td></td>
 </tr>
-<tr>
-	<td>CONVERT_BUTTON</td>
-	<td>//button[contains(@class,'btn-primary') and contains(.,'Convert')]</td>
-	<td></td>
-</tr>
 </tbody>
 </table>
 </body>

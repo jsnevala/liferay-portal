@@ -42,7 +42,9 @@ public class QueryUtil {
 		Query query, Dialect dialect, int start, int end,
 		boolean unmodifiable) {
 
-		return list(query, dialect, start, end).iterator();
+		List<?> list = list(query, dialect, start, end);
+
+		return list.iterator();
 	}
 
 	public static List<?> list(
@@ -156,8 +158,8 @@ public class QueryUtil {
 
 		ScrollableResults sr = query.scroll();
 
-		for (int i = 0; i < scrollIds.length; i++) {
-			if (sr.scroll(scrollIds[i])) {
+		for (int scrollId : scrollIds) {
+			if (sr.scroll(scrollId)) {
 				Object[] array = sr.get();
 
 				if (array.length == 1) {

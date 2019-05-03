@@ -30,9 +30,9 @@
 
 	var STR_RIGHT_SQUARE_BRACKET = ']';
 
-	var TPL_LEXICON_ICON = '<svg class="lexicon-icon lexicon-icon-{0} {1}" focusable="false" role="image">' +
+	var TPL_LEXICON_ICON = '<svg class="lexicon-icon lexicon-icon-{0} {1}" focusable="false" role="button">' +
 			'<use data-href="' + themeDisplay.getPathThemeImages() + '/lexicon/icons.svg#{0}" />' +
-			'<title>{0}</title>'
+			'<title>{0}</title>' +
 		'</svg>';
 
 	var Window = {
@@ -1156,11 +1156,11 @@
 
 				var actionURL = new A.Url(action);
 
-				var authToken = actionURL.getParameter('p_auth');
+				var authToken = actionURL.getParameter('p_auth') || '';
+
+				form.append('<input name="p_auth" type="hidden" value="' + authToken + '" />');
 
 				if (authToken) {
-					form.append('<input name="p_auth" type="hidden" value="' + authToken + '" />');
-
 					actionURL.removeParameter('p_auth');
 
 					action = actionURL.toString();

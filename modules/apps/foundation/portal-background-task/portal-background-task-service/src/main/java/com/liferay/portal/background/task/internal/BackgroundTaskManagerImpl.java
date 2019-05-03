@@ -646,8 +646,7 @@ public class BackgroundTaskManagerImpl implements BackgroundTaskManager {
 			backgroundTaskModels.size());
 
 		for (com.liferay.portal.background.task.model.BackgroundTask
-				backgroundTaskModel :
-					backgroundTaskModels) {
+				backgroundTaskModel : backgroundTaskModels) {
 
 			backgroundTasks.add(new BackgroundTaskImpl(backgroundTaskModel));
 		}
@@ -656,8 +655,8 @@ public class BackgroundTaskManagerImpl implements BackgroundTaskManager {
 	}
 
 	protected OrderByComparator
-		<com.liferay.portal.background.task.model.BackgroundTask>
-			translate(OrderByComparator<BackgroundTask> orderByComparator) {
+		<com.liferay.portal.background.task.model.BackgroundTask> translate(
+			OrderByComparator<BackgroundTask> orderByComparator) {
 
 		if (orderByComparator instanceof
 				BackgroundTaskCompletionDateComparator) {

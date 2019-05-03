@@ -17,9 +17,7 @@ package com.liferay.marketplace.model;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.service.ServiceContext;
 
@@ -41,6 +39,7 @@ import java.util.Objects;
  */
 @ProviderType
 public class AppWrapper implements App, ModelWrapper<App> {
+
 	public AppWrapper(App app) {
 		_app = app;
 	}
@@ -72,7 +71,7 @@ public class AppWrapper implements App, ModelWrapper<App> {
 		attributes.put("category", getCategory());
 		attributes.put("iconURL", getIconURL());
 		attributes.put("version", getVersion());
-		attributes.put("required", getRequired());
+		attributes.put("required", isRequired());
 
 		return attributes;
 	}
@@ -165,12 +164,12 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	@Override
-	public java.lang.String[] addContextName(java.lang.String contextName) {
+	public String[] addContextName(String contextName) {
 		return _app.addContextName(contextName);
 	}
 
 	@Override
-	public java.lang.Object clone() {
+	public Object clone() {
 		return new AppWrapper((App)_app.clone());
 	}
 
@@ -180,57 +179,57 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	/**
-	* Returns the app ID of this app.
-	*
-	* @return the app ID of this app
-	*/
+	 * Returns the app ID of this app.
+	 *
+	 * @return the app ID of this app
+	 */
 	@Override
 	public long getAppId() {
 		return _app.getAppId();
 	}
 
 	/**
-	* Returns the category of this app.
-	*
-	* @return the category of this app
-	*/
+	 * Returns the category of this app.
+	 *
+	 * @return the category of this app
+	 */
 	@Override
-	public java.lang.String getCategory() {
+	public String getCategory() {
 		return _app.getCategory();
 	}
 
 	/**
-	* Returns the company ID of this app.
-	*
-	* @return the company ID of this app
-	*/
+	 * Returns the company ID of this app.
+	 *
+	 * @return the company ID of this app
+	 */
 	@Override
 	public long getCompanyId() {
 		return _app.getCompanyId();
 	}
 
 	@Override
-	public java.lang.String[] getContextNames() {
+	public String[] getContextNames() {
 		return _app.getContextNames();
 	}
 
 	/**
-	* Returns the create date of this app.
-	*
-	* @return the create date of this app
-	*/
+	 * Returns the create date of this app.
+	 *
+	 * @return the create date of this app
+	 */
 	@Override
 	public Date getCreateDate() {
 		return _app.getCreateDate();
 	}
 
 	/**
-	* Returns the description of this app.
-	*
-	* @return the description of this app
-	*/
+	 * Returns the description of this app.
+	 *
+	 * @return the description of this app
+	 */
 	@Override
-	public java.lang.String getDescription() {
+	public String getDescription() {
 		return _app.getDescription();
 	}
 
@@ -240,45 +239,45 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	@Override
-	public java.lang.String getFileDir() {
+	public String getFileDir() {
 		return _app.getFileDir();
 	}
 
 	@Override
-	public java.lang.String getFileName() {
+	public String getFileName() {
 		return _app.getFileName();
 	}
 
 	@Override
-	public java.lang.String getFilePath() {
+	public String getFilePath() {
 		return _app.getFilePath();
 	}
 
 	/**
-	* Returns the icon url of this app.
-	*
-	* @return the icon url of this app
-	*/
+	 * Returns the icon url of this app.
+	 *
+	 * @return the icon url of this app
+	 */
 	@Override
-	public java.lang.String getIconURL() {
+	public String getIconURL() {
 		return _app.getIconURL();
 	}
 
 	/**
-	* Returns the modified date of this app.
-	*
-	* @return the modified date of this app
-	*/
+	 * Returns the modified date of this app.
+	 *
+	 * @return the modified date of this app
+	 */
 	@Override
 	public Date getModifiedDate() {
 		return _app.getModifiedDate();
 	}
 
 	/**
-	* Returns the primary key of this app.
-	*
-	* @return the primary key of this app
-	*/
+	 * Returns the primary key of this app.
+	 *
+	 * @return the primary key of this app
+	 */
 	@Override
 	public long getPrimaryKey() {
 		return _app.getPrimaryKey();
@@ -290,82 +289,82 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	/**
-	* Returns the remote app ID of this app.
-	*
-	* @return the remote app ID of this app
-	*/
+	 * Returns the remote app ID of this app.
+	 *
+	 * @return the remote app ID of this app
+	 */
 	@Override
 	public long getRemoteAppId() {
 		return _app.getRemoteAppId();
 	}
 
 	/**
-	* Returns the required of this app.
-	*
-	* @return the required of this app
-	*/
+	 * Returns the required of this app.
+	 *
+	 * @return the required of this app
+	 */
 	@Override
 	public boolean getRequired() {
 		return _app.getRequired();
 	}
 
 	/**
-	* Returns the title of this app.
-	*
-	* @return the title of this app
-	*/
+	 * Returns the title of this app.
+	 *
+	 * @return the title of this app
+	 */
 	@Override
-	public java.lang.String getTitle() {
+	public String getTitle() {
 		return _app.getTitle();
 	}
 
 	/**
-	* Returns the user ID of this app.
-	*
-	* @return the user ID of this app
-	*/
+	 * Returns the user ID of this app.
+	 *
+	 * @return the user ID of this app
+	 */
 	@Override
 	public long getUserId() {
 		return _app.getUserId();
 	}
 
 	/**
-	* Returns the user name of this app.
-	*
-	* @return the user name of this app
-	*/
+	 * Returns the user name of this app.
+	 *
+	 * @return the user name of this app
+	 */
 	@Override
-	public java.lang.String getUserName() {
+	public String getUserName() {
 		return _app.getUserName();
 	}
 
 	/**
-	* Returns the user uuid of this app.
-	*
-	* @return the user uuid of this app
-	*/
+	 * Returns the user uuid of this app.
+	 *
+	 * @return the user uuid of this app
+	 */
 	@Override
-	public java.lang.String getUserUuid() {
+	public String getUserUuid() {
 		return _app.getUserUuid();
 	}
 
 	/**
-	* Returns the uuid of this app.
-	*
-	* @return the uuid of this app
-	*/
+	 * Returns the uuid of this app.
+	 *
+	 * @return the uuid of this app
+	 */
 	@Override
-	public java.lang.String getUuid() {
+	public String getUuid() {
 		return _app.getUuid();
 	}
 
 	/**
-	* Returns the version of this app.
-	*
-	* @return the version of this app
-	*/
+	 * Returns the version of this app.
+	 *
+	 * @return the version of this app
+	 */
 	@Override
-	public java.lang.String getVersion() {
+	public String getVersion() {
 		return _app.getVersion();
 	}
 
@@ -382,6 +381,7 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	@Override
 	public boolean isDownloaded()
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _app.isDownloaded();
 	}
 
@@ -401,10 +401,10 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	/**
-	* Returns <code>true</code> if this app is required.
-	*
-	* @return <code>true</code> if this app is required; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this app is required.
+	 *
+	 * @return <code>true</code> if this app is required; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isRequired() {
 		return _app.isRequired();
@@ -416,10 +416,10 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	/**
-	* Sets the app ID of this app.
-	*
-	* @param appId the app ID of this app
-	*/
+	 * Sets the app ID of this app.
+	 *
+	 * @param appId the app ID of this app
+	 */
 	@Override
 	public void setAppId(long appId) {
 		_app.setAppId(appId);
@@ -431,48 +431,49 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	/**
-	* Sets the category of this app.
-	*
-	* @param category the category of this app
-	*/
+	 * Sets the category of this app.
+	 *
+	 * @param category the category of this app
+	 */
 	@Override
-	public void setCategory(java.lang.String category) {
+	public void setCategory(String category) {
 		_app.setCategory(category);
 	}
 
 	/**
-	* Sets the company ID of this app.
-	*
-	* @param companyId the company ID of this app
-	*/
+	 * Sets the company ID of this app.
+	 *
+	 * @param companyId the company ID of this app
+	 */
 	@Override
 	public void setCompanyId(long companyId) {
 		_app.setCompanyId(companyId);
 	}
 
 	/**
-	* Sets the create date of this app.
-	*
-	* @param createDate the create date of this app
-	*/
+	 * Sets the create date of this app.
+	 *
+	 * @param createDate the create date of this app
+	 */
 	@Override
 	public void setCreateDate(Date createDate) {
 		_app.setCreateDate(createDate);
 	}
 
 	/**
-	* Sets the description of this app.
-	*
-	* @param description the description of this app
-	*/
+	 * Sets the description of this app.
+	 *
+	 * @param description the description of this app
+	 */
 	@Override
-	public void setDescription(java.lang.String description) {
+	public void setDescription(String description) {
 		_app.setDescription(description);
 	}
 
 	@Override
 	public void setExpandoBridgeAttributes(
 		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
+
 		_app.setExpandoBridgeAttributes(baseModel);
 	}
 
@@ -487,20 +488,20 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	/**
-	* Sets the icon url of this app.
-	*
-	* @param iconURL the icon url of this app
-	*/
+	 * Sets the icon url of this app.
+	 *
+	 * @param iconURL the icon url of this app
+	 */
 	@Override
-	public void setIconURL(java.lang.String iconURL) {
+	public void setIconURL(String iconURL) {
 		_app.setIconURL(iconURL);
 	}
 
 	/**
-	* Sets the modified date of this app.
-	*
-	* @param modifiedDate the modified date of this app
-	*/
+	 * Sets the modified date of this app.
+	 *
+	 * @param modifiedDate the modified date of this app
+	 */
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		_app.setModifiedDate(modifiedDate);
@@ -512,10 +513,10 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	/**
-	* Sets the primary key of this app.
-	*
-	* @param primaryKey the primary key of this app
-	*/
+	 * Sets the primary key of this app.
+	 *
+	 * @param primaryKey the primary key of this app
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		_app.setPrimaryKey(primaryKey);
@@ -527,82 +528,82 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	/**
-	* Sets the remote app ID of this app.
-	*
-	* @param remoteAppId the remote app ID of this app
-	*/
+	 * Sets the remote app ID of this app.
+	 *
+	 * @param remoteAppId the remote app ID of this app
+	 */
 	@Override
 	public void setRemoteAppId(long remoteAppId) {
 		_app.setRemoteAppId(remoteAppId);
 	}
 
 	/**
-	* Sets whether this app is required.
-	*
-	* @param required the required of this app
-	*/
+	 * Sets whether this app is required.
+	 *
+	 * @param required the required of this app
+	 */
 	@Override
 	public void setRequired(boolean required) {
 		_app.setRequired(required);
 	}
 
 	/**
-	* Sets the title of this app.
-	*
-	* @param title the title of this app
-	*/
+	 * Sets the title of this app.
+	 *
+	 * @param title the title of this app
+	 */
 	@Override
-	public void setTitle(java.lang.String title) {
+	public void setTitle(String title) {
 		_app.setTitle(title);
 	}
 
 	/**
-	* Sets the user ID of this app.
-	*
-	* @param userId the user ID of this app
-	*/
+	 * Sets the user ID of this app.
+	 *
+	 * @param userId the user ID of this app
+	 */
 	@Override
 	public void setUserId(long userId) {
 		_app.setUserId(userId);
 	}
 
 	/**
-	* Sets the user name of this app.
-	*
-	* @param userName the user name of this app
-	*/
+	 * Sets the user name of this app.
+	 *
+	 * @param userName the user name of this app
+	 */
 	@Override
-	public void setUserName(java.lang.String userName) {
+	public void setUserName(String userName) {
 		_app.setUserName(userName);
 	}
 
 	/**
-	* Sets the user uuid of this app.
-	*
-	* @param userUuid the user uuid of this app
-	*/
+	 * Sets the user uuid of this app.
+	 *
+	 * @param userUuid the user uuid of this app
+	 */
 	@Override
-	public void setUserUuid(java.lang.String userUuid) {
+	public void setUserUuid(String userUuid) {
 		_app.setUserUuid(userUuid);
 	}
 
 	/**
-	* Sets the uuid of this app.
-	*
-	* @param uuid the uuid of this app
-	*/
+	 * Sets the uuid of this app.
+	 *
+	 * @param uuid the uuid of this app
+	 */
 	@Override
-	public void setUuid(java.lang.String uuid) {
+	public void setUuid(String uuid) {
 		_app.setUuid(uuid);
 	}
 
 	/**
-	* Sets the version of this app.
-	*
-	* @param version the version of this app
-	*/
+	 * Sets the version of this app.
+	 *
+	 * @param version the version of this app
+	 */
 	@Override
-	public void setVersion(java.lang.String version) {
+	public void setVersion(String version) {
 		_app.setVersion(version);
 	}
 
@@ -617,7 +618,7 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	@Override
-	public java.lang.String toString() {
+	public String toString() {
 		return _app.toString();
 	}
 
@@ -627,7 +628,7 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	@Override
-	public java.lang.String toXmlString() {
+	public String toXmlString() {
 		return _app.toXmlString();
 	}
 
@@ -676,4 +677,5 @@ public class AppWrapper implements App, ModelWrapper<App> {
 	}
 
 	private final App _app;
+
 }

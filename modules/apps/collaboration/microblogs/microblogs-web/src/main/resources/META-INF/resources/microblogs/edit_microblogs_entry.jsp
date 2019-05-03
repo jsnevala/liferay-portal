@@ -59,15 +59,18 @@ if ((microblogsEntry != null) && !edit) {
 
 String formId = String.valueOf(microblogsEntryId);
 
+boolean comment = GetterUtil.getBoolean((String)request.getAttribute("view_comments.jsp-comment"));
+
 if (edit) {
 	formId = "Edit" + formId;
+}
+else if (comment) {
+	formId = "Comment" + formId;
 }
 
 String formName = "fm" + formId;
 
 String formCssClass = "microblogs-entry-form";
-
-boolean comment = GetterUtil.getBoolean((String)request.getAttribute("view_comments.jsp-comment"));
 
 if (comment) {
 	formCssClass += " reply";
@@ -173,7 +176,7 @@ if (comment) {
 				</span>
 			</div>
 
-			<div class="highlighter-content <%= comment || edit || repost ? StringPool.BLANK : "textbox" %>" id="<portlet:namespace />highlighterContent<%= formId %>"></div>
+			<div class="highlighter-content <%= (comment || edit || repost) ? StringPool.BLANK : "textbox" %>" id="<portlet:namespace />highlighterContent<%= formId %>"></div>
 		</div>
 
 		<aui:input label="" name="content" type="hidden" />
@@ -277,7 +280,7 @@ if (comment) {
 			var autocompleteContent = A.one('#<portlet:namespace />autocompleteContent<%= formId %>');
 			var highlighterContent = A.one('#<portlet:namespace />highlighterContent<%= formId %>');
 
-			var inputValue = '<%= ((microblogsEntry != null) && (edit)) ? StringUtil.replace(HtmlUtil.escapeJS(microblogsEntry.getContent()), "\'", "\\'") : StringPool.BLANK %>';
+			var inputValue = '<%= ((microblogsEntry != null) && edit) ? StringUtil.replace(HtmlUtil.escapeJS(microblogsEntry.getContent()), "\'", "\\'") : StringPool.BLANK %>';
 
 			var textarea = new A.Textarea(
 				{

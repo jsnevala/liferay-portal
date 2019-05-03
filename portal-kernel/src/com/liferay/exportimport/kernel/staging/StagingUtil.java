@@ -66,8 +66,8 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getRemoteSiteURL(Group,
-	 *             boolean)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getRemoteSiteURL(Group, boolean)}
 	 */
 	@Deprecated
 	public static String buildRemoteURL(
@@ -86,7 +86,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.StagingLocalServiceUtil#
 	 *             checkDefaultLayoutSetBranches(long, Group, boolean, boolean,
 	 *             boolean, ServiceContext)}
@@ -117,8 +117,8 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #publishPortlet(long, long,
-	 *             long, long, long, String, Map)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #publishPortlet(long, long, long, long, long, String, Map)}
 	 */
 	@Deprecated
 	public static long copyPortlet(
@@ -160,9 +160,9 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #copyRemoteLayouts(long,
-	 *             boolean, Map, Map, String, int, String, boolean, long,
-	 *             boolean)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #copyRemoteLayouts(long, boolean, Map, Map, String, int,
+	 *             String, boolean, long, boolean)}
 	 */
 	@Deprecated
 	public static long copyRemoteLayouts(
@@ -213,7 +213,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #deleteRecentLayoutRevisionId(long, long, long)}
 	 */
 	@Deprecated
@@ -230,7 +230,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getErrorMessagesJSONArray(Locale, Map<String,
 	 *             MissingReference>)}
 	 */
@@ -252,7 +252,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getExceptionMessagesJSONObject(Locale, Exception,
 	 *             ExportImportConfiguration)}
 	 */
@@ -276,7 +276,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, moved to {@link
+	 * @deprecated As of Wilberforce (7.0.x), moved to {@link
 	 *             com.liferay.exportimport.kernel.lar.ExportImportHelperUtil#getMissingParentLayouts(
 	 *             Layout, long)}
 	 */
@@ -346,7 +346,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.configuration.ExportImportConfigurationParameterMapFactory#buildParameterMap(
 	 *             )}
 	 */
@@ -356,7 +356,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.configuration.ExportImportConfigurationParameterMapFactory#buildParameterMap(
 	 *             PortletRequest)}
 	 */
@@ -374,7 +374,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getWarningMessagesJSONArray(Locale, Map<String,
 	 *             MissingReference>)}
 	 */
@@ -416,7 +416,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, see {@link
+	 * @deprecated As of Wilberforce (7.0.x), see {@link
 	 *             com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor#getIsolationLevel(
 	 *             )}
 	 */
@@ -461,8 +461,8 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #publishLayouts(long, long,
-	 *             long, boolean, long[], Map)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #publishLayouts(long, long, long, boolean, long[], Map)}
 	 */
 	@Deprecated
 	public static long publishLayouts(
@@ -488,8 +488,8 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #publishLayouts(long, long,
-	 *             long, boolean, long[], Map)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #publishLayouts(long, long, long, boolean, long[], Map)}
 	 */
 	@Deprecated
 	public static long publishLayouts(
@@ -513,8 +513,8 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #publishLayouts(long, long,
-	 *             long, boolean, Map)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #publishLayouts(long, long, long, boolean, Map)}
 	 */
 	@Deprecated
 	public static long publishLayouts(
@@ -646,7 +646,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, see {@link
+	 * @deprecated As of Wilberforce (7.0.x), see {@link
 	 *             com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor#getIsolationLevel(
 	 *             )}
 	 */
@@ -683,7 +683,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.lar.ExportImportDateUtil#updateLastPublishDate(
 	 *             long, boolean, com.liferay.portal.kernel.util.DateRange,
 	 *             Date)}
@@ -698,7 +698,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.lar.ExportImportDateUtil#updateLastPublishDate(
 	 *             String, PortletPreferences,
 	 *             com.liferay.portal.kernel.util.DateRange, Date)}
@@ -714,7 +714,7 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 4.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             com.liferay.staging.configuration.web.internal.portlet.StagingConfigurationPortlet#editStagingConfiguration(
 	 *             javax.portlet.ActionRequest, javax.portlet.ActionResponse)}
 	 */
@@ -738,8 +738,8 @@ public class StagingUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #validateRemote(long, String,
-	 *             int, String, boolean, long)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #validateRemote(long, String, int, String, boolean, long)}
 	 */
 	@Deprecated
 	public static void validateRemote(

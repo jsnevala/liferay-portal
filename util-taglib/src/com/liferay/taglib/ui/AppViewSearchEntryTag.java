@@ -126,6 +126,7 @@ public class AppViewSearchEntryTag extends IncludeTag {
 		super.cleanUp();
 
 		_actionJsp = null;
+		_actionJspServletContext = null;
 		_commentRelatedSearchResults = null;
 		_containerName = null;
 		_containerType = null;

@@ -169,8 +169,10 @@ public class DLDirectoryNameAndFileNameTest {
 
 			sb.append(".txt");
 
+			name = sb.toString();
+
 			Assert.assertEquals(
-				sb.toString().replace(blacklistChar, StringPool.UNDERLINE),
+				name.replace(blacklistChar, StringPool.UNDERLINE),
 				DLValidatorUtil.fixName(sb.toString()));
 		}
 	}
@@ -306,8 +308,9 @@ public class DLDirectoryNameAndFileNameTest {
 			serviceContext);
 	}
 
-	private static final String[] _DL_CHAR_LAST_BLACKLIST =
-		{StringPool.SPACE, StringPool.PERIOD};
+	private static final String[] _DL_CHAR_LAST_BLACKLIST = {
+		StringPool.SPACE, StringPool.PERIOD
+	};
 
 	@DeleteAfterTestRun
 	private Group _group;

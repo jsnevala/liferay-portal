@@ -440,8 +440,13 @@ public class PortletPermissionImpl implements PortletPermission {
 
 	@Override
 	public String getPrimaryKey(long plid, String portletId) {
-		return String.valueOf(plid).concat(
-			PortletConstants.LAYOUT_SEPARATOR).concat(portletId);
+		return String.valueOf(
+			plid
+		).concat(
+			PortletConstants.LAYOUT_SEPARATOR
+		).concat(
+			portletId
+		);
 	}
 
 	@Override
@@ -523,6 +528,10 @@ public class PortletPermissionImpl implements PortletPermission {
 			Portlet portlet)
 		throws PortalException {
 
+		if (portlet == null) {
+			return false;
+		}
+
 		Group group = GroupLocalServiceUtil.getGroup(scopeGroupId);
 
 		ControlPanelEntry controlPanelEntry =
@@ -600,7 +609,10 @@ public class PortletPermissionImpl implements PortletPermission {
 			return false;
 		}
 
-		if (portlet.isPreferencesUniquePerLayout()) {
+		if (portlet.isPreferencesUniquePerLayout() &&
+			(layout.isTypeEmbedded() || layout.isTypePanel() ||
+			 layout.isTypePortlet())) {
+
 			return LayoutPermissionUtil.contains(
 				permissionChecker, layout, ActionKeys.CONFIGURE_PORTLETS);
 		}
@@ -611,7 +623,7 @@ public class PortletPermissionImpl implements PortletPermission {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #hasConfigurePermission(PermissionChecker, Layout, Portlet,
 	 *             String)}
 	 */
@@ -657,7 +669,7 @@ public class PortletPermissionImpl implements PortletPermission {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #hasCustomizePermission(PermissionChecker, Layout, Portlet,
 	 *             String)}
 	 */

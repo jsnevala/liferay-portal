@@ -49,7 +49,7 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
 /**
- * @author Istvan Andras Dezsi
+ * @author István András Dézsi
  */
 @OSGiBeanProperties
 public class AssetCategoryIndexer extends BaseIndexer<AssetCategory> {
@@ -179,6 +179,7 @@ public class AssetCategoryIndexer extends BaseIndexer<AssetCategory> {
 			assetCategory.getDescriptionMap());
 
 		document.addText(Field.NAME, assetCategory.getName());
+
 		addLocalizedField(
 			document, Field.TITLE, siteDefaultLocale,
 			assetCategory.getTitleMap());

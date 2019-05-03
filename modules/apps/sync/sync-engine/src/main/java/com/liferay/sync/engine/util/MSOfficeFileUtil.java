@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.hpsf.HPSFPropertiesOnlyDocument;
 import org.apache.poi.hpsf.SummaryInformation;
-import org.apache.poi.poifs.filesystem.NPOIFSFileSystem;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 
 /**
  * @author Shinn Lok
@@ -35,10 +35,10 @@ import org.apache.poi.poifs.filesystem.NPOIFSFileSystem;
 public class MSOfficeFileUtil {
 
 	public static Date getLastSavedDate(Path filePath) {
-		NPOIFSFileSystem npoifsFileSystem = null;
+		POIFSFileSystem npoifsFileSystem = null;
 
 		try {
-			npoifsFileSystem = new NPOIFSFileSystem(filePath.toFile());
+			npoifsFileSystem = new POIFSFileSystem(filePath.toFile());
 
 			HPSFPropertiesOnlyDocument hpsfPropertiesOnlyDocument =
 				new HPSFPropertiesOnlyDocument(npoifsFileSystem);

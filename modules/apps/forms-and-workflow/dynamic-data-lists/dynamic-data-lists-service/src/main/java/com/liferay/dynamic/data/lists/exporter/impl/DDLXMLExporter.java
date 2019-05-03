@@ -37,6 +37,8 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 
 import java.io.Serializable;
 
+import java.time.format.DateTimeFormatter;
+
 import java.util.List;
 import java.util.Locale;
 
@@ -120,6 +122,12 @@ public class DDLXMLExporter extends BaseDDLExporter {
 			addFieldElement(
 				fieldsElement, LanguageUtil.get(locale, "status"),
 				getStatusMessage(recordVersion.getStatus()));
+
+			DateTimeFormatter dateTimeFormatter = getDateTimeFormatter();
+
+			addFieldElement(
+				fieldsElement, LanguageUtil.get(locale, "modified-date"),
+				formatDate(recordVersion.getStatusDate(), dateTimeFormatter));
 
 			addFieldElement(
 				fieldsElement, LanguageUtil.get(locale, "author"),

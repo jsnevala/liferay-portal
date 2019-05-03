@@ -1,1257 +1,1172 @@
-<definition>
-	<command name="_addPageTypeEmbedded">
-		<execute function="Type" locator1="SitePagesEditPage#PAGE_TYPE_EMBEDDED_URL_FIELD" value1="${pageTypeURL}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SitePagesEditPage#PAGE_TYPE_EMBEDDED_DESCRIPTION_FIELD" value1="Show content from another website." />
-	</command>
-
-	<command name="_addPageTypeFullPageApplication">
-		<execute function="Select" locator1="SitePagesEditPage#PAGE_TYPE_FULL_PAGE_APPLICATION_SELECT" value1="${portlet}" />
-	</command>
-
-	<command name="_addPageTypeLinkToURL">
-		<execute function="Type" locator1="SitePagesEditPage#PAGE_TYPE_LINK_TO_URL_URL_FIELD" value1="${pageTypeURL}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SitePagesEditPage#PAGE_TYPE_LINK_TO_URL_DESCRIPTION_FIELD" value1="Link to another website." />
-	</command>
-
-	<command name="_addPageTypePanel">
-		<var name="key_componentOrPortletName" value="${componentName}" />
-
-		<execute function="Click" locator1="SitePagesEditPage#PAGE_TYPE_PANEL_CHECKBOX" />
-
-		<execute function="AssertChecked#assertCheckedNotVisible" locator1="SitePagesEditPage#PAGE_TYPE_PANEL_CHECKBOX_INPUT" />
-	</command>
-
-	<command name="_selectPageTypeRadio">
-		<if>
-			<equals arg1="${sitePageType}" arg2="Embedded" />
-			<then>
-				<execute function="Select" locator1="SitePagesEditPage#PAGE_TYPE_SELECT" value1="Embedded" />
-
-				<execute macro="Page#_addPageTypeEmbedded">
-					<var name="pageTypeDescription" value="${pageTypeDescription}" />
-					<var name="pageTypeURL" value="${pageTypeURL}" />
-				</execute>
-			</then>
-			<elseif>
-				<equals arg1="${sitePageType}" arg2="Link to URL" />
-				<then>
-					<execute function="Select" locator1="SitePagesEditPage#PAGE_TYPE_SELECT" value1="Link to URL" />
-
-					<execute macro="Page#_addPageTypeLinkToURL">
-						<var name="pageTypeDescription" value="${pageTypeDescription}" />
-						<var name="pageTypeURL" value="${pageTypeURL}" />
-					</execute>
-				</then>
-			</elseif>
-			<elseif>
-				<equals arg1="${sitePageType}" arg2="Panel" />
-				<then>
-					<execute function="Select" locator1="SitePagesEditPage#PAGE_TYPE_SELECT" value1="Panel" />
-
-					<execute macro="Page#_addPageTypePanel">
-						<var name="componentName" value="${componentName}" />
-					</execute>
-				</then>
-			</elseif>
-			<elseif>
-				<equals arg1="${sitePageType}" arg2="Full Page Application" />
-				<then>
-					<execute function="Select" locator1="SitePagesEditPage#PAGE_TYPE_SELECT" value1="Full Page Application" />
-
-					<execute macro="Page#_addPageTypeFullPageApplication">
-						<var name="portlet" value="${portlet}" />
-					</execute>
-				</then>
-			</elseif>
-			<elseif>
-				<equals arg1="${sitePageType}" arg2="Empty Page" />
-				<then>
-					<var name="key_columnName" value="${columnName}" />
-
-					<execute function="Click" locator1="SitePagesEditPage#LAYOUT_CARD" />
-				</then>
-			</elseif>
-			<elseif>
-				<equals arg1="${sitePageType}" arg2="Page Set" />
-				<then>
-					<execute function="Select" locator1="SitePagesEditPage#PAGE_TYPE_SELECT" value1="Page Set" />
-				</then>
-			</elseif>
-		</if>
-	</command>
-
-	<command name="add" summary="Add a page named '${pageName}'">
-		<var name="key_siteName" value="${siteName}" />
-
-		<if>
-			<isset var="siteName" />
-			<then>
-				<execute macro="ProductMenu#gotoSite">
-					<var name="site" value="${siteName}" />
-				</execute>
-			</then>
-		</if>
-
-		<if>
-			<isset var="pageStaging" />
-			<then>
-				<execute macro="Navigator#gotoStagedView" />
-			</then>
-		</if>
-
-		<execute macro="SitePageNavigator#gotoAddPage">
-			<var name="sitePagePrivacy" value="${sitePagePrivacy}" />
-		</execute>
-
-		<execute macro-mobile="MobileNavigator#clickRemoveIcon" />
-
-		<execute function="Type#typeClickAt" locator1="TextInput#NAME" value1="${pageName}" />
-
-		<if>
-			<isset var="pageTemplateName" />
-			<then>
-				<execute function="Select" locator1="SitePagesEditPage#PAGE_TYPE_SELECT" value1="${pageTemplateName}" />
-
-				<execute macro="Page#togglePageTemplateInheritChanges">
-					<var name="toggleValue" value="enable" />
-				</execute>
-			</then>
-		</if>
-
-		<if>
-			<isset var="sitePageType" />
-			<then>
-				<execute macro="Page#_selectPageTypeRadio">
-					<var name="columnName" value="${columnName}" />
-					<var name="componentName" value="${componentName}" />
-					<var name="pageTypeDescription" value="${pageTypeDescription}" />
-					<var name="pageTypeURL" value="${pageTypeURL}" />
-					<var name="portlet" value="${portlet}" />
-					<var name="sitePageType" value="${sitePageType}" />
-				</execute>
-			</then>
-		</if>
-
-		<execute function="AssertClick" locator1="Button#ADD_PAGE_BTN" value1="Add Page" />
-
-		<if>
-			<not>
-				<equals arg1="${sitePageType}" arg2="Page Set" />
-			</not>
-			<then>
-				<if>
-					<contains string="${pageName}" substring="&apos;" />
-					<then>
-						<execute function="AssertVisible" locator1="Home#PAGE_WITH_QUOTES">
-							<var name="key_pageName" value="${pageName}" />
-						</execute>
-					</then>
-					<else>
-						<execute function="AssertVisible" locator1="Home#PAGE">
-							<var name="key_pageName" value="${pageName}" />
-						</execute>
-					</else>
-				</if>
-			</then>
-		</if>
-
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
-
-	<command name="addChild">
-		<execute macro="TestCase#getSiteName">
-			<return from="siteName" name="siteName" />
-			<var name="siteName" value="${siteName}" />
-		</execute>
-
-		<var name="key_siteName" value="${siteName}" />
-
-		<if>
-			<not>
-				<isset var="siteScopeSelected" />
-			</not>
-			<then>
-				<execute function="Type" locator1="NavBar#BASIC_SEARCH_FIELD" value1="${siteName}" />
-
-				<execute function="Click" locator1="Icon#BASIC_SEARCH" />
-
-				<execute function="AssertClick" locator1="ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK" value1="${siteName}">
-					<var name="key_rowEntry" value="${siteName}" />
-				</execute>
-			</then>
-		</if>
-
-		<execute macro="SitePageNavigator#gotoPages">
-			<var name="page" value="${page}" />
-		</execute>
-
-		<var name="key_page" value="${pageName}" />
-
-		<execute function="Click#mouseOverClick" locator1="SitePages#SPECIFIC_PAGE_ELLIPSIS" />
-
-		<execute function="Click" locator1="SitePages#ADD_CHILD_PAGE" />
-
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${siteChildPageName}" />
-		</execute>
-
-		<if>
-			<isset var="sitePageType" />
-			<then>
-				<execute macro="Page#_selectPageTypeRadio">
-					<var name="columnName" value="${columnName}" />
-					<var name="componentName" value="${componentName}" />
-					<var name="pageTypeDescription" value="${pageTypeDescription}" />
-					<var name="pageTypeURL" value="${pageTypeURL}" />
-					<var name="portlet" value="${portlet}" />
-					<var name="sitePageType" value="${sitePageType}" />
-				</execute>
-			</then>
-		</if>
-
-		<execute function="AssertClick" locator1="Button#ADD_PAGE_BTN" value1="Add Page" />
-
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
-
-	<command name="addFriendlyURLLocalizedPG">
-		<var name="key_friendlyUrlLocalized" value="${friendlyUrlLocalized}" />
-
-		<execute function="Click" locator1="SitePagesEditPage#FRIENDLY_URL_LOCALIZED" />
+definition {
+	macro _addPageTypeEmbedded {
+		Type(
+			locator1 = "SitePagesEditPage#PAGE_TYPE_EMBEDDED_URL_FIELD",
+			value1 = "${pageTypeURL}"
+		);
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "SitePagesEditPage#PAGE_TYPE_DESCRIPTION_FIELD",
+			value1 = "Show content from another website."
+		);
+	}
+
+	macro _addPageTypeFullPageApplication {
+		Select(
+			locator1 = "SitePagesEditPage#PAGE_TYPE_FULL_PAGE_APPLICATION_SELECT",
+			value1 = "${portlet}"
+		);
+	}
+
+	macro _addPageTypeLinkToURL {
+		Type(
+			locator1 = "SitePagesEditPage#PAGE_TYPE_LINK_TO_URL_URL_FIELD",
+			value1 = "${pageTypeURL}"
+		);
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "SitePagesEditPage#PAGE_TYPE_DESCRIPTION_FIELD",
+			value1 = "Link to another website."
+		);
+	}
+
+	macro _addPageTypePanel {
+		var key_componentOrPortletName = "${componentName}";
+
+		Click(locator1 = "SitePagesEditPage#PAGE_TYPE_PANEL_CHECKBOX");
+
+		AssertChecked.assertCheckedNotVisible(
+			locator1 = "SitePagesEditPage#PAGE_TYPE_PANEL_CHECKBOX_INPUT"
+		);
+	}
+
+	macro _selectPageTypeRadio {
+		if ("${sitePageType}" == "Embedded") {
+			Select(locator1 = "SitePagesEditPage#PAGE_TYPE_SELECT", value1 = "Embedded");
+
+			Page._addPageTypeEmbedded(
+				pageTypeDescription = "${pageTypeDescription}",
+				pageTypeURL = "${pageTypeURL}"
+			);
+		}
+		else if ("${sitePageType}" == "Link to URL") {
+			Select(locator1 = "SitePagesEditPage#PAGE_TYPE_SELECT", value1 = "Link to URL");
+
+			Page._addPageTypeLinkToURL(
+				pageTypeDescription = "${pageTypeDescription}",
+				pageTypeURL = "${pageTypeURL}"
+			);
+		}
+		else if ("${sitePageType}" == "Panel") {
+			Select(locator1 = "SitePagesEditPage#PAGE_TYPE_SELECT", value1 = "Panel");
+
+			Page._addPageTypePanel(componentName = "${componentName}");
+		}
+		else if ("${sitePageType}" == "Full Page Application") {
+			Select(
+				locator1 = "SitePagesEditPage#PAGE_TYPE_SELECT",
+				value1 = "Full Page Application"
+			);
+
+			Page._addPageTypeFullPageApplication(portlet = "${portlet}");
+		}
+		else if ("${sitePageType}" == "Empty Page") {
+			var key_columnName = "${columnName}";
+
+			Click(locator1 = "SitePagesEditPage#LAYOUT_CARD");
+		}
+		else if ("${sitePageType}" == "Page Set") {
+			Select(locator1 = "SitePagesEditPage#PAGE_TYPE_SELECT", value1 = "Page Set");
+		}
+		else if ("${sitePageType}" == "Link to a Page of This Site") {
+			Select(
+				locator1 = "SitePagesEditPage#PAGE_TYPE_SELECT",
+				value1 = "Link to a Page of This Site"
+			);
+
+			Select(
+				locator1 = "SitePagesEditPage#PAGE_TYPE_LINK_TO_PAGE_PAGE_SELECT",
+				value1 = "regexp:.*${linkToPage}.*"
+			);
+		}
+	}
+
+	@summary = "Add a page named '${pageName}'"
+	macro add {
+		if (isSet(siteName)) {
+			ProductMenu.gotoSite(site = "${siteName}");
+		}
+
+		if (isSet(pageStaging)) {
+			Navigator.gotoStagedView();
+		}
 
-		<execute function="Type" locator1="SitePagesEditPage#FRIENDLY_URL_FIELD" value1="${localizedFriendlyURL}" />
-	</command>
+		SitePageNavigator.gotoAddPage(sitePagePrivacy = "${sitePagePrivacy}");
 
-	<command name="addJavaScript">
-		<execute macro="SitePageNavigator#gotoEditPage">
-			<var name="page" value="${pageName}" />
-		</execute>
+		Type.typeClickAt(locator1 = "TextInput#NAME", value1 = "${pageName}");
 
-		<execute macro="Navigator#gotoNavTab">
-			<var name="navTab" value="Advanced" />
-		</execute>
-
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="JavaScript" />
-		</execute>
-
-		<execute function="AssertTextEquals" locator1="SitePages#JAVASCRIPT_LABEL" value1="Paste JavaScript code that is executed at the bottom of the page." />
-
-		<execute function="Type" locator1="SitePages#JAVASCRIPT_TEXTAREA" value1="${javaScript}" />
-
-		<execute function="AssertClickNoError" locator1="Button#SAVE" value1="Save" />
-	</command>
-
-	<command name="addPageTitle">
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${pageName}" />
-		</execute>
-	</command>
-
-	<command name="addPageToSiteTemplates">
-		<execute macro="SiteTemplatesNavigator#gotoManageSiteTemplates">
-			<var name="siteTemplateName" value="${siteTemplateName}" />
-		</execute>
-
-		<execute macro="SitePageNavigator#gotoAddPage">
-			<var name="sitePagePrivacy" value="Private" />
-		</execute>
-
-		<execute macro="Page#addPageTitle">
-			<var name="pageName" value="${pageName}" />
-		</execute>
-
-		<execute macro="Page#saveAddPage" />
-	</command>
-
-	<command name="addPageTranslations">
-		<execute macro="SitePageNavigator#gotoEditPage">
-			<var name="page" value="${page}" />
-		</execute>
+		if (isSet(pageTemplateName)) {
+			Select(
+				locator1 = "SitePagesEditPage#PAGE_TYPE_SELECT",
+				value1 = "${pageTemplateName}"
+			);
 
-		<var name="key_pageTranslation" value="${pageTranslation}" />
+			if (isSet(inheritChanges)) {
+				Page.togglePageTemplateInheritChanges(toggleValue = "${inheritChanges}");
+			}
+			else {
+				Page.togglePageTemplateInheritChanges(toggleValue = "enable");
+			}
+		}
 
-		<execute function="Click" locator1="SitePages#DETAILS_LANGUAGE_TRANSLATIONS" />
+		if (isSet(sitePageType)) {
+			Page._selectPageTypeRadio(
+				columnName = "${columnName}",
+				componentName = "${componentName}",
+				linkToPage = "${linkToPage}",
+				pageTypeDescription = "${pageTypeDescription}",
+				pageTypeURL = "${pageTypeURL}",
+				portlet = "${portlet}",
+				sitePageType = "${sitePageType}"
+			);
+		}
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${pageTranslationName}" />
-		</execute>
+		AssertClick(locator1 = "Button#ADD_PAGE_BTN", value1 = "Add Page");
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		if (!("${sitePageType}" == "Page Set")) {
+			if (contains("${pageName}", "'")) {
+				AssertVisible(locator1 = "Home#PAGE_WITH_QUOTES", key_pageName = "${pageName}");
+			}
+			else {
+				AssertVisible(locator1 = "Home#PAGE", key_pageName = "${pageName}");
+			}
+		}
 
-	<command name="addPageTypePanelPG">
-		<var name="key_componentName" value="${componentName}" />
+		Alert.viewSuccessMessage();
+	}
 
-		<execute function="Click" locator1="SitePagesEditPage#PAGE_TYPE_PANEL_COMPONENT_TREE_ARROW" />
+	macro addChild {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		<for list="${portletNameList}" param="portletName">
-			<var name="key_componentOrPortletName" value="${portletName}" />
+		var key_siteName = "${siteName}";
 
-			<execute function="Click" locator1="SitePagesEditPage#PAGE_TYPE_PANEL_CHECKBOX" />
+		if (!(isSet(siteScopeSelected))) {
+			Type(locator1 = "NavBar#BASIC_SEARCH_FIELD", value1 = "${siteName}");
 
-			<execute function="AssertChecked#assertCheckedNotVisible" locator1="SitePagesEditPage#PAGE_TYPE_PANEL_CHECKBOX_INPUT" />
-		</for>
-	</command>
+			Click(locator1 = "Icon#BASIC_SEARCH");
 
-	<command name="assertCannotDeleteOnlyPage">
-		<var name="key_page" value="${pageName}" />
-
-		<execute macro="SitePageNavigator#gotoEditPage">
-			<var name="page" value="${pageName}" />
-			<var name="sitePagePrivacy" value="${sitePagePrivacy}" />
-		</execute>
+			LexiconEntry.gotoEntry(rowEntry = "${siteName}");
+		}
 
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+		SitePageNavigator.gotoPages(page = "${page}");
 
-		<execute function="ClickNoError" locator1="MenuItem#ANY_MENU_ITEM">
-			<var name="key_menuItem" value="Delete" />
-		</execute>
+		var key_page = "${pageName}";
 
-		<execute function="Confirm" value1="Are you sure you want to delete the selected page?" />
+		Click.mouseOverClick(locator1 = "SitePages#SPECIFIC_PAGE_ELLIPSIS");
 
-		<execute macro="Alert#viewRequestFailedToComplete" />
+		Click(locator1 = "SitePages#ADD_CHILD_PAGE");
 
-		<execute function="AssertTextPresent" locator1="Message#ERROR_2" value1="You must have at least one page." />
-	</command>
+		PortletEntry.inputName(name = "${siteChildPageName}");
 
-	<command name="assertNodePortPG">
-		<var name="key_nodePort" value="${nodePort}" />
+		if (isSet(sitePageType)) {
+			Page._selectPageTypeRadio(
+				columnName = "${columnName}",
+				componentName = "${componentName}",
+				pageTypeDescription = "${pageTypeDescription}",
+				pageTypeURL = "${pageTypeURL}",
+				portlet = "${portlet}",
+				sitePageType = "${sitePageType}"
+			);
+		}
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="Home#NODE_NAME" value1="${nodePort}" />
-	</command>
+		AssertClick(locator1 = "Button#ADD_PAGE_BTN", value1 = "Add Page");
 
-	<command name="changeLogoViaPageCP">
-		<execute macro="SitePageNavigator#gotoEditPage">
-			<var name="page" value="${page}" />
-		</execute>
+		Alert.viewSuccessMessage();
+	}
 
-		<if>
-			<condition function="IsElementPresent" locator1="SitePagesEditPage#PAGE_TYPE_LAYOUT" />
-			<then>
-				<execute function="AssertClick" locator1="SitePages#DETAILS_NAVIGATION_ADVANCED" value1="Advanced" />
-			</then>
-			<else>
-				<execute macro="Panel#expandPanel">
-					<var name="panelHeading" value="Logo" />
-				</execute>
-			</else>
-		</if>
+	macro addFriendlyURLLocalizedPG {
+		var key_friendlyUrlLocalized = "${friendlyUrlLocalized}";
 
-		<execute macro="Page#uploadFileForLogo">
-			<var name="logoFile" value="${logoFile}" />
-		</execute>
-	</command>
+		Click(locator1 = "SitePagesEditPage#FRIENDLY_URL_LOCALIZED");
 
-	<command name="copyApplicationsFromPageToPage">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+		Type(locator1 = "TextInput#FRIENDLY_URL", value1 = "${localizedFriendlyURL}");
+	}
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Copy Applications">
-			<var name="key_menuItem" value="Copy Applications" />
-		</execute>
+	macro addJavaScript {
+		SitePageNavigator.gotoEditPage(page = "${pageName}");
 
-		<execute function="AssertTextEquals" locator1="SitePagesEditPage#COPY_APPLICATIONS_MESSAGE_INFO" value1="The applications in page ${pageName} will be replaced with the ones in the page you select below." />
-		<execute function="AssertTextEquals" locator1="SitePagesEditPage#COPY_APPLICATIONS_COPY_FROM_PAGE_LABEL" value1="Copy from Page" />
+		Navigator.gotoNavTab(navTab = "Advanced");
 
-		<execute function="Click" locator1="SitePagesEditPage#COPY_APPLICATIONS_COPY_FROM_PAGE_SELECT" />
+		Panel.expandPanel(panelHeading = "JavaScript");
 
-		<execute function="AssertClick" locator1="SitePagesEditPage#COPY_APPLICATIONS_COPY_BUTTON" value1="Copy" />
+		AssertTextEquals(
+			locator1 = "SitePages#JAVASCRIPT_LABEL",
+			value1 = "Paste JavaScript code that is executed at the bottom of the page."
+		);
 
-		<var name="key_portletName" value="Blogs" />
+		Type(locator1 = "SitePages#JAVASCRIPT_TEXTAREA", value1 = "${javaScript}");
 
-		<execute function="AssertTextNotPresent" locator1="Portlet#TITLE" value1="Blogs" />
-	</command>
+		AssertClickNoError(locator1 = "Button#SAVE", value1 = "Save");
+	}
 
-	<command name="deleteFriendlyURLPG">
-		<var name="key_friendlyUrlLocalized" value="${friendlyUrlLocalized}" />
+	macro addPageTranslations {
+		SitePageNavigator.gotoEditPage(page = "${page}");
 
-		<execute function="Click#pauseClickAt" locator1="SitePagesEditPage#FRIENDLY_URL_LOCALIZED" />
+		var key_pageTranslation = "${pageTranslation}";
 
-		<execute function="Type" locator1="SitePagesEditPage#FRIENDLY_URL_FIELD" value1=" " />
+		Click(locator1 = "SitePages#DETAILS_LANGUAGE_TRANSLATIONS");
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="Button#SAVE" value1="Save" />
+		PortletEntry.inputName(name = "${pageTranslationName}");
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		PortletEntry.save();
+	}
 
-	<command name="deleteLivePG">
-		<execute function="ClickNoError" locator1="ControlMenu#EDIT_LIVE_DELETE" />
+	macro assertCannotDeleteOnlyPage {
+		var key_page = "${pageName}";
 
-		<execute function="Confirm#waitForConfirmation" value1="Are you sure you want to delete the selected page?" />
-	</command>
+		SitePageNavigator.gotoEditPage(
+			page = "${pageName}",
+			sitePagePrivacy = "${sitePagePrivacy}"
+		);
 
-	<command name="deleteLogoPG">
-		<execute macro="SitePageNavigator#gotoEditPage">
-			<var name="page" value="${page}" />
-		</execute>
+		LexiconEntry.gotoHeaderMenuItemNoError(menuItem = "Delete");
 
-		<if>
-			<condition function="IsElementPresent" locator1="SitePagesEditPage#PAGE_TYPE_LAYOUT" />
-			<then>
-				<execute function="AssertClick" locator1="SitePages#DETAILS_NAVIGATION_ADVANCED" value1="Advanced" />
-			</then>
-			<else>
-				<execute macro="Panel#expandPanel">
-					<var name="panelHeading" value="Logo" />
-				</execute>
-			</else>
-		</if>
+		Confirm(value1 = "Are you sure you want to delete the selected page?");
 
-		<execute function="AssertClick" locator1="Button#DELETE" value1="Delete" />
+		Alert.viewRequestFailedToComplete();
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		AssertTextPresent(
+			locator1 = "Message#ERROR_2",
+			value1 = "You must have at least one page."
+		);
+	}
 
-	<command name="deletePG">
-		<execute macro="SitePageNavigator#gotoPages">
-			<var name="page" value="${pageName}" />
-		</execute>
+	macro assertNodePortPG {
+		var key_nodePort = "${nodePort}";
 
-		<var name="key_page" value="${pageName}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "Home#NODE_NAME",
+			value1 = "${nodePort}"
+		);
+	}
 
-		<execute function="Click#mouseOverClick" locator1="SitePages#SPECIFIC_PAGE_ELLIPSIS" />
+	macro changeCurrentTheme {
+		Click(locator1 = "SitePagesEditPage#CHANGE_CURRENT_THEME_BUTTON");
 
-		<execute function="ClickNoError" locator1="SitePages#DELETE_SPECIFIC_PAGE" />
+		SelectFrame(locator1 = "IFrame#DIALOG");
 
-		<execute function="Confirm#waitForConfirmation" value1="Are you sure you want to delete the selected page?" />
+		var key_cardText = "${themeName}";
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		AssertTextPresent(
+			locator1 = "Card#SPECIFIC_LARGE_TEXT",
+			value1 = "${key_cardText}"
+		);
 
-	<command name="deleteViaX">
-		<var name="key_page" value="${pageName}" />
+		Click(locator1 = "Card#SPECIFIC_LARGE_TEXT");
 
-		<execute function="MouseOver" locator1="SitePages#NAVIGATION_SPECIFIC_PAGE" />
+		SelectFrameTop(value1 = "relative=top");
 
-		<execute function="ClickNoError" locator1="SitePages#NAVIGATION_SPECIFIC_PAGE_X_DELETE" />
+		PortletEntry.save();
+	}
 
-		<execute function="Confirm#waitForConfirmation" value1="Are you sure you want to delete this page?" />
-	</command>
+	macro changeLogoViaPageCP {
+		SitePageNavigator.gotoEditPage(page = "${page}");
 
-	<command name="disableMobileDeviceRulesAreInheritedFromPublicPages">
-		<execute function="Uncheck#uncheckHiddenToggleSwitch" locator1="ToggleSwitch#INHERIT_MOBILE_DEVICE_RULES_FROM_PAGE" />
-	</command>
+		if (IsElementPresent(locator1 = "SitePagesEditPage#PAGE_TYPE_LAYOUT")) {
+			AssertClick(
+				locator1 = "SitePages#DETAILS_NAVIGATION_ADVANCED",
+				value1 = "Advanced"
+			);
+		}
+		else {
+			Panel.expandPanel(panelHeading = "Logo");
+		}
 
-	<command name="disallowEditViaSiteAdminEditCP">
-		<var name="key_page" value="${pageName}" />
+		Page.uploadFileForLogo(logoFile = "${logoFile}");
+	}
 
-		<execute function="AssertClick" locator1="SitePages#PAGE_TREE_PAGE_SPECIFIC_PAGE" value1="${pageName}" />
+	macro copyApplicationsFromPageToPage {
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Copy Applications");
 
-		<execute function="Uncheck" locator1="Checkbox#ALLOW_SITE_ADMIN_MODIFY_PAGES" />
+		AssertTextEquals(
+			locator1 = "SitePagesEditPage#COPY_APPLICATIONS_MESSAGE_INFO",
+			value1 = "The applications in page ${pageName} will be replaced with the ones in the page you select below."
+		);
 
-		<execute macro="Button#clickSave" />
-	</command>
+		AssertTextEquals(
+			locator1 = "SitePagesEditPage#COPY_APPLICATIONS_COPY_FROM_PAGE_LABEL",
+			value1 = "Copy from Page"
+		);
 
-	<command name="editName">
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${pageNameEdit}" />
-		</execute>
+		Click(locator1 = "SitePagesEditPage#COPY_APPLICATIONS_COPY_FROM_PAGE_SELECT");
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="Button#SAVE" value1="Save" />
+		AssertClick(
+			locator1 = "SitePagesEditPage#COPY_APPLICATIONS_COPY_BUTTON",
+			value1 = "Copy"
+		);
+	}
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+	macro deleteFriendlyURLPG {
+		var key_friendlyUrlLocalized = "${friendlyUrlLocalized}";
 
-	<command name="editPageLayoutColumn">
-		<var name="key_columnName" value="${columnName}" />
+		Click.pauseClickAt(locator1 = "SitePagesEditPage#FRIENDLY_URL_LOCALIZED");
 
-		<execute function="Click" locator1="SitePagesEditPage#LAYOUT_CARD" />
+		Type(locator1 = "TextInput#FRIENDLY_URL", value1 = " ");
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="Button#SAVE" value1="Save" />
+		AssertClick.pauseAssertTextClickAt(locator1 = "Button#SAVE", value1 = "Save");
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		Alert.viewSuccessMessage();
+	}
 
-	<command name="editPageMetadata">
-		<execute function="Type#typeClickAt" locator1="TextInput#SEO_HTML_TITLE" value1="${HTMLTitle}" />
+	macro deleteLogoPG {
+		SitePageNavigator.gotoEditPage(page = "${page}");
 
-		<execute function="Type#typeClickAt" locator1="TextArea#SEO_META_TAGS_DESCRIPTION" value1="${metaTagsDescription}" />
+		if (IsElementPresent(locator1 = "SitePagesEditPage#PAGE_TYPE_LAYOUT")) {
+			AssertClick(
+				locator1 = "SitePages#DETAILS_NAVIGATION_ADVANCED",
+				value1 = "Advanced"
+			);
+		}
+		else {
+			Panel.expandPanel(panelHeading = "Logo");
+		}
 
-		<execute function="Type#typeClickAt" locator1="TextArea#SEO_META_TAGS_KEYWORDS" value1="${metaTagsKeywords}" />
+		AssertClick(locator1 = "Button#DELETE", value1 = "Delete");
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="Button#SAVE" value1="Save" />
+		PortletEntry.save();
+	}
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+	macro deletePG {
+		SitePageNavigator.gotoPages(page = "${pageName}");
 
-	<command name="editPageTypeLayout">
-		<var name="key_columnName" value="${columnName}" />
+		var key_page = "${pageName}";
 
-		<execute function="Click" locator1="SitePagesEditPage#LAYOUT_CARD" />
+		Click.mouseOverClick(locator1 = "SitePages#SPECIFIC_PAGE_ELLIPSIS");
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		ClickNoError(locator1 = "SitePages#DELETE_SPECIFIC_PAGE");
 
-	<command name="editSelectPageType">
-		<execute macro="SitePageNavigator#gotoEditPage">
-			<var name="page" value="${page}" />
-		</execute>
+		Confirm.waitForConfirmation(
+			value1 = "Are you sure you want to delete the selected page?"
+		);
 
-		<var name="key_pageType" value="${pageType}" />
+		Alert.viewSuccessMessage();
+	}
 
-		<execute function="Select" locator1="SitePagesEditPage#PAGE_TYPE_LAYOUT" value1="${pageType}" />
+	macro deleteViaX {
+		var key_page = "${pageName}";
 
-		<if>
-			<equals arg1="${pageType}" arg2="Link to a Page of This Site" />
-			<then>
-				<var name="key_indexNumber" value="${indexNumber}" />
+		MouseOver(locator1 = "SitePages#NAVIGATION_SPECIFIC_PAGE");
 
-				<execute function="Select" locator1="SitePagesEditPage#PAGE_TYPE_LINK_TO_PAGE_PAGE_SELECT" value1="index=${indexNumber}" />
-			</then>
-			<elseif>
-				<equals arg1="${pageType}" arg2="Embedded" />
-				<then>
-					<execute function="Type" locator1="SitePagesEditPage#PAGE_TYPE_EMBEDDED_URL_FIELD" value1="http://www.liferay.com" />
-				</then>
-			</elseif>
-		</if>
+		ClickNoError(locator1 = "SitePages#NAVIGATION_SPECIFIC_PAGE_X_DELETE");
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		Confirm.waitForConfirmation(
+			value1 = "Are you sure you want to delete this page?"
+		);
+	}
 
-	<command name="firstPageCanNotBeOfTypeLinkToURL">
-		<execute macro="SitePageNavigator#gotoEditPage">
-			<var name="page" value="${pageName}" />
-		</execute>
+	macro disableMobileDeviceRulesAreInheritedFromPublicPages {
+		Uncheck.uncheckHiddenToggleSwitch(
+			locator1 = "ToggleSwitch#INHERIT_MOBILE_DEVICE_RULES_FROM_PAGE"
+		);
+	}
 
-		<execute function="AssertElementPresent" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+	macro editName {
+		PortletEntry.inputName(name = "${pageNameEdit}");
 
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+		AssertClick.pauseAssertTextClickAt(locator1 = "Button#SAVE", value1 = "Save");
 
-		<execute function="AssertClickNoError" locator1="MenuItem#ANY_MENU_ITEM" value1="Delete">
-			<var name="key_menuItem" value="Delete" />
-		</execute>
+		Alert.viewSuccessMessage();
+	}
 
-		<execute function="Confirm" value1="Are you sure you want to delete the selected page?" />
+	macro editPageLayoutColumn {
+		var key_columnName = "${columnName}";
 
-		<execute macro="Alert#viewRequestFailedToComplete" />
+		Click(locator1 = "SitePagesEditPage#LAYOUT_CARD");
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="Message#ERROR_2" value1="The first page cannot be of type Link to URL." />
+		AssertClick.pauseAssertTextClickAt(locator1 = "Button#SAVE", value1 = "Save");
 
-		<execute macro="ProductMenuHelper#openProductMenu" />
+		Alert.viewSuccessMessage();
+	}
 
-		<var name="key_page" value="${pageName}" />
+	macro editPageMetadata {
+		Type.typeClickAt(locator1 = "TextInput#SEO_HTML_TITLE", value1 = "${HTMLTitle}");
 
-		<execute function="AssertTextEquals" locator1="SitePages#PAGE_TREE_PAGE_LINK" value1="${pageName}" />
-	</command>
+		Type.typeClickAt(
+			locator1 = "TextArea#SEO_META_TAGS_DESCRIPTION",
+			value1 = "${metaTagsDescription}"
+		);
 
-	<command name="gotoChildPagePG">
-		<var name="key_pageName" value="${pageName}" />
+		Type.typeClickAt(
+			locator1 = "TextArea#SEO_META_TAGS_KEYWORDS",
+			value1 = "${metaTagsKeywords}"
+		);
 
-		<execute function="MouseOver" locator1="Home#PAGE" />
+		AssertClick.pauseAssertTextClickAt(locator1 = "Button#SAVE", value1 = "Save");
 
-		<var name="key_childPageName" value="${childPageName}" />
+		Alert.viewSuccessMessage();
+	}
 
-		<execute function="AssertVisible" locator1="Home#PAGE_CHILD_PAGE" />
+	macro editPageTypeLayout {
+		var key_columnName = "${columnName}";
 
-		<execute function="Click" locator1="Home#PAGE_CHILD_PAGE" />
-	</command>
+		Click(locator1 = "SitePagesEditPage#LAYOUT_CARD");
 
-	<command name="gotoEditTemplatePages">
-		<var name="key_siteTemplateName" value="${siteTemplateName}" />
+		PortletEntry.save();
+	}
 
-		<execute function="Click" locator1="SiteTemplates#SITE_TEMPLATE_TABLE_ACTIONS" />
+	macro editSelectPageType {
+		SitePageNavigator.gotoEditPage(page = "${page}");
 
-		<execute function="Click" locator1="MenuItem#ANY_MENU_ITEM">
-			<var name="key_menuItem" value="Manage" />
-		</execute>
-	</command>
+		var key_pageType = "${pageType}";
 
-	<command name="gotoMyAccount">
-		<description message="Navigate to My Account > ${portletName}." />
+		Select(locator1 = "SitePagesEditPage#PAGE_TYPE_LAYOUT", value1 = "${pageType}");
 
-		<execute macro="Navigator#openURL" />
+		if ("${pageType}" == "Link to a Page of This Site") {
+			var key_indexNumber = "${indexNumber}";
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="My Account" />
-			<var name="panel" value="User" />
-			<var name="portlet" value="${portletName}" />
-		</execute>
-	</command>
+			Select(
+				locator1 = "SitePagesEditPage#PAGE_TYPE_LINK_TO_PAGE_PAGE_SELECT",
+				value1 = "index=${indexNumber}"
+			);
+		}
+		else if ("${pageType}" == "Embedded") {
+			Type(
+				locator1 = "SitePagesEditPage#PAGE_TYPE_EMBEDDED_URL_FIELD",
+				value1 = "http://www.liferay.com"
+			);
+		}
 
-	<command name="gotoPagePanelPortlet">
-		<var name="key_portletName" value="${portletName}" />
+		PortletEntry.save();
+	}
 
-		<execute function="AssertClick" locator1="Panel#MENU_ITEM" value1="${portletName}" />
-	</command>
+	macro firstPageCanNotBeOfTypeLinkToURL {
+		SitePageNavigator.gotoEditPage(page = "${pageName}");
 
-	<command name="gotoSALocalizedCP">
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Social Activity Page" />
-		</execute>
+		LexiconEntry.gotoHeaderMenuItemNoError(menuItem = "Delete");
 
-		<var name="key_portletCategoryName" value="${portletCategoryName}" />
+		Confirm(value1 = "Are you sure you want to delete the selected page?");
 
-		<execute macro="ProductMenuHelper#expandCategory">
-			<var name="category" value="${portletCategoryName}" />
-		</execute>
+		Alert.viewRequestFailedToComplete();
 
-		<var name="key_portletName" value="${portletName}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "Message#ERROR_2",
+			value1 = "The first page cannot be of type Link to URL."
+		);
 
-		<execute macro="ProductMenuHelper#gotoPortlet">
-			<var name="portlet" value="${portletName}" />
-		</execute>
-	</command>
+		ProductMenuHelper.openProductMenu();
 
-	<command name="hideFromNavigationMenu">
-		<execute function="Check#checkToggleSwitch" locator1="Checkbox#HIDE_FROM_NAVIGATION_MENU" />
+		var key_page = "${pageName}";
 
-		<execute function="AssertClick" locator1="Button#SAVE" value1="Save" />
-	</command>
+		AssertTextEquals(
+			locator1 = "SitePages#PAGE_TREE_PAGE_LINK",
+			value1 = "${pageName}"
+		);
+	}
 
-	<command name="localizedPG">
-		<var name="key_pageLocale" value="${pageLocale}" />
+	macro getGroupIdFromHtmlSource {
+		var portalURL = PropsUtil.get("portal.url");
+		var pageURL = selenium.getAttribute("//li[@class='control-menu-nav-item']/a[contains(@data-qa-id,'editLayout')]@href");
+		var partialPageURL = StringUtil.stripBetween("${pageURL}", "${portalURL}", "GroupPagesPortlet_groupId=");
+		var groupId = StringUtil.extractFirst("${partialPageURL}", "&");
 
-		<execute function="Click" locator1="Link#PAGE_LOCALE" value1="${pageLocale}" />
-	</command>
+		echo("## * Group ID: ${groupId}");
 
-	<command name="manageDeviceFamilyActions">
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
+		return "${groupId}";
+	}
 
-		<execute function="Click" locator1="MenuItem#ANY_MENU_ITEM">
-			<var name="key_menuItem" value="Manage Actions" />
-		</execute>
+	macro gotoChildPagePG {
+		var key_pageName = "${pageName}";
 
-		<execute macro="IFrame#selectDialogFrame" />
+		MouseOver(locator1 = "Home#PAGE");
 
-		<execute function="Click" locator1="Button#ADD_ACTION" />
+		var key_childPageName = "${childPageName}";
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${actionName}" />
-		</execute>
+		AssertVisible(locator1 = "Home#PAGE_CHILD_PAGE");
 
-		<var name="key_actionType" value="${actionType}" />
+		Click(locator1 = "Home#PAGE_CHILD_PAGE");
+	}
 
-		<execute function="Click" locator1="MobileDevice#ADD_ACTION_TYPE_OPTION" />
+	@description = "Navigate to My Account > ${portletName}."
+	macro gotoMyAccount {
+		Navigator.openURL();
 
-		<if>
-			<equals arg1="${actionType}" arg2="Redirect to URL" />
-			<then>
-				<execute function="Type" locator1="TextInput#URL" value1="${actionURL}" />
-			</then>
-			<elseif>
-				<equals arg1="${actionType}" arg2="Redirect to Site" />
-				<then>
-					<var name="key_siteName" value="${siteName}" />
+		ProductMenu.gotoPortlet(
+			category = "My Account",
+			panel = "User",
+			portlet = "${portletName}"
+		);
+	}
 
-					<execute function="Click" locator1="MobileDevice#ADD_ACTION_SITE_OPTION" />
+	macro gotoPagePanelPortlet {
+		var key_portletName = "${portletName}";
 
-					<var name="key_pageName" value="${pageName}" />
+		AssertClick(locator1 = "Panel#MENU_ITEM", value1 = "${portletName}");
+	}
 
-					<execute function="Click" locator1="MobileDevice#ADD_ACTION_PAGE_OPTION" />
-				</then>
-			</elseif>
-		</if>
+	macro gotoSALocalizedCP {
+		Navigator.gotoPage(pageName = "Social Activity Page");
 
-		<execute macro="PortletEntry#save" />
+		var key_portletCategoryName = "${portletCategoryName}";
 
-		<execute function="SelectFrame" value1="relative=top" />
+		ProductMenuHelper.expandCategory(category = "${portletCategoryName}");
 
-		<var name="key_modalTitle" value="Actions" />
+		var key_portletName = "${portletName}";
 
-		<execute function="Click" locator1="Button#CLOSE_MODAL" />
-	</command>
+		ProductMenuHelper.gotoPortlet(portlet = "${portletName}");
+	}
 
-	<command name="openURLLocale">
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="${localizationPageURL}" />
-		</execute>
+	macro hideFromNavigationMenu {
+		Check.checkToggleSwitch(locator1 = "Checkbox#HIDE_FROM_NAVIGATION_MENU");
 
-		<execute function="AssertLocation" value1="${localizationPageURL}" />
-	</command>
+		AssertClick(locator1 = "Button#SAVE", value1 = "Save");
+	}
 
-	<command name="saveAddPage">
-		<execute function="AssertClick" locator1="Button#ADD_PAGE_BTN" value1="Add Page" />
+	macro localizedPG {
+		var key_pageLocale = "${pageLocale}";
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		Click(locator1 = "Link#PAGE_LOCALE", value1 = "${pageLocale}");
+	}
 
-	<command name="selectMobileDeviceFamily">
-		<execute function="AssertClick" locator1="Button#SELECT_MOBILE_DEVICE_RULES" value1="Select" />
+	macro manageDeviceFamilyActions {
+		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Manage Actions");
 
-		<execute macro="IFrame#selectDialogFrame" />
+		IFrame.selectDialogFrame();
 
-		<var name="key_deviceFamilyName" value="${deviceFamilyName}" />
+		Click(locator1 = "Button#ADD_ACTION");
 
-		<execute function="AssertClick" locator1="MobileDevice#DEVICE_FAMILY_TABLE_NAME_LINK" value1="${deviceFamilyName}" />
+		PortletEntry.inputName(name = "${actionName}");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		var key_actionType = "${actionType}";
 
-	<command name="selectSitePagesVariationName">
-		<execute function="Click" locator1="SitePages#STAGING_SITE_PAGES_VARIATION_BUTTON" />
+		Click(locator1 = "MobileDevice#ADD_ACTION_TYPE_OPTION");
 
-		<var name="key_sitePagesVariationName" value="${sitePagesVariationName}" />
+		if ("${actionType}" == "Redirect to URL") {
+			Type(locator1 = "TextInput#URL", value1 = "${actionURL}");
+		}
+		else if ("${actionType}" == "Redirect to Site") {
+			var key_siteName = "${siteName}";
 
-		<execute function="Click" locator1="MenuItem#ANY_MENU_ITEM">
-			<var name="key_menuItem" value="${sitePagesVariationName}" />
-		</execute>
-	</command>
+			Click(locator1 = "MobileDevice#ADD_ACTION_SITE_OPTION");
 
-	<command name="tearDownPG" summary="Delete all pages except the Welcome Page">
-		<execute macro="TestCase#getSiteName">
-			<return from="siteName" name="siteName" />
-			<var name="siteName" value="${siteName}" />
-		</execute>
+			var key_pageName = "${pageName}";
 
-		<execute macro="ProductMenu#gotoSite">
-			<var name="site" value="${siteName}" />
-		</execute>
+			Click(locator1 = "MobileDevice#ADD_ACTION_PAGE_OPTION");
+		}
 
-		<while>
-			<condition function="IsElementPresent" locator1="SitePages#PAGE_ELLIPSIS_2" />
-			<then>
-				<execute macro="ProductMenuHelper#expandPanel">
-					<var name="panel" value="Site Administration" />
-				</execute>
+		PortletEntry.save();
 
-				<execute macro="ProductMenuHelper#expandCategory">
-					<var name="category" value="Navigation" />
-				</execute>
+		SelectFrame(value1 = "relative=top");
 
-				<execute function="MouseOver#mouseOverNotVisible" locator1="SitePages#PAGE_ELLIPSIS_2" />
+		var key_modalTitle = "Actions";
 
-				<execute function="Click" locator1="SitePages#PAGE_ELLIPSIS_2" />
+		Click(locator1 = "Button#CLOSE_MODAL");
+	}
 
-				<execute function="AssertClickNoError" locator1="MenuItem#ANY_MENU_ITEM" value1="Delete">
-					<var name="key_menuItem" value="Delete" />
-				</execute>
+	macro openURLLocale {
+		Navigator.openSpecificURL(url = "${localizationPageURL}");
 
-				<execute function="Confirm" value1="Are you sure you want to delete the selected page?" />
-			</then>
-		</while>
+		AssertLocation(value1 = "${localizationPageURL}");
+	}
 
-		<execute function="AssertElementNotPresent" locator1="SitePages#PAGE_ELLIPSIS_2" />
-	</command>
+	macro saveAddPage {
+		AssertClick(locator1 = "Button#ADD_PAGE_BTN", value1 = "Add Page");
 
-	<command name="togglePageTemplateInheritChanges">
-		<if>
-			<equals arg1="${toggleValue}" arg2="enable" />
-			<then>
-				<execute function="Check#checkToggleSwitch" locator1="ToggleSwitch#ANY_TOGGLE_SWITCH">
-					<var name="key_toggleSwitchLabel" value="Inherit Changes" />
-				</execute>
-			</then>
-			<elseif>
-				<equals arg1="${toggleValue}" arg2="disable" />
-				<then>
-					<execute function="Uncheck#uncheckToggleSwitch" locator1="ToggleSwitch#ANY_TOGGLE_SWITCH">
-						<var name="key_toggleSwitchLabel" value="Inherit Changes" />
-					</execute>
-				</then>
-			</elseif>
-		</if>
-	</command>
+		Alert.viewSuccessMessage();
+	}
 
-	<command name="uploadFileForLogo">
-		<execute function="AssertClick" locator1="Button#CHANGE_LOGO" value1="Change" />
+	macro selectMobileDeviceFamily {
+		AssertClick(locator1 = "Button#SELECT_MOBILE_DEVICE_RULES", value1 = "Select");
 
-		<execute function="SelectFrame" locator1="SitePages#LOGO_UPLOAD_IMAGE_IFRAME" />
+		IFrame.selectDialogFrame();
 
-		<execute function="AssertClick" locator1="SitePages#LOGO_UPLOAD_IMAGE_BUTTON" value1="Select" />
+		var key_deviceFamilyName = "${deviceFamilyName}";
 
-		<execute function="SikuliUploadCommonFile" locator1="OS#FILE_DIALOG_BOX_FILE_NAME_FIELD_PNG" value1="${logoFile}" />
+		AssertClick(
+			locator1 = "MobileDevice#DEVICE_FAMILY_TABLE_NAME_LINK",
+			value1 = "${deviceFamilyName}"
+		);
 
-		<execute function="Pause" locator1="5000" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute macro="Button#clickDone" />
+	macro selectSitePagesVariationName {
+		Click(locator1 = "SitePages#STAGING_SITE_PAGES_VARIATION_BUTTON");
 
-		<execute function="Pause" locator1="5000" />
+		var key_sitePagesVariationName = "${sitePagesVariationName}";
 
-		<execute function="SelectFrameTop" />
+		MenuItem.click(menuItem = "${sitePagesVariationName}");
+	}
 
-		<execute macro="PortletEntry#save" />
-	</command>
+	@summary = "Delete all pages except the Welcome Page"
+	macro tearDownPG {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-	<command name="view">
-		<execute macro="ProductMenuHelper#expandPanel">
-			<var name="panel" value="Site Administration" />
-		</execute>
+		ProductMenu.gotoSite(site = "${siteName}");
 
-		<execute macro="ProductMenuHelper#expandCategory">
-			<var name="category" value="Navigation" />
-		</execute>
+		while (IsElementPresent(locator1 = "SitePages#PAGE_ELLIPSIS_2")) {
+			ProductMenuHelper.expandPanel(panel = "Site Administration");
 
-		<execute function="AssertTextEquals" locator1="SitePages#PAGE_TREE_PAGE_LINK" value1="${pageName}">
-			<var name="key_page" value="${pageName}" />
-		</execute>
-	</command>
+			ProductMenuHelper.expandCategory(category = "Navigation");
 
-	<command name="viewChildPage">
-		<execute macro="ProductMenuHelper#openProductMenu" />
+			MouseOver.mouseOverNotVisible(locator1 = "SitePages#PAGE_ELLIPSIS_2");
 
-		<execute macro="ProductMenuHelper#expandPanel">
-			<var name="panel" value="Site Administration" />
-		</execute>
+			Click(locator1 = "SitePages#PAGE_ELLIPSIS_2");
 
-		<execute macro="ProductMenuHelper#expandCategory">
-			<var name="category" value="Navigation" />
-		</execute>
+			MenuItem.clickNoError(menuItem = "Delete");
 
-		<var name="key_page" value="${pageName}" />
+			Confirm(value1 = "Are you sure you want to delete the selected page?");
+		}
 
-		<execute macro="ProductMenuHelper#expandPageTree" />
+		AssertElementNotPresent(locator1 = "SitePages#PAGE_ELLIPSIS_2");
+	}
 
-		<execute function="AssertTextEquals" locator1="ProductMenu#PAGES" value1="${pageName}" />
-	</command>
+	macro togglePageTemplateInheritChanges {
+		if ("${toggleValue}" == "enable") {
+			Check.checkToggleSwitch(
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH",
+				key_toggleSwitchLabel = "Inherit Changes"
+			);
+		}
+		else if ("${toggleValue}" == "disable") {
+			Uncheck.uncheckToggleSwitch(
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH",
+				key_toggleSwitchLabel = "Inherit Changes"
+			);
+		}
+	}
 
-	<command name="viewChildPageDropdown">
-		<execute function="ClickNoError" locator1="Home#${viewChildPageDropdown}" />
+	macro uploadFileForLogo {
+		AssertClick(locator1 = "Button#CHANGE_LOGO", value1 = "Change");
 
-		<if>
-			<isset var="javaScriptPage" />
-			<then>
-				<execute function="Confirm#waitForConfirmation" value1="${javaScriptPage}" />
-			</then>
-		</if>
+		SelectFrame(locator1 = "SitePages#LOGO_UPLOAD_IMAGE_IFRAME");
 
-		<execute function="MouseOver#mouseOverClickNavigation" locator1="Home#PAGE_2" />
+		AssertElementPresent(locator1 = "SitePages#LOGO_UPLOAD_IMAGE_BUTTON");
 
-		<var name="key_childPageName" value="${childPageName}" />
+		UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
+			locator1 = "TextInput#FILE",
+			value1 = "${logoFile}"
+		);
 
-		<execute function="AssertTextEquals" locator1="Home#PAGE_CHILD_PAGE" value1="${childPageName}" />
-	</command>
+		Pause(locator1 = "5000");
 
-	<command name="viewCustomLogoPG">
-		<execute function="AssertElementPresent" locator1="Home#CUSTOM_LOGO" />
-		<execute function="AssertElementNotPresent" locator1="Home#DEFAULT_LOGO" />
-	</command>
+		Button.clickDone();
 
-	<command name="viewDefaultLogoPG">
-		<execute function="AssertElementPresent" locator1="Home#DEFAULT_LOGO" />
-		<execute function="AssertElementNotPresent" locator1="Home#CUSTOM_LOGO" />
-	</command>
+		Pause(locator1 = "5000");
 
-	<command name="viewDefaultSiteTemplatePagesPG">
-		<execute function="Click" locator1="Home#PAGE_NAVIGATION_BAR" />
+		SelectFrameTop();
 
-		<var name="key_pageName" value="${pageName}" />
+		PortletEntry.save();
+	}
 
-		<if>
-			<equals arg1="${siteTemplate}" arg2="Community" />
-			<then>
-				<execute function="AssertTextEquals" locator1="Home#PAGE_TEMPLATE_1" value1="${pageName}" />
-				<execute function="AssertTextEquals" locator1="Home#PAGE_TEMPLATE_2" value1="Wiki" />
-			</then>
-			<elseif>
-				<equals arg1="${siteTemplate}" arg2="Intranet" />
-				<then>
-					<execute function="AssertTextEquals" locator1="Home#PAGE_TEMPLATE_1" value1="${pageName}" />
-					<execute function="AssertTextEquals" locator1="Home#PAGE_TEMPLATE_2" value1="Documents and Media" />
-				</then>
-			</elseif>
-			<elseif>
-				<equals arg1="${siteTemplate}" arg2="Zoe Healthcare Theme" />
-				<then>
-					<execute function="AssertElementPresent" locator1="Home#SITE_NAME_LOGO" />
-					<execute function="AssertElementPresent" locator1="Home#PAGE_TEMPLATE_1" />
-					<execute function="AssertElementPresent" locator1="Home#PAGE_TEMPLATE_2" />
-					<execute function="AssertElementPresent" locator1="Home#PAGE_TEMPLATE_3" />
-					<execute function="AssertElementPresent" locator1="Home#PAGE_TEMPLATE_4" />
-					<execute function="AssertElementPresent" locator1="Home#PAGE_TEMPLATE_5" />
-					<execute function="AssertElementPresent" locator1="Home#PAGE_TEMPLATE_6" />
-					<execute function="AssertElementPresent" locator1="Home#PAGE_TEMPLATE_7" />
-				</then>
-			</elseif>
-		</if>
-	</command>
+	macro view {
+		ProductMenuHelper.expandPanel(panel = "Site Administration");
 
-	<command name="viewDeletedPage">
-		<var name="key_page" value="${pageName}" />
+		ProductMenuHelper.expandCategory(category = "Navigation");
 
-		<execute function="AssertElementNotPresent" locator1="Home#PAGE" />
+		AssertTextEquals(
+			locator1 = "SitePages#PAGE_TREE_PAGE_LINK",
+			value1 = "${pageName}",
+			key_page = "${pageName}"
+		);
+	}
 
-		<execute function="AssertElementNotPresent" locator1="SitePages#PAGE_TREE_PAGE_LINK">
-			<var name="key_page" value="${pageName}" />
-		</execute>
-	</command>
+	macro viewChildPage {
+		ProductMenuHelper.openProductMenu();
 
-	<command name="viewEmbeddedPagePG">
-		<execute function="AssertTextPresent" locator1="Home#EMBEDDED_SITE_LIFERAY_BANNER_LOGO" value1="Liferay" />
-	</command>
+		ProductMenuHelper.expandPanel(panel = "Site Administration");
 
-	<command name="viewFriendlyURL">
-		<execute macro="SitePageNavigator#gotoEditPage">
-			<var name="page" value="${pageName}" />
-		</execute>
+		ProductMenuHelper.expandCategory(category = "Navigation");
 
-		<execute function="AssertTextEquals" locator1="SitePages#DETAILS_FRIENDLY_BASE_URL" value1="http://localhost:8080/web${siteFriendlyURL}" />
-	</command>
+		var key_page = "${pageName}";
 
-	<command name="viewFriendlyURLLanguageOptionsPG">
-		<for list="${currentLanguageList}" param="languageKey">
-			<execute function="AssertElementPresent" locator1="SitePagesEditPage#${languageKey}" />
-		</for>
+		ProductMenuHelper.expandPageTree();
 
-		<if>
-			<equals arg1="${assertUnavailableLanguages}" arg2="true" />
-			<then>
-				<for list="${unavailableLanguageList}" param="languageKey">
-					<execute function="AssertElementNotPresent" locator1="SitePagesEditPage#${languageKey}" />
-				</for>
-			</then>
-		</if>
-	</command>
+		AssertTextEquals(locator1 = "ProductMenu#PAGES", value1 = "${pageName}");
+	}
 
-	<command name="viewLayoutLogoPG">
-		<if>
-			<equals arg1="${assertLayoutLogoPresent}" arg2="true" />
-			<then>
-				<execute function="AssertElementPresent" locator1="Home#LAYOUT_LOGO" />
-			</then>
-			<else>
-				<execute function="AssertElementNotPresent" locator1="Home#LAYOUT_LOGO" />
-			</else>
-		</if>
-	</command>
+	macro viewChildPageDropdown {
+		ClickNoError.clickNoMouseOver(locator1 = "Home#${viewChildPageDropdown}");
 
-	<command name="viewLoadMoreResultsPages">
-		<execute macro="ProductMenuHelper#expandPageTree" />
+		if (isSet(javaScriptPage)) {
+			Confirm.waitForConfirmation(value1 = "${javaScriptPage}");
+		}
 
-		<if>
-			<equals arg1="${siteChildPages}" arg2="false" />
-			<then>
-				<execute function="AssertClick" locator1="SitePages#PAGE_TREE_LOAD_MORE_RESULTS_LINK" value1="Load more results" />
+		MouseOver.mouseOverClickNavigation(locator1 = "Home#PAGE_2");
 
-				<execute function="AssertTextEquals" locator1="SitePages#PAGE_TREE_PAGE_LINK_4" value1="Page3 Name" />
-				<execute function="AssertTextEquals" locator1="SitePages#PAGE_TREE_PAGE_LINK_5" value1="Page4 Name" />
-			</then>
-			<elseif>
-				<equals arg1="${siteChildPages}" arg2="true" />
-				<then>
-					<execute function="AssertClick" locator1="SitePages#PAGE_TREE_LOAD_MORE_RESULTS_LINK" value1="Load more results" />
+		var key_childPageName = "${childPageName}";
 
-					<execute function="AssertTextEquals" locator1="SitePages#PAGE_TREE_PAGE_LINK_5" value1="Child Page4 Name" />
-					<execute function="AssertTextEquals" locator1="SitePages#PAGE_TREE_PAGE_LINK_6" value1="Child Page5 Name" />
-				</then>
-			</elseif>
-		</if>
-	</command>
+		AssertTextEquals(locator1 = "Home#PAGE_CHILD_PAGE", value1 = "${childPageName}");
+	}
 
-	<command name="viewNoDeletePagesAssociatedWithSiteTemplate">
-		<execute macro="ProductMenuHelper#expandCategory">
-			<var name="category" value="Navigation" />
-		</execute>
+	macro viewCurrentTheme {
+		var key_page = "${page}";
+		var key_themeName = "${themeName}";
 
-		<execute macro="ProductMenuHelper#expandPageTree" />
+		ProductMenuHelper.expandCategory(category = "Navigation");
 
-		<var name="key_page" value="${page}" />
+		Click.mouseOverClick(locator1 = "SitePages#SPECIFIC_PAGE_ELLIPSIS");
 
-		<execute function="Click#mouseOverClick" locator1="SitePages#SPECIFIC_PAGE_ELLIPSIS" />
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "MenuItem#ANY_MENU_ITEM",
+			value1 = "Configure Page",
+			key_menuItem = "Configure Page"
+		);
 
-		<execute function="AssertNotVisible" locator1="SitePages#DELETE_SPECIFIC_PAGE" value1="Delete" />
+		Navigator.gotoNavTab(navTab = "${navTab}");
 
-		<execute function="Click" locator1="SitePages#EDIT_SPECIFIC_PAGE" />
+		AssertTextPresent(
+			locator1 = "SitePagesEditPage#VIEW_THEME",
+			value1 = "${themeName}"
+		);
+	}
 
-		<if>
-			<and>
-				<condition function="IsElementPresent" locator1="Message#ERROR_3" />
-				<condition function="IsVisible" locator1="Message#ERROR_3" />
-			</and>
-			<then>
-				<execute function="AssertTextEquals" locator1="Message#ERROR_3" value1="This page cannot be deleted and cannot have child pages because it is associated to a site template." />
-			</then>
-		</if>
-	</command>
+	macro viewCustomLogoPG {
+		AssertElementPresent(locator1 = "Home#CUSTOM_LOGO");
 
-	<command name="viewNoPG">
-		<var name="key_pageName" value="${pageName}" />
+		AssertElementNotPresent(locator1 = "Home#DEFAULT_LOGO");
+	}
 
-		<execute function="AssertElementNotPresent" locator1="Home#PAGE" />
-	</command>
+	macro viewDefaultLogoPG {
+		AssertElementPresent(locator1 = "Home#DEFAULT_LOGO");
 
-	<command name="viewNoSelectCategory">
-		<execute macro="SitePageNavigator#gotoAddPage">
-			<var name="sitePagePrivacy" value="${sitePagePrivacy}" />
-		</execute>
+		AssertElementNotPresent(locator1 = "Home#CUSTOM_LOGO");
+	}
 
-		<execute macro-mobile="MobileNavigator#clickRemoveIcon" />
+	macro viewDefaultSiteTemplatePagesPG {
+		Click(locator1 = "Home#PAGE_NAVIGATION_BAR");
 
-		<execute function="Type#typeClickAt" locator1="TextInput#NAME" value1="${pageName}" />
+		var key_pageName = "${pageName}";
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Categorization" />
-		</execute>
+		if ("${siteTemplate}" == "Community") {
+			AssertTextEquals(locator1 = "Home#PAGE_TEMPLATE_1", value1 = "${pageName}");
 
-		<execute function="AssertElementNotPresent" locator1="AssetCategorization#CATEGORY_SELECT">
-			<var name="key_vocabularyName" value="${vocabularyName}" />
-		</execute>
-	</command>
+			AssertTextEquals(locator1 = "Home#PAGE_TEMPLATE_2", value1 = "Wiki");
+		}
+		else if ("${siteTemplate}" == "Intranet") {
+			AssertTextEquals(locator1 = "Home#PAGE_TEMPLATE_1", value1 = "${pageName}");
 
-	<command name="viewOnlyAddOptionViaSiteAdmin">
-		<execute function="Click" locator1="ControlMenu#ADD" />
+			AssertTextEquals(
+				locator1 = "Home#PAGE_TEMPLATE_2",
+				value1 = "Documents and Media"
+			);
+		}
+		else if ("${siteTemplate}" == "Zoe Healthcare Theme") {
+			AssertElementPresent(locator1 = "Home#SITE_NAME_LOGO");
 
-		<execute function="AssertElementNotPresent" locator1="ControlMenuAddPanel#CONTENT_ACCORDION_PANEL_TITLE" />
-		<execute function="AssertElementNotPresent" locator1="ControlMenuAddPanel#APPLICATIONS_ACCORDION_PANEL_TITLE" />
+			AssertElementPresent(locator1 = "Home#PAGE_TEMPLATE_1");
 
-		<execute function="Refresh" />
-	</command>
+			AssertElementPresent(locator1 = "Home#PAGE_TEMPLATE_2");
 
-	<command name="viewPageFriendlyURLPG">
-		<if>
-			<isset var="friendlyUrlLocalized" />
-			<then>
-				<var name="key_friendlyUrlLocalized" value="${friendlyUrlLocalized}" />
+			AssertElementPresent(locator1 = "Home#PAGE_TEMPLATE_3");
 
-				<execute function="Click" locator1="SitePagesEditPage#FRIENDLY_URL_LOCALIZED" />
-			</then>
-		</if>
+			AssertElementPresent(locator1 = "Home#PAGE_TEMPLATE_4");
 
-		<execute function="AssertTextEquals" locator1="SitePagesEditPage#FRIENDLY_URL_FIELD" value1="/${pageName}" />
-	</command>
+			AssertElementPresent(locator1 = "Home#PAGE_TEMPLATE_5");
 
-	<command name="viewPageLayout">
-		<if>
-			<equals arg1="${pageLayout}" arg2="1 Column" />
-			<then>
-				<execute function="AssertVisible" locator1="Home#PAGE_COLUMN_1_LAYOUT_1_COLUMN" />
-				<execute function="AssertElementNotPresent" locator1="Home#PAGE_COLUMN_2" />
-			</then>
-			<elseif>
-				<equals arg1="${pageLayout}" arg2="2 Column (30/70)" />
-				<then>
-					<execute function="AssertVisible" locator1="Home#PAGE_COLUMN_1_LAYOUT_2_COLUMNS_30_SPLIT" />
-					<execute function="AssertVisible" locator1="Home#PAGE_COLUMN_2_LAYOUT_2_COLUMNS_70_SPLIT" />
-				</then>
-			</elseif>
-		</if>
-	</command>
+			AssertElementPresent(locator1 = "Home#PAGE_TEMPLATE_6");
 
-	<command name="viewPageLayoutColumn">
-		<execute function="AssertElementPresent" locator1="SitePagesEditPage#LAYOUT_CARD">
-			<var name="key_columnName" value="${columnName}" />
-		</execute>
-	</command>
+			AssertElementPresent(locator1 = "Home#PAGE_TEMPLATE_7");
+		}
+	}
 
-	<command name="viewPageLocalization">
-		<if>
-			<condition function="IsElementPresent" locator1="Home#PORTAL_LOCALIZATION_CONFIRMATION_MESSAGE" />
-			<then>
-				<execute function="Click" locator1="Home#PORTAL_LOCALIZATION_CONFIRMATION_MESSAGE" />
-			</then>
-		</if>
+	macro viewDeletedPage {
+		var key_page = "${pageName}";
 
-		<execute macro="ProductMenu#gotoLocalizedEditPage">
-			<var name="category" value="${category}" />
-			<var name="page" value="${page}" />
-		</execute>
+		AssertElementNotPresent(locator1 = "Home#PAGE");
 
-		<var name="key_defaultSiteLanguageKey" value="${defaultSiteLanguageKey}" />
+		AssertElementNotPresent(
+			locator1 = "SitePages#PAGE_TREE_PAGE_LINK",
+			key_page = "${pageName}"
+		);
+	}
 
-		<execute macro="Navigator#gotoSEOPanel" />
+	macro viewEmbeddedPagePG {
+		AssertTextPresent(
+			locator1 = "Home#EMBEDDED_SITE_LIFERAY_BANNER_LOGO",
+			value1 = "Liferay"
+		);
+	}
 
-		<execute function="AssertElementPresent" locator1="TextInput#SEO_HTML_TITLE" />
-		<execute function="AssertElementPresent" locator1="SitePagesEditPage#SEO_HTML_TITLE_META_TAGS" />
-	</command>
+	macro viewFriendlyURL {
+		SitePageNavigator.gotoEditPage(page = "${pageName}");
 
-	<command name="viewPageLockCheck">
-		<execute function="Click" locator1="ControlMenu#INFO" />
+		AssertTextEquals(
+			locator1 = "SitePages#DETAILS_FRIENDLY_BASE_URL",
+			value1 = "http://localhost:8080/web${siteFriendlyURL}"
+		);
+	}
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="Message#CUSTOMIZED_PAGE_INFO" value1="This page is linked to a site template which does not allow modifications to it." />
-	</command>
+	macro viewFriendlyURLLanguageOptionsPG {
+		for (var languageKey : list "${currentLanguageList}") {
+			AssertElementPresent(locator1 = "SitePagesEditPage#${languageKey}");
+		}
 
-	<command name="viewPageMetadata">
-		<execute function="AssertTextEquals" locator1="TextInput#SEO_HTML_TITLE" value1="${HTMLTitle}" />
+		if ("${assertUnavailableLanguages}" == "true") {
+			for (var languageKey : list "${unavailableLanguageList}") {
+				AssertElementNotPresent(locator1 = "SitePagesEditPage#${languageKey}");
+			}
+		}
+	}
 
-		<execute function="AssertTextEquals" locator1="TextArea#SEO_META_TAGS_DESCRIPTION" value1="${metaTagsDescription}" />
+	macro viewLayoutLogoPG {
+		if ("${assertLayoutLogoPresent}" == "true") {
+			AssertElementPresent(locator1 = "Home#LAYOUT_LOGO");
+		}
+		else {
+			AssertElementNotPresent(locator1 = "Home#LAYOUT_LOGO");
+		}
+	}
 
-		<execute function="AssertTextEquals" locator1="TextArea#SEO_META_TAGS_KEYWORDS" value1="${metaTagsKeywords}" />
-	</command>
+	macro viewLoadMoreResultsPages {
+		ProductMenuHelper.expandPageTree();
 
-	<command name="viewPageNoLockCheck">
-		<execute function="AssertElementNotPresent" locator1="Message#CUSTOMIZED_PAGE_INFO" />
-	</command>
+		if ("${siteChildPages}" == "false") {
+			AssertClick(
+				locator1 = "SitePages#PAGE_TREE_LOAD_MORE_RESULTS_LINK",
+				value1 = "Load more results"
+			);
 
-	<command name="viewPageOrderStagingLivePG">
-		<execute function="AssertTextEquals" locator1="Home#PAGE_1_STAGING_LIVE" value1="${pageName1}" />
-		<execute function="AssertTextEquals" locator1="Home#PAGE_2_STAGING_LIVE" value1="${pageName2}" />
-		<execute function="AssertTextEquals" locator1="Home#PAGE_3_STAGING_LIVE" value1="${pageName3}" />
-	</command>
+			AssertTextEquals(
+				locator1 = "SitePages#PAGE_TREE_PAGE_LINK_4",
+				value1 = "Page3 Name"
+			);
 
-	<command name="viewPagesOrder">
-		<execute macro="ProductMenuHelper#expandCategory">
-			<var name="category" value="Navigation" />
-		</execute>
+			AssertTextEquals(
+				locator1 = "SitePages#PAGE_TREE_PAGE_LINK_5",
+				value1 = "Page4 Name"
+			);
+		}
+		else if ("${siteChildPages}" == "true") {
+			AssertClick(
+				locator1 = "SitePages#PAGE_TREE_LOAD_MORE_RESULTS_LINK",
+				value1 = "Load more results"
+			);
 
-		<var name="key_page" value="${pageName1}" />
-		<execute function="AssertTextEquals" locator1="SitePages#PAGE_TREE_PAGE_LINK" value1="${pageName1}" />
-		<execute function="AssertTextEquals" locator1="SitePages#PAGE_TREE_PAGE_LINK_2" value1="${pageName2}" />
-		<execute function="AssertTextEquals" locator1="SitePages#PAGE_TREE_PAGE_LINK_3" value1="${pageName3}" />
-	</command>
+			AssertTextEquals(
+				locator1 = "SitePages#PAGE_TREE_PAGE_LINK_5",
+				value1 = "Child Page4 Name"
+			);
 
-	<command name="viewPageTemplate">
-		<execute macro="Navigator#openSiteURL">
-			<var name="siteName" value="Site Name" />
-		</execute>
+			AssertTextEquals(
+				locator1 = "SitePages#PAGE_TREE_PAGE_LINK_6",
+				value1 = "Child Page5 Name"
+			);
+		}
+	}
 
-		<execute function="Click" locator1="ControlMenu#INFO" />
+	macro viewNoDeletePagesAssociatedWithSiteTemplate {
+		ProductMenuHelper.expandCategory(category = "Navigation");
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="Message#CUSTOMIZED_PAGE_INFO" value1="This page is linked to a page template. Disable the automatic propagation of changes to this page to be able to make modifications." />
+		ProductMenuHelper.expandPageTree();
 
-		<execute macro="ProductMenuHelper#expandPanel">
-			<var name="panel" value="Site Administration" />
-		</execute>
+		var key_page = "${page}";
 
-		<execute macro="ProductMenuHelper#expandCategory">
-			<var name="category" value="Navigation" />
-		</execute>
+		Click.mouseOverClick(locator1 = "SitePages#SPECIFIC_PAGE_ELLIPSIS");
 
-		<execute macro="SitePageNavigator#gotoEditPage">
-			<var name="page" value="${page}" />
-		</execute>
+		AssertNotVisible(locator1 = "SitePages#DELETE_SPECIFIC_PAGE", value1 = "Delete");
 
-		<execute function="AssertTextEquals" locator1="Message#ERROR_3" value1="Some page settings are unavailable because Inherit Changes is enabled. To change these settings, disable Inherit Changes under the General section." />
-		<execute function="AssertChecked#assertCheckedNotVisible" locator1="SitePagesEditPage#PAGE_TYPE_TEMPLATE_AUTOMATICALLY_APPLY_CHANGES_CHECKBOX_GENERIC" />
-	</command>
+		Click(locator1 = "SitePages#EDIT_SPECIFIC_PAGE");
 
-	<command name="viewPageTemplateLockCheck">
-		<execute function="Click" locator1="ControlMenu#INFO" />
+		if ((IsElementPresent(locator1 = "Message#ERROR_3")) && (IsVisible(locator1 = "Message#ERROR_3"))) {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_3",
+				value1 = "This page cannot be deleted and cannot have child pages because it is associated to a site template."
+			);
+		}
+	}
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="Message#CUSTOMIZED_PAGE_INFO" value1="This page is linked to a page template. Disable the automatic propagation of changes to this page to be able to make modifications." />
-	</command>
+	macro viewNoPG {
+		var key_pageName = "${pageName}";
 
-	<command name="viewPageTemplateNoLockCheck">
-		<execute function="AssertElementNotPresent" locator1="ControlMenu#INFO" />
-		<execute function="AssertElementNotPresent" locator1="Message#CUSTOMIZED_PAGE_INFO" />
-	</command>
+		AssertElementNotPresent(locator1 = "Home#PAGE");
+	}
 
-	<command name="viewPageTemplateTypeNotPresent">
-		<var name="key_pageName" value="${pageTemplateName}" />
+	macro viewNoSelectCategory {
+		SitePageNavigator.gotoAddPage(sitePagePrivacy = "${sitePagePrivacy}");
 
-		<execute function="Click" locator1="SitePagesEditPage#PAGE_TYPE_SELECT" />
+		Type.typeClickAt(locator1 = "TextInput#NAME", value1 = "${pageName}");
 
-		<execute function="AssertTextNotPresent" locator1="SitePagesEditPage#PAGE_TYPE_SELECT" value1="${pageTemplateName}" />
-	</command>
+		Panel.expandPanel(panelHeading = "Categorization");
 
-	<command name="viewPageTemplateTypePresent">
-		<var name="key_pageName" value="${pageTemplateName}" />
+		AssertElementNotPresent(
+			locator1 = "AssetCategorization#CATEGORY_SELECT",
+			key_vocabularyName = "${vocabularyName}"
+		);
+	}
 
-		<execute function="AssertElementPresent" locator1="SitePagesEditPage#PAGE_TYPE_SELECT" />
-	</command>
+	macro viewPageFriendlyURLPG {
+		if (isSet(friendlyUrlLocalized)) {
+			var key_friendlyUrlLocalized = "${friendlyUrlLocalized}";
 
-	<command name="viewPanelPortletListCP">
-		<execute macro="ProductMenuHelper#openProductMenu" />
+			Click(locator1 = "SitePagesEditPage#FRIENDLY_URL_LOCALIZED");
+		}
 
-		<execute macro="SitePageNavigator#gotoEditPage">
-			<var name="page" value="${pageName}" />
-		</execute>
+		AssertTextEquals(locator1 = "TextInput#FRIENDLY_URL", value1 = "/${pageName}");
+	}
 
-		<var name="key_componentName" value="${componentName}" />
+	macro viewPageLayout {
+		if ("${pageLayout}" == "1 Column") {
+			AssertVisible(locator1 = "Home#PAGE_COLUMN_1_LAYOUT_1_COLUMN");
 
-		<if>
-			<condition function="IsElementPresent" locator1="SitePages#DETAILS_PAGE_TYPE_PANEL_COMPONENT_TREE_ARROW" />
-			<then>
-				<execute function="Click" locator1="SitePages#DETAILS_PAGE_TYPE_PANEL_COMPONENT_TREE_ARROW" />
-			</then>
-		</if>
+			AssertElementNotPresent(locator1 = "Home#PAGE_COLUMN_2");
+		}
+		else if ("${pageLayout}" == "2 Column (30/70)") {
+			AssertVisible(locator1 = "Home#PAGE_COLUMN_1_LAYOUT_2_COLUMNS_30_SPLIT");
 
-		<var name="key_componentOrPortletName" value="${componentName}" />
+			AssertVisible(locator1 = "Home#PAGE_COLUMN_2_LAYOUT_2_COLUMNS_70_SPLIT");
+		}
+	}
 
-		<execute function="AssertChecked#assertCheckedNotVisible" locator1="SitePages#DETAILS_PAGE_TYPE_PANEL_CHECKBOX_INPUT" />
+	macro viewPageLayoutColumn {
+		AssertElementPresent(
+			locator1 = "SitePagesEditPage#LAYOUT_CARD",
+			key_columnName = "${columnName}"
+		);
+	}
 
-		<for list="${portletNameList}" param="portletName">
-			<var name="key_componentOrPortletName" value="${portletName}" />
+	macro viewPageLocalization {
+		if (IsElementPresent(locator1 = "Home#PORTAL_LOCALIZATION_CONFIRMATION_MESSAGE")) {
+			Click(locator1 = "Home#PORTAL_LOCALIZATION_CONFIRMATION_MESSAGE");
+		}
 
-			<execute function="AssertChecked#assertCheckedNotVisible" locator1="SitePages#DETAILS_PAGE_TYPE_PANEL_CHECKBOX_INPUT" />
-		</for>
-	</command>
+		ProductMenu.gotoLocalizedEditPage(category = "${category}", page = "${page}");
 
-	<command name="viewPanelPortletListPG">
-		<var name="key_componentName" value="${componentName}" />
+		var key_defaultSiteLanguageKey = "${defaultSiteLanguageKey}";
 
-		<execute function="AssertTextEquals" locator1="Panel#PANEL_TITLE" value1="${componentName}" />
+		Navigator.gotoSEOPanel();
 
-		<var name="key_pageName" value="${pageName}" />
+		AssertElementPresent(locator1 = "TextInput#SEO_HTML_TITLE");
 
-		<execute function="AssertTextEquals" locator1="Panel#PANEL_PAGE_TITLE" value1="${pageName}" />
-		<execute function="AssertTextEquals" locator1="Message#INFO" value1="Please select a tool from the left menu." />
+		AssertElementPresent(locator1 = "SitePagesEditPage#SEO_HTML_TITLE_META_TAGS");
+	}
 
-		<for list="${portletNameList}" param="portletName">
-			<var name="key_portletName" value="${portletName}" />
+	macro viewPageLockCheck {
+		Click(locator1 = "ControlMenu#INFO");
 
-			<execute function="AssertTextEquals" locator1="Panel#MENU_ITEM" value1="${portletName}" />
-		</for>
-	</command>
+		AssertTextEquals.assertPartialText(
+			locator1 = "Message#CUSTOMIZED_PAGE_INFO",
+			value1 = "This page is linked to a site template which does not allow modifications to it."
+		);
+	}
 
-	<command name="viewRTLLayout">
-		<execute function="AssertCssValue" locator1="Home#SITE_NAME" locator2="direction" value1="rtl" />
-		<execute function="AssertCssValue" locator1="ProductMenu#TOGGLE" locator2="text-align" value1="right" />
-		<execute function="AssertCssValue" locator1="ProductMenu#PRODUCT_MENU_OPENED" locator2="right" value1="0px" />
-	</command>
+	macro viewPageMetadata {
+		AssertTextEquals(locator1 = "TextInput#SEO_HTML_TITLE", value1 = "${HTMLTitle}");
 
-	<command name="viewSelectedLayoutColumn">
-		<execute function="AssertElementPresent" locator1="SitePagesEditPage#LAYOUT_CARD_SELECTED">
-			<var name="key_columnName" value="${columnName}" />
-		</execute>
-	</command>
+		AssertTextEquals(
+			locator1 = "TextArea#SEO_META_TAGS_DESCRIPTION",
+			value1 = "${metaTagsDescription}"
+		);
 
-	<command name="viewSiteNameTranslationsPG">
-		<execute function="Click" locator1="Language#SELECT_LANGUAGE">
-			<var name="key_language" value="${language}" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "TextArea#SEO_META_TAGS_KEYWORDS",
+			value1 = "${metaTagsKeywords}"
+		);
+	}
 
-		<execute function="AssertTextEquals" locator1="Home#SITE_NAME" value1="${siteName}" />
-	</command>
+	macro viewPageOrderStagingLivePG {
+		AssertTextEquals(locator1 = "Home#PAGE_1_STAGING_LIVE", value1 = "${pageName1}");
 
-	<command name="viewSiteTemplatePages">
-		<var name="key_siteName" value="${siteName}" />
+		AssertTextEquals(locator1 = "Home#PAGE_2_STAGING_LIVE", value1 = "${pageName2}");
 
-		<execute function="AssertTextEquals" locator1="SitePages#SITE_NAME" value1="${siteName}" />
+		AssertTextEquals(locator1 = "Home#PAGE_3_STAGING_LIVE", value1 = "${pageName3}");
+	}
 
-		<execute function="Click" locator1="SitePages#PAGE_TREE_ROOT_LINK" />
+	macro viewPagesOrder {
+		ProductMenuHelper.expandCategory(category = "Navigation");
 
-		<execute function="Click" locator1="SitePages#TOOLBAR_VIEW_PAGES" />
+		var key_page = "${pageName1}";
 
-		<execute function="Pause" locator1="5000" />
-	</command>
+		AssertTextEquals(
+			locator1 = "SitePages#PAGE_TREE_PAGE_LINK",
+			value1 = "${pageName1}"
+		);
 
-	<command name="viewSpecificPG">
-		<for list="${pageNameList}" param="pageName">
-			<var name="key_pageName" value="${pageName}" />
+		AssertTextEquals(
+			locator1 = "SitePages#PAGE_TREE_PAGE_LINK_2",
+			value1 = "${pageName2}"
+		);
 
-			<execute function="AssertTextEquals" locator1="Home#PAGE" value1="${pageName}" />
-		</for>
-	</command>
+		AssertTextEquals(
+			locator1 = "SitePages#PAGE_TREE_PAGE_LINK_3",
+			value1 = "${pageName3}"
+		);
+	}
 
-	<command name="viewTranslationsPG">
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="${sitePageURL}" />
-		</execute>
+	macro viewPageTemplate {
+		Navigator.openSiteURL(siteName = "Site Name");
 
-		<execute function="AssertLocation" value1="${sitePageURL}" />
+		Click(locator1 = "ControlMenu#INFO");
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="Home#PORTAL_LOCALIZATION_MESSAGE_INFO" value1="${pageLocalizationMessage}" />
-		<execute function="AssertTextEquals" locator1="Home#PORTAL_LOCALIZATION_PREFERRED_MESSAGE" value1="${pageLocalizationPreferredLanguage}" />
-	</command>
+		AssertTextEquals.assertPartialText(
+			locator1 = "Message#CUSTOMIZED_PAGE_INFO",
+			value1 = "This page is linked to a page template. Disable the automatic propagation of changes to this page to be able to make modifications."
+		);
 
-	<command name="viewURLLocale">
-		<if>
-			<isset var="localizationOption" />
-			<then>
-				<execute function="AssertClick" locator1="Message#INFO_4" value1="${localizationOption}" />
-			</then>
-		</if>
+		ProductMenuHelper.expandPanel(panel = "Site Administration");
 
-		<execute function="AssertLocation" value1="${localizationPageURL}" />
-	</command>
+		ProductMenuHelper.expandCategory(category = "Navigation");
 
-	<command name="viewWithWorkflowPG">
-		<execute function="Pause" locator1="5000" />
+		SitePageNavigator.gotoEditPage(page = "${page}");
 
-		<if>
-			<equals arg1="${workflowStatus}" arg2="Ready for Publication" />
-			<then>
-				<execute function="AssertElementPresent" locator1="Staging#STAGING_MENU_READY_FOR_PUBLICATION" />
-			</then>
-			<else>
-				<execute function="AssertTextEquals" locator1="Message#WORKFLOW_STATUS" value1="${workflowStatus}" />
-			</else>
-		</if>
+		AssertTextEquals(
+			locator1 = "Message#ERROR_3",
+			value1 = "Some page settings are unavailable because Inherit Changes is enabled. To change these settings, disable Inherit Changes under the General section."
+		);
 
-		<execute function="AssertClick#assertPartialTextClickAt" locator1="Staging#LIVE_BUTTON" value1="Live" />
+		AssertChecked.assertCheckedNotVisible(
+			locator1 = "SitePagesEditPage#PAGE_TYPE_TEMPLATE_AUTOMATICALLY_APPLY_CHANGES_CHECKBOX_GENERIC"
+		);
+	}
 
-		<var name="key_pageName" value="${pageName}" />
+	macro viewPageTemplateTypeNotPresent {
+		var key_pageName = "${pageTemplateName}";
 
-		<execute function="AssertElementNotPresent" locator1="Home#PAGE" />
-	</command>
-</definition>
+		Click(locator1 = "SitePagesEditPage#PAGE_TYPE_SELECT");
+
+		AssertTextNotPresent(
+			locator1 = "SitePagesEditPage#PAGE_TYPE_SELECT",
+			value1 = "${pageTemplateName}"
+		);
+	}
+
+	macro viewPageTemplateTypePresent {
+		var key_pageName = "${pageTemplateName}";
+
+		AssertElementPresent(locator1 = "SitePagesEditPage#PAGE_TYPE_SELECT");
+	}
+
+	macro viewPanelPortletListCP {
+		ProductMenuHelper.openProductMenu();
+
+		SitePageNavigator.gotoEditPage(page = "${pageName}");
+
+		var key_componentName = "${componentName}";
+
+		if (IsElementPresent(locator1 = "SitePages#DETAILS_PAGE_TYPE_PANEL_COMPONENT_TREE_ARROW")) {
+			Click(locator1 = "SitePages#DETAILS_PAGE_TYPE_PANEL_COMPONENT_TREE_ARROW");
+		}
+
+		var key_componentOrPortletName = "${componentName}";
+
+		AssertChecked.assertCheckedNotVisible(
+			locator1 = "SitePages#DETAILS_PAGE_TYPE_PANEL_CHECKBOX_INPUT"
+		);
+
+		for (var portletName : list "${portletNameList}") {
+			var key_componentOrPortletName = "${portletName}";
+
+			AssertChecked.assertCheckedNotVisible(
+				locator1 = "SitePages#DETAILS_PAGE_TYPE_PANEL_CHECKBOX_INPUT"
+			);
+		}
+	}
+
+	macro viewPanelPortletListPG {
+		var key_componentName = "${componentName}";
+
+		AssertTextEquals(locator1 = "Panel#PANEL_TITLE", value1 = "${componentName}");
+
+		var key_pageName = "${pageName}";
+
+		AssertTextEquals(locator1 = "Panel#PANEL_PAGE_TITLE", value1 = "${pageName}");
+
+		AssertTextEquals(
+			locator1 = "Message#INFO",
+			value1 = "Please select a tool from the left menu."
+		);
+
+		for (var portletName : list "${portletNameList}") {
+			var key_portletName = "${portletName}";
+
+			AssertTextEquals(locator1 = "Panel#MENU_ITEM", value1 = "${portletName}");
+		}
+	}
+
+	macro viewRTLLayout {
+		AssertCssValue(
+			locator1 = "Home#SITE_NAME",
+			locator2 = "direction",
+			value1 = "rtl"
+		);
+
+		AssertCssValue(
+			locator1 = "ProductMenu#TOGGLE",
+			locator2 = "text-align",
+			value1 = "right"
+		);
+
+		AssertCssValue(
+			locator1 = "ProductMenu#PRODUCT_MENU_OPENED",
+			locator2 = "right",
+			value1 = "0px"
+		);
+	}
+
+	macro viewSelectedLayoutColumn {
+		AssertElementPresent(
+			locator1 = "SitePagesEditPage#LAYOUT_CARD_SELECTED",
+			key_columnName = "${columnName}"
+		);
+	}
+
+	macro viewSiteNameTranslationsPG {
+		Click(locator1 = "Language#SELECT_LANGUAGE", key_language = "${language}");
+
+		AssertTextEquals(locator1 = "Home#SITE_NAME", value1 = "${siteName}");
+	}
+
+	macro viewSpecificPG {
+		for (var pageName : list "${pageNameList}") {
+			var key_pageName = "${pageName}";
+
+			AssertTextEquals(locator1 = "Home#PAGE", value1 = "${pageName}");
+		}
+	}
+
+	macro viewTranslationsPG {
+		Navigator.openSpecificURL(url = "${sitePageURL}");
+
+		AssertLocation(value1 = "${sitePageURL}");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Home#PORTAL_LOCALIZATION_MESSAGE_INFO",
+			value1 = "${pageLocalizationMessage}"
+		);
+
+		AssertTextEquals(
+			locator1 = "Home#PORTAL_LOCALIZATION_PREFERRED_MESSAGE",
+			value1 = "${pageLocalizationPreferredLanguage}"
+		);
+	}
+
+	macro viewURLLocale {
+		if (isSet(localizationOption)) {
+			AssertClick(locator1 = "Message#INFO_4", value1 = "${localizationOption}");
+		}
+
+		AssertLocation(value1 = "${localizationPageURL}");
+	}
+
+	macro viewWithWorkflowPG {
+		Pause(locator1 = "5000");
+
+		if ("${workflowStatus}" == "Ready for Publication") {
+			AssertElementPresent(locator1 = "Staging#STAGING_MENU_READY_FOR_PUBLICATION");
+		}
+		else {
+			AssertTextEquals(
+				locator1 = "Message#WORKFLOW_STATUS",
+				value1 = "${workflowStatus}"
+			);
+		}
+
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "Staging#LIVE_BUTTON",
+			value1 = "Live"
+		);
+
+		var key_pageName = "${pageName}";
+
+		AssertElementNotPresent(locator1 = "Home#PAGE");
+	}
+}

@@ -1,6 +1,4 @@
 Bundle-Name: Liferay Login Authentication Facebook Connect Web
 Bundle-SymbolicName: com.liferay.login.authentication.facebook.connect.web
-Bundle-Version: 2.0.11
-Liferay-Releng-Module-Group-Description:
-Liferay-Releng-Module-Group-Title:
+Bundle-Version: 2.0.16
 Web-ContextPath: /login-authentication-facebook-connect-web

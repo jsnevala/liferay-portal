@@ -18,13 +18,12 @@ import com.liferay.document.library.display.context.BaseDLDisplayContextFactory;
 import com.liferay.document.library.display.context.DLDisplayContextFactory;
 import com.liferay.document.library.display.context.DLViewFileVersionDisplayContext;
 import com.liferay.portal.kernel.repository.model.FileVersion;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
+import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Adolfo Pérez
@@ -41,19 +40,11 @@ public class FileVersionDiscussionDLViewFileVersionDisplayContextFactory
 
 		return new FileVersionDiscussionDLViewFileVersionDisplayContext(
 			parentDLViewFileVersionDisplayContext, request, response,
-			fileVersion, _resourceBundleLoader);
+			fileVersion,
+			ResourceBundleLoaderUtil.
+				getResourceBundleLoaderByBundleSymbolicName(
+					"com.liferay.document.library.file.version.discussion." +
+						"web"));
 	}
-
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.document.library.file.version.discussion.web)",
-		unbind = "-"
-	)
-	protected void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = resourceBundleLoader;
-	}
-
-	private ResourceBundleLoader _resourceBundleLoader;
 
 }

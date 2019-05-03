@@ -59,7 +59,21 @@ boolean changeStructure = GetterUtil.getBoolean(request.getAttribute("edit_artic
 	</c:if>
 </liferay-ui:error>
 
-<liferay-ui:error exception="<%= NoSuchFileEntryException.class %>" message="the-content-references-a-missing-file-entry" />
+<liferay-ui:error exception="<%= NoSuchFileEntryException.class %>">
+
+	<%
+	NoSuchFileEntryException nsfee = (NoSuchFileEntryException)errorException;
+
+	String message = nsfee.getMessage();
+
+	int index = message.indexOf("{");
+
+	String[] args = {message.substring(index)};
+	%>
+
+	<liferay-ui:message arguments="<%= args %>" key="unable-to-validate-referenced-file-entry-because-it-cannot-be-found-with-the-following-parameters-x" />
+</liferay-ui:error>
+
 <liferay-ui:error exception="<%= NoSuchImageException.class %>" message="please-select-an-existing-small-image" />
 
 <liferay-ui:error exception="<%= NoSuchLayoutException.class %>">
@@ -75,7 +89,28 @@ boolean changeStructure = GetterUtil.getBoolean(request.getAttribute("edit_artic
 			<liferay-ui:message key="please-select-an-existing-display-page" />
 		</c:when>
 		<c:otherwise>
-			<liferay-ui:message key="the-content-references-a-missing-page" />
+
+			<%
+			int index = message.indexOf(": ");
+
+			String[] messageArgs = null;
+			String messageKey = null;
+
+			if (message.contains("with url: ")) {
+				messageArgs = new String[] {message.substring(index + 2)};
+				messageKey = "unable-to-validate-referenced-page-because-it-cannot-be-found-with-url-x";
+			}
+			else if (message.contains("group cannot be found: ")) {
+				messageArgs = new String[] {message.substring(index + 2)};
+				messageKey = "unable-to-validate-referenced-page-because-the-page-group-with-id-x-cannot-be-found";
+			}
+			else {
+				messageArgs = new String[0];
+				messageKey = "the-content-references-a-missing-page";
+			}
+			%>
+
+			<liferay-ui:message arguments="<%= messageArgs %>" key="<%= messageKey %>" />
 		</c:otherwise>
 	</c:choose>
 </liferay-ui:error>
@@ -105,15 +140,21 @@ boolean changeStructure = GetterUtil.getBoolean(request.getAttribute("edit_artic
 		</c:choose>
 	</c:if>
 
-	<aui:input ignoreRequestValue="<%= changeStructure %>" label="summary" name="description" />
+	<aui:input ignoreRequestValue="<%= changeStructure %>" label="summary" name="description" wrapperCssClass="article-content-description" />
+
+	<%
+	JournalItemSelectorHelper journalItemSelectorHelper = new JournalItemSelectorHelper(article, journalDisplayContext.getFolder(), renderRequest, renderResponse);
+	%>
 
 	<liferay-ddm:html
 		checkRequired="<%= classNameId == JournalArticleConstants.CLASSNAME_ID_DEFAULT %>"
 		classNameId="<%= PortalUtil.getClassNameId(DDMStructure.class) %>"
 		classPK="<%= ddmStructure.getStructureId() %>"
 		ddmFormValues="<%= journalDisplayContext.getDDMFormValues(ddmStructure) %>"
+		documentLibrarySelectorURL="<%= String.valueOf(journalItemSelectorHelper.getDocumentLibrarySelectorURL()) %>"
 		ignoreRequestValue="<%= changeStructure %>"
-		requestedLocale="<%= LocaleUtil.fromLanguageId(defaultLanguageId) %>"
+		imageSelectorURL="<%= String.valueOf(journalItemSelectorHelper.getImageSelectorURL()) %>"
+		requestedLocale="<%= locale %>"
 	/>
 
 	<aui:input label="searchable" name="indexable" type="toggle-switch" value="<%= (article != null) ? article.isIndexable() : true %>" />

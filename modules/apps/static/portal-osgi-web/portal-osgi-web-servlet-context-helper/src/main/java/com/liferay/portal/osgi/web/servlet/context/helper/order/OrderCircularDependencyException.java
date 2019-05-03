@@ -23,7 +23,7 @@ import java.util.List;
 
 /**
  * @author Vernon Singleton
- * @author Juan Gonzalez
+ * @author Juan González
  */
 public class OrderCircularDependencyException extends Exception {
 

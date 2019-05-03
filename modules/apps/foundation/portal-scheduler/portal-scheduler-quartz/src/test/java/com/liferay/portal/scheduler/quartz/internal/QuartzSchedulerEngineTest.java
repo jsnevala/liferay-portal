@@ -36,6 +36,7 @@ import com.liferay.portal.kernel.security.SecureRandomUtil;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.Props;
@@ -826,15 +827,7 @@ public class QuartzSchedulerEngineTest {
 	}
 
 	protected Props setUpProps() {
-		Props props = Mockito.mock(Props.class);
-
-		Mockito.when(
-			props.get(PropsKeys.SCHEDULER_ENABLED)
-		).thenReturn(
-			"true"
-		);
-
-		return props;
+		return PropsTestUtil.setProps(PropsKeys.SCHEDULER_ENABLED, "true");
 	}
 
 	private static final int _DEFAULT_INTERVAL = 10;
@@ -851,8 +844,6 @@ public class QuartzSchedulerEngineTest {
 	private static final String _TEST_JOB_NAME_0 = "test.job.0";
 
 	private static final String _TEST_JOB_NAME_PREFIX = "test.job.";
-
-	private static final String _TEST_PORTLET_ID = "testPortletId";
 
 	private JSONFactory _jsonFactory;
 	private QuartzSchedulerEngine _quartzSchedulerEngine;
@@ -921,7 +912,7 @@ public class QuartzSchedulerEngineTest {
 		}
 
 		@Override
-		public boolean checkExists(JobKey jobkey) {
+		public boolean checkExists(JobKey jobKey) {
 			return false;
 		}
 
@@ -1002,7 +993,7 @@ public class QuartzSchedulerEngineTest {
 			Set<JobKey> jobKeys = new HashSet<>();
 
 			for (JobKey jobKey : _jobs.keySet()) {
-				if (jobKey.getGroup().equals(groupName)) {
+				if (Objects.equals(jobKey.getGroup(), groupName)) {
 					jobKeys.add(jobKey);
 				}
 			}
@@ -1061,7 +1052,7 @@ public class QuartzSchedulerEngineTest {
 
 		@Override
 		public List<? extends org.quartz.Trigger> getTriggersOfJob(
-			JobKey jobkey) {
+			JobKey jobKey) {
 
 			return Collections.emptyList();
 		}
@@ -1074,7 +1065,7 @@ public class QuartzSchedulerEngineTest {
 		}
 
 		@Override
-		public boolean interrupt(JobKey jobkey) {
+		public boolean interrupt(JobKey jobKey) {
 			return false;
 		}
 
@@ -1090,7 +1081,7 @@ public class QuartzSchedulerEngineTest {
 
 		@Override
 		public boolean isShutdown() {
-			if (_ready == false) {
+			if (!_ready) {
 				return true;
 			}
 
@@ -1126,7 +1117,7 @@ public class QuartzSchedulerEngineTest {
 			String groupName = groupMatcher.getCompareToValue();
 
 			for (JobKey jobKey : _jobs.keySet()) {
-				if (jobKey.getGroup().equals(groupName)) {
+				if (Objects.equals(jobKey.getGroup(), groupName)) {
 					pauseJob(jobKey);
 				}
 			}
@@ -1184,7 +1175,7 @@ public class QuartzSchedulerEngineTest {
 			String groupName = groupMatcher.getCompareToValue();
 
 			for (JobKey jobKey : _jobs.keySet()) {
-				if (jobKey.getGroup().equals(groupName)) {
+				if (Objects.equals(jobKey.getGroup(), groupName)) {
 					resumeJob(jobKey);
 				}
 			}
@@ -1247,11 +1238,11 @@ public class QuartzSchedulerEngineTest {
 		}
 
 		@Override
-		public void triggerJob(JobKey jobkey) {
+		public void triggerJob(JobKey jobKey) {
 		}
 
 		@Override
-		public void triggerJob(JobKey jobkey, JobDataMap jobDataMap) {
+		public void triggerJob(JobKey jobKey, JobDataMap jobDataMap) {
 		}
 
 		@Override

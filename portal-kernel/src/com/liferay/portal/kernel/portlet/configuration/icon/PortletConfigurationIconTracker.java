@@ -58,7 +58,11 @@ public class PortletConfigurationIconTracker {
 	}
 
 	protected static String getKey(String portletId, String path) {
-		return portletId.concat(StringPool.COLON).concat(path);
+		return portletId.concat(
+			StringPool.COLON
+		).concat(
+			path
+		);
 	}
 
 	protected static Set<String> getPaths(
@@ -107,19 +111,19 @@ public class PortletConfigurationIconTracker {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		PortletRequestWrapper portletRequestWrapper =
-			new PortletRequestWrapper(portletRequest) {
+		PortletRequestWrapper portletRequestWrapper = new PortletRequestWrapper(
+			portletRequest) {
 
-				@Override
-				public Object getAttribute(String name) {
-					if (name == WebKeys.THEME_DISPLAY) {
-						return themeDisplay;
-					}
-
-					return super.getAttribute(name);
+			@Override
+			public Object getAttribute(String name) {
+				if (name == WebKeys.THEME_DISPLAY) {
+					return themeDisplay;
 				}
 
-			};
+				return super.getAttribute(name);
+			}
+
+		};
 
 		for (String path : getPaths(portletId, portletRequest)) {
 			List<PortletConfigurationIcon> portletPortletConfigurationIcons =
@@ -167,8 +171,8 @@ public class PortletConfigurationIconTracker {
 		_serviceTrackerList = ServiceTrackerCollections.openList(
 			PortletConfigurationIconLocator.class);
 	private static final ServiceTrackerMap
-		<String, List<PortletConfigurationIcon>>
-			_serviceTrackerMap = ServiceTrackerCollections.openMultiValueMap(
+		<String, List<PortletConfigurationIcon>> _serviceTrackerMap =
+			ServiceTrackerCollections.openMultiValueMap(
 				PortletConfigurationIcon.class, null,
 				new PortletConfigurationIconServiceReferenceMapper());
 

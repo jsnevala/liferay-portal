@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.repository.liferayrepository.LiferayRepository;
 import com.liferay.portal.repository.portletrepository.PortletRepository;
+import com.liferay.portal.upgrade.v7_0_0.util.DLFileEntryTypeTable;
 import com.liferay.portal.upgrade.v7_0_0.util.DLFolderTable;
 
 import java.sql.PreparedStatement;
@@ -104,6 +105,8 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 
 		updateFileEntryTypeDDMStructureLinks();
 
+		updateFileEntryTypeFileEntryTypeKeys();
+
 		// DLFileVersion
 
 		updateFileVersionFileNames();
@@ -148,8 +151,8 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #hasFileEntry(long, long,
-	 *             long, String, String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #hasFileEntry(long, long, long, String, String)}
 	 */
 	@Deprecated
 	protected boolean hasFileEntry(long groupId, long folderId, String fileName)
@@ -172,7 +175,7 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 					"extension) where (fileName is null or fileName = '') " +
 						"and LENGTH(title) + LENGTH(extension) < 255");
 
-			_updateLongFileEntryFileNames();
+			_updateLongFileNames("DLFileEntry");
 
 			runSQL(
 				"update DLFileEntry set fileName = REPLACE(fileName, '/', " +
@@ -199,6 +202,20 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 			}
 
 			runSQL("drop table DLFileEntryTypes_DDMStructures");
+		}
+	}
+
+	protected void updateFileEntryTypeFileEntryTypeKeys() throws Exception {
+		try (LoggingTimer loggingTimer = new LoggingTimer()) {
+			if (!hasColumnType(
+					DLFileEntryTypeTable.class, "fileEntryTypeKey",
+					"VARCHAR(75) null")) {
+
+				alter(
+					DLFileEntryTypeTable.class,
+					new AlterColumnType(
+						"fileEntryTypeKey", "VARCHAR(75) null"));
+			}
 		}
 	}
 
@@ -373,34 +390,19 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
 			runSQL("alter table DLFileVersion add fileName VARCHAR(255) null");
 
-			try (PreparedStatement ps1 = connection.prepareStatement(
-					"select fileVersionId, extension, title from " +
-						"DLFileVersion");
-				PreparedStatement ps2 =
-					AutoBatchPreparedStatementUtil.concurrentAutoBatch(
-						connection,
-						"update DLFileVersion set fileName = ? where " +
-							"fileVersionId = ?");
-				ResultSet rs = ps1.executeQuery()) {
+			runSQL(
+				"update DLFileVersion set fileName = title where title like " +
+					"CONCAT('%.', extension) or extension = '' or extension " +
+						"is null");
 
-				while (rs.next()) {
-					long fileVersionId = rs.getLong("fileVersionId");
-					String extension = GetterUtil.getString(
-						rs.getString("extension"));
-					String title = GetterUtil.getString(rs.getString("title"));
+			runSQL(
+				StringBundler.concat(
+					"update DLFileVersion set fileName = CONCAT(title, ",
+					"CONCAT('.', extension)) where (fileName is null or ",
+					"fileName = '') and LENGTH(title) + LENGTH(extension) < ",
+					"255"));
 
-					String fileName = DLUtil.getSanitizedFileName(
-						title, extension);
-
-					ps2.setString(1, fileName);
-
-					ps2.setLong(2, fileVersionId);
-
-					ps2.addBatch();
-				}
-
-				ps2.executeBatch();
-			}
+			_updateLongFileNames("DLFileVersion");
 		}
 	}
 
@@ -408,6 +410,7 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
 			long liferayRepositoryClassNameId = PortalUtil.getClassNameId(
 				LiferayRepository.class);
+
 			long portletRepositoryClassNameId = PortalUtil.getClassNameId(
 				PortletRepository.class);
 
@@ -559,14 +562,14 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 		}
 	}
 
-	private void _updateLongFileEntryFileNames() throws Exception {
+	private void _updateLongFileNames(String tableName) throws Exception {
 		try (PreparedStatement ps1 = connection.prepareStatement(
-				"select fileEntryId, title, extension from DLFileEntry where " +
-					"fileName = '' or fileName is null");
+				"select fileEntryId, title, extension from " + tableName +
+					" where fileName = '' or fileName is null");
 			PreparedStatement ps2 = AutoBatchPreparedStatementUtil.autoBatch(
 				connection.prepareStatement(
-					"update DLFileEntry set fileName = ? where fileEntryId = " +
-						"?"));
+					"update " + tableName +
+						" set fileName = ? where fileEntryId = ?"));
 			ResultSet rs = ps1.executeQuery()) {
 
 			while (rs.next()) {

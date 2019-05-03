@@ -59,7 +59,7 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class WebServerTrashTest extends BaseWebServerTestCase {
 

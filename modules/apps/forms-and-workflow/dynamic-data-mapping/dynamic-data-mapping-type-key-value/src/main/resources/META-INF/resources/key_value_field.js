@@ -15,7 +15,7 @@ AUI.add(
 					},
 
 					key: {
-						valueFn: '_valueKey'
+						valueFn: '_keyValueFn'
 					},
 
 					strings: {
@@ -89,7 +89,7 @@ AUI.add(
 						var key = instance.get('key');
 
 						if (!key) {
-							instance.set('key', instance._valueKey());
+							instance.set('key', instance._keyValueFn());
 						}
 
 						KeyValueField.superclass.render.apply(instance, arguments);
@@ -156,6 +156,12 @@ AUI.add(
 						}
 
 						return size;
+					},
+
+					_keyValueFn: function() {
+						var instance = this;
+
+						return instance.normalizeKey(instance.getContextValue());
 					},
 
 					_onClickCancel: function() {
@@ -256,12 +262,6 @@ AUI.add(
 						var instance = this;
 
 						return instance.get('key') !== instance.normalizeKey(instance.getContextValue());
-					},
-
-					_valueKey: function() {
-						var instance = this;
-
-						return instance.normalizeKey(instance.getContextValue());
 					}
 				}
 			}

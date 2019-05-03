@@ -173,7 +173,7 @@ String selectStyle = (String)request.getAttribute("configuration.jsp-selectStyle
 												}
 											%>
 
-												<aui:option label="<%= HtmlUtil.escapeAttribute(classType.getName()) %>" selected="<%= !anyAssetSubtype && (assetSelectedClassTypeIds.length == 1) && ((assetSelectedClassTypeIds[0]).equals(classType.getClassTypeId())) %>" value="<%= classType.getClassTypeId() %>" />
+												<aui:option label="<%= HtmlUtil.escapeAttribute(classType.getName()) %>" selected="<%= !anyAssetSubtype && (assetSelectedClassTypeIds.length == 1) && (assetSelectedClassTypeIds[0]).equals(classType.getClassTypeId()) %>" value="<%= classType.getClassTypeId() %>" />
 
 											<%
 											}
@@ -227,7 +227,7 @@ String selectStyle = (String)request.getAttribute("configuration.jsp-selectStyle
 										</div>
 									</c:if>
 
-									<div class="<%= assetSelectedClassTypeIds.length > 1 ? StringPool.BLANK : "hide" %>" id="<portlet:namespace /><%= className %>Boxes">
+									<div class="<%= (assetSelectedClassTypeIds.length > 1) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace /><%= className %>Boxes">
 										<liferay-ui:input-move-boxes
 											leftBoxName='<%= className + "currentClassTypeIds" %>'
 											leftList="<%= subtypesLeftList %>"
@@ -276,7 +276,7 @@ String selectStyle = (String)request.getAttribute("configuration.jsp-selectStyle
 									<liferay-util:buffer
 										var="messageArgument"
 									>
-										<em>(<liferay-ui:message key='<%= dqre.isContains() ? "contains" : "does-not-contain" %>' /> - <liferay-ui:message key='<%= dqre.isAndOperator() ? "all" : "any" %>' /> - <liferay-ui:message key='<%= name.equals(("assetTags")) ? "tags" : "categories" %>' />)</em>
+										<em>(<liferay-ui:message key='<%= dqre.isContains() ? "contains" : "does-not-contain" %>' /> - <liferay-ui:message key='<%= dqre.isAndOperator() ? "all" : "any" %>' /> - <liferay-ui:message key='<%= name.equals("assetTags") ? "tags" : "categories" %>' />)</em>
 									</liferay-util:buffer>
 
 									<liferay-ui:message arguments="<%= messageArgument %>" key="only-one-rule-with-the-combination-x-is-supported" translateArguments="<%= false %>" />
@@ -312,6 +312,7 @@ String selectStyle = (String)request.getAttribute("configuration.jsp-selectStyle
 
 								for (int queryLogicIndex : queryLogicIndexes) {
 									String queryValues = StringUtil.merge(portletPreferences.getValues("queryValues" + queryLogicIndex, new String[0]));
+
 									String tagNames = ParamUtil.getString(request, "queryTagNames" + queryLogicIndex, queryValues);
 									String categoryIds = ParamUtil.getString(request, "queryCategoryIds" + queryLogicIndex, queryValues);
 

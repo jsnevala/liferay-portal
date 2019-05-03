@@ -24,10 +24,7 @@ import com.liferay.asset.kernel.validator.AssetEntryValidator;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
-import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringBundler;
 
@@ -40,7 +37,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Juan Fernández
  */
 @Component(
-	immediate = true, property = {"model.class.name=*"},
+	immediate = true, property = "model.class.name=*",
 	service = AssetEntryValidator.class
 )
 public class CardinalityAssetEntryValidator implements AssetEntryValidator {
@@ -52,22 +49,8 @@ public class CardinalityAssetEntryValidator implements AssetEntryValidator {
 		throws PortalException {
 
 		List<AssetVocabulary> assetVocabularies =
-			_assetVocabularyLocalService.getGroupVocabularies(groupId, false);
-
-		Group group = _groupLocalService.getGroup(groupId);
-
-		if (!group.isCompany()) {
-			Group companyGroup = _groupLocalService.fetchCompanyGroup(
-				group.getCompanyId());
-
-			if (companyGroup != null) {
-				assetVocabularies = ListUtil.copy(assetVocabularies);
-
-				assetVocabularies.addAll(
-					_assetVocabularyLocalService.getGroupVocabularies(
-						companyGroup.getGroupId()));
-			}
-		}
+			_assetVocabularyLocalService.getGroupsVocabularies(
+				_portal.getCurrentAndAncestorSiteGroupIds(groupId));
 
 		long classNameId = _classNameLocalService.getClassNameId(className);
 
@@ -80,7 +63,7 @@ public class CardinalityAssetEntryValidator implements AssetEntryValidator {
 	}
 
 	/**
-	 * @deprecated As of 1.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override
@@ -147,11 +130,6 @@ public class CardinalityAssetEntryValidator implements AssetEntryValidator {
 		_classNameLocalService = classNameLocalService;
 	}
 
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
 	protected void validate(
 			long classNameId, long classTypePK, final long[] categoryIds,
 			AssetVocabulary assetVocabulary)
@@ -183,7 +161,6 @@ public class CardinalityAssetEntryValidator implements AssetEntryValidator {
 
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
 	private ClassNameLocalService _classNameLocalService;
-	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Portal _portal;

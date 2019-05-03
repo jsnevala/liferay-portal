@@ -40,7 +40,7 @@ import java.util.Map;
 import javax.portlet.PortletURL;
 
 /**
- * @author Ambrin Chaudhary
+ * @author Ambrín Chaudhary
  */
 public abstract class BaseTinyMCEEditorConfigContributor
 	extends BaseEditorConfigContributor {

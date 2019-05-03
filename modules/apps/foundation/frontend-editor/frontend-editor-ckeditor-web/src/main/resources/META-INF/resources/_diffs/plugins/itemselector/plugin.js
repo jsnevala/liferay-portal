@@ -1,4 +1,6 @@
 (function() {
+	var IE9AndLater = AUI.Env.UA.ie >= 9;
+
 	var STR_FILE_ENTRY_RETURN_TYPE = 'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType';
 
 	var TPL_AUDIO_SCRIPT = 'boundingBox: "#" + mediaId,' +
@@ -326,7 +328,6 @@
 					AUI().use(
 						'liferay-item-selector-dialog',
 						function(A) {
-
 							itemSelectorDialog = new A.LiferayItemSelectorDialog(
 								{
 									eventName: eventName,
@@ -350,13 +351,21 @@
 					try {
 						var itemValue = JSON.parse(selectedItem.value);
 
-						itemSrc = editor.config.attachmentURLPrefix ? editor.config.attachmentURLPrefix + itemValue.title : itemValue.url;
+						itemSrc = editor.config.attachmentURLPrefix ? editor.config.attachmentURLPrefix + encodeURIComponent(itemValue.title) : itemValue.url;
 					}
 					catch (e) {
 					}
 				}
 
 				return itemSrc;
+			},
+
+			_isEmptySelection: function(editor) {
+				var selection = editor.getSelection();
+
+				var ranges = selection.getRanges();
+
+				return selection.getType() === CKEDITOR.SELECTION_NONE || (ranges.length === 1 && (ranges[0].collapsed || IE9AndLater));
 			},
 
 			_onSelectedAudioChange: function(editor, callback, event) {
@@ -385,7 +394,6 @@
 
 				if (selectedItem) {
 					var eventName = editor.name + 'selectItem';
-
 					var imageSrc = instance._getItemSrc(editor, selectedItem);
 
 					Liferay.Util.getWindow(eventName).onceAfter(
@@ -396,9 +404,26 @@
 									callback(imageSrc, selectedItem);
 								}
 								else {
-									var el = CKEDITOR.dom.element.createFromHtml('<img src="' + imageSrc + '">');
+									var elementOuterHtml = '<img src="' + imageSrc + '">';
 
-									editor.insertElement(el);
+									editor.insertHtml(elementOuterHtml);
+
+									if (instance._isEmptySelection(editor)) {
+										if (IE9AndLater) {
+											var emptySelectionMarkup = '<br />';
+
+											var usingAlloyEditor = typeof AlloyEditor == 'undefined';
+
+											if (!usingAlloyEditor) {
+												emptySelectionMarkup = elementOuterHtml + emptySelectionMarkup;
+											}
+
+											editor.insertHtml(emptySelectionMarkup);
+										}
+										else {
+											editor.execCommand('enter');
+										}
+									}
 
 									editor.focus();
 								}

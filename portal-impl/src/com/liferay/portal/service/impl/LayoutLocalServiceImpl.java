@@ -17,6 +17,7 @@ package com.liferay.portal.service.impl;
 import com.liferay.exportimport.kernel.lar.MissingReferences;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
+import com.liferay.layouts.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -270,7 +271,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		layout.setExpandoBridgeAttributes(serviceContext);
 
-		layoutPersistence.update(layout);
+		layout = layoutPersistence.update(layout);
 
 		// Layout friendly URLs
 
@@ -425,6 +426,21 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	}
 
 	/**
+	 * Deletes the layout with the plid, also deleting the layout's child
+	 * layouts, and associated resources.
+	 *
+	 * @param  layout the layout
+	 * @return the deleted layout
+	 * @throws PortalException if a portal exception occurred
+	 */
+	@Override
+	public Layout deleteLayout(Layout layout) throws PortalException {
+		layoutLocalService.deleteLayout(layout, true, new ServiceContext());
+
+		return layout;
+	}
+
+	/**
 	 * Deletes the layout, its child layouts, and its associated resources.
 	 *
 	 * @param layout the layout
@@ -534,7 +550,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		// Layout
 
-		layoutPersistence.remove(layout);
+		layout = layoutPersistence.remove(layout);
 
 		// Layout set
 
@@ -555,6 +571,22 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			systemEventHierarchyEntry.setExtraDataValue(
 				"privateLayout", String.valueOf(layout.isPrivateLayout()));
 		}
+	}
+
+	/**
+	 * Deletes the layout with the plid, also deleting the layout's child
+	 * layouts, and associated resources.
+	 *
+	 * @param  plid the primary key of the layout
+	 * @throws PortalException if a portal exception occurred
+	 */
+	@Override
+	public Layout deleteLayout(long plid) throws PortalException {
+		Layout layout = layoutPersistence.findByPrimaryKey(plid);
+
+		layoutLocalService.deleteLayout(layout, true, new ServiceContext());
+
+		return layout;
 	}
 
 	/**
@@ -658,7 +690,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 * @param      endDate the export's end date
 	 * @return     the layouts as a byte array
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -683,7 +715,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 * @param      endDate the export's end date
 	 * @return     the layout as a byte array
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -697,7 +729,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#exportLayoutsAsFile(
 	 *             ExportImportConfiguration)}
 	 */
@@ -725,7 +757,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 * @param      endDate the export's end date
 	 * @return     the layouts as a File
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -739,7 +771,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#exportLayoutsAsFileInBackground(
 	 *             long, ExportImportConfiguration)}
 	 */
@@ -754,7 +786,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#exportLayoutsAsFileInBackground(
 	 *             long, long)}
 	 */
@@ -769,7 +801,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -784,7 +816,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -812,7 +844,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 * @param      endDate the export's end date
 	 * @return     the portlet information as a byte array
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -826,7 +858,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -840,7 +872,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#exportPortletInfoAsFile(
 	 *             ExportImportConfiguration)}}
 	 */
@@ -868,7 +900,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 * @param      endDate the export's end date
 	 * @return     the portlet information as a file
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -882,7 +914,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -896,7 +928,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#exportPortletInfoAsFileInBackground(
 	 *             long, ExportImportConfiguration)}}
 	 */
@@ -911,7 +943,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#exportPortletInfoAsFileInBackground(
 	 *             long, long)}}
 	 */
@@ -926,7 +958,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -941,7 +973,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1200,23 +1232,70 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		return layoutPersistence.findByIconImageId(iconImageId);
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 * 			   #getLayoutChildLayouts(List)}
+	 */
+	@Deprecated
 	@Override
 	public Map<Long, List<Layout>> getLayoutChildLayouts(
 		LayoutSet layoutSet, List<Layout> parentLayouts) {
 
-		List<Layout> childLayouts = _getChildLayouts(
-			layoutSet,
-			ListUtil.toLongArray(parentLayouts, Layout::getLayoutId));
+		return getLayoutChildLayouts(parentLayouts);
+	}
+
+	@Override
+	public Map<Long, List<Layout>> getLayoutChildLayouts(
+		List<Layout> parentLayouts) {
+
+		Map<LayoutSet, List<Layout>> layoutsMap = new HashMap<>();
+
+		for (Layout parentLayout : parentLayouts) {
+			try {
+				List<Layout> layouts = layoutsMap.computeIfAbsent(
+					parentLayout.getLayoutSet(), key -> new ArrayList<>());
+
+				layouts.add(parentLayout);
+			}
+			catch (PortalException pe) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Unable to get layout set for Layout with plid=" +
+							parentLayout.getPlid(),
+						pe);
+				}
+			}
+		}
+
+		List<Layout> childLayouts = new ArrayList<>();
+
+		for (Map.Entry<LayoutSet, List<Layout>> entry : layoutsMap.entrySet()) {
+			List<Layout> newChildLayouts = _getChildLayouts(
+				entry.getKey(),
+				ListUtil.toLongArray(entry.getValue(), Layout::getLayoutId));
+
+			childLayouts.addAll(newChildLayouts);
+		}
 
 		Map<Long, List<Layout>> layoutChildLayouts = new HashMap<>();
 
 		for (Layout childLayout : childLayouts) {
-			List<Layout> layoutChildLayoutsList =
-				layoutChildLayouts.computeIfAbsent(
-					childLayout.getParentLayoutId(),
-					parentLayoutId -> new ArrayList<>());
+			try {
+				List<Layout> layoutChildLayoutsList =
+					layoutChildLayouts.computeIfAbsent(
+						childLayout.getParentPlid(),
+						parentPlid -> new ArrayList<>());
 
-			layoutChildLayoutsList.add(childLayout);
+				layoutChildLayoutsList.add(childLayout);
+			}
+			catch (PortalException pe) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Unable to get parent plid for Layout with plid=" +
+							childLayout.getPlid(),
+						pe);
+				}
+			}
 		}
 
 		for (List<Layout> layoutChildLayoutsList :
@@ -1334,11 +1413,11 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 					start, end)) {
 
 				return layoutPersistence.findByG_P_P(
-					groupId, privateLayout, parentLayoutId);
+					groupId, privateLayout, parentLayoutId, start, end);
 			}
 
 			List<Layout> layouts = layoutPersistence.findByG_P_P(
-				groupId, privateLayout, parentLayoutId);
+				groupId, privateLayout, parentLayoutId, start, end);
 
 			return _injectVirtualLayouts(
 				group, layoutSet, layouts, parentLayoutId);
@@ -1557,7 +1636,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 *
 	 * @param      roleId the primary key of the role
 	 * @return     all the layouts without resource permissions
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1668,7 +1747,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			Layout layout = layoutPersistence.findByPrimaryKey(
 				group.getClassPK());
 
-			if (layout.getPrivateLayout() == privateLayout) {
+			if (layout.isPrivateLayout() == privateLayout) {
 				layouts.add(layout);
 			}
 		}
@@ -1835,7 +1914,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#importLayouts(
 	 *             ExportImportConfiguration, File)}}
 	 */
@@ -1850,7 +1929,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#importLayouts(
 	 *             ExportImportConfiguration, InputStream)}}
 	 */
@@ -1876,7 +1955,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 * @param      bytes the byte array with the data
 	 * @throws     PortalException
 	 * @see        com.liferay.exportimport.kernel.lar.LayoutImporter
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1901,7 +1980,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 * @param      file the LAR file with the data
 	 * @throws     PortalException
 	 * @see        com.liferay.exportimport.kernel.lar.LayoutImporter
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1926,7 +2005,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 * @param      is the input stream
 	 * @throws     PortalException
 	 * @see        com.liferay.exportimport.kernel.lar.LayoutImporter
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1940,7 +2019,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#importLayoutsDataDeletions(
 	 *             ExportImportConfiguration, File)}
 	 */
@@ -1955,7 +2034,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#importLayoutsInBackground(
 	 *             long, ExportImportConfiguration, File)}
 	 */
@@ -1971,7 +2050,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#importLayoutsInBackground(
 	 *             long, long, File)}
 	 */
@@ -1986,7 +2065,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -2000,7 +2079,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -2014,7 +2093,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#importPortletDataDeletions(
 	 *             ExportImportConfiguration, File)}
 	 */
@@ -2029,7 +2108,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#importPortletInfo(
 	 *             ExportImportConfiguration, File)}
 	 */
@@ -2044,7 +2123,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#importPortletInfo(
 	 *             ExportImportConfiguration, InputStream)}
 	 */
@@ -2071,7 +2150,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 *             com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys}.
 	 * @param      file the LAR file with the data
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -2097,7 +2176,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 *             com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys}.
 	 * @param      is the input stream
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -2111,7 +2190,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -2125,7 +2204,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -2139,7 +2218,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#importPortletInfoInBackground(
 	 *             long, ExportImportConfiguration, File)}
 	 */
@@ -2155,7 +2234,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#importPortletInfoInBackground(
 	 *             long, long, File)}
 	 */
@@ -2170,7 +2249,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -2184,7 +2263,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -2199,7 +2278,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -2213,7 +2292,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -2351,9 +2430,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			layout.setFriendlyURL(friendlyURL);
 		}
 
-		layoutPersistence.update(layout);
-
-		return layout;
+		return layoutPersistence.update(layout);
 	}
 
 	/**
@@ -2363,8 +2440,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	 * @param      friendlyURL the friendly URL to be assigned
 	 * @param      languageId the primary key of the language
 	 * @return     the updated layout
-	 * @deprecated As of 7.0.0, replaced by {@link #updateFriendlyURL(long,
-	 *             long, String, String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateFriendlyURL(long, long, String, String)}
 	 */
 	@Deprecated
 	@Override
@@ -2390,9 +2467,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		PortalUtil.updateImageId(layout, true, bytes, "iconImageId", 0, 0, 0);
 
-		layoutPersistence.update(layout);
-
-		return layout;
+		return layoutPersistence.update(layout);
 	}
 
 	/**
@@ -2516,7 +2591,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		layout.setExpandoBridgeAttributes(serviceContext);
 
-		layoutPersistence.update(layout);
+		layout = layoutPersistence.update(layout);
 
 		// Layout friendly URLs
 
@@ -2565,9 +2640,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		layout.setModifiedDate(now);
 		layout.setTypeSettings(typeSettingsProperties.toString());
 
-		layoutPersistence.update(layout);
-
-		return layout;
+		return layoutPersistence.update(layout);
 	}
 
 	/**
@@ -2859,6 +2932,10 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			lessThan = true;
 		}
 
+		if (oldPriority == layouts.size()) {
+			lessThan = true;
+		}
+
 		layouts = ListUtil.sort(
 			layouts, new LayoutPriorityComparator(layout, lessThan));
 
@@ -2981,7 +3058,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#validateImportLayoutsFile(
 	 *             ExportImportConfiguration, File)}
 	 */
@@ -2996,7 +3073,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#validateImportLayoutsFile(
 	 *             ExportImportConfiguration, InputStream)}
 	 */
@@ -3012,7 +3089,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -3026,7 +3103,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -3040,7 +3117,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#validateImportPortletInfo(
 	 *             ExportImportConfiguration, File)}
 	 */
@@ -3055,7 +3132,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.kernel.service.ExportImportLocalService#validateImportPortletInfo(
 	 *             ExportImportConfiguration, InputStream)}
 	 */
@@ -3071,7 +3148,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -3085,7 +3162,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 	/**
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -3117,7 +3194,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		}
 
 		String sitemapInclude = typeSettingsProperties.getProperty(
-			"sitemap-include");
+			LayoutTypePortletConstants.SITEMAP_INCLUDE);
 
 		if (Validator.isNotNull(sitemapInclude) &&
 			!sitemapInclude.equals("0") && !sitemapInclude.equals("1")) {
@@ -3139,6 +3216,20 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			catch (NumberFormatException nfe) {
 				throw new SitemapPagePriorityException(nfe);
 			}
+		}
+
+		boolean enableJavaScript =
+			PropsValues.
+				FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_LAYOUT_JAVASCRIPT;
+
+		if (!enableJavaScript) {
+			UnicodeProperties layoutTypeSettingsProperties =
+				layout.getTypeSettingsProperties();
+
+			String javaScript = layoutTypeSettingsProperties.getProperty(
+				"javascript");
+
+			typeSettingsProperties.setProperty("javascript", javaScript);
 		}
 	}
 

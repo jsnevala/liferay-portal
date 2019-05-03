@@ -26,13 +26,10 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.language.LanguageResources;
 import com.liferay.social.kernel.model.SocialRelationConstants;
 import com.liferay.social.kernel.model.SocialRequest;
 import com.liferay.social.kernel.model.SocialRequestConstants;
@@ -52,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + ContactsPortletKeys.CONTACTS_CENTER},
+	property = "javax.portlet.name=" + ContactsPortletKeys.CONTACTS_CENTER,
 	service = UserNotificationHandler.class
 )
 public class ContactsCenterUserNotificationHandler
@@ -87,9 +84,9 @@ public class ContactsCenterUserNotificationHandler
 		String creatorUserName = getUserNameLink(
 			socialRequest.getUserId(), serviceContext);
 
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(
-				serviceContext.getLocale());
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			serviceContext.getLocale(),
+			ContactsCenterUserNotificationHandler.class);
 
 		String title = StringPool.BLANK;
 
@@ -196,21 +193,9 @@ public class ContactsCenterUserNotificationHandler
 		}
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.contacts.web)", unbind = "-"
-	)
-	protected void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader, LanguageResources.RESOURCE_BUNDLE_LOADER);
-	}
-
 	private static final String _BODY =
 		"<div class=\"title\">[$TITLE$]</div><div class=\"body\">[$BODY$]" +
 			"</div>";
-
-	private ResourceBundleLoader _resourceBundleLoader;
 
 	@Reference
 	private SocialRequestLocalService _socialRequestLocalService;

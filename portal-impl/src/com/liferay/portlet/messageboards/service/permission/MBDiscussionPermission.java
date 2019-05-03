@@ -40,9 +40,7 @@ import java.util.List;
  * @author Sergio González
  */
 @OSGiBeanProperties(
-	property = {
-		"model.class.name=com.liferay.message.boards.kernel.model.MBDiscussion"
-	}
+	property = "model.class.name=com.liferay.message.boards.kernel.model.MBDiscussion"
 )
 public class MBDiscussionPermission implements BaseModelPermissionChecker {
 
@@ -82,25 +80,10 @@ public class MBDiscussionPermission implements BaseModelPermissionChecker {
 			return false;
 		}
 
-		MBDiscussion mbDiscussion =
-			MBDiscussionLocalServiceUtil.fetchDiscussion(className, classPK);
-
-		if (mbDiscussion == null) {
-			return false;
-		}
-
 		List<String> resourceActions = ResourceActionsUtil.getResourceActions(
 			className);
 
 		if (!resourceActions.contains(actionId)) {
-			return true;
-		}
-
-		if ((mbDiscussion.getUserId() > 0) &&
-			permissionChecker.hasOwnerPermission(
-				companyId, className, classPK, mbDiscussion.getUserId(),
-				actionId)) {
-
 			return true;
 		}
 

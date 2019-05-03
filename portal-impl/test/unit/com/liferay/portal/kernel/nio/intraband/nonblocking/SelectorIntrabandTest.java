@@ -171,11 +171,12 @@ public class SelectorIntrabandTest {
 		}
 	}
 
-	@AdviseWith(adviceClasses = {Jdk14LogImplAdvice.class})
+	@AdviseWith(adviceClasses = Jdk14LogImplAdvice.class)
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testReceiveDatagram() throws Exception {
 		Pipe readPipe = Pipe.open();
+
 		Pipe writePipe = Pipe.open();
 
 		GatheringByteChannel gatheringByteChannel = writePipe.sink();
@@ -903,7 +904,7 @@ public class SelectorIntrabandTest {
 		}
 	}
 
-	@AdviseWith(adviceClasses = {Jdk14LogImplAdvice.class})
+	@AdviseWith(adviceClasses = Jdk14LogImplAdvice.class)
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testSendDatagramWithCallback() throws Exception {
@@ -911,6 +912,7 @@ public class SelectorIntrabandTest {
 		// Submitted callback
 
 		Pipe readPipe = Pipe.open();
+
 		Pipe writePipe = Pipe.open();
 
 		GatheringByteChannel gatheringByteChannel = writePipe.sink();

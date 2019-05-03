@@ -14,12 +14,18 @@
 
 package com.liferay.portal.util;
 
+import com.liferay.layouts.admin.kernel.model.LayoutTypePortletConstants;
+import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutConstants;
+import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.test.LayoutTestUtil;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -71,6 +77,43 @@ public class PortalImplLayoutURLTest extends BasePortalImplURLTestCase {
 	}
 
 	@Test
+	public void testNotPreserveParametersForLayoutTypeURL() throws Exception {
+		ThemeDisplay themeDisplay = initThemeDisplay(
+			company, group, publicLayout, VIRTUAL_HOSTNAME);
+
+		themeDisplay.setDoAsUserId("impersonated");
+
+		Layout layout = LayoutTestUtil.addLayout(group);
+
+		layout.setType(LayoutConstants.TYPE_URL);
+
+		LayoutLocalServiceUtil.updateLayout(layout);
+
+		String virtualHostnameFriendlyURL = PortalUtil.getLayoutURL(
+			layout, themeDisplay, true);
+
+		if (Validator.isNotNull(
+				layout.getTypeSettingsProperty(
+					LayoutTypePortletConstants.URL)) &&
+			!virtualHostnameFriendlyURL.startsWith(StringPool.SLASH) &&
+			!virtualHostnameFriendlyURL.startsWith(
+				PortalUtil.getPortalURL(layout, themeDisplay))) {
+
+			Assert.assertEquals(
+				StringPool.BLANK,
+				HttpUtil.getParameter(
+					virtualHostnameFriendlyURL, "doAsUserId"));
+		}
+
+		virtualHostnameFriendlyURL = PortalUtil.getLayoutURL(
+			layout, themeDisplay, false);
+
+		Assert.assertEquals(
+			StringPool.BLANK,
+			HttpUtil.getParameter(virtualHostnameFriendlyURL, "doAsUserId"));
+	}
+
+	@Test
 	public void testPreserveParameters() throws Exception {
 		ThemeDisplay themeDisplay = initThemeDisplay(
 			company, group, publicLayout, VIRTUAL_HOSTNAME);
@@ -80,9 +123,15 @@ public class PortalImplLayoutURLTest extends BasePortalImplURLTestCase {
 		String virtualHostnameFriendlyURL = PortalUtil.getLayoutURL(
 			publicLayout, themeDisplay, true);
 
-		Assert.assertEquals(
-			"impersonated",
-			HttpUtil.getParameter(virtualHostnameFriendlyURL, "doAsUserId"));
+		if (virtualHostnameFriendlyURL.startsWith(StringPool.SLASH) ||
+			virtualHostnameFriendlyURL.startsWith(
+				PortalUtil.getPortalURL(themeDisplay))) {
+
+			Assert.assertEquals(
+				"impersonated",
+				HttpUtil.getParameter(
+					virtualHostnameFriendlyURL, "doAsUserId"));
+		}
 	}
 
 	@Test

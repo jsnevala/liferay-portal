@@ -151,6 +151,10 @@ AUI.add(
 						var type = item.type;
 						var value = record.get(item.name);
 
+						if ((!record.changed[item.id]) && (value && value.length > 0)) {
+							return;
+						}
+
 						if (type === 'ddm-link-to-page') {
 							value = FormBuilder.Util.parseJSON(value);
 
@@ -394,7 +398,17 @@ AUI.add(
 								};
 
 								config.inputFormatter = function(value) {
-									return String(value.length > 0);
+									if (Array.isArray(value) && value.length > 0) {
+										value = value[0];
+									}
+
+									var checkedValue = 'false';
+
+									if (value === 'true') {
+										checkedValue = value;
+									}
+
+									return checkedValue;
 								};
 
 								item.formatter = function(obj) {

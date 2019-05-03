@@ -141,9 +141,7 @@ public class MailingListMessageListener extends BaseMessageListener {
 		URLName urlName = new URLName(
 			protocol, host, port, StringPool.BLANK, user, password);
 
-		Store store = session.getStore(urlName);
-
-		return store;
+		return session.getStore(urlName);
 	}
 
 	protected void processMessage(
@@ -171,6 +169,7 @@ public class MailingListMessageListener extends BaseMessageListener {
 
 		long companyId = mailingListRequest.getCompanyId();
 		long groupId = mailingListRequest.getGroupId();
+
 		long categoryId = mailingListRequest.getCategoryId();
 
 		if (_log.isDebugEnabled()) {

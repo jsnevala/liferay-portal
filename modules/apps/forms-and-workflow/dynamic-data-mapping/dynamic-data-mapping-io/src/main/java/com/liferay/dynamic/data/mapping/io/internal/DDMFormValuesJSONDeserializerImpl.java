@@ -21,12 +21,12 @@ import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 
 import java.util.ArrayList;
@@ -48,14 +48,13 @@ public class DDMFormValuesJSONDeserializerImpl
 
 	@Override
 	public DDMFormValues deserialize(
-			DDMForm ddmForm, String serializedDDMFormValues)
-		throws PortalException {
+		DDMForm ddmForm, String serializedDDMFormValues) {
+
+		DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
 
 		try {
 			JSONObject jsonObject = _jsonFactory.createJSONObject(
 				serializedDDMFormValues);
-
-			DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
 
 			setDDMFormValuesAvailableLocales(
 				jsonObject.getJSONArray("availableLanguageIds"), ddmFormValues);
@@ -63,13 +62,16 @@ public class DDMFormValuesJSONDeserializerImpl
 				jsonObject.getString("defaultLanguageId"), ddmFormValues);
 			setDDMFormFieldValues(
 				jsonObject.getJSONArray("fieldValues"), ddmFormValues);
-			setDDMFormLocalizedValuesDefaultLocale(ddmFormValues);
 
-			return ddmFormValues;
+			setDDMFormLocalizedValuesDefaultLocale(ddmFormValues);
 		}
-		catch (JSONException jsone) {
-			throw new PortalException(jsone);
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(e, e);
+			}
 		}
+
+		return ddmFormValues;
 	}
 
 	protected Set<Locale> getAvailableLocales(JSONArray jsonArray) {
@@ -250,6 +252,9 @@ public class DDMFormValuesJSONDeserializerImpl
 
 		ddmFormFieldValue.setNestedDDMFormFields(nestedDDMFormFieldValues);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DDMFormValuesJSONDeserializerImpl.class);
 
 	private JSONFactory _jsonFactory;
 

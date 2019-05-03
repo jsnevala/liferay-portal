@@ -99,7 +99,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.portal.search.solr.configuration.SolrConfiguration",
-	immediate = true, property = {"search.engine.impl=Solr"},
+	immediate = true, property = "search.engine.impl=Solr",
 	service = IndexSearcher.class
 )
 public class SolrIndexSearcher extends BaseIndexSearcher {
@@ -360,7 +360,11 @@ public class SolrIndexSearcher extends BaseIndexSearcher {
 		}
 
 		document.addText(
-			Field.SNIPPET.concat(StringPool.UNDERLINE).concat(snippetFieldName),
+			Field.SNIPPET.concat(
+				StringPool.UNDERLINE
+			).concat(
+				snippetFieldName
+			),
 			StringUtil.merge(list, StringPool.TRIPLE_PERIOD));
 	}
 
@@ -431,7 +435,7 @@ public class SolrIndexSearcher extends BaseIndexSearcher {
 			boolean count)
 		throws Exception {
 
-		QueryConfig queryConfig = query.getQueryConfig();
+		QueryConfig queryConfig = searchContext.getQueryConfig();
 
 		SolrQuery solrQuery = new SolrQuery();
 
@@ -519,9 +523,7 @@ public class SolrIndexSearcher extends BaseIndexSearcher {
 		QueryResponse queryResponse = doSearch(
 			searchContext, query, start, end, false);
 
-		Hits hits = processResponse(queryResponse, searchContext, query);
-
-		return hits;
+		return processResponse(queryResponse, searchContext, query);
 	}
 
 	protected QueryResponse executeSearchRequest(SolrQuery solrQuery)

@@ -782,8 +782,11 @@ public class IntrabandProxyUtil {
 				methodName = method.getName();
 			}
 
-			return methodName.concat(StringPool.DASH).concat(
-				Type.getMethodDescriptor(method));
+			return methodName.concat(
+				StringPool.DASH
+			).concat(
+				Type.getMethodDescriptor(method)
+			);
 		}
 
 	}
@@ -807,8 +810,11 @@ public class IntrabandProxyUtil {
 
 				String name = proxyMethod.getName();
 
-				proxyMethodSignatures[i] = name.concat(StringPool.DASH).concat(
-					Type.getMethodDescriptor(proxyMethod));
+				proxyMethodSignatures[i] = name.concat(
+					StringPool.DASH
+				).concat(
+					Type.getMethodDescriptor(proxyMethod)
+				);
 			}
 		}
 
@@ -816,85 +822,6 @@ public class IntrabandProxyUtil {
 		protected List<Method> idMethods;
 		protected List<Method> proxyMethods;
 		protected String[] proxyMethodSignatures;
-
-	}
-
-	protected static class TemplateStub {
-
-		public static final String[] PROXY_METHOD_SIGNATURES =
-			_getProxyMethodSignatures();
-
-		public TemplateStub(
-			String id, RegistrationReference registrationReference,
-			ExceptionHandler exceptionHandler) {
-
-			if (id == null) {
-				throw new NullPointerException("Id is null");
-			}
-
-			if (registrationReference == null) {
-				throw new NullPointerException(
-					"Registration reference is null");
-			}
-
-			_id = id;
-			_registrationReference = registrationReference;
-			_exceptionHandler = exceptionHandler;
-
-			_intraband = registrationReference.getIntraband();
-		}
-
-		private static String[] _getProxyMethodSignatures() {
-			return new String[0];
-		}
-
-		@SuppressWarnings("unused")
-		private void _send(Serializer serializer) {
-			_intraband.sendDatagram(
-				_registrationReference,
-				Datagram.createRequestDatagram(
-					_PROXY_TYPE, serializer.toByteBuffer()));
-		}
-
-		@SuppressWarnings("unused")
-		private <T extends Serializable> T _syncSend(Serializer serializer) {
-			try {
-				Datagram responseDatagram = _intraband.sendSyncDatagram(
-					_registrationReference,
-					Datagram.createRequestDatagram(
-						_PROXY_TYPE, serializer.toByteBuffer()));
-
-				Deserializer deserializer = new Deserializer(
-					responseDatagram.getDataByteBuffer());
-
-				RPCResponse rpcResponse = deserializer.readObject();
-
-				Exception e = rpcResponse.getException();
-
-				if (e != null) {
-					throw e;
-				}
-
-				return (T)rpcResponse.getResult();
-			}
-			catch (Exception e) {
-				if (_exceptionHandler != null) {
-					_exceptionHandler.onException(e);
-				}
-
-				return null;
-			}
-		}
-
-		private static final byte _PROXY_TYPE = SystemDataType.PROXY.getValue();
-
-		private final ExceptionHandler _exceptionHandler;
-
-		@SuppressWarnings("unused")
-		private String _id;
-
-		private final Intraband _intraband;
-		private final RegistrationReference _registrationReference;
 
 	}
 
@@ -993,6 +920,85 @@ public class IntrabandProxyUtil {
 
 		@SuppressWarnings("unused")
 		private TargetLocator _targetLocator;
+
+	}
+
+	protected static class TemplateStub {
+
+		public static final String[] PROXY_METHOD_SIGNATURES =
+			_getProxyMethodSignatures();
+
+		public TemplateStub(
+			String id, RegistrationReference registrationReference,
+			ExceptionHandler exceptionHandler) {
+
+			if (id == null) {
+				throw new NullPointerException("Id is null");
+			}
+
+			if (registrationReference == null) {
+				throw new NullPointerException(
+					"Registration reference is null");
+			}
+
+			_id = id;
+			_registrationReference = registrationReference;
+			_exceptionHandler = exceptionHandler;
+
+			_intraband = registrationReference.getIntraband();
+		}
+
+		private static String[] _getProxyMethodSignatures() {
+			return new String[0];
+		}
+
+		@SuppressWarnings("unused")
+		private void _send(Serializer serializer) {
+			_intraband.sendDatagram(
+				_registrationReference,
+				Datagram.createRequestDatagram(
+					_PROXY_TYPE, serializer.toByteBuffer()));
+		}
+
+		@SuppressWarnings("unused")
+		private <T extends Serializable> T _syncSend(Serializer serializer) {
+			try {
+				Datagram responseDatagram = _intraband.sendSyncDatagram(
+					_registrationReference,
+					Datagram.createRequestDatagram(
+						_PROXY_TYPE, serializer.toByteBuffer()));
+
+				Deserializer deserializer = new Deserializer(
+					responseDatagram.getDataByteBuffer());
+
+				RPCResponse rpcResponse = deserializer.readObject();
+
+				Exception e = rpcResponse.getException();
+
+				if (e != null) {
+					throw e;
+				}
+
+				return (T)rpcResponse.getResult();
+			}
+			catch (Exception e) {
+				if (_exceptionHandler != null) {
+					_exceptionHandler.onException(e);
+				}
+
+				return null;
+			}
+		}
+
+		private static final byte _PROXY_TYPE = SystemDataType.PROXY.getValue();
+
+		private final ExceptionHandler _exceptionHandler;
+
+		@SuppressWarnings("unused")
+		private String _id;
+
+		private final Intraband _intraband;
+		private final RegistrationReference _registrationReference;
 
 	}
 

@@ -72,7 +72,8 @@ public interface Http {
 	public String decodeURL(String url);
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #decodeURL(String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #decodeURL(String)}
 	 */
 	@Deprecated
 	public String decodeURL(String url, boolean unescapeSpaces);
@@ -82,14 +83,15 @@ public interface Http {
 	public String encodePath(String path);
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link URLCodec#encodeURL(String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             URLCodec#encodeURL(String)}
 	 */
 	@Deprecated
 	public String encodeURL(String url);
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link URLCodec#encodeURL(String,
-	 *             boolean)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             URLCodec#encodeURL(String, boolean)}
 	 */
 	@Deprecated
 	public String encodeURL(String url, boolean escapeSpaces);
@@ -184,7 +186,7 @@ public interface Http {
 	public String shortenURL(String url);
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #shortenURL(String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #shortenURL(String)}
 	 */
 	@Deprecated
 	public String shortenURL(String url, int count);
@@ -333,7 +335,7 @@ public interface Http {
 
 	public enum Method {
 
-		DELETE, GET, HEAD, POST, PUT
+		DELETE, GET, HEAD, PATCH, POST, PUT
 
 	}
 
@@ -451,6 +453,14 @@ public interface Http {
 			}
 		}
 
+		public boolean isPatch() {
+			if (_method == Method.PATCH) {
+				return true;
+			}
+
+			return false;
+		}
+
 		public boolean isPost() {
 			if (_method == Method.POST) {
 				return true;
@@ -538,6 +548,15 @@ public interface Http {
 
 		public void setParts(Map<String, String> parts) {
 			_parts = parts;
+		}
+
+		public void setPatch(boolean patch) {
+			if (patch) {
+				_method = Method.PATCH;
+			}
+			else {
+				_method = Method.GET;
+			}
 		}
 
 		public void setPost(boolean post) {

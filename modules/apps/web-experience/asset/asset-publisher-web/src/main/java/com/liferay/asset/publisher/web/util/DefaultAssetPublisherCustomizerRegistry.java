@@ -48,8 +48,7 @@ public class DefaultAssetPublisherCustomizerRegistry
 
 	@Reference(
 		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		unbind = "unregisterAssetPublisherCustomizer"
+		policy = ReferencePolicy.DYNAMIC
 	)
 	public void registerAssetPublisherCustomizer(
 		AssetPublisherCustomizer assetPublisherCustomizer) {
@@ -65,8 +64,7 @@ public class DefaultAssetPublisherCustomizerRegistry
 			assetPublisherCustomizer.getPortletId());
 	}
 
-	private final
-		Map<String, AssetPublisherCustomizer> _assetPublisherCustomizers =
-			new ConcurrentHashMap<>();
+	private final Map<String, AssetPublisherCustomizer>
+		_assetPublisherCustomizers = new ConcurrentHashMap<>();
 
 }

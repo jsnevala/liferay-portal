@@ -56,8 +56,11 @@ public class ClassPathUtil {
 		if (includeBootClassPath) {
 			String bootClassPath = System.getProperty("sun.boot.class.path");
 
-			jvmClassPath = jvmClassPath.concat(File.pathSeparator).concat(
-				bootClassPath);
+			jvmClassPath = jvmClassPath.concat(
+				File.pathSeparator
+			).concat(
+				bootClassPath
+			);
 		}
 
 		return jvmClassPath;

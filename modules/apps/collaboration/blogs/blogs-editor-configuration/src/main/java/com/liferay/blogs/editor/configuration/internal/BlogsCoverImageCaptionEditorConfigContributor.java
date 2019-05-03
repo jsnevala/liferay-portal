@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Map;
 
@@ -49,6 +50,17 @@ public class BlogsCoverImageCaptionEditorConfigContributor
 
 		jsonObject.put("allowedContent", "a");
 		jsonObject.put("disallowedContent", "br");
+
+		String removePlugins = jsonObject.getString("removePlugins");
+
+		if (Validator.isNotNull(removePlugins)) {
+			removePlugins = removePlugins + ",magicline";
+		}
+		else {
+			removePlugins = "magicline";
+		}
+
+		jsonObject.put("removePlugins", removePlugins);
 	}
 
 	protected JSONObject getToolbarsJSONObject() {

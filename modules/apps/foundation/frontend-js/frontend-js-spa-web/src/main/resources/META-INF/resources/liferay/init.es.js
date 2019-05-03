@@ -21,9 +21,9 @@ var initSPA = function(callback) {
 
 					var loginRedirect = new Uri(Liferay.SPA.loginRedirect);
 
-					var hostname = loginRedirect.getHostname() || window.location.hostname;
+					var host = loginRedirect.getHost() || window.location.host;
 
-					if (!app.isLinkSameOrigin_(hostname)) {
+					if (!app.isLinkSameOrigin_(host)) {
 						return false;
 					}
 

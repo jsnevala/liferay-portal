@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.cluster.ClusterNode;
 import com.liferay.portal.kernel.cluster.ClusterRequest;
 import com.liferay.portal.kernel.cluster.FutureClusterResponses;
 import com.liferay.portal.kernel.concurrent.NoticeableFuture;
-import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.test.CaptureHandler;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
@@ -32,9 +31,9 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.MethodKey;
-import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.ReflectionUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.test.rule.AdviseWith;
@@ -47,7 +46,6 @@ import java.net.InetAddress;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Exchanger;
@@ -408,7 +406,7 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 				isMasterTokenAcquiredNotified());
 	}
 
-	@AdviseWith(adviceClasses = {ClusterExecutorAdvice.class})
+	@AdviseWith(adviceClasses = ClusterExecutorAdvice.class)
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testGetMasterClusterNodeIdRetry() throws Exception {
@@ -465,7 +463,7 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 
 		ClusterExecutorAdvice.unblock(1);
 
-		Assert.assertNull(ClusterExecutorAdvice.waitClusterNode());
+		Assert.assertNull(ClusterExecutorAdvice.waitClusterNodeId());
 
 		ClusterExecutorAdvice.waitUntilBlock(1);
 
@@ -476,7 +474,8 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 
 		ClusterExecutorAdvice.unblock(1);
 
-		Assert.assertSame(clusterNode, ClusterExecutorAdvice.waitClusterNode());
+		Assert.assertSame(
+			_TEST_CLUSTER_NODE_ID, ClusterExecutorAdvice.waitClusterNodeId());
 
 		thread.join();
 
@@ -515,7 +514,7 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 
 		ClusterExecutorAdvice.unblock(1);
 
-		Assert.assertNull(ClusterExecutorAdvice.waitClusterNode());
+		Assert.assertNull(ClusterExecutorAdvice.waitClusterNodeId());
 
 		ClusterExecutorAdvice.waitUntilBlock(1);
 
@@ -523,7 +522,8 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 
 		ClusterExecutorAdvice.unblock(1);
 
-		Assert.assertSame(clusterNode, ClusterExecutorAdvice.waitClusterNode());
+		Assert.assertSame(
+			_TEST_CLUSTER_NODE_ID, ClusterExecutorAdvice.waitClusterNodeId());
 
 		thread.join();
 	}
@@ -577,7 +577,7 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 		Assert.assertFalse(clusterMasterExecutorImpl.isMaster());
 	}
 
-	@AdviseWith(adviceClasses = {SPIUtilAdvice.class})
+	@AdviseWith(adviceClasses = SPIUtilAdvice.class)
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testMisc() {
@@ -650,13 +650,13 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 			_semaphore.release(permits);
 		}
 
-		public static ClusterNode waitClusterNode() throws Exception {
+		public static String waitClusterNodeId() throws Exception {
 			try {
-				return _clusterNodeExchanger.exchange(
+				return _clusterNodeIdExchanger.exchange(
 					null, 1000, TimeUnit.MILLISECONDS);
 			}
 			catch (TimeoutException te) {
-				return new ClusterNode("null", InetAddress.getLocalHost());
+				return "null";
 			}
 		}
 
@@ -670,9 +670,9 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 
 		@Around(
 			"execution(protected * com.liferay.portal.cluster.multiple." +
-				"internal.ClusterExecutorImpl.getClusterNode(..))"
+				"internal.ClusterExecutorImpl.getClusterNodeId(..))"
 		)
-		public Object getClusterNode(ProceedingJoinPoint proceedingJoinPoint)
+		public Object getClusterNodeId(ProceedingJoinPoint proceedingJoinPoint)
 			throws Throwable {
 
 			Semaphore semaphore = _semaphore;
@@ -683,12 +683,12 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 
 			Object result = proceedingJoinPoint.proceed();
 
-			_clusterNodeExchanger.exchange((ClusterNode)result);
+			_clusterNodeIdExchanger.exchange((String)result);
 
 			return result;
 		}
 
-		private static final Exchanger<ClusterNode> _clusterNodeExchanger =
+		private static final Exchanger<String> _clusterNodeIdExchanger =
 			new Exchanger<>();
 		private static volatile Semaphore _semaphore;
 
@@ -788,8 +788,14 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 		}
 
 		@Override
-		protected ClusterNode getClusterNode(Address address) {
-			return _clusterNodes.get(address);
+		protected String getClusterNodeId(Address address) {
+			ClusterNode clusterNode = _clusterNodes.get(address);
+
+			if (clusterNode == null) {
+				return null;
+			}
+
+			return clusterNode.getClusterNodeId();
 		}
 
 		private MockClusterExecutor(boolean enabled) {
@@ -800,55 +806,28 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 			clusterExecutorConfiguration = new ClusterExecutorConfiguration() {
 
 				@Override
+				public long clusterNodeAddressTimeout() {
+					return 100;
+				}
+
+				@Override
 				public boolean debugEnabled() {
 					return false;
+				}
+
+				@Override
+				public String[] excludedPropertyKeys() {
+					return new String[] {
+						"access_key", "connection_password",
+						"connection_username", "secret_access_key"
+					};
 				}
 
 			};
 
 			setPortalExecutorManager(new MockPortalExecutorManager());
 
-			setProps(
-				new Props() {
-
-					@Override
-					public boolean contains(String key) {
-						return false;
-					}
-
-					@Override
-					public String get(String key) {
-						return null;
-					}
-
-					@Override
-					public String get(String key, Filter filter) {
-						return null;
-					}
-
-					@Override
-					public String[] getArray(String key) {
-						return null;
-					}
-
-					@Override
-					public String[] getArray(String key, Filter filter) {
-						return null;
-					}
-
-					@Override
-					public Properties getProperties() {
-						return null;
-					}
-
-					@Override
-					public Properties getProperties(
-						String prefix, boolean removePrefix) {
-
-						return null;
-					}
-
-				});
+			setProps(PropsTestUtil.setProps(Collections.emptyMap()));
 
 			initialize(
 				"test-channel-logic-name-mock", "test-channel-properties-mock",

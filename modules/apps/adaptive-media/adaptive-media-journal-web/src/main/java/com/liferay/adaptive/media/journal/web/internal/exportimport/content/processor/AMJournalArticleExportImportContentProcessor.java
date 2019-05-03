@@ -49,10 +49,11 @@ public class AMJournalArticleExportImportContentProcessor
 
 		return _amJournalArticleContentHTMLReplacer.replace(
 			replacedContent,
-			html -> _htmlExportImportContentProcessor.
-				replaceExportContentReferences(
-					portletDataContext, stagedModel, html,
-					exportReferencedContent, escapeContent));
+			html ->
+				_htmlExportImportContentProcessor.
+					replaceExportContentReferences(
+						portletDataContext, stagedModel, html,
+						exportReferencedContent, escapeContent));
 	}
 
 	@Override
@@ -68,9 +69,10 @@ public class AMJournalArticleExportImportContentProcessor
 
 		return _amJournalArticleContentHTMLReplacer.replace(
 			replacedContent,
-			html -> _htmlExportImportContentProcessor.
-				replaceImportContentReferences(
-					portletDataContext, stagedModel, html));
+			html ->
+				_htmlExportImportContentProcessor.
+					replaceImportContentReferences(
+						portletDataContext, stagedModel, html));
 	}
 
 	@Override

@@ -46,11 +46,11 @@ public class UpgradeCalendarResource extends UpgradeProcess {
 
 	public UpgradeCalendarResource(
 		ClassNameLocalService classNameLocalService,
-		CompanyLocalService companyLocaService,
+		CompanyLocalService companyLocalService,
 		UserLocalService userLocalService) {
 
 		_classNameLocalService = classNameLocalService;
-		_companyLocaService = companyLocaService;
+		_companyLocalService = companyLocalService;
 		_userLocalService = userLocalService;
 	}
 
@@ -131,8 +131,8 @@ public class UpgradeCalendarResource extends UpgradeProcess {
 		sb.append("CalendarResource.classNameId = ? and ");
 		sb.append("CalendarResource.userId = ?");
 
-		try (PreparedStatement ps =
-				connection.prepareStatement(sb.toString())) {
+		try (PreparedStatement ps = connection.prepareStatement(
+				sb.toString())) {
 
 			ps.setLong(1, groupClassNameId);
 			ps.setLong(2, defaultUserId);
@@ -167,7 +167,7 @@ public class UpgradeCalendarResource extends UpgradeProcess {
 		throws PortalException, SQLException {
 
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			for (Company company : _companyLocaService.getCompanies()) {
+			for (Company company : _companyLocalService.getCompanies()) {
 				long classNameId = _classNameLocalService.getClassNameId(
 					Group.class);
 				long defaultUserId = _userLocalService.getDefaultUserId(
@@ -184,7 +184,7 @@ public class UpgradeCalendarResource extends UpgradeProcess {
 	}
 
 	private final ClassNameLocalService _classNameLocalService;
-	private final CompanyLocalService _companyLocaService;
+	private final CompanyLocalService _companyLocalService;
 	private final UserLocalService _userLocalService;
 
 }

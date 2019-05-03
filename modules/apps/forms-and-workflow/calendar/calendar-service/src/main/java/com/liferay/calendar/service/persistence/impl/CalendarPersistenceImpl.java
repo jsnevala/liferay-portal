@@ -21,7 +21,6 @@ import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.impl.CalendarImpl;
 import com.liferay.calendar.model.impl.CalendarModelImpl;
 import com.liferay.calendar.service.persistence.CalendarPersistence;
-
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -38,6 +37,7 @@ import com.liferay.portal.kernel.service.persistence.CompanyProvider;
 import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
@@ -47,6 +47,7 @@ import com.liferay.portal.spring.extender.service.ServiceReference;
 import java.io.Serializable;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
 import java.util.Date;
@@ -66,53 +67,32 @@ import java.util.Set;
  * </p>
  *
  * @author Eduardo Lundgren
- * @see CalendarPersistence
- * @see com.liferay.calendar.service.persistence.CalendarUtil
  * @generated
  */
 @ProviderType
-public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
-	implements CalendarPersistence {
+public class CalendarPersistenceImpl
+	extends BasePersistenceImpl<Calendar> implements CalendarPersistence {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link CalendarUtil} to access the calendar persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
+	 * Never modify or reference this class directly. Always use <code>CalendarUtil</code> to access the calendar persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static final String FINDER_CLASS_NAME_ENTITY = CalendarImpl.class.getName();
-	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List1";
-	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List2";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_ALL = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_COUNT_ALL = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_RESOURCEBLOCKID =
-		new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByResourceBlockId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_RESOURCEBLOCKID =
-		new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByResourceBlockId",
-			new String[] { Long.class.getName() },
-			CalendarModelImpl.RESOURCEBLOCKID_COLUMN_BITMASK |
-			CalendarModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_RESOURCEBLOCKID = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"countByResourceBlockId", new String[] { Long.class.getName() });
+	public static final String FINDER_CLASS_NAME_ENTITY =
+		CalendarImpl.class.getName();
+
+	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List1";
+
+	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List2";
+
+	private FinderPath _finderPathWithPaginationFindAll;
+	private FinderPath _finderPathWithoutPaginationFindAll;
+	private FinderPath _finderPathCountAll;
+	private FinderPath _finderPathWithPaginationFindByResourceBlockId;
+	private FinderPath _finderPathWithoutPaginationFindByResourceBlockId;
+	private FinderPath _finderPathCountByResourceBlockId;
 
 	/**
 	 * Returns all the calendars where resourceBlockId = &#63;.
@@ -122,15 +102,15 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public List<Calendar> findByResourceBlockId(long resourceBlockId) {
-		return findByResourceBlockId(resourceBlockId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return findByResourceBlockId(
+			resourceBlockId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the calendars where resourceBlockId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param resourceBlockId the resource block ID
@@ -139,8 +119,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByResourceBlockId(long resourceBlockId,
-		int start, int end) {
+	public List<Calendar> findByResourceBlockId(
+		long resourceBlockId, int start, int end) {
+
 		return findByResourceBlockId(resourceBlockId, start, end, null);
 	}
 
@@ -148,7 +129,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Returns an ordered range of all the calendars where resourceBlockId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param resourceBlockId the resource block ID
@@ -158,17 +139,19 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByResourceBlockId(long resourceBlockId,
-		int start, int end, OrderByComparator<Calendar> orderByComparator) {
-		return findByResourceBlockId(resourceBlockId, start, end,
-			orderByComparator, true);
+	public List<Calendar> findByResourceBlockId(
+		long resourceBlockId, int start, int end,
+		OrderByComparator<Calendar> orderByComparator) {
+
+		return findByResourceBlockId(
+			resourceBlockId, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the calendars where resourceBlockId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param resourceBlockId the resource block ID
@@ -179,33 +162,34 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByResourceBlockId(long resourceBlockId,
-		int start, int end, OrderByComparator<Calendar> orderByComparator,
+	public List<Calendar> findByResourceBlockId(
+		long resourceBlockId, int start, int end,
+		OrderByComparator<Calendar> orderByComparator,
 		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_RESOURCEBLOCKID;
-			finderArgs = new Object[] { resourceBlockId };
+			finderPath = _finderPathWithoutPaginationFindByResourceBlockId;
+			finderArgs = new Object[] {resourceBlockId};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_RESOURCEBLOCKID;
+			finderPath = _finderPathWithPaginationFindByResourceBlockId;
 			finderArgs = new Object[] {
-					resourceBlockId,
-					
-					start, end, orderByComparator
-				};
+				resourceBlockId, start, end, orderByComparator
+			};
 		}
 
 		List<Calendar> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<Calendar>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<Calendar>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Calendar calendar : list) {
@@ -222,8 +206,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(3);
@@ -234,11 +218,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			query.append(_FINDER_COLUMN_RESOURCEBLOCKID_RESOURCEBLOCKID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(CalendarModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -256,16 +239,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 				qPos.add(resourceBlockId);
 
 				if (!pagination) {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -294,11 +277,12 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar findByResourceBlockId_First(long resourceBlockId,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar findByResourceBlockId_First(
+			long resourceBlockId, OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
-		Calendar calendar = fetchByResourceBlockId_First(resourceBlockId,
-				orderByComparator);
+
+		Calendar calendar = fetchByResourceBlockId_First(
+			resourceBlockId, orderByComparator);
 
 		if (calendar != null) {
 			return calendar;
@@ -324,10 +308,11 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the first matching calendar, or <code>null</code> if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar fetchByResourceBlockId_First(long resourceBlockId,
-		OrderByComparator<Calendar> orderByComparator) {
-		List<Calendar> list = findByResourceBlockId(resourceBlockId, 0, 1,
-				orderByComparator);
+	public Calendar fetchByResourceBlockId_First(
+		long resourceBlockId, OrderByComparator<Calendar> orderByComparator) {
+
+		List<Calendar> list = findByResourceBlockId(
+			resourceBlockId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -345,11 +330,12 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar findByResourceBlockId_Last(long resourceBlockId,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar findByResourceBlockId_Last(
+			long resourceBlockId, OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
-		Calendar calendar = fetchByResourceBlockId_Last(resourceBlockId,
-				orderByComparator);
+
+		Calendar calendar = fetchByResourceBlockId_Last(
+			resourceBlockId, orderByComparator);
 
 		if (calendar != null) {
 			return calendar;
@@ -375,16 +361,17 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the last matching calendar, or <code>null</code> if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar fetchByResourceBlockId_Last(long resourceBlockId,
-		OrderByComparator<Calendar> orderByComparator) {
+	public Calendar fetchByResourceBlockId_Last(
+		long resourceBlockId, OrderByComparator<Calendar> orderByComparator) {
+
 		int count = countByResourceBlockId(resourceBlockId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Calendar> list = findByResourceBlockId(resourceBlockId, count - 1,
-				count, orderByComparator);
+		List<Calendar> list = findByResourceBlockId(
+			resourceBlockId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -403,9 +390,11 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a calendar with the primary key could not be found
 	 */
 	@Override
-	public Calendar[] findByResourceBlockId_PrevAndNext(long calendarId,
-		long resourceBlockId, OrderByComparator<Calendar> orderByComparator)
+	public Calendar[] findByResourceBlockId_PrevAndNext(
+			long calendarId, long resourceBlockId,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
+
 		Calendar calendar = findByPrimaryKey(calendarId);
 
 		Session session = null;
@@ -415,13 +404,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			Calendar[] array = new CalendarImpl[3];
 
-			array[0] = getByResourceBlockId_PrevAndNext(session, calendar,
-					resourceBlockId, orderByComparator, true);
+			array[0] = getByResourceBlockId_PrevAndNext(
+				session, calendar, resourceBlockId, orderByComparator, true);
 
 			array[1] = calendar;
 
-			array[2] = getByResourceBlockId_PrevAndNext(session, calendar,
-					resourceBlockId, orderByComparator, false);
+			array[2] = getByResourceBlockId_PrevAndNext(
+				session, calendar, resourceBlockId, orderByComparator, false);
 
 			return array;
 		}
@@ -433,14 +422,15 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		}
 	}
 
-	protected Calendar getByResourceBlockId_PrevAndNext(Session session,
-		Calendar calendar, long resourceBlockId,
+	protected Calendar getByResourceBlockId_PrevAndNext(
+		Session session, Calendar calendar, long resourceBlockId,
 		OrderByComparator<Calendar> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -452,7 +442,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		query.append(_FINDER_COLUMN_RESOURCEBLOCKID_RESOURCEBLOCKID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -522,10 +513,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		qPos.add(resourceBlockId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(calendar);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(calendar)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -546,8 +537,11 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public void removeByResourceBlockId(long resourceBlockId) {
-		for (Calendar calendar : findByResourceBlockId(resourceBlockId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (Calendar calendar :
+				findByResourceBlockId(
+					resourceBlockId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
 			remove(calendar);
 		}
 	}
@@ -560,9 +554,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public int countByResourceBlockId(long resourceBlockId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_RESOURCEBLOCKID;
+		FinderPath finderPath = _finderPathCountByResourceBlockId;
 
-		Object[] finderArgs = new Object[] { resourceBlockId };
+		Object[] finderArgs = new Object[] {resourceBlockId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -603,27 +597,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_RESOURCEBLOCKID_RESOURCEBLOCKID_2 =
-		"calendar.resourceBlockId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
-			new String[] {
-				String.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
-			new String[] { String.class.getName() },
-			CalendarModelImpl.UUID_COLUMN_BITMASK |
-			CalendarModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_UUID = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] { String.class.getName() });
+	private static final String
+		_FINDER_COLUMN_RESOURCEBLOCKID_RESOURCEBLOCKID_2 =
+			"calendar.resourceBlockId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByUuid;
+	private FinderPath _finderPathWithoutPaginationFindByUuid;
+	private FinderPath _finderPathCountByUuid;
 
 	/**
 	 * Returns all the calendars where uuid = &#63;.
@@ -640,7 +620,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Returns a range of all the calendars where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -657,7 +637,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Returns an ordered range of all the calendars where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -667,8 +647,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByUuid(String uuid, int start, int end,
+	public List<Calendar> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<Calendar> orderByComparator) {
+
 		return findByUuid(uuid, start, end, orderByComparator, true);
 	}
 
@@ -676,7 +658,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Returns an ordered range of all the calendars where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -687,32 +669,38 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByUuid(String uuid, int start, int end,
-		OrderByComparator<Calendar> orderByComparator, boolean retrieveFromCache) {
+	public List<Calendar> findByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<Calendar> orderByComparator,
+		boolean retrieveFromCache) {
+
+		uuid = Objects.toString(uuid, "");
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID;
-			finderArgs = new Object[] { uuid };
+			finderPath = _finderPathWithoutPaginationFindByUuid;
+			finderArgs = new Object[] {uuid};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID;
-			finderArgs = new Object[] { uuid, start, end, orderByComparator };
+			finderPath = _finderPathWithPaginationFindByUuid;
+			finderArgs = new Object[] {uuid, start, end, orderByComparator};
 		}
 
 		List<Calendar> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<Calendar>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<Calendar>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Calendar calendar : list) {
-					if (!Objects.equals(uuid, calendar.getUuid())) {
+					if (!uuid.equals(calendar.getUuid())) {
 						list = null;
 
 						break;
@@ -725,8 +713,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(3);
@@ -736,10 +724,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
@@ -749,11 +734,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			}
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(CalendarModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -773,16 +757,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 				}
 
 				if (!pagination) {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -811,9 +795,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar findByUuid_First(String uuid,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar findByUuid_First(
+			String uuid, OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
+
 		Calendar calendar = fetchByUuid_First(uuid, orderByComparator);
 
 		if (calendar != null) {
@@ -840,8 +825,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the first matching calendar, or <code>null</code> if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar fetchByUuid_First(String uuid,
-		OrderByComparator<Calendar> orderByComparator) {
+	public Calendar fetchByUuid_First(
+		String uuid, OrderByComparator<Calendar> orderByComparator) {
+
 		List<Calendar> list = findByUuid(uuid, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -860,9 +846,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar findByUuid_Last(String uuid,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar findByUuid_Last(
+			String uuid, OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
+
 		Calendar calendar = fetchByUuid_Last(uuid, orderByComparator);
 
 		if (calendar != null) {
@@ -889,16 +876,17 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the last matching calendar, or <code>null</code> if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar fetchByUuid_Last(String uuid,
-		OrderByComparator<Calendar> orderByComparator) {
+	public Calendar fetchByUuid_Last(
+		String uuid, OrderByComparator<Calendar> orderByComparator) {
+
 		int count = countByUuid(uuid);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Calendar> list = findByUuid(uuid, count - 1, count,
-				orderByComparator);
+		List<Calendar> list = findByUuid(
+			uuid, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -917,9 +905,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a calendar with the primary key could not be found
 	 */
 	@Override
-	public Calendar[] findByUuid_PrevAndNext(long calendarId, String uuid,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar[] findByUuid_PrevAndNext(
+			long calendarId, String uuid,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
+
+		uuid = Objects.toString(uuid, "");
+
 		Calendar calendar = findByPrimaryKey(calendarId);
 
 		Session session = null;
@@ -929,13 +921,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			Calendar[] array = new CalendarImpl[3];
 
-			array[0] = getByUuid_PrevAndNext(session, calendar, uuid,
-					orderByComparator, true);
+			array[0] = getByUuid_PrevAndNext(
+				session, calendar, uuid, orderByComparator, true);
 
 			array[1] = calendar;
 
-			array[2] = getByUuid_PrevAndNext(session, calendar, uuid,
-					orderByComparator, false);
+			array[2] = getByUuid_PrevAndNext(
+				session, calendar, uuid, orderByComparator, false);
 
 			return array;
 		}
@@ -947,14 +939,15 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		}
 	}
 
-	protected Calendar getByUuid_PrevAndNext(Session session,
-		Calendar calendar, String uuid,
+	protected Calendar getByUuid_PrevAndNext(
+		Session session, Calendar calendar, String uuid,
 		OrderByComparator<Calendar> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -965,10 +958,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_UUID_1);
-		}
-		else if (uuid.equals("")) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_UUID_3);
 		}
 		else {
@@ -978,7 +968,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -1050,10 +1041,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		}
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(calendar);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(calendar)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -1074,8 +1065,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public void removeByUuid(String uuid) {
-		for (Calendar calendar : findByUuid(uuid, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null)) {
+		for (Calendar calendar :
+				findByUuid(uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(calendar);
 		}
 	}
@@ -1088,9 +1080,11 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public int countByUuid(String uuid) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_UUID;
+		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] { uuid };
+		FinderPath finderPath = _finderPathCountByUuid;
+
+		Object[] finderArgs = new Object[] {uuid};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -1101,10 +1095,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
@@ -1145,22 +1136,17 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_UUID_UUID_1 = "calendar.uuid IS NULL";
-	private static final String _FINDER_COLUMN_UUID_UUID_2 = "calendar.uuid = ?";
-	private static final String _FINDER_COLUMN_UUID_UUID_3 = "(calendar.uuid IS NULL OR calendar.uuid = '')";
-	public static final FinderPath FINDER_PATH_FETCH_BY_UUID_G = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
-			new String[] { String.class.getName(), Long.class.getName() },
-			CalendarModelImpl.UUID_COLUMN_BITMASK |
-			CalendarModelImpl.GROUPID_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_UUID_G = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] { String.class.getName(), Long.class.getName() });
+	private static final String _FINDER_COLUMN_UUID_UUID_2 =
+		"calendar.uuid = ?";
+
+	private static final String _FINDER_COLUMN_UUID_UUID_3 =
+		"(calendar.uuid IS NULL OR calendar.uuid = '')";
+
+	private FinderPath _finderPathFetchByUUID_G;
+	private FinderPath _finderPathCountByUUID_G;
 
 	/**
-	 * Returns the calendar where uuid = &#63; and groupId = &#63; or throws a {@link NoSuchCalendarException} if it could not be found.
+	 * Returns the calendar where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchCalendarException</code> if it could not be found.
 	 *
 	 * @param uuid the uuid
 	 * @param groupId the group ID
@@ -1170,6 +1156,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	@Override
 	public Calendar findByUUID_G(String uuid, long groupId)
 		throws NoSuchCalendarException {
+
 		Calendar calendar = fetchByUUID_G(uuid, groupId);
 
 		if (calendar == null) {
@@ -1216,22 +1203,26 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the matching calendar, or <code>null</code> if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar fetchByUUID_G(String uuid, long groupId,
-		boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] { uuid, groupId };
+	public Calendar fetchByUUID_G(
+		String uuid, long groupId, boolean retrieveFromCache) {
+
+		uuid = Objects.toString(uuid, "");
+
+		Object[] finderArgs = new Object[] {uuid, groupId};
 
 		Object result = null;
 
 		if (retrieveFromCache) {
-			result = finderCache.getResult(FINDER_PATH_FETCH_BY_UUID_G,
-					finderArgs, this);
+			result = finderCache.getResult(
+				_finderPathFetchByUUID_G, finderArgs, this);
 		}
 
 		if (result instanceof Calendar) {
 			Calendar calendar = (Calendar)result;
 
 			if (!Objects.equals(uuid, calendar.getUuid()) ||
-					(groupId != calendar.getGroupId())) {
+				(groupId != calendar.getGroupId())) {
+
 				result = null;
 			}
 		}
@@ -1243,10 +1234,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_G_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_G_UUID_3);
 			}
 			else {
@@ -1277,8 +1265,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 				List<Calendar> list = q.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(FINDER_PATH_FETCH_BY_UUID_G,
-						finderArgs, list);
+					finderCache.putResult(
+						_finderPathFetchByUUID_G, finderArgs, list);
 				}
 				else {
 					Calendar calendar = list.get(0);
@@ -1286,17 +1274,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 					result = calendar;
 
 					cacheResult(calendar);
-
-					if ((calendar.getUuid() == null) ||
-							!calendar.getUuid().equals(uuid) ||
-							(calendar.getGroupId() != groupId)) {
-						finderCache.putResult(FINDER_PATH_FETCH_BY_UUID_G,
-							finderArgs, calendar);
-					}
 				}
 			}
 			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_FETCH_BY_UUID_G, finderArgs);
+				finderCache.removeResult(_finderPathFetchByUUID_G, finderArgs);
 
 				throw processException(e);
 			}
@@ -1323,6 +1304,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	@Override
 	public Calendar removeByUUID_G(String uuid, long groupId)
 		throws NoSuchCalendarException {
+
 		Calendar calendar = findByUUID_G(uuid, groupId);
 
 		return remove(calendar);
@@ -1337,9 +1319,11 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_UUID_G;
+		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] { uuid, groupId };
+		FinderPath finderPath = _finderPathCountByUUID_G;
+
+		Object[] finderArgs = new Object[] {uuid, groupId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -1350,10 +1334,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_G_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_G_UUID_3);
 			}
 			else {
@@ -1398,31 +1379,18 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_UUID_G_UUID_1 = "calendar.uuid IS NULL AND ";
-	private static final String _FINDER_COLUMN_UUID_G_UUID_2 = "calendar.uuid = ? AND ";
-	private static final String _FINDER_COLUMN_UUID_G_UUID_3 = "(calendar.uuid IS NULL OR calendar.uuid = '') AND ";
-	private static final String _FINDER_COLUMN_UUID_G_GROUPID_2 = "calendar.groupId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID_C = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
-			new String[] {
-				String.class.getName(), Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C =
-		new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
-			new String[] { String.class.getName(), Long.class.getName() },
-			CalendarModelImpl.UUID_COLUMN_BITMASK |
-			CalendarModelImpl.COMPANYID_COLUMN_BITMASK |
-			CalendarModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_UUID_C = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] { String.class.getName(), Long.class.getName() });
+	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
+		"calendar.uuid = ? AND ";
+
+	private static final String _FINDER_COLUMN_UUID_G_UUID_3 =
+		"(calendar.uuid IS NULL OR calendar.uuid = '') AND ";
+
+	private static final String _FINDER_COLUMN_UUID_G_GROUPID_2 =
+		"calendar.groupId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByUuid_C;
+	private FinderPath _finderPathWithoutPaginationFindByUuid_C;
+	private FinderPath _finderPathCountByUuid_C;
 
 	/**
 	 * Returns all the calendars where uuid = &#63; and companyId = &#63;.
@@ -1433,15 +1401,15 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public List<Calendar> findByUuid_C(String uuid, long companyId) {
-		return findByUuid_C(uuid, companyId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return findByUuid_C(
+			uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the calendars where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1451,8 +1419,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByUuid_C(String uuid, long companyId, int start,
-		int end) {
+	public List<Calendar> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
 		return findByUuid_C(uuid, companyId, start, end, null);
 	}
 
@@ -1460,7 +1429,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Returns an ordered range of all the calendars where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1471,16 +1440,19 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByUuid_C(String uuid, long companyId, int start,
-		int end, OrderByComparator<Calendar> orderByComparator) {
-		return findByUuid_C(uuid, companyId, start, end, orderByComparator, true);
+	public List<Calendar> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<Calendar> orderByComparator) {
+
+		return findByUuid_C(
+			uuid, companyId, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the calendars where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1492,38 +1464,42 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByUuid_C(String uuid, long companyId, int start,
-		int end, OrderByComparator<Calendar> orderByComparator,
+	public List<Calendar> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<Calendar> orderByComparator,
 		boolean retrieveFromCache) {
+
+		uuid = Objects.toString(uuid, "");
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C;
-			finderArgs = new Object[] { uuid, companyId };
+			finderPath = _finderPathWithoutPaginationFindByUuid_C;
+			finderArgs = new Object[] {uuid, companyId};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID_C;
+			finderPath = _finderPathWithPaginationFindByUuid_C;
 			finderArgs = new Object[] {
-					uuid, companyId,
-					
-					start, end, orderByComparator
-				};
+				uuid, companyId, start, end, orderByComparator
+			};
 		}
 
 		List<Calendar> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<Calendar>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<Calendar>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Calendar calendar : list) {
-					if (!Objects.equals(uuid, calendar.getUuid()) ||
-							(companyId != calendar.getCompanyId())) {
+					if (!uuid.equals(calendar.getUuid()) ||
+						(companyId != calendar.getCompanyId())) {
+
 						list = null;
 
 						break;
@@ -1536,8 +1512,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(4 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(4);
@@ -1547,10 +1523,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
@@ -1562,11 +1535,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(CalendarModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -1588,16 +1560,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 				qPos.add(companyId);
 
 				if (!pagination) {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -1627,11 +1599,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar findByUuid_C_First(String uuid, long companyId,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar findByUuid_C_First(
+			String uuid, long companyId,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
-		Calendar calendar = fetchByUuid_C_First(uuid, companyId,
-				orderByComparator);
+
+		Calendar calendar = fetchByUuid_C_First(
+			uuid, companyId, orderByComparator);
 
 		if (calendar != null) {
 			return calendar;
@@ -1661,10 +1635,12 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the first matching calendar, or <code>null</code> if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar fetchByUuid_C_First(String uuid, long companyId,
+	public Calendar fetchByUuid_C_First(
+		String uuid, long companyId,
 		OrderByComparator<Calendar> orderByComparator) {
-		List<Calendar> list = findByUuid_C(uuid, companyId, 0, 1,
-				orderByComparator);
+
+		List<Calendar> list = findByUuid_C(
+			uuid, companyId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1683,11 +1659,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar findByUuid_C_Last(String uuid, long companyId,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar findByUuid_C_Last(
+			String uuid, long companyId,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
-		Calendar calendar = fetchByUuid_C_Last(uuid, companyId,
-				orderByComparator);
+
+		Calendar calendar = fetchByUuid_C_Last(
+			uuid, companyId, orderByComparator);
 
 		if (calendar != null) {
 			return calendar;
@@ -1717,16 +1695,18 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the last matching calendar, or <code>null</code> if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar fetchByUuid_C_Last(String uuid, long companyId,
+	public Calendar fetchByUuid_C_Last(
+		String uuid, long companyId,
 		OrderByComparator<Calendar> orderByComparator) {
+
 		int count = countByUuid_C(uuid, companyId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Calendar> list = findByUuid_C(uuid, companyId, count - 1, count,
-				orderByComparator);
+		List<Calendar> list = findByUuid_C(
+			uuid, companyId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1746,9 +1726,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a calendar with the primary key could not be found
 	 */
 	@Override
-	public Calendar[] findByUuid_C_PrevAndNext(long calendarId, String uuid,
-		long companyId, OrderByComparator<Calendar> orderByComparator)
+	public Calendar[] findByUuid_C_PrevAndNext(
+			long calendarId, String uuid, long companyId,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
+
+		uuid = Objects.toString(uuid, "");
+
 		Calendar calendar = findByPrimaryKey(calendarId);
 
 		Session session = null;
@@ -1758,13 +1742,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			Calendar[] array = new CalendarImpl[3];
 
-			array[0] = getByUuid_C_PrevAndNext(session, calendar, uuid,
-					companyId, orderByComparator, true);
+			array[0] = getByUuid_C_PrevAndNext(
+				session, calendar, uuid, companyId, orderByComparator, true);
 
 			array[1] = calendar;
 
-			array[2] = getByUuid_C_PrevAndNext(session, calendar, uuid,
-					companyId, orderByComparator, false);
+			array[2] = getByUuid_C_PrevAndNext(
+				session, calendar, uuid, companyId, orderByComparator, false);
 
 			return array;
 		}
@@ -1776,14 +1760,15 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		}
 	}
 
-	protected Calendar getByUuid_C_PrevAndNext(Session session,
-		Calendar calendar, String uuid, long companyId,
+	protected Calendar getByUuid_C_PrevAndNext(
+		Session session, Calendar calendar, String uuid, long companyId,
 		OrderByComparator<Calendar> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -1794,10 +1779,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-		}
-		else if (uuid.equals("")) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_C_UUID_3);
 		}
 		else {
@@ -1809,7 +1791,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -1883,10 +1866,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		qPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(calendar);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(calendar)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -1908,8 +1891,11 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public void removeByUuid_C(String uuid, long companyId) {
-		for (Calendar calendar : findByUuid_C(uuid, companyId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (Calendar calendar :
+				findByUuid_C(
+					uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
 			remove(calendar);
 		}
 	}
@@ -1923,9 +1909,11 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public int countByUuid_C(String uuid, long companyId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_UUID_C;
+		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] { uuid, companyId };
+		FinderPath finderPath = _finderPathCountByUuid_C;
+
+		Object[] finderArgs = new Object[] {uuid, companyId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -1936,10 +1924,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
@@ -1984,30 +1969,18 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_UUID_C_UUID_1 = "calendar.uuid IS NULL AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_2 = "calendar.uuid = ? AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_3 = "(calendar.uuid IS NULL OR calendar.uuid = '') AND ";
-	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 = "calendar.companyId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_G_C = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C",
-			new String[] {
-				Long.class.getName(), Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C",
-			new String[] { Long.class.getName(), Long.class.getName() },
-			CalendarModelImpl.GROUPID_COLUMN_BITMASK |
-			CalendarModelImpl.CALENDARRESOURCEID_COLUMN_BITMASK |
-			CalendarModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_G_C = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C",
-			new String[] { Long.class.getName(), Long.class.getName() });
+	private static final String _FINDER_COLUMN_UUID_C_UUID_2 =
+		"calendar.uuid = ? AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_UUID_3 =
+		"(calendar.uuid IS NULL OR calendar.uuid = '') AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 =
+		"calendar.companyId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByG_C;
+	private FinderPath _finderPathWithoutPaginationFindByG_C;
+	private FinderPath _finderPathCountByG_C;
 
 	/**
 	 * Returns all the calendars where groupId = &#63; and calendarResourceId = &#63;.
@@ -2018,15 +1991,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public List<Calendar> findByG_C(long groupId, long calendarResourceId) {
-		return findByG_C(groupId, calendarResourceId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return findByG_C(
+			groupId, calendarResourceId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			null);
 	}
 
 	/**
 	 * Returns a range of all the calendars where groupId = &#63; and calendarResourceId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2036,8 +2010,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByG_C(long groupId, long calendarResourceId,
-		int start, int end) {
+	public List<Calendar> findByG_C(
+		long groupId, long calendarResourceId, int start, int end) {
+
 		return findByG_C(groupId, calendarResourceId, start, end, null);
 	}
 
@@ -2045,7 +2020,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Returns an ordered range of all the calendars where groupId = &#63; and calendarResourceId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2056,17 +2031,19 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByG_C(long groupId, long calendarResourceId,
-		int start, int end, OrderByComparator<Calendar> orderByComparator) {
-		return findByG_C(groupId, calendarResourceId, start, end,
-			orderByComparator, true);
+	public List<Calendar> findByG_C(
+		long groupId, long calendarResourceId, int start, int end,
+		OrderByComparator<Calendar> orderByComparator) {
+
+		return findByG_C(
+			groupId, calendarResourceId, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the calendars where groupId = &#63; and calendarResourceId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2078,38 +2055,41 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByG_C(long groupId, long calendarResourceId,
-		int start, int end, OrderByComparator<Calendar> orderByComparator,
+	public List<Calendar> findByG_C(
+		long groupId, long calendarResourceId, int start, int end,
+		OrderByComparator<Calendar> orderByComparator,
 		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C;
-			finderArgs = new Object[] { groupId, calendarResourceId };
+			finderPath = _finderPathWithoutPaginationFindByG_C;
+			finderArgs = new Object[] {groupId, calendarResourceId};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_G_C;
+			finderPath = _finderPathWithPaginationFindByG_C;
 			finderArgs = new Object[] {
-					groupId, calendarResourceId,
-					
-					start, end, orderByComparator
-				};
+				groupId, calendarResourceId, start, end, orderByComparator
+			};
 		}
 
 		List<Calendar> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<Calendar>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<Calendar>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Calendar calendar : list) {
 					if ((groupId != calendar.getGroupId()) ||
-							(calendarResourceId != calendar.getCalendarResourceId())) {
+						(calendarResourceId !=
+							calendar.getCalendarResourceId())) {
+
 						list = null;
 
 						break;
@@ -2122,8 +2102,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(4 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(4);
@@ -2136,11 +2116,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			query.append(_FINDER_COLUMN_G_C_CALENDARRESOURCEID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(CalendarModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -2160,16 +2139,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 				qPos.add(calendarResourceId);
 
 				if (!pagination) {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -2199,11 +2178,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar findByG_C_First(long groupId, long calendarResourceId,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar findByG_C_First(
+			long groupId, long calendarResourceId,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
-		Calendar calendar = fetchByG_C_First(groupId, calendarResourceId,
-				orderByComparator);
+
+		Calendar calendar = fetchByG_C_First(
+			groupId, calendarResourceId, orderByComparator);
 
 		if (calendar != null) {
 			return calendar;
@@ -2233,10 +2214,12 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the first matching calendar, or <code>null</code> if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar fetchByG_C_First(long groupId, long calendarResourceId,
+	public Calendar fetchByG_C_First(
+		long groupId, long calendarResourceId,
 		OrderByComparator<Calendar> orderByComparator) {
-		List<Calendar> list = findByG_C(groupId, calendarResourceId, 0, 1,
-				orderByComparator);
+
+		List<Calendar> list = findByG_C(
+			groupId, calendarResourceId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -2255,11 +2238,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar findByG_C_Last(long groupId, long calendarResourceId,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar findByG_C_Last(
+			long groupId, long calendarResourceId,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
-		Calendar calendar = fetchByG_C_Last(groupId, calendarResourceId,
-				orderByComparator);
+
+		Calendar calendar = fetchByG_C_Last(
+			groupId, calendarResourceId, orderByComparator);
 
 		if (calendar != null) {
 			return calendar;
@@ -2289,16 +2274,18 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the last matching calendar, or <code>null</code> if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar fetchByG_C_Last(long groupId, long calendarResourceId,
+	public Calendar fetchByG_C_Last(
+		long groupId, long calendarResourceId,
 		OrderByComparator<Calendar> orderByComparator) {
+
 		int count = countByG_C(groupId, calendarResourceId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Calendar> list = findByG_C(groupId, calendarResourceId, count - 1,
-				count, orderByComparator);
+		List<Calendar> list = findByG_C(
+			groupId, calendarResourceId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -2318,9 +2305,11 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a calendar with the primary key could not be found
 	 */
 	@Override
-	public Calendar[] findByG_C_PrevAndNext(long calendarId, long groupId,
-		long calendarResourceId, OrderByComparator<Calendar> orderByComparator)
+	public Calendar[] findByG_C_PrevAndNext(
+			long calendarId, long groupId, long calendarResourceId,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
+
 		Calendar calendar = findByPrimaryKey(calendarId);
 
 		Session session = null;
@@ -2330,13 +2319,15 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			Calendar[] array = new CalendarImpl[3];
 
-			array[0] = getByG_C_PrevAndNext(session, calendar, groupId,
-					calendarResourceId, orderByComparator, true);
+			array[0] = getByG_C_PrevAndNext(
+				session, calendar, groupId, calendarResourceId,
+				orderByComparator, true);
 
 			array[1] = calendar;
 
-			array[2] = getByG_C_PrevAndNext(session, calendar, groupId,
-					calendarResourceId, orderByComparator, false);
+			array[2] = getByG_C_PrevAndNext(
+				session, calendar, groupId, calendarResourceId,
+				orderByComparator, false);
 
 			return array;
 		}
@@ -2348,14 +2339,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		}
 	}
 
-	protected Calendar getByG_C_PrevAndNext(Session session, Calendar calendar,
-		long groupId, long calendarResourceId,
-		OrderByComparator<Calendar> orderByComparator, boolean previous) {
+	protected Calendar getByG_C_PrevAndNext(
+		Session session, Calendar calendar, long groupId,
+		long calendarResourceId, OrderByComparator<Calendar> orderByComparator,
+		boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -2369,7 +2362,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		query.append(_FINDER_COLUMN_G_C_CALENDARRESOURCEID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -2441,10 +2435,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		qPos.add(calendarResourceId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(calendar);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(calendar)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -2466,16 +2460,19 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the matching calendars that the user has permission to view
 	 */
 	@Override
-	public List<Calendar> filterFindByG_C(long groupId, long calendarResourceId) {
-		return filterFindByG_C(groupId, calendarResourceId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+	public List<Calendar> filterFindByG_C(
+		long groupId, long calendarResourceId) {
+
+		return filterFindByG_C(
+			groupId, calendarResourceId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			null);
 	}
 
 	/**
 	 * Returns a range of all the calendars that the user has permission to view where groupId = &#63; and calendarResourceId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2485,8 +2482,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the range of matching calendars that the user has permission to view
 	 */
 	@Override
-	public List<Calendar> filterFindByG_C(long groupId,
-		long calendarResourceId, int start, int end) {
+	public List<Calendar> filterFindByG_C(
+		long groupId, long calendarResourceId, int start, int end) {
+
 		return filterFindByG_C(groupId, calendarResourceId, start, end, null);
 	}
 
@@ -2494,7 +2492,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Returns an ordered range of all the calendars that the user has permissions to view where groupId = &#63; and calendarResourceId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2505,19 +2503,20 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars that the user has permission to view
 	 */
 	@Override
-	public List<Calendar> filterFindByG_C(long groupId,
-		long calendarResourceId, int start, int end,
+	public List<Calendar> filterFindByG_C(
+		long groupId, long calendarResourceId, int start, int end,
 		OrderByComparator<Calendar> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
-			return findByG_C(groupId, calendarResourceId, start, end,
-				orderByComparator);
+			return findByG_C(
+				groupId, calendarResourceId, start, end, orderByComparator);
 		}
 
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByFields().length * 2));
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
 			query = new StringBundler(4);
@@ -2530,17 +2529,17 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		query.append(_FINDER_COLUMN_G_C_CALENDARRESOURCEID_2);
 
 		if (orderByComparator != null) {
-			appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-				orderByComparator);
+			appendOrderByComparator(
+				query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 		}
 		else {
 			query.append(CalendarModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Calendar.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
-				_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Calendar.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
+			_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
 
 		Session session = null;
 
@@ -2576,13 +2575,14 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a calendar with the primary key could not be found
 	 */
 	@Override
-	public Calendar[] filterFindByG_C_PrevAndNext(long calendarId,
-		long groupId, long calendarResourceId,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar[] filterFindByG_C_PrevAndNext(
+			long calendarId, long groupId, long calendarResourceId,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
+
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
-			return findByG_C_PrevAndNext(calendarId, groupId,
-				calendarResourceId, orderByComparator);
+			return findByG_C_PrevAndNext(
+				calendarId, groupId, calendarResourceId, orderByComparator);
 		}
 
 		Calendar calendar = findByPrimaryKey(calendarId);
@@ -2594,13 +2594,15 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			Calendar[] array = new CalendarImpl[3];
 
-			array[0] = filterGetByG_C_PrevAndNext(session, calendar, groupId,
-					calendarResourceId, orderByComparator, true);
+			array[0] = filterGetByG_C_PrevAndNext(
+				session, calendar, groupId, calendarResourceId,
+				orderByComparator, true);
 
 			array[1] = calendar;
 
-			array[2] = filterGetByG_C_PrevAndNext(session, calendar, groupId,
-					calendarResourceId, orderByComparator, false);
+			array[2] = filterGetByG_C_PrevAndNext(
+				session, calendar, groupId, calendarResourceId,
+				orderByComparator, false);
 
 			return array;
 		}
@@ -2612,14 +2614,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		}
 	}
 
-	protected Calendar filterGetByG_C_PrevAndNext(Session session,
-		Calendar calendar, long groupId, long calendarResourceId,
-		OrderByComparator<Calendar> orderByComparator, boolean previous) {
+	protected Calendar filterGetByG_C_PrevAndNext(
+		Session session, Calendar calendar, long groupId,
+		long calendarResourceId, OrderByComparator<Calendar> orderByComparator,
+		boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -2633,7 +2637,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		query.append(_FINDER_COLUMN_G_C_CALENDARRESOURCEID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -2691,10 +2696,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			query.append(CalendarModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Calendar.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
-				_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Calendar.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
+			_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
 
 		Query q = session.createQuery(sql);
 
@@ -2708,10 +2713,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		qPos.add(calendarResourceId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(calendar);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(calendar)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -2733,8 +2738,11 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public void removeByG_C(long groupId, long calendarResourceId) {
-		for (Calendar calendar : findByG_C(groupId, calendarResourceId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (Calendar calendar :
+				findByG_C(
+					groupId, calendarResourceId, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
 			remove(calendar);
 		}
 	}
@@ -2748,9 +2756,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public int countByG_C(long groupId, long calendarResourceId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_G_C;
+		FinderPath finderPath = _finderPathCountByG_C;
 
-		Object[] finderArgs = new Object[] { groupId, calendarResourceId };
+		Object[] finderArgs = new Object[] {groupId, calendarResourceId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -2816,10 +2824,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 		query.append(_FINDER_COLUMN_G_C_CALENDARRESOURCEID_2);
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Calendar.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
-				_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Calendar.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
+			_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
 
 		Session session = null;
 
@@ -2846,36 +2854,15 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		}
 	}
 
-	private static final String _FINDER_COLUMN_G_C_GROUPID_2 = "calendar.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_G_C_CALENDARRESOURCEID_2 = "calendar.calendarResourceId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_G_C_D = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_D",
-			new String[] {
-				Long.class.getName(), Long.class.getName(),
-				Boolean.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C_D = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_D",
-			new String[] {
-				Long.class.getName(), Long.class.getName(),
-				Boolean.class.getName()
-			},
-			CalendarModelImpl.GROUPID_COLUMN_BITMASK |
-			CalendarModelImpl.CALENDARRESOURCEID_COLUMN_BITMASK |
-			CalendarModelImpl.DEFAULTCALENDAR_COLUMN_BITMASK |
-			CalendarModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_G_C_D = new FinderPath(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_D",
-			new String[] {
-				Long.class.getName(), Long.class.getName(),
-				Boolean.class.getName()
-			});
+	private static final String _FINDER_COLUMN_G_C_GROUPID_2 =
+		"calendar.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_C_CALENDARRESOURCEID_2 =
+		"calendar.calendarResourceId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByG_C_D;
+	private FinderPath _finderPathWithoutPaginationFindByG_C_D;
+	private FinderPath _finderPathCountByG_C_D;
 
 	/**
 	 * Returns all the calendars where groupId = &#63; and calendarResourceId = &#63; and defaultCalendar = &#63;.
@@ -2886,17 +2873,19 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the matching calendars
 	 */
 	@Override
-	public List<Calendar> findByG_C_D(long groupId, long calendarResourceId,
-		boolean defaultCalendar) {
-		return findByG_C_D(groupId, calendarResourceId, defaultCalendar,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	public List<Calendar> findByG_C_D(
+		long groupId, long calendarResourceId, boolean defaultCalendar) {
+
+		return findByG_C_D(
+			groupId, calendarResourceId, defaultCalendar, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the calendars where groupId = &#63; and calendarResourceId = &#63; and defaultCalendar = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2907,17 +2896,19 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByG_C_D(long groupId, long calendarResourceId,
-		boolean defaultCalendar, int start, int end) {
-		return findByG_C_D(groupId, calendarResourceId, defaultCalendar, start,
-			end, null);
+	public List<Calendar> findByG_C_D(
+		long groupId, long calendarResourceId, boolean defaultCalendar,
+		int start, int end) {
+
+		return findByG_C_D(
+			groupId, calendarResourceId, defaultCalendar, start, end, null);
 	}
 
 	/**
 	 * Returns an ordered range of all the calendars where groupId = &#63; and calendarResourceId = &#63; and defaultCalendar = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2929,18 +2920,20 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByG_C_D(long groupId, long calendarResourceId,
-		boolean defaultCalendar, int start, int end,
-		OrderByComparator<Calendar> orderByComparator) {
-		return findByG_C_D(groupId, calendarResourceId, defaultCalendar, start,
-			end, orderByComparator, true);
+	public List<Calendar> findByG_C_D(
+		long groupId, long calendarResourceId, boolean defaultCalendar,
+		int start, int end, OrderByComparator<Calendar> orderByComparator) {
+
+		return findByG_C_D(
+			groupId, calendarResourceId, defaultCalendar, start, end,
+			orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the calendars where groupId = &#63; and calendarResourceId = &#63; and defaultCalendar = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -2953,41 +2946,45 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars
 	 */
 	@Override
-	public List<Calendar> findByG_C_D(long groupId, long calendarResourceId,
-		boolean defaultCalendar, int start, int end,
-		OrderByComparator<Calendar> orderByComparator, boolean retrieveFromCache) {
+	public List<Calendar> findByG_C_D(
+		long groupId, long calendarResourceId, boolean defaultCalendar,
+		int start, int end, OrderByComparator<Calendar> orderByComparator,
+		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C_D;
+			finderPath = _finderPathWithoutPaginationFindByG_C_D;
 			finderArgs = new Object[] {
-					groupId, calendarResourceId, defaultCalendar
-				};
+				groupId, calendarResourceId, defaultCalendar
+			};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_G_C_D;
+			finderPath = _finderPathWithPaginationFindByG_C_D;
 			finderArgs = new Object[] {
-					groupId, calendarResourceId, defaultCalendar,
-					
-					start, end, orderByComparator
-				};
+				groupId, calendarResourceId, defaultCalendar, start, end,
+				orderByComparator
+			};
 		}
 
 		List<Calendar> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<Calendar>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<Calendar>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Calendar calendar : list) {
 					if ((groupId != calendar.getGroupId()) ||
-							(calendarResourceId != calendar.getCalendarResourceId()) ||
-							(defaultCalendar != calendar.getDefaultCalendar())) {
+						(calendarResourceId !=
+							calendar.getCalendarResourceId()) ||
+						(defaultCalendar != calendar.isDefaultCalendar())) {
+
 						list = null;
 
 						break;
@@ -3000,8 +2997,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(5 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(5);
@@ -3016,11 +3013,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			query.append(_FINDER_COLUMN_G_C_D_DEFAULTCALENDAR_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(CalendarModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -3042,16 +3038,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 				qPos.add(defaultCalendar);
 
 				if (!pagination) {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -3082,11 +3078,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar findByG_C_D_First(long groupId, long calendarResourceId,
-		boolean defaultCalendar, OrderByComparator<Calendar> orderByComparator)
+	public Calendar findByG_C_D_First(
+			long groupId, long calendarResourceId, boolean defaultCalendar,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
-		Calendar calendar = fetchByG_C_D_First(groupId, calendarResourceId,
-				defaultCalendar, orderByComparator);
+
+		Calendar calendar = fetchByG_C_D_First(
+			groupId, calendarResourceId, defaultCalendar, orderByComparator);
 
 		if (calendar != null) {
 			return calendar;
@@ -3120,10 +3118,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the first matching calendar, or <code>null</code> if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar fetchByG_C_D_First(long groupId, long calendarResourceId,
-		boolean defaultCalendar, OrderByComparator<Calendar> orderByComparator) {
-		List<Calendar> list = findByG_C_D(groupId, calendarResourceId,
-				defaultCalendar, 0, 1, orderByComparator);
+	public Calendar fetchByG_C_D_First(
+		long groupId, long calendarResourceId, boolean defaultCalendar,
+		OrderByComparator<Calendar> orderByComparator) {
+
+		List<Calendar> list = findByG_C_D(
+			groupId, calendarResourceId, defaultCalendar, 0, 1,
+			orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -3143,11 +3144,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar findByG_C_D_Last(long groupId, long calendarResourceId,
-		boolean defaultCalendar, OrderByComparator<Calendar> orderByComparator)
+	public Calendar findByG_C_D_Last(
+			long groupId, long calendarResourceId, boolean defaultCalendar,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
-		Calendar calendar = fetchByG_C_D_Last(groupId, calendarResourceId,
-				defaultCalendar, orderByComparator);
+
+		Calendar calendar = fetchByG_C_D_Last(
+			groupId, calendarResourceId, defaultCalendar, orderByComparator);
 
 		if (calendar != null) {
 			return calendar;
@@ -3181,16 +3184,19 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the last matching calendar, or <code>null</code> if a matching calendar could not be found
 	 */
 	@Override
-	public Calendar fetchByG_C_D_Last(long groupId, long calendarResourceId,
-		boolean defaultCalendar, OrderByComparator<Calendar> orderByComparator) {
+	public Calendar fetchByG_C_D_Last(
+		long groupId, long calendarResourceId, boolean defaultCalendar,
+		OrderByComparator<Calendar> orderByComparator) {
+
 		int count = countByG_C_D(groupId, calendarResourceId, defaultCalendar);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Calendar> list = findByG_C_D(groupId, calendarResourceId,
-				defaultCalendar, count - 1, count, orderByComparator);
+		List<Calendar> list = findByG_C_D(
+			groupId, calendarResourceId, defaultCalendar, count - 1, count,
+			orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -3211,10 +3217,12 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a calendar with the primary key could not be found
 	 */
 	@Override
-	public Calendar[] findByG_C_D_PrevAndNext(long calendarId, long groupId,
-		long calendarResourceId, boolean defaultCalendar,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar[] findByG_C_D_PrevAndNext(
+			long calendarId, long groupId, long calendarResourceId,
+			boolean defaultCalendar,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
+
 		Calendar calendar = findByPrimaryKey(calendarId);
 
 		Session session = null;
@@ -3224,14 +3232,15 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			Calendar[] array = new CalendarImpl[3];
 
-			array[0] = getByG_C_D_PrevAndNext(session, calendar, groupId,
-					calendarResourceId, defaultCalendar, orderByComparator, true);
+			array[0] = getByG_C_D_PrevAndNext(
+				session, calendar, groupId, calendarResourceId, defaultCalendar,
+				orderByComparator, true);
 
 			array[1] = calendar;
 
-			array[2] = getByG_C_D_PrevAndNext(session, calendar, groupId,
-					calendarResourceId, defaultCalendar, orderByComparator,
-					false);
+			array[2] = getByG_C_D_PrevAndNext(
+				session, calendar, groupId, calendarResourceId, defaultCalendar,
+				orderByComparator, false);
 
 			return array;
 		}
@@ -3243,15 +3252,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		}
 	}
 
-	protected Calendar getByG_C_D_PrevAndNext(Session session,
-		Calendar calendar, long groupId, long calendarResourceId,
-		boolean defaultCalendar, OrderByComparator<Calendar> orderByComparator,
-		boolean previous) {
+	protected Calendar getByG_C_D_PrevAndNext(
+		Session session, Calendar calendar, long groupId,
+		long calendarResourceId, boolean defaultCalendar,
+		OrderByComparator<Calendar> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(6 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -3267,7 +3277,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		query.append(_FINDER_COLUMN_G_C_D_DEFAULTCALENDAR_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -3341,10 +3352,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		qPos.add(defaultCalendar);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(calendar);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(calendar)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -3367,17 +3378,19 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the matching calendars that the user has permission to view
 	 */
 	@Override
-	public List<Calendar> filterFindByG_C_D(long groupId,
-		long calendarResourceId, boolean defaultCalendar) {
-		return filterFindByG_C_D(groupId, calendarResourceId, defaultCalendar,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	public List<Calendar> filterFindByG_C_D(
+		long groupId, long calendarResourceId, boolean defaultCalendar) {
+
+		return filterFindByG_C_D(
+			groupId, calendarResourceId, defaultCalendar, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the calendars that the user has permission to view where groupId = &#63; and calendarResourceId = &#63; and defaultCalendar = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -3388,17 +3401,19 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the range of matching calendars that the user has permission to view
 	 */
 	@Override
-	public List<Calendar> filterFindByG_C_D(long groupId,
-		long calendarResourceId, boolean defaultCalendar, int start, int end) {
-		return filterFindByG_C_D(groupId, calendarResourceId, defaultCalendar,
-			start, end, null);
+	public List<Calendar> filterFindByG_C_D(
+		long groupId, long calendarResourceId, boolean defaultCalendar,
+		int start, int end) {
+
+		return filterFindByG_C_D(
+			groupId, calendarResourceId, defaultCalendar, start, end, null);
 	}
 
 	/**
 	 * Returns an ordered range of all the calendars that the user has permissions to view where groupId = &#63; and calendarResourceId = &#63; and defaultCalendar = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -3410,19 +3425,21 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of matching calendars that the user has permission to view
 	 */
 	@Override
-	public List<Calendar> filterFindByG_C_D(long groupId,
-		long calendarResourceId, boolean defaultCalendar, int start, int end,
-		OrderByComparator<Calendar> orderByComparator) {
+	public List<Calendar> filterFindByG_C_D(
+		long groupId, long calendarResourceId, boolean defaultCalendar,
+		int start, int end, OrderByComparator<Calendar> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
-			return findByG_C_D(groupId, calendarResourceId, defaultCalendar,
-				start, end, orderByComparator);
+			return findByG_C_D(
+				groupId, calendarResourceId, defaultCalendar, start, end,
+				orderByComparator);
 		}
 
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByFields().length * 2));
+			query = new StringBundler(
+				5 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
 			query = new StringBundler(5);
@@ -3437,17 +3454,17 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		query.append(_FINDER_COLUMN_G_C_D_DEFAULTCALENDAR_2);
 
 		if (orderByComparator != null) {
-			appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-				orderByComparator);
+			appendOrderByComparator(
+				query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 		}
 		else {
 			query.append(CalendarModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Calendar.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
-				_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Calendar.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
+			_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
 
 		Session session = null;
 
@@ -3486,13 +3503,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @throws NoSuchCalendarException if a calendar with the primary key could not be found
 	 */
 	@Override
-	public Calendar[] filterFindByG_C_D_PrevAndNext(long calendarId,
-		long groupId, long calendarResourceId, boolean defaultCalendar,
-		OrderByComparator<Calendar> orderByComparator)
+	public Calendar[] filterFindByG_C_D_PrevAndNext(
+			long calendarId, long groupId, long calendarResourceId,
+			boolean defaultCalendar,
+			OrderByComparator<Calendar> orderByComparator)
 		throws NoSuchCalendarException {
+
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
-			return findByG_C_D_PrevAndNext(calendarId, groupId,
-				calendarResourceId, defaultCalendar, orderByComparator);
+			return findByG_C_D_PrevAndNext(
+				calendarId, groupId, calendarResourceId, defaultCalendar,
+				orderByComparator);
 		}
 
 		Calendar calendar = findByPrimaryKey(calendarId);
@@ -3504,14 +3524,15 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 			Calendar[] array = new CalendarImpl[3];
 
-			array[0] = filterGetByG_C_D_PrevAndNext(session, calendar, groupId,
-					calendarResourceId, defaultCalendar, orderByComparator, true);
+			array[0] = filterGetByG_C_D_PrevAndNext(
+				session, calendar, groupId, calendarResourceId, defaultCalendar,
+				orderByComparator, true);
 
 			array[1] = calendar;
 
-			array[2] = filterGetByG_C_D_PrevAndNext(session, calendar, groupId,
-					calendarResourceId, defaultCalendar, orderByComparator,
-					false);
+			array[2] = filterGetByG_C_D_PrevAndNext(
+				session, calendar, groupId, calendarResourceId, defaultCalendar,
+				orderByComparator, false);
 
 			return array;
 		}
@@ -3523,15 +3544,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		}
 	}
 
-	protected Calendar filterGetByG_C_D_PrevAndNext(Session session,
-		Calendar calendar, long groupId, long calendarResourceId,
-		boolean defaultCalendar, OrderByComparator<Calendar> orderByComparator,
-		boolean previous) {
+	protected Calendar filterGetByG_C_D_PrevAndNext(
+		Session session, Calendar calendar, long groupId,
+		long calendarResourceId, boolean defaultCalendar,
+		OrderByComparator<Calendar> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(6 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -3547,7 +3569,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		query.append(_FINDER_COLUMN_G_C_D_DEFAULTCALENDAR_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -3605,10 +3628,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			query.append(CalendarModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Calendar.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
-				_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Calendar.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
+			_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
 
 		Query q = session.createQuery(sql);
 
@@ -3624,10 +3647,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		qPos.add(defaultCalendar);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(calendar);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(calendar)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -3649,10 +3672,14 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @param defaultCalendar the default calendar
 	 */
 	@Override
-	public void removeByG_C_D(long groupId, long calendarResourceId,
-		boolean defaultCalendar) {
-		for (Calendar calendar : findByG_C_D(groupId, calendarResourceId,
-				defaultCalendar, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+	public void removeByG_C_D(
+		long groupId, long calendarResourceId, boolean defaultCalendar) {
+
+		for (Calendar calendar :
+				findByG_C_D(
+					groupId, calendarResourceId, defaultCalendar,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(calendar);
 		}
 	}
@@ -3666,13 +3693,14 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the number of matching calendars
 	 */
 	@Override
-	public int countByG_C_D(long groupId, long calendarResourceId,
-		boolean defaultCalendar) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_G_C_D;
+	public int countByG_C_D(
+		long groupId, long calendarResourceId, boolean defaultCalendar) {
+
+		FinderPath finderPath = _finderPathCountByG_C_D;
 
 		Object[] finderArgs = new Object[] {
-				groupId, calendarResourceId, defaultCalendar
-			};
+			groupId, calendarResourceId, defaultCalendar
+		};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -3730,8 +3758,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the number of matching calendars that the user has permission to view
 	 */
 	@Override
-	public int filterCountByG_C_D(long groupId, long calendarResourceId,
-		boolean defaultCalendar) {
+	public int filterCountByG_C_D(
+		long groupId, long calendarResourceId, boolean defaultCalendar) {
+
 		if (!InlineSQLHelperUtil.isEnabled(groupId)) {
 			return countByG_C_D(groupId, calendarResourceId, defaultCalendar);
 		}
@@ -3746,10 +3775,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 		query.append(_FINDER_COLUMN_G_C_D_DEFAULTCALENDAR_2);
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Calendar.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
-				_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			query.toString(), Calendar.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN,
+			_FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN, groupId);
 
 		Session session = null;
 
@@ -3778,22 +3807,27 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		}
 	}
 
-	private static final String _FINDER_COLUMN_G_C_D_GROUPID_2 = "calendar.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_G_C_D_CALENDARRESOURCEID_2 = "calendar.calendarResourceId = ? AND ";
-	private static final String _FINDER_COLUMN_G_C_D_DEFAULTCALENDAR_2 = "calendar.defaultCalendar = ?";
+	private static final String _FINDER_COLUMN_G_C_D_GROUPID_2 =
+		"calendar.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_C_D_CALENDARRESOURCEID_2 =
+		"calendar.calendarResourceId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_C_D_DEFAULTCALENDAR_2 =
+		"calendar.defaultCalendar = ?";
 
 	public CalendarPersistenceImpl() {
 		setModelClass(Calendar.class);
 
+		Map<String, String> dbColumnNames = new HashMap<String, String>();
+
+		dbColumnNames.put("uuid", "uuid_");
+
 		try {
 			Field field = BasePersistenceImpl.class.getDeclaredField(
-					"_dbColumnNames");
+				"_dbColumnNames");
 
 			field.setAccessible(true);
-
-			Map<String, String> dbColumnNames = new HashMap<String, String>();
-
-			dbColumnNames.put("uuid", "uuid_");
 
 			field.set(this, dbColumnNames);
 		}
@@ -3811,11 +3845,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public void cacheResult(Calendar calendar) {
-		entityCache.putResult(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarImpl.class, calendar.getPrimaryKey(), calendar);
+		entityCache.putResult(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED, CalendarImpl.class,
+			calendar.getPrimaryKey(), calendar);
 
-		finderCache.putResult(FINDER_PATH_FETCH_BY_UUID_G,
-			new Object[] { calendar.getUuid(), calendar.getGroupId() }, calendar);
+		finderCache.putResult(
+			_finderPathFetchByUUID_G,
+			new Object[] {calendar.getUuid(), calendar.getGroupId()}, calendar);
 
 		calendar.resetOriginalValues();
 	}
@@ -3828,8 +3864,10 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	@Override
 	public void cacheResult(List<Calendar> calendars) {
 		for (Calendar calendar : calendars) {
-			if (entityCache.getResult(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-						CalendarImpl.class, calendar.getPrimaryKey()) == null) {
+			if (entityCache.getResult(
+					CalendarModelImpl.ENTITY_CACHE_ENABLED, CalendarImpl.class,
+					calendar.getPrimaryKey()) == null) {
+
 				cacheResult(calendar);
 			}
 			else {
@@ -3842,7 +3880,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Clears the cache for all calendars.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
@@ -3858,13 +3896,14 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Clears the cache for the calendar.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(Calendar calendar) {
-		entityCache.removeResult(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarImpl.class, calendar.getPrimaryKey());
+		entityCache.removeResult(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED, CalendarImpl.class,
+			calendar.getPrimaryKey());
 
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
@@ -3878,44 +3917,49 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		for (Calendar calendar : calendars) {
-			entityCache.removeResult(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-				CalendarImpl.class, calendar.getPrimaryKey());
+			entityCache.removeResult(
+				CalendarModelImpl.ENTITY_CACHE_ENABLED, CalendarImpl.class,
+				calendar.getPrimaryKey());
 
 			clearUniqueFindersCache((CalendarModelImpl)calendar, true);
 		}
 	}
 
-	protected void cacheUniqueFindersCache(CalendarModelImpl calendarModelImpl) {
-		Object[] args = new Object[] {
-				calendarModelImpl.getUuid(), calendarModelImpl.getGroupId()
-			};
+	protected void cacheUniqueFindersCache(
+		CalendarModelImpl calendarModelImpl) {
 
-		finderCache.putResult(FINDER_PATH_COUNT_BY_UUID_G, args,
-			Long.valueOf(1), false);
-		finderCache.putResult(FINDER_PATH_FETCH_BY_UUID_G, args,
-			calendarModelImpl, false);
+		Object[] args = new Object[] {
+			calendarModelImpl.getUuid(), calendarModelImpl.getGroupId()
+		};
+
+		finderCache.putResult(
+			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
+		finderCache.putResult(
+			_finderPathFetchByUUID_G, args, calendarModelImpl, false);
 	}
 
 	protected void clearUniqueFindersCache(
 		CalendarModelImpl calendarModelImpl, boolean clearCurrent) {
+
 		if (clearCurrent) {
 			Object[] args = new Object[] {
-					calendarModelImpl.getUuid(), calendarModelImpl.getGroupId()
-				};
+				calendarModelImpl.getUuid(), calendarModelImpl.getGroupId()
+			};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_G, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_UUID_G, args);
+			finderCache.removeResult(_finderPathCountByUUID_G, args);
+			finderCache.removeResult(_finderPathFetchByUUID_G, args);
 		}
 
 		if ((calendarModelImpl.getColumnBitmask() &
-				FINDER_PATH_FETCH_BY_UUID_G.getColumnBitmask()) != 0) {
-			Object[] args = new Object[] {
-					calendarModelImpl.getOriginalUuid(),
-					calendarModelImpl.getOriginalGroupId()
-				};
+			 _finderPathFetchByUUID_G.getColumnBitmask()) != 0) {
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_G, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_UUID_G, args);
+			Object[] args = new Object[] {
+				calendarModelImpl.getOriginalUuid(),
+				calendarModelImpl.getOriginalGroupId()
+			};
+
+			finderCache.removeResult(_finderPathCountByUUID_G, args);
+			finderCache.removeResult(_finderPathFetchByUUID_G, args);
 		}
 	}
 
@@ -3963,21 +4007,22 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	@Override
 	public Calendar remove(Serializable primaryKey)
 		throws NoSuchCalendarException {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			Calendar calendar = (Calendar)session.get(CalendarImpl.class,
-					primaryKey);
+			Calendar calendar = (Calendar)session.get(
+				CalendarImpl.class, primaryKey);
 
 			if (calendar == null) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 				}
 
-				throw new NoSuchCalendarException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-					primaryKey);
+				throw new NoSuchCalendarException(
+					_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
 			return remove(calendar);
@@ -3995,16 +4040,14 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 	@Override
 	protected Calendar removeImpl(Calendar calendar) {
-		calendar = toUnwrappedModel(calendar);
-
 		Session session = null;
 
 		try {
 			session = openSession();
 
 			if (!session.contains(calendar)) {
-				calendar = (Calendar)session.get(CalendarImpl.class,
-						calendar.getPrimaryKeyObj());
+				calendar = (Calendar)session.get(
+					CalendarImpl.class, calendar.getPrimaryKeyObj());
 			}
 
 			if (calendar != null) {
@@ -4027,9 +4070,23 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 	@Override
 	public Calendar updateImpl(Calendar calendar) {
-		calendar = toUnwrappedModel(calendar);
-
 		boolean isNew = calendar.isNew();
+
+		if (!(calendar instanceof CalendarModelImpl)) {
+			InvocationHandler invocationHandler = null;
+
+			if (ProxyUtil.isProxyClass(calendar.getClass())) {
+				invocationHandler = ProxyUtil.getInvocationHandler(calendar);
+
+				throw new IllegalArgumentException(
+					"Implement ModelWrapper in calendar proxy " +
+						invocationHandler.getClass());
+			}
+
+			throw new IllegalArgumentException(
+				"Implement ModelWrapper in custom Calendar implementation " +
+					calendar.getClass());
+		}
 
 		CalendarModelImpl calendarModelImpl = (CalendarModelImpl)calendar;
 
@@ -4039,7 +4096,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			calendar.setUuid(uuid);
 		}
 
-		ServiceContext serviceContext = ServiceContextThreadLocal.getServiceContext();
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
 
 		Date now = new Date();
 
@@ -4087,156 +4145,168 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		if (!CalendarModelImpl.COLUMN_BITMASK_ENABLED) {
 			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 		}
-		else
-		 if (isNew) {
-			Object[] args = new Object[] { calendarModelImpl.getResourceBlockId() };
+		else if (isNew) {
+			Object[] args = new Object[] {
+				calendarModelImpl.getResourceBlockId()
+			};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_RESOURCEBLOCKID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_RESOURCEBLOCKID,
-				args);
+			finderCache.removeResult(_finderPathCountByResourceBlockId, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByResourceBlockId, args);
 
-			args = new Object[] { calendarModelImpl.getUuid() };
+			args = new Object[] {calendarModelImpl.getUuid()};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-				args);
+			finderCache.removeResult(_finderPathCountByUuid, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByUuid, args);
 
 			args = new Object[] {
+				calendarModelImpl.getUuid(), calendarModelImpl.getCompanyId()
+			};
+
+			finderCache.removeResult(_finderPathCountByUuid_C, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByUuid_C, args);
+
+			args = new Object[] {
+				calendarModelImpl.getGroupId(),
+				calendarModelImpl.getCalendarResourceId()
+			};
+
+			finderCache.removeResult(_finderPathCountByG_C, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByG_C, args);
+
+			args = new Object[] {
+				calendarModelImpl.getGroupId(),
+				calendarModelImpl.getCalendarResourceId(),
+				calendarModelImpl.isDefaultCalendar()
+			};
+
+			finderCache.removeResult(_finderPathCountByG_C_D, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByG_C_D, args);
+
+			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
+		}
+		else {
+			if ((calendarModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByResourceBlockId.
+					 getColumnBitmask()) != 0) {
+
+				Object[] args = new Object[] {
+					calendarModelImpl.getOriginalResourceBlockId()
+				};
+
+				finderCache.removeResult(
+					_finderPathCountByResourceBlockId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByResourceBlockId, args);
+
+				args = new Object[] {calendarModelImpl.getResourceBlockId()};
+
+				finderCache.removeResult(
+					_finderPathCountByResourceBlockId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByResourceBlockId, args);
+			}
+
+			if ((calendarModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
+					 0) {
+
+				Object[] args = new Object[] {
+					calendarModelImpl.getOriginalUuid()
+				};
+
+				finderCache.removeResult(_finderPathCountByUuid, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByUuid, args);
+
+				args = new Object[] {calendarModelImpl.getUuid()};
+
+				finderCache.removeResult(_finderPathCountByUuid, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByUuid, args);
+			}
+
+			if ((calendarModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
+					 0) {
+
+				Object[] args = new Object[] {
+					calendarModelImpl.getOriginalUuid(),
+					calendarModelImpl.getOriginalCompanyId()
+				};
+
+				finderCache.removeResult(_finderPathCountByUuid_C, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByUuid_C, args);
+
+				args = new Object[] {
 					calendarModelImpl.getUuid(),
 					calendarModelImpl.getCompanyId()
 				};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-				args);
+				finderCache.removeResult(_finderPathCountByUuid_C, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByUuid_C, args);
+			}
 
-			args = new Object[] {
+			if ((calendarModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByG_C.getColumnBitmask()) !=
+					 0) {
+
+				Object[] args = new Object[] {
+					calendarModelImpl.getOriginalGroupId(),
+					calendarModelImpl.getOriginalCalendarResourceId()
+				};
+
+				finderCache.removeResult(_finderPathCountByG_C, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByG_C, args);
+
+				args = new Object[] {
 					calendarModelImpl.getGroupId(),
 					calendarModelImpl.getCalendarResourceId()
 				};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_G_C, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C,
-				args);
+				finderCache.removeResult(_finderPathCountByG_C, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByG_C, args);
+			}
 
-			args = new Object[] {
-					calendarModelImpl.getGroupId(),
-					calendarModelImpl.getCalendarResourceId(),
-					calendarModelImpl.getDefaultCalendar()
+			if ((calendarModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByG_C_D.getColumnBitmask()) !=
+					 0) {
+
+				Object[] args = new Object[] {
+					calendarModelImpl.getOriginalGroupId(),
+					calendarModelImpl.getOriginalCalendarResourceId(),
+					calendarModelImpl.getOriginalDefaultCalendar()
 				};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_G_C_D, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C_D,
-				args);
-
-			finderCache.removeResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL,
-				FINDER_ARGS_EMPTY);
-		}
-
-		else {
-			if ((calendarModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_RESOURCEBLOCKID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						calendarModelImpl.getOriginalResourceBlockId()
-					};
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_RESOURCEBLOCKID,
-					args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_RESOURCEBLOCKID,
-					args);
-
-				args = new Object[] { calendarModelImpl.getResourceBlockId() };
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_RESOURCEBLOCKID,
-					args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_RESOURCEBLOCKID,
-					args);
-			}
-
-			if ((calendarModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] { calendarModelImpl.getOriginalUuid() };
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-					args);
-
-				args = new Object[] { calendarModelImpl.getUuid() };
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-					args);
-			}
-
-			if ((calendarModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						calendarModelImpl.getOriginalUuid(),
-						calendarModelImpl.getOriginalCompanyId()
-					};
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-					args);
+				finderCache.removeResult(_finderPathCountByG_C_D, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByG_C_D, args);
 
 				args = new Object[] {
-						calendarModelImpl.getUuid(),
-						calendarModelImpl.getCompanyId()
-					};
+					calendarModelImpl.getGroupId(),
+					calendarModelImpl.getCalendarResourceId(),
+					calendarModelImpl.isDefaultCalendar()
+				};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-					args);
-			}
-
-			if ((calendarModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						calendarModelImpl.getOriginalGroupId(),
-						calendarModelImpl.getOriginalCalendarResourceId()
-					};
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_G_C, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C,
-					args);
-
-				args = new Object[] {
-						calendarModelImpl.getGroupId(),
-						calendarModelImpl.getCalendarResourceId()
-					};
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_G_C, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C,
-					args);
-			}
-
-			if ((calendarModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C_D.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						calendarModelImpl.getOriginalGroupId(),
-						calendarModelImpl.getOriginalCalendarResourceId(),
-						calendarModelImpl.getOriginalDefaultCalendar()
-					};
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_G_C_D, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C_D,
-					args);
-
-				args = new Object[] {
-						calendarModelImpl.getGroupId(),
-						calendarModelImpl.getCalendarResourceId(),
-						calendarModelImpl.getDefaultCalendar()
-					};
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_G_C_D, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_G_C_D,
-					args);
+				finderCache.removeResult(_finderPathCountByG_C_D, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByG_C_D, args);
 			}
 		}
 
-		entityCache.putResult(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-			CalendarImpl.class, calendar.getPrimaryKey(), calendar, false);
+		entityCache.putResult(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED, CalendarImpl.class,
+			calendar.getPrimaryKey(), calendar, false);
 
 		clearUniqueFindersCache(calendarModelImpl, false);
 		cacheUniqueFindersCache(calendarModelImpl);
@@ -4246,40 +4316,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		return calendar;
 	}
 
-	protected Calendar toUnwrappedModel(Calendar calendar) {
-		if (calendar instanceof CalendarImpl) {
-			return calendar;
-		}
-
-		CalendarImpl calendarImpl = new CalendarImpl();
-
-		calendarImpl.setNew(calendar.isNew());
-		calendarImpl.setPrimaryKey(calendar.getPrimaryKey());
-
-		calendarImpl.setUuid(calendar.getUuid());
-		calendarImpl.setCalendarId(calendar.getCalendarId());
-		calendarImpl.setGroupId(calendar.getGroupId());
-		calendarImpl.setCompanyId(calendar.getCompanyId());
-		calendarImpl.setUserId(calendar.getUserId());
-		calendarImpl.setUserName(calendar.getUserName());
-		calendarImpl.setCreateDate(calendar.getCreateDate());
-		calendarImpl.setModifiedDate(calendar.getModifiedDate());
-		calendarImpl.setResourceBlockId(calendar.getResourceBlockId());
-		calendarImpl.setCalendarResourceId(calendar.getCalendarResourceId());
-		calendarImpl.setName(calendar.getName());
-		calendarImpl.setDescription(calendar.getDescription());
-		calendarImpl.setTimeZoneId(calendar.getTimeZoneId());
-		calendarImpl.setColor(calendar.getColor());
-		calendarImpl.setDefaultCalendar(calendar.isDefaultCalendar());
-		calendarImpl.setEnableComments(calendar.isEnableComments());
-		calendarImpl.setEnableRatings(calendar.isEnableRatings());
-		calendarImpl.setLastPublishDate(calendar.getLastPublishDate());
-
-		return calendarImpl;
-	}
-
 	/**
-	 * Returns the calendar with the primary key or throws a {@link com.liferay.portal.kernel.exception.NoSuchModelException} if it could not be found.
+	 * Returns the calendar with the primary key or throws a <code>com.liferay.portal.kernel.exception.NoSuchModelException</code> if it could not be found.
 	 *
 	 * @param primaryKey the primary key of the calendar
 	 * @return the calendar
@@ -4288,6 +4326,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	@Override
 	public Calendar findByPrimaryKey(Serializable primaryKey)
 		throws NoSuchCalendarException {
+
 		Calendar calendar = fetchByPrimaryKey(primaryKey);
 
 		if (calendar == null) {
@@ -4295,15 +4334,15 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 				_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
-			throw new NoSuchCalendarException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-				primaryKey);
+			throw new NoSuchCalendarException(
+				_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 		}
 
 		return calendar;
 	}
 
 	/**
-	 * Returns the calendar with the primary key or throws a {@link NoSuchCalendarException} if it could not be found.
+	 * Returns the calendar with the primary key or throws a <code>NoSuchCalendarException</code> if it could not be found.
 	 *
 	 * @param calendarId the primary key of the calendar
 	 * @return the calendar
@@ -4312,6 +4351,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	@Override
 	public Calendar findByPrimaryKey(long calendarId)
 		throws NoSuchCalendarException {
+
 		return findByPrimaryKey((Serializable)calendarId);
 	}
 
@@ -4323,8 +4363,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public Calendar fetchByPrimaryKey(Serializable primaryKey) {
-		Serializable serializable = entityCache.getResult(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-				CalendarImpl.class, primaryKey);
+		Serializable serializable = entityCache.getResult(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED, CalendarImpl.class,
+			primaryKey);
 
 		if (serializable == nullModel) {
 			return null;
@@ -4338,19 +4379,22 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			try {
 				session = openSession();
 
-				calendar = (Calendar)session.get(CalendarImpl.class, primaryKey);
+				calendar = (Calendar)session.get(
+					CalendarImpl.class, primaryKey);
 
 				if (calendar != null) {
 					cacheResult(calendar);
 				}
 				else {
-					entityCache.putResult(CalendarModelImpl.ENTITY_CACHE_ENABLED,
+					entityCache.putResult(
+						CalendarModelImpl.ENTITY_CACHE_ENABLED,
 						CalendarImpl.class, primaryKey, nullModel);
 				}
 			}
 			catch (Exception e) {
-				entityCache.removeResult(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-					CalendarImpl.class, primaryKey);
+				entityCache.removeResult(
+					CalendarModelImpl.ENTITY_CACHE_ENABLED, CalendarImpl.class,
+					primaryKey);
 
 				throw processException(e);
 			}
@@ -4376,6 +4420,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	@Override
 	public Map<Serializable, Calendar> fetchByPrimaryKeys(
 		Set<Serializable> primaryKeys) {
+
 		if (primaryKeys.isEmpty()) {
 			return Collections.emptyMap();
 		}
@@ -4399,8 +4444,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 		Set<Serializable> uncachedPrimaryKeys = null;
 
 		for (Serializable primaryKey : primaryKeys) {
-			Serializable serializable = entityCache.getResult(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-					CalendarImpl.class, primaryKey);
+			Serializable serializable = entityCache.getResult(
+				CalendarModelImpl.ENTITY_CACHE_ENABLED, CalendarImpl.class,
+				primaryKey);
 
 			if (serializable != nullModel) {
 				if (serializable == null) {
@@ -4420,8 +4466,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			return map;
 		}
 
-		StringBundler query = new StringBundler((uncachedPrimaryKeys.size() * 2) +
-				1);
+		StringBundler query = new StringBundler(
+			uncachedPrimaryKeys.size() * 2 + 1);
 
 		query.append(_SQL_SELECT_CALENDAR_WHERE_PKS_IN);
 
@@ -4453,8 +4499,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			}
 
 			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				entityCache.putResult(CalendarModelImpl.ENTITY_CACHE_ENABLED,
-					CalendarImpl.class, primaryKey, nullModel);
+				entityCache.putResult(
+					CalendarModelImpl.ENTITY_CACHE_ENABLED, CalendarImpl.class,
+					primaryKey, nullModel);
 			}
 		}
 		catch (Exception e) {
@@ -4481,7 +4528,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Returns a range of all the calendars.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of calendars
@@ -4497,7 +4544,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Returns an ordered range of all the calendars.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of calendars
@@ -4506,8 +4553,9 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of calendars
 	 */
 	@Override
-	public List<Calendar> findAll(int start, int end,
-		OrderByComparator<Calendar> orderByComparator) {
+	public List<Calendar> findAll(
+		int start, int end, OrderByComparator<Calendar> orderByComparator) {
+
 		return findAll(start, end, orderByComparator, true);
 	}
 
@@ -4515,7 +4563,7 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Returns an ordered range of all the calendars.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link CalendarModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>CalendarModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of calendars
@@ -4525,28 +4573,31 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * @return the ordered range of calendars
 	 */
 	@Override
-	public List<Calendar> findAll(int start, int end,
-		OrderByComparator<Calendar> orderByComparator, boolean retrieveFromCache) {
+	public List<Calendar> findAll(
+		int start, int end, OrderByComparator<Calendar> orderByComparator,
+		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL;
+			finderPath = _finderPathWithoutPaginationFindAll;
 			finderArgs = FINDER_ARGS_EMPTY;
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_ALL;
-			finderArgs = new Object[] { start, end, orderByComparator };
+			finderPath = _finderPathWithPaginationFindAll;
+			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<Calendar> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<Calendar>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<Calendar>)finderCache.getResult(
+				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
@@ -4554,13 +4605,13 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(2 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					2 + (orderByComparator.getOrderByFields().length * 2));
 
 				query.append(_SQL_SELECT_CALENDAR);
 
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
 				sql = query.toString();
 			}
@@ -4580,16 +4631,16 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 				Query q = session.createQuery(sql);
 
 				if (!pagination) {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<Calendar>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<Calendar>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -4627,8 +4678,8 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)finderCache.getResult(FINDER_PATH_COUNT_ALL,
-				FINDER_ARGS_EMPTY, this);
+		Long count = (Long)finderCache.getResult(
+			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
 			Session session = null;
@@ -4640,12 +4691,12 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY,
-					count);
+				finderCache.putResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_COUNT_ALL,
-					FINDER_ARGS_EMPTY);
+				finderCache.removeResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 				throw processException(e);
 			}
@@ -4671,6 +4722,164 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 	 * Initializes the calendar persistence.
 	 */
 	public void afterPropertiesSet() {
+		_finderPathWithPaginationFindAll = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+
+		_finderPathWithoutPaginationFindAll = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
+			new String[0]);
+
+		_finderPathCountAll = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
+			new String[0]);
+
+		_finderPathWithPaginationFindByResourceBlockId = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByResourceBlockId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByResourceBlockId = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByResourceBlockId",
+			new String[] {Long.class.getName()},
+			CalendarModelImpl.RESOURCEBLOCKID_COLUMN_BITMASK |
+			CalendarModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByResourceBlockId = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByResourceBlockId",
+			new String[] {Long.class.getName()});
+
+		_finderPathWithPaginationFindByUuid = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
+			new String[] {
+				String.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByUuid = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
+			new String[] {String.class.getName()},
+			CalendarModelImpl.UUID_COLUMN_BITMASK |
+			CalendarModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByUuid = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
+			new String[] {String.class.getName()});
+
+		_finderPathFetchByUUID_G = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
+			new String[] {String.class.getName(), Long.class.getName()},
+			CalendarModelImpl.UUID_COLUMN_BITMASK |
+			CalendarModelImpl.GROUPID_COLUMN_BITMASK);
+
+		_finderPathCountByUUID_G = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
+			new String[] {String.class.getName(), Long.class.getName()});
+
+		_finderPathWithPaginationFindByUuid_C = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
+			new String[] {
+				String.class.getName(), Long.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
+			new String[] {String.class.getName(), Long.class.getName()},
+			CalendarModelImpl.UUID_COLUMN_BITMASK |
+			CalendarModelImpl.COMPANYID_COLUMN_BITMASK |
+			CalendarModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByUuid_C = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
+			new String[] {String.class.getName(), Long.class.getName()});
+
+		_finderPathWithPaginationFindByG_C = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByG_C = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C",
+			new String[] {Long.class.getName(), Long.class.getName()},
+			CalendarModelImpl.GROUPID_COLUMN_BITMASK |
+			CalendarModelImpl.CALENDARRESOURCEID_COLUMN_BITMASK |
+			CalendarModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByG_C = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C",
+			new String[] {Long.class.getName(), Long.class.getName()});
+
+		_finderPathWithPaginationFindByG_C_D = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_D",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Boolean.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByG_C_D = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, CalendarImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_D",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Boolean.class.getName()
+			},
+			CalendarModelImpl.GROUPID_COLUMN_BITMASK |
+			CalendarModelImpl.CALENDARRESOURCEID_COLUMN_BITMASK |
+			CalendarModelImpl.DEFAULTCALENDAR_COLUMN_BITMASK |
+			CalendarModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByG_C_D = new FinderPath(
+			CalendarModelImpl.ENTITY_CACHE_ENABLED,
+			CalendarModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_D",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Boolean.class.getName()
+			});
 	}
 
 	public void destroy() {
@@ -4682,22 +4891,46 @@ public class CalendarPersistenceImpl extends BasePersistenceImpl<Calendar>
 
 	@ServiceReference(type = CompanyProviderWrapper.class)
 	protected CompanyProvider companyProvider;
+
 	@ServiceReference(type = EntityCache.class)
 	protected EntityCache entityCache;
+
 	@ServiceReference(type = FinderCache.class)
 	protected FinderCache finderCache;
-	private static final String _SQL_SELECT_CALENDAR = "SELECT calendar FROM Calendar calendar";
-	private static final String _SQL_SELECT_CALENDAR_WHERE_PKS_IN = "SELECT calendar FROM Calendar calendar WHERE calendarId IN (";
-	private static final String _SQL_SELECT_CALENDAR_WHERE = "SELECT calendar FROM Calendar calendar WHERE ";
-	private static final String _SQL_COUNT_CALENDAR = "SELECT COUNT(calendar) FROM Calendar calendar";
-	private static final String _SQL_COUNT_CALENDAR_WHERE = "SELECT COUNT(calendar) FROM Calendar calendar WHERE ";
-	private static final String _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN = "calendar.calendarId";
-	private static final String _FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN = "calendar.userId";
+
+	private static final String _SQL_SELECT_CALENDAR =
+		"SELECT calendar FROM Calendar calendar";
+
+	private static final String _SQL_SELECT_CALENDAR_WHERE_PKS_IN =
+		"SELECT calendar FROM Calendar calendar WHERE calendarId IN (";
+
+	private static final String _SQL_SELECT_CALENDAR_WHERE =
+		"SELECT calendar FROM Calendar calendar WHERE ";
+
+	private static final String _SQL_COUNT_CALENDAR =
+		"SELECT COUNT(calendar) FROM Calendar calendar";
+
+	private static final String _SQL_COUNT_CALENDAR_WHERE =
+		"SELECT COUNT(calendar) FROM Calendar calendar WHERE ";
+
+	private static final String _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN =
+		"calendar.calendarId";
+
+	private static final String _FILTER_ENTITY_TABLE_FILTER_USERID_COLUMN =
+		"calendar.userId";
+
 	private static final String _ORDER_BY_ENTITY_ALIAS = "calendar.";
-	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY = "No Calendar exists with the primary key ";
-	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No Calendar exists with the key {";
-	private static final Log _log = LogFactoryUtil.getLog(CalendarPersistenceImpl.class);
-	private static final Set<String> _badColumnNames = SetUtil.fromArray(new String[] {
-				"uuid"
-			});
+
+	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY =
+		"No Calendar exists with the primary key ";
+
+	private static final String _NO_SUCH_ENTITY_WITH_KEY =
+		"No Calendar exists with the key {";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CalendarPersistenceImpl.class);
+
+	private static final Set<String> _badColumnNames = SetUtil.fromArray(
+		new String[] {"uuid"});
+
 }

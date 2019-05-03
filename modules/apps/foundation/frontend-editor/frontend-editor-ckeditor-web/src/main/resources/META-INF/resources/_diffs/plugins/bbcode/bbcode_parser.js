@@ -762,13 +762,15 @@
 
 			var cite = token.attribute;
 
-			var result = '<blockquote><p>';
+			var result = '<blockquote>';
 
 			if (cite && cite.length) {
 				cite = BBCodeUtil.escape(cite);
 
 				result += '<cite>' + cite + '</cite>';
 			}
+
+			result += '<p>';
 
 			instance._result.push(result);
 

@@ -30,6 +30,7 @@ import java.util.List;
  */
 @ProviderType
 public class WallEntrySoap implements Serializable {
+
 	public static WallEntrySoap toSoapModel(WallEntry model) {
 		WallEntrySoap soapModel = new WallEntrySoap();
 
@@ -73,7 +74,8 @@ public class WallEntrySoap implements Serializable {
 	}
 
 	public static WallEntrySoap[] toSoapModels(List<WallEntry> models) {
-		List<WallEntrySoap> soapModels = new ArrayList<WallEntrySoap>(models.size());
+		List<WallEntrySoap> soapModels = new ArrayList<WallEntrySoap>(
+			models.size());
 
 		for (WallEntry model : models) {
 			soapModels.add(toSoapModel(model));
@@ -165,4 +167,5 @@ public class WallEntrySoap implements Serializable {
 	private Date _createDate;
 	private Date _modifiedDate;
 	private String _comments;
+
 }

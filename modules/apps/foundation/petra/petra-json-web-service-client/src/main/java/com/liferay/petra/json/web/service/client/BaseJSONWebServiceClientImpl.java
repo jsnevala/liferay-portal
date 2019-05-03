@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
+import com.liferay.petra.json.web.service.client.internal.AsyncHttpClient;
 import com.liferay.petra.json.web.service.client.internal.IdleConnectionMonitorThread;
 import com.liferay.petra.json.web.service.client.internal.JSONWebServiceClientImpl;
 import com.liferay.petra.json.web.service.client.internal.X509TrustManagerImpl;
@@ -33,6 +34,7 @@ import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +75,6 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
@@ -90,7 +91,6 @@ import org.apache.http.nio.conn.NHttpClientConnectionManager;
 import org.apache.http.nio.conn.NoopIOSessionStrategy;
 import org.apache.http.nio.conn.SchemeIOSessionStrategy;
 import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
-import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.nio.reactor.IOReactorException;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLContexts;
@@ -106,6 +106,13 @@ public abstract class BaseJSONWebServiceClientImpl
 	implements JSONWebServiceClient {
 
 	public void afterPropertiesSet() throws IOReactorException {
+		if (_classLoader != null) {
+			TypeFactory typeFactory = TypeFactory.defaultInstance();
+
+			_objectMapper.setTypeFactory(
+				typeFactory.withClassLoader(_classLoader));
+		}
+
 		HttpAsyncClientBuilder httpAsyncClientBuilder =
 			HttpAsyncClients.custom();
 
@@ -123,9 +130,13 @@ public abstract class BaseJSONWebServiceClientImpl
 		setProxyHost(httpAsyncClientBuilder);
 
 		try {
-			_closeableHttpAsyncClient = httpAsyncClientBuilder.build();
+			CloseableHttpAsyncClient closeableHttpAsyncClient =
+				httpAsyncClientBuilder.build();
 
-			_closeableHttpAsyncClient.start();
+			closeableHttpAsyncClient.start();
+
+			_asyncHttpClient = new AsyncHttpClient(
+				closeableHttpAsyncClient, _maxAttempts);
 
 			_idleConnectionMonitorThread = new IdleConnectionMonitorThread(
 				nHttpClientConnectionManager);
@@ -152,16 +163,55 @@ public abstract class BaseJSONWebServiceClientImpl
 
 	@Override
 	public void destroy() {
-		try {
-			_closeableHttpAsyncClient.close();
-		}
-		catch (IOException ioe) {
-			_logger.error("Unable to close client", ioe);
+		if (_asyncHttpClient != null) {
+			try {
+				_asyncHttpClient.close();
+			}
+			catch (IOException ioe) {
+				_logger.error("Unable to close client", ioe);
+			}
+
+			_asyncHttpClient = null;
 		}
 
-		_closeableHttpAsyncClient = null;
+		if (_idleConnectionMonitorThread != null) {
+			_idleConnectionMonitorThread.shutdown();
+		}
+	}
 
-		_idleConnectionMonitorThread.shutdown();
+	@Override
+	public String doDelete(String url, List<NameValuePair> parameters)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceTransportException {
+
+		return doDelete(
+			url, parameters, Collections.<NameValuePair>emptyList());
+	}
+
+	@Override
+	public String doDelete(
+			String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceTransportException {
+
+		if (!isNull(_contextPath)) {
+			url = _contextPath + url;
+		}
+
+		if (!parameters.isEmpty()) {
+			String queryString = URLEncodedUtils.format(parameters, _CHARSET);
+
+			url += "?" + queryString;
+		}
+
+		log("DELETE", url, parameters, headers);
+
+		HttpDelete httpDelete = new HttpDelete(url);
+
+		addHeaders(httpDelete, headers);
+
+		return execute(httpDelete);
 	}
 
 	@Override
@@ -170,7 +220,8 @@ public abstract class BaseJSONWebServiceClientImpl
 			   JSONWebServiceTransportException {
 
 		return doDelete(
-			url, parameters, Collections.<String, String>emptyMap());
+			url, toNameValuePairs(parameters),
+			Collections.<NameValuePair>emptyList());
 	}
 
 	@Override
@@ -180,32 +231,8 @@ public abstract class BaseJSONWebServiceClientImpl
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException {
 
-		if (!isNull(_contextPath)) {
-			url = _contextPath + url;
-		}
-
-		List<NameValuePair> nameValuePairs = toNameValuePairs(parameters);
-
-		if (!nameValuePairs.isEmpty()) {
-			String queryString = URLEncodedUtils.format(
-				nameValuePairs, _CHARSET);
-
-			url += "?" + queryString;
-		}
-
-		if (_logger.isDebugEnabled()) {
-			_logger.debug(
-				"Sending DELETE request to " + _login + "@" + _hostName + url);
-
-			log("HTTP headers", headers);
-			log("HTTP parameters", parameters);
-		}
-
-		HttpDelete httpDelete = new HttpDelete(url);
-
-		addHeaders(httpDelete, headers);
-
-		return execute(httpDelete);
+		return doDelete(
+			url, toNameValuePairs(parameters), toNameValuePairs(headers));
 	}
 
 	@Override
@@ -220,7 +247,42 @@ public abstract class BaseJSONWebServiceClientImpl
 		}
 
 		return doDelete(
-			url, parameters, Collections.<String, String>emptyMap());
+			url, _toNameValuePairs(parametersArray),
+			Collections.<NameValuePair>emptyList());
+	}
+
+	@Override
+	public String doGet(String url, List<NameValuePair> parameters)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceTransportException {
+
+		return doGet(url, parameters, Collections.<NameValuePair>emptyList());
+	}
+
+	@Override
+	public String doGet(
+			String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceTransportException {
+
+		if (!isNull(_contextPath)) {
+			url = _contextPath + url;
+		}
+
+		if (!parameters.isEmpty()) {
+			String queryString = URLEncodedUtils.format(parameters, _CHARSET);
+
+			url += "?" + queryString;
+		}
+
+		log("GET", url, parameters, headers);
+
+		HttpGet httpGet = new HttpGet(url);
+
+		addHeaders(httpGet, headers);
+
+		return execute(httpGet);
 	}
 
 	@Override
@@ -238,32 +300,8 @@ public abstract class BaseJSONWebServiceClientImpl
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException {
 
-		if (!isNull(_contextPath)) {
-			url = _contextPath + url;
-		}
-
-		List<NameValuePair> nameValuePairs = toNameValuePairs(parameters);
-
-		if (!nameValuePairs.isEmpty()) {
-			String queryString = URLEncodedUtils.format(
-				nameValuePairs, _CHARSET);
-
-			url += "?" + queryString;
-		}
-
-		if (_logger.isDebugEnabled()) {
-			_logger.debug(
-				"Sending GET request to " + _login + "@" + _hostName + url);
-
-			log("HTTP headers", headers);
-			log("HTTP parameters", parameters);
-		}
-
-		HttpGet httpGet = new HttpGet(url);
-
-		addHeaders(httpGet, headers);
-
-		return execute(httpGet);
+		return doGet(
+			url, toNameValuePairs(parameters), toNameValuePairs(headers));
 	}
 
 	@Override
@@ -271,19 +309,15 @@ public abstract class BaseJSONWebServiceClientImpl
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException {
 
-		Map<String, String> parameters = new HashMap<String, String>();
-
-		for (int i = 0; i < parametersArray.length; i += 2) {
-			parameters.put(parametersArray[i], parametersArray[i + 1]);
-		}
-
-		return doGet(url, parameters, Collections.<String, String>emptyMap());
+		return doGet(
+			url, _toNameValuePairs(parametersArray),
+			Collections.<NameValuePair>emptyList());
 	}
 
 	@Override
 	public <V, T> List<V> doGetToList(
-			Class<T> clazz, String url, Map<String, String> parameters,
-			Map<String, String> headers)
+			Class<T> clazz, String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceSerializeException,
 			   JSONWebServiceTransportException {
@@ -311,19 +345,27 @@ public abstract class BaseJSONWebServiceClientImpl
 
 	@Override
 	public <V, T> List<V> doGetToList(
+			Class<T> clazz, String url, Map<String, String> parameters,
+			Map<String, String> headers)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceSerializeException,
+			   JSONWebServiceTransportException {
+
+		return doGetToList(
+			clazz, url, toNameValuePairs(parameters),
+			toNameValuePairs(headers));
+	}
+
+	@Override
+	public <V, T> List<V> doGetToList(
 			Class<T> clazz, String url, String... parametersArray)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceSerializeException,
 			   JSONWebServiceTransportException {
 
-		Map<String, String> parameters = new HashMap<String, String>();
-
-		for (int i = 0; i < parametersArray.length; i += 2) {
-			parameters.put(parametersArray[i], parametersArray[i + 1]);
-		}
-
 		return doGetToList(
-			clazz, url, parameters, Collections.<String, String>emptyMap());
+			clazz, url, _toNameValuePairs(parametersArray),
+			Collections.<NameValuePair>emptyList());
 	}
 
 	@Override
@@ -333,7 +375,7 @@ public abstract class BaseJSONWebServiceClientImpl
 			   JSONWebServiceSerializeException,
 			   JSONWebServiceTransportException {
 
-		String json = doGet(url, parametersArray);
+		String json = doGet(url, _toNameValuePairs(parametersArray));
 
 		if (json == null) {
 			return null;
@@ -348,17 +390,17 @@ public abstract class BaseJSONWebServiceClientImpl
 	}
 
 	@Override
-	public String doPost(String url, Map<String, String> parameters)
+	public String doPost(String url, List<NameValuePair> parameters)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException {
 
-		return doPost(url, parameters, Collections.<String, String>emptyMap());
+		return doPost(url, parameters, Collections.<NameValuePair>emptyList());
 	}
 
 	@Override
 	public String doPost(
-			String url, Map<String, String> parameters,
-			Map<String, String> headers)
+			String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException {
 
@@ -366,20 +408,11 @@ public abstract class BaseJSONWebServiceClientImpl
 			url = _contextPath + url;
 		}
 
-		if (_logger.isDebugEnabled()) {
-			_logger.debug(
-				"Sending POST request to " + _login + "@" + _hostName + url);
-
-			log("HTTP headers", headers);
-			log("HTTP parameters", parameters);
-		}
+		log("POST", url, parameters, headers);
 
 		HttpPost httpPost = new HttpPost(url);
 
-		List<NameValuePair> nameValuePairs = toNameValuePairs(parameters);
-
-		HttpEntity httpEntity = new UrlEncodedFormEntity(
-			nameValuePairs, _CHARSET);
+		HttpEntity httpEntity = new UrlEncodedFormEntity(parameters, _CHARSET);
 
 		addHeaders(httpPost, headers);
 
@@ -389,17 +422,34 @@ public abstract class BaseJSONWebServiceClientImpl
 	}
 
 	@Override
+	public String doPost(String url, Map<String, String> parameters)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceTransportException {
+
+		return doPost(
+			url, toNameValuePairs(parameters),
+			Collections.<NameValuePair>emptyList());
+	}
+
+	@Override
+	public String doPost(
+			String url, Map<String, String> parameters,
+			Map<String, String> headers)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceTransportException {
+
+		return doPost(
+			url, toNameValuePairs(parameters), toNameValuePairs(headers));
+	}
+
+	@Override
 	public String doPost(String url, String... parametersArray)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException {
 
-		Map<String, String> parameters = new HashMap<String, String>();
-
-		for (int i = 0; i < parametersArray.length; i += 2) {
-			parameters.put(parametersArray[i], parametersArray[i + 1]);
-		}
-
-		return doPost(url, parameters, Collections.<String, String>emptyMap());
+		return doPost(
+			url, _toNameValuePairs(parametersArray),
+			Collections.<NameValuePair>emptyList());
 	}
 
 	@Override
@@ -428,7 +478,7 @@ public abstract class BaseJSONWebServiceClientImpl
 
 	@Override
 	public String doPostAsJSON(
-			String url, String json, Map<String, String> headers)
+			String url, String json, List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException {
 
@@ -443,6 +493,50 @@ public abstract class BaseJSONWebServiceClientImpl
 		httpPost.setEntity(stringEntity);
 
 		return execute(httpPost);
+	}
+
+	@Override
+	public String doPostAsJSON(
+			String url, String json, Map<String, String> headers)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceTransportException {
+
+		return doPostAsJSON(url, json, toNameValuePairs(headers));
+	}
+
+	@Override
+	public <T> T doPostToObject(
+			Class<T> clazz, String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceSerializeException,
+			   JSONWebServiceTransportException {
+
+		String json = doPost(url, parameters, headers);
+
+		if (json == null) {
+			return null;
+		}
+
+		try {
+			return _objectMapper.readValue(json, clazz);
+		}
+		catch (IOException ioe) {
+			throw _getJSONWebServiceSerializeException(json, clazz);
+		}
+	}
+
+	@Override
+	public <T> T doPostToObject(
+			Class<T> clazz, String url, Map<String, String> parameters,
+			Map<String, String> headers)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceSerializeException,
+			   JSONWebServiceTransportException {
+
+		return doPostToObject(
+			clazz, url, toNameValuePairs(parameters),
+			toNameValuePairs(headers));
 	}
 
 	@Override
@@ -467,17 +561,17 @@ public abstract class BaseJSONWebServiceClientImpl
 	}
 
 	@Override
-	public String doPut(String url, Map<String, String> parameters)
+	public String doPut(String url, List<NameValuePair> parameters)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException {
 
-		return doPut(url, parameters, Collections.<String, String>emptyMap());
+		return doPut(url, parameters, Collections.<NameValuePair>emptyList());
 	}
 
 	@Override
 	public String doPut(
-			String url, Map<String, String> parameters,
-			Map<String, String> headers)
+			String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException {
 
@@ -485,20 +579,11 @@ public abstract class BaseJSONWebServiceClientImpl
 			url = _contextPath + url;
 		}
 
-		if (_logger.isDebugEnabled()) {
-			_logger.debug(
-				"Sending PUT request to " + _login + "@" + _hostName + url);
-
-			log("HTTP headers", headers);
-			log("HTTP parameters", parameters);
-		}
+		log("PUT", url, parameters, headers);
 
 		HttpPut httpPut = new HttpPut(url);
 
-		List<NameValuePair> nameValuePairs = toNameValuePairs(parameters);
-
-		HttpEntity httpEntity = new UrlEncodedFormEntity(
-			nameValuePairs, _CHARSET);
+		HttpEntity httpEntity = new UrlEncodedFormEntity(parameters, _CHARSET);
 
 		addHeaders(httpPut, headers);
 
@@ -508,17 +593,113 @@ public abstract class BaseJSONWebServiceClientImpl
 	}
 
 	@Override
+	public String doPut(String url, Map<String, String> parameters)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceTransportException {
+
+		return doPut(
+			url, toNameValuePairs(parameters),
+			Collections.<NameValuePair>emptyList());
+	}
+
+	@Override
+	public String doPut(
+			String url, Map<String, String> parameters,
+			Map<String, String> headers)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceTransportException {
+
+		return doPut(
+			url, toNameValuePairs(parameters), toNameValuePairs(headers));
+	}
+
+	@Override
 	public String doPut(String url, String... parametersArray)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException {
 
-		Map<String, String> parameters = new HashMap<String, String>();
+		return doPut(
+			url, _toNameValuePairs(parametersArray),
+			Collections.<NameValuePair>emptyList());
+	}
 
-		for (int i = 0; i < parametersArray.length; i += 2) {
-			parameters.put(parametersArray[i], parametersArray[i + 1]);
+	@Override
+	public <T> T doPutToObject(
+			Class<T> clazz, String url, List<NameValuePair> parameters)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceSerializeException,
+			   JSONWebServiceTransportException {
+
+		return doPutToObject(
+			clazz, url, parameters, Collections.<NameValuePair>emptyList());
+	}
+
+	@Override
+	public <T> T doPutToObject(
+			Class<T> clazz, String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceSerializeException,
+			   JSONWebServiceTransportException {
+
+		String json = doPut(url, parameters, headers);
+
+		if (json == null) {
+			return null;
 		}
 
-		return doPut(url, parameters, Collections.<String, String>emptyMap());
+		try {
+			return _objectMapper.readValue(json, clazz);
+		}
+		catch (IOException ioe) {
+			throw _getJSONWebServiceSerializeException(json, clazz);
+		}
+	}
+
+	@Override
+	public <T> T doPutToObject(
+			Class<T> clazz, String url, Map<String, String> parameters)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceSerializeException,
+			   JSONWebServiceTransportException {
+
+		return doPutToObject(
+			clazz, url, toNameValuePairs(parameters),
+			Collections.<NameValuePair>emptyList());
+	}
+
+	@Override
+	public <T> T doPutToObject(
+			Class<T> clazz, String url, Map<String, String> parameters,
+			Map<String, String> headers)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceSerializeException,
+			   JSONWebServiceTransportException {
+
+		String json = doPut(url, parameters, headers);
+
+		if (json == null) {
+			return null;
+		}
+
+		try {
+			return _objectMapper.readValue(json, clazz);
+		}
+		catch (IOException ioe) {
+			throw _getJSONWebServiceSerializeException(json, clazz);
+		}
+	}
+
+	@Override
+	public <T> T doPutToObject(
+			Class<T> clazz, String url, String... parametersArray)
+		throws JSONWebServiceInvocationException,
+			   JSONWebServiceSerializeException,
+			   JSONWebServiceTransportException {
+
+		return doPutToObject(
+			clazz, url, _toNameValuePairs(parametersArray),
+			Collections.<NameValuePair>emptyList());
 	}
 
 	public Map<String, String> getHeaders() {
@@ -585,6 +766,10 @@ public abstract class BaseJSONWebServiceClientImpl
 		}
 	}
 
+	public void setClassLoader(ClassLoader classLoader) {
+		_classLoader = classLoader;
+	}
+
 	public void setContextPath(String contextPath) {
 		_contextPath = contextPath;
 	}
@@ -611,6 +796,11 @@ public abstract class BaseJSONWebServiceClientImpl
 	@Override
 	public void setLogin(String login) {
 		_login = login;
+	}
+
+	@Override
+	public void setMaxAttempts(int maxAttempts) {
+		_maxAttempts = maxAttempts;
 	}
 
 	@Override
@@ -680,10 +870,11 @@ public abstract class BaseJSONWebServiceClientImpl
 	}
 
 	protected void addHeaders(
-		HttpMessage httpMessage, Map<String, String> headers) {
+		HttpMessage httpMessage, List<NameValuePair> headers) {
 
-		for (Map.Entry<String, String> entry : headers.entrySet()) {
-			httpMessage.addHeader(entry.getKey(), entry.getValue());
+		for (NameValuePair nameValuePair : headers) {
+			httpMessage.addHeader(
+				nameValuePair.getName(), nameValuePair.getValue());
 		}
 
 		for (Map.Entry<String, String> entry : _headers.entrySet()) {
@@ -700,7 +891,7 @@ public abstract class BaseJSONWebServiceClientImpl
 		HttpHost httpHost = new HttpHost(_hostName, _hostPort, _protocol);
 
 		try {
-			if (_closeableHttpAsyncClient == null) {
+			if (_asyncHttpClient == null) {
 				afterPropertiesSet();
 			}
 
@@ -726,12 +917,11 @@ public abstract class BaseJSONWebServiceClientImpl
 				httpClientContext.setAttribute(
 					ClientContext.AUTH_CACHE, authCache);
 
-				future = _closeableHttpAsyncClient.execute(
-					httpHost, httpRequestBase, httpClientContext, null);
+				future = _asyncHttpClient.execute(
+					httpHost, httpRequestBase, httpClientContext);
 			}
 			else {
-				future = _closeableHttpAsyncClient.execute(
-					httpHost, httpRequestBase, null);
+				future = _asyncHttpClient.execute(httpHost, httpRequestBase);
 			}
 
 			HttpResponse httpResponse = future.get();
@@ -778,23 +968,30 @@ public abstract class BaseJSONWebServiceClientImpl
 			else if (statusCode == HttpServletResponse.SC_UNAUTHORIZED) {
 				throw new JSONWebServiceTransportException.
 					AuthenticationFailure(
-						"Not authorized to access JSON web service");
+						"Not authorized to access JSON web service " + content);
 			}
 
+			StringBuilder sb = new StringBuilder();
+
+			sb.append("Server returned status ");
+			sb.append(statusCode);
+			sb.append(" and content ");
+			sb.append(content);
+
 			throw new JSONWebServiceTransportException.CommunicationFailure(
-				"Server returned status " + statusCode, statusCode);
+				sb.toString(), statusCode);
 		}
 		catch (ExecutionException ee) {
 			throw new JSONWebServiceTransportException.CommunicationFailure(
-				"Unable to transmit request", ee);
+				"Unable to transmit request to " + _hostName, ee);
 		}
 		catch (InterruptedException ie) {
 			throw new JSONWebServiceTransportException.CommunicationFailure(
-				"Unable to transmit request", ie);
+				"Unable to transmit request to " + _hostName, ie);
 		}
 		catch (IOException ioe) {
 			throw new JSONWebServiceTransportException.CommunicationFailure(
-				"Unable to transmit request", ioe);
+				"Unable to transmit request to " + _hostName, ioe);
 		}
 		finally {
 			httpRequestBase.releaseConnection();
@@ -816,20 +1013,11 @@ public abstract class BaseJSONWebServiceClientImpl
 		PoolingNHttpClientConnectionManager
 			poolingNHttpClientConnectionManager = null;
 
-		ConnectingIOReactor connectingIOReactor =
-			new DefaultConnectingIOReactor();
-
-		if (_keyStore != null) {
-			poolingNHttpClientConnectionManager =
-				new PoolingNHttpClientConnectionManager(
-					connectingIOReactor, null,
-					getSchemeIOSessionStrategyRegistry(), null, null, 60000,
-					TimeUnit.MILLISECONDS);
-		}
-		else {
-			poolingNHttpClientConnectionManager =
-				new PoolingNHttpClientConnectionManager(connectingIOReactor);
-		}
+		poolingNHttpClientConnectionManager =
+			new PoolingNHttpClientConnectionManager(
+				new DefaultConnectingIOReactor(), null,
+				getSchemeIOSessionStrategyRegistry(), null, null, 60000,
+				TimeUnit.MILLISECONDS);
 
 		poolingNHttpClientConnectionManager.setMaxTotal(20);
 
@@ -843,7 +1031,14 @@ public abstract class BaseJSONWebServiceClientImpl
 			RegistryBuilder.<SchemeIOSessionStrategy>create();
 
 		registryBuilder.register("http", NoopIOSessionStrategy.INSTANCE);
-		registryBuilder.register("https", getSSLIOSessionStrategy());
+
+		if (_keyStore == null) {
+			registryBuilder.register(
+				"https", SSLIOSessionStrategy.getSystemDefaultStrategy());
+		}
+		else {
+			registryBuilder.register("https", getSSLIOSessionStrategy());
+		}
 
 		return registryBuilder.build();
 	}
@@ -866,9 +1061,14 @@ public abstract class BaseJSONWebServiceClientImpl
 			throw new RuntimeException(e);
 		}
 
+		String[] httpProtocols = _split(System.getProperty("https.protocols"));
+
+		String[] cipherSuites = _split(
+			System.getProperty("https.cipherSuites"));
+
 		return new SSLIOSessionStrategy(
-			sslContext, new String[] {"TLSv1"}, null,
-			SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+			sslContext, httpProtocols, cipherSuites,
+			SSLIOSessionStrategy.getDefaultHostnameVerifier());
 	}
 
 	protected int getStatus(String json) {
@@ -889,32 +1089,37 @@ public abstract class BaseJSONWebServiceClientImpl
 		return false;
 	}
 
-	protected void log(String message, Map<String, String> map) {
-		if (!_logger.isDebugEnabled() || map.isEmpty()) {
+	protected void log(
+		String httpCommand, String url, List<NameValuePair> parameters,
+		List<NameValuePair> headers) {
+
+		if (!_logger.isTraceEnabled()) {
 			return;
 		}
 
-		StringBuilder sb = new StringBuilder((map.size() * 4) + 2);
+		StringBuilder sb = new StringBuilder(
+			12 + (headers.size() * 4) + (parameters.size() * 4) + 2);
 
-		sb.append(message);
-		sb.append(":");
+		sb.append("Sending ");
+		sb.append(httpCommand);
+		sb.append(" request to ");
+		sb.append(_login);
+		sb.append("@");
+		sb.append(_hostName);
+		sb.append(url);
+		sb.append("\n");
+		sb.append("HTTP Headers: ");
 
-		for (Map.Entry<String, String> entry : map.entrySet()) {
-			String key = entry.getKey();
-			String value = entry.getValue();
+		_update(sb, headers);
 
-			if (value == null) {
-				key = "-" + key;
-				value = "";
-			}
+		sb.append("\n");
+		sb.append("HTTP parameters: ");
 
-			sb.append("\n");
-			sb.append(key);
-			sb.append("=");
-			sb.append(value);
-		}
+		_update(sb, parameters);
 
-		_logger.debug(sb.toString());
+		sb.append("\n");
+
+		_logger.trace(sb.toString());
 	}
 
 	protected void setProxyHost(HttpAsyncClientBuilder httpClientBuilder) {
@@ -976,6 +1181,28 @@ public abstract class BaseJSONWebServiceClientImpl
 		}
 
 		return json;
+	}
+
+	private static boolean _isBlank(String s) {
+		if (s == null) {
+			return true;
+		}
+
+		for (int i = 0; i < s.length(); i++) {
+			if (!Character.isWhitespace(s.charAt(i))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private static String[] _split(final String s) {
+		if (_isBlank(s)) {
+			return null;
+		}
+
+		return s.split(" *, *");
 	}
 
 	private CredentialsProvider _getCredentialsProvider() {
@@ -1082,21 +1309,71 @@ public abstract class BaseJSONWebServiceClientImpl
 		return false;
 	}
 
+	private List<NameValuePair> _toNameValuePairs(String... keyValuesArray) {
+		if ((keyValuesArray == null) || (keyValuesArray.length == 0)) {
+			return Collections.emptyList();
+		}
+
+		if ((keyValuesArray.length % 2) == 1) {
+			throw new IllegalArgumentException(
+				"Expected even number of variable arguments");
+		}
+
+		List<NameValuePair> nameValuePairs = new LinkedList<NameValuePair>();
+
+		for (int i = 0; i < keyValuesArray.length; i += 2) {
+			nameValuePairs.add(
+				new BasicNameValuePair(
+					keyValuesArray[i], keyValuesArray[i + 1]));
+		}
+
+		return nameValuePairs;
+	}
+
+	private void _update(
+		StringBuilder stringBuilder, List<NameValuePair> nameValuePairs) {
+
+		Iterator<NameValuePair> iterator = nameValuePairs.iterator();
+
+		stringBuilder.append("{");
+
+		while (iterator.hasNext()) {
+			NameValuePair nameValuePair = iterator.next();
+
+			stringBuilder.append(nameValuePair.getName());
+
+			stringBuilder.append("=");
+
+			stringBuilder.append(nameValuePair.getValue());
+
+			if (iterator.hasNext()) {
+				stringBuilder.append(",");
+			}
+		}
+
+		stringBuilder.append("}");
+	}
+
 	private static final Charset _CHARSET = Charset.forName("UTF-8");
 
 	private static final Logger _logger = LoggerFactory.getLogger(
 		JSONWebServiceClientImpl.class);
 
-	private CloseableHttpAsyncClient _closeableHttpAsyncClient;
-	private String _contextPath;
-	private final Pattern _errorMessagePattern = Pattern.compile(
+	private static final Pattern _errorMessagePattern = Pattern.compile(
 		"errorCode\":\\s*(\\d+).+message\":.+status\":\\s*(\\d+)");
+	private static final Pattern _statusPattern = Pattern.compile(
+		"status\":(\\d+)");
+
+	private AsyncHttpClient _asyncHttpClient;
+	private ClassLoader _classLoader;
+	private String _contextPath;
 	private Map<String, String> _headers = Collections.emptyMap();
 	private String _hostName;
 	private int _hostPort = 80;
 	private IdleConnectionMonitorThread _idleConnectionMonitorThread;
 	private KeyStore _keyStore;
 	private String _login;
+	private int _maxAttempts;
 	private String _oAuthAccessSecret;
 	private String _oAuthAccessToken;
 	private String _oAuthConsumerKey;
@@ -1111,6 +1388,5 @@ public abstract class BaseJSONWebServiceClientImpl
 	private String _proxyLogin;
 	private String _proxyPassword;
 	private String _proxyWorkstation;
-	private final Pattern _statusPattern = Pattern.compile("status\":(\\d+)");
 
 }

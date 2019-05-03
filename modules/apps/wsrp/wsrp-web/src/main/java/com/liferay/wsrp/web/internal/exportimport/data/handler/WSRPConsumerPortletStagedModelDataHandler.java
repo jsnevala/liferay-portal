@@ -39,8 +39,9 @@ import java.util.Map;
 public class WSRPConsumerPortletStagedModelDataHandler
 	extends BaseStagedModelDataHandler<WSRPConsumerPortlet> {
 
-	public static final String[] CLASS_NAMES =
-		{WSRPConsumerPortlet.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		WSRPConsumerPortlet.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(

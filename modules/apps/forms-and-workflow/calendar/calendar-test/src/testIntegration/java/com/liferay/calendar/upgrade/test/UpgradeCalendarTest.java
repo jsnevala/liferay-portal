@@ -65,7 +65,7 @@ public class UpgradeCalendarTest extends UpgradeCalendar {
 	public void testUpgradeCreatesCalendarTimeZoneId() throws Exception {
 		upgrade();
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection()) {
+		try (Connection con = DataAccess.getConnection()) {
 			connection = con;
 
 			Assert.assertTrue(hasColumn("Calendar", "timeZoneId"));

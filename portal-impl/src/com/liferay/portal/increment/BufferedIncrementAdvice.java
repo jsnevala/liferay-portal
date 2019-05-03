@@ -40,7 +40,7 @@ import org.aopalliance.intercept.MethodInvocation;
 /**
  * @author     Zsolt Berentey
  * @author     Shuyang Zhou
- * @deprecated As of 7.0.0, with no direct replacement
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
 @Deprecated
 public class BufferedIncrementAdvice
@@ -98,7 +98,7 @@ public class BufferedIncrementAdvice
 			CacheKeyGeneratorUtil.getCacheKeyGenerator(
 				BufferedIncrementAdvice.class.getName());
 
-		for (int i = 0; i < arguments.length - 1; i++) {
+		for (int i = 0; i < (arguments.length - 1); i++) {
 			cacheKeyGenerator.append(StringUtil.toHexString(arguments[i]));
 		}
 

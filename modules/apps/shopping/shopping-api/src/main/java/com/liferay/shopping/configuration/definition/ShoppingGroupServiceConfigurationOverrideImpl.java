@@ -29,7 +29,7 @@ import java.util.TreeSet;
 
 /**
  * @author Brian Wing Shun Chan
- * @author Eduardo Garcia
+ * @author Eduardo García
  * @author Peter Fellwock
  */
 public class ShoppingGroupServiceConfigurationOverrideImpl
@@ -48,7 +48,9 @@ public class ShoppingGroupServiceConfigurationOverrideImpl
 			for (int i = 0; i < locales.length; i++) {
 				Locale locale = locales[i];
 
-				if (locale.getCountry().length() == 2) {
+				String country = locale.getCountry();
+
+				if (country.length() == 2) {
 					Currency currency = Currency.getInstance(locale);
 
 					String currencyId = currency.getCurrencyCode();
@@ -138,10 +140,8 @@ public class ShoppingGroupServiceConfigurationOverrideImpl
 
 	@Override
 	public LocalizedValuesMap getEmailOrderConfirmationBody() {
-		LocalizedValuesMap emailOrderConfirmationBody =
-			_typedSettings.getLocalizedValuesMap("emailOrderConfirmationBody");
-
-		return emailOrderConfirmationBody;
+		return _typedSettings.getLocalizedValuesMap(
+			"emailOrderConfirmationBody");
 	}
 
 	@Override
@@ -152,11 +152,8 @@ public class ShoppingGroupServiceConfigurationOverrideImpl
 
 	@Override
 	public LocalizedValuesMap getEmailOrderConfirmationSubject() {
-		LocalizedValuesMap emailOrderConfirmationSubject =
-			_typedSettings.getLocalizedValuesMap(
-				"emailOrderConfirmationSubject");
-
-		return emailOrderConfirmationSubject;
+		return _typedSettings.getLocalizedValuesMap(
+			"emailOrderConfirmationSubject");
 	}
 
 	@Override

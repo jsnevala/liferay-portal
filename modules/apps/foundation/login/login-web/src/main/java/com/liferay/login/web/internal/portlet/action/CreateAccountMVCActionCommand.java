@@ -243,8 +243,7 @@ public class CreateAccountMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 		catch (Exception e) {
-			if (e instanceof
-					UserEmailAddressException.MustNotBeDuplicate ||
+			if (e instanceof UserEmailAddressException.MustNotBeDuplicate ||
 				e instanceof UserScreenNameException.MustNotBeDuplicate) {
 
 				String emailAddress = ParamUtil.getString(
@@ -445,6 +444,7 @@ public class CreateAccountMVCActionCommand extends BaseMVCActionCommand {
 
 		long facebookId = GetterUtil.getLong(
 			session.getAttribute(WebKeys.FACEBOOK_INCOMPLETE_USER_ID));
+
 		String googleUserId = GetterUtil.getString(
 			session.getAttribute(WebKeys.GOOGLE_INCOMPLETE_USER_ID));
 

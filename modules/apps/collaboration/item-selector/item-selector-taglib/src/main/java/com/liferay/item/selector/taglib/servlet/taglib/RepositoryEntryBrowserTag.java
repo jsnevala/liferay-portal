@@ -14,6 +14,7 @@
 
 package com.liferay.item.selector.taglib.servlet.taglib;
 
+import com.liferay.document.library.display.context.DLMimeTypeDisplayContext;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolver;
 import com.liferay.item.selector.constants.ItemSelectorPortletKeys;
@@ -42,11 +43,12 @@ import javax.servlet.jsp.PageContext;
  */
 public class RepositoryEntryBrowserTag extends IncludeTag {
 
-	public static final String[] DISPLAY_STYLES =
-		{"icon", "descriptive", "list"};
+	public static final String[] DISPLAY_STYLES = {
+		"icon", "descriptive", "list"
+	};
 
 	/**
-	 * @deprecated As of 1.1.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public void setDesiredItemSelectorReturnTypes(
@@ -59,8 +61,18 @@ public class RepositoryEntryBrowserTag extends IncludeTag {
 		_displayStyle = displayStyle;
 	}
 
+	public void setDlMimeTypeDisplayContext(
+		DLMimeTypeDisplayContext dlMimeTypeDisplayContext) {
+
+		_dlMimeTypeDisplayContext = dlMimeTypeDisplayContext;
+	}
+
 	public void setEmptyResultsMessage(String emptyResultsMessage) {
 		_emptyResultsMessage = emptyResultsMessage;
+	}
+
+	public void setExtensions(List<String> extensions) {
+		_extensions = extensions;
 	}
 
 	public void setItemSelectedEventName(String itemSelectedEventName) {
@@ -117,9 +129,12 @@ public class RepositoryEntryBrowserTag extends IncludeTag {
 		super.cleanUp();
 
 		_desiredItemSelectorReturnTypes = null;
-		_emptyResultsMessage = null;
 		_displayStyle = null;
+		_dlMimeTypeDisplayContext = null;
+		_emptyResultsMessage = null;
+		_extensions = new ArrayList<>();
 		_itemSelectedEventName = null;
+		_itemSelectorReturnTypeResolver = null;
 		_maxFileSize = PropsValues.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE;
 		_portletURL = null;
 		_repositoryEntries = new ArrayList<>();
@@ -175,6 +190,10 @@ public class RepositoryEntryBrowserTag extends IncludeTag {
 			getDisplayStyle());
 		request.setAttribute(
 			"liferay-item-selector:repository-entry-browser:" +
+				"dlMimeTypeDisplayContext",
+			_dlMimeTypeDisplayContext);
+		request.setAttribute(
+			"liferay-item-selector:repository-entry-browser:" +
 				"emptyResultsMessage",
 			_getEmptyResultsMessage(request));
 
@@ -187,6 +206,9 @@ public class RepositoryEntryBrowserTag extends IncludeTag {
 						_desiredItemSelectorReturnTypes));
 		}
 
+		request.setAttribute(
+			"liferay-item-selector:repository-entry-browser:extensions",
+			_extensions);
 		request.setAttribute(
 			"liferay-item-selector:repository-entry-browser:" +
 				"itemSelectedEventName",
@@ -214,7 +236,7 @@ public class RepositoryEntryBrowserTag extends IncludeTag {
 		request.setAttribute(
 			"liferay-item-selector:repository-entry-browser:" +
 				"showDragAndDropZone",
-			_showDragAndDropZone);
+			_isShownDragAndDropZone());
 		request.setAttribute(
 			"liferay-item-selector:repository-entry-browser:tabName", _tabName);
 		request.setAttribute(
@@ -230,9 +252,19 @@ public class RepositoryEntryBrowserTag extends IncludeTag {
 		return LanguageUtil.get(request, "no-results-were-found");
 	}
 
+	private boolean _isShownDragAndDropZone() {
+		if (_uploadURL == null) {
+			return false;
+		}
+
+		return _showDragAndDropZone;
+	}
+
 	private List<ItemSelectorReturnType> _desiredItemSelectorReturnTypes;
 	private String _displayStyle;
+	private DLMimeTypeDisplayContext _dlMimeTypeDisplayContext;
 	private String _emptyResultsMessage;
+	private List<String> _extensions = new ArrayList<>();
 	private String _itemSelectedEventName;
 	private ItemSelectorReturnTypeResolver _itemSelectorReturnTypeResolver;
 	private long _maxFileSize =

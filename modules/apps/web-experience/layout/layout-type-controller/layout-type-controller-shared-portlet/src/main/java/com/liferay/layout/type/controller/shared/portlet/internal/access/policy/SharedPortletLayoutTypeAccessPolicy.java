@@ -21,11 +21,11 @@ import com.liferay.portal.kernel.model.impl.DefaultLayoutTypeAccessPolicyImpl;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Leonardo Barros
- * @deprecated As of 2.0.0, with no direct replacement
+ * @author     Leonardo Barros
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
 @Component(
-	property = {"layout.type=" + SharedPortletLayoutTypeControllerConstants.LAYOUT_TYPE_SHARED_PORTLET},
+	property = "layout.type=" + SharedPortletLayoutTypeControllerConstants.LAYOUT_TYPE_SHARED_PORTLET,
 	service = LayoutTypeAccessPolicy.class
 )
 @Deprecated

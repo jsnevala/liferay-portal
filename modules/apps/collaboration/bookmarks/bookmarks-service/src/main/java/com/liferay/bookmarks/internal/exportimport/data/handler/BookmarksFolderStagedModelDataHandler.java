@@ -31,15 +31,16 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Daniel Kocsis
  */
 @Component(immediate = true, service = StagedModelDataHandler.class)
 public class BookmarksFolderStagedModelDataHandler
 	extends BaseStagedModelDataHandler<BookmarksFolder> {
 
-	public static final String[] CLASS_NAMES =
-		{BookmarksFolder.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		BookmarksFolder.class.getName()
+	};
 
 	@Override
 	public String[] getClassNames() {

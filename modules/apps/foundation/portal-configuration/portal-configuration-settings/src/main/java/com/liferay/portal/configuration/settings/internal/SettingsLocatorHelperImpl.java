@@ -16,8 +16,6 @@ package com.liferay.portal.configuration.settings.internal;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.resource.manager.ClassLoaderResourceManager;
@@ -101,7 +99,7 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 	}
 
 	/**
-	 * @deprecated As of 2.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #getConfigurationBeanSettings(String)}
 	 */
 	@Deprecated
@@ -144,7 +142,7 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 	}
 
 	/**
-	 * @deprecated As of 2.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -261,9 +259,6 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 			configurationPidMapping.getConfigurationPid());
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		SettingsLocatorHelperImpl.class);
-
 	private final ConcurrentMap<String, Class<?>> _configurationBeanClasses =
 		new ConcurrentHashMap<>();
 	private ServiceTracker
@@ -326,11 +321,13 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 
 			configurationBeanManagedService.unregister();
 
+			Class<?> configurationBeanClass = _configurationBeanClasses.remove(
+				configurationBeanManagedService.getConfigurationPid());
+
 			_configurationBeanClasses.remove(
 				configurationBeanManagedService.getConfigurationPid());
 
-			_configurationBeanSettings.remove(
-				configurationBeanManagedService.getConfigurationPid());
+			_configurationBeanSettings.remove(configurationBeanClass);
 		}
 
 		private ConfigurationBeanDeclarationServiceTracker(

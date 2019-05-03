@@ -21,12 +21,18 @@ import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.lar.UserIdStrategy;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.petra.string.CharPool;
+import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
+import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.DuplicateUserGroupException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.RequiredUserGroupException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.exception.UserGroupNameException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -36,6 +42,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.UserGroupConstants;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -48,6 +55,8 @@ import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.exportimport.UserGroupImportTransactionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -78,6 +87,78 @@ import java.util.Set;
 public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 
 	/**
+	 * Adds the user group to the group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param userGroupId the primary key of the user group
+	 */
+	@Override
+	public void addGroupUserGroup(long groupId, long userGroupId) {
+		super.addGroupUserGroup(groupId, userGroupId);
+
+		try {
+			reindexUsers(userGroupId);
+		}
+		catch (PortalException pe) {
+			throw new SystemException(pe);
+		}
+	}
+
+	/**
+	 * Adds the user group to the group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param userGroup the user group
+	 */
+	@Override
+	public void addGroupUserGroup(long groupId, UserGroup userGroup) {
+		super.addGroupUserGroup(groupId, userGroup);
+
+		try {
+			reindexUsers(userGroup);
+		}
+		catch (PortalException pe) {
+			throw new SystemException(pe);
+		}
+	}
+
+	/**
+	 * Adds the user groups to the group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param userGroups the user groups
+	 */
+	@Override
+	public void addGroupUserGroups(long groupId, List<UserGroup> userGroups) {
+		super.addGroupUserGroups(groupId, userGroups);
+
+		try {
+			reindexUsers(userGroups);
+		}
+		catch (PortalException pe) {
+			throw new SystemException(pe);
+		}
+	}
+
+	/**
+	 * Adds the user groups to the group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param userGroupIds the primary keys of the user groups
+	 */
+	@Override
+	public void addGroupUserGroups(long groupId, long[] userGroupIds) {
+		super.addGroupUserGroups(groupId, userGroupIds);
+
+		try {
+			reindexUsers(userGroupIds);
+		}
+		catch (PortalException pe) {
+			throw new SystemException(pe);
+		}
+	}
+
+	/**
 	 * Adds a user group.
 	 *
 	 * <p>
@@ -92,8 +173,8 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	 * @param      name the user group's name
 	 * @param      description the user group's description
 	 * @return     the user group
-	 * @deprecated As of 6.2.0, replaced by {@link #addUserGroup(long, long,
-	 *             String, String, ServiceContext)}
+	 * @deprecated As of Newton (6.2.x), replaced by {@link #addUserGroup(long,
+	 *             long, String, String, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -187,7 +268,7 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	 *
 	 * @param      userGroupId the primary key of the user group
 	 * @param      userId the primary key of the user
-	 * @deprecated As of 6.2.0
+	 * @deprecated As of Paton (6.1.x)
 	 */
 	@Deprecated
 	@Override
@@ -218,7 +299,7 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	 *
 	 * @param      userGroupId the primary key of the user group
 	 * @param      userIds the primary keys of the users
-	 * @deprecated As of 6.1.0
+	 * @deprecated As of Newton (6.2.x)
 	 */
 	@Deprecated
 	@Override
@@ -252,7 +333,7 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	 *
 	 * @param      userGroupIds the primary keys of the user groups
 	 * @param      userId the primary key of the user
-	 * @deprecated As of 6.1.0
+	 * @deprecated As of Newton (6.2.x)
 	 */
 	@Deprecated
 	@Override
@@ -411,6 +492,17 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 		return userGroupPersistence.findByCompanyId(companyId);
 	}
 
+	@Override
+	public List<UserGroup> getUserGroups(
+		long companyId, String name, int start, int end) {
+
+		if (Validator.isNull(name)) {
+			return userGroupPersistence.findByCompanyId(companyId, start, end);
+		}
+
+		return userGroupPersistence.findByC_LikeN(companyId, name, start, end);
+	}
+
 	/**
 	 * Returns all the user groups with the primary keys.
 	 *
@@ -430,6 +522,15 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 		}
 
 		return userGroups;
+	}
+
+	@Override
+	public int getUserGroupsCount(long companyId, String name) {
+		if (Validator.isNull(name)) {
+			return userGroupPersistence.countByCompanyId(companyId);
+		}
+
+		return userGroupPersistence.countByC_LikeN(companyId, name);
 	}
 
 	/**
@@ -810,6 +911,13 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 			userGroupIds, groupId);
 
 		groupPersistence.removeUserGroups(groupId, userGroupIds);
+
+		try {
+			reindexUsers(userGroupIds);
+		}
+		catch (PortalException pe) {
+			throw new SystemException(pe);
+		}
 	}
 
 	/**
@@ -831,8 +939,8 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	 * @param      name the user group's name
 	 * @param      description the user group's description
 	 * @return     the user group
-	 * @deprecated As of 6.2.0, replaced by {@link #updateUserGroup(long, long,
-	 *             String, String, ServiceContext)}
+	 * @deprecated As of Newton (6.2.x), replaced by {@link
+	 *             #updateUserGroup(long, long, String, String, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -1093,6 +1201,86 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 		return true;
 	}
 
+	protected void reindex(long companyId, long[] userIds)
+		throws PortalException {
+
+		final Indexer<User> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
+			User.class);
+
+		final IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			userLocalService.getIndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setAddCriteriaMethod(
+			dynamicQuery -> {
+				Property userId = PropertyFactoryUtil.forName("userId");
+
+				dynamicQuery.add(userId.in(userIds));
+			});
+		indexableActionableDynamicQuery.setCompanyId(companyId);
+		indexableActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<User>() {
+
+				@Override
+				public void performAction(User user) {
+					if (!user.isDefaultUser()) {
+						try {
+							Document document = indexer.getDocument(user);
+
+							indexableActionableDynamicQuery.addDocuments(
+								document);
+						}
+						catch (PortalException pe) {
+							if (_log.isWarnEnabled()) {
+								_log.warn(
+									"Unable to index user " + user.getUserId(),
+									pe);
+							}
+						}
+					}
+				}
+
+			});
+		indexableActionableDynamicQuery.setSearchEngineId(
+			indexer.getSearchEngineId());
+
+		indexableActionableDynamicQuery.performActions();
+	}
+
+	protected void reindexUsers(List<UserGroup> userGroups)
+		throws PortalException {
+
+		for (UserGroup userGroup : userGroups) {
+			reindexUsers(userGroup);
+		}
+	}
+
+	protected void reindexUsers(long userGroupId) throws PortalException {
+		UserGroup userGroup = getUserGroup(userGroupId);
+
+		reindexUsers(userGroup);
+	}
+
+	protected void reindexUsers(long[] userGroupIds) throws PortalException {
+		for (long userGroupId : userGroupIds) {
+			reindexUsers(userGroupId);
+		}
+	}
+
+	protected void reindexUsers(UserGroup userGroup) throws PortalException {
+		long companyId = userGroup.getCompanyId();
+
+		long[] userIds = getUserPrimaryKeys(userGroup.getUserGroupId());
+
+		if (ArrayUtil.isNotEmpty(userIds)) {
+			TransactionCommitCallbackUtil.registerCallback(
+				() -> {
+					reindex(companyId, userIds);
+
+					return null;
+				});
+		}
+	}
+
 	protected void validate(long userGroupId, long companyId, String name)
 		throws PortalException {
 
@@ -1116,5 +1304,8 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 			throw new DuplicateUserGroupException("{name=" + name + "}");
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		UserGroupLocalServiceImpl.class);
 
 }

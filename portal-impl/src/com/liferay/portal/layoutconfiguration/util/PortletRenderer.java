@@ -273,8 +273,8 @@ public class PortletRenderer {
 				Object attribute = request.getAttribute(attributeName);
 
 				if (!(attribute instanceof Mergeable<?>) ||
-						!RestrictPortletServletRequest.isSharedRequestAttribute(
-							attributeName)) {
+					!RestrictPortletServletRequest.isSharedRequestAttribute(
+						attributeName)) {
 
 					continue;
 				}

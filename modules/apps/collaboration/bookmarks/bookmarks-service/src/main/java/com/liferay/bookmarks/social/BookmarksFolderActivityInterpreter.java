@@ -19,7 +19,6 @@ import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.service.permission.BookmarksFolderPermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -29,13 +28,12 @@ import com.liferay.social.kernel.model.SocialActivityConstants;
 import com.liferay.social.kernel.model.SocialActivityInterpreter;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Zsolt Berentey
  */
 @Component(
-	property = {"javax.portlet.name=" + BookmarksPortletKeys.BOOKMARKS},
+	property = "javax.portlet.name=" + BookmarksPortletKeys.BOOKMARKS,
 	service = SocialActivityInterpreter.class
 )
 public class BookmarksFolderActivityInterpreter
@@ -55,6 +53,12 @@ public class BookmarksFolderActivityInterpreter
 
 	@Override
 	protected ResourceBundleLoader getResourceBundleLoader() {
+		if (_resourceBundleLoader == null) {
+			return ResourceBundleLoaderUtil.
+				getResourceBundleLoaderByBundleSymbolicName(
+					"com.liferay.bookmarks.web");
+		}
+
 		return _resourceBundleLoader;
 	}
 
@@ -97,20 +101,15 @@ public class BookmarksFolderActivityInterpreter
 			actionId);
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.bookmarks.web)",
-		unbind = "-"
-	)
 	protected void setResourceBundleLoader(
 		ResourceBundleLoader resourceBundleLoader) {
 
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
+		_resourceBundleLoader = resourceBundleLoader;
 	}
 
-	private static final String[] _CLASS_NAMES =
-		{BookmarksFolder.class.getName()};
+	private static final String[] _CLASS_NAMES = {
+		BookmarksFolder.class.getName()
+	};
 
 	private ResourceBundleLoader _resourceBundleLoader;
 

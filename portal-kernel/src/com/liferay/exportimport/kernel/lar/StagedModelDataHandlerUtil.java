@@ -25,7 +25,12 @@ import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.spring.orm.LastSessionRecorderHelperUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.xml.Attribute;
+import com.liferay.portal.kernel.xml.Document;
+import com.liferay.portal.kernel.xml.DocumentException;
 import com.liferay.portal.kernel.xml.Element;
+import com.liferay.portal.kernel.xml.SAXReaderUtil;
 
 import java.util.Collections;
 import java.util.List;
@@ -33,7 +38,7 @@ import java.util.Map;
 
 /**
  * @author Brian Wing Shun Chan
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @ProviderType
 public class StagedModelDataHandlerUtil {
@@ -84,7 +89,7 @@ public class StagedModelDataHandlerUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #exportReferenceStagedModel(PortletDataContext, StagedModel,
 	 *             StagedModel, String)}
 	 */
@@ -102,7 +107,7 @@ public class StagedModelDataHandlerUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #exportReferenceStagedModel(PortletDataContext, StagedModel,
 	 *             StagedModel, String)}
 	 */
@@ -403,6 +408,48 @@ public class StagedModelDataHandlerUtil {
 			return;
 		}
 
+		Attribute missingAttribute = referenceElement.attribute("missing");
+
+		if ((missingAttribute != null) &&
+			GetterUtil.getBoolean(missingAttribute.getValue())) {
+
+			StagedModel stagedModel = _getReferenceStagedModel(
+				portletDataContext, referenceElement);
+
+			Element missingReferenceElement =
+				portletDataContext.getMissingReferenceElement(stagedModel);
+
+			if (missingReferenceElement != null) {
+				String elementPath = missingReferenceElement.attributeValue(
+					"element-path");
+
+				if (Validator.isNotNull(elementPath)) {
+					Element importDataRootElement =
+						portletDataContext.getImportDataRootElement();
+
+					try {
+						Document document = SAXReaderUtil.read(
+							portletDataContext.getZipEntryAsString(
+								elementPath));
+
+						portletDataContext.setImportDataRootElement(
+							document.getRootElement());
+
+						importStagedModel(portletDataContext, referenceElement);
+					}
+					catch (DocumentException de) {
+						throw new RuntimeException(de);
+					}
+					finally {
+						portletDataContext.setImportDataRootElement(
+							importDataRootElement);
+					}
+
+					return;
+				}
+			}
+		}
+
 		importStagedModel(portletDataContext, referenceElement);
 	}
 
@@ -461,12 +508,9 @@ public class StagedModelDataHandlerUtil {
 			return null;
 		}
 
-		StagedModelDataHandler<T> stagedModelDataHandler =
-			(StagedModelDataHandler<T>)
-				StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
-					ExportImportClassedModelUtil.getClassName(stagedModel));
-
-		return stagedModelDataHandler;
+		return (StagedModelDataHandler<T>)
+			StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
+				ExportImportClassedModelUtil.getClassName(stagedModel));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

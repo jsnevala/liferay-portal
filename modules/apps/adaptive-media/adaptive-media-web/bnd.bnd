@@ -1,6 +1,5 @@
 Bundle-Name: Liferay Adaptive Media Web
 Bundle-SymbolicName: com.liferay.adaptive.media.web
-Bundle-Version: 1.0.7
-Liferay-Releng-Module-Group-Description:
+Bundle-Version: 1.0.18
 Liferay-Releng-Module-Group-Title: Adaptive Media
 Web-ContextPath: /adaptive-media-web

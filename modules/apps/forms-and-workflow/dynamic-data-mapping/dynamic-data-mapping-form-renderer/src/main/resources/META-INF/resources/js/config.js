@@ -24,7 +24,8 @@
 								'liferay-ddm-form-renderer-types',
 								'liferay-ddm-form-renderer-util',
 								'liferay-ddm-form-renderer-validation',
-								'liferay-ddm-form-soy'
+								'liferay-ddm-form-soy',
+								'liferay-ddm-soy-template-util'
 							]
 						},
 						'liferay-ddm-form-renderer-definition': {
@@ -123,6 +124,7 @@
 						'liferay-ddm-form-renderer-type': {
 							path: 'type.js',
 							requires: [
+								'aui-component',
 								'aui-form-builder-field-type'
 							]
 						},
@@ -155,6 +157,10 @@
 								'aui-node',
 								'widget'
 							]
+						},
+						'liferay-ddm-soy-template-util': {
+							path: 'soy_template_util.js',
+							requires: []
 						}
 					},
 					root: MODULE_PATH + '/js/'

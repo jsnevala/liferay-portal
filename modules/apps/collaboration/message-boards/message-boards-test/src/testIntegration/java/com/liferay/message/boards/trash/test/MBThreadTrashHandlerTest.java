@@ -67,7 +67,7 @@ import org.junit.runner.RunWith;
 
 /**
  * @author Zsolt Berentey
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @RunWith(Arquillian.class)
 public class MBThreadTrashHandlerTest

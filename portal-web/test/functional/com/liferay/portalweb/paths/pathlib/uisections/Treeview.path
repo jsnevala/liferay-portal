@@ -9,11 +9,6 @@
 </thead>
 <tbody>
 <tr>
-	<td>GLYPHICON_MINUS</td>
-	<td>//span[contains(@class,'glyphicon-minus')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>GLYPHICON_PLUS</td>
 	<td>//span[contains(@class,'glyphicon-plus')]</td>
 	<tr></tr>

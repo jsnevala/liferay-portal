@@ -34,7 +34,10 @@ public class MarkupCharacterSetsImpl implements MarkupCharacterSetsHelper {
 
 		if (!markupCharacterSets.contains(StringPool.UTF8)) {
 			markupCharacterSets = markupCharacterSets.concat(
-				StringPool.COMMA).concat(StringPool.UTF8);
+				StringPool.COMMA
+			).concat(
+				StringPool.UTF8
+			);
 		}
 
 		return markupCharacterSets;

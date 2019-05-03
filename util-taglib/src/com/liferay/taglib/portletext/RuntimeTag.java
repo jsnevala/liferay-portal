@@ -258,7 +258,8 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 			boolean writeObject = false;
 
 			if (persistSettings &&
-				!themeDisplay.isPortletEmbedded(portlet.getPortletId())) {
+				!layout.isPortletEmbedded(
+					portlet.getPortletId(), layout.getGroupId())) {
 
 				PortletPreferencesFactoryUtil.getLayoutPortletSetup(
 					themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId(),
@@ -269,10 +270,12 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 				writeObject = true;
 			}
 
-			if (PortletPreferencesLocalServiceUtil.getPortletPreferencesCount(
+			long count =
+				PortletPreferencesLocalServiceUtil.getPortletPreferencesCount(
 					PortletKeys.PREFS_OWNER_TYPE_LAYOUT, themeDisplay.getPlid(),
-					portletInstanceKey) < 1) {
+					portletInstanceKey);
 
+			if (count < 1) {
 				PortletPreferencesFactoryUtil.getLayoutPortletSetup(
 					layout, portletInstanceKey, defaultPreferences);
 				PortletPreferencesFactoryUtil.getPortletSetup(

@@ -32,9 +32,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + AssetTagsNavigationPortletKeys.ASSET_TAGS_CLOUD
-	},
+	property = "javax.portlet.name=" + AssetTagsNavigationPortletKeys.ASSET_TAGS_CLOUD,
 	service = TemplateHandler.class
 )
 public class AssetTagsCloudPortletDisplayTemplateHandler
@@ -48,8 +46,11 @@ public class AssetTagsCloudPortletDisplayTemplateHandler
 		String portletTitle = portal.getPortletTitle(
 			AssetTagsNavigationPortletKeys.ASSET_TAGS_CLOUD, resourceBundle);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override

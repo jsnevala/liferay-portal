@@ -103,7 +103,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Eduardo Lundgren
  * @author Brian Wing Shun Chan
- * @author Eduardo Garcia
+ * @author Eduardo García
  * @author Marcellus Tavares
  */
 @Component(immediate = true)
@@ -146,9 +146,7 @@ public class DDMImpl implements DDM {
 			DDMStructure structure = DDMStructureLocalServiceUtil.getStructure(
 				classPK);
 
-			DDMForm ddmForm = structure.getFullHierarchyDDMForm();
-
-			return ddmForm;
+			return structure.getFullHierarchyDDMForm();
 		}
 		else if (classNameId == ddmTemplateClassNameId) {
 			DDMTemplate template = DDMTemplateLocalServiceUtil.getTemplate(

@@ -76,7 +76,7 @@ public class KaleoWorkflowModelConverterImpl
 		DefaultWorkflowDefinition defaultWorkflowDefinition =
 			new DefaultWorkflowDefinition();
 
-		defaultWorkflowDefinition.setActive(kaleoDefinition.getActive());
+		defaultWorkflowDefinition.setActive(kaleoDefinition.isActive());
 
 		String content = kaleoDefinition.getContent();
 

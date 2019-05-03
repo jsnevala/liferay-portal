@@ -18,6 +18,7 @@
 
 <%
 JournalItemSelectorViewDisplayContext journalItemSelectorViewDisplayContext = (JournalItemSelectorViewDisplayContext)request.getAttribute(JournalItemSelectorView.JOURNAL_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT);
+String[] imageExtensions = PrefsPropsUtil.getStringArray(PropsKeys.JOURNAL_IMAGE_EXTENSIONS, StringPool.COMMA);
 %>
 
 <div class="container-fluid-1280 lfr-item-viewer" id="itemSelectorUploadContainer">
@@ -26,7 +27,7 @@ JournalItemSelectorViewDisplayContext journalItemSelectorViewDisplayContext = (J
 	>
 		<label class="btn btn-default" for="<portlet:namespace />inputFile"><liferay-ui:message key="select-file" /></label>
 
-		<input class="hide" id="<portlet:namespace />inputFile" type="file" />
+		<input accept="<%= ArrayUtil.isEmpty(imageExtensions) ? "*" : StringUtil.merge(imageExtensions) %>" class="hide" id="<portlet:namespace />inputFile" type="file" />
 	</liferay-util:buffer>
 
 	<div class="drop-enabled drop-zone upload-view">
@@ -40,6 +41,7 @@ JournalItemSelectorViewDisplayContext journalItemSelectorViewDisplayContext = (J
 	new Liferay.ItemSelectorRepositoryEntryBrowser(
 		{
 			closeCaption: '<%= journalItemSelectorViewDisplayContext.getTitle(locale) %>',
+			maxFileSize: '<%= PrefsPropsUtil.getLong(PropsKeys.DL_FILE_MAX_SIZE) %> ',
 			on: {
 				selectedItem: function(event) {
 					Liferay.Util.getOpener().Liferay.fire('<%= journalItemSelectorViewDisplayContext.getItemSelectedEventName() %>', event);
@@ -47,7 +49,8 @@ JournalItemSelectorViewDisplayContext journalItemSelectorViewDisplayContext = (J
 			},
 			rootNode: '#itemSelectorUploadContainer',
 			uploadItemReturnType: '<%= HtmlUtil.escapeAttribute(FileEntryItemSelectorReturnType.class.getName()) %>',
-			uploadItemURL: '<%= journalItemSelectorViewDisplayContext.getUploadURL(liferayPortletResponse) %>'
+			uploadItemURL: '<%= journalItemSelectorViewDisplayContext.getUploadURL(liferayPortletResponse) %>',
+			validExtensions: '<%= ArrayUtil.isEmpty(imageExtensions) ? "*" : StringUtil.merge(imageExtensions) %>'
 		}
 	);
 </aui:script>

@@ -1,0 +1,165 @@
+@component-name = "portal-document-management-ee"
+@ignore = "true"
+definition {
+	property dummy.socket.proxy.disabled = "true";
+	property osgi.app.includes = "sharepoint-rest";
+	property portal.ssl.enabled = "true";
+	property portal.upstream = "true";
+	property test.run.environment = "EE";
+	property testray.main.component.name = "Documents Management";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		var authorizationGrantEndpoint = PropsUtil.get("sharepoint.oauth.authorization.grant.endpoint");
+		var authorizationTokenEndpoint = PropsUtil.get("sharepoint.oauth.authorization.token.endpoint");
+		var clientId = PropsUtil.get("sharepoint.oauth.client.id");
+		var clientSecret = PropsUtil.get("sharepoint.oauth.client.secret");
+		var configurationName = PropsUtil.get("sharepoint.oauth.configuration.name");
+		var configurationResource = PropsUtil.get("sharepoint.oauth.configuration.resource");
+		var configurationScope = PropsUtil.get("sharepoint.oauth.configuration.scope");
+		var siteDomain = PropsUtil.get("sharepoint.oauth.site.domain");
+		var tenantId = PropsUtil.get("sharepoint.oauth.tenant.id");
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "System Settings"
+		);
+
+		SystemSettings.gotoCategory(category = "Collaboration");
+
+		SystemSettings.viewConfiguration(configurationName = "Sharepoint OAuth2");
+
+		Click(locator1 = "Button#ADD_ENTRY");
+
+		Type(
+			locator1 = "TextArea#ANY",
+			value1 = "${configurationName}",
+			key_text = "name"
+		);
+
+		Type(
+			locator1 = "TextArea#ANY",
+			value1 = "${authorizationGrantEndpoint}",
+			key_text = "authorizationGrantEndpoint"
+		);
+
+		Type(
+			locator1 = "TextArea#ANY",
+			value1 = "${authorizationTokenEndpoint}",
+			key_text = "authorizationTokenEndpoint"
+		);
+
+		Type(
+			locator1 = "TextArea#ANY",
+			value1 = "${clientId}",
+			key_text = "clientId"
+		);
+
+		Type(
+			locator1 = "TextArea#ANY",
+			value1 = "${clientSecret}",
+			key_text = "clientSecret"
+		);
+
+		Type(
+			locator1 = "TextArea#ANY",
+			value1 = "${configurationScope}",
+			key_text = "scope"
+		);
+
+		Type(
+			locator1 = "TextArea#ANY",
+			value1 = "${tenantId}",
+			key_text = "tenantId"
+		);
+
+		Type(
+			locator1 = "TextArea#ANY",
+			value1 = "${siteDomain}",
+			key_text = "siteDomain"
+		);
+
+		Type(
+			locator1 = "TextArea#ANY",
+			value1 = "${configurationResource}",
+			key_text = "resource"
+		);
+
+		Button.clickSave();
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMPortlet.setDescriptiveView();
+
+		DMNavigator.gotoAddRepositoryCP();
+
+		Type(
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${configurationName}",
+			key_fieldLabel = "Name"
+		);
+
+		DMRepository.addSharepoint(
+			dmRepositoryLibraryPath = "Documentos compartidos",
+			dmRepositoryName = "Sharepoint (${configurationName})",
+			dmRepositorySiteAbsoluteURL = "https://liferaycolab.sharepoint.com"
+		);
+
+		PortletEntry.save();
+
+		Navigator.openSpecificURL(url = "https://localhost:8443");
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMPortlet.setDescriptiveView();
+
+		AssertClick(
+			locator1 = "DocumentsAndMedia#REPOSITORY_FOLDER_NAME_DESCRIPTIVE_VIEW",
+			value1 = "${configurationName}",
+			key_dmRepositoryName = "${configurationName}"
+		);
+
+		MicrosoftLogin.accountSignIn();
+
+		MicrosoftLogin.confirmSharepointApp(dmRepositoryName = "${configurationName}");
+
+		Navigator.openSpecificURL(url = "https://localhost:8443");
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
+
+	// LPS-87107
+
+	@priority = "5"
+	test ViewRepository {
+		DMRepository.gotoCP(dmRepositoryName = "${configurationName}");
+
+		DMRepository.viewBreadcrumb(dmRepositoryName = "${configurationName}");
+	}
+}

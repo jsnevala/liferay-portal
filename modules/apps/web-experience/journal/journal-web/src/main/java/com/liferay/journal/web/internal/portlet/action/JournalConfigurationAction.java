@@ -45,12 +45,12 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	configurationPid = "com.liferay.journal.web.configuration.JournalWebConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
-	property = {"javax.portlet.name=" + JournalPortletKeys.JOURNAL},
+	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = ConfigurationAction.class
 )
 public class JournalConfigurationAction

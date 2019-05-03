@@ -1,166 +1,178 @@
-<definition>
-	<command name="_expandDetailsPanel">
-		<if>
-			<condition function="IsElementPresent" locator1="CalendarEditResource#DETAILS_PANEL_COLLAPSED" />
-			<then>
-				<execute function="Click" locator1="CalendarEditResource#DETAILS_PANEL_COLLAPSED" />
+definition {
+	macro _expandDetailsPanel {
+		if (IsElementPresent(locator1 = "CalendarEditResource#DETAILS_PANEL_COLLAPSED")) {
+			Click(locator1 = "CalendarEditResource#DETAILS_PANEL_COLLAPSED");
 
-				<execute function="AssertElementPresent" locator1="CalendarEditResource#DETAILS_PANEL_EXPANDED" />
-			</then>
-		</if>
-	</command>
+			AssertElementPresent(locator1 = "CalendarEditResource#DETAILS_PANEL_EXPANDED");
+		}
+	}
 
-	<command name="activate">
-		<execute macro="CalendarResource#_expandDetailsPanel" />
+	macro add {
+		CalendarNavigator.gotoAddResource();
 
-		<execute function="Check" locator1="CalendarEditResource#DETAILS_PANEL_ACTIVE_CHECKBOX" />
-	</command>
+		PortletEntry.inputName(name = "${calendarResourceName}");
 
-	<command name="add">
-		<execute macro="CalendarNavigator#gotoAddResource" />
+		CalendarResource.save();
 
-		<execute macro="CalendarResource#editResourceName">
-			<var name="calendarResourceName" value="${calendarResourceName}" />
-		</execute>
+		CalendarResource.view(calendarResourceName = "${calendarResourceName}");
+	}
 
-		<execute macro="CalendarResource#save" />
+	macro deactivate {
+		CalendarResource._expandDetailsPanel();
 
-		<execute macro="CalendarResource#view">
-			<var name="calendarResourceName" value="${calendarResourceName}" />
-		</execute>
-	</command>
+		Uncheck(locator1 = "CalendarEditResource#DETAILS_PANEL_ACTIVE_CHECKBOX");
+	}
 
-	<command name="deactivate">
-		<execute macro="CalendarResource#_expandDetailsPanel" />
+	macro delete {
+		CalendarNavigator.gotoResources();
 
-		<execute function="Uncheck" locator1="CalendarEditResource#DETAILS_PANEL_ACTIVE_CHECKBOX" />
-	</command>
+		var key_calendarResourceName = "${calendarResourceName}";
 
-	<command name="delete">
-		<execute macro="CalendarNavigator#gotoResources" />
+		AssertTextEquals(
+			locator1 = "CalendarResources#RESOURCE_TABLE_NAME",
+			value1 = "${calendarResourceName}"
+		);
 
-		<var name="key_calendarResourceName" value="${calendarResourceName}" />
+		LexiconEntry.openEntryMenu(rowEntry = "${calendarResourceName}");
 
-		<execute function="AssertTextEquals" locator1="CalendarResources#RESOURCE_TABLE_NAME" value1="${calendarResourceName}" />
+		MenuItem.clickNoError(menuItem = "Delete");
 
-		<execute function="Click" locator1="CalendarResources#RESOURCE_TABLE_ACTIONS" />
+		Confirm.waitForConfirmation(
+			value1 = "Are you sure you want to delete this? It will be deleted immediately."
+		);
 
-		<execute function="AssertClickNoError" locator1="MenuItem#ANY_MENU_ITEM" value1="Delete">
-			<var name="key_menuItem" value="Delete" />
-		</execute>
+		Alert.viewSuccessMessage();
 
-		<execute function="Confirm#waitForConfirmation" value1="Are you sure you want to delete this? It will be deleted immediately." />
+		AssertElementNotPresent(locator1 = "CalendarResources#RESOURCE_TABLE_NAME");
 
-		<execute macro="Alert#viewSuccessMessage" />
+		AssertTextNotPresent(value1 = "${calendarResourceName}");
+	}
 
-		<execute function="AssertElementNotPresent" locator1="CalendarResources#RESOURCE_TABLE_NAME" />
-		<execute function="AssertTextNotPresent" value1="${calendarResourceName}" />
-	</command>
+	macro edit {
+		CalendarNavigator.gotoResources();
 
-	<command name="edit">
-		<execute macro="CalendarNavigator#gotoResources" />
+		var key_calendarResourceName = "${calendarResourceName}";
 
-		<var name="key_calendarResourceName" value="${calendarResourceName}" />
+		AssertTextEquals(
+			locator1 = "CalendarResources#RESOURCE_TABLE_NAME",
+			value1 = "${calendarResourceName}"
+		);
 
-		<execute function="AssertTextEquals" locator1="CalendarResources#RESOURCE_TABLE_NAME" value1="${calendarResourceName}" />
+		LexiconEntry.openEntryMenu(rowEntry = "${calendarResourceName}");
 
-		<execute function="Click" locator1="CalendarResources#RESOURCE_TABLE_ACTIONS" />
+		MenuItem.click(menuItem = "Edit");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit">
-			<var name="key_menuItem" value="Edit" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "Portlet#HEADER_TITLE",
+			value1 = "${calendarResourceName}"
+		);
 
-		<execute function="AssertTextEquals" locator1="CalendarEditResource#HEADER_TITLE" value1="${calendarResourceName}" />
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${calendarResourceNameEdit}" />
-		</execute>
+		PortletEntry.inputName(name = "${calendarResourceNameEdit}");
 
-		<execute macro="CalendarResource#save" />
+		CalendarResource.save();
 
-		<execute macro="CalendarResource#view">
-			<var name="calendarResourceName" value="${calendarResourceNameEdit}" />
-		</execute>
-	</command>
+		CalendarResource.view(calendarResourceName = "${calendarResourceNameEdit}");
+	}
 
-	<command name="editResourceName">
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${calendarResourceName}" />
-		</execute>
-	</command>
+	macro save {
+		Click(locator1 = "Button#SAVE");
 
-	<command name="save">
-		<execute function="Click" locator1="Button#SAVE" />
+		var key_calendarResourceName = "${calendarResourceName}";
 
-		<var name="key_calendarResourceName" value="${calendarResourceName}" />
+		Alert.viewSuccessMessage();
+	}
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+	macro search {
+		Type(locator1 = "NavBar#BASIC_SEARCH_FIELD", value1 = "${calendarResourceName}");
 
-	<command name="search">
-		<execute function="Type" locator1="NavBar#BASIC_SEARCH_FIELD" value1="${calendarResourceName}" />
+		Click(locator1 = "Icon#BASIC_SEARCH");
+	}
 
-		<execute function="Click" locator1="Icon#BASIC_SEARCH" />
-	</command>
+	macro tearDown {
+		CalendarNavigator.gotoResources();
 
-	<command name="tearDown">
-		<execute macro="CalendarNavigator#gotoResources" />
+		while (IsElementPresent(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS")) {
+			LexiconEntry.gotoEllipsisMenuItemNoError(menuItem = "Delete");
 
-		<while>
-			<condition function="IsElementPresent" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
-			<then>
-				<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
+			Confirm.waitForConfirmation(
+				value1 = "Are you sure you want to delete this? It will be deleted immediately."
+			);
 
-				<execute function="AssertClickNoError" locator1="MenuItem#ANY_MENU_ITEM" value1="Delete">
-					<var name="key_menuItem" value="Delete" />
-				</execute>
+			Alert.viewSuccessMessage();
+		}
 
-				<execute function="Confirm#waitForConfirmation" value1="Are you sure you want to delete this? It will be deleted immediately." />
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_INFO",
+			value1 = "No resources were found."
+		);
 
-				<execute macro="Alert#viewSuccessMessage" />
-			</then>
-		</while>
+		AssertElementNotPresent(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
+	}
 
-		<execute function="AssertTextEquals" locator1="Message#EMPTY_INFO" value1="No resources were found." />
-		<execute function="AssertElementNotPresent" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
-	</command>
+	macro view {
+		CalendarNavigator.gotoResources();
 
-	<command name="view">
-		<execute macro="CalendarNavigator#gotoResources" />
+		var key_calendarResourceName = "${calendarResourceName}";
 
-		<var name="key_calendarResourceName" value="${calendarResourceName}" />
+		AssertTextEquals(
+			locator1 = "CalendarResources#RESOURCE_TABLE_NAME",
+			value1 = "${calendarResourceName}"
+		);
 
-		<execute function="AssertTextEquals" locator1="CalendarResources#RESOURCE_TABLE_NAME" value1="${calendarResourceName}" />
-		<execute function="AssertTextEquals" locator1="CalendarResources#RESOURCE_TABLE_DESCRIPTION" value1="" />
-		<execute function="AssertTextEquals" locator1="CalendarResources#RESOURCE_TABLE_ACTIVE" value1="Yes" />
-		<execute function="AssertElementPresent" locator1="CalendarResources#RESOURCE_TABLE_ACTIONS" />
-	</command>
+		AssertTextEquals(
+			locator1 = "CalendarResources#RESOURCE_TABLE_DESCRIPTION",
+			value1 = ""
+		);
 
-	<command name="viewDefault">
-		<execute macro="CalendarNavigator#gotoResources" />
+		AssertTextEquals(
+			locator1 = "CalendarResources#RESOURCE_TABLE_ACTIVE",
+			value1 = "Yes"
+		);
 
-		<var name="key_calendarResourceName" value="${calendarResourceName}" />
+		AssertElementPresent(locator1 = "CalendarResources#RESOURCE_TABLE_ACTIONS");
+	}
 
-		<execute function="AssertTextEquals" locator1="Message#EMPTY_INFO" value1="No resources were found." />
-		<execute function="AssertElementNotPresent" locator1="CalendarResources#RESOURCE_TABLE_NAME" />
-	</command>
+	macro viewDefault {
+		CalendarNavigator.gotoResources();
 
-	<command name="viewResourceCalendars">
-		<var name="key_calendarResourceName" value="${calendarResourceName}" />
+		var key_calendarResourceName = "${calendarResourceName}";
 
-		<execute function="AssertTextEquals" locator1="CalendarResources#RESOURCE_TABLE_NAME" value1="${calendarResourceName}" />
-		<execute function="AssertTextEquals" locator1="CalendarEditResource#HEADER_TITLE" value1="${calendarResourceName}'s Calendars" />
-	</command>
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_INFO",
+			value1 = "No resources were found."
+		);
 
-	<command name="viewResourceName">
-		<var name="key_calendarResourceName" value="${calendarResourceName}" />
+		AssertElementNotPresent(locator1 = "CalendarResources#RESOURCE_TABLE_NAME");
+	}
 
-		<execute function="AssertTextEquals" locator1="CalendarResources#RESOURCE_TABLE_NAME" value1="${calendarResourceName}" />
-	</command>
+	macro viewResourceCalendars {
+		var key_calendarResourceName = "${calendarResourceName}";
 
-	<command name="viewResourceNameNotPresent">
-		<var name="key_calendarResourceName" value="${calendarResourceName}" />
+		AssertTextEquals(
+			locator1 = "CalendarResources#RESOURCE_TABLE_NAME",
+			value1 = "${calendarResourceName}"
+		);
 
-		<execute function="AssertElementNotPresent" locator1="CalendarResources#RESOURCE_TABLE_NAME" />
-		<execute function="AssertTextNotPresent" value1="${calendarResourceName}" />
-	</command>
-</definition>
+		AssertTextEquals(
+			locator1 = "Portlet#HEADER_TITLE",
+			value1 = "${calendarResourceName}'s Calendars"
+		);
+	}
+
+	macro viewResourceName {
+		var key_calendarResourceName = "${calendarResourceName}";
+
+		AssertTextEquals(
+			locator1 = "CalendarResources#RESOURCE_TABLE_NAME",
+			value1 = "${calendarResourceName}"
+		);
+	}
+
+	macro viewResourceNameNotPresent {
+		var key_calendarResourceName = "${calendarResourceName}";
+
+		AssertElementNotPresent(locator1 = "CalendarResources#RESOURCE_TABLE_NAME");
+
+		AssertTextNotPresent(value1 = "${calendarResourceName}");
+	}
+}

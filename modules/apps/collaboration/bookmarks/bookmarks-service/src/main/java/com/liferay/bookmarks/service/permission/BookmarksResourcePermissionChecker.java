@@ -28,9 +28,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {
-		"resource.name=" + BookmarksResourcePermissionChecker.RESOURCE_NAME
-	},
+	property = "resource.name=" + BookmarksResourcePermissionChecker.RESOURCE_NAME,
 	service = ResourcePermissionChecker.class
 )
 public class BookmarksResourcePermissionChecker

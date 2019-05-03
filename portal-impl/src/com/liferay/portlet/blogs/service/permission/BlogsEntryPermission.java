@@ -35,7 +35,7 @@ import java.util.Objects;
  * @author Brian Wing Shun Chan
  */
 @OSGiBeanProperties(
-	property = {"model.class.name=com.liferay.blogs.kernel.model.BlogsEntry"}
+	property = "model.class.name=com.liferay.blogs.kernel.model.BlogsEntry"
 )
 public class BlogsEntryPermission implements BaseModelPermissionChecker {
 

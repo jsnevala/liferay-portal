@@ -15,81 +15,75 @@
 package com.liferay.portal.convert.database;
 
 import com.liferay.portal.convert.BaseConvertProcess;
-import com.liferay.portal.kernel.dao.jdbc.DataSourceFactoryUtil;
-import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.util.MaintenanceUtil;
-import com.liferay.portal.util.ShutdownUtil;
-import com.liferay.registry.collections.ServiceTrackerCollections;
-
-import java.util.List;
 
 import javax.sql.DataSource;
 
 /**
- * @author Alexander Chow
+ * @author     Alexander Chow
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
+@Deprecated
 public class DatabaseConvertProcess extends BaseConvertProcess {
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	public void destroy() {
-		_databaseConverters.clear();
-
-		_databaseConverters = null;
+		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public String getDescription() {
-		return "migrate-data-from-one-database-to-another";
+		return null;
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public String getParameterDescription() {
-		return "please-enter-jdbc-information-for-new-database";
+		return null;
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public String[] getParameterNames() {
-		return new String[] {
-			"jdbc-driver-class-name", "jdbc-url", "jdbc-user-name",
-			"jdbc-password"
-		};
+		return null;
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEnabled() {
-		return true;
+		return false;
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	protected DataSource buildDatasource() throws Exception {
-		String[] values = getParameterValues();
-
-		String driverClassName = values[0];
-		String url = values[1];
-		String userName = values[2];
-		String password = values[3];
-
-		String jndiName = StringPool.BLANK;
-
-		return DataSourceFactoryUtil.initDataSource(
-			driverClassName, url, userName, password, jndiName);
+		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	protected void doConvert() throws Exception {
-		MaintenanceUtil.appendStatus("Starting database migration.");
-
-		DataSource dataSource = buildDatasource();
-
-		for (DatabaseConverter databaseConverter : _databaseConverters) {
-			databaseConverter.convert(dataSource);
-		}
-
-		MaintenanceUtil.appendStatus(
-			"Please change your JDBC settings before restarting server");
-
-		ShutdownUtil.shutdown(0);
+		throw new UnsupportedOperationException();
 	}
-
-	private List<DatabaseConverter> _databaseConverters =
-		ServiceTrackerCollections.openList(DatabaseConverter.class);
 
 }

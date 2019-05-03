@@ -46,6 +46,7 @@ import com.liferay.registry.RegistryUtil;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.junit.After;
@@ -133,7 +134,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		String defaultSource = jsonObject.getString("defaultSource");
 
 		Assert.assertEquals(
-			DLUtil.getPreviewURL(
+			DLUtil.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false),
 			defaultSource);
@@ -178,7 +179,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		String defaultSource = jsonObject.getString("defaultSource");
 
 		Assert.assertEquals(
-			DLUtil.getPreviewURL(
+			DLUtil.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false),
 			defaultSource);
@@ -227,7 +228,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		String defaultSource = jsonObject.getString("defaultSource");
 
 		Assert.assertEquals(
-			DLUtil.getPreviewURL(
+			DLUtil.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false),
 			defaultSource);
@@ -268,7 +269,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		String defaultSource = jsonObject.getString("defaultSource");
 
 		Assert.assertEquals(
-			DLUtil.getPreviewURL(
+			DLUtil.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false),
 			defaultSource);
@@ -309,7 +310,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		String defaultSource = jsonObject.getString("defaultSource");
 
 		Assert.assertEquals(
-			DLUtil.getPreviewURL(
+			DLUtil.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false),
 			defaultSource);
@@ -350,7 +351,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		String defaultSource = jsonObject.getString("defaultSource");
 
 		Assert.assertEquals(
-			DLUtil.getPreviewURL(
+			DLUtil.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false),
 			defaultSource);
@@ -391,7 +392,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		String defaultSource = jsonObject.getString("defaultSource");
 
 		Assert.assertEquals(
-			DLUtil.getPreviewURL(
+			DLUtil.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false),
 			defaultSource);
@@ -432,7 +433,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		String defaultSource = jsonObject.getString("defaultSource");
 
 		Assert.assertEquals(
-			DLUtil.getPreviewURL(
+			DLUtil.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false),
 			defaultSource);
@@ -473,7 +474,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		String defaultSource = jsonObject.getString("defaultSource");
 
 		Assert.assertEquals(
-			DLUtil.getPreviewURL(
+			DLUtil.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false),
 			defaultSource);
@@ -514,7 +515,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		String defaultSource = jsonObject.getString("defaultSource");
 
 		Assert.assertEquals(
-			DLUtil.getPreviewURL(
+			DLUtil.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false),
 			defaultSource);
@@ -592,11 +593,11 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		}
 
 		Assert.assertTrue(
-			"Couldn't find expected max-width of '" + expectedMaxWidth +
+			"could not find expected max-width of '" + expectedMaxWidth +
 				"' in '" + sourceJSONObject.toString() + "'",
 			(expectedMaxWidth == 0) || assertedMaxWidth);
 		Assert.assertTrue(
-			"Couldn't find expected min-width of '" + expectedMinWidth +
+			"could not find expected min-width of '" + expectedMinWidth +
 				"' in '" + sourceJSONObject.toString() + "'",
 			(expectedMinWidth == 0) || assertedMinWidth);
 	}
@@ -663,7 +664,9 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 
 			Collection<T> services = registry.getServices(clazz, filter);
 
-			return services.iterator().next();
+			Iterator<T> iterator = services.iterator();
+
+			return iterator.next();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);

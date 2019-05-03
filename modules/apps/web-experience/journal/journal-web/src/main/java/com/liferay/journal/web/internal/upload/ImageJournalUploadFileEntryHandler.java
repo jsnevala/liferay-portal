@@ -15,6 +15,8 @@
 package com.liferay.journal.web.internal.upload;
 
 import com.liferay.document.library.kernel.util.DLValidator;
+import com.liferay.journal.service.permission.JournalArticlePermission;
+import com.liferay.journal.service.permission.JournalFolderPermission;
 import com.liferay.journal.service.permission.JournalPermission;
 import com.liferay.portal.kernel.exception.ImageTypeException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -28,6 +30,7 @@ import com.liferay.portal.kernel.security.permission.ResourcePermissionCheckerUt
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
@@ -43,7 +46,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  * @author Alejandro Tardín
  */
 @Component(immediate = true, service = ImageJournalUploadFileEntryHandler.class)
@@ -58,9 +61,27 @@ public class ImageJournalUploadFileEntryHandler
 			(ThemeDisplay)uploadPortletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		_checkPermission(
-			themeDisplay.getScopeGroupId(),
-			themeDisplay.getPermissionChecker());
+		long resourcePrimKey = ParamUtil.getLong(
+			uploadPortletRequest, "resourcePrimKey");
+
+		long folderId = ParamUtil.getLong(uploadPortletRequest, "folderId");
+
+		if (resourcePrimKey != 0) {
+			JournalArticlePermission.check(
+				themeDisplay.getPermissionChecker(), resourcePrimKey,
+				ActionKeys.UPDATE);
+		}
+		else if (folderId != 0) {
+			JournalFolderPermission.check(
+				themeDisplay.getPermissionChecker(),
+				themeDisplay.getScopeGroupId(), folderId,
+				ActionKeys.ADD_ARTICLE);
+		}
+		else {
+			_checkPermission(
+				themeDisplay.getScopeGroupId(),
+				themeDisplay.getPermissionChecker());
+		}
 
 		String fileName = uploadPortletRequest.getFileName(_PARAMETER_NAME);
 		long size = uploadPortletRequest.getSize(_PARAMETER_NAME);
@@ -70,8 +91,8 @@ public class ImageJournalUploadFileEntryHandler
 		String contentType = uploadPortletRequest.getContentType(
 			_PARAMETER_NAME);
 
-		try (InputStream inputStream =
-				uploadPortletRequest.getFileAsStream(_PARAMETER_NAME)) {
+		try (InputStream inputStream = uploadPortletRequest.getFileAsStream(
+				_PARAMETER_NAME)) {
 
 			String uniqueFileName = _uniqueFileNameProvider.provide(
 				fileName, curFileName -> _exists(themeDisplay, curFileName));
@@ -100,10 +121,11 @@ public class ImageJournalUploadFileEntryHandler
 
 	private boolean _exists(ThemeDisplay themeDisplay, String curFileName) {
 		try {
-			if (TempFileEntryUtil.getTempFileEntry(
-					themeDisplay.getScopeGroupId(), themeDisplay.getUserId(),
-					_TEMP_FOLDER_NAME, curFileName) != null) {
+			FileEntry tempFileEntry = TempFileEntryUtil.getTempFileEntry(
+				themeDisplay.getScopeGroupId(), themeDisplay.getUserId(),
+				_TEMP_FOLDER_NAME, curFileName);
 
+			if (tempFileEntry != null) {
 				return true;
 			}
 

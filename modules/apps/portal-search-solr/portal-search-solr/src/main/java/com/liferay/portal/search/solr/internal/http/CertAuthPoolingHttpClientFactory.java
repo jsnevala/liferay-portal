@@ -44,8 +44,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  */
 @Component(
 	configurationPid = "com.liferay.portal.search.solr.configuration.SolrHttpClientFactoryConfiguration",
-	immediate = true, property = {"type=CERT"},
-	service = HttpClientFactory.class
+	immediate = true, property = "type=CERT", service = HttpClientFactory.class
 )
 public class CertAuthPoolingHttpClientFactory
 	extends BasePoolingHttpClientFactory {
@@ -74,7 +73,8 @@ public class CertAuthPoolingHttpClientFactory
 
 	@Override
 	protected PoolingHttpClientConnectionManager
-		createPoolingHttpClientConnectionManager() throws Exception {
+			createPoolingHttpClientConnectionManager()
+		throws Exception {
 
 		SSLConnectionSocketFactory sslConnectionSocketFactory =
 			_sslSocketFactoryBuilder.build();

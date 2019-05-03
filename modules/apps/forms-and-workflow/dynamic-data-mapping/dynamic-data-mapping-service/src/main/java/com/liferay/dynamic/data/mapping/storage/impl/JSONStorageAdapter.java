@@ -126,11 +126,8 @@ public class JSONStorageAdapter extends BaseStorageAdapter {
 		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
 			ddmStorageLink.getStructureId());
 
-		DDMFormValues ddmFormValues =
-			_ddmFormValuesJSONDeserializer.deserialize(
-				ddmStructure.getDDMForm(), ddmContent.getData());
-
-		return ddmFormValues;
+		return _ddmFormValuesJSONDeserializer.deserialize(
+			ddmStructure.getDDMForm(), ddmContent.getData());
 	}
 
 	@Reference(unbind = "-")

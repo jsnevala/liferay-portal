@@ -162,7 +162,9 @@ public class SlimRuntimeServlet extends HttpServlet {
 		properties.put("service.version", ReleaseInfo.getVersion());
 
 		_dbModuleServiceLifecycleServiceRegistration = registry.registerService(
-			ModuleServiceLifecycle.class, new ModuleServiceLifecycle() {},
+			ModuleServiceLifecycle.class,
+			new ModuleServiceLifecycle() {
+			},
 			properties);
 
 		// Check class names
@@ -185,7 +187,9 @@ public class SlimRuntimeServlet extends HttpServlet {
 
 		_portalModuleServiceLifecycleServiceRegistration =
 			registry.registerService(
-				ModuleServiceLifecycle.class, new ModuleServiceLifecycle() {},
+				ModuleServiceLifecycle.class,
+				new ModuleServiceLifecycle() {
+				},
 				properties);
 
 		properties = new HashMap<>();

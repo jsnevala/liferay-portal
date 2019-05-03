@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Bookmarks Service
 Bundle-SymbolicName: com.liferay.bookmarks.service
-Bundle-Version: 1.1.26
+Bundle-Version: 1.1.54
 Export-Package:\
 	com.liferay.bookmarks.asset,\
 	com.liferay.bookmarks.search,\
@@ -9,7 +9,6 @@ Export-Package:\
 	com.liferay.bookmarks.trash,\
 	com.liferay.bookmarks.util,\
 	com.liferay.bookmarks.verify
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Bookmarks
 Liferay-Require-SchemaVersion: 1.0.0
 Liferay-Service: true

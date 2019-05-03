@@ -37,7 +37,7 @@ import javax.portlet.ReadOnlyException;
 public abstract class BaseUpgradePortletPreferences extends UpgradeProcess {
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected void deletePortletPreferences(long portletPreferencesId)
@@ -125,8 +125,9 @@ public abstract class BaseUpgradePortletPreferences extends UpgradeProcess {
 				boolean privateLayout = rs.getBoolean("privateLayout");
 				long layoutId = rs.getLong("layoutId");
 
-				layout =
-					new Object[] {groupId, companyId, privateLayout, layoutId};
+				layout = new Object[] {
+					groupId, companyId, privateLayout, layoutId
+				};
 			}
 		}
 		finally {
@@ -163,8 +164,9 @@ public abstract class BaseUpgradePortletPreferences extends UpgradeProcess {
 				boolean privateLayout = rs.getBoolean("privateLayout");
 				long layoutId = rs.getLong("layoutRevisionId");
 
-				layoutRevision =
-					new Object[] {groupId, companyId, privateLayout, layoutId};
+				layoutRevision = new Object[] {
+					groupId, companyId, privateLayout, layoutId
+				};
 			}
 		}
 		finally {
@@ -360,7 +362,7 @@ public abstract class BaseUpgradePortletPreferences extends UpgradeProcess {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected void updatePortletPreferences(

@@ -37,6 +37,15 @@
 		</c:if>
 	</liferay-ui:error>
 
+	<liferay-ui:error exception="<%= RequiredLocaleException.class %>">
+
+		<%
+		RequiredLocaleException rle = (RequiredLocaleException)errorException;
+		%>
+
+		<liferay-ui:message arguments="<%= rle.getMessageArguments() %>" key="<%= rle.getMessageKey() %>" translateArguments="<%= false %>" />
+	</liferay-ui:error>
+
 	<aui:select label="default-language" name="languageId">
 
 		<%
@@ -71,8 +80,10 @@
 
 		List leftList = new ArrayList();
 
-		for (Locale availableLocale : LanguageUtil.getAvailableLocales()) {
-			leftList.add(new KeyValuePair(LocaleUtil.toLanguageId(availableLocale), availableLocale.getDisplayName(locale)));
+		String[] currentLanguageIds = PrefsPropsUtil.getStringArray(company.getCompanyId(), PropsKeys.LOCALES, StringPool.COMMA, PropsValues.LOCALES_ENABLED);
+
+		for (Locale currentLocale : LocaleUtil.fromLanguageIds(currentLanguageIds)) {
+			leftList.add(new KeyValuePair(LanguageUtil.getLanguageId(currentLocale), currentLocale.getDisplayName(locale)));
 		}
 
 		// Right list

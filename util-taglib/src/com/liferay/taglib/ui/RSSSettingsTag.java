@@ -21,7 +21,7 @@ import com.liferay.taglib.util.IncludeTag;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class RSSSettingsTag extends IncludeTag {
 

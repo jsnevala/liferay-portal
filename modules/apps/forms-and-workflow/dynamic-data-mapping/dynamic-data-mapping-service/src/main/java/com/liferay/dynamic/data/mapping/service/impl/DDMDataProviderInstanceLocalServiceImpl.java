@@ -155,8 +155,8 @@ public class DDMDataProviderInstanceLocalServiceImpl
 
 			});
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.
-				PerformActionMethod<DDMDataProviderInstance>() {
+			new ActionableDynamicQuery.PerformActionMethod
+				<DDMDataProviderInstance>() {
 
 				@Override
 				public void performAction(

@@ -22,9 +22,14 @@ import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.exportimport.configuration.ExportImportServiceConfiguration;
 import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
+import com.liferay.journal.constants.JournalPortletKeys;
+import com.liferay.journal.exception.NoSuchFeedException;
+import com.liferay.journal.model.JournalFeed;
+import com.liferay.journal.service.JournalFeedLocalServiceUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -50,6 +55,7 @@ import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -68,9 +74,11 @@ import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -88,6 +96,9 @@ public class BaseTextExportImportContentProcessor
 		throws Exception {
 
 		content = replaceExportDLReferences(
+			portletDataContext, stagedModel, content, exportReferencedContent);
+
+		content = replaceExportJournalFeedReferences(
 			portletDataContext, stagedModel, content, exportReferencedContent);
 
 		content = replaceExportLayoutReferences(
@@ -113,6 +124,9 @@ public class BaseTextExportImportContentProcessor
 		content = replaceImportDLReferences(
 			portletDataContext, stagedModel, content);
 
+		content = replaceImportJournalFeedReferences(
+			portletDataContext, stagedModel, content);
+
 		content = replaceImportLayoutReferences(portletDataContext, content);
 		content = replaceImportLinksToLayouts(portletDataContext, content);
 
@@ -124,6 +138,7 @@ public class BaseTextExportImportContentProcessor
 		throws PortalException {
 
 		validateDLReferences(groupId, content);
+		validateJournalFeedReferences(groupId, content);
 		validateLayoutReferences(groupId, content);
 		validateLinksToLayoutsReferences(content);
 	}
@@ -138,7 +153,7 @@ public class BaseTextExportImportContentProcessor
 		}
 
 		int endPos = StringUtil.indexOfAny(
-			sb.toString(), DL_REFERENCE_LEGACY_STOP_CHARS, beginPos + 2);
+			sb.toString(), _DL_REFERENCE_LEGACY_STOP_STRINGS, beginPos + 2);
 
 		if (endPos == -1) {
 			return;
@@ -155,14 +170,14 @@ public class BaseTextExportImportContentProcessor
 		long groupId, String content, int beginPos, int endPos) {
 
 		boolean legacyURL = true;
-		char[] stopChars = DL_REFERENCE_LEGACY_STOP_CHARS;
+		String[] stropStrings = _DL_REFERENCE_LEGACY_STOP_STRINGS;
 
 		if (content.startsWith("/documents/", beginPos)) {
 			legacyURL = false;
-			stopChars = DL_REFERENCE_STOP_CHARS;
+			stropStrings = _DL_REFERENCE_STOP_STRINGS;
 		}
 
-		endPos = StringUtil.indexOfAny(content, stopChars, beginPos, endPos);
+		endPos = StringUtil.indexOfAny(content, stropStrings, beginPos, endPos);
 
 		if (endPos == -1) {
 			return null;
@@ -186,16 +201,16 @@ public class BaseTextExportImportContentProcessor
 
 			map.put("groupId", new String[] {pathArray[2]});
 
-			if (pathArray.length == 4) {
-				map.put("uuid", new String[] {pathArray[3]});
-			}
-			else if (pathArray.length == 5) {
+			if (pathArray.length == 5) {
 				map.put("folderId", new String[] {pathArray[3]});
 				map.put(
 					"title", new String[] {HttpUtil.decodeURL(pathArray[4])});
 			}
-			else if (pathArray.length > 5) {
-				map.put("uuid", new String[] {pathArray[5]});
+
+			String uuid = _getUuid(dlReference);
+
+			if (Validator.isNotNull(uuid)) {
+				map.put("uuid", new String[] {uuid});
 			}
 		}
 		else {
@@ -306,6 +321,70 @@ public class BaseTextExportImportContentProcessor
 		return fileEntry;
 	}
 
+	protected JournalFeed getJournalFeed(Map<String, String> map) {
+		if (MapUtil.isEmpty(map)) {
+			return null;
+		}
+
+		JournalFeed journalFeed = null;
+
+		try {
+			String feedId = MapUtil.getString(map, "feedId");
+			long groupId = MapUtil.getLong(map, "groupId");
+
+			if (Validator.isNotNull(feedId)) {
+				journalFeed = JournalFeedLocalServiceUtil.getFeed(
+					groupId, feedId);
+			}
+		}
+		catch (Exception e) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(e, e);
+			}
+			else if (_log.isWarnEnabled()) {
+				_log.warn(e.getMessage());
+			}
+		}
+
+		return journalFeed;
+	}
+
+	protected Map<String, String> getJournalFeedReferenceParameters(
+		long groupId, String content, int beginPos, int endPos) {
+
+		endPos = StringUtil.indexOfAny(
+			content, _JOURNAL_FEED_REFERENCE_STOP_CHARS, beginPos, endPos);
+
+		if (endPos == -1) {
+			return null;
+		}
+
+		Map<String, String> map = new HashMap<>();
+
+		String journalFeedReference = content.substring(
+			beginPos + _JOURNAL_FEED_FRIENDLY_URL.length(), endPos);
+
+		String[] pathArray = journalFeedReference.split(StringPool.SLASH);
+
+		if (pathArray.length < 2) {
+			return null;
+		}
+
+		map.put("endPos", String.valueOf(endPos));
+		map.put("feedId", pathArray[1]);
+		map.put("groupId", pathArray[0]);
+
+		String groupIdString = MapUtil.getString(map, "groupId");
+
+		if (groupIdString.equals("@group_id@")) {
+			groupIdString = String.valueOf(groupId);
+
+			map.put("groupId", groupIdString);
+		}
+
+		return map;
+	}
+
 	protected boolean isValidateLayoutReferences() throws PortalException {
 		long companyId = CompanyThreadLocal.getCompanyId();
 
@@ -329,7 +408,8 @@ public class BaseTextExportImportContentProcessor
 		}
 
 		if (group.isStaged() && !group.isStagedRemotely() &&
-			!group.isStagedPortlet(PortletKeys.DOCUMENT_LIBRARY)) {
+			!group.isStagedPortlet(PortletKeys.DOCUMENT_LIBRARY) &&
+			ExportImportThreadLocal.isStagingInProcess()) {
 
 			return content;
 		}
@@ -536,6 +616,105 @@ public class BaseTextExportImportContentProcessor
 		return url;
 	}
 
+	protected String replaceExportJournalFeedReferences(
+			PortletDataContext portletDataContext, StagedModel stagedModel,
+			String content, boolean exportReferencedContent)
+		throws Exception {
+
+		Group group = GroupLocalServiceUtil.getGroup(
+			portletDataContext.getGroupId());
+
+		if (group.isStagingGroup()) {
+			group = group.getLiveGroup();
+		}
+
+		if (group.isStaged() && !group.isStagedRemotely() &&
+			!group.isStagedPortlet(JournalPortletKeys.JOURNAL)) {
+
+			return content;
+		}
+
+		StringBuilder sb = new StringBuilder(content);
+
+		String[] patterns = {_JOURNAL_FEED_FRIENDLY_URL};
+
+		int beginPos = -1;
+		int endPos = content.length();
+
+		while (true) {
+			beginPos = StringUtil.lastIndexOfAny(content, patterns, endPos);
+
+			if (beginPos == -1) {
+				break;
+			}
+
+			Map<String, String> journalFeedReferenceParameters =
+				getJournalFeedReferenceParameters(
+					portletDataContext.getScopeGroupId(), content, beginPos,
+					endPos);
+
+			JournalFeed journalFeed = getJournalFeed(
+				journalFeedReferenceParameters);
+
+			if (journalFeed == null) {
+				endPos = beginPos - 1;
+
+				continue;
+			}
+
+			endPos = MapUtil.getInteger(
+				journalFeedReferenceParameters, "endPos");
+
+			try {
+				if (exportReferencedContent) {
+					StagedModelDataHandlerUtil.exportReferenceStagedModel(
+						portletDataContext, stagedModel, journalFeed,
+						PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
+				}
+				else {
+					Element entityElement =
+						portletDataContext.getExportDataElement(stagedModel);
+
+					String referenceType =
+						PortletDataContext.REFERENCE_TYPE_DEPENDENCY;
+
+					portletDataContext.addReferenceElement(
+						stagedModel, entityElement, journalFeed, referenceType,
+						true);
+				}
+
+				String path = ExportImportPathUtil.getModelPath(journalFeed);
+
+				StringBundler exportedReferenceSB = new StringBundler(4);
+
+				exportedReferenceSB.append(Portal.FRIENDLY_URL_SEPARATOR);
+				exportedReferenceSB.append("[$journalfeed-reference=");
+				exportedReferenceSB.append(path);
+				exportedReferenceSB.append("$]");
+
+				sb.replace(beginPos, endPos, exportedReferenceSB.toString());
+			}
+			catch (Exception e) {
+				StringBundler exceptionSB = new StringBundler(6);
+
+				exceptionSB.append("Unable to process journal feed ");
+				exceptionSB.append(journalFeed.getFeedId());
+				exceptionSB.append(" for staged model ");
+				exceptionSB.append(stagedModel.getModelClassName());
+				exceptionSB.append(" with primary key ");
+				exceptionSB.append(stagedModel.getPrimaryKeyObj());
+
+				if (_log.isWarnEnabled()) {
+					_log.warn(exceptionSB.toString());
+				}
+			}
+
+			endPos = beginPos - 1;
+		}
+
+		return sb.toString();
+	}
+
 	protected String replaceExportLayoutReferences(
 			PortletDataContext portletDataContext, StagedModel stagedModel,
 			String content)
@@ -586,8 +765,18 @@ public class BaseTextExportImportContentProcessor
 
 			String url = content.substring(beginPos + offset, endPos);
 
+			int pos = url.indexOf(Portal.FRIENDLY_URL_SEPARATOR);
+
+			if (pos != -1) {
+				url = url.substring(0, pos);
+
+				endPos = beginPos + offset + pos;
+			}
+
 			if (url.endsWith(StringPool.SLASH)) {
 				url = url.substring(0, url.length() - 1);
+
+				endPos--;
 			}
 
 			StringBundler urlSB = new StringBundler(6);
@@ -616,7 +805,7 @@ public class BaseTextExportImportContentProcessor
 					continue;
 				}
 
-				int pos = url.indexOf(StringPool.SLASH, 1);
+				pos = url.indexOf(StringPool.SLASH, 1);
 
 				String localePath = StringPool.BLANK;
 
@@ -696,12 +885,12 @@ public class BaseTextExportImportContentProcessor
 
 					privateLayout = layoutSet.isPrivateLayout();
 
-					LayoutFriendlyURL layoutFriendlyUrl =
+					LayoutFriendlyURL layoutFriendlyURL =
 						LayoutFriendlyURLLocalServiceUtil.
 							fetchFirstLayoutFriendlyURL(
 								group.getGroupId(), privateLayout, url);
 
-					if (layoutFriendlyUrl == null) {
+					if (layoutFriendlyURL == null) {
 						continue;
 					}
 
@@ -762,7 +951,7 @@ public class BaseTextExportImportContentProcessor
 
 				urlSB.append(StringPool.AT);
 
-				if (urlGroup.isStaged()) {
+				if (urlGroup.isStagingGroup()) {
 					Group liveGroup = urlGroup.getLiveGroup();
 
 					urlSB.append(liveGroup.getUuid());
@@ -775,11 +964,14 @@ public class BaseTextExportImportContentProcessor
 						urlSB.append(remoteGroupUuid);
 					}
 				}
-				else if (group.getGroupId() == urlGroup.getGroupId()) {
-					urlSB.append(urlGroup.getFriendlyURL());
+				else if (urlGroup.isControlPanel() ||
+						 (urlGroup.hasLocalOrRemoteStagingGroup() &&
+						  (group.getLiveGroupId() == urlGroup.getGroupId()))) {
+
+					urlSB.append(urlGroup.getUuid());
 				}
 				else {
-					urlSB.append(urlGroup.getUuid());
+					urlSB.append(urlGroup.getFriendlyURL());
 				}
 
 				urlSB.append(StringPool.AT);
@@ -815,7 +1007,7 @@ public class BaseTextExportImportContentProcessor
 					PortletDataContext.REFERENCE_TYPE_DEPENDENCY, true);
 			}
 			catch (Exception e) {
-				if (e instanceof NoSuchLayoutException &&
+				if ((e instanceof NoSuchLayoutException) &&
 					!isValidateLayoutReferences()) {
 
 					continue;
@@ -1044,6 +1236,103 @@ public class BaseTextExportImportContentProcessor
 		return content;
 	}
 
+	protected String replaceImportJournalFeedReferences(
+			PortletDataContext portletDataContext, StagedModel stagedModel,
+			String content)
+		throws Exception {
+
+		List<Element> referenceElements =
+			portletDataContext.getReferenceElements(
+				stagedModel, JournalFeed.class);
+
+		for (Element referenceElement : referenceElements) {
+			Long classPK = GetterUtil.getLong(
+				referenceElement.attributeValue("class-pk"));
+
+			Element referenceDataElement =
+				portletDataContext.getReferenceDataElement(
+					stagedModel, JournalFeed.class, classPK);
+
+			String path = null;
+
+			if (referenceDataElement != null) {
+				path = referenceDataElement.attributeValue("path");
+			}
+
+			long groupId = GetterUtil.getLong(
+				referenceElement.attributeValue("group-id"));
+
+			if (Validator.isNull(path)) {
+				String className = referenceElement.attributeValue(
+					"class-name");
+
+				path = ExportImportPathUtil.getModelPath(
+					groupId, className, classPK);
+			}
+
+			String exportedReference = StringBundler.concat(
+				Portal.FRIENDLY_URL_SEPARATOR, "[$journalfeed-reference=", path,
+				"$]");
+
+			if (!content.contains(exportedReference)) {
+				continue;
+			}
+
+			try {
+				StagedModelDataHandlerUtil.importReferenceStagedModel(
+					portletDataContext, stagedModel, JournalFeed.class,
+					classPK);
+			}
+			catch (Exception e) {
+				StringBundler exceptionSB = new StringBundler(6);
+
+				exceptionSB.append("Unable to process journal feed ");
+				exceptionSB.append(classPK);
+				exceptionSB.append(" for ");
+				exceptionSB.append(stagedModel.getModelClassName());
+				exceptionSB.append(" with primary key ");
+				exceptionSB.append(stagedModel.getPrimaryKeyObj());
+
+				if (_log.isWarnEnabled()) {
+					_log.warn(exceptionSB.toString());
+				}
+			}
+
+			Map<Long, Long> journalFeedIds =
+				(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+					JournalFeed.class);
+
+			long journalFeedId = MapUtil.getLong(
+				journalFeedIds, classPK, classPK);
+
+			JournalFeed importedJournalFeed = null;
+
+			try {
+				importedJournalFeed = JournalFeedLocalServiceUtil.getFeed(
+					journalFeedId);
+			}
+			catch (PortalException pe) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(pe, pe);
+				}
+				else if (_log.isWarnEnabled()) {
+					_log.warn(pe.getMessage());
+				}
+
+				continue;
+			}
+
+			String url = StringBundler.concat(
+				_JOURNAL_FEED_FRIENDLY_URL,
+				String.valueOf(importedJournalFeed.getGroupId()), "/",
+				importedJournalFeed.getFeedId());
+
+			content = StringUtil.replace(content, exportedReference, url);
+		}
+
+		return content;
+	}
+
 	protected String replaceImportLayoutReferences(
 			PortletDataContext portletDataContext, String content)
 		throws Exception {
@@ -1145,8 +1434,14 @@ public class BaseTextExportImportContentProcessor
 				GroupLocalServiceUtil.fetchGroupByUuidAndCompanyId(
 					groupUuid, portletDataContext.getCompanyId());
 
+			if (groupFriendlyUrlGroup == null) {
+				groupFriendlyUrlGroup =
+					GroupLocalServiceUtil.fetchFriendlyURLGroup(
+						portletDataContext.getCompanyId(), groupUuid);
+			}
+
 			if ((groupFriendlyUrlGroup == null) ||
-				groupUuid.startsWith(StringPool.SLASH)) {
+				groupUuid.contains(_TEMPLATE_NAME_PREFIX)) {
 
 				content = StringUtil.replaceFirst(
 					content, DATA_HANDLER_GROUP_FRIENDLY_URL,
@@ -1154,6 +1449,11 @@ public class BaseTextExportImportContentProcessor
 				content = StringUtil.replaceFirst(
 					content, StringPool.AT + groupUuid + StringPool.AT,
 					StringPool.BLANK, groupFriendlyUrlPos);
+
+				if (groupUuid.contains(_TEMPLATE_NAME_PREFIX)) {
+					content = _replaceTemplateLinkToLayout(
+						content, portletDataContext.isPrivateLayout());
+				}
 
 				continue;
 			}
@@ -1282,75 +1582,148 @@ public class BaseTextExportImportContentProcessor
 	protected void validateDLReferences(long groupId, String content)
 		throws PortalException {
 
-		String portalURL = PortalUtil.getPathContext();
-
-		ServiceContext serviceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
-		if ((serviceContext != null) &&
-			(serviceContext.getThemeDisplay() != null)) {
-
-			ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
-
-			portalURL =
-				PortalUtil.getPortalURL(themeDisplay) +
-					PortalUtil.getPathContext();
-		}
+		String pathContext = PortalUtil.getPathContext();
 
 		String[] patterns = {
-			portalURL.concat("/c/document_library/get_file?"),
-			portalURL.concat("/documents/"),
-			portalURL.concat("/image/image_gallery?")
+			pathContext.concat("/c/document_library/get_file?"),
+			pathContext.concat("/documents/"),
+			pathContext.concat("/image/image_gallery?")
 		};
 
-		String[] completePatterns = new String[patterns.length];
+		int beginPos = -1;
+		int endPos = content.length();
 
-		long[] companyIds = PortalUtil.getCompanyIds();
+		while (true) {
+			beginPos = StringUtil.lastIndexOfAny(content, patterns, endPos);
 
-		for (long companyId : companyIds) {
-			Company company = CompanyLocalServiceUtil.getCompany(companyId);
-
-			String webId = company.getWebId();
-
-			int i = 0;
-
-			for (String pattern : patterns) {
-				completePatterns[i] = webId.concat(pattern);
-
-				i++;
+			if (beginPos == -1) {
+				break;
 			}
 
-			int beginPos = -1;
-			int endPos = content.length();
+			Map<String, String[]> dlReferenceParameters =
+				getDLReferenceParameters(
+					groupId, content, beginPos + pathContext.length(), endPos);
 
-			while (true) {
-				beginPos = StringUtil.lastIndexOfAny(
-					content, completePatterns, endPos);
+			FileEntry fileEntry = getFileEntry(dlReferenceParameters);
 
-				if (beginPos == -1) {
-					break;
+			if (fileEntry == null) {
+				boolean absolutePortalURL = false;
+
+				boolean relativePortalURL = false;
+
+				if (content.regionMatches(
+						true, beginPos - _OFFSET_HREF_ATTRIBUTE, "href=", 0,
+						5) ||
+					content.regionMatches(
+						true, beginPos - _OFFSET_SRC_ATTRIBUTE, "src=", 0, 4)) {
+
+					relativePortalURL = true;
 				}
 
-				Map<String, String[]> dlReferenceParameters =
-					getDLReferenceParameters(
-						groupId, content,
-						beginPos + portalURL.length() + webId.length(), endPos);
+				if (!relativePortalURL) {
+					String portalURL = pathContext;
 
-				FileEntry fileEntry = getFileEntry(dlReferenceParameters);
+					if (Validator.isNull(portalURL)) {
+						ServiceContext serviceContext =
+							ServiceContextThreadLocal.getServiceContext();
 
-				if (fileEntry == null) {
+						if ((serviceContext != null) &&
+							(serviceContext.getThemeDisplay() != null)) {
+
+							ThemeDisplay themeDisplay =
+								serviceContext.getThemeDisplay();
+
+							portalURL = PortalUtil.getPortalURL(themeDisplay);
+						}
+					}
+
+					Set<String> hostNames = new HashSet<>();
+
+					hostNames.add(portalURL);
+
+					List<Company> companies =
+						CompanyLocalServiceUtil.getCompanies();
+
+					for (Company company : companies) {
+						String virtualHostname = company.getVirtualHostname();
+
+						hostNames.add(Http.HTTP_WITH_SLASH + virtualHostname);
+						hostNames.add(Http.HTTPS_WITH_SLASH + virtualHostname);
+						hostNames.add(virtualHostname);
+					}
+
+					for (String hostName : hostNames) {
+						int curBeginPos = beginPos - hostName.length();
+
+						String substring = content.substring(
+							curBeginPos, endPos);
+
+						if (substring.startsWith(hostName)) {
+							if (content.regionMatches(
+									true, curBeginPos - _OFFSET_HREF_ATTRIBUTE,
+									"href=", 0, 5) ||
+								content.regionMatches(
+									true, curBeginPos - _OFFSET_SRC_ATTRIBUTE,
+									"src=", 0, 4)) {
+
+								absolutePortalURL = true;
+
+								continue;
+							}
+						}
+					}
+				}
+
+				if (absolutePortalURL || relativePortalURL) {
 					StringBundler sb = new StringBundler(4);
 
 					sb.append("Validation failed for a referenced file entry ");
 					sb.append("because a file entry could not be found with ");
 					sb.append("the following parameters: ");
-					sb.append(dlReferenceParameters);
+					sb.append(MapUtil.toString(dlReferenceParameters));
 
 					throw new NoSuchFileEntryException(sb.toString());
 				}
-
-				endPos = beginPos - 1;
 			}
+
+			endPos = beginPos - 1;
+		}
+	}
+
+	protected void validateJournalFeedReferences(long groupId, String content)
+		throws PortalException {
+
+		String[] patterns = {_JOURNAL_FEED_FRIENDLY_URL};
+
+		int beginPos = -1;
+		int endPos = content.length();
+
+		while (true) {
+			beginPos = StringUtil.lastIndexOfAny(content, patterns, endPos);
+
+			if (beginPos == -1) {
+				break;
+			}
+
+			Map<String, String> journalFeedReferenceParameters =
+				getJournalFeedReferenceParameters(
+					groupId, content, beginPos, endPos);
+
+			JournalFeed journalFeed = getJournalFeed(
+				journalFeedReferenceParameters);
+
+			if (journalFeed == null) {
+				StringBundler sb = new StringBundler(4);
+
+				sb.append("Validation failed for a referenced journal feed ");
+				sb.append("because a journal feed could not be found with ");
+				sb.append("the following parameters: ");
+				sb.append(journalFeedReferenceParameters);
+
+				throw new NoSuchFeedException(sb.toString());
+			}
+
+			endPos = beginPos - 1;
 		}
 	}
 
@@ -1403,6 +1776,13 @@ public class BaseTextExportImportContentProcessor
 
 			String url = content.substring(beginPos + offset, endPos);
 
+			if (url.contains("/c/document_library/get_file?") ||
+				url.contains("/documents/") ||
+				url.contains("/image/image_gallery?")) {
+
+				continue;
+			}
+
 			endPos = url.indexOf(Portal.FRIENDLY_URL_SEPARATOR);
 
 			if (endPos != -1) {
@@ -1454,7 +1834,8 @@ public class BaseTextExportImportContentProcessor
 				if (urlWithoutLocale.startsWith(
 						PRIVATE_GROUP_SERVLET_MAPPING) ||
 					urlWithoutLocale.startsWith(PRIVATE_USER_SERVLET_MAPPING) ||
-					urlWithoutLocale.startsWith(PUBLIC_GROUP_SERVLET_MAPPING)) {
+					urlWithoutLocale.startsWith(PUBLIC_GROUP_SERVLET_MAPPING) ||
+					_isVirtualHostDefined(urlSB)) {
 
 					url = urlWithoutLocale;
 				}
@@ -1655,16 +2036,92 @@ public class BaseTextExportImportContentProcessor
 				StringPool.SLASH;
 
 	protected static final String PUBLIC_GROUP_SERVLET_MAPPING =
-		PropsUtil.get(
-			PropsKeys.LAYOUT_FRIENDLY_URL_PUBLIC_SERVLET_MAPPING) +
-				StringPool.SLASH;
+		PropsUtil.get(PropsKeys.LAYOUT_FRIENDLY_URL_PUBLIC_SERVLET_MAPPING) +
+			StringPool.SLASH;
 
 	protected static final Pattern exportLinksToLayoutPattern = Pattern.compile(
 		"\\[([\\d]+)@(private(-group|-user)?|public)(@([\\d]+))?\\]");
 	protected static final Pattern importLinksToLayoutPattern = Pattern.compile(
 		"\\[([\\d]+)@(private(-group|-user)?|public)@([\\d]+)(@([\\d]+))?\\]");
 
+	private String _getUuid(String s) {
+		Matcher matcher = _uuidPattern.matcher(s);
+
+		if (matcher.find()) {
+			return matcher.group(0);
+		}
+
+		return com.liferay.petra.string.StringPool.BLANK;
+	}
+
+	private boolean _isVirtualHostDefined(StringBundler urlSB) {
+		String urlSBString = urlSB.toString();
+
+		if (urlSBString.contains(DATA_HANDLER_PUBLIC_LAYOUT_SET_SECURE_URL) ||
+			urlSBString.contains(DATA_HANDLER_PUBLIC_LAYOUT_SET_URL) ||
+			urlSBString.contains(DATA_HANDLER_PRIVATE_LAYOUT_SET_SECURE_URL) ||
+			urlSBString.contains(DATA_HANDLER_PRIVATE_LAYOUT_SET_URL)) {
+
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	private String _replaceTemplateLinkToLayout(
+		String content, boolean privateLayout) {
+
+		if (privateLayout) {
+			content = StringUtil.replace(
+				content, DATA_HANDLER_PRIVATE_GROUP_SERVLET_MAPPING,
+				PropsValues.LAYOUT_FRIENDLY_URL_PRIVATE_GROUP_SERVLET_MAPPING);
+		}
+		else {
+			content = StringUtil.replace(
+				content, DATA_HANDLER_PRIVATE_GROUP_SERVLET_MAPPING,
+				PropsValues.LAYOUT_FRIENDLY_URL_PUBLIC_SERVLET_MAPPING);
+		}
+
+		return content;
+	}
+
+	private static final String[] _DL_REFERENCE_LEGACY_STOP_STRINGS = {
+		StringPool.APOSTROPHE, StringPool.APOSTROPHE_ENCODED,
+		StringPool.CLOSE_BRACKET, StringPool.CLOSE_CURLY_BRACE,
+		StringPool.CLOSE_PARENTHESIS, StringPool.GREATER_THAN,
+		StringPool.LESS_THAN, StringPool.PIPE, StringPool.QUOTE,
+		StringPool.QUOTE_ENCODED, StringPool.SPACE
+	};
+
+	private static final String[] _DL_REFERENCE_STOP_STRINGS = {
+		StringPool.APOSTROPHE, StringPool.APOSTROPHE_ENCODED,
+		StringPool.CLOSE_BRACKET, StringPool.CLOSE_CURLY_BRACE,
+		StringPool.CLOSE_PARENTHESIS, StringPool.GREATER_THAN,
+		StringPool.LESS_THAN, StringPool.PIPE, StringPool.QUESTION,
+		StringPool.QUOTE, StringPool.QUOTE_ENCODED, StringPool.SPACE
+	};
+
+	private static final String _JOURNAL_FEED_FRIENDLY_URL = "/-/journal/rss/";
+
+	private static final char[] _JOURNAL_FEED_REFERENCE_STOP_CHARS = {
+		CharPool.APOSTROPHE, CharPool.CLOSE_BRACKET, CharPool.CLOSE_CURLY_BRACE,
+		CharPool.CLOSE_PARENTHESIS, CharPool.GREATER_THAN, CharPool.LESS_THAN,
+		CharPool.PIPE, CharPool.POUND, CharPool.QUESTION, CharPool.QUOTE,
+		CharPool.SPACE
+	};
+
+	private static final int _OFFSET_HREF_ATTRIBUTE = 6;
+
+	private static final int _OFFSET_SRC_ATTRIBUTE = 5;
+
+	private static final String _TEMPLATE_NAME_PREFIX = "template";
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		BaseTextExportImportContentProcessor.class);
+
+	private static final Pattern _uuidPattern = Pattern.compile(
+		"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-" +
+			"[a-fA-F0-9]{12}");
 
 }

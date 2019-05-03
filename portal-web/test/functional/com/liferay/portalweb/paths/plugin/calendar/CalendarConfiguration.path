@@ -14,36 +14,11 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SUCCESS_MESSAGE</td>
-	<td>//div[contains(@class,'alert') and contains(@class,'alert-success')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ERROR_HEADER</td>
-	<td>//h3[contains(@class,'alert') and contains(@class,'alert-danger')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SAVE_BUTTON</td>
-	<td>//button[contains(.,'Save')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td></td>
 	<td></td>
 	<td></td>
 </tr>
 <!--NAVIGATION-->
-<tr>
-	<td>NAVIGATION_USER_SETTINGS</td>
-	<td>//ul[contains(@class,'lfr-nav nav')]//a[contains(.,'User Settings')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NAVIGATION_DISPLAY_SETTINGS</td>
-	<td>//ul[contains(@class,'lfr-nav nav')]//a[contains(.,'Display Settings')]</td>
-	<td></td>
-</tr>
 <tr>
 	<td>NAVIGATION_USER_RSS</td>
 	<td>//ul[contains(@class,'lfr-nav nav')]//a[contains(.,'RSS')]</td>
@@ -73,11 +48,6 @@
 <tr>
 	<td>USER_SETTINGS_WEEK_STARTS_ON_SELECT</td>
 	<td>//select[contains(@id,'weekStartsOn')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>USER_SETTINGS_TIME_ZONE_SELECT</td>
-	<td>//select[contains(@id,'timeZoneId')]</td>
 	<td></td>
 </tr>
 <tr>

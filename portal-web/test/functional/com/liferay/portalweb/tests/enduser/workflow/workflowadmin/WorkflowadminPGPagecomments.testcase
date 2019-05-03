@@ -1,295 +1,237 @@
-<definition component-name="portal-workflow">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Workflow" />
-
-	<var name="portletName" value="Page Comments" />
-	<var name="workflowAssetType" value="Comments" />
-
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
-
-		<execute macro="User#firstLoginPG" />
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Configuration" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Workflow Configuration" />
-		</execute>
-
-		<execute macro="Workflow#configureWorkflow">
-			<var name="workflowDefinition" value="Single Approver (Version 1)" />
-			<var name="workflowResourceValue" value="Comments" />
-		</execute>
-
-		<execute macro="Page#add">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Page Comments" />
-		</execute>
-	</set-up>
-
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
-
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="PageComment#tearDownPG">
-					<var name="pageName" value="Page Comments Page" />
-				</execute>
-
-				<execute macro="Page#tearDownPG" />
-
-				<execute macro="Workflow#tearDownPortalWorkflow" />
-
-				<execute macro="Workflow#tearDownSiteWorkflow" />
-			</else>
-		</if>
-	</tear-down>
-
-	<command name="ApprovePageCommentPG" priority="5">
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="PageComment#addWithWorkflowPG">
-			<var name="commentAuthor" value="Test Test (You)" />
-			<var name="commentBody" value="Page Comment Comment" />
-		</execute>
-
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="PageComment#viewWithWorkflowPG">
-			<var name="commentAuthor" value="Test Test (You)" />
-			<var name="commentBody" value="Page Comment Comment" />
-			<var name="commentStatus" value="Pending (Review)" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#assignToMeTaskByActions">
-			<var name="workflowAssetTitle" value="Page Comment Comment" />
-			<var name="workflowAssetType" value="Comments" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="PageComment#viewWithWorkflowPG">
-			<var name="commentAuthor" value="Test Test (You)" />
-			<var name="commentBody" value="Page Comment Comment" />
-			<var name="commentStatus" value="Pending (Review)" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#approveTaskByActions">
-			<var name="workflowAssetTitle" value="Page Comment Comment" />
-			<var name="workflowAssetType" value="Comments" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="PageComment#viewPG">
-			<var name="commentAuthor" value="Test Test (You)" />
-			<var name="commentBody" value="Page Comment Comment" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Submissions" />
-		</execute>
-
-		<execute macro="Workflow#gotoViewCompletedAssetViaMySubmissions">
-			<var name="workflowAssetTitle" value="Page Comment Comment" />
-		</execute>
-
-		<execute macro="PageComment#viewAsWorkflowAsset">
-			<var name="commentBody" value="Page Comment Comment" />
-		</execute>
-	</command>
-
-	<command name="DeleteComment" priority="4">
-		<description message="This is a use case for LPS-54707." />
-
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="PageComment#addWithWorkflowPG">
-			<var name="commentAuthor" value="Test Test (You)" />
-			<var name="commentBody" value="Page Comment Comment" />
-		</execute>
-
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="PageComment#viewWithWorkflowPG">
-			<var name="commentAuthor" value="Test Test (You)" />
-			<var name="commentBody" value="Page Comment Comment" />
-			<var name="commentStatus" value="Pending (Review)" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Submissions" />
-		</execute>
-
-		<execute macro="Workflow#viewMySubmissions">
-			<var name="workflowAssetTitle" value="Page Comment Comment" />
-			<var name="workflowAssetType" value="Comments" />
-			<var name="workflowDefinition" value="Single Approver" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="PageComment#tearDownPG">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Submissions" />
-		</execute>
-
-		<execute macro="Workflow#viewDefaultMySubmissionsCP" />
-	</command>
-
-	<command name="EditCommentAssignedToMe" priority="4">
-		<description message="This is a use case for LPS-68780." />
-
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="PageComment#addWithWorkflowPG">
-			<var name="commentAuthor" value="Test Test (You)" />
-			<var name="commentBody" value="Page Comment Comment" />
-		</execute>
-
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="PageComment#viewWithWorkflowPG">
-			<var name="commentAuthor" value="Test Test (You)" />
-			<var name="commentBody" value="Page Comment Comment" />
-			<var name="commentStatus" value="Pending (Review)" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#assignToMeTaskByActions">
-			<var name="workflowAssetTitle" value="Page Comment Comment" />
-			<var name="workflowAssetType" value="Comments" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Workflow#viewTaskAssignedToMeDetails">
-			<var name="workflowAssetContent" value="Page Comment Comment" />
-			<var name="workflowAssetTitle" value="Page Comment Comment" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Workflow#gotoPreviewEdit" />
-
-		<execute macro="FormFields#editTextMultiline">
-			<var name="fieldName" value="CommentPortlet" />
-			<var name="fieldValue" value="EDIT Comment" />
-		</execute>
-
-		<execute macro="Button#clickSave" />
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#viewTaskAssignedToMeDetails">
-			<var name="workflowAssetContent" value="EDIT Comment" />
-			<var name="workflowAssetTitle" value="EDIT Comment" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-	</command>
-
-	<command name="RejectPageCommentPG" priority="4">
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="PageComment#addWithWorkflowPG">
-			<var name="commentAuthor" value="Test Test (You)" />
-			<var name="commentBody" value="Page Comment Comment" />
-		</execute>
-
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="PageComment#viewWithWorkflowPG">
-			<var name="commentAuthor" value="Test Test (You)" />
-			<var name="commentBody" value="Page Comment Comment" />
-			<var name="commentStatus" value="Pending (Review)" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#assignToMeTaskByActions">
-			<var name="workflowAssetTitle" value="Page Comment Comment" />
-			<var name="workflowAssetType" value="Comments" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#rejectTaskByActions">
-			<var name="workflowAssetTitle" value="Page Comment Comment" />
-			<var name="workflowAssetType" value="Comments" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#viewRejectedTask">
-			<var name="workflowAssetTitle" value="Page Comment Comment" />
-			<var name="workflowAssetType" value="Comments" />
-		</execute>
-
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Page Comments Page" />
-		</execute>
-
-		<execute macro="PageComment#viewWithWorkflowPG">
-			<var name="commentAuthor" value="Test Test (You)" />
-			<var name="commentBody" value="Page Comment Comment" />
-			<var name="commentStatus" value="Pending (Update)" />
-		</execute>
-	</command>
-</definition>
+@component-name = "portal-workflow"
+definition {
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Workflow";
+	var portletName = "Page Comments";
+	var workflowAssetType = "Comments";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Site Administration",
+			portlet = "Workflow Configuration"
+		);
+
+		Workflow.configureWorkflow(
+			workflowDefinition = "Single Approver (Version 1)",
+			workflowResourceValue = "Comments"
+		);
+
+		Page.add(pageName = "Page Comments Page");
+
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		Portlet.addPG(portletName = "Page Comments");
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			PageComment.tearDownPG(pageName = "Page Comments Page");
+
+			Page.tearDownPG();
+
+			Workflow.tearDownPortalWorkflow();
+
+			Workflow.tearDownSiteWorkflow();
+		}
+	}
+
+	@priority = "5"
+	test ApprovePageCommentPG {
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		PageComment.addWithWorkflowPG(
+			commentAuthor = "Test Test (You)",
+			commentBody = "Page Comment Comment"
+		);
+
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		PageComment.viewWithWorkflowPG(
+			commentAuthor = "Test Test (You)",
+			commentBody = "Page Comment Comment",
+			commentStatus = "Pending (Review)"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "Page Comment Comment",
+			workflowAssetType = "Comments",
+			workflowTask = "Review"
+		);
+
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		PageComment.viewWithWorkflowPG(
+			commentAuthor = "Test Test (You)",
+			commentBody = "Page Comment Comment",
+			commentStatus = "Pending (Review)"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "Page Comment Comment",
+			workflowAssetType = "Comments",
+			workflowTask = "Review"
+		);
+
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		PageComment.viewPG(
+			commentAuthor = "Test Test (You)",
+			commentBody = "Page Comment Comment"
+		);
+
+		Page.gotoMyAccount(portletName = "My Submissions");
+
+		Workflow.gotoViewCompletedAssetViaMySubmissions(
+			workflowAssetTitle = "Page Comment Comment"
+		);
+
+		PageComment.viewAsWorkflowAsset(commentBody = "Page Comment Comment");
+	}
+
+	@description = "This is a use case for LPS-54707."
+	@priority = "4"
+	test DeleteComment {
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		PageComment.addWithWorkflowPG(
+			commentAuthor = "Test Test (You)",
+			commentBody = "Page Comment Comment"
+		);
+
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		PageComment.viewWithWorkflowPG(
+			commentAuthor = "Test Test (You)",
+			commentBody = "Page Comment Comment",
+			commentStatus = "Pending (Review)"
+		);
+
+		Page.gotoMyAccount(portletName = "My Submissions");
+
+		Workflow.viewMySubmissions(
+			workflowAssetTitle = "Page Comment Comment",
+			workflowAssetType = "Comments",
+			workflowDefinition = "Single Approver",
+			workflowTask = "Review"
+		);
+
+		PageComment.tearDownPG(pageName = "Page Comments Page");
+
+		Page.gotoMyAccount(portletName = "My Submissions");
+
+		Workflow.viewDefaultMySubmissionsCP();
+	}
+
+	@description = "This is a use case for LPS-68780."
+	@priority = "4"
+	test EditCommentAssignedToMe {
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		PageComment.addWithWorkflowPG(
+			commentAuthor = "Test Test (You)",
+			commentBody = "Page Comment Comment"
+		);
+
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		PageComment.viewWithWorkflowPG(
+			commentAuthor = "Test Test (You)",
+			commentBody = "Page Comment Comment",
+			commentStatus = "Pending (Review)"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "Page Comment Comment",
+			workflowAssetType = "Comments",
+			workflowTask = "Review"
+		);
+
+		Workflow.viewTaskAssignedToMeDetails(
+			workflowAssetContent = "Page Comment Comment",
+			workflowAssetTitle = "Page Comment Comment",
+			workflowTask = "Review"
+		);
+
+		Workflow.gotoPreviewEdit();
+
+		PageComment.editCommentField(commentBody = "EDIT Comment");
+
+		Button.clickSave();
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.viewTaskAssignedToMeDetails(
+			workflowAssetContent = "EDIT Comment",
+			workflowAssetTitle = "EDIT Comment",
+			workflowTask = "Review"
+		);
+	}
+
+	@priority = "4"
+	test RejectPageCommentPG {
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		PageComment.addWithWorkflowPG(
+			commentAuthor = "Test Test (You)",
+			commentBody = "Page Comment Comment"
+		);
+
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		PageComment.viewWithWorkflowPG(
+			commentAuthor = "Test Test (You)",
+			commentBody = "Page Comment Comment",
+			commentStatus = "Pending (Review)"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "Page Comment Comment",
+			workflowAssetType = "Comments",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.rejectTaskByActions(
+			workflowAssetTitle = "Page Comment Comment",
+			workflowAssetType = "Comments",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.viewRejectedTask(
+			workflowAssetTitle = "Page Comment Comment",
+			workflowAssetType = "Comments"
+		);
+
+		Navigator.gotoPage(pageName = "Page Comments Page");
+
+		PageComment.viewWithWorkflowPG(
+			commentAuthor = "Test Test (You)",
+			commentBody = "Page Comment Comment",
+			commentStatus = "Pending (Update)"
+		);
+	}
+}

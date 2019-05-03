@@ -43,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Edward Han
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -105,6 +105,7 @@ public class EditRuleMVCActionCommand extends BaseMVCActionCommand {
 			actionRequest, "name");
 		Map<Locale, String> descriptionMap =
 			LocalizationUtil.getLocalizationMap(actionRequest, "description");
+
 		String type = ParamUtil.getString(actionRequest, "type");
 
 		RuleHandler ruleHandler = RuleGroupProcessorUtil.getRuleHandler(type);

@@ -27,8 +27,6 @@ import java.io.IOException;
 
 import java.nio.file.Path;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,19 +90,17 @@ public class BarbaryWatcher extends Watcher {
 					continue;
 				}
 
-				List<WatchEvent<?>> watchEvents = watchKey.pollEvents();
+				for (WatchEvent<?> watchEvent : watchKey.pollEvents()) {
+					WatchEvent<File> fileWatchEvent =
+						(WatchEvent<File>)watchEvent;
 
-				for (int i = 0; i < watchEvents.size(); i++) {
-					WatchEvent<File> watchEvent =
-						(WatchEvent<File>)watchEvents.get(i);
-
-					File file = watchEvent.context();
+					File file = fileWatchEvent.context();
 
 					if (file == null) {
 						continue;
 					}
 
-					WatchEvent.Kind<?> kind = watchEvent.kind();
+					WatchEvent.Kind<?> kind = fileWatchEvent.kind();
 
 					processWatchEvent(kind.name(), file.toPath());
 				}

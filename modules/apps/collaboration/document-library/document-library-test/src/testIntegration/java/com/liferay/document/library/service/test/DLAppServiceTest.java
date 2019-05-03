@@ -78,6 +78,7 @@ import java.io.File;
 import java.io.InputStream;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -109,6 +110,21 @@ public class DLAppServiceTest extends BaseDLAppTestCase {
 		@Rule
 		public static final AggregateTestRule aggregateTestRule =
 			new LiferayIntegrationTestRule();
+
+		@Test
+		public void assetEntryShouldHavePublishDate() throws Exception {
+			String fileName = RandomTestUtil.randomString();
+
+			FileEntry fileEntry = addFileEntry(
+				group.getGroupId(), parentFolder.getFolderId(), fileName);
+
+			AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+				DLFileEntryConstants.getClassName(),
+				fileEntry.getFileEntryId());
+
+			Assert.assertEquals(
+				assetEntry.getCreateDate(), assetEntry.getPublishDate());
+		}
 
 		@Test
 		public void assetTagsShouldBeOrdered() throws Exception {
@@ -1562,6 +1578,42 @@ public class DLAppServiceTest extends BaseDLAppTestCase {
 	}
 
 	@RunWith(Arquillian.class)
+	public static class WhenUpdatingAndCheckingInAFileEntry
+		extends BaseDLAppTestCase {
+
+		@ClassRule
+		@Rule
+		public static final AggregateTestRule aggregateTestRule =
+			new LiferayIntegrationTestRule();
+
+		@Test
+		public void shouldHaveSameModifiedDate() throws Exception {
+			FileEntry fileEntry = addFileEntry(
+				group.getGroupId(), parentFolder.getFolderId());
+
+			ServiceContext serviceContext =
+				ServiceContextTestUtil.getServiceContext(group.getGroupId());
+
+			fileEntry = DLAppServiceUtil.updateFileEntryAndCheckIn(
+				fileEntry.getFileEntryId(), fileEntry.getFileName(),
+				fileEntry.getMimeType(), fileEntry.getTitle(),
+				RandomTestUtil.randomString(), StringPool.BLANK, false, null,
+				serviceContext);
+
+			AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+				DLFileEntryConstants.getClassName(),
+				fileEntry.getFileEntryId());
+
+			Date assetEntryModifiedDate = assetEntry.getModifiedDate();
+
+			Date fileEntryModifiedDate = fileEntry.getModifiedDate();
+
+			Assert.assertEquals(fileEntryModifiedDate, assetEntryModifiedDate);
+		}
+
+	}
+
+	@RunWith(Arquillian.class)
 	public static class WhenViewingFolderContents extends BaseDLAppTestCase {
 
 		@ClassRule
@@ -1623,8 +1675,8 @@ public class DLAppServiceTest extends BaseDLAppTestCase {
 
 			User user = UserTestUtil.addGroupUser(group, "User");
 
-			try (ContextUserReplace contextUserReplace =
-					new ContextUserReplace(user)) {
+			try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+					user)) {
 
 				int foldersAndFileEntriesAndFileShortcutsCount =
 					DLAppServiceUtil.
@@ -1664,8 +1716,8 @@ public class DLAppServiceTest extends BaseDLAppTestCase {
 
 			User user = UserTestUtil.addGroupUser(group, "User");
 
-			try (ContextUserReplace contextUserReplace =
-					new ContextUserReplace(user)) {
+			try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+					user)) {
 
 				List<Object> foldersAndFileEntriesAndFileShortcuts =
 					DLAppServiceUtil.getFoldersAndFileEntriesAndFileShortcuts(

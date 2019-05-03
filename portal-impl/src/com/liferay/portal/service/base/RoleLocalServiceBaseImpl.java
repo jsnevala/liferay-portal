@@ -16,14 +16,13 @@ package com.liferay.portal.service.base;
 
 import aQute.bnd.annotation.ProviderType;
 
+import com.liferay.counter.kernel.service.persistence.CounterPersistence;
 import com.liferay.expando.kernel.service.persistence.ExpandoRowPersistence;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -72,6 +71,7 @@ import com.liferay.portal.kernel.service.persistence.UserGroupGroupRolePersisten
 import com.liferay.portal.kernel.service.persistence.UserGroupRoleFinder;
 import com.liferay.portal.kernel.service.persistence.UserGroupRolePersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
@@ -90,16 +90,17 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.portal.service.impl.RoleLocalServiceImpl
- * @see com.liferay.portal.kernel.service.RoleLocalServiceUtil
  * @generated
  */
 @ProviderType
-public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
+public abstract class RoleLocalServiceBaseImpl
+	extends BaseLocalServiceImpl
 	implements RoleLocalService, IdentifiableOSGiService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.portal.kernel.service.RoleLocalServiceUtil} to access the role local service.
+	 * Never modify or reference this class directly. Use <code>RoleLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.RoleLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -123,6 +124,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the new role
 	 */
 	@Override
+	@Transactional(enabled = false)
 	public Role createRole(long roleId) {
 		return rolePersistence.create(roleId);
 	}
@@ -157,8 +159,8 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(Role.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			Role.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -176,7 +178,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.RoleModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.RoleModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -185,8 +187,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
 		return rolePersistence.findWithDynamicQuery(dynamicQuery, start, end);
 	}
 
@@ -194,7 +197,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.RoleModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.RoleModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -204,10 +207,12 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return rolePersistence.findWithDynamicQuery(dynamicQuery, start, end,
-			orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return rolePersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -229,8 +234,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
 		return rolePersistence.countWithDynamicQuery(dynamicQuery, projection);
 	}
 
@@ -265,7 +271,8 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
 		actionableDynamicQuery.setBaseLocalService(roleLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
@@ -277,8 +284,11 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
+
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
 
 		indexableActionableDynamicQuery.setBaseLocalService(roleLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
@@ -291,6 +301,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
+
 		actionableDynamicQuery.setBaseLocalService(roleLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(Role.class);
@@ -301,64 +312,86 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
-		final ExportActionableDynamicQuery exportActionableDynamicQuery = new ExportActionableDynamicQuery() {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
 				@Override
 				public long performCount() throws PortalException {
-					ManifestSummary manifestSummary = portletDataContext.getManifestSummary();
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
 
 					StagedModelType stagedModelType = getStagedModelType();
 
 					long modelAdditionCount = super.performCount();
 
-					manifestSummary.addModelAdditionCount(stagedModelType,
-						modelAdditionCount);
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
 
-					long modelDeletionCount = ExportImportHelperUtil.getModelDeletionCount(portletDataContext,
-							stagedModelType);
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
 
-					manifestSummary.addModelDeletionCount(stagedModelType,
-						modelDeletionCount);
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
 
 					return modelAdditionCount;
 				}
+
 			};
 
 		initActionableDynamicQuery(exportActionableDynamicQuery);
 
-		exportActionableDynamicQuery.setAddCriteriaMethod(new ActionableDynamicQuery.AddCriteriaMethod() {
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
 				@Override
 				public void addCriteria(DynamicQuery dynamicQuery) {
-					portletDataContext.addDateRangeCriteria(dynamicQuery,
-						"modifiedDate");
+					portletDataContext.addDateRangeCriteria(
+						dynamicQuery, "modifiedDate");
 
-					StagedModelType stagedModelType = exportActionableDynamicQuery.getStagedModelType();
+					StagedModelType stagedModelType =
+						exportActionableDynamicQuery.getStagedModelType();
 
-					long referrerClassNameId = stagedModelType.getReferrerClassNameId();
+					long referrerClassNameId =
+						stagedModelType.getReferrerClassNameId();
 
 					Property classNameIdProperty = PropertyFactoryUtil.forName(
-							"classNameId");
+						"classNameId");
 
-					if ((referrerClassNameId != StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
-							(referrerClassNameId != StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
-						dynamicQuery.add(classNameIdProperty.eq(
+					if ((referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
+						(referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
+
+						dynamicQuery.add(
+							classNameIdProperty.eq(
 								stagedModelType.getReferrerClassNameId()));
 					}
-					else if (referrerClassNameId == StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
+					else if (referrerClassNameId ==
+								StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
+
 						dynamicQuery.add(classNameIdProperty.isNotNull());
 					}
 				}
+
 			});
 
-		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<Role>() {
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<Role>() {
+
 				@Override
 				public void performAction(Role role) throws PortalException {
-					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
-						role);
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, role);
 				}
+
 			});
-		exportActionableDynamicQuery.setStagedModelType(new StagedModelType(
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
 				PortalUtil.getClassNameId(Role.class.getName()),
 				StagedModelType.REFERRER_CLASS_NAME_ID_ALL));
 
@@ -371,12 +404,14 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
+
 		return roleLocalService.deleteRole((Role)persistedModel);
 	}
 
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return rolePersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -391,6 +426,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public Role getRoleByUuidAndCompanyId(String uuid, long companyId)
 		throws PortalException {
+
 		return rolePersistence.findByUuid_C_First(uuid, companyId, null);
 	}
 
@@ -398,7 +434,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Returns a range of all the roles.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.RoleModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.RoleModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of roles
@@ -523,9 +559,12 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	/**
 	 */
 	@Override
-	public List<Role> getGroupRoles(long groupId, int start, int end,
+	public List<Role> getGroupRoles(
+		long groupId, int start, int end,
 		OrderByComparator<Role> orderByComparator) {
-		return groupPersistence.getRoles(groupId, start, end, orderByComparator);
+
+		return groupPersistence.getRoles(
+			groupId, start, end, orderByComparator);
 	}
 
 	/**
@@ -578,6 +617,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public void addUserRoles(long userId, long[] roleIds)
 		throws PortalException {
+
 		userPersistence.addRoles(userId, roleIds);
 	}
 
@@ -587,6 +627,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public void addUserRoles(long userId, List<Role> roles)
 		throws PortalException {
+
 		userPersistence.addRoles(userId, roles);
 	}
 
@@ -604,6 +645,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public void deleteUserRole(long userId, long roleId)
 		throws PortalException {
+
 		userPersistence.removeRole(userId, roleId);
 	}
 
@@ -611,8 +653,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @throws PortalException
 	 */
 	@Override
-	public void deleteUserRole(long userId, Role role)
-		throws PortalException {
+	public void deleteUserRole(long userId, Role role) throws PortalException {
 		userPersistence.removeRole(userId, role);
 	}
 
@@ -622,6 +663,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public void deleteUserRoles(long userId, long[] roleIds)
 		throws PortalException {
+
 		userPersistence.removeRoles(userId, roleIds);
 	}
 
@@ -631,6 +673,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public void deleteUserRoles(long userId, List<Role> roles)
 		throws PortalException {
+
 		userPersistence.removeRoles(userId, roles);
 	}
 
@@ -662,8 +705,10 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	/**
 	 */
 	@Override
-	public List<Role> getUserRoles(long userId, int start, int end,
+	public List<Role> getUserRoles(
+		long userId, int start, int end,
 		OrderByComparator<Role> orderByComparator) {
+
 		return userPersistence.getRoles(userId, start, end, orderByComparator);
 	}
 
@@ -694,6 +739,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public void setUserRoles(long userId, long[] roleIds)
 		throws PortalException {
+
 		userPersistence.setRoles(userId, roleIds);
 	}
 
@@ -756,7 +802,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the counter local service
 	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
+	public com.liferay.counter.kernel.service.CounterLocalService
+		getCounterLocalService() {
+
 		return counterLocalService;
 	}
 
@@ -766,8 +814,28 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param counterLocalService the counter local service
 	 */
 	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
+		com.liferay.counter.kernel.service.CounterLocalService
+			counterLocalService) {
+
 		this.counterLocalService = counterLocalService;
+	}
+
+	/**
+	 * Returns the counter persistence.
+	 *
+	 * @return the counter persistence
+	 */
+	public CounterPersistence getCounterPersistence() {
+		return counterPersistence;
+	}
+
+	/**
+	 * Sets the counter persistence.
+	 *
+	 * @param counterPersistence the counter persistence
+	 */
+	public void setCounterPersistence(CounterPersistence counterPersistence) {
+		this.counterPersistence = counterPersistence;
 	}
 
 	/**
@@ -775,7 +843,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the class name local service
 	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService getClassNameLocalService() {
+	public com.liferay.portal.kernel.service.ClassNameLocalService
+		getClassNameLocalService() {
+
 		return classNameLocalService;
 	}
 
@@ -785,7 +855,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param classNameLocalService the class name local service
 	 */
 	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService) {
+		com.liferay.portal.kernel.service.ClassNameLocalService
+			classNameLocalService) {
+
 		this.classNameLocalService = classNameLocalService;
 	}
 
@@ -805,6 +877,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setClassNamePersistence(
 		ClassNamePersistence classNamePersistence) {
+
 		this.classNamePersistence = classNamePersistence;
 	}
 
@@ -813,7 +886,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the company local service
 	 */
-	public com.liferay.portal.kernel.service.CompanyLocalService getCompanyLocalService() {
+	public com.liferay.portal.kernel.service.CompanyLocalService
+		getCompanyLocalService() {
+
 		return companyLocalService;
 	}
 
@@ -823,7 +898,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param companyLocalService the company local service
 	 */
 	public void setCompanyLocalService(
-		com.liferay.portal.kernel.service.CompanyLocalService companyLocalService) {
+		com.liferay.portal.kernel.service.CompanyLocalService
+			companyLocalService) {
+
 		this.companyLocalService = companyLocalService;
 	}
 
@@ -850,7 +927,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the group local service
 	 */
-	public com.liferay.portal.kernel.service.GroupLocalService getGroupLocalService() {
+	public com.liferay.portal.kernel.service.GroupLocalService
+		getGroupLocalService() {
+
 		return groupLocalService;
 	}
 
@@ -861,6 +940,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setGroupLocalService(
 		com.liferay.portal.kernel.service.GroupLocalService groupLocalService) {
+
 		this.groupLocalService = groupLocalService;
 	}
 
@@ -905,7 +985,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the layout local service
 	 */
-	public com.liferay.portal.kernel.service.LayoutLocalService getLayoutLocalService() {
+	public com.liferay.portal.kernel.service.LayoutLocalService
+		getLayoutLocalService() {
+
 		return layoutLocalService;
 	}
 
@@ -915,7 +997,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param layoutLocalService the layout local service
 	 */
 	public void setLayoutLocalService(
-		com.liferay.portal.kernel.service.LayoutLocalService layoutLocalService) {
+		com.liferay.portal.kernel.service.LayoutLocalService
+			layoutLocalService) {
+
 		this.layoutLocalService = layoutLocalService;
 	}
 
@@ -960,7 +1044,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the resource local service
 	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService getResourceLocalService() {
+	public com.liferay.portal.kernel.service.ResourceLocalService
+		getResourceLocalService() {
+
 		return resourceLocalService;
 	}
 
@@ -970,7 +1056,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param resourceLocalService the resource local service
 	 */
 	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService) {
+		com.liferay.portal.kernel.service.ResourceLocalService
+			resourceLocalService) {
+
 		this.resourceLocalService = resourceLocalService;
 	}
 
@@ -979,7 +1067,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the resource action local service
 	 */
-	public com.liferay.portal.kernel.service.ResourceActionLocalService getResourceActionLocalService() {
+	public com.liferay.portal.kernel.service.ResourceActionLocalService
+		getResourceActionLocalService() {
+
 		return resourceActionLocalService;
 	}
 
@@ -989,7 +1079,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param resourceActionLocalService the resource action local service
 	 */
 	public void setResourceActionLocalService(
-		com.liferay.portal.kernel.service.ResourceActionLocalService resourceActionLocalService) {
+		com.liferay.portal.kernel.service.ResourceActionLocalService
+			resourceActionLocalService) {
+
 		this.resourceActionLocalService = resourceActionLocalService;
 	}
 
@@ -1009,6 +1101,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setResourceActionPersistence(
 		ResourceActionPersistence resourceActionPersistence) {
+
 		this.resourceActionPersistence = resourceActionPersistence;
 	}
 
@@ -1017,7 +1110,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the resource block local service
 	 */
-	public com.liferay.portal.kernel.service.ResourceBlockLocalService getResourceBlockLocalService() {
+	public com.liferay.portal.kernel.service.ResourceBlockLocalService
+		getResourceBlockLocalService() {
+
 		return resourceBlockLocalService;
 	}
 
@@ -1027,7 +1122,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param resourceBlockLocalService the resource block local service
 	 */
 	public void setResourceBlockLocalService(
-		com.liferay.portal.kernel.service.ResourceBlockLocalService resourceBlockLocalService) {
+		com.liferay.portal.kernel.service.ResourceBlockLocalService
+			resourceBlockLocalService) {
+
 		this.resourceBlockLocalService = resourceBlockLocalService;
 	}
 
@@ -1047,6 +1144,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setResourceBlockPersistence(
 		ResourceBlockPersistence resourceBlockPersistence) {
+
 		this.resourceBlockPersistence = resourceBlockPersistence;
 	}
 
@@ -1064,7 +1162,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @param resourceBlockFinder the resource block finder
 	 */
-	public void setResourceBlockFinder(ResourceBlockFinder resourceBlockFinder) {
+	public void setResourceBlockFinder(
+		ResourceBlockFinder resourceBlockFinder) {
+
 		this.resourceBlockFinder = resourceBlockFinder;
 	}
 
@@ -1073,7 +1173,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the resource block permission local service
 	 */
-	public com.liferay.portal.kernel.service.ResourceBlockPermissionLocalService getResourceBlockPermissionLocalService() {
+	public com.liferay.portal.kernel.service.ResourceBlockPermissionLocalService
+		getResourceBlockPermissionLocalService() {
+
 		return resourceBlockPermissionLocalService;
 	}
 
@@ -1083,8 +1185,11 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param resourceBlockPermissionLocalService the resource block permission local service
 	 */
 	public void setResourceBlockPermissionLocalService(
-		com.liferay.portal.kernel.service.ResourceBlockPermissionLocalService resourceBlockPermissionLocalService) {
-		this.resourceBlockPermissionLocalService = resourceBlockPermissionLocalService;
+		com.liferay.portal.kernel.service.ResourceBlockPermissionLocalService
+			resourceBlockPermissionLocalService) {
+
+		this.resourceBlockPermissionLocalService =
+			resourceBlockPermissionLocalService;
 	}
 
 	/**
@@ -1092,7 +1197,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the resource block permission persistence
 	 */
-	public ResourceBlockPermissionPersistence getResourceBlockPermissionPersistence() {
+	public ResourceBlockPermissionPersistence
+		getResourceBlockPermissionPersistence() {
+
 		return resourceBlockPermissionPersistence;
 	}
 
@@ -1103,7 +1210,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setResourceBlockPermissionPersistence(
 		ResourceBlockPermissionPersistence resourceBlockPermissionPersistence) {
-		this.resourceBlockPermissionPersistence = resourceBlockPermissionPersistence;
+
+		this.resourceBlockPermissionPersistence =
+			resourceBlockPermissionPersistence;
 	}
 
 	/**
@@ -1111,7 +1220,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the resource permission local service
 	 */
-	public com.liferay.portal.kernel.service.ResourcePermissionLocalService getResourcePermissionLocalService() {
+	public com.liferay.portal.kernel.service.ResourcePermissionLocalService
+		getResourcePermissionLocalService() {
+
 		return resourcePermissionLocalService;
 	}
 
@@ -1121,7 +1232,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param resourcePermissionLocalService the resource permission local service
 	 */
 	public void setResourcePermissionLocalService(
-		com.liferay.portal.kernel.service.ResourcePermissionLocalService resourcePermissionLocalService) {
+		com.liferay.portal.kernel.service.ResourcePermissionLocalService
+			resourcePermissionLocalService) {
+
 		this.resourcePermissionLocalService = resourcePermissionLocalService;
 	}
 
@@ -1141,6 +1254,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setResourcePermissionPersistence(
 		ResourcePermissionPersistence resourcePermissionPersistence) {
+
 		this.resourcePermissionPersistence = resourcePermissionPersistence;
 	}
 
@@ -1160,6 +1274,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setResourcePermissionFinder(
 		ResourcePermissionFinder resourcePermissionFinder) {
+
 		this.resourcePermissionFinder = resourcePermissionFinder;
 	}
 
@@ -1168,7 +1283,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the resource type permission local service
 	 */
-	public com.liferay.portal.kernel.service.ResourceTypePermissionLocalService getResourceTypePermissionLocalService() {
+	public com.liferay.portal.kernel.service.ResourceTypePermissionLocalService
+		getResourceTypePermissionLocalService() {
+
 		return resourceTypePermissionLocalService;
 	}
 
@@ -1178,8 +1295,11 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param resourceTypePermissionLocalService the resource type permission local service
 	 */
 	public void setResourceTypePermissionLocalService(
-		com.liferay.portal.kernel.service.ResourceTypePermissionLocalService resourceTypePermissionLocalService) {
-		this.resourceTypePermissionLocalService = resourceTypePermissionLocalService;
+		com.liferay.portal.kernel.service.ResourceTypePermissionLocalService
+			resourceTypePermissionLocalService) {
+
+		this.resourceTypePermissionLocalService =
+			resourceTypePermissionLocalService;
 	}
 
 	/**
@@ -1187,7 +1307,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the resource type permission persistence
 	 */
-	public ResourceTypePermissionPersistence getResourceTypePermissionPersistence() {
+	public ResourceTypePermissionPersistence
+		getResourceTypePermissionPersistence() {
+
 		return resourceTypePermissionPersistence;
 	}
 
@@ -1198,7 +1320,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setResourceTypePermissionPersistence(
 		ResourceTypePermissionPersistence resourceTypePermissionPersistence) {
-		this.resourceTypePermissionPersistence = resourceTypePermissionPersistence;
+
+		this.resourceTypePermissionPersistence =
+			resourceTypePermissionPersistence;
 	}
 
 	/**
@@ -1217,6 +1341,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setResourceTypePermissionFinder(
 		ResourceTypePermissionFinder resourceTypePermissionFinder) {
+
 		this.resourceTypePermissionFinder = resourceTypePermissionFinder;
 	}
 
@@ -1225,7 +1350,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the expando row local service
 	 */
-	public com.liferay.expando.kernel.service.ExpandoRowLocalService getExpandoRowLocalService() {
+	public com.liferay.expando.kernel.service.ExpandoRowLocalService
+		getExpandoRowLocalService() {
+
 		return expandoRowLocalService;
 	}
 
@@ -1235,7 +1362,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param expandoRowLocalService the expando row local service
 	 */
 	public void setExpandoRowLocalService(
-		com.liferay.expando.kernel.service.ExpandoRowLocalService expandoRowLocalService) {
+		com.liferay.expando.kernel.service.ExpandoRowLocalService
+			expandoRowLocalService) {
+
 		this.expandoRowLocalService = expandoRowLocalService;
 	}
 
@@ -1255,6 +1384,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setExpandoRowPersistence(
 		ExpandoRowPersistence expandoRowPersistence) {
+
 		this.expandoRowPersistence = expandoRowPersistence;
 	}
 
@@ -1263,7 +1393,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the team local service
 	 */
-	public com.liferay.portal.kernel.service.TeamLocalService getTeamLocalService() {
+	public com.liferay.portal.kernel.service.TeamLocalService
+		getTeamLocalService() {
+
 		return teamLocalService;
 	}
 
@@ -1274,6 +1406,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setTeamLocalService(
 		com.liferay.portal.kernel.service.TeamLocalService teamLocalService) {
+
 		this.teamLocalService = teamLocalService;
 	}
 
@@ -1318,7 +1451,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the user local service
 	 */
-	public com.liferay.portal.kernel.service.UserLocalService getUserLocalService() {
+	public com.liferay.portal.kernel.service.UserLocalService
+		getUserLocalService() {
+
 		return userLocalService;
 	}
 
@@ -1329,6 +1464,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setUserLocalService(
 		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
+
 		this.userLocalService = userLocalService;
 	}
 
@@ -1373,7 +1509,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the user group group role local service
 	 */
-	public com.liferay.portal.kernel.service.UserGroupGroupRoleLocalService getUserGroupGroupRoleLocalService() {
+	public com.liferay.portal.kernel.service.UserGroupGroupRoleLocalService
+		getUserGroupGroupRoleLocalService() {
+
 		return userGroupGroupRoleLocalService;
 	}
 
@@ -1383,7 +1521,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param userGroupGroupRoleLocalService the user group group role local service
 	 */
 	public void setUserGroupGroupRoleLocalService(
-		com.liferay.portal.kernel.service.UserGroupGroupRoleLocalService userGroupGroupRoleLocalService) {
+		com.liferay.portal.kernel.service.UserGroupGroupRoleLocalService
+			userGroupGroupRoleLocalService) {
+
 		this.userGroupGroupRoleLocalService = userGroupGroupRoleLocalService;
 	}
 
@@ -1403,6 +1543,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setUserGroupGroupRolePersistence(
 		UserGroupGroupRolePersistence userGroupGroupRolePersistence) {
+
 		this.userGroupGroupRolePersistence = userGroupGroupRolePersistence;
 	}
 
@@ -1422,6 +1563,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setUserGroupGroupRoleFinder(
 		UserGroupGroupRoleFinder userGroupGroupRoleFinder) {
+
 		this.userGroupGroupRoleFinder = userGroupGroupRoleFinder;
 	}
 
@@ -1430,7 +1572,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the user group role local service
 	 */
-	public com.liferay.portal.kernel.service.UserGroupRoleLocalService getUserGroupRoleLocalService() {
+	public com.liferay.portal.kernel.service.UserGroupRoleLocalService
+		getUserGroupRoleLocalService() {
+
 		return userGroupRoleLocalService;
 	}
 
@@ -1440,7 +1584,9 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param userGroupRoleLocalService the user group role local service
 	 */
 	public void setUserGroupRoleLocalService(
-		com.liferay.portal.kernel.service.UserGroupRoleLocalService userGroupRoleLocalService) {
+		com.liferay.portal.kernel.service.UserGroupRoleLocalService
+			userGroupRoleLocalService) {
+
 		this.userGroupRoleLocalService = userGroupRoleLocalService;
 	}
 
@@ -1460,6 +1606,7 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setUserGroupRolePersistence(
 		UserGroupRolePersistence userGroupRolePersistence) {
+
 		this.userGroupRolePersistence = userGroupRolePersistence;
 	}
 
@@ -1477,13 +1624,15 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @param userGroupRoleFinder the user group role finder
 	 */
-	public void setUserGroupRoleFinder(UserGroupRoleFinder userGroupRoleFinder) {
+	public void setUserGroupRoleFinder(
+		UserGroupRoleFinder userGroupRoleFinder) {
+
 		this.userGroupRoleFinder = userGroupRoleFinder;
 	}
 
 	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.portal.kernel.model.Role",
-			roleLocalService);
+		persistedModelLocalServiceRegistry.register(
+			"com.liferay.portal.kernel.model.Role", roleLocalService);
 	}
 
 	public void destroy() {
@@ -1523,8 +1672,8 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
@@ -1535,88 +1684,187 @@ public abstract class RoleLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 	@BeanReference(type = RoleLocalService.class)
 	protected RoleLocalService roleLocalService;
+
 	@BeanReference(type = RolePersistence.class)
 	protected RolePersistence rolePersistence;
+
 	@BeanReference(type = RoleFinder.class)
 	protected RoleFinder roleFinder;
-	@BeanReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@BeanReference(type = com.liferay.portal.kernel.service.ClassNameLocalService.class)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService;
+
+	@BeanReference(
+		type = com.liferay.counter.kernel.service.CounterLocalService.class
+	)
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@BeanReference(type = CounterPersistence.class)
+	protected CounterPersistence counterPersistence;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ClassNameLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ClassNameLocalService
+		classNameLocalService;
+
 	@BeanReference(type = ClassNamePersistence.class)
 	protected ClassNamePersistence classNamePersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.CompanyLocalService.class)
-	protected com.liferay.portal.kernel.service.CompanyLocalService companyLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.CompanyLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.CompanyLocalService
+		companyLocalService;
+
 	@BeanReference(type = CompanyPersistence.class)
 	protected CompanyPersistence companyPersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.GroupLocalService.class)
-	protected com.liferay.portal.kernel.service.GroupLocalService groupLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.GroupLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.GroupLocalService
+		groupLocalService;
+
 	@BeanReference(type = GroupPersistence.class)
 	protected GroupPersistence groupPersistence;
+
 	@BeanReference(type = GroupFinder.class)
 	protected GroupFinder groupFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.LayoutLocalService.class)
-	protected com.liferay.portal.kernel.service.LayoutLocalService layoutLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.LayoutLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.LayoutLocalService
+		layoutLocalService;
+
 	@BeanReference(type = LayoutPersistence.class)
 	protected LayoutPersistence layoutPersistence;
+
 	@BeanReference(type = LayoutFinder.class)
 	protected LayoutFinder layoutFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.ResourceLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService;
-	@BeanReference(type = com.liferay.portal.kernel.service.ResourceActionLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceActionLocalService resourceActionLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ResourceLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ResourceLocalService
+		resourceLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ResourceActionLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ResourceActionLocalService
+		resourceActionLocalService;
+
 	@BeanReference(type = ResourceActionPersistence.class)
 	protected ResourceActionPersistence resourceActionPersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.ResourceBlockLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceBlockLocalService resourceBlockLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ResourceBlockLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ResourceBlockLocalService
+		resourceBlockLocalService;
+
 	@BeanReference(type = ResourceBlockPersistence.class)
 	protected ResourceBlockPersistence resourceBlockPersistence;
+
 	@BeanReference(type = ResourceBlockFinder.class)
 	protected ResourceBlockFinder resourceBlockFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.ResourceBlockPermissionLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceBlockPermissionLocalService resourceBlockPermissionLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ResourceBlockPermissionLocalService.class
+	)
+	protected
+		com.liferay.portal.kernel.service.ResourceBlockPermissionLocalService
+			resourceBlockPermissionLocalService;
+
 	@BeanReference(type = ResourceBlockPermissionPersistence.class)
-	protected ResourceBlockPermissionPersistence resourceBlockPermissionPersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.ResourcePermissionLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourcePermissionLocalService resourcePermissionLocalService;
+	protected ResourceBlockPermissionPersistence
+		resourceBlockPermissionPersistence;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ResourcePermissionLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ResourcePermissionLocalService
+		resourcePermissionLocalService;
+
 	@BeanReference(type = ResourcePermissionPersistence.class)
 	protected ResourcePermissionPersistence resourcePermissionPersistence;
+
 	@BeanReference(type = ResourcePermissionFinder.class)
 	protected ResourcePermissionFinder resourcePermissionFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.ResourceTypePermissionLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceTypePermissionLocalService resourceTypePermissionLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ResourceTypePermissionLocalService.class
+	)
+	protected
+		com.liferay.portal.kernel.service.ResourceTypePermissionLocalService
+			resourceTypePermissionLocalService;
+
 	@BeanReference(type = ResourceTypePermissionPersistence.class)
-	protected ResourceTypePermissionPersistence resourceTypePermissionPersistence;
+	protected ResourceTypePermissionPersistence
+		resourceTypePermissionPersistence;
+
 	@BeanReference(type = ResourceTypePermissionFinder.class)
 	protected ResourceTypePermissionFinder resourceTypePermissionFinder;
-	@BeanReference(type = com.liferay.expando.kernel.service.ExpandoRowLocalService.class)
-	protected com.liferay.expando.kernel.service.ExpandoRowLocalService expandoRowLocalService;
+
+	@BeanReference(
+		type = com.liferay.expando.kernel.service.ExpandoRowLocalService.class
+	)
+	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
+		expandoRowLocalService;
+
 	@BeanReference(type = ExpandoRowPersistence.class)
 	protected ExpandoRowPersistence expandoRowPersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.TeamLocalService.class)
-	protected com.liferay.portal.kernel.service.TeamLocalService teamLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.TeamLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.TeamLocalService
+		teamLocalService;
+
 	@BeanReference(type = TeamPersistence.class)
 	protected TeamPersistence teamPersistence;
+
 	@BeanReference(type = TeamFinder.class)
 	protected TeamFinder teamFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.UserLocalService.class)
-	protected com.liferay.portal.kernel.service.UserLocalService userLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.UserLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.UserLocalService
+		userLocalService;
+
 	@BeanReference(type = UserPersistence.class)
 	protected UserPersistence userPersistence;
+
 	@BeanReference(type = UserFinder.class)
 	protected UserFinder userFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.UserGroupGroupRoleLocalService.class)
-	protected com.liferay.portal.kernel.service.UserGroupGroupRoleLocalService userGroupGroupRoleLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.UserGroupGroupRoleLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.UserGroupGroupRoleLocalService
+		userGroupGroupRoleLocalService;
+
 	@BeanReference(type = UserGroupGroupRolePersistence.class)
 	protected UserGroupGroupRolePersistence userGroupGroupRolePersistence;
+
 	@BeanReference(type = UserGroupGroupRoleFinder.class)
 	protected UserGroupGroupRoleFinder userGroupGroupRoleFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.UserGroupRoleLocalService.class)
-	protected com.liferay.portal.kernel.service.UserGroupRoleLocalService userGroupRoleLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.UserGroupRoleLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.UserGroupRoleLocalService
+		userGroupRoleLocalService;
+
 	@BeanReference(type = UserGroupRolePersistence.class)
 	protected UserGroupRolePersistence userGroupRolePersistence;
+
 	@BeanReference(type = UserGroupRoleFinder.class)
 	protected UserGroupRoleFinder userGroupRoleFinder;
+
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+	protected PersistedModelLocalServiceRegistry
+		persistedModelLocalServiceRegistry;
+
 }

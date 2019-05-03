@@ -71,21 +71,21 @@ boolean showRestoreButton = (searchTerms.getStatus() != WorkflowConstants.STATUS
 	<liferay-frontend:management-bar-filters>
 		<liferay-frontend:management-bar-navigation
 			navigationKeys='<%= new String[] {"active", "inactive"} %>'
-			portletURL="<%= renderResponse.createRenderURL() %>"
+			portletURL="<%= PortletURLUtil.clone(currentURLObj, liferayPortletResponse) %>"
 		/>
 
 		<liferay-frontend:management-bar-sort
 			orderByCol="<%= searchContainer.getOrderByCol() %>"
 			orderByType="<%= searchContainer.getOrderByType() %>"
 			orderColumns='<%= new String[] {"first-name", "last-name", "screen-name"} %>'
-			portletURL="<%= portletURL %>"
+			portletURL="<%= PortletURLUtil.clone(currentURLObj, liferayPortletResponse) %>"
 		/>
 	</liferay-frontend:management-bar-filters>
 
 	<liferay-frontend:management-bar-buttons>
 		<liferay-frontend:management-bar-display-buttons
 			displayViews='<%= new String[] {"list"} %>'
-			portletURL="<%= renderResponse.createRenderURL() %>"
+			portletURL="<%= PortletURLUtil.clone(currentURLObj, liferayPortletResponse) %>"
 			selectedDisplayStyle="<%= displayStyle %>"
 		/>
 	</liferay-frontend:management-bar-buttons>

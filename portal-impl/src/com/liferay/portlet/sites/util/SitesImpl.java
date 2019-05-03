@@ -98,6 +98,7 @@ import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -254,11 +255,16 @@ public class SitesImpl implements Sites {
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		serviceContext.setAttribute("layoutPrototypeLinkEnabled", linkEnabled);
-		serviceContext.setAttribute(
-			"layoutPrototypeUuid", layoutPrototype.getUuid());
+		Serializable originalLayoutPrototypeLinkEnabled =
+			serviceContext.getAttribute("layoutPrototypeLinkEnabled");
+		Serializable originalLayoutPrototypeUuid = serviceContext.getAttribute(
+			"layoutPrototypeUuid");
 
 		try {
+			serviceContext.setAttribute(
+				"layoutPrototypeLinkEnabled", linkEnabled);
+			serviceContext.setAttribute(
+				"layoutPrototypeUuid", layoutPrototype.getUuid());
 			Locale targetSiteDefaultLocale = PortalUtil.getSiteDefaultLocale(
 				targetLayout.getGroupId());
 
@@ -270,10 +276,27 @@ public class SitesImpl implements Sites {
 				targetLayout.getNameMap(), targetLayout.getTitleMap(),
 				targetLayout.getDescriptionMap(), targetLayout.getKeywordsMap(),
 				targetLayout.getRobotsMap(), layoutPrototypeLayout.getType(),
-				targetLayout.getHidden(), targetLayout.getFriendlyURLMap(),
+				targetLayout.isHidden(), targetLayout.getFriendlyURLMap(),
 				targetLayout.getIconImage(), null, serviceContext);
 		}
 		finally {
+			if (originalLayoutPrototypeLinkEnabled == null) {
+				serviceContext.removeAttribute("layoutPrototypeLinkEnabled");
+			}
+			else {
+				serviceContext.setAttribute(
+					"layoutPrototypeLinkEnabled",
+					originalLayoutPrototypeLinkEnabled);
+			}
+
+			if (originalLayoutPrototypeUuid == null) {
+				serviceContext.removeAttribute("layoutPrototypeUuid");
+			}
+			else {
+				serviceContext.setAttribute(
+					"layoutPrototypeUuid", originalLayoutPrototypeUuid);
+			}
+
 			LocaleThreadLocal.setSiteDefaultLocale(siteDefaultLocale);
 		}
 
@@ -301,7 +324,9 @@ public class SitesImpl implements Sites {
 		typeSettingsProperties.setProperty(
 			LAST_MERGE_TIME, String.valueOf(modifiedDate.getTime()));
 
-		LayoutLocalServiceUtil.updateLayout(targetLayout);
+		LayoutLocalServiceUtil.updateLayout(
+			targetLayout.getGroupId(), targetLayout.isPrivateLayout(),
+			targetLayout.getLayoutId(), targetLayout.getTypeSettings());
 
 		UnicodeProperties prototypeTypeSettingsProperties =
 			layoutPrototypeLayout.getTypeSettingsProperties();
@@ -1166,6 +1191,10 @@ public class SitesImpl implements Sites {
 				Layout layoutSetPrototypeLayout = getLayoutSetPrototypeLayout(
 					layout);
 
+				if (layoutSetPrototypeLayout == null) {
+					return true;
+				}
+
 				String layoutUpdateable =
 					layoutSetPrototypeLayout.getTypeSettingsProperty(
 						LAYOUT_UPDATEABLE);
@@ -1277,11 +1306,16 @@ public class SitesImpl implements Sites {
 			return;
 		}
 
+		String owner = _acquireLock(
+			LayoutSet.class.getName(), layoutSet.getLayoutSetId(),
+			Time.SECOND * PropsValues.LAYOUT_SET_PROTOTYPE_MERGE_LOCK_MAX_TIME);
+
+		if (owner == null) {
+			return;
+		}
+
 		UnicodeProperties settingsProperties =
 			layoutSet.getSettingsProperties();
-
-		long lastMergeTime = GetterUtil.getLong(
-			settingsProperties.getProperty(LAST_MERGE_TIME));
 
 		LayoutSetPrototype layoutSetPrototype =
 			LayoutSetPrototypeLocalServiceUtil.
@@ -1289,58 +1323,13 @@ public class SitesImpl implements Sites {
 					layoutSet.getLayoutSetPrototypeUuid(),
 					layoutSet.getCompanyId());
 
-		LayoutSet layoutSetPrototypeLayoutSet =
-			layoutSetPrototype.getLayoutSet();
-
-		UnicodeProperties layoutSetPrototypeSettingsProperties =
-			layoutSetPrototypeLayoutSet.getSettingsProperties();
-
-		int mergeFailCount = GetterUtil.getInteger(
-			layoutSetPrototypeSettingsProperties.getProperty(MERGE_FAIL_COUNT));
-
-		String owner = PortalUUIDUtil.generate();
-
-		try {
-			Lock lock = LockManagerUtil.lock(
-				SitesImpl.class.getName(),
-				String.valueOf(layoutSet.getLayoutSetId()), owner);
-
-			// Double deep check
-
-			if (!owner.equals(lock.getOwner())) {
-				Date createDate = lock.getCreateDate();
-
-				if ((System.currentTimeMillis() - createDate.getTime()) >=
-						PropsValues.LAYOUT_SET_PROTOTYPE_MERGE_LOCK_MAX_TIME) {
-
-					// Acquire lock if the lock is older than the lock max time
-
-					lock = LockManagerUtil.lock(
-						SitesImpl.class.getName(),
-						String.valueOf(layoutSet.getLayoutSetId()),
-						lock.getOwner(), owner);
-
-					// Check if acquiring the lock succeeded or if another
-					// process has the lock
-
-					if (!owner.equals(lock.getOwner())) {
-						return;
-					}
-				}
-				else {
-					return;
-				}
-			}
-		}
-		catch (Exception e) {
-			return;
-		}
-
 		try {
 			MergeLayoutPrototypesThreadLocal.setInProgress(true);
 
 			boolean importData = true;
 
+			long lastMergeTime = GetterUtil.getLong(
+				settingsProperties.getProperty(LAST_MERGE_TIME));
 			long lastResetTime = GetterUtil.getLong(
 				settingsProperties.getProperty(LAST_RESET_TIME));
 
@@ -1361,6 +1350,16 @@ public class SitesImpl implements Sites {
 				layoutSet.isPrivateLayout(), parameterMap, importData);
 		}
 		catch (Exception e) {
+			LayoutSet layoutSetPrototypeLayoutSet =
+				layoutSetPrototype.getLayoutSet();
+
+			UnicodeProperties layoutSetPrototypeSettingsProperties =
+				layoutSetPrototypeLayoutSet.getSettingsProperties();
+
+			int mergeFailCount = GetterUtil.getInteger(
+				layoutSetPrototypeSettingsProperties.getProperty(
+					MERGE_FAIL_COUNT));
+
 			mergeFailCount++;
 
 			StringBundler sb = new StringBundler(6);
@@ -1384,9 +1383,8 @@ public class SitesImpl implements Sites {
 		finally {
 			MergeLayoutPrototypesThreadLocal.setInProgress(false);
 
-			LockManagerUtil.unlock(
-				SitesImpl.class.getName(),
-				String.valueOf(layoutSet.getLayoutSetId()), owner);
+			_releaseLock(
+				LayoutSet.class.getName(), layoutSet.getLayoutSetId(), owner);
 		}
 	}
 
@@ -1454,7 +1452,7 @@ public class SitesImpl implements Sites {
 
 		LayoutServiceUtil.updateLayout(
 			layoutPrototypeLayout.getGroupId(),
-			layoutPrototypeLayout.getPrivateLayout(),
+			layoutPrototypeLayout.isPrivateLayout(),
 			layoutPrototypeLayout.getLayoutId(),
 			layoutPrototypeLayout.getTypeSettings());
 	}
@@ -1487,7 +1485,7 @@ public class SitesImpl implements Sites {
 
 		LayoutSetServiceUtil.updateSettings(
 			layoutSetPrototypeLayoutSet.getGroupId(),
-			layoutSetPrototypeLayoutSet.getPrivateLayout(),
+			layoutSetPrototypeLayoutSet.isPrivateLayout(),
 			layoutSetPrototypeLayoutSet.getSettings());
 	}
 
@@ -1622,6 +1620,23 @@ public class SitesImpl implements Sites {
 		long lastMergeTime = GetterUtil.getLong(
 			layout.getTypeSettingsProperty(LAST_MERGE_TIME));
 
+		if (lastMergeTime == 0) {
+			try {
+				MergeLayoutPrototypesThreadLocal.setInProgress(true);
+
+				Layout targetLayout = LayoutLocalServiceUtil.getLayout(
+					layout.getPlid());
+
+				if (targetLayout != null) {
+					lastMergeTime = GetterUtil.getLong(
+						targetLayout.getTypeSettingsProperty(LAST_MERGE_TIME));
+				}
+			}
+			finally {
+				MergeLayoutPrototypesThreadLocal.setInProgress(false);
+			}
+		}
+
 		LayoutPrototype layoutPrototype =
 			LayoutPrototypeLocalServiceUtil.
 				getLayoutPrototypeByUuidAndCompanyId(
@@ -1660,39 +1675,11 @@ public class SitesImpl implements Sites {
 			return;
 		}
 
-		String owner = PortalUUIDUtil.generate();
+		String owner = _acquireLock(
+			Layout.class.getName(), layout.getPlid(),
+			Time.SECOND * PropsValues.LAYOUT_PROTOTYPE_MERGE_LOCK_MAX_TIME);
 
-		try {
-			Lock lock = LockManagerUtil.lock(
-				SitesImpl.class.getName(), String.valueOf(layout.getPlid()),
-				owner);
-
-			if (!owner.equals(lock.getOwner())) {
-				Date createDate = lock.getCreateDate();
-
-				if ((System.currentTimeMillis() - createDate.getTime()) >=
-						PropsValues.LAYOUT_PROTOTYPE_MERGE_LOCK_MAX_TIME) {
-
-					// Acquire lock if the lock is older than the lock max time
-
-					lock = LockManagerUtil.lock(
-						SitesImpl.class.getName(),
-						String.valueOf(layout.getPlid()), lock.getOwner(),
-						owner);
-
-					// Check if acquiring the lock succeeded or if another
-					// process has the lock
-
-					if (!owner.equals(lock.getOwner())) {
-						return;
-					}
-				}
-				else {
-					return;
-				}
-			}
-		}
-		catch (Exception e) {
+		if (owner == null) {
 			return;
 		}
 
@@ -1714,9 +1701,7 @@ public class SitesImpl implements Sites {
 		finally {
 			MergeLayoutPrototypesThreadLocal.setInProgress(false);
 
-			LockManagerUtil.unlock(
-				SitesImpl.class.getName(), String.valueOf(layout.getPlid()),
-				owner);
+			_releaseLock(Layout.class.getName(), layout.getPlid(), owner);
 		}
 	}
 
@@ -1859,25 +1844,17 @@ public class SitesImpl implements Sites {
 			boolean importData)
 		throws PortalException {
 
+		File cacheFile = null;
 		File file = null;
 
-		StringBundler sb = new StringBundler(importData ? 4 : 3);
+		if (!importData) {
+			String cacheFileName = StringBundler.concat(
+				_TEMP_DIR, layoutSetPrototype.getUuid(), ".v",
+				String.valueOf(layoutSetPrototype.getMvccVersion()), ".lar");
 
-		sb.append(_TEMP_DIR);
-		sb.append(layoutSetPrototype.getUuid());
+			cacheFile = new File(cacheFileName);
 
-		if (importData) {
-			sb.append("-data");
-		}
-
-		sb.append(".lar");
-
-		File cacheFile = new File(sb.toString());
-
-		if (cacheFile.exists() && !importData) {
-			Date modifiedDate = layoutSetPrototype.getModifiedDate();
-
-			if (cacheFile.lastModified() >= modifiedDate.getTime()) {
+			if (cacheFile.exists()) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(
 						"Using cached layout set prototype LAR file " +
@@ -1890,8 +1867,6 @@ public class SitesImpl implements Sites {
 
 		User user = UserLocalServiceUtil.getDefaultUser(
 			layoutSetPrototype.getCompanyId());
-
-		boolean newFile = false;
 
 		if (file == null) {
 			List<Layout> layoutSetPrototypeLayouts =
@@ -1915,8 +1890,6 @@ public class SitesImpl implements Sites {
 
 			file = ExportImportLocalServiceUtil.exportLayoutsAsFile(
 				exportImportConfiguration);
-
-			newFile = true;
 		}
 
 		Map<String, Serializable> importLayoutSettingsMap =
@@ -1937,7 +1910,7 @@ public class SitesImpl implements Sites {
 		ExportImportLocalServiceUtil.importLayouts(
 			exportImportConfiguration, file);
 
-		if (newFile) {
+		if ((cacheFile != null) && !cacheFile.exists()) {
 			try {
 				FileUtil.copyFile(file, cacheFile);
 
@@ -2048,6 +2021,69 @@ public class SitesImpl implements Sites {
 			groupId, privateLayout);
 
 		mergeLayoutSetPrototypeLayouts(group, layoutSet);
+	}
+
+	private String _acquireLock(
+		String className, long classPK, long mergeLockMaxTime) {
+
+		String owner = PortalUUIDUtil.generate();
+
+		try {
+			Lock lock = LockManagerUtil.lock(
+				SitesImpl.class.getName(), String.valueOf(classPK), owner);
+
+			// Double deep check
+
+			if (!owner.equals(lock.getOwner())) {
+				Date createDate = lock.getCreateDate();
+
+				if ((System.currentTimeMillis() - createDate.getTime()) >=
+						mergeLockMaxTime) {
+
+					// Acquire lock if the lock is older than the lock max time
+
+					lock = LockManagerUtil.lock(
+						SitesImpl.class.getName(), String.valueOf(classPK),
+						lock.getOwner(), owner);
+
+					// Check if acquiring the lock succeeded or if another
+					// process has the lock
+
+					if (!owner.equals(lock.getOwner())) {
+						return null;
+					}
+				}
+				else {
+					return null;
+				}
+			}
+		}
+		catch (Exception e) {
+			return null;
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				StringBundler.concat(
+					"Acquired lock for ", SitesImpl.class.getName(),
+					" to update ", className, StringPool.POUND,
+					String.valueOf(classPK)));
+		}
+
+		return owner;
+	}
+
+	private void _releaseLock(String className, long classPK, String owner) {
+		LockManagerUtil.unlock(
+			SitesImpl.class.getName(), String.valueOf(classPK), owner);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				StringBundler.concat(
+					"Released lock for ", SitesImpl.class.getName(),
+					" to update ", className, StringPool.POUND,
+					String.valueOf(classPK)));
+		}
 	}
 
 	private static final String _TEMP_DIR =

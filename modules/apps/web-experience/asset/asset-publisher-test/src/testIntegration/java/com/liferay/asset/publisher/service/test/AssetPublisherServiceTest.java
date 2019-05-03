@@ -108,8 +108,9 @@ public class AssetPublisherServiceTest {
 
 		addAssetVocabulary();
 
-		long[] allAssetCategoryIds =
-			{_assetCategoryIds[0], _assetCategoryIds[1], _assetCategoryIds[2]};
+		long[] allAssetCategoryIds = {
+			_assetCategoryIds[0], _assetCategoryIds[1], _assetCategoryIds[2]
+		};
 
 		List<AssetEntry> expectedAssetEntries = addAssetEntries(
 			allAssetCategoryIds, _NO_ASSET_TAG_NAMES, 2, true);
@@ -272,11 +273,13 @@ public class AssetPublisherServiceTest {
 		return portletPreferences;
 	}
 
-	private static final String[] _ASSET_CATEGORY_NAMES =
-		{"Athletic", "Barcelona", "RealMadrid", "Sevilla", "Sporting"};
+	private static final String[] _ASSET_CATEGORY_NAMES = {
+		"Athletic", "Barcelona", "RealMadrid", "Sevilla", "Sporting"
+	};
 
-	private static final String[] _ASSET_TAG_NAMES =
-		{"basketball", "football", "tennis"};
+	private static final String[] _ASSET_TAG_NAMES = {
+		"basketball", "football", "tennis"
+	};
 
 	private static final long[] _NO_ASSET_CATEGORY_IDS = new long[0];
 

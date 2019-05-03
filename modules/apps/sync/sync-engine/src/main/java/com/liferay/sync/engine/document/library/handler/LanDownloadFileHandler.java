@@ -71,8 +71,9 @@ public class LanDownloadFileHandler extends DownloadFileHandler {
 
 		if (_queueEndTime == 0) {
 			long queueEndTime =
-				now + ((syncFile.getSize() * 1000) /
-					PropsValues.SYNC_LAN_SESSION_QUEUE_DURATION_RATE);
+				now +
+					((syncFile.getSize() * 1000) /
+						PropsValues.SYNC_LAN_SESSION_QUEUE_DURATION_RATE);
 
 			long maxQueueEndTime =
 				now + PropsValues.SYNC_LAN_SESSION_QUEUE_MAX_DURATION;

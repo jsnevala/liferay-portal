@@ -26,95 +26,105 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @generated
  */
 @ProviderType
-public class ShoppingCategoryServiceWrapper implements ShoppingCategoryService,
-	ServiceWrapper<ShoppingCategoryService> {
+public class ShoppingCategoryServiceWrapper
+	implements ShoppingCategoryService,
+			   ServiceWrapper<ShoppingCategoryService> {
+
 	public ShoppingCategoryServiceWrapper(
 		ShoppingCategoryService shoppingCategoryService) {
+
 		_shoppingCategoryService = shoppingCategoryService;
 	}
 
 	@Override
 	public com.liferay.shopping.model.ShoppingCategory addCategory(
-		long parentCategoryId, java.lang.String name,
-		java.lang.String description,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+			long parentCategoryId, String name, String description,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _shoppingCategoryService.addCategory(parentCategoryId, name,
-			description, serviceContext);
+
+		return _shoppingCategoryService.addCategory(
+			parentCategoryId, name, description, serviceContext);
 	}
 
 	@Override
 	public void deleteCategory(long categoryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_shoppingCategoryService.deleteCategory(categoryId);
 	}
 
 	@Override
-	public java.util.List<com.liferay.shopping.model.ShoppingCategory> getCategories(
-		long groupId) {
+	public java.util.List<com.liferay.shopping.model.ShoppingCategory>
+		getCategories(long groupId) {
+
 		return _shoppingCategoryService.getCategories(groupId);
 	}
 
 	@Override
-	public java.util.List<com.liferay.shopping.model.ShoppingCategory> getCategories(
-		long groupId, long parentCategoryId, int start, int end) {
-		return _shoppingCategoryService.getCategories(groupId,
-			parentCategoryId, start, end);
+	public java.util.List<com.liferay.shopping.model.ShoppingCategory>
+		getCategories(long groupId, long parentCategoryId, int start, int end) {
+
+		return _shoppingCategoryService.getCategories(
+			groupId, parentCategoryId, start, end);
 	}
 
 	@Override
-	public java.util.List<java.lang.Object> getCategoriesAndItems(
+	public java.util.List<Object> getCategoriesAndItems(
 		long groupId, long categoryId, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<?> obc) {
-		return _shoppingCategoryService.getCategoriesAndItems(groupId,
-			categoryId, start, end, obc);
+
+		return _shoppingCategoryService.getCategoriesAndItems(
+			groupId, categoryId, start, end, obc);
 	}
 
 	@Override
 	public int getCategoriesAndItemsCount(long groupId, long categoryId) {
-		return _shoppingCategoryService.getCategoriesAndItemsCount(groupId,
-			categoryId);
+		return _shoppingCategoryService.getCategoriesAndItemsCount(
+			groupId, categoryId);
 	}
 
 	@Override
 	public int getCategoriesCount(long groupId, long parentCategoryId) {
-		return _shoppingCategoryService.getCategoriesCount(groupId,
-			parentCategoryId);
+		return _shoppingCategoryService.getCategoriesCount(
+			groupId, parentCategoryId);
 	}
 
 	@Override
 	public com.liferay.shopping.model.ShoppingCategory getCategory(
-		long categoryId)
+			long categoryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _shoppingCategoryService.getCategory(categoryId);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _shoppingCategoryService.getOSGiServiceIdentifier();
 	}
 
 	@Override
-	public void getSubcategoryIds(java.util.List<java.lang.Long> categoryIds,
-		long groupId, long categoryId) {
-		_shoppingCategoryService.getSubcategoryIds(categoryIds, groupId,
-			categoryId);
+	public void getSubcategoryIds(
+		java.util.List<Long> categoryIds, long groupId, long categoryId) {
+
+		_shoppingCategoryService.getSubcategoryIds(
+			categoryIds, groupId, categoryId);
 	}
 
 	@Override
 	public com.liferay.shopping.model.ShoppingCategory updateCategory(
-		long categoryId, long parentCategoryId, java.lang.String name,
-		java.lang.String description, boolean mergeWithParentCategory,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+			long categoryId, long parentCategoryId, String name,
+			String description, boolean mergeWithParentCategory,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _shoppingCategoryService.updateCategory(categoryId,
-			parentCategoryId, name, description, mergeWithParentCategory,
-			serviceContext);
+
+		return _shoppingCategoryService.updateCategory(
+			categoryId, parentCategoryId, name, description,
+			mergeWithParentCategory, serviceContext);
 	}
 
 	@Override
@@ -125,8 +135,10 @@ public class ShoppingCategoryServiceWrapper implements ShoppingCategoryService,
 	@Override
 	public void setWrappedService(
 		ShoppingCategoryService shoppingCategoryService) {
+
 		_shoppingCategoryService = shoppingCategoryService;
 	}
 
 	private ShoppingCategoryService _shoppingCategoryService;
+
 }

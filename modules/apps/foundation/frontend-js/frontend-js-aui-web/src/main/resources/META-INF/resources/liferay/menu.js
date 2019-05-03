@@ -15,6 +15,8 @@ AUI.add(
 
 		var CSS_OPEN = 'open';
 
+		var CSS_PORTLET = '.portlet';
+
 		var DEFAULT_ALIGN_POINTS = ['tl', 'bl'];
 
 		var EVENT_CLICK = 'click';
@@ -100,7 +102,11 @@ AUI.add(
 
 					handles.length = 0;
 
-					instance._overlay.hide();
+					var overlay = instance._overlay;
+
+					if (overlay) {
+						overlay.hide();
+					}
 
 					var trigger = instance._activeTrigger;
 
@@ -112,6 +118,12 @@ AUI.add(
 					}
 					else {
 						trigger.get(PARENT_NODE).removeClass(CSS_OPEN);
+
+						var portlet = trigger.ancestor(CSS_PORTLET);
+
+						if (portlet) {
+							portlet.removeClass(CSS_OPEN);
+						}
 					}
 				}
 			},
@@ -371,6 +383,12 @@ AUI.add(
 					}
 					else {
 						trigger.get(PARENT_NODE).addClass(CSS_OPEN);
+
+						var portlet = trigger.ancestor(CSS_PORTLET);
+
+						if (portlet) {
+							portlet.addClass(CSS_OPEN);
+						}
 					}
 				}
 			},
@@ -507,7 +525,13 @@ AUI.add(
 
 							var selectedItem = descendants.item(event.newVal);
 
-							bodyNode.one('ul').setAttribute('aria-activedescendant', selectedItem.guid());
+							if (selectedItem) {
+								var overlayList = bodyNode.one('ul');
+
+								if (overlayList) {
+									overlayList.setAttribute('aria-activedescendant', selectedItem.guid());
+								}
+							}
 						}
 					);
 
@@ -583,6 +607,12 @@ AUI.add(
 						activeTrigger.removeClass(CSS_BTN_PRIMARY);
 
 						activeTrigger.get(PARENT_NODE).removeClass(CSS_OPEN);
+
+						var portlet = activeTrigger.ancestor(CSS_PORTLET);
+
+						if (portlet) {
+							portlet.removeClass(CSS_OPEN);
+						}
 					}
 					else {
 						menuInstance._closeActiveMenu();

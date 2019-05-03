@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.util.Validator;
 import javax.portlet.PortletPreferences;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class BlogsExportImportPortletPreferencesProcessorUtil {
 

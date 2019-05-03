@@ -22,7 +22,7 @@
 	</aui:nav>
 
 	<aui:nav-bar-search>
-		<aui:form action="<%= assetBrowserDisplayContext.getPortletURL() %>" cssClass="container-fluid-1280" method="post" name="searchFm">
+		<aui:form action="<%= assetBrowserDisplayContext.getSearchURL() %>" cssClass="container-fluid-1280" method="post" name="searchFm">
 			<liferay-ui:input-search
 				markupView="lexicon"
 			/>
@@ -190,7 +190,7 @@
 					/>
 
 					<liferay-ui:search-container-column-text
-						name="user-name"
+						name="author"
 						value="<%= PortalUtil.getUserName(assetEntry) %>"
 					/>
 

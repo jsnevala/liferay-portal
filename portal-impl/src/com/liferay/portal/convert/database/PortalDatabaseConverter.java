@@ -14,56 +14,45 @@
 
 package com.liferay.portal.convert.database;
 
-import com.liferay.portal.convert.util.HibernateModelUtil;
 import com.liferay.portal.convert.util.ModelMigrator;
 import com.liferay.portal.kernel.model.BaseModel;
-import com.liferay.portal.kernel.servlet.ServletContextPool;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import javax.servlet.ServletContext;
 
 import javax.sql.DataSource;
 
 /**
- * @author Cristina González
+ * @author     Cristina González
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
+@Deprecated
 public class PortalDatabaseConverter implements DatabaseConverter {
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public void convert(DataSource dataSource) throws Exception {
-		_modelMigrator.migrate(dataSource, getModelClassNames(".*"));
+		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setModelMigrator(ModelMigrator modelMigrator) {
-		_modelMigrator = modelMigrator;
+		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	protected List<Class<? extends BaseModel<?>>> getModelClassNames(
 		String regex) {
 
-		List<Class<? extends BaseModel<?>>> modelClassesName =
-			new ArrayList<>();
-
-		modelClassesName.addAll(
-			HibernateModelUtil.getModelClassNames(
-				ClassLoaderUtil.getPortalClassLoader(), ".*"));
-
-		for (String servletContextName : ServletContextPool.keySet()) {
-			ServletContext servletContext = ServletContextPool.get(
-				servletContextName);
-
-			ClassLoader classLoader = servletContext.getClassLoader();
-
-			modelClassesName.addAll(
-				HibernateModelUtil.getModelClassNames(classLoader, ".*"));
-		}
-
-		return modelClassesName;
+		throw new UnsupportedOperationException();
 	}
-
-	private ModelMigrator _modelMigrator;
 
 }

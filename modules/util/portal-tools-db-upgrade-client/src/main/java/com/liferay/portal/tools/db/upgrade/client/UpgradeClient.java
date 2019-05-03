@@ -81,7 +81,7 @@ public class UpgradeClient {
 			else {
 				jvmOpts =
 					"-Dfile.encoding=UTF8 -Duser.country=US " +
-						"-Duser.language=en -Duser.timezone=GMT -Xmx2048m ";
+						"-Duser.language=en -Duser.timezone=GMT -Xmx2048m";
 			}
 
 			File logFile = null;
@@ -171,12 +171,15 @@ public class UpgradeClient {
 		commands.add("-cp");
 		commands.add(_getBootstrapClassPath());
 
-		Collections.addAll(commands, _jvmOpts.split(" "));
+		String jvmOptsCommands = _jvmOpts.concat(
+			" -Dexternal-properties=portal-upgrade.properties " +
+				"-Dserver.detector.server.id=" +
+					_appServer.getServerDetectorServerId());
 
-		commands.add("-Dexternal-properties=portal-upgrade.properties");
-		commands.add(
-			"-Dserver.detector.server.id=" +
-				_appServer.getServerDetectorServerId());
+		System.out.println("JVM arguments: " + jvmOptsCommands);
+
+		Collections.addAll(commands, jvmOptsCommands.split(" "));
+
 		commands.add(DBUpgraderLauncher.class.getName());
 
 		processBuilder.command(commands);
@@ -430,11 +433,9 @@ public class UpgradeClient {
 				}
 			}
 
-			File dir = _appServer.getDir();
-
 			System.out.println(
-				"Please enter your application server directory (" + dir +
-					"): ");
+				"Please enter your application server directory (" +
+					_appServer.getDir() + "): ");
 
 			response = _consoleReader.readLine();
 
@@ -474,7 +475,10 @@ public class UpgradeClient {
 				_appServer.setPortalDirName(response);
 			}
 
+			File dir = _appServer.getDir();
+
 			_appServerProperties.setProperty("dir", dir.getCanonicalPath());
+
 			_appServerProperties.setProperty(
 				"extra.lib.dirs", _appServer.getExtraLibDirNames());
 			_appServerProperties.setProperty(

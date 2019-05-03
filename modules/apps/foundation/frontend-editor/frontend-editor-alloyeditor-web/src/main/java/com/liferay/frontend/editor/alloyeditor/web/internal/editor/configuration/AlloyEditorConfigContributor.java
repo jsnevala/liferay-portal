@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -33,14 +32,13 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Sergio González
  * @author Roberto Díaz
  */
 @Component(
-	property = {"editor.name=alloyeditor"},
+	property = "editor.name=alloyeditor",
 	service = EditorConfigContributor.class
 )
 public class AlloyEditorConfigContributor
@@ -90,7 +88,12 @@ public class AlloyEditorConfigContributor
 		ResourceBundle resourceBundle = null;
 
 		try {
-			resourceBundle = _resourceBundleLoader.loadResourceBundle(locale);
+			ResourceBundleLoader resourceBundleLoader =
+				ResourceBundleLoaderUtil.
+					getResourceBundleLoaderByBundleSymbolicName(
+						"com.liferay.frontend.editor.lang");
+
+			resourceBundle = resourceBundleLoader.loadResourceBundle(locale);
 		}
 		catch (MissingResourceException mre) {
 			resourceBundle = ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE;
@@ -206,15 +209,17 @@ public class AlloyEditorConfigContributor
 	}
 
 	protected JSONObject getToolbarsStylesSelectionsImageJSONObject() {
-		JSONObject jsonNObject = JSONFactoryUtil.createJSONObject();
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-		jsonNObject.put(
+		jsonObject.put(
 			"buttons",
-			toJSONArray("['imageLeft', 'imageCenter', 'imageRight', 'link']"));
-		jsonNObject.put("name", "image");
-		jsonNObject.put("test", "AlloyEditor.SelectionTest.image");
+			toJSONArray(
+				"['imageLeft', 'imageCenter', 'imageRight', 'linkBrowse']"));
+		jsonObject.put("name", "image");
+		jsonObject.put("setPosition", "AlloyEditor.SelectionSetPosition.image");
+		jsonObject.put("test", "AlloyEditor.SelectionTest.image");
 
-		return jsonNObject;
+		return jsonObject;
 	}
 
 	protected JSONArray getToolbarsStylesSelectionsJSONArray(Locale locale) {
@@ -280,22 +285,8 @@ public class AlloyEditorConfigContributor
 		return jsonObject;
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.frontend.editor.lang)",
-		unbind = "-"
-	)
-	protected void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
-	}
-
 	private static final int _CKEDITOR_STYLE_BLOCK = 1;
 
 	private static final int _CKEDITOR_STYLE_INLINE = 2;
-
-	private volatile ResourceBundleLoader _resourceBundleLoader;
 
 }

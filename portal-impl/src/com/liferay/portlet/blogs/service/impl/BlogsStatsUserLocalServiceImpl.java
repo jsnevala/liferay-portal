@@ -32,7 +32,7 @@ import java.util.List;
 
 /**
  * @author Brian Wing Shun Chan
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class BlogsStatsUserLocalServiceImpl
 	extends BlogsStatsUserLocalServiceBaseImpl {
@@ -68,6 +68,11 @@ public class BlogsStatsUserLocalServiceImpl
 		for (BlogsStatsUser statsUser : statsUsers) {
 			deleteStatsUser(statsUser);
 		}
+	}
+
+	@Override
+	public BlogsStatsUser fetchStatsUser(long groupId, long userId) {
+		return blogsStatsUserPersistence.fetchByG_U(groupId, userId);
 	}
 
 	@Override
@@ -158,8 +163,8 @@ public class BlogsStatsUserLocalServiceImpl
 
 			statsUser = blogsStatsUserPersistence.create(statsUserId);
 
-			statsUser.setCompanyId(group.getCompanyId());
 			statsUser.setGroupId(groupId);
+			statsUser.setCompanyId(group.getCompanyId());
 			statsUser.setUserId(userId);
 
 			blogsStatsUserPersistence.update(statsUser);
@@ -227,6 +232,21 @@ public class BlogsStatsUserLocalServiceImpl
 		}
 
 		blogsStatsUserPersistence.update(statsUser);
+	}
+
+	@Override
+	public BlogsStatsUser updateStatsUser(
+			long groupId, long userId, int ratingsTotalEntries,
+			double ratingsTotalScore, double ratingsAverageScore)
+		throws PortalException {
+
+		BlogsStatsUser blogsStatsUser = getStatsUser(groupId, userId);
+
+		blogsStatsUser.setRatingsTotalEntries(ratingsTotalEntries);
+		blogsStatsUser.setRatingsTotalScore(ratingsTotalScore);
+		blogsStatsUser.setRatingsAverageScore(ratingsAverageScore);
+
+		return blogsStatsUserPersistence.update(blogsStatsUser);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -43,7 +43,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + BlogsPortletKeys.BLOGS_ADMIN},
+	property = "javax.portlet.name=" + BlogsPortletKeys.BLOGS_ADMIN,
 	service = PortletConfigurationIcon.class
 )
 public class PermissionsPortletConfigurationIcon

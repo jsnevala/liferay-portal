@@ -1,6 +1,5 @@
 Bundle-Name: Liferay Adaptive Media Document Library Item Selector Web
 Bundle-SymbolicName: com.liferay.adaptive.media.document.library.item.selector.web
-Bundle-Version: 1.0.4
-Liferay-Releng-Module-Group-Description:
+Bundle-Version: 1.0.7
 Liferay-Releng-Module-Group-Title: Adaptive Media
 -dsannotations-options: inherit

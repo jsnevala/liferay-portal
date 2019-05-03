@@ -27,7 +27,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Philip Jones
  */
 @Component(
-	immediate = true, property = {"form.navigator.entry.order:Integer=30"},
+	immediate = true, property = "form.navigator.entry.order:Integer=30",
 	service = FormNavigatorEntry.class
 )
 public class CompanySettingsPhoneNumbersFormNavigatorEntry
@@ -35,8 +35,8 @@ public class CompanySettingsPhoneNumbersFormNavigatorEntry
 
 	@Override
 	public String getCategoryKey() {
-		return
-			FormNavigatorConstants.CATEGORY_KEY_COMPANY_SETTINGS_IDENTIFICATION;
+		return FormNavigatorConstants.
+			CATEGORY_KEY_COMPANY_SETTINGS_IDENTIFICATION;
 	}
 
 	@Override

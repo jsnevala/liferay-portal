@@ -45,17 +45,6 @@
 	<td></td>
 	<td></td>
 </tr>
-<!--FOLDER_TABLE-->
-<tr>
-	<td>FOLDER_TABLE_CHOOSE</td>
-	<td>//tr[contains(.,'${key_folderName}')]/td[4]//button[contains(.,'Choose')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td></td>
-	<td></td>
-	<td></td>
-</tr>
 <!--SEARCH_TABLE-->
 <tr>
 	<td>SEARCH_TABLE_ENTRY_NAME</td>

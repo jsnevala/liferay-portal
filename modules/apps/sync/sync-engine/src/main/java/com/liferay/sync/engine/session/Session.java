@@ -548,6 +548,10 @@ public class Session {
 			Path filePath, String mimeType, String fileName)
 		throws Exception {
 
+		if (mimeType == null) {
+			mimeType = ContentType.APPLICATION_OCTET_STREAM.getMimeType();
+		}
+
 		return new FileBody(
 			filePath.toFile(), ContentType.create(mimeType), fileName) {
 

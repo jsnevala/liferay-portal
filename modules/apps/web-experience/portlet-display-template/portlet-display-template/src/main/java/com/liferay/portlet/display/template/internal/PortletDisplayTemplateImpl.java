@@ -73,7 +73,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  * @author Juan Fernández
  * @author Brian Wing Shun Chan
  * @author Raymond Augé
@@ -170,7 +170,7 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 	}
 
 	/**
-	 * @deprecated As of 2.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -249,7 +249,7 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 	}
 
 	/**
-	 * @deprecated As of 2.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -416,12 +416,15 @@ public class PortletDisplayTemplateImpl implements PortletDisplayTemplate {
 		PortletResponse portletResponse = (PortletResponse)request.getAttribute(
 			JavaConstants.JAVAX_PORTLET_RESPONSE);
 
-		PortletURL currentURL = PortletURLUtil.getCurrent(
-			_portal.getLiferayPortletRequest(portletRequest),
-			_portal.getLiferayPortletResponse(portletResponse));
+		if ((portletRequest != null) && (portletResponse != null)) {
+			PortletURL currentURL = PortletURLUtil.getCurrent(
+				_portal.getLiferayPortletRequest(portletRequest),
+				_portal.getLiferayPortletResponse(portletResponse));
 
-		contextObjects.put(
-			PortletDisplayTemplateConstants.CURRENT_URL, currentURL.toString());
+			contextObjects.put(
+				PortletDisplayTemplateConstants.CURRENT_URL,
+				currentURL.toString());
+		}
 
 		contextObjects.put(PortletDisplayTemplateConstants.ENTRIES, entries);
 

@@ -29,6 +29,7 @@ import java.util.List;
  */
 @ProviderType
 public class ShoppingItemPriceSoap implements Serializable {
+
 	public static ShoppingItemPriceSoap toSoapModel(ShoppingItemPrice model) {
 		ShoppingItemPriceSoap soapModel = new ShoppingItemPriceSoap();
 
@@ -39,9 +40,9 @@ public class ShoppingItemPriceSoap implements Serializable {
 		soapModel.setMaxQuantity(model.getMaxQuantity());
 		soapModel.setPrice(model.getPrice());
 		soapModel.setDiscount(model.getDiscount());
-		soapModel.setTaxable(model.getTaxable());
+		soapModel.setTaxable(model.isTaxable());
 		soapModel.setShipping(model.getShipping());
-		soapModel.setUseShippingFormula(model.getUseShippingFormula());
+		soapModel.setUseShippingFormula(model.isUseShippingFormula());
 		soapModel.setStatus(model.getStatus());
 
 		return soapModel;
@@ -49,7 +50,9 @@ public class ShoppingItemPriceSoap implements Serializable {
 
 	public static ShoppingItemPriceSoap[] toSoapModels(
 		ShoppingItemPrice[] models) {
-		ShoppingItemPriceSoap[] soapModels = new ShoppingItemPriceSoap[models.length];
+
+		ShoppingItemPriceSoap[] soapModels =
+			new ShoppingItemPriceSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -60,10 +63,12 @@ public class ShoppingItemPriceSoap implements Serializable {
 
 	public static ShoppingItemPriceSoap[][] toSoapModels(
 		ShoppingItemPrice[][] models) {
+
 		ShoppingItemPriceSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new ShoppingItemPriceSoap[models.length][models[0].length];
+			soapModels =
+				new ShoppingItemPriceSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new ShoppingItemPriceSoap[0][0];
@@ -78,7 +83,9 @@ public class ShoppingItemPriceSoap implements Serializable {
 
 	public static ShoppingItemPriceSoap[] toSoapModels(
 		List<ShoppingItemPrice> models) {
-		List<ShoppingItemPriceSoap> soapModels = new ArrayList<ShoppingItemPriceSoap>(models.size());
+
+		List<ShoppingItemPriceSoap> soapModels =
+			new ArrayList<ShoppingItemPriceSoap>(models.size());
 
 		for (ShoppingItemPrice model : models) {
 			soapModels.add(toSoapModel(model));
@@ -205,4 +212,5 @@ public class ShoppingItemPriceSoap implements Serializable {
 	private double _shipping;
 	private boolean _useShippingFormula;
 	private int _status;
+
 }

@@ -101,19 +101,19 @@ public class StringBundler implements Serializable {
 	}
 
 	public StringBundler append(double d) {
-		return append(Double.toString(d));
+		return append(String.valueOf(d));
 	}
 
 	public StringBundler append(float f) {
-		return append(Float.toString(f));
+		return append(String.valueOf(f));
 	}
 
 	public StringBundler append(int i) {
-		return append(Integer.toString(i));
+		return append(String.valueOf(i));
 	}
 
 	public StringBundler append(long l) {
-		return append(Long.toString(l));
+		return append(String.valueOf(l));
 	}
 
 	public StringBundler append(Object obj) {
@@ -271,7 +271,11 @@ public class StringBundler implements Serializable {
 		}
 
 		if (arrayIndex == 3) {
-			return array[0].concat(array[1]).concat(array[2]);
+			return array[0].concat(
+				array[1]
+			).concat(
+				array[2]
+			);
 		}
 
 		int length = 0;

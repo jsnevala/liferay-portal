@@ -113,8 +113,8 @@ public class DDLFormViewRecordDisplayContext {
 	}
 
 	protected DDMStructure getDDMStructure() throws PortalException {
-		if (_ddmStucture != null) {
-			return _ddmStucture;
+		if (_ddmStructure != null) {
+			return _ddmStructure;
 		}
 
 		DDLRecordSet recordSet = getRecordSet();
@@ -123,10 +123,10 @@ public class DDLFormViewRecordDisplayContext {
 			return null;
 		}
 
-		_ddmStucture = _ddmStructureLocalService.getStructure(
+		_ddmStructure = _ddmStructureLocalService.getStructure(
 			recordSet.getDDMStructureId());
 
-		return _ddmStucture;
+		return _ddmStructure;
 	}
 
 	protected DDLRecord getRecord() throws PortalException {
@@ -177,8 +177,8 @@ public class DDLFormViewRecordDisplayContext {
 	private final DDMFormRenderer _ddmFormRenderer;
 	private final DDMFormValuesFactory _ddmFormValuesFactory;
 	private final DDMFormValuesMerger _ddmFormValuesMerger;
+	private DDMStructure _ddmStructure;
 	private final DDMStructureLocalService _ddmStructureLocalService;
-	private DDMStructure _ddmStucture;
 	private final HttpServletResponse _httpServletResponse;
 
 }

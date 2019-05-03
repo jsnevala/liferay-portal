@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Calendar API
 Bundle-SymbolicName: com.liferay.calendar.api
-Bundle-Version: 2.3.2
+Bundle-Version: 2.3.16
 Export-Package:\
 	com.liferay.calendar.constants,\
 	com.liferay.calendar.exception,\
@@ -15,7 +15,6 @@ Import-Package:\
 	!org.joda.*,\
 	\
 	*
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Calendar
 -exportcontents:\
 	com.google.ical.iter,\

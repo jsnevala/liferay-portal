@@ -17,8 +17,10 @@ package com.liferay.asset.tags.internal.exportimport.data.handler;
 import com.liferay.asset.kernel.exception.DuplicateTagException;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.asset.tags.internal.configuration.AssetTagsServiceConfigurationValues;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.exportimport.kernel.lar.PortletDataHandlerControl;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.lar.BaseStagedModelDataHandler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -28,6 +30,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.xml.Element;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
@@ -133,14 +136,24 @@ public class AssetTagStagedModelDataHandler
 		AssetTag existingAssetTag = fetchStagedModelByUuidAndGroupId(
 			assetTag.getUuid(), portletDataContext.getScopeGroupId());
 
+		Map<String, String[]> parameterMap =
+			portletDataContext.getParameterMap();
+
+		boolean hasMergeParameter = parameterMap.containsKey(
+			PortletDataHandlerControl.getNamespacedControlName(
+				AssetTagsPortletDataHandler.NAMESPACE, "merge-tags-by-name"));
+
 		if (portletDataContext.getBooleanParameter(
-				AssetTagsPortletDataHandler.NAMESPACE, "merge-tags-by-name")) {
+				AssetTagsPortletDataHandler.NAMESPACE, "merge-tags-by-name") ||
+			(!hasMergeParameter &&
+			 AssetTagsServiceConfigurationValues.STAGING_MERGE_TAGS_BY_NAME)) {
 
-			Optional<AssetTag> assetTagOptional = Optional.ofNullable(
+			existingAssetTag = Optional.ofNullable(
 				_assetTagLocalService.fetchTag(
-					portletDataContext.getScopeGroupId(), assetTag.getName()));
-
-			existingAssetTag = assetTagOptional.orElse(existingAssetTag);
+					portletDataContext.getScopeGroupId(), assetTag.getName())
+			).orElse(
+				existingAssetTag
+			);
 		}
 
 		AssetTag importedAssetTag = null;

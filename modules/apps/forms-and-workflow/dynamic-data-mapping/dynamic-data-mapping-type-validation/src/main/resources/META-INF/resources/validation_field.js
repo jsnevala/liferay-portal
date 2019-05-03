@@ -49,7 +49,7 @@ AUI.add(
 
 					value: {
 						setter: '_setValue',
-						valueFn: '_valueValidation'
+						valueFn: '_validationValueFn'
 					}
 				},
 
@@ -322,7 +322,7 @@ AUI.add(
 						instance.set('value', instance.getValue());
 					},
 
-					_valueValidation: function() {
+					_validationValueFn: function() {
 						var instance = this;
 
 						return {

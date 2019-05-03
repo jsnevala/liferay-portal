@@ -31,7 +31,7 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class ExportImportPortletPreferencesProcessorRegistryUtil {
 
@@ -80,15 +80,15 @@ public class ExportImportPortletPreferencesProcessorRegistryUtil {
 	private final BundleContext _bundleContext;
 	private final Map<String, ExportImportPortletPreferencesProcessor>
 		_exportImportPortletPreferencesProcessors = new ConcurrentHashMap<>();
-	private final
-		ServiceTracker
-			<ExportImportPortletPreferencesProcessor,
-				ExportImportPortletPreferencesProcessor> _serviceTracker;
+	private final ServiceTracker
+		<ExportImportPortletPreferencesProcessor,
+		 ExportImportPortletPreferencesProcessor> _serviceTracker;
 
-	private class ExportImportPortletPreferencesProcessorServiceTrackerCustomizer
-		implements ServiceTrackerCustomizer
-			<ExportImportPortletPreferencesProcessor,
-				ExportImportPortletPreferencesProcessor> {
+	private class
+		ExportImportPortletPreferencesProcessorServiceTrackerCustomizer
+			implements ServiceTrackerCustomizer
+				<ExportImportPortletPreferencesProcessor,
+				 ExportImportPortletPreferencesProcessor> {
 
 		@Override
 		public ExportImportPortletPreferencesProcessor addingService(

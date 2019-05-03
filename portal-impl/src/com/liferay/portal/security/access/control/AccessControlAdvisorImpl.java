@@ -77,8 +77,8 @@ public class AccessControlAdvisorImpl implements AccessControlAdvisor {
 	private final ServiceTracker<?, AccessControlPolicy> _serviceTracker;
 
 	private class AccessControlPolicyTrackerCustomizer
-		implements
-			ServiceTrackerCustomizer<AccessControlPolicy, AccessControlPolicy> {
+		implements ServiceTrackerCustomizer
+			<AccessControlPolicy, AccessControlPolicy> {
 
 		@Override
 		public AccessControlPolicy addingService(

@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Template Soy
 Bundle-SymbolicName: com.liferay.portal.template.soy
-Bundle-Version: 2.4.14
+Bundle-Version: 2.4.32
 Export-Package: com.liferay.portal.template.soy.utils
 Import-Package:\
 	!com.google.inject.internal.asm.util,\
@@ -10,5 +10,4 @@ Import-Package:\
 	!org.objectweb.asm.util,\
 	\
 	*
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Template Engines

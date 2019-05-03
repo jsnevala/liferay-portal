@@ -122,7 +122,7 @@ public class CalEventImporter {
 			_log.info("Importing CalEvent records");
 		}
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection()) {
+		try (Connection con = DataAccess.getConnection()) {
 			connection = con;
 
 			DBInspector dbInspector = new DBInspector(connection);
@@ -212,8 +212,8 @@ public class CalEventImporter {
 				calendarBookingId);
 
 		calendarBooking.setUuid(uuid);
-		calendarBooking.setCompanyId(companyId);
 		calendarBooking.setGroupId(groupId);
+		calendarBooking.setCompanyId(companyId);
 		calendarBooking.setUserId(userId);
 		calendarBooking.setUserName(userName);
 		calendarBooking.setCreateDate(createDate);
@@ -543,8 +543,8 @@ public class CalEventImporter {
 				continue;
 			}
 
-			actionIds = actionIds | getActionId(
-				oldResourceAction, newClassName);
+			actionIds =
+				actionIds | getActionId(oldResourceAction, newClassName);
 		}
 
 		return actionIds;
@@ -866,8 +866,8 @@ public class CalEventImporter {
 			sb.append("repeating, recurrence, remindBy, firstReminder, ");
 			sb.append("secondReminder from CalEvent where eventId = ?");
 
-			try (PreparedStatement ps =
-					connection.prepareStatement(sb.toString())) {
+			try (PreparedStatement ps = connection.prepareStatement(
+					sb.toString())) {
 
 				ps.setLong(1, calEventId);
 
@@ -1000,8 +1000,8 @@ public class CalEventImporter {
 			sb.append("repeating, recurrence, remindBy, firstReminder, ");
 			sb.append("secondReminder from CalEvent");
 
-			try (PreparedStatement ps =
-					connection.prepareStatement(sb.toString())) {
+			try (PreparedStatement ps = connection.prepareStatement(
+					sb.toString())) {
 
 				ResultSet rs = ps.executeQuery();
 
@@ -1095,7 +1095,7 @@ public class CalEventImporter {
 			mbMessage.getRootMessageId(), mbMessage.getParentMessageId(),
 			mbMessage.getSubject(), mbMessage.getBody(), mbMessage.getFormat(),
 			mbMessage.isAnonymous(), mbMessage.getPriority(),
-			mbMessage.getAllowPingbacks(), mbMessage.isAnswer(),
+			mbMessage.isAllowPingbacks(), mbMessage.isAnswer(),
 			mbMessage.getStatus(), mbMessage.getStatusByUserId(),
 			mbMessage.getStatusByUserName(), mbMessage.getStatusDate(),
 			mbMessageIds);

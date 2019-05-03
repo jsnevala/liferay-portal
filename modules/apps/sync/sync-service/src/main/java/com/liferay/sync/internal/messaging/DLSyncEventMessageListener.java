@@ -51,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"destination.name=" + DestinationNames.DOCUMENT_LIBRARY_SYNC_EVENT_PROCESSOR},
+	property = "destination.name=" + DestinationNames.DOCUMENT_LIBRARY_SYNC_EVENT_PROCESSOR,
 	service = MessageListener.class
 )
 public class DLSyncEventMessageListener extends BaseMessageListener {
@@ -130,6 +130,7 @@ public class DLSyncEventMessageListener extends BaseMessageListener {
 
 			setUser(syncDLObject);
 
+			syncDLObject.setModifiedTime(System.currentTimeMillis());
 			syncDLObject.setEvent(event);
 			syncDLObject.setType(type);
 			syncDLObject.setTypePK(typePK);
@@ -159,6 +160,8 @@ public class DLSyncEventMessageListener extends BaseMessageListener {
 			syncDLObject = _syncUtil.toSyncDLObject(
 				dlFileEntry, event, calculateChecksum);
 
+			syncDLObject.setModifiedTime(modifiedTime);
+
 			if (checksum != null) {
 				syncDLObject.setChecksum(checksum);
 			}
@@ -178,9 +181,9 @@ public class DLSyncEventMessageListener extends BaseMessageListener {
 			}
 
 			syncDLObject = _syncUtil.toSyncDLObject(dlFolder, event);
-		}
 
-		syncDLObject.setModifiedTime(modifiedTime);
+			syncDLObject.setModifiedTime(modifiedTime);
+		}
 
 		_syncUtil.addSyncDLObject(syncDLObject);
 	}

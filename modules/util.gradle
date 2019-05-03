@@ -7,6 +7,8 @@ import com.liferay.gradle.util.StringUtil
 
 import java.util.regex.Matcher
 
+import org.gradle.util.GUtil
+
 buildscript {
 	apply from: file("build-buildscript.gradle"), to: buildscript
 }
@@ -134,14 +136,14 @@ repositories {
 	}
 
 	maven {
-		url System.properties["repository.url"] ?: "https://cdn.lfrs.sl/repository.liferay.com/nexus/content/groups/public"
+		url System.properties["repository.url"] ?: "https://repository-cdn.liferay.com/nexus/content/groups/public"
 	}
 }
 
 wrapper {
 	File wrapperDir = projectDir.parentFile
 
-	distributionUrl = "../../tools/gradle-${gradle.gradleVersion}.LIFERAY-PATCHED-1-bin.zip"
+	distributionUrl = "../../tools/gradle-${gradle.gradleVersion}.LIFERAY-PATCHED-3-bin.zip"
 	dependsOn wrapperSubrepo
 
 	doLast {
@@ -188,6 +190,30 @@ set DEFAULT_JVM_OPTS=%DEFAULT_JVM_OPTS% "-Dgradle.user.home=%APP_HOME%\\.gradle"
 
 wrapperSubrepo {
 	File wrapperDir = new File(projectDir.parentFile, "tools/subrepo")
+
+	doLast {
+		File gradlewFile = new File(wrapperDir, "gradlew")
+
+		ant.replace(
+			failOnNoReplacements: true,
+			file: gradlewFile,
+			token: '# Escape application args',
+			value: '''\
+# Escape application args
+DEFAULT_JVM_OPTS="$DEFAULT_JVM_OPTS \\\"-Dgradle.user.home=$APP_HOME/.gradle\\\""'''
+		)
+
+		File gradlewBatFile = new File(wrapperDir, "gradlew.bat")
+
+		ant.replace(
+			failOnNoReplacements: true,
+			file: gradlewBatFile,
+			token: '@rem Setup the command line',
+			value: '''\
+@rem Setup the command line
+set DEFAULT_JVM_OPTS=%DEFAULT_JVM_OPTS% "-Dgradle.user.home=%APP_HOME%\\.gradle"'''
+		)
+	}
 
 	jarFile = new File(wrapperDir, "gradle/wrapper/gradle-wrapper.jar")
 	scriptFile = new File(wrapperDir, "gradlew")
@@ -263,8 +289,18 @@ private void _createSetUpPortalToolTasks() {
 				dependencyNotation
 			}
 
+			if (ivyXmlFile.parentFile.name != "sdk") {
+				doFirst {
+					delete destinationDir
+				}
+			}
+
 			inputFile = ivyXmlFile
 			into new File(portalToolDir, "lib")
+
+			outputs.upToDateWhen {
+				false
+			}
 		}
 
 		setUpPortalTools.dependsOn copyIvyDependenciesTask

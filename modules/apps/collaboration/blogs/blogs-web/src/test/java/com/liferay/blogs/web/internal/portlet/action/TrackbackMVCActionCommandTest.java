@@ -21,15 +21,16 @@ import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Function;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.blogs.trackback.Trackback;
+
+import java.util.Collections;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -285,7 +286,7 @@ public class TrackbackMVCActionCommandTest extends PowerMockito {
 	}
 
 	protected void setUpPropsUtil() throws Exception {
-		PropsUtil.setProps(mock(Props.class));
+		PropsTestUtil.setProps(Collections.emptyMap());
 	}
 
 	protected void whenGetEntryThenThrow(Throwable toBeThrown)

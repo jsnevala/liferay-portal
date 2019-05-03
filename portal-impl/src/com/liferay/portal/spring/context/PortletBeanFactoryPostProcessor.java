@@ -64,9 +64,7 @@ public class PortletBeanFactoryPostProcessor
 						configurableListableBeanFactory);
 				}
 
-				if (beanPostProcessor instanceof
-						AbstractAutoProxyCreator) {
-
+				if (beanPostProcessor instanceof AbstractAutoProxyCreator) {
 					AbstractAutoProxyCreator abstractAutoProxyCreator =
 						(AbstractAutoProxyCreator)beanPostProcessor;
 

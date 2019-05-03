@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
  * subscribers. The scheduled task uses the <code>check.interval</code> property
  * to define the execution interval (in hours).
  *
- * @author Roberto Diaz
+ * @author Roberto Díaz
  * @author Sergio González
  */
 @Component(immediate = true, service = CheckAssetEntryMessageListener.class)

@@ -154,6 +154,7 @@
 	.edit-entry {
 		.alloy-editor-placeholder:before {
 			display: block;
+			padding-right: 12px;
 			text-align: inherit;
 			width: 100%;
 		}
@@ -190,18 +191,6 @@
 
 	.entry-content {
 		margin-bottom: 60px;
-
-		h4 {
-			margin-top: 0;
-
-			a {
-				color: inherit;
-
-				&:hover {
-					text-decoration: none;
-				}
-			}
-		}
 	}
 
 	.entry-metadata {

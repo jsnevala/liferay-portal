@@ -30,7 +30,7 @@ public class ExportImportProcessCallbackRegistryImpl
 	implements ExportImportProcessCallbackRegistry {
 
 	/**
-	 * @deprecated As of 3.6.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override

@@ -178,7 +178,7 @@ boolean showSearch = (categoriesAndItemsCount > 0);
 						</h6>
 
 						<h5>
-							<aui:a href="<%= rowURL != null ? rowURL.toString() : null %>">
+							<aui:a href="<%= (rowURL != null) ? rowURL.toString() : null %>">
 								<%= HtmlUtil.escape(curItem.getName()) %>
 							</aui:a>
 						</h5>
@@ -198,6 +198,7 @@ boolean showSearch = (categoriesAndItemsCount > 0);
 
 						while (enu.hasMoreElements()) {
 							String propsKey = (String)enu.nextElement();
+
 							String propsValue = props.getProperty(propsKey, StringPool.BLANK);
 
 							sb.append("<br />");
@@ -260,7 +261,7 @@ boolean showSearch = (categoriesAndItemsCount > 0);
 						</h6>
 
 						<h5>
-							<aui:a href="<%= rowURL != null ? rowURL.toString() : null %>">
+							<aui:a href="<%= (rowURL != null) ? rowURL.toString() : null %>">
 								<%= curCategory.getName() %>
 							</aui:a>
 						</h5>
@@ -282,6 +283,7 @@ boolean showSearch = (categoriesAndItemsCount > 0);
 
 						<h6 class="text-default">
 							<liferay-ui:message key="categories" />: <span><%= subcategoriesCount %></span>
+
 							<liferay-ui:message key="items" />: <span><%= subitemsCount %></span>
 						</h6>
 					</liferay-ui:search-container-column-text>

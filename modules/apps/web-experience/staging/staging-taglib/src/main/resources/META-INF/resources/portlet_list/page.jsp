@@ -88,14 +88,14 @@
 			<liferay-util:buffer
 				var="badgeHTML"
 			>
-				<span class="badge badge-info"><%= exportModelCount > 0 ? exportModelCount : StringPool.BLANK %></span>
+				<span class="badge badge-info"><%= (exportModelCount > 0) ? exportModelCount : StringPool.BLANK %></span>
 
-				<span class="badge badge-warning deletions"><%= modelDeletionCount > 0 ? (modelDeletionCount + StringPool.SPACE + LanguageUtil.get(request, "deletions")) : StringPool.BLANK %></span>
+				<span class="badge badge-warning deletions"><%= (modelDeletionCount > 0) ? (modelDeletionCount + StringPool.SPACE + LanguageUtil.get(request, "deletions")) : StringPool.BLANK %></span>
 			</liferay-util:buffer>
 
 			<aui:input checked="<%= showPortletDataInput %>" disabled="<%= disableInputs %>" label="<%= portletTitle + badgeHTML %>" name="<%= PortletDataHandlerKeys.PORTLET_DATA + StringPool.UNDERLINE + portlet.getPortletId() %>" type="checkbox" />
 
-			<div class="<%= disableInputs && showPortletDataInput ? StringPool.BLANK : "hide " %>" id="<portlet:namespace />content_<%= portlet.getPortletId() %>">
+			<div class="<%= (disableInputs && showPortletDataInput) ? StringPool.BLANK : "hide " %>" id="<portlet:namespace />content_<%= portlet.getPortletId() %>">
 				<ul class="lfr-tree list-unstyled">
 					<li class="tree-item">
 						<aui:fieldset cssClass="portlet-type-data-section" label="<%= portletTitle %>">

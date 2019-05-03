@@ -231,8 +231,8 @@ public abstract class BaseOrganizationMembershipPolicy
 					userGroupRoleActionableDynamicQuery.setGroupId(
 						organization.getGroupId());
 					userGroupRoleActionableDynamicQuery.setPerformActionMethod(
-						new ActionableDynamicQuery.
-							PerformActionMethod<UserGroupRole>() {
+						new ActionableDynamicQuery.PerformActionMethod
+							<UserGroupRole>() {
 
 							@Override
 							public void performAction(

@@ -96,7 +96,9 @@ public class WabURLConnectionTest {
 		URL url = new URL(
 			"webbundle:/path/to/foo?Web-ContextPath=foo&protocol=file");
 
-		new WabURLConnection(null, null, url).getInputStream();
+		new WabURLConnection(
+			null, null, url
+		).getInputStream();
 	}
 
 	@Test(expected = UnknownServiceException.class)
@@ -107,14 +109,18 @@ public class WabURLConnectionTest {
 
 		URL url = new URL("webbundle:" + uriString + "?Web-ContextPath=foo");
 
-		new WabURLConnection(null, null, url).getInputStream();
+		new WabURLConnection(
+			null, null, url
+		).getInputStream();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testWabURLConnectionRequiredParamsMissing() throws Exception {
 		URL url = new URL("webbundle:/path/to/foo?Web-ContextPath=foo");
 
-		new WabURLConnection(null, null, url).getInputStream();
+		new WabURLConnection(
+			null, null, url
+		).getInputStream();
 	}
 
 	private String _getURIString(String fileName) throws URISyntaxException {

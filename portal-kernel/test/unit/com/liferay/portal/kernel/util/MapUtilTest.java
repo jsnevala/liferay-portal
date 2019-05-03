@@ -31,7 +31,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Sampsa Sohlman
  * @author Manuel de la Peña
- * @author Peter Borkuti
+ * @author Péter Borkuti
  */
 @RunWith(Enclosed.class)
 public class MapUtilTest {
@@ -440,7 +440,9 @@ public class MapUtilTest {
 
 					@Override
 					public boolean filter(Map.Entry<?, Number> entry) {
-						if ((entry.getValue().intValue() % 2) == 0) {
+						Number number = entry.getValue();
+
+						if ((number.intValue() % 2) == 0) {
 							return true;
 						}
 

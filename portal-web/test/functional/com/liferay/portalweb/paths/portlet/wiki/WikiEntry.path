@@ -24,11 +24,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>BODY_ASSET</td>
-	<td>//div[@class='portlet-body']/p[contains(.,'${key_wikiPageContent}')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>BODY_BOLD_TEXT</td>
 	<td>//div[@class='wiki-body']/b</td>
 	<td></td>
@@ -51,11 +46,6 @@
 <tr>
 	<td>BODY_LINK</td>
 	<td>//div[@class='wiki-body']//a</td>
-	<td></td>
-</tr>
-<tr>
-	<td>HEADER_TITLE</td>
-	<td>//h3[@class='header-title']/span</td>
 	<td></td>
 </tr>
 </tbody>

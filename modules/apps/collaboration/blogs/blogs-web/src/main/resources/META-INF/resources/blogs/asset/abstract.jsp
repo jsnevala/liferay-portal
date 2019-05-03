@@ -39,11 +39,11 @@ String coverImageURL = entry.getCoverImageURL(themeDisplay);
 </c:if>
 
 <div class="portlet-blogs">
-	<div class="entry-body">
+	<div class="entry-body" data-analytics-asset-id="<%= String.valueOf(entry.getEntryId()) %>" data-analytics-asset-title="<%= HtmlUtil.escapeAttribute(entry.getTitle()) %>" data-analytics-asset-type="blog">
 		<c:if test="<%= Validator.isNotNull(coverImageURL) %>">
 			<div class="cover-image-container" style="background-image: url(<%= coverImageURL %>)"></div>
 		</c:if>
 
-		<%= assetRenderer.getSummary(renderRequest, renderResponse) %>
+		<%= HtmlUtil.stripHtml(assetRenderer.getSummary(renderRequest, renderResponse)) %>
 	</div>
 </div>

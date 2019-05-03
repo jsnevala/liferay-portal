@@ -52,7 +52,7 @@
 			width: 100%;
 
 			@include respond-to(phone) {
-				float: none;
+				float: left;
 				margin-top: 20px;
 			}
 
@@ -68,7 +68,6 @@
 				> a {
 					line-height: 20px;
 					padding: 11px 19px;
-					width: 50%;
 				}
 			}
 		}

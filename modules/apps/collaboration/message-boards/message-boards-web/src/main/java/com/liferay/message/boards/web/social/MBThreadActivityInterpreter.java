@@ -23,7 +23,6 @@ import com.liferay.message.boards.web.constants.MBPortletKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -36,12 +35,14 @@ import com.liferay.social.kernel.model.SocialActivityInterpreter;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Zsolt Berentey
  */
 @Component(
-	property = {"javax.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS},
+	property = "javax.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS,
 	service = SocialActivityInterpreter.class
 )
 public class MBThreadActivityInterpreter extends BaseSocialActivityInterpreter {
@@ -99,6 +100,12 @@ public class MBThreadActivityInterpreter extends BaseSocialActivityInterpreter {
 
 	@Override
 	protected ResourceBundleLoader getResourceBundleLoader() {
+		if (_resourceBundleLoader == null) {
+			return ResourceBundleLoaderUtil.
+				getResourceBundleLoaderByBundleSymbolicName(
+					"com.liferay.message.boards.web");
+		}
+
 		return _resourceBundleLoader;
 	}
 
@@ -108,6 +115,7 @@ public class MBThreadActivityInterpreter extends BaseSocialActivityInterpreter {
 		ServiceContext serviceContext) {
 
 		String userName = getUserName(activity.getUserId(), serviceContext);
+
 		String receiverUserName = StringPool.BLANK;
 
 		if (activity.getReceiverUserId() > 0) {
@@ -174,22 +182,22 @@ public class MBThreadActivityInterpreter extends BaseSocialActivityInterpreter {
 		_mbThreadLocalService = mbThreadLocalService;
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.message.boards.web)",
-		unbind = "-"
-	)
 	protected void setResourceBundleLoader(
 		ResourceBundleLoader resourceBundleLoader) {
 
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
+		_resourceBundleLoader = resourceBundleLoader;
 	}
 
 	private static final String[] _CLASS_NAMES = {MBThread.class.getName()};
 
 	private MBMessageLocalService _mbMessageLocalService;
 	private MBThreadLocalService _mbThreadLocalService;
-	private ResourceBundleLoader _resourceBundleLoader;
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY,
+		target = "(bundle.symbolic.name=com.liferay.message.boards.web)"
+	)
+	private volatile ResourceBundleLoader _resourceBundleLoader;
 
 }

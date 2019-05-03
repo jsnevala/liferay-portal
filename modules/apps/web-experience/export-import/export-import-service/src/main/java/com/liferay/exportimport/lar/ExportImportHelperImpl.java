@@ -103,6 +103,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.portlet.PortletPreferences;
@@ -118,7 +119,7 @@ import org.xml.sax.XMLReader;
  * @author Zsolt Berentey
  * @author Levente Hudák
  * @author Julio Camarero
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true)
 public class ExportImportHelperImpl implements ExportImportHelper {
@@ -148,7 +149,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, moved to {@link
+	 * @deprecated As of Wilberforce (7.0.x), moved to {@link
 	 *             ExportImportDateUtil#getCalendar(PortletRequest, String,
 	 *             boolean)}
 	 */
@@ -212,11 +213,11 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 			dataSiteLevelPortlets.addAll(rankedPortlets);
 		}
 
-		return dataSiteLevelPortlets;
+		return _filterPortletsBySharedDataHandlers(dataSiteLevelPortlets);
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, moved to {@link
+	 * @deprecated As of Wilberforce (7.0.x), moved to {@link
 	 *             ExportImportDateUtil#getDateRange(PortletRequest, long,
 	 *             boolean, long, String, String)}
 	 */
@@ -233,7 +234,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -258,7 +259,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getExportPortletControlsMap(long, String, Map)}
 	 */
 	@Deprecated
@@ -273,7 +274,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getExportPortletControlsMap(long, String, Map, String)}
 	 */
 	@Deprecated
@@ -329,7 +330,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getImportPortletControlsMap(long, String, Map, Element,
 	 *             ManifestSummary)}
 	 */
@@ -345,7 +346,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getImportPortletControlsMap(long, String, Map, Element,
 	 *             ManifestSummary)}
 	 */
@@ -452,19 +453,30 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 
 		List<Layout> layouts = new ArrayList<>();
 
-		for (Map.Entry<Long, Boolean> entry : layoutIdMap.entrySet()) {
+		Set<Map.Entry<Long, Boolean>> entrySet = layoutIdMap.entrySet();
+
+		for (Map.Entry<Long, Boolean> entry : entrySet) {
 			long plid = GetterUtil.getLong(String.valueOf(entry.getKey()));
 
-			Layout layout = new LayoutImpl();
+			Layout layout = getLayoutOrCreateDummyRootLayout(plid);
 
-			if (plid == 0) {
-				layout.setPlid(LayoutConstants.DEFAULT_PLID);
-				layout.setLayoutId(LayoutConstants.DEFAULT_PLID);
-				layout.setParentLayoutId(
-					LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+			try {
+				layout = getLayoutOrCreateDummyRootLayout(plid);
 			}
-			else {
-				layout = _layoutLocalService.getLayout(plid);
+			catch (NoSuchLayoutException nsle) {
+				if (_log.isWarnEnabled()) {
+					_log.warn("Unable to publish deleted layout " + plid);
+				}
+
+				// See LPS-36174
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(nsle, nsle);
+				}
+
+				entrySet.remove(plid);
+
+				continue;
 			}
 
 			if (!layouts.contains(layout)) {
@@ -519,6 +531,24 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	@Override
+	public Layout getLayoutOrCreateDummyRootLayout(long plid)
+		throws PortalException {
+
+		Layout layout = new LayoutImpl();
+
+		if (plid == 0) {
+			layout.setPlid(LayoutConstants.DEFAULT_PLID);
+			layout.setLayoutId(LayoutConstants.DEFAULT_PLID);
+			layout.setParentLayoutId(LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+		}
+		else {
+			layout = _layoutLocalService.getLayout(plid);
+		}
+
+		return layout;
+	}
+
+	@Override
 	public ZipWriter getLayoutSetZipWriter(long groupId) {
 		StringBundler sb = new StringBundler(4);
 
@@ -531,7 +561,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getManifestSummary(PortletDataContext)}
 	 */
 	@Deprecated
@@ -851,7 +881,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceExportContentReferences(
 	 *             PortletDataContext, StagedModel, String, boolean, boolean)}
 	 */
@@ -867,7 +897,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceExportContentReferences(
 	 *             PortletDataContext, StagedModel, String, boolean, boolean)}
 	 */
@@ -883,7 +913,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceExportContentReferences(
 	 *             PortletDataContext, StagedModel, String, boolean, boolean)}
 	 */
@@ -899,7 +929,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -913,7 +943,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -927,7 +957,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -939,7 +969,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -952,7 +982,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -966,7 +996,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -979,7 +1009,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceImportContentReferences(
 	 *             PortletDataContext, StagedModel, String)}
 	 */
@@ -994,7 +1024,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceImportContentReferences(
 	 *             PortletDataContext, StagedModel, String)}
 	 */
@@ -1009,7 +1039,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1022,7 +1052,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1035,7 +1065,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1047,7 +1077,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1060,7 +1090,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1072,7 +1102,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1085,7 +1115,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, see {@link
+	 * @deprecated As of Wilberforce (7.0.x), see {@link
 	 *             DefaultConfigurationPortletDataHandler#updateExportPortletPreferencesClassPKs(
 	 *             PortletDataContext, Portlet, PortletPreferences, String,
 	 *             String)}
@@ -1099,7 +1129,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #updateExportPortletPreferencesClassPKs(PortletDataContext,
 	 *             Portlet, PortletPreferences, String, String)}
 	 */
@@ -1116,7 +1146,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, see {@link
+	 * @deprecated As of Wilberforce (7.0.x), see {@link
 	 *             DefaultConfigurationPortletDataHandler#updateImportPortletPreferencesClassPKs(
 	 *             PortletDataContext, PortletPreferences, String, Class, long)}
 	 */
@@ -1130,7 +1160,7 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #validateMissingReferences(PortletDataContext)}
 	 */
 	@Deprecated
@@ -1647,6 +1677,12 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 	protected MissingReference validateMissingReference(
 		PortletDataContext portletDataContext, Element element) {
 
+		// Missing reference is exported after added as missing
+
+		if (Validator.isNotNull(element.attributeValue("element-path"))) {
+			return null;
+		}
+
 		String className = element.attributeValue("class-name");
 
 		StagedModelDataHandler<?> stagedModelDataHandler =
@@ -1672,6 +1708,54 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 		}
 
 		return null;
+	}
+
+	private List<Portlet> _filterPortletsBySharedDataHandlers(
+		List<Portlet> portlets) {
+
+		Map<PortletDataHandler, Portlet> portletDataHandlersMap =
+			new HashMap<>();
+
+		for (Portlet portlet : portlets) {
+			PortletDataHandler portletDataHandler =
+				portlet.getPortletDataHandlerInstance();
+
+			if (portletDataHandlersMap.containsKey(portletDataHandler)) {
+				Portlet otherPortlet = portletDataHandlersMap.get(
+					portletDataHandler);
+
+				if (!_isAdminPortlet(otherPortlet) &&
+					_isAdminPortlet(portlet)) {
+
+					portletDataHandlersMap.put(portletDataHandler, portlet);
+				}
+			}
+			else {
+				portletDataHandlersMap.put(portletDataHandler, portlet);
+			}
+		}
+
+		List<Portlet> filteredPortlets = new ArrayList<>();
+
+		for (Portlet portlet : portlets) {
+			PortletDataHandler portletDataHandler =
+				portlet.getPortletDataHandlerInstance();
+
+			Portlet preferredPortlet = portletDataHandlersMap.get(
+				portletDataHandler);
+
+			if (preferredPortlet.equals(portlet)) {
+				filteredPortlets.add(portlet);
+			}
+		}
+
+		return filteredPortlets;
+	}
+
+	private boolean _isAdminPortlet(Portlet portlet) {
+		String portletId = portlet.getPortletId();
+
+		return portletId.contains("AdminPortlet");
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

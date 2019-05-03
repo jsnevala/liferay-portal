@@ -49,11 +49,10 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"model.class.name=com.liferay.dynamic.data.lists.model.DDLRecord"
-	},
-	service =
-		{DDLRecordStagedModelRepository.class, StagedModelRepository.class}
+	property = "model.class.name=com.liferay.dynamic.data.lists.model.DDLRecord",
+	service = {
+		DDLRecordStagedModelRepository.class, StagedModelRepository.class
+	}
 )
 public class DDLRecordStagedModelRepository
 	extends BaseStagedModelRepository<DDLRecord> {
@@ -98,10 +97,10 @@ public class DDLRecordStagedModelRepository
 			String uuid, long groupId, String className, String extraData)
 		throws PortalException {
 
-		DDLRecord ddlRrecord = fetchStagedModelByUuidAndGroupId(uuid, groupId);
+		DDLRecord ddlRecord = fetchStagedModelByUuidAndGroupId(uuid, groupId);
 
-		if (ddlRrecord != null) {
-			deleteStagedModel(ddlRrecord);
+		if (ddlRecord != null) {
+			deleteStagedModel(ddlRecord);
 		}
 	}
 

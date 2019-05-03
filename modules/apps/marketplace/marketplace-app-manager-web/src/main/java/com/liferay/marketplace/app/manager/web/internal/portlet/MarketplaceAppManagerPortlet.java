@@ -98,14 +98,14 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.render-weight=50",
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.description=", "javax.portlet.display-name=App Manager",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + MarketplaceAppManagerPortletKeys.MARKETPLACE_APP_MANAGER,
 		"javax.portlet.resource-bundle=content.Language",
 		"javax.portlet.security-role-ref=administrator,guest,power-user,user",
 		"javax.portlet.supports.mime-type=text/html"
 	},
-	service = {javax.portlet.Portlet.class}
+	service = javax.portlet.Portlet.class
 )
 public class MarketplaceAppManagerPortlet extends MVCPortlet {
 

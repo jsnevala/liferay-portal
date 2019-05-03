@@ -41,9 +41,7 @@ public class PluginsAdminWebUpgrade implements UpgradeStepRegistrator {
 				@Override
 				protected String[][] getRenamePortletIdsArray() {
 					return new String[][] {
-						new String[] {
-							"132", PluginsAdminPortletKeys.PLUGINS_ADMIN
-						}
+						{"132", PluginsAdminPortletKeys.PLUGINS_ADMIN}
 					};
 				}
 

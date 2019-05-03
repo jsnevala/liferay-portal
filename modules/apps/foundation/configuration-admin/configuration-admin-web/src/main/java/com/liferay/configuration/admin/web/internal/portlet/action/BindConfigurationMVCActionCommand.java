@@ -38,7 +38,14 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
 
+import java.io.File;
 import java.io.IOException;
+
+import java.net.URI;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -219,18 +226,46 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 
 				String factoryPid = pid.substring(index + 1);
 
-				StringBundler sb = new StringBundler(7);
+				StringBundler sb = new StringBundler(4);
 
-				sb.append("file:");
-				sb.append(PropsValues.MODULE_FRAMEWORK_CONFIGS_DIR);
-				sb.append(StringPool.SLASH);
 				sb.append(configuration.getFactoryPid());
 				sb.append(StringPool.DASH);
 				sb.append(factoryPid);
 				sb.append(".config");
 
-				configuredProperties.put(
-					"felix.fileinstall.filename", sb.toString());
+				File file = new File(
+					PropsValues.MODULE_FRAMEWORK_CONFIGS_DIR, sb.toString());
+
+				file = file.getAbsoluteFile();
+
+				URI uri = file.toURI();
+
+				String fileName = uri.toString();
+
+				String oldFileName = (String)configuredProperties.put(
+					"felix.fileinstall.filename", fileName);
+
+				if ((oldFileName != null) && !oldFileName.equals(fileName)) {
+					try {
+						Path oldFilePath = Paths.get(new URI(oldFileName));
+
+						Files.deleteIfExists(oldFilePath);
+
+						if (_log.isInfoEnabled()) {
+							_log.info(
+								"Delete inconsistent factory configuration " +
+									oldFileName);
+						}
+					}
+					catch (Exception e) {
+						if (_log.isWarnEnabled()) {
+							_log.warn(
+								"Unable to delete inconsistent factory " +
+									"configuration " + oldFileName,
+								e);
+						}
+					}
+				}
 			}
 
 			configuration.update(configuredProperties);

@@ -215,6 +215,22 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 
 	@Override
 	public List<AssetEntry> getEntries(
+		long[] groupIds, long[] classNameIds, long[] classTypeIds,
+		String keywords, String userName, String title, String description,
+		Boolean listable, boolean advancedSearch, boolean andOperator,
+		int start, int end, String orderByCol1, String orderByCol2,
+		String orderByType1, String orderByType2) {
+
+		AssetEntryQuery assetEntryQuery = getAssetEntryQuery(
+			groupIds, classNameIds, classTypeIds, keywords, userName, title,
+			description, listable, advancedSearch, andOperator, start, end,
+			orderByCol1, orderByCol2, orderByType1, orderByType2);
+
+		return getEntries(assetEntryQuery);
+	}
+
+	@Override
+	public List<AssetEntry> getEntries(
 		long[] groupIds, long[] classNameIds, String keywords, String userName,
 		String title, String description, Boolean listable,
 		boolean advancedSearch, boolean andOperator, int start, int end,
@@ -812,10 +828,10 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #updateEntry(long, long,
-	 *             Date, Date, String, long, String, long, long[], String[],
-	 *             boolean, boolean, Date, Date, Date, Date, String, String,
-	 *             String, String, String, String, int, int, Double)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #updateEntry(long,
+	 *             long, Date, Date, String, long, String, long, long[],
+	 *             String[], boolean, boolean, Date, Date, Date, Date, String,
+	 *             String, String, String, String, String, int, int, Double)}
 	 */
 	@Deprecated
 	@Override
@@ -837,10 +853,11 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #updateEntry(long, long,
-	 *             Date, Date, String, long, String, long, long[], String[],
-	 *             boolean, boolean, Date, Date, Date, Date, String, String,
-	 *             String, String, String, String, int, int, Double)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateEntry(long, long, Date, Date, String, long, String,
+	 *             long, long[], String[], boolean, boolean, Date, Date, Date,
+	 *             Date, String, String, String, String, String, String, int,
+	 *             int, Double)}
 	 */
 	@Deprecated
 	@Override
@@ -899,8 +916,8 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #updateEntry(String, long,
-	 *             Date, Date, boolean, boolean)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateEntry(String, long, Date, Date, boolean, boolean)}
 	 */
 	@Deprecated
 	@Override
@@ -913,8 +930,8 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #updateEntry(String, long,
-	 *             Date, Date, boolean, boolean)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateEntry(String, long, Date, Date, boolean, boolean)}
 	 */
 	@Deprecated
 	@Override
@@ -938,9 +955,9 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		AssetEntry entry = assetEntryPersistence.findByC_C(
 			classNameId, classPK);
 
-		entry.setExpirationDate(expirationDate);
 		entry.setListable(listable);
 		entry.setPublishDate(publishDate);
+		entry.setExpirationDate(expirationDate);
 
 		return updateVisible(entry, visible);
 	}
@@ -1032,8 +1049,8 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #validate(long, String, long,
-	 *             long, long[], String[])}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #validate(long,
+	 *             String, long, long, long[], String[])}
 	 */
 	@Deprecated
 	@Override
@@ -1046,8 +1063,8 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #validate(long, String, long,
-	 *             long[], String[])}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #validate(long,
+	 *             String, long, long[], String[])}
 	 */
 	@Deprecated
 	@Override
@@ -1084,14 +1101,15 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 			StringUtil.split(assetCategoryIds, 0L));
 		searchContext.setAssetTagNames(StringUtil.split(assetTagNames));
 		searchContext.setAttribute("paginationType", "regular");
+
+		if (showNonindexable) {
+			searchContext.setAttribute("showNonindexable", Boolean.TRUE);
+		}
+
 		searchContext.setAttribute("status", statuses);
 
 		if (classTypeId > 0) {
 			searchContext.setClassTypeIds(new long[] {classTypeId});
-		}
-
-		if (showNonindexable) {
-			searchContext.setAttribute("showNonindexable", Boolean.TRUE);
 		}
 
 		searchContext.setCompanyId(companyId);
@@ -1209,13 +1227,28 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	}
 
 	protected AssetEntryQuery getAssetEntryQuery(
-		long[] groupIds, long[] classNameIds, String keywords, String userName,
-		String title, String description, Boolean listable,
-		boolean advancedSearch, boolean andOperator, int start, int end,
-		String orderByCol1, String orderByCol2, String orderByType1,
-		String orderByType2) {
+		long[] groupIds, long[] classNameIds, long[] classTypeIds,
+		String keywords, String userName, String title, String description,
+		Boolean listable, boolean advancedSearch, boolean andOperator,
+		int start, int end, String orderByCol1, String orderByCol2,
+		String orderByType1, String orderByType2) {
 
 		AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
+
+		assetEntryQuery.setClassNameIds(classNameIds);
+
+		if (ArrayUtil.isNotEmpty(classTypeIds)) {
+			assetEntryQuery.setClassTypeIds(classTypeIds);
+		}
+
+		assetEntryQuery.setEnd(end);
+		assetEntryQuery.setGroupIds(groupIds);
+		assetEntryQuery.setListable(listable);
+		assetEntryQuery.setOrderByCol1(orderByCol1);
+		assetEntryQuery.setOrderByCol2(orderByCol2);
+		assetEntryQuery.setOrderByType1(orderByType1);
+		assetEntryQuery.setOrderByType2(orderByType2);
+		assetEntryQuery.setStart(start);
 
 		if (advancedSearch) {
 			assetEntryQuery.setAndOperator(andOperator);
@@ -1227,17 +1260,20 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 			assetEntryQuery.setKeywords(keywords);
 		}
 
-		assetEntryQuery.setClassNameIds(classNameIds);
-		assetEntryQuery.setEnd(end);
-		assetEntryQuery.setGroupIds(groupIds);
-		assetEntryQuery.setListable(listable);
-		assetEntryQuery.setOrderByCol1(orderByCol1);
-		assetEntryQuery.setOrderByCol2(orderByCol2);
-		assetEntryQuery.setOrderByType1(orderByType1);
-		assetEntryQuery.setOrderByType2(orderByType2);
-		assetEntryQuery.setStart(start);
-
 		return assetEntryQuery;
+	}
+
+	protected AssetEntryQuery getAssetEntryQuery(
+		long[] groupIds, long[] classNameIds, String keywords, String userName,
+		String title, String description, Boolean listable,
+		boolean advancedSearch, boolean andOperator, int start, int end,
+		String orderByCol1, String orderByCol2, String orderByType1,
+		String orderByType2) {
+
+		return getAssetEntryQuery(
+			groupIds, classNameIds, new long[0], keywords, userName, title,
+			description, listable, advancedSearch, andOperator, start, end,
+			orderByCol1, orderByCol2, orderByType1, orderByType2);
 	}
 
 	protected long[] getClassNameIds(long companyId, String className) {
@@ -1334,8 +1370,8 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	}
 
 	private final ServiceTrackerMap
-		<String, List<AssetEntryValidatorExclusionRule>>
-			_serviceTrackerMap = ServiceTrackerCollections.openMultiValueMap(
+		<String, List<AssetEntryValidatorExclusionRule>> _serviceTrackerMap =
+			ServiceTrackerCollections.openMultiValueMap(
 				AssetEntryValidatorExclusionRule.class, "model.class.name");
 
 }

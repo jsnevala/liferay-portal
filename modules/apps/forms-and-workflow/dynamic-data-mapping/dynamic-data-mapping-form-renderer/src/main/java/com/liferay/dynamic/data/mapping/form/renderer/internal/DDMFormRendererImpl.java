@@ -18,11 +18,13 @@ import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderer;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingException;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormTemplateContextFactory;
+import com.liferay.dynamic.data.mapping.form.renderer.internal.servlet.taglib.DDMFormFieldTypesDynamicInclude;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
+import com.liferay.portal.kernel.servlet.taglib.DynamicIncludeUtil;
 import com.liferay.portal.kernel.template.Template;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.template.TemplateException;
@@ -45,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marcellus Tavares
  */
 @Component(
-	immediate = true, property = {"templatePath=/META-INF/resources/form.soy"}
+	immediate = true, property = "templatePath=/META-INF/resources/form.soy"
 )
 public class DDMFormRendererImpl implements DDMFormRenderer {
 
@@ -107,6 +109,11 @@ public class DDMFormRendererImpl implements DDMFormRenderer {
 		String html = render(template, templateNamespace);
 
 		String javaScript = render(template, "ddm.form_renderer_js");
+
+		DynamicIncludeUtil.include(
+			ddmFormRenderingContext.getHttpServletRequest(),
+			ddmFormRenderingContext.getHttpServletResponse(),
+			DDMFormFieldTypesDynamicInclude.class.getName(), true);
 
 		return html.concat(javaScript);
 	}

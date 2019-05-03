@@ -24,8 +24,9 @@ import aQute.bnd.annotation.ProviderType;
  * @generated
  */
 @ProviderType
-public class ListTypeServiceWrapper implements ListTypeService,
-	ServiceWrapper<ListTypeService> {
+public class ListTypeServiceWrapper
+	implements ListTypeService, ServiceWrapper<ListTypeService> {
+
 	public ListTypeServiceWrapper(ListTypeService listTypeService) {
 		_listTypeService = listTypeService;
 	}
@@ -33,35 +34,38 @@ public class ListTypeServiceWrapper implements ListTypeService,
 	@Override
 	public com.liferay.portal.kernel.model.ListType getListType(long listTypeId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _listTypeService.getListType(listTypeId);
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.kernel.model.ListType> getListTypes(
-		java.lang.String type) {
+	public java.util.List<com.liferay.portal.kernel.model.ListType>
+		getListTypes(String type) {
+
 		return _listTypeService.getListTypes(type);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _listTypeService.getOSGiServiceIdentifier();
 	}
 
 	@Override
-	public void validate(long listTypeId, long classNameId,
-		java.lang.String type)
+	public void validate(long listTypeId, long classNameId, String type)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_listTypeService.validate(listTypeId, classNameId, type);
 	}
 
 	@Override
-	public void validate(long listTypeId, java.lang.String type)
+	public void validate(long listTypeId, String type)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_listTypeService.validate(listTypeId, type);
 	}
 
@@ -76,4 +80,5 @@ public class ListTypeServiceWrapper implements ListTypeService,
 	}
 
 	private ListTypeService _listTypeService;
+
 }

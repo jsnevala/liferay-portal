@@ -31,8 +31,9 @@ public class ItemMinQuantityComparator extends OrderByComparator<ShoppingItem> {
 		"ShoppingItem.categoryId DESC, ShoppingItem.minQuantity DESC, " +
 			"ShoppingItem.name DESC";
 
-	public static final String[] ORDER_BY_FIELDS =
-		{"categoryId", "minQuantity", "name"};
+	public static final String[] ORDER_BY_FIELDS = {
+		"categoryId", "minQuantity", "name"
+	};
 
 	public ItemMinQuantityComparator() {
 		this(false);

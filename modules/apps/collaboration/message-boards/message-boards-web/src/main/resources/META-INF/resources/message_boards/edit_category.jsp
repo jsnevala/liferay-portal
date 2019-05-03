@@ -82,7 +82,7 @@ if (portletTitleBasedNavigation) {
 
 		<liferay-ui:header
 			backURL="<%= redirect %>"
-			localizeTitle="<%= (category == null) %>"
+			localizeTitle="<%= category == null %>"
 			title="<%= mbHomeDisplayContext.getTitle() %>"
 		/>
 	</c:if>

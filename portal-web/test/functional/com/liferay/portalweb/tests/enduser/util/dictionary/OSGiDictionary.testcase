@@ -1,58 +1,48 @@
-<definition component-name="portal-util-misc">
-	<property name="osgi.app.includes" value="dictionary" />
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Util" />
+@component-name = "portal-util-misc"
+definition {
+	property osgi.app.includes = "dictionary";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Util";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
+		User.firstLoginPG();
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Dictionary Page" />
-		</execute>
+		Page.add(pageName = "Dictionary Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Dictionary Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Dictionary Page");
 
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Dictionary" />
-		</execute>
-	</set-up>
+		Portlet.addPG(portletName = "Dictionary");
+	}
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-		</if>
-	</tear-down>
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
 
-	<command name="FindDictionaryWord" priority="2">
-		<execute macro="TestCase#getSiteName">
-			<return from="siteName" name="siteName" />
-			<var name="siteName" value="${siteName}" />
-		</execute>
+	@priority = "2"
+	test FindDictionaryWord {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Dictionary Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Dictionary Page");
 
-		<execute macro="Dictionary#findPG">
-			<var name="dictionaryWord" value="dog" />
-		</execute>
+		Dictionary.findPG(dictionaryWord = "dog");
 
-		<var name="key_dictionaryTerm" value="dog" />
+		SelectWindow(locator1 = "title=Dog | Define Dog at Dictionary.com");
 
-		<execute function="SelectWindow" locator1="title=Dog | Define Dog at Dictionary.com" />
-		<execute function="AssertTextEquals" locator1="Portlet#WORD" value1="dog" />
+		AssertTextEquals(
+			locator1 = "Portlet#WORD",
+			value1 = "dog",
+			key_dictionaryTerm = "dog"
+		);
 
-		<execute function="Close" locator1="title=Dog | Define Dog at Dictionary.com" />
-		<execute function="SelectWindow" locator1="title=Dictionary Page - ${siteName}" />
-	</command>
-</definition>
+		Close(locator1 = "title=Dog | Define Dog at Dictionary.com");
+
+		SelectWindow(locator1 = "title=Dictionary Page - ${siteName}");
+	}
+}

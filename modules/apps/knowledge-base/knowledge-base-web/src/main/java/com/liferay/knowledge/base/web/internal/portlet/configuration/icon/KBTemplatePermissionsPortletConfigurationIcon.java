@@ -35,7 +35,7 @@ import javax.portlet.PortletResponse;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Ambrin Chaudhary
+ * @author Ambrín Chaudhary
  */
 @Component(
 	immediate = true,

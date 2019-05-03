@@ -297,8 +297,8 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			long[] fileEntryIds = ParamUtil.getLongValues(
 				actionRequest, "rowIdsFileEntry");
 
-			for (int i = 0; i < fileEntryIds.length; i++) {
-				_dlAppService.cancelCheckOut(fileEntryIds[i]);
+			for (long curFileEntryId : fileEntryIds) {
+				_dlAppService.cancelCheckOut(curFileEntryId);
 			}
 		}
 	}
@@ -323,9 +323,9 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			long[] fileEntryIds = ParamUtil.getLongValues(
 				actionRequest, "rowIdsFileEntry");
 
-			for (int i = 0; i < fileEntryIds.length; i++) {
+			for (long curFileEntryId : fileEntryIds) {
 				_dlAppService.checkInFileEntry(
-					fileEntryIds[i], majorVersion, changeLog, serviceContext);
+					curFileEntryId, majorVersion, changeLog, serviceContext);
 			}
 		}
 	}
@@ -345,9 +345,8 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			long[] fileEntryIds = ParamUtil.getLongValues(
 				actionRequest, "rowIdsFileEntry");
 
-			for (int i = 0; i < fileEntryIds.length; i++) {
-				_dlAppService.checkOutFileEntry(
-					fileEntryIds[i], serviceContext);
+			for (long curFileEntryId : fileEntryIds) {
+				_dlAppService.checkOutFileEntry(curFileEntryId, serviceContext);
 			}
 		}
 	}
@@ -948,8 +947,16 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			uploadPortletRequest, "description");
 		String changeLog = ParamUtil.getString(
 			uploadPortletRequest, "changeLog");
+
 		boolean majorVersion = ParamUtil.getBoolean(
 			uploadPortletRequest, "majorVersion");
+
+		boolean updateVersionDetails = ParamUtil.getBoolean(
+			uploadPortletRequest, "updateVersionDetails");
+
+		if (!updateVersionDetails) {
+			majorVersion = Boolean.FALSE;
+		}
 
 		if (folderId > 0) {
 			Folder folder = _dlAppService.getFolder(folderId);

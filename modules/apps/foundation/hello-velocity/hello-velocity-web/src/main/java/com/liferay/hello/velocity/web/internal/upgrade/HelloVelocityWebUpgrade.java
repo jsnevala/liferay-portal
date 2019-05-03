@@ -40,9 +40,7 @@ public class HelloVelocityWebUpgrade implements UpgradeStepRegistrator {
 				@Override
 				protected String[][] getRenamePortletIdsArray() {
 					return new String[][] {
-						new String[] {
-							"50", HelloVelocityPortletKeys.HELLO_VELOCITY
-						}
+						{"50", HelloVelocityPortletKeys.HELLO_VELOCITY}
 					};
 				}
 

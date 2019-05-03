@@ -57,6 +57,7 @@ public abstract class BasePreferencesImpl implements Serializable {
 
 		for (Map.Entry<String, Preference> entry : preferences.entrySet()) {
 			String key = entry.getKey();
+
 			Preference preference = entry.getValue();
 
 			String[] actualValues = getActualValues(preference.getValues());
@@ -240,7 +241,7 @@ public abstract class BasePreferencesImpl implements Serializable {
 			if (actualValue == null) {
 				return null;
 			}
-			else if (actualValue == _NULL_ELEMENT) {
+			else if (actualValue.equals(_NULL_ELEMENT)) {
 				return new String[] {null};
 			}
 			else {

@@ -23,7 +23,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Adolfo Pérez
  */
 @Component(
-	property = {"model.class.name=com.liferay.knowledge.base.model.KBArticle"},
+	property = "model.class.name=com.liferay.knowledge.base.model.KBArticle",
 	service = {
 		ExportImportContentProcessor.class,
 		KBArticleExportImportContentProcessor.class

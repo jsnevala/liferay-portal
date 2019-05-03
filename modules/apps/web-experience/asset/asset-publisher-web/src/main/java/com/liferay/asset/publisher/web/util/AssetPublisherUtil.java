@@ -802,6 +802,8 @@ public class AssetPublisherUtil {
 		Map<String, Serializable> attributes =
 			assetPublisherDisplayContext.getAttributes();
 
+		attributes.put("filterExpired", Boolean.TRUE);
+
 		return getAssetEntryResults(
 			searchContainer, assetEntryQuery, layout, portletPreferences,
 			portletName, locale, timeZone, companyId, scopeGroupId, userId,
@@ -1351,7 +1353,7 @@ public class AssetPublisherUtil {
 	}
 
 	/**
-	 * @deprecated As of 1.2.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	public static void notifySubscribers(
@@ -1386,7 +1388,7 @@ public class AssetPublisherUtil {
 	}
 
 	/**
-	 * @deprecated As of 1.2.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static void registerAssetQueryProcessor(
@@ -1448,7 +1450,7 @@ public class AssetPublisherUtil {
 	}
 
 	/**
-	 * @deprecated As of 1.2.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static void unregisterAssetQueryProcessor(

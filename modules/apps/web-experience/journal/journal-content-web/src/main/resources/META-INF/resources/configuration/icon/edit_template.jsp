@@ -16,20 +16,23 @@
 
 <%@ include file="/init.jsp" %>
 
-<%
-DDMTemplate ddmTemplate = journalContentDisplayContext.getDDMTemplate();
+<c:if test="<%= journalContentDisplayContext.isShowEditTemplateIcon() %>">
 
-Map<String, Object> data = new HashMap<String, Object>();
+	<%
+	DDMTemplate ddmTemplate = journalContentDisplayContext.getDDMTemplate();
 
-data.put("destroyOnHide", true);
-data.put("id", HtmlUtil.escape(portletDisplay.getNamespace()) + "editAsset");
-data.put("title", HtmlUtil.escape(ddmTemplate.getName(locale)));
-%>
+	Map<String, Object> data = new HashMap<String, Object>();
 
-<liferay-ui:icon
-	data="<%= data %>"
-	id="editTemplateIcon"
-	message="edit-template"
-	url="<%= journalContentDisplayContext.getURLEditTemplate() %>"
-	useDialog="<%= true %>"
-/>
+	data.put("destroyOnHide", true);
+	data.put("id", HtmlUtil.escape(portletDisplay.getNamespace()) + "editAsset");
+	data.put("title", HtmlUtil.escape(ddmTemplate.getName(locale)));
+	%>
+
+	<liferay-ui:icon
+		data="<%= data %>"
+		id="editTemplateIcon"
+		message="edit-template"
+		url="<%= journalContentDisplayContext.getURLEditTemplate() %>"
+		useDialog="<%= true %>"
+	/>
+</c:if>

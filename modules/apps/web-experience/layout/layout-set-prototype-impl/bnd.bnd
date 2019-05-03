@@ -1,6 +1,5 @@
 Bundle-Name: Liferay Layout Set Prototype Implementation
 Bundle-SymbolicName: com.liferay.layout.set.prototype.impl
-Bundle-Version: 2.0.2
-Liferay-Releng-Module-Group-Description:
+Bundle-Version: 2.0.7
 Liferay-Releng-Module-Group-Title: Site Management
 -dsannotations-options: inherit

@@ -14,18 +14,9 @@
 
 package com.liferay.exportimport.kernel.lar;
 
-import static com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants.TYPE_EXPORT_LAYOUT;
-import static com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants.TYPE_EXPORT_PORTLET;
-import static com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants.TYPE_IMPORT_LAYOUT;
-import static com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants.TYPE_IMPORT_PORTLET;
-import static com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants.TYPE_PUBLISH_LAYOUT_LOCAL;
-import static com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants.TYPE_PUBLISH_LAYOUT_REMOTE;
-import static com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants.TYPE_PUBLISH_PORTLET;
-import static com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants.TYPE_SCHEDULED_PUBLISH_LAYOUT_LOCAL;
-import static com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants.TYPE_SCHEDULED_PUBLISH_LAYOUT_REMOTE;
-
 import aQute.bnd.annotation.ProviderType;
 
+import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalServiceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -65,7 +56,7 @@ import javax.portlet.PortletPreferences;
 import javax.portlet.PortletRequest;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @ProviderType
 public class ExportImportDateUtil {
@@ -461,38 +452,52 @@ public class ExportImportDateUtil {
 	protected static String getDefaultDateRange(
 		ExportImportConfiguration exportImportConfiguration) {
 
-		if (exportImportConfiguration.getType() == TYPE_EXPORT_LAYOUT) {
-			return RANGE_ALL;
-		}
-		else if (exportImportConfiguration.getType() == TYPE_EXPORT_PORTLET) {
-			return RANGE_ALL;
-		}
-		else if (exportImportConfiguration.getType() == TYPE_IMPORT_LAYOUT) {
-			return RANGE_ALL;
-		}
-		else if (exportImportConfiguration.getType() == TYPE_IMPORT_PORTLET) {
+		if (exportImportConfiguration.getType() ==
+				ExportImportConfigurationConstants.TYPE_EXPORT_LAYOUT) {
+
 			return RANGE_ALL;
 		}
 		else if (exportImportConfiguration.getType() ==
-					TYPE_PUBLISH_LAYOUT_LOCAL) {
+					ExportImportConfigurationConstants.TYPE_EXPORT_PORTLET) {
+
+			return RANGE_ALL;
+		}
+		else if (exportImportConfiguration.getType() ==
+					ExportImportConfigurationConstants.TYPE_IMPORT_LAYOUT) {
+
+			return RANGE_ALL;
+		}
+		else if (exportImportConfiguration.getType() ==
+					ExportImportConfigurationConstants.TYPE_IMPORT_PORTLET) {
+
+			return RANGE_ALL;
+		}
+		else if (exportImportConfiguration.getType() ==
+					ExportImportConfigurationConstants.
+						TYPE_PUBLISH_LAYOUT_LOCAL) {
 
 			return RANGE_FROM_LAST_PUBLISH_DATE;
 		}
 		else if (exportImportConfiguration.getType() ==
-					TYPE_PUBLISH_LAYOUT_REMOTE) {
-
-			return RANGE_FROM_LAST_PUBLISH_DATE;
-		}
-		else if (exportImportConfiguration.getType() == TYPE_PUBLISH_PORTLET) {
-			return RANGE_FROM_LAST_PUBLISH_DATE;
-		}
-		else if (exportImportConfiguration.getType() ==
-					TYPE_SCHEDULED_PUBLISH_LAYOUT_LOCAL) {
+					ExportImportConfigurationConstants.
+						TYPE_PUBLISH_LAYOUT_REMOTE) {
 
 			return RANGE_FROM_LAST_PUBLISH_DATE;
 		}
 		else if (exportImportConfiguration.getType() ==
-					TYPE_SCHEDULED_PUBLISH_LAYOUT_REMOTE) {
+					ExportImportConfigurationConstants.TYPE_PUBLISH_PORTLET) {
+
+			return RANGE_FROM_LAST_PUBLISH_DATE;
+		}
+		else if (exportImportConfiguration.getType() ==
+					ExportImportConfigurationConstants.
+						TYPE_SCHEDULED_PUBLISH_LAYOUT_LOCAL) {
+
+			return RANGE_FROM_LAST_PUBLISH_DATE;
+		}
+		else if (exportImportConfiguration.getType() ==
+					ExportImportConfigurationConstants.
+						TYPE_SCHEDULED_PUBLISH_LAYOUT_REMOTE) {
 
 			return RANGE_FROM_LAST_PUBLISH_DATE;
 		}

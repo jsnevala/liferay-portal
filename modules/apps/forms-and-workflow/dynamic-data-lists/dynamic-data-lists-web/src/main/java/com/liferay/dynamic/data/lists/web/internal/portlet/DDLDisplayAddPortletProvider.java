@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"model.class.name=com.liferay.dynamic.data.lists.model.DDLRecord"},
+	property = "model.class.name=com.liferay.dynamic.data.lists.model.DDLRecord",
 	service = AddPortletProvider.class
 )
 public class DDLDisplayAddPortletProvider
@@ -84,7 +84,7 @@ public class DDLDisplayAddPortletProvider
 	}
 
 	/**
-	 * @deprecated As of 1.1.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override

@@ -451,7 +451,8 @@ public class TasksEntryFinderImpl
 		TasksEntryConstants.STATUS_REOPENED
 	};
 
-	private static final int[] _RESOLVED_STATUS_ARRAY =
-		{TasksEntryConstants.STATUS_RESOLVED};
+	private static final int[] _RESOLVED_STATUS_ARRAY = {
+		TasksEntryConstants.STATUS_RESOLVED
+	};
 
 }

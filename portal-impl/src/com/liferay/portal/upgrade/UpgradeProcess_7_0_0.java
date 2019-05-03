@@ -66,6 +66,8 @@ public class UpgradeProcess_7_0_0 extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
+		upgrade(UpgradeSharding.class);
+
 		upgrade(UpgradeSchema.class);
 
 		upgrade(UpgradeKernelPackage.class);
@@ -105,8 +107,6 @@ public class UpgradeProcess_7_0_0 extends UpgradeProcess {
 		upgrade(UpgradeWebsite.class);
 
 		upgrade(UpgradeMobileDeviceRules.class);
-
-		upgrade(UpgradeSharding.class);
 
 		clearIndexesCache();
 	}

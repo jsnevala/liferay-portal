@@ -45,7 +45,7 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
 /**
- * @author Istvan Andras Dezsi
+ * @author István András Dézsi
  */
 @OSGiBeanProperties
 public class AssetVocabularyIndexer extends BaseIndexer<AssetVocabulary> {
@@ -123,6 +123,7 @@ public class AssetVocabularyIndexer extends BaseIndexer<AssetVocabulary> {
 			assetVocabulary.getDescriptionMap());
 
 		document.addText(Field.NAME, assetVocabulary.getName());
+
 		addLocalizedField(
 			document, Field.TITLE, siteDefaultLocale,
 			assetVocabulary.getTitleMap());

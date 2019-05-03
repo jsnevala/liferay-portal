@@ -56,9 +56,7 @@ public class VerifyPropertiesTest extends BaseVerifyProcessTestCase {
 
 		ReflectionTestUtil.setFieldValue(
 			VerifyProperties.class, "_MIGRATED_PORTAL_KEYS",
-			new String[][] {
-				new String[] {migratedPortalKey, migratedPortalKey}
-			});
+			new String[][] {{migratedPortalKey, migratedPortalKey}});
 
 		try (CaptureAppender captureAppender =
 				Log4JLoggerTestUtil.configureLog4JLogger(
@@ -98,9 +96,7 @@ public class VerifyPropertiesTest extends BaseVerifyProcessTestCase {
 
 		ReflectionTestUtil.setFieldValue(
 			VerifyProperties.class, "_MIGRATED_SYSTEM_KEYS",
-			new String[][] {
-				new String[] {migratedSystemKey, migratedSystemKey}
-			});
+			new String[][] {{migratedSystemKey, migratedSystemKey}});
 
 		try (CaptureAppender captureAppender =
 				Log4JLoggerTestUtil.configureLog4JLogger(
@@ -141,7 +137,7 @@ public class VerifyPropertiesTest extends BaseVerifyProcessTestCase {
 		ReflectionTestUtil.setFieldValue(
 			VerifyProperties.class, "_MODULARIZED_PORTAL_KEYS",
 			new String[][] {
-				new String[] {
+				{
 					modularizedPortalKey, modularizedPortalKey,
 					modularizedPortalKey
 				}
@@ -201,8 +197,7 @@ public class VerifyPropertiesTest extends BaseVerifyProcessTestCase {
 			LoggingEvent loggingEvent = loggingEvents.get(0);
 
 			Assert.assertEquals(
-				"Portal property \"" + obsoletePortalKey +
-					"\" is obsolete",
+				"Portal property \"" + obsoletePortalKey + "\" is obsolete",
 				loggingEvent.getMessage());
 		}
 		finally {
@@ -238,8 +233,7 @@ public class VerifyPropertiesTest extends BaseVerifyProcessTestCase {
 			LoggingEvent loggingEvent = loggingEvents.get(0);
 
 			Assert.assertEquals(
-				"System property \"" + obsoleteSystemKey +
-					"\" is obsolete",
+				"System property \"" + obsoleteSystemKey + "\" is obsolete",
 				loggingEvent.getMessage());
 		}
 		finally {

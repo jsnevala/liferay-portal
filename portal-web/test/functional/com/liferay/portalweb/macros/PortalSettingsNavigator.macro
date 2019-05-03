@@ -1,29 +1,27 @@
-<definition>
-	<command name="gotoAuthenticationFacebook">
-		<execute function="AssertClick" locator1="NavTab#FACEBOOK" value1="Facebook" />
-	</command>
+definition {
+	macro gotoAuthenticationFacebook {
+		AssertClick(locator1 = "NavTab#FACEBOOK", value1 = "Facebook");
+	}
 
-	<command name="gotoAuthenticationGoogle">
-		<execute function="AssertClick" locator1="NavTab#GOOGLE" value1="Google" />
-	</command>
+	macro gotoAuthenticationGoogle {
+		AssertClick(locator1 = "NavTab#GOOGLE", value1 = "Google");
+	}
 
-	<command name="gotoAuthenticationLDAP">
-		<execute function="AssertClick" locator1="NavTab#LDAP" value1="LDAP" />
-	</command>
+	macro gotoAuthenticationLDAP {
+		AssertClick(locator1 = "NavTab#LDAP", value1 = "LDAP");
+	}
 
-	<command name="gotoAuthenticationOpenID">
-		<execute function="AssertClick" locator1="NavTab#OPENID" value1="OpenID" />
-	</command>
+	macro gotoAuthenticationOpenID {
+		AssertClick(locator1 = "NavTab#OPENID", value1 = "OpenID");
+	}
 
-	<command name="gotoAuthenticationOpenSSO">
-		<execute function="AssertClick" locator1="NavTab#OPENSSO" value1="OpenSSO" />
-	</command>
+	macro gotoAuthenticationOpenSSO {
+		AssertClick(locator1 = "NavTab#OPENSSO", value1 = "OpenSSO");
+	}
 
-	<command name="gotoLDAP">
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Authentication" />
-		</execute>
+	macro gotoLDAP {
+		Panel.expandPanel(panelHeading = "Authentication");
 
-		<execute macro="PortalSettingsNavigator#gotoAuthenticationLDAP" />
-	</command>
-</definition>
+		PortalSettingsNavigator.gotoAuthenticationLDAP();
+	}
+}

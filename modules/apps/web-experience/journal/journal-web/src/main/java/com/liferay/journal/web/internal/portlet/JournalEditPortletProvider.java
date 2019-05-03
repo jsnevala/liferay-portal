@@ -21,11 +21,11 @@ import com.liferay.portal.kernel.portlet.EditPortletProvider;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	immediate = true,
-	property = {"model.class.name=com.liferay.journal.model.JournalArticle"},
+	property = "model.class.name=com.liferay.journal.model.JournalArticle",
 	service = EditPortletProvider.class
 )
 public class JournalEditPortletProvider

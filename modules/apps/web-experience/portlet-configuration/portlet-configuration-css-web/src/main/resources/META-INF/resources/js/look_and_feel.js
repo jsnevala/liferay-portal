@@ -1174,7 +1174,7 @@ AUI.add(
 						var messageClass = EMPTY;
 						var type = SUCCESS;
 
-						if (obj.statusText.toLowerCase() != OK) {
+						if (obj.status != 200) {
 							type = ERROR;
 						}
 
@@ -1961,7 +1961,7 @@ AUI.add(
 				// Font color
 
 				var changeColor = function(color) {
-					if (color) {
+					if (typeof color !== 'undefined') {
 						portlet.setStyle(COLOR, color);
 
 						textData.color = color;

@@ -112,10 +112,9 @@ public class RequestParameterAutoLogin extends BaseAutoLogin {
 			}
 		}
 
-		String[] credentials =
-			{String.valueOf(userId), password, Boolean.FALSE.toString()};
-
-		return credentials;
+		return new String[] {
+			String.valueOf(userId), password, Boolean.FALSE.toString()
+		};
 	}
 
 	protected String getLoginParam() {
@@ -159,15 +158,11 @@ public class RequestParameterAutoLogin extends BaseAutoLogin {
 		_getRequestParameterAutoLoginConfiguration(long companyId) {
 
 		try {
-			RequestParameterAutoLoginConfiguration
-				requestParameterAutoLoginConfiguration =
-					_configurationProvider.getConfiguration(
-						RequestParameterAutoLoginConfiguration.class,
-						new CompanyServiceSettingsLocator(
-							companyId,
-							RequestParameterAutoLoginConstants.SERVICE_NAME));
-
-			return requestParameterAutoLoginConfiguration;
+			return _configurationProvider.getConfiguration(
+				RequestParameterAutoLoginConfiguration.class,
+				new CompanyServiceSettingsLocator(
+					companyId,
+					RequestParameterAutoLoginConstants.SERVICE_NAME));
 		}
 		catch (ConfigurationException ce) {
 			_log.error(

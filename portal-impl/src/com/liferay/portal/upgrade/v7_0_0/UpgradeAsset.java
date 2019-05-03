@@ -16,6 +16,8 @@ package com.liferay.portal.upgrade.v7_0_0;
 
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
+import com.liferay.portal.kernel.dao.db.DBType;
+import com.liferay.portal.kernel.dao.db.DBTypeToSQLMap;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -53,7 +55,20 @@ public class UpgradeAsset extends UpgradeProcess {
 			sb.append("DLFileVersion) and classPK not in (select fileEntryId ");
 			sb.append("from DLFileEntry)");
 
-			runSQL(sb.toString());
+			DBTypeToSQLMap dbTypeToSQLMap = new DBTypeToSQLMap(sb.toString());
+
+			sb = new StringBundler(6);
+
+			sb.append("delete from AssetEntry where classNameId = ");
+			sb.append(classNameId);
+			sb.append(" and not exists (select null from DLFileVersion where ");
+			sb.append("fileVersionId = AssetEntry.classPK) and not exists ");
+			sb.append("(select null from DLFileEntry where fileEntryId = ");
+			sb.append("AssetEntry.classPK)");
+
+			dbTypeToSQLMap.add(DBType.POSTGRESQL, sb.toString());
+
+			runSQL(dbTypeToSQLMap);
 		}
 	}
 
@@ -145,6 +160,7 @@ public class UpgradeAsset extends UpgradeProcess {
 
 			while (rs.next()) {
 				long vocabularyId = rs.getLong("vocabularyId");
+
 				String settings = rs.getString("settings_");
 
 				ps2.setString(1, upgradeVocabularySettings(settings));
@@ -159,7 +175,7 @@ public class UpgradeAsset extends UpgradeProcess {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	protected void updateAssetVocabulary(long vocabularyId, String settings)

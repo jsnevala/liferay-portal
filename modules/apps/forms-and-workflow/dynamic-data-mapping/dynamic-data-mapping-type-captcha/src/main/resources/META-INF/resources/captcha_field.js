@@ -27,9 +27,25 @@ AUI.add(
 
 						var container = instance.fetchContainer();
 
-						instance._formGroupNode = container.one('.form-group');
+						if (!instance._formGroupNode) {
+							instance._formGroupNode = container.one('.form-group');
+						}
 
-						var fieldName = instance._formGroupNode.attr('data-fieldname');
+						var formGroupNode = instance._formGroupNode;
+
+						if (formGroupNode.hasChildNodes()) {
+							instance._formGroupNodeChildren = A.NodeList.create();
+
+							var formGroupNodeChildren = formGroupNode.get('children');
+
+							formGroupNodeChildren.each(
+								function(item, index) {
+									instance._formGroupNodeChildren.push(item.cloneNode(true));
+								}
+							);
+						}
+
+						var fieldName = formGroupNode.attr('data-fieldname');
 
 						return '<div class="form-group" data-fieldname="' + fieldName + '"></div>';
 					},
@@ -51,7 +67,13 @@ AUI.add(
 
 						container.empty();
 
-						instance._formGroupNode.appendTo(container);
+						var formGroupNode = instance._formGroupNode;
+
+						if (!formGroupNode.hasChildNodes()) {
+							formGroupNode.setHTML(instance._formGroupNodeChildren);
+						}
+
+						formGroupNode.appendTo(container);
 
 						return instance;
 					},

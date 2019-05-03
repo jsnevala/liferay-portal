@@ -181,6 +181,8 @@ userSearch.setResults(users);
 	</liferay-frontend:management-bar-action-buttons>
 </liferay-frontend:management-bar>
 
+<liferay-ui:error exception="<%= RequiredUserException.class %>" message="one-or-more-users-were-not-removed-since-they-belong-to-a-user-group" />
+
 <div class="closed container-fluid-1280 sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/user/info_panel" var="sidebarPanelURL">
 		<portlet:param name="groupId" value="<%= String.valueOf(siteMembershipsDisplayContext.getGroupId()) %>" />

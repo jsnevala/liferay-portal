@@ -246,6 +246,7 @@ public class UpgradePermission extends UpgradeProcess {
 			}
 
 			long resourceActionId = rs1.getLong("resourceActionId");
+
 			long bitwiseValue = rs1.getLong("bitwiseValue");
 
 			try (PreparedStatement ps2 = connection.prepareStatement(
@@ -260,6 +261,7 @@ public class UpgradePermission extends UpgradeProcess {
 					String primKey = rs.getString("primKey");
 					long primKeyId = rs.getLong("primKeyId");
 					long roleId = rs.getLong("roleId");
+
 					long actionIds = rs.getLong("actionIds");
 
 					if ((bitwiseValue & actionIds) == 0) {

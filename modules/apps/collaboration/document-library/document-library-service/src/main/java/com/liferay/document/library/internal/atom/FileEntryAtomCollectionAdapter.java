@@ -48,7 +48,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Igor Spasic
  */
 @Component(
-	property = {"model.class.name=com.liferay.portal.kernel.repository.model.FileEntry"},
+	property = "model.class.name=com.liferay.portal.kernel.repository.model.FileEntry",
 	service = AtomCollectionAdapter.class
 )
 public class FileEntryAtomCollectionAdapter
@@ -219,11 +219,9 @@ public class FileEntryAtomCollectionAdapter
 
 		ServiceContext serviceContext = new ServiceContext();
 
-		FileEntry fileEntry = _dlAppService.addFileEntry(
+		return _dlAppService.addFileEntry(
 			repositoryId, folderId, title, mimeType, title, summary, null,
 			contentInputStream, contentDecoded.length, serviceContext);
-
-		return fileEntry;
 	}
 
 	@Override
@@ -260,11 +258,9 @@ public class FileEntryAtomCollectionAdapter
 
 		ServiceContext serviceContext = new ServiceContext();
 
-		FileEntry fileEntry = _dlAppService.addFileEntry(
+		return _dlAppService.addFileEntry(
 			repositoryId, folderId, title, mimeType, title, description, null,
 			contentInputStream, content.length, serviceContext);
-
-		return fileEntry;
 	}
 
 	@Override

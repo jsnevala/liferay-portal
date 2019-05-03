@@ -63,7 +63,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + JournalPortletKeys.JOURNAL},
+	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = AssetRendererFactory.class
 )
 public class JournalArticleAssetRendererFactory
@@ -136,8 +136,8 @@ public class JournalArticleAssetRendererFactory
 			long groupId, String urlTitle)
 		throws PortalException {
 
-		JournalArticle article = _journalArticleService.getArticleByUrlTitle(
-			groupId, urlTitle);
+		JournalArticle article =
+			_journalArticleLocalService.getArticleByUrlTitle(groupId, urlTitle);
 
 		return getJournalArticleAssetRenderer(article);
 	}

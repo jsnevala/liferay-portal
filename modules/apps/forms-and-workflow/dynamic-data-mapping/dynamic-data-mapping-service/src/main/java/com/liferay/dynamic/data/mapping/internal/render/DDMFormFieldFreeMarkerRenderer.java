@@ -15,6 +15,7 @@
 package com.liferay.dynamic.data.mapping.internal.render;
 
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
+import com.liferay.dynamic.data.mapping.internal.util.DDMFormFieldFreeMarkerRendererHelper;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
@@ -27,6 +28,7 @@ import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.util.impl.DDMFieldsCounter;
 import com.liferay.dynamic.data.mapping.util.impl.DDMImpl;
 import com.liferay.petra.string.CharPool;
+import com.liferay.portal.kernel.editor.Editor;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.language.LanguageConstants;
@@ -496,6 +498,11 @@ public class DDMFormFieldFreeMarkerRenderer implements DDMFormFieldRenderer {
 
 		freeMarkerContext.put(
 			"ddmPortletId", DDMPortletKeys.DYNAMIC_DATA_MAPPING);
+
+		Editor editor = DDMFormFieldFreeMarkerRendererHelper.getEditor(request);
+
+		freeMarkerContext.put("editorName", editor.getName());
+
 		freeMarkerContext.put("fieldStructure", fieldContext);
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
@@ -558,10 +565,8 @@ public class DDMFormFieldFreeMarkerRenderer implements DDMFormFieldRenderer {
 	protected TemplateResource getTemplateResource(String resource) {
 		Class<?> clazz = getClass();
 
-		TemplateResource templateResource = new ClassLoaderTemplateResource(
+		return new ClassLoaderTemplateResource(
 			clazz.getClassLoader(), resource);
-
-		return templateResource;
 	}
 
 	protected String processFTL(

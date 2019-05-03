@@ -113,7 +113,11 @@ public class PermissionDisplay
 
 	@Override
 	public int hashCode() {
-		return _portletName.concat(_modelName).concat(_actionId).hashCode();
+		return _portletName.concat(
+			_modelName
+		).concat(
+			_actionId
+		).hashCode();
 	}
 
 	private final String _actionId;

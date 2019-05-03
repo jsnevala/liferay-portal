@@ -16,7 +16,7 @@ package com.liferay.portal.osgi.web.servlet.context.helper.order;
 
 /**
  * @author Vernon Singleton
- * @author Juan Gonzalez
+ * @author Juan González
  */
 public class OrderBeforeAndAfterException extends Exception {
 

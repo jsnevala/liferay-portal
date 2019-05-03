@@ -136,7 +136,7 @@ public class WSDLServlet extends HttpServlet {
 		String hostname = ParamUtil.getString(
 			request, "hostname", request.getServerName());
 		String port = ParamUtil.getString(
-			request, "port", Integer.toString(request.getServerPort()));
+			request, "port", String.valueOf(request.getServerPort()));
 		String protocol = ParamUtil.getString(
 			request, "protocol", request.getScheme());
 

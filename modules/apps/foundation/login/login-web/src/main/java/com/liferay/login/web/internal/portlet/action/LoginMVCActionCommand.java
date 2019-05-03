@@ -152,6 +152,8 @@ public class LoginMVCActionCommand extends BaseMVCActionCommand {
 			}
 
 			postProcessAuthFailure(actionRequest, actionResponse);
+
+			hideDefaultErrorMessage(actionRequest);
 		}
 	}
 
@@ -208,6 +210,25 @@ public class LoginMVCActionCommand extends BaseMVCActionCommand {
 		String redirect = ParamUtil.getString(actionRequest, "redirect");
 
 		if (Validator.isNotNull(redirect)) {
+			if (!themeDisplay.isSignedIn()) {
+				LiferayPortletResponse liferayPortletResponse =
+					_portal.getLiferayPortletResponse(actionResponse);
+
+				String portletId = _portal.getPortletId(actionRequest);
+
+				PortletURL actionURL = liferayPortletResponse.createActionURL(
+					portletId);
+
+				actionURL.setParameter(
+					ActionRequest.ACTION_NAME, "/login/login");
+				actionURL.setParameter("redirect", redirect);
+
+				actionRequest.setAttribute(
+					WebKeys.REDIRECT, actionURL.toString());
+
+				return;
+			}
+
 			redirect = _portal.escapeRedirect(redirect);
 
 			if (Validator.isNotNull(redirect) &&
@@ -222,8 +243,10 @@ public class LoginMVCActionCommand extends BaseMVCActionCommand {
 		if (PropsValues.PORTAL_JAAS_ENABLE) {
 			if (Validator.isNotNull(redirect)) {
 				redirect = mainPath.concat(
-					"/portal/protected?redirect=").concat(
-						URLCodec.encodeURL(redirect));
+					"/portal/protected?redirect="
+				).concat(
+					URLCodec.encodeURL(redirect)
+				);
 			}
 			else {
 				redirect = mainPath.concat("/portal/protected");

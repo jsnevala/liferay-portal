@@ -41,9 +41,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"model.class.name=com.liferay.exportimport.kernel.model.ExportImportConfiguration"
-	},
+	property = "model.class.name=com.liferay.exportimport.kernel.model.ExportImportConfiguration",
 	service = TrashHandler.class
 )
 public class ExportImportConfigurationTrashHandler extends BaseTrashHandler {

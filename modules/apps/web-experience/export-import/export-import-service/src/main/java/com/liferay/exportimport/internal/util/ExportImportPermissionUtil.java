@@ -135,6 +135,10 @@ public class ExportImportPermissionUtil {
 			String resourcePK, Map<Long, String[]> roleIdsToActionIds)
 		throws PortalException {
 
+		ResourcePermissionLocalServiceUtil.deleteResourcePermissions(
+			companyId, resourceName, ResourceConstants.SCOPE_INDIVIDUAL,
+			resourcePK);
+
 		if (roleIdsToActionIds.isEmpty()) {
 			return;
 		}

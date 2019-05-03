@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Component;
 		"javax.portlet.display-name=Shopping",
 		"javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.config-template=/admin/configuration.jsp",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-action=/shopping/view",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + ShoppingPortletKeys.SHOPPING_ADMIN,

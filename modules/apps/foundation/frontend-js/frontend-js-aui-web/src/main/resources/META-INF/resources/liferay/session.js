@@ -322,6 +322,7 @@ AUI.add(
 						var instance = this;
 
 						var sessionLength = instance.get('sessionLength');
+						var sessionState = instance.get('sessionState');
 						var warningTime = instance.get('warningTime');
 
 						var registered = instance._registered;
@@ -340,6 +341,14 @@ AUI.add(
 									timeOffset = Math.floor((Date.now() - timestamp) / 1000) * 1000;
 
 									elapsed = timeOffset;
+
+									if (instance._initTimestamp !== timestamp) {
+										instance.set('timestamp', timestamp);
+
+										if (sessionState != 'active') {
+											instance.set('sessionState', 'active', SRC_EVENT_OBJ);
+										}
+									}
 								}
 								else {
 									timestamp = 'expired';
@@ -359,8 +368,6 @@ AUI.add(
 										extend = false;
 										hasExpired = true;
 									}
-
-									var sessionState = instance.get('sessionState');
 
 									if (hasExpired && sessionState != 'expired') {
 										if (extend) {
@@ -455,7 +462,7 @@ AUI.add(
 						var instance = this;
 
 						if (instance._banner) {
-							instance._banner.destroy();
+							instance._destroyBanner();
 						}
 					},
 
@@ -529,6 +536,18 @@ AUI.add(
 						);
 					},
 
+					_destroyBanner: function() {
+						var instance = this;
+
+						instance._banner = false;
+
+						var notificationContainer = A.one('.lfr-notification-container');
+
+						if (notificationContainer) {
+							notificationContainer.remove();
+						}
+					},
+
 					_formatNumber: function(value) {
 						var instance = this;
 
@@ -583,6 +602,10 @@ AUI.add(
 												event.domEvent.preventDefault();
 												instance._host.extend();
 											}
+											else if (event.domEvent.target.test('.close') || event.domEvent.target.test('.lexicon-icon-times')) {
+												instance._destroyBanner();
+												instance._alertClosed = true;
+											}
 										}
 									},
 									title: Liferay.Language.get('warning'),
@@ -614,7 +637,7 @@ AUI.add(
 						var banner = instance._getBanner();
 
 						if (banner) {
-							banner.hide();
+							instance._destroyBanner();
 						}
 					},
 
@@ -634,22 +657,24 @@ AUI.add(
 						DOC.title = instance.get('pageTitle');
 					},
 
-					_uiSetRemainingTime: function(remainingTime, counterTextNode) {
+					_uiSetRemainingTime: function(remainingTime) {
 						var instance = this;
-
-						var banner = instance._getBanner();
 
 						remainingTime = instance._formatTime(remainingTime);
 
-						banner.set(
-							'message',
-							Lang.sub(
-								instance._warningText,
-								[
-									remainingTime
-								]
-							)
-						);
+						if (!instance._alertClosed) {
+							var banner = instance._getBanner();
+
+							banner.set(
+								'message',
+								Lang.sub(
+									instance._warningText,
+									[
+										remainingTime
+									]
+								)
+							);
+						}
 
 						DOC.title = Lang.sub(Liferay.Language.get('session-expires-in-x'), [remainingTime]) + ' | ' + instance.get('pageTitle');
 					}

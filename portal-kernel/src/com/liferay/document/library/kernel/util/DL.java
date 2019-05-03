@@ -114,6 +114,12 @@ public interface DL {
 		throws Exception;
 
 	public String getImagePreviewURL(
+			FileEntry fileEntry, FileVersion fileVersion,
+			ThemeDisplay themeDisplay, String queryString,
+			boolean appendVersion, boolean absoluteURL)
+		throws PortalException;
+
+	public String getImagePreviewURL(
 			FileEntry fileEntry, ThemeDisplay themeDisplay)
 		throws Exception;
 
@@ -138,8 +144,8 @@ public interface DL {
 	public String getTempFileId(long id, String version, String languageId);
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getThumbnailSrc(FileEntry,
-	 *             ThemeDisplay)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getThumbnailSrc(FileEntry, ThemeDisplay)}
 	 */
 	@Deprecated
 	public String getThumbnailSrc(
@@ -148,8 +154,8 @@ public interface DL {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getThumbnailSrc(FileEntry,
-	 *             FileVersion, ThemeDisplay)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getThumbnailSrc(FileEntry, FileVersion, ThemeDisplay)}
 	 */
 	@Deprecated
 	public String getThumbnailSrc(

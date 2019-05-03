@@ -17,7 +17,39 @@ package com.liferay.journal.item.selector.criterion;
 import com.liferay.item.selector.BaseItemSelectorCriterion;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class JournalItemSelectorCriterion extends BaseItemSelectorCriterion {
+
+	public JournalItemSelectorCriterion() {
+	}
+
+	public JournalItemSelectorCriterion(long resourcePrimKey) {
+		_resourcePrimKey = resourcePrimKey;
+	}
+
+	public JournalItemSelectorCriterion(long resourcePrimKey, long folderId) {
+		_resourcePrimKey = resourcePrimKey;
+		_folderId = folderId;
+	}
+
+	public long getFolderId() {
+		return _folderId;
+	}
+
+	public long getResourcePrimKey() {
+		return _resourcePrimKey;
+	}
+
+	public void setFolderId(long folderId) {
+		_folderId = folderId;
+	}
+
+	public void setResourcePrimKey(long resourcePrimKey) {
+		_resourcePrimKey = resourcePrimKey;
+	}
+
+	private long _folderId;
+	private long _resourcePrimKey;
+
 }

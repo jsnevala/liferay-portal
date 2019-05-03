@@ -1,49 +1,52 @@
-<definition>
-	<var name="validationErrorMessage" value="This field is required." />
+definition {
+	var validationErrorMessage = "This field is required.";
 
-	<command name="clickSubmit">
-		<execute function="AssertClick" locator1="Button#SUBMIT" value1="Submit" />
-	</command>
+	macro clickSubmit {
+		AssertClick(locator1 = "Button#SUBMIT_1", value1 = "Submit");
+	}
 
-	<command name="gotoFormPage">
-		<var name="key_formPageName" value="${formPageName}" />
+	macro nextPage {
+		AssertClick(locator1 = "Button#NEXT", value1 = "Next");
 
-		<execute function="AssertClick" locator1="FormPortlet#FORM_PAGE" value1="${formPageName}" />
-	</command>
+		var key_formPageName = "${formPageCurrent}";
 
-	<command name="nextPage">
-		<execute function="AssertClick" locator1="Button#NEXT" value1="Next" />
+		AssertTextEquals(
+			locator1 = "FormPortlet#FORM_PAGE_INACTIVE",
+			value1 = "${formPageCurrent}"
+		);
 
-		<var name="key_formPageName" value="${formPageCurrent}" />
+		var key_formPageName = "${formPageNext}";
 
-		<execute function="AssertTextEquals" locator1="FormPortlet#FORM_PAGE_INACTIVE" value1="${formPageCurrent}" />
+		AssertTextEquals(
+			locator1 = "FormPortlet#FORM_PAGE_ACTIVE",
+			value1 = "${formPageNext}"
+		);
+	}
 
-		<var name="key_formPageName" value="${formPageNext}" />
+	macro submit {
+		Click(locator1 = "FormPortlet#FORM_CONTENT");
 
-		<execute function="AssertTextEquals" locator1="FormPortlet#FORM_PAGE_ACTIVE" value1="${formPageNext}" />
-	</command>
+		FormPortlet.clickSubmit();
+	}
 
-	<command name="submit">
-		<execute function="Click" locator1="FormPortlet#FORM_CONTENT" />
+	macro submitSuccessfully {
+		FormPortlet.submit();
 
-		<execute macro="FormPortlet#clickSubmit" />
-	</command>
+		Alert.viewSuccessMessage();
+	}
 
-	<command name="submitSuccessfully">
-		<execute macro="FormPortlet#submit" />
+	macro submitWithError {
+		FormPortlet.submit();
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		AssertTextEquals(locator1 = "Message#ERROR", value1 = "${errorMessage}");
+	}
 
-	<command name="submitWithError">
-		<execute macro="FormPortlet#submit" />
+	macro submitWithValidationError {
+		FormPortlet.submit();
 
-		<execute function="AssertTextEquals" locator1="Message#ERROR" value1="${errorMessage}" />
-	</command>
-
-	<command name="submitWithValidationError">
-		<execute macro="FormPortlet#submit" />
-
-		<execute function="AssertTextEquals" locator1="Message#ERROR_FORM_FIELD_REQUIRED" value1="${validationErrorMessage}" />
-	</command>
-</definition>
+		AssertTextEquals(
+			locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
+			value1 = "${validationErrorMessage}"
+		);
+	}
+}

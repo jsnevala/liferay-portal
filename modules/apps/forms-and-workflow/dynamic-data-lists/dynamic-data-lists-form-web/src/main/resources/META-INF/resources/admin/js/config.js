@@ -25,7 +25,8 @@
 								'liferay-ddl-form-builder-pages-manager',
 								'liferay-ddl-form-builder-util',
 								'liferay-ddm-form-field-types',
-								'liferay-ddm-form-renderer'
+								'liferay-ddm-form-renderer',
+								'liferay-ddm-soy-template-util'
 							]
 						},
 						'liferay-ddl-form-builder-definition-serializer': {
@@ -111,6 +112,7 @@
 							path: 'form_builder_settings_form.js',
 							requires: [
 								'liferay-ddm-form-renderer',
+								'liferay-ddm-soy-template-util',
 								'liferay-form'
 							]
 						},

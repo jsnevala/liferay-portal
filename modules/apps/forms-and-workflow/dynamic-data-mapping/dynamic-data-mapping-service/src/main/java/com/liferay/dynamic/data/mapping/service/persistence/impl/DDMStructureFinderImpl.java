@@ -328,7 +328,7 @@ public class DDMStructureFinderImpl
 				sql, "[$GROUP_ID$]", getGroupIds(groupIds));
 			sql = StringUtil.replace(sql, "[$STATUS$]", getStatus(status));
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(CAST_TEXT(DDMStructure.name))", StringPool.LIKE,
+				sql, "LOWER(CAST_TEXT(DDMStructure.name))", StringPool.LIKE,
 				false, names);
 
 			sql = CustomSQLUtil.replaceKeywords(
@@ -409,7 +409,7 @@ public class DDMStructureFinderImpl
 				sql, "[$GROUP_ID$]", getGroupIds(groupIds));
 			sql = StringUtil.replace(sql, "[$STATUS$]", getStatus(status));
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(CAST_TEXT(DDMStructure.name))", StringPool.LIKE,
+				sql, "LOWER(CAST_TEXT(DDMStructure.name))", StringPool.LIKE,
 				false, names);
 			sql = CustomSQLUtil.replaceKeywords(
 				sql, "DDMStructure.description", StringPool.LIKE, true,
@@ -463,7 +463,7 @@ public class DDMStructureFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < groupIds.length - 1; i++) {
+		for (int i = 0; i < (groupIds.length - 1); i++) {
 			sb.append("DDMStructure.groupId = ? OR ");
 		}
 

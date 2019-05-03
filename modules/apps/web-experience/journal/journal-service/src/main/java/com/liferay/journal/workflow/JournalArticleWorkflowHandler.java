@@ -49,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Julio Camarero
  */
 @Component(
-	property = {"model.class.name=com.liferay.journal.model.JournalArticle"},
+	property = "model.class.name=com.liferay.journal.model.JournalArticle",
 	service = WorkflowHandler.class
 )
 public class JournalArticleWorkflowHandler
@@ -107,6 +107,7 @@ public class JournalArticleWorkflowHandler
 
 		long userId = GetterUtil.getLong(
 			(String)workflowContext.get(WorkflowConstants.CONTEXT_USER_ID));
+
 		long classPK = GetterUtil.getLong(
 			(String)workflowContext.get(
 				WorkflowConstants.CONTEXT_ENTRY_CLASS_PK));

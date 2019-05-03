@@ -235,10 +235,10 @@ public class ResourceBlockLocalServiceImpl
 	public long getActionId(String name, String actionId)
 		throws PortalException {
 
-		ResourceAction resourcAction =
+		ResourceAction resourceAction =
 			resourceActionLocalService.getResourceAction(name, actionId);
 
-		return resourcAction.getBitwiseValue();
+		return resourceAction.getBitwiseValue();
 	}
 
 	@Override
@@ -855,7 +855,7 @@ public class ResourceBlockLocalServiceImpl
 			actionIdsLong |= oldActionIdsLong;
 		}
 		else if (operator == ResourceBlockConstants.OPERATOR_REMOVE) {
-			actionIdsLong = oldActionIdsLong & (~actionIdsLong);
+			actionIdsLong = oldActionIdsLong & ~actionIdsLong;
 		}
 
 		if (resourceBlock != null) {
@@ -909,7 +909,8 @@ public class ResourceBlockLocalServiceImpl
 				catch (SystemException se) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
-							"Unable to add a new resource block. Retrying", se);
+							"Unable to add a new resource block. Retrying.",
+							se);
 					}
 
 					// On failure, cancel all pending persistent entities
@@ -1180,8 +1181,8 @@ public class ResourceBlockLocalServiceImpl
 
 			});
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.
-				PerformActionMethod<PermissionedModel>() {
+			new ActionableDynamicQuery.PerformActionMethod
+				<PermissionedModel>() {
 
 				@Override
 				public void performAction(PermissionedModel permissionedModel) {

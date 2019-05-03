@@ -564,10 +564,10 @@ public class JournalRSSUtil {
 	}
 
 	/**
-	 * @deprecated As of 1.9.0, replaced by
-	 * 		{@link #processContent(ResourceRequest, ResourceResponse,
-	 * 		JournalFeed, JournalArticle, String, ThemeDisplay, SyndEntry,
-	 * 		SyndContent)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #processContent(ResourceRequest, ResourceResponse,
+	 *             JournalFeed, JournalArticle, String, ThemeDisplay, SyndEntry,
+	 *             SyndContent)}
 	 */
 	@Deprecated
 	protected String processContent(

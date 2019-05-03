@@ -74,7 +74,7 @@ List<String> attributeNames = Collections.list(expandoBridge.getAttributeNames()
 	<aui:input name="columnIds" type="hidden" />
 
 	<liferay-ui:search-container
-		emptyResultsMessage='<%= LanguageUtil.format(request, "no-custom-fields-are-defined-for-x", modelResourceName, false) %>'
+		emptyResultsMessage='<%= LanguageUtil.format(request, "no-custom-fields-are-defined-for-x", HtmlUtil.escape(modelResourceName), false) %>'
 		id="customFields"
 		iteratorURL="<%= portletURL %>"
 		rowChecker="<%= new CustomFieldChecker(renderRequest, renderResponse) %>"

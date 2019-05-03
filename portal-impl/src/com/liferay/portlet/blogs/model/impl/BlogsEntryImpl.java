@@ -53,7 +53,7 @@ public class BlogsEntryImpl extends BlogsEntryBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getSmallImageURL(ThemeDisplay)}
 	 */
 	@Deprecated

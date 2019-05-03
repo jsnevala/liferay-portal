@@ -41,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + SiteNavigationSiteMapPortletKeys.SITE_NAVIGATION_SITE_MAP},
+	property = "javax.portlet.name=" + SiteNavigationSiteMapPortletKeys.SITE_NAVIGATION_SITE_MAP,
 	service = TemplateHandler.class
 )
 public class SiteNavigationSiteMapPortletDisplayTemplateHandler
@@ -61,8 +61,11 @@ public class SiteNavigationSiteMapPortletDisplayTemplateHandler
 			SiteNavigationSiteMapPortletKeys.SITE_NAVIGATION_SITE_MAP,
 			resourceBundle);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override

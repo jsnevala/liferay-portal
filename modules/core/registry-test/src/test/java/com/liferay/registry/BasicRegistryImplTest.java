@@ -56,12 +56,18 @@ public class BasicRegistryImplTest {
 		Assert.assertEquals(0, serviceTracker.size());
 
 		ServiceRegistration<Foo> serviceRegistrationA =
-			registry.registerService(Foo.class, new Foo() {});
+			registry.registerService(
+				Foo.class,
+				new Foo() {
+				});
 
 		Assert.assertEquals(1, serviceTracker.size());
 
 		ServiceRegistration<Foo> serviceRegistrationB =
-			registry.registerService(Foo.class, new Foo() {});
+			registry.registerService(
+				Foo.class,
+				new Foo() {
+				});
 
 		Assert.assertEquals(2, serviceTracker.size());
 
@@ -89,7 +95,9 @@ public class BasicRegistryImplTest {
 		serviceTracker.open();
 
 		ServiceRegistration<Foo> serviceRegistration = registry.registerService(
-			Foo.class, new Foo() {});
+			Foo.class,
+			new Foo() {
+			});
 
 		Assert.assertEquals(1, addingState.get());
 

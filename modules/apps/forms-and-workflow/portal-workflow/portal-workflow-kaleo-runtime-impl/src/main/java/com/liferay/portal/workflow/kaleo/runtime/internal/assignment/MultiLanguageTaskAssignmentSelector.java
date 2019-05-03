@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  * @author Michael C. Han
  */
 @Component(
-	immediate = true, property = {"assignee.class.name=SCRIPT"},
+	immediate = true, property = "assignee.class.name=SCRIPT",
 	service = TaskAssignmentSelector.class
 )
 public class MultiLanguageTaskAssignmentSelector
@@ -96,8 +96,7 @@ public class MultiLanguageTaskAssignmentSelector
 		cardinality = ReferenceCardinality.MULTIPLE,
 		policy = ReferencePolicy.DYNAMIC,
 		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(scripting.language=*)",
-		unbind = "removeTaskAssignmentSelector"
+		target = "(scripting.language=*)"
 	)
 	protected void addTaskAssignmentSelector(
 		TaskAssignmentSelector taskAssignmentSelector,

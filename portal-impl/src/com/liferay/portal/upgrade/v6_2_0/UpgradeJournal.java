@@ -15,6 +15,7 @@
 package com.liferay.portal.upgrade.v6_2_0;
 
 import com.liferay.petra.xml.XMLUtil;
+import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -399,8 +400,10 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 	protected void updateAssetEntryClassTypeId() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
 			PreparedStatement ps1 = connection.prepareStatement(
-				"select companyId, groupId, resourcePrimKey, structureId " +
-					"from JournalArticle where structureId != ''");
+				SQLTransformer.transform(
+					"select distinct companyId, groupId, resourcePrimKey, " +
+						"structureId from JournalArticle where structureId " +
+							"!= ''"));
 			ResultSet rs = ps1.executeQuery()) {
 
 			long classNameId = PortalUtil.getClassNameId(
@@ -810,6 +813,7 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 				while (rs.next()) {
 					long groupId = rs.getLong("groupId");
 					String articleId = rs.getString("articleId");
+
 					String urlTitle = GetterUtil.getString(
 						rs.getString("urlTitle"));
 
@@ -826,6 +830,7 @@ public class UpgradeJournal extends BaseUpgradePortletPreferences {
 						processedArticleIds);
 
 					ps2.setString(1, normalizedURLTitle);
+
 					ps2.setString(2, urlTitle);
 
 					ps2.addBatch();

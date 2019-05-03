@@ -16,7 +16,6 @@ package com.liferay.portal.portlet.bridge.soy;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
-import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCCommandCache;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
@@ -26,6 +25,7 @@ import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.template.TemplateException;
 import com.liferay.portal.kernel.template.TemplateManagerUtil;
 import com.liferay.portal.kernel.template.TemplateResource;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -156,6 +156,12 @@ public class SoyPortlet extends MVCPortlet {
 				TemplateConstants.NAMESPACE,
 				_soyPortletHelper.getTemplateNamespace(path));
 
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)portletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			template.put("locale", themeDisplay.getLocale());
+
 			if (propagateRequestParameters) {
 				propagateRequestParameters(portletRequest);
 			}
@@ -218,7 +224,7 @@ public class SoyPortlet extends MVCPortlet {
 	protected boolean propagateRequestParameters;
 
 	/**
-	 * @deprecated As of 3.1.0, use {@link
+	 * @deprecated As of Judson (7.1.x), use {@link
 	 *             SoyPortlet#getTemplate(PortletRequest)}} instead
 	 */
 	@Deprecated
@@ -251,7 +257,7 @@ public class SoyPortlet extends MVCPortlet {
 			return _templateResources;
 		}
 
-		_templateResources =
+		List<TemplateResource> templateResources =
 			SoyTemplateResourcesProvider.getBundleTemplateResources(
 				_bundle, templatePath);
 
@@ -266,8 +272,10 @@ public class SoyPortlet extends MVCPortlet {
 				SoyTemplateResourcesProvider.getBundleTemplateResources(
 					bundle, templatePath);
 
-			_templateResources.addAll(mvcCommandTemplateResources);
+			templateResources.addAll(mvcCommandTemplateResources);
 		}
+
+		_templateResources = templateResources;
 
 		return _templateResources;
 	}
@@ -283,10 +291,7 @@ public class SoyPortlet extends MVCPortlet {
 
 		Template template = getTemplate(portletRequest);
 
-		LiferayPortletConfig liferayPortletConfig =
-			(LiferayPortletConfig)getPortletConfig();
-
-		template.put("portletId", liferayPortletConfig.getPortletId());
+		template.put("portletId", PortalUtil.getPortletId(portletRequest));
 
 		String portletJavaScript = _soyPortletHelper.getPortletJavaScript(
 			template, path, portletResponse.getNamespace(),

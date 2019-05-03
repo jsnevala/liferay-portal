@@ -36,13 +36,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -53,14 +46,23 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+
 /**
  * @generated
  */
 public class GroupPersistenceTest {
+
 	@ClassRule
 	@Rule
-	public static final AggregateTestRule aggregateTestRule = new AggregateTestRule(new LiferayIntegrationTestRule(),
-			PersistenceTestRule.INSTANCE,
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), PersistenceTestRule.INSTANCE,
 			new TransactionalTestRule(Propagation.REQUIRED));
 
 	@Before
@@ -100,7 +102,8 @@ public class GroupPersistenceTest {
 
 		_persistence.remove(newGroup);
 
-		Group existingGroup = _persistence.fetchByPrimaryKey(newGroup.getPrimaryKey());
+		Group existingGroup = _persistence.fetchByPrimaryKey(
+			newGroup.getPrimaryKey());
 
 		Assert.assertNull(existingGroup);
 	}
@@ -160,43 +163,48 @@ public class GroupPersistenceTest {
 
 		_groups.add(_persistence.update(newGroup));
 
-		Group existingGroup = _persistence.findByPrimaryKey(newGroup.getPrimaryKey());
+		Group existingGroup = _persistence.findByPrimaryKey(
+			newGroup.getPrimaryKey());
 
-		Assert.assertEquals(existingGroup.getMvccVersion(),
-			newGroup.getMvccVersion());
+		Assert.assertEquals(
+			existingGroup.getMvccVersion(), newGroup.getMvccVersion());
 		Assert.assertEquals(existingGroup.getUuid(), newGroup.getUuid());
 		Assert.assertEquals(existingGroup.getGroupId(), newGroup.getGroupId());
-		Assert.assertEquals(existingGroup.getCompanyId(),
-			newGroup.getCompanyId());
-		Assert.assertEquals(existingGroup.getCreatorUserId(),
-			newGroup.getCreatorUserId());
-		Assert.assertEquals(existingGroup.getClassNameId(),
-			newGroup.getClassNameId());
+		Assert.assertEquals(
+			existingGroup.getCompanyId(), newGroup.getCompanyId());
+		Assert.assertEquals(
+			existingGroup.getCreatorUserId(), newGroup.getCreatorUserId());
+		Assert.assertEquals(
+			existingGroup.getClassNameId(), newGroup.getClassNameId());
 		Assert.assertEquals(existingGroup.getClassPK(), newGroup.getClassPK());
-		Assert.assertEquals(existingGroup.getParentGroupId(),
-			newGroup.getParentGroupId());
-		Assert.assertEquals(existingGroup.getLiveGroupId(),
-			newGroup.getLiveGroupId());
-		Assert.assertEquals(existingGroup.getTreePath(), newGroup.getTreePath());
-		Assert.assertEquals(existingGroup.getGroupKey(), newGroup.getGroupKey());
+		Assert.assertEquals(
+			existingGroup.getParentGroupId(), newGroup.getParentGroupId());
+		Assert.assertEquals(
+			existingGroup.getLiveGroupId(), newGroup.getLiveGroupId());
+		Assert.assertEquals(
+			existingGroup.getTreePath(), newGroup.getTreePath());
+		Assert.assertEquals(
+			existingGroup.getGroupKey(), newGroup.getGroupKey());
 		Assert.assertEquals(existingGroup.getName(), newGroup.getName());
-		Assert.assertEquals(existingGroup.getDescription(),
-			newGroup.getDescription());
+		Assert.assertEquals(
+			existingGroup.getDescription(), newGroup.getDescription());
 		Assert.assertEquals(existingGroup.getType(), newGroup.getType());
-		Assert.assertEquals(existingGroup.getTypeSettings(),
-			newGroup.getTypeSettings());
-		Assert.assertEquals(existingGroup.getManualMembership(),
-			newGroup.getManualMembership());
-		Assert.assertEquals(existingGroup.getMembershipRestriction(),
+		Assert.assertEquals(
+			existingGroup.getTypeSettings(), newGroup.getTypeSettings());
+		Assert.assertEquals(
+			existingGroup.isManualMembership(), newGroup.isManualMembership());
+		Assert.assertEquals(
+			existingGroup.getMembershipRestriction(),
 			newGroup.getMembershipRestriction());
-		Assert.assertEquals(existingGroup.getFriendlyURL(),
-			newGroup.getFriendlyURL());
-		Assert.assertEquals(existingGroup.getSite(), newGroup.getSite());
-		Assert.assertEquals(existingGroup.getRemoteStagingGroupCount(),
+		Assert.assertEquals(
+			existingGroup.getFriendlyURL(), newGroup.getFriendlyURL());
+		Assert.assertEquals(existingGroup.isSite(), newGroup.isSite());
+		Assert.assertEquals(
+			existingGroup.getRemoteStagingGroupCount(),
 			newGroup.getRemoteStagingGroupCount());
-		Assert.assertEquals(existingGroup.getInheritContent(),
-			newGroup.getInheritContent());
-		Assert.assertEquals(existingGroup.getActive(), newGroup.getActive());
+		Assert.assertEquals(
+			existingGroup.isInheritContent(), newGroup.isInheritContent());
+		Assert.assertEquals(existingGroup.isActive(), newGroup.isActive());
 	}
 
 	@Test
@@ -242,16 +250,16 @@ public class GroupPersistenceTest {
 
 	@Test
 	public void testCountByC_C() throws Exception {
-		_persistence.countByC_C(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong());
+		_persistence.countByC_C(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
 
 		_persistence.countByC_C(0L, 0L);
 	}
 
 	@Test
 	public void testCountByC_P() throws Exception {
-		_persistence.countByC_P(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong());
+		_persistence.countByC_P(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
 
 		_persistence.countByC_P(0L, 0L);
 	}
@@ -276,72 +284,76 @@ public class GroupPersistenceTest {
 
 	@Test
 	public void testCountByC_S() throws Exception {
-		_persistence.countByC_S(RandomTestUtil.nextLong(),
-			RandomTestUtil.randomBoolean());
+		_persistence.countByC_S(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
 
 		_persistence.countByC_S(0L, RandomTestUtil.randomBoolean());
 	}
 
 	@Test
 	public void testCountByC_A() throws Exception {
-		_persistence.countByC_A(RandomTestUtil.nextLong(),
-			RandomTestUtil.randomBoolean());
+		_persistence.countByC_A(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
 
 		_persistence.countByC_A(0L, RandomTestUtil.randomBoolean());
 	}
 
 	@Test
 	public void testCountByC_CPK() throws Exception {
-		_persistence.countByC_CPK(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong());
+		_persistence.countByC_CPK(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
 
 		_persistence.countByC_CPK(0L, 0L);
 	}
 
 	@Test
 	public void testCountByT_A() throws Exception {
-		_persistence.countByT_A(RandomTestUtil.nextInt(),
-			RandomTestUtil.randomBoolean());
+		_persistence.countByT_A(
+			RandomTestUtil.nextInt(), RandomTestUtil.randomBoolean());
 
 		_persistence.countByT_A(0, RandomTestUtil.randomBoolean());
 	}
 
 	@Test
 	public void testCountByG_C_P() throws Exception {
-		_persistence.countByG_C_P(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+		_persistence.countByG_C_P(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.nextLong());
 
 		_persistence.countByG_C_P(0L, 0L, 0L);
 	}
 
 	@Test
 	public void testCountByC_C_C() throws Exception {
-		_persistence.countByC_C_C(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+		_persistence.countByC_C_C(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.nextLong());
 
 		_persistence.countByC_C_C(0L, 0L, 0L);
 	}
 
 	@Test
 	public void testCountByC_C_P() throws Exception {
-		_persistence.countByC_C_P(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+		_persistence.countByC_C_P(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.nextLong());
 
 		_persistence.countByC_C_P(0L, 0L, 0L);
 	}
 
 	@Test
 	public void testCountByC_P_S() throws Exception {
-		_persistence.countByC_P_S(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+		_persistence.countByC_P_S(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean());
 
 		_persistence.countByC_P_S(0L, 0L, RandomTestUtil.randomBoolean());
 	}
 
 	@Test
 	public void testCountByC_L_GK() throws Exception {
-		_persistence.countByC_L_GK(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong(), "");
+		_persistence.countByC_L_GK(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "");
 
 		_persistence.countByC_L_GK(0L, 0L, "null");
 
@@ -350,28 +362,50 @@ public class GroupPersistenceTest {
 
 	@Test
 	public void testCountByC_T_S() throws Exception {
-		_persistence.countByC_T_S(RandomTestUtil.nextLong(), "",
-			RandomTestUtil.randomBoolean());
+		_persistence.countByC_T_S(
+			RandomTestUtil.nextLong(), "", RandomTestUtil.randomBoolean());
 
 		_persistence.countByC_T_S(0L, "null", RandomTestUtil.randomBoolean());
 
-		_persistence.countByC_T_S(0L, (String)null,
-			RandomTestUtil.randomBoolean());
+		_persistence.countByC_T_S(
+			0L, (String)null, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByC_LikeN_S() throws Exception {
+		_persistence.countByC_LikeN_S(
+			RandomTestUtil.nextLong(), "", RandomTestUtil.randomBoolean());
+
+		_persistence.countByC_LikeN_S(
+			0L, "null", RandomTestUtil.randomBoolean());
+
+		_persistence.countByC_LikeN_S(
+			0L, (String)null, RandomTestUtil.randomBoolean());
 	}
 
 	@Test
 	public void testCountByG_C_C_P() throws Exception {
-		_persistence.countByG_C_C_P(RandomTestUtil.nextLong(),
+		_persistence.countByG_C_C_P(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong());
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
 
 		_persistence.countByG_C_C_P(0L, 0L, 0L, 0L);
 	}
 
 	@Test
+	public void testCountByG_C_P_S() throws Exception {
+		_persistence.countByG_C_P_S(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByG_C_P_S(0L, 0L, 0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
 	public void testCountByC_C_L_GK() throws Exception {
-		_persistence.countByC_C_L_GK(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "");
+		_persistence.countByC_C_L_GK(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.nextLong(), "");
 
 		_persistence.countByC_C_L_GK(0L, 0L, 0L, "null");
 
@@ -379,12 +413,26 @@ public class GroupPersistenceTest {
 	}
 
 	@Test
-	public void testCountByC_P_S_I() throws Exception {
-		_persistence.countByC_P_S_I(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+	public void testCountByC_P_LikeN_S() throws Exception {
+		_persistence.countByC_P_LikeN_S(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "",
 			RandomTestUtil.randomBoolean());
 
-		_persistence.countByC_P_S_I(0L, 0L, RandomTestUtil.randomBoolean(),
+		_persistence.countByC_P_LikeN_S(
+			0L, 0L, "null", RandomTestUtil.randomBoolean());
+
+		_persistence.countByC_P_LikeN_S(
+			0L, 0L, (String)null, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByC_P_S_I() throws Exception {
+		_persistence.countByC_P_S_I(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByC_P_S_I(
+			0L, 0L, RandomTestUtil.randomBoolean(),
 			RandomTestUtil.randomBoolean());
 	}
 
@@ -392,7 +440,8 @@ public class GroupPersistenceTest {
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		Group newGroup = addGroup();
 
-		Group existingGroup = _persistence.findByPrimaryKey(newGroup.getPrimaryKey());
+		Group existingGroup = _persistence.findByPrimaryKey(
+			newGroup.getPrimaryKey());
 
 		Assert.assertEquals(existingGroup, newGroup);
 	}
@@ -406,26 +455,28 @@ public class GroupPersistenceTest {
 
 	@Test
 	public void testFindAll() throws Exception {
-		_persistence.findAll(QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			getOrderByComparator());
+		_persistence.findAll(
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, getOrderByComparator());
 	}
 
 	protected OrderByComparator<Group> getOrderByComparator() {
-		return OrderByComparatorFactoryUtil.create("Group_", "mvccVersion",
-			true, "uuid", true, "groupId", true, "companyId", true,
-			"creatorUserId", true, "classNameId", true, "classPK", true,
-			"parentGroupId", true, "liveGroupId", true, "treePath", true,
-			"groupKey", true, "name", true, "description", true, "type", true,
-			"manualMembership", true, "membershipRestriction", true,
-			"friendlyURL", true, "site", true, "remoteStagingGroupCount", true,
-			"inheritContent", true, "active", true);
+		return OrderByComparatorFactoryUtil.create(
+			"Group_", "mvccVersion", true, "uuid", true, "groupId", true,
+			"companyId", true, "creatorUserId", true, "classNameId", true,
+			"classPK", true, "parentGroupId", true, "liveGroupId", true,
+			"treePath", true, "groupKey", true, "name", true, "description",
+			true, "type", true, "manualMembership", true,
+			"membershipRestriction", true, "friendlyURL", true, "site", true,
+			"remoteStagingGroupCount", true, "inheritContent", true, "active",
+			true);
 	}
 
 	@Test
 	public void testFetchByPrimaryKeyExisting() throws Exception {
 		Group newGroup = addGroup();
 
-		Group existingGroup = _persistence.fetchByPrimaryKey(newGroup.getPrimaryKey());
+		Group existingGroup = _persistence.fetchByPrimaryKey(
+			newGroup.getPrimaryKey());
 
 		Assert.assertEquals(existingGroup, newGroup);
 	}
@@ -442,6 +493,7 @@ public class GroupPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereAllPrimaryKeysExist()
 		throws Exception {
+
 		Group newGroup1 = addGroup();
 		Group newGroup2 = addGroup();
 
@@ -450,7 +502,8 @@ public class GroupPersistenceTest {
 		primaryKeys.add(newGroup1.getPrimaryKey());
 		primaryKeys.add(newGroup2.getPrimaryKey());
 
-		Map<Serializable, Group> groups = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, Group> groups = _persistence.fetchByPrimaryKeys(
+			primaryKeys);
 
 		Assert.assertEquals(2, groups.size());
 		Assert.assertEquals(newGroup1, groups.get(newGroup1.getPrimaryKey()));
@@ -460,6 +513,7 @@ public class GroupPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereNoPrimaryKeysExist()
 		throws Exception {
+
 		long pk1 = RandomTestUtil.nextLong();
 
 		long pk2 = RandomTestUtil.nextLong();
@@ -469,7 +523,8 @@ public class GroupPersistenceTest {
 		primaryKeys.add(pk1);
 		primaryKeys.add(pk2);
 
-		Map<Serializable, Group> groups = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, Group> groups = _persistence.fetchByPrimaryKeys(
+			primaryKeys);
 
 		Assert.assertTrue(groups.isEmpty());
 	}
@@ -477,6 +532,7 @@ public class GroupPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereSomePrimaryKeysExist()
 		throws Exception {
+
 		Group newGroup = addGroup();
 
 		long pk = RandomTestUtil.nextLong();
@@ -486,32 +542,33 @@ public class GroupPersistenceTest {
 		primaryKeys.add(newGroup.getPrimaryKey());
 		primaryKeys.add(pk);
 
-		Map<Serializable, Group> groups = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, Group> groups = _persistence.fetchByPrimaryKeys(
+			primaryKeys);
 
 		Assert.assertEquals(1, groups.size());
 		Assert.assertEquals(newGroup, groups.get(newGroup.getPrimaryKey()));
 	}
 
 	@Test
-	public void testFetchByPrimaryKeysWithNoPrimaryKeys()
-		throws Exception {
+	public void testFetchByPrimaryKeysWithNoPrimaryKeys() throws Exception {
 		Set<Serializable> primaryKeys = new HashSet<Serializable>();
 
-		Map<Serializable, Group> groups = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, Group> groups = _persistence.fetchByPrimaryKeys(
+			primaryKeys);
 
 		Assert.assertTrue(groups.isEmpty());
 	}
 
 	@Test
-	public void testFetchByPrimaryKeysWithOnePrimaryKey()
-		throws Exception {
+	public void testFetchByPrimaryKeysWithOnePrimaryKey() throws Exception {
 		Group newGroup = addGroup();
 
 		Set<Serializable> primaryKeys = new HashSet<Serializable>();
 
 		primaryKeys.add(newGroup.getPrimaryKey());
 
-		Map<Serializable, Group> groups = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, Group> groups = _persistence.fetchByPrimaryKeys(
+			primaryKeys);
 
 		Assert.assertEquals(1, groups.size());
 		Assert.assertEquals(newGroup, groups.get(newGroup.getPrimaryKey()));
@@ -521,15 +578,19 @@ public class GroupPersistenceTest {
 	public void testActionableDynamicQuery() throws Exception {
 		final IntegerWrapper count = new IntegerWrapper();
 
-		ActionableDynamicQuery actionableDynamicQuery = GroupLocalServiceUtil.getActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			GroupLocalServiceUtil.getActionableDynamicQuery();
 
-		actionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<Group>() {
+		actionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<Group>() {
+
 				@Override
 				public void performAction(Group group) {
 					Assert.assertNotNull(group);
 
 					count.increment();
 				}
+
 			});
 
 		actionableDynamicQuery.performActions();
@@ -538,15 +599,14 @@ public class GroupPersistenceTest {
 	}
 
 	@Test
-	public void testDynamicQueryByPrimaryKeyExisting()
-		throws Exception {
+	public void testDynamicQueryByPrimaryKeyExisting() throws Exception {
 		Group newGroup = addGroup();
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(Group.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			Group.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.add(RestrictionsFactoryUtil.eq("groupId",
-				newGroup.getGroupId()));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq("groupId", newGroup.getGroupId()));
 
 		List<Group> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -559,11 +619,11 @@ public class GroupPersistenceTest {
 
 	@Test
 	public void testDynamicQueryByPrimaryKeyMissing() throws Exception {
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(Group.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			Group.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.add(RestrictionsFactoryUtil.eq("groupId",
-				RandomTestUtil.nextLong()));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq("groupId", RandomTestUtil.nextLong()));
 
 		List<Group> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -571,19 +631,18 @@ public class GroupPersistenceTest {
 	}
 
 	@Test
-	public void testDynamicQueryByProjectionExisting()
-		throws Exception {
+	public void testDynamicQueryByProjectionExisting() throws Exception {
 		Group newGroup = addGroup();
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(Group.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			Group.class, _dynamicQueryClassLoader);
 
 		dynamicQuery.setProjection(ProjectionFactoryUtil.property("groupId"));
 
 		Object newGroupId = newGroup.getGroupId();
 
-		dynamicQuery.add(RestrictionsFactoryUtil.in("groupId",
-				new Object[] { newGroupId }));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.in("groupId", new Object[] {newGroupId}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -596,13 +655,14 @@ public class GroupPersistenceTest {
 
 	@Test
 	public void testDynamicQueryByProjectionMissing() throws Exception {
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(Group.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			Group.class, _dynamicQueryClassLoader);
 
 		dynamicQuery.setProjection(ProjectionFactoryUtil.property("groupId"));
 
-		dynamicQuery.add(RestrictionsFactoryUtil.in("groupId",
-				new Object[] { RandomTestUtil.nextLong() }));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.in(
+				"groupId", new Object[] {RandomTestUtil.nextLong()}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -615,65 +675,88 @@ public class GroupPersistenceTest {
 
 		_persistence.clearCache();
 
-		Group existingGroup = _persistence.findByPrimaryKey(newGroup.getPrimaryKey());
+		Group existingGroup = _persistence.findByPrimaryKey(
+			newGroup.getPrimaryKey());
 
-		Assert.assertTrue(Objects.equals(existingGroup.getUuid(),
-				ReflectionTestUtil.invoke(existingGroup, "getOriginalUuid",
-					new Class<?>[0])));
-		Assert.assertEquals(Long.valueOf(existingGroup.getGroupId()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalGroupId", new Class<?>[0]));
+		Assert.assertTrue(
+			Objects.equals(
+				existingGroup.getUuid(),
+				ReflectionTestUtil.invoke(
+					existingGroup, "getOriginalUuid", new Class<?>[0])));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalGroupId", new Class<?>[0]));
 
-		Assert.assertEquals(Long.valueOf(existingGroup.getLiveGroupId()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalLiveGroupId", new Class<?>[0]));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getLiveGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalLiveGroupId", new Class<?>[0]));
 
-		Assert.assertEquals(Long.valueOf(existingGroup.getCompanyId()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalCompanyId", new Class<?>[0]));
-		Assert.assertTrue(Objects.equals(existingGroup.getGroupKey(),
-				ReflectionTestUtil.invoke(existingGroup, "getOriginalGroupKey",
-					new Class<?>[0])));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalCompanyId", new Class<?>[0]));
+		Assert.assertTrue(
+			Objects.equals(
+				existingGroup.getGroupKey(),
+				ReflectionTestUtil.invoke(
+					existingGroup, "getOriginalGroupKey", new Class<?>[0])));
 
-		Assert.assertEquals(Long.valueOf(existingGroup.getCompanyId()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalCompanyId", new Class<?>[0]));
-		Assert.assertTrue(Objects.equals(existingGroup.getFriendlyURL(),
-				ReflectionTestUtil.invoke(existingGroup,
-					"getOriginalFriendlyURL", new Class<?>[0])));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalCompanyId", new Class<?>[0]));
+		Assert.assertTrue(
+			Objects.equals(
+				existingGroup.getFriendlyURL(),
+				ReflectionTestUtil.invoke(
+					existingGroup, "getOriginalFriendlyURL", new Class<?>[0])));
 
-		Assert.assertEquals(Long.valueOf(existingGroup.getCompanyId()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalCompanyId", new Class<?>[0]));
-		Assert.assertEquals(Long.valueOf(existingGroup.getClassNameId()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalClassNameId", new Class<?>[0]));
-		Assert.assertEquals(Long.valueOf(existingGroup.getClassPK()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalClassPK", new Class<?>[0]));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalCompanyId", new Class<?>[0]));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getClassNameId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalClassNameId", new Class<?>[0]));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getClassPK()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalClassPK", new Class<?>[0]));
 
-		Assert.assertEquals(Long.valueOf(existingGroup.getCompanyId()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalCompanyId", new Class<?>[0]));
-		Assert.assertEquals(Long.valueOf(existingGroup.getLiveGroupId()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalLiveGroupId", new Class<?>[0]));
-		Assert.assertTrue(Objects.equals(existingGroup.getGroupKey(),
-				ReflectionTestUtil.invoke(existingGroup, "getOriginalGroupKey",
-					new Class<?>[0])));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalCompanyId", new Class<?>[0]));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getLiveGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalLiveGroupId", new Class<?>[0]));
+		Assert.assertTrue(
+			Objects.equals(
+				existingGroup.getGroupKey(),
+				ReflectionTestUtil.invoke(
+					existingGroup, "getOriginalGroupKey", new Class<?>[0])));
 
-		Assert.assertEquals(Long.valueOf(existingGroup.getCompanyId()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalCompanyId", new Class<?>[0]));
-		Assert.assertEquals(Long.valueOf(existingGroup.getClassNameId()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalClassNameId", new Class<?>[0]));
-		Assert.assertEquals(Long.valueOf(existingGroup.getLiveGroupId()),
-			ReflectionTestUtil.<Long>invoke(existingGroup,
-				"getOriginalLiveGroupId", new Class<?>[0]));
-		Assert.assertTrue(Objects.equals(existingGroup.getGroupKey(),
-				ReflectionTestUtil.invoke(existingGroup, "getOriginalGroupKey",
-					new Class<?>[0])));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalCompanyId", new Class<?>[0]));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getClassNameId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalClassNameId", new Class<?>[0]));
+		Assert.assertEquals(
+			Long.valueOf(existingGroup.getLiveGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingGroup, "getOriginalLiveGroupId", new Class<?>[0]));
+		Assert.assertTrue(
+			Objects.equals(
+				existingGroup.getGroupKey(),
+				ReflectionTestUtil.invoke(
+					existingGroup, "getOriginalGroupKey", new Class<?>[0])));
 	}
 
 	protected Group addGroup() throws Exception {
@@ -731,4 +814,5 @@ public class GroupPersistenceTest {
 	private List<Group> _groups = new ArrayList<Group>();
 	private GroupPersistence _persistence;
 	private ClassLoader _dynamicQueryClassLoader;
+
 }

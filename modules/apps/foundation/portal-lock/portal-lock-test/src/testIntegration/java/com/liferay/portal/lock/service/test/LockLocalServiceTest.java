@@ -71,8 +71,8 @@ public class LockLocalServiceTest {
 			),
 			@ExpectedLog(
 				expectedDBType = ExpectedDBType.DB2,
-				expectedLog = "[jcc][t4][102][10040][4.16.53] Batch failure.",
-				expectedType = ExpectedType.PREFIX
+				expectedLog = "Batch failure.",
+				expectedType = ExpectedType.CONTAINS
 			),
 			@ExpectedLog(
 				expectedDBType = ExpectedDBType.HYPERSONIC,

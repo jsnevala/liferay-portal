@@ -83,6 +83,10 @@ AUI.add(
 						value: true
 					},
 
+					startedFilling: {
+						value: false
+					},
+
 					tip: {
 						value: ''
 					},
@@ -158,7 +162,7 @@ AUI.add(
 					focus: function() {
 						var instance = this;
 
-						instance.get('container').scrollIntoView();
+						instance.scrollIntoView();
 
 						instance.getInputNode().focus();
 					},
@@ -216,10 +220,10 @@ AUI.add(
 						var locale = instance.get('locale');
 
 						if (Lang.isObject(label) && locale in label) {
-							label = label[locale];
+							return label[locale] || instance.get('name');
 						}
 
-						return label || instance.get('name');
+						return instance.get('name');
 					},
 
 					getLabelNode: function() {
@@ -352,6 +356,12 @@ AUI.add(
 						instance.fire('render');
 
 						return instance;
+					},
+
+					scrollIntoView: function() {
+						var instance = this;
+
+						instance.get('container').scrollIntoView(false);
 					},
 
 					setValue: function(value) {

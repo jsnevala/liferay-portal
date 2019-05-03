@@ -68,7 +68,7 @@ import org.osgi.service.component.annotations.Reference;
 public class DDLImpl implements DDL {
 
 	/**
-	 * @deprecated As of 1.1.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override
@@ -112,6 +112,7 @@ public class DDLImpl implements DDL {
 		for (Field field : fields) {
 			String fieldName = field.getName();
 			String fieldType = field.getType();
+
 			Object[] fieldValues = getFieldValues(field, locale);
 
 			if (fieldValues.length == 0) {
@@ -231,7 +232,7 @@ public class DDLImpl implements DDL {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override
@@ -245,7 +246,7 @@ public class DDLImpl implements DDL {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override
@@ -282,7 +283,7 @@ public class DDLImpl implements DDL {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -295,7 +296,7 @@ public class DDLImpl implements DDL {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -360,7 +361,7 @@ public class DDLImpl implements DDL {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override

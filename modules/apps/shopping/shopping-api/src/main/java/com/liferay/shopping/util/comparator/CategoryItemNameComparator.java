@@ -44,7 +44,10 @@ public class CategoryItemNameComparator extends OrderByComparator<Object> {
 		if ((object1 instanceof ShoppingCategory) &&
 			(object2 instanceof ShoppingCategory)) {
 
-			value = getName(object1).compareTo(getName(object2));
+			String name1 = getName(object1);
+			String name2 = getName(object2);
+
+			value = name1.compareTo(name2);
 		}
 		else if (object1 instanceof ShoppingCategory) {
 			value = -1;
@@ -53,7 +56,10 @@ public class CategoryItemNameComparator extends OrderByComparator<Object> {
 			value = 1;
 		}
 		else {
-			value = getName(object1).compareTo(getName(object2));
+			String name1 = getName(object1);
+			String name2 = getName(object2);
+
+			value = name1.compareTo(name2);
 		}
 
 		if (_ascending) {

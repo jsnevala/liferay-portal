@@ -27,6 +27,7 @@ import com.liferay.sync.engine.service.SyncSiteService;
 import com.liferay.sync.engine.util.ConnectionRetryUtil;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -48,6 +49,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.HttpHostConnectException;
+import org.apache.http.util.EntityUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +121,9 @@ public class BaseHandler implements Handler<Void> {
 
 			retryServerConnection(SyncAccount.UI_EVENT_CONNECTION_EXCEPTION);
 		}
-		else if (e instanceof FileNotFoundException) {
+		else if (e instanceof FileNotFoundException ||
+				 e instanceof IOException) {
+
 			SyncFile syncFile = (SyncFile)getParameterValue("syncFile");
 
 			String message = e.getMessage();
@@ -132,8 +136,13 @@ public class BaseHandler implements Handler<Void> {
 
 				_scheduledExecutorService.schedule(_event, 1, TimeUnit.SECONDS);
 			}
-			else if (syncFile.getVersion() == null) {
+			else if ((e instanceof FileNotFoundException) &&
+					 (syncFile.getVersion() == null)) {
+
 				SyncFileService.deleteSyncFile(syncFile, false);
+			}
+			else {
+				_logger.error(e.getMessage(), e);
 			}
 		}
 		else {
@@ -157,6 +166,8 @@ public class BaseHandler implements Handler<Void> {
 
 			if ((statusLine.getStatusCode() != HttpStatus.SC_OK) &&
 				(statusLine.getStatusCode() != HttpStatus.SC_PARTIAL_CONTENT)) {
+
+				EntityUtils.consume(httpResponse.getEntity());
 
 				_logger.error("Status code {}", statusLine.getStatusCode());
 

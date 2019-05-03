@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PwdGenerator;
@@ -788,8 +789,8 @@ public class ShoppingOrderLocalServiceImpl
 		}
 
 		if (!shoppingGroupServiceOverriddenConfiguration.usePayPal() &&
-			(shoppingGroupServiceOverriddenConfiguration.getCcTypes().length >
-				0)) {
+			ArrayUtil.isNotEmpty(
+				shoppingGroupServiceOverriddenConfiguration.getCcTypes())) {
 
 			if (Validator.isNull(ccName)) {
 				throw new CCNameException();

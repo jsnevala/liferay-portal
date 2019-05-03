@@ -29,7 +29,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Supritha Sundaram
  */
 @Component(
-	property = {"resource.name=com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthApp"},
+	property = "resource.name=com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthApp",
 	service = ResourcePermissionChecker.class
 )
 public class WeDeployAuthAppPermission extends BaseResourcePermissionChecker {

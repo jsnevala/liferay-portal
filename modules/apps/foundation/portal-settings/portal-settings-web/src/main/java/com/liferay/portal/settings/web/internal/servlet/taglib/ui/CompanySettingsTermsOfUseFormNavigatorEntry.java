@@ -23,11 +23,11 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  * @author Philip Jones
  */
 @Component(
-	immediate = true, property = {"form.navigator.entry.order:Integer=50"},
+	immediate = true, property = "form.navigator.entry.order:Integer=50",
 	service = FormNavigatorEntry.class
 )
 public class CompanySettingsTermsOfUseFormNavigatorEntry
@@ -35,8 +35,8 @@ public class CompanySettingsTermsOfUseFormNavigatorEntry
 
 	@Override
 	public String getCategoryKey() {
-		return
-			FormNavigatorConstants.CATEGORY_KEY_COMPANY_SETTINGS_CONFIGURATION;
+		return FormNavigatorConstants.
+			CATEGORY_KEY_COMPANY_SETTINGS_CONFIGURATION;
 	}
 
 	@Override

@@ -235,7 +235,17 @@ renderResponse.setTitle((recordSet == null) ? LanguageUtil.get(request, "new-for
 							['liferay-ddl-portlet'].concat(systemFieldModules)
 						);
 
-						<portlet:namespace />init();
+						if (Liferay.DDMFieldTypesReady) {
+							<portlet:namespace />init();
+						}
+						else {
+							Liferay.onceAfter(
+								'DDMFieldTypesReady',
+								function() {
+									<portlet:namespace />init();
+								}
+							);
+						}
 					}
 				}
 			);

@@ -547,7 +547,7 @@ public class GroupFinderImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -778,10 +778,8 @@ public class GroupFinderImpl
 			qPos.add(site);
 			qPos.add(remoteStagingGroupCount);
 
-			List<Group> groups = (List<Group>)QueryUtil.list(
+			return (List<Group>)QueryUtil.list(
 				q, getDialect(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-
-			return groups;
 		}
 		catch (Exception e) {
 			throw new SystemException(e);
@@ -899,9 +897,9 @@ public class GroupFinderImpl
 		}
 
 		sql = CustomSQLUtil.replaceKeywords(
-			sql, "lower(Group_.name)", StringPool.LIKE, false, names);
+			sql, "LOWER(Group_.name)", StringPool.LIKE, false, names);
 		sql = CustomSQLUtil.replaceKeywords(
-			sql, "lower(Group_.description)", StringPool.LIKE, true,
+			sql, "LOWER(Group_.description)", StringPool.LIKE, true,
 			descriptions);
 		sql = CustomSQLUtil.replaceAndOperator(sql, andOperator);
 
@@ -1017,9 +1015,9 @@ public class GroupFinderImpl
 		}
 
 		sql = CustomSQLUtil.replaceKeywords(
-			sql, "lower(Group_.name)", StringPool.LIKE, false, names);
+			sql, "LOWER(Group_.name)", StringPool.LIKE, false, names);
 		sql = CustomSQLUtil.replaceKeywords(
-			sql, "lower(Group_.description)", StringPool.LIKE, true,
+			sql, "LOWER(Group_.description)", StringPool.LIKE, true,
 			descriptions);
 
 		sql = replaceJoinAndWhere(sql, params);
@@ -1050,6 +1048,7 @@ public class GroupFinderImpl
 
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
 			String key = entry.getKey();
+
 			Object value = entry.getValue();
 
 			if (Validator.isNull(value)) {
@@ -1414,7 +1413,9 @@ public class GroupFinderImpl
 			int pos = join.indexOf("WHERE");
 
 			if (pos != -1) {
-				join = join.substring(pos + 5).concat(" AND ");
+				join = join.substring(pos + 5);
+
+				join = join.concat(" AND ");
 			}
 			else {
 				join = StringPool.BLANK;
@@ -1631,7 +1632,6 @@ public class GroupFinderImpl
 	private volatile Map<String, String> _joinMap;
 	private final Map<String, String> _replaceJoinAndWhereSQLCache =
 		new ConcurrentHashMap<>();
-	private volatile Long _userGroupClassNameId;
 	private volatile Map<String, String> _whereMap;
 
 }

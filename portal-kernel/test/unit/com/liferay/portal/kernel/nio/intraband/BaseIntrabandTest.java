@@ -73,9 +73,11 @@ public class BaseIntrabandTest {
 				assertClasses.add(ChannelContext.class);
 				assertClasses.add(ClosedIntrabandException.class);
 				assertClasses.add(CompletionHandler.class);
+
 				Collections.addAll(
 					assertClasses,
 					CompletionHandler.class.getDeclaredClasses());
+
 				assertClasses.add(Datagram.class);
 				assertClasses.add(DatagramReceiveHandler.class);
 			}
@@ -1510,8 +1512,9 @@ public class BaseIntrabandTest {
 			Assert.assertEquals("Result waiting timeout", te.getMessage());
 		}
 
-		Assert.assertEquals(
-			_DEFAULT_TIMEOUT, _mockIntraband.getDatagram().timeout);
+		Datagram datagram = _mockIntraband.getDatagram();
+
+		Assert.assertEquals(_DEFAULT_TIMEOUT, datagram.timeout);
 
 		// Covert timeout
 

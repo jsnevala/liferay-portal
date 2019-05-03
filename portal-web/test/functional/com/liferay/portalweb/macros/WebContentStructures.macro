@@ -1,289 +1,289 @@
-<definition>
-	<command name="addCP">
-		<execute macro="LexiconEntry#gotoAdd" />
+definition {
+	macro addCP {
+		LexiconEntry.gotoAdd();
 
-		<execute macro="WebContentStructures#addName">
-			<var name="structureName" value="${structureName}" />
-		</execute>
+		WebContentStructures.addName(structureName = "${structureName}");
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Details" />
-		</execute>
+		Panel.expandPanel(panelHeading = "Details");
 
-		<if>
-			<isset var="structureDescription" />
-			<then>
-				<execute macro="PortletEntry#inputDescriptionTextInput">
-					<var name="description" value="${structureDescription}" />
-				</execute>
-			</then>
-		</if>
+		if (isSet(structureDescription)) {
+			PortletEntry.inputDescriptionTextInput(description = "${structureDescription}");
+		}
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		SelectFrame(value1 = "relative=top");
+	}
 
-	<command name="addLocalization">
-		<var name="key_localizationName" value="${localization1NameKey}" />
+	macro addLocalization {
+		var key_localizationName = "${localization1NameKey}";
 
-		<execute function="Click" locator1="Translation#LOCALIZATION_NAME" />
+		Click(locator1 = "Translation#LOCALIZATION_NAME");
 
-		<execute macro="WebContentStructures#addName">
-			<var name="structureName" value="${localization1Name}" />
-		</execute>
+		WebContentStructures.addName(structureName = "${localization1Name}");
 
-		<if>
-			<isset var="localization2NameKey" />
-			<then>
-				<var name="key_localizationName" value="${localization2NameKey}" />
+		if (isSet(localization2NameKey)) {
+			var key_localizationName = "${localization2NameKey}";
 
-				<execute function="Click" locator1="Translation#LOCALIZATION_NAME" />
+			Click(locator1 = "Translation#LOCALIZATION_NAME");
 
-				<execute macro="WebContentStructures#addName">
-					<var name="structureName" value="${localization2Name}" />
-				</execute>
-			</then>
-		</if>
-	</command>
+			WebContentStructures.addName(structureName = "${localization2Name}");
+		}
+	}
 
-	<command name="addName">
-		<execute function="Type#clickAtType" locator1="TextInput#NAME" value1="${structureName}" />
-	</command>
+	macro addName {
+		Type.clickAtType(locator1 = "TextInput#NAME", value1 = "${structureName}");
+	}
 
-	<command name="addNullCP">
-		<execute macro="LexiconEntry#gotoAdd" />
+	macro addNullCP {
+		LexiconEntry.gotoAdd();
 
-		<execute function="AssertElementNotPresent" locator1="TextInput#REQUIRED_ALERT" />
+		AssertElementNotPresent(locator1 = "TextInput#REQUIRED_ALERT");
 
-		<execute macro="Button#clickSave" />
+		Button.clickSave();
 
-		<execute function="AssertTextEquals" locator1="Message#ERROR_FIELD_REQUIRED" value1="This field is required." />
+		AssertTextEquals(
+			locator1 = "Message#ERROR_FIELD_REQUIRED",
+			value1 = "This field is required."
+		);
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		SelectFrame(value1 = "relative=top");
+	}
 
-	<command name="addSubstructure">
-		<execute function="AssertClick" locator1="DDMEditStructure#DETAILS_PARENT_SELECT_BUTTON" value1="Select" />
+	macro addSubstructure {
+		AssertClick(locator1 = "Button#SELECT", value1 = "Select");
 
-		<execute function="SelectFrame" value1="relative=top" />
+		SelectFrame(value1 = "relative=top");
 
-		<execute macro="IFrame#selectDialogFrame" />
+		IFrame.selectDialogFrame();
 
-		<var name="key_ddlDataDefinitionName" value="${parentStructureName}" />
+		var key_ddlDataDefinitionName = "${parentStructureName}";
 
-		<execute function="AssertClickNoError" locator1="DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK" value1="${parentStructureName}" />
+		AssertClickNoError(
+			locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK",
+			value1 = "${parentStructureName}"
+		);
 
-		<execute function="Confirm#assertConfirmationNoWait" value1="Selecting a new structure deletes all unsaved content. Do you want to proceed?" />
+		Confirm.assertConfirmationNoWait(
+			value1 = "Selecting a new structure deletes all unsaved content. Do you want to proceed?"
+		);
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		SelectFrame(value1 = "relative=top");
+	}
 
-	<command name="advancedSearchCP">
-		<var name="key_ddlDataDefinitionName" value="${structureName}" />
+	macro advancedSearchCP {
+		var key_ddlDataDefinitionName = "${structureName}";
 
-		<execute function="AssertTextEquals" locator1="DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME" value1="${structureName}" />
+		AssertTextEquals(
+			locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME",
+			value1 = "${structureName}"
+		);
 
-		<execute function="Click" locator1="Icon#ADVANCED_SEARCH" />
+		Click(locator1 = "Icon#ADVANCED_SEARCH");
 
-		<if>
-			<isset var="structureName" />
-			<then>
-				<execute macro="PortletEntry#inputName">
-					<var name="name" value="${structureName}" />
-				</execute>
-			</then>
-		</if>
+		if (isSet(structureName)) {
+			PortletEntry.inputName(name = "${structureName}");
+		}
 
-		<if>
-			<isset var="structureDescription" />
-			<then>
-				<execute macro="PortletEntry#inputDescriptionTextInput">
-					<var name="description" value="${structureDescription}" />
-				</execute>
-			</then>
-		</if>
+		if (isSet(structureDescription)) {
+			PortletEntry.inputDescriptionTextInput(description = "${structureDescription}");
+		}
 
-		<execute function="Click" locator1="Icon#BASIC_SEARCH" />
+		Click(locator1 = "Icon#BASIC_SEARCH");
 
-		<execute function="AssertTextEquals" locator1="DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME" value1="${structureName}" />
-		<execute function="AssertTextEquals" locator1="DDMSelectStructure#DDM_STRUCTURE_TABLE_DESCRIPTION" value1="${structureDescription}" />
-	</command>
+		AssertTextEquals(
+			locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME",
+			value1 = "${structureName}"
+		);
 
-	<command name="deleteCP">
-		<execute macro="WebContentNavigator#gotoManageStructures" />
+		AssertTextEquals(
+			locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_DESCRIPTION",
+			value1 = "${structureDescription}"
+		);
+	}
 
-		<var name="key_ddlDataDefinitionName" value="${structureName}" />
+	macro deleteCP {
+		WebContentNavigator.gotoManageStructures();
 
-		<execute function="Click" locator1="DDMSelectStructure#DDM_STRUCTURE_ELLIPSIS" />
+		var key_ddlDataDefinitionName = "${structureName}";
 
-		<execute function="AssertClickNoError" locator1="MenuItem#ANY_MENU_ITEM" value1="Delete">
-			<var name="key_menuItem" value="Delete" />
-		</execute>
+		Click(locator1 = "DDMSelectStructure#DDM_STRUCTURE_ELLIPSIS");
 
-		<execute function="Confirm" value1="Are you sure you want to delete this? It will be deleted immediately." />
+		MenuItem.clickNoError(menuItem = "Delete");
 
-		<if>
-			<equals arg1="${webContentHasReference}" arg2="true" />
-			<then>
-				<execute macro="Alert#viewRequestFailedToComplete" />
+		Confirm(
+			value1 = "Are you sure you want to delete this? It will be deleted immediately."
+		);
 
-				<execute function="AssertTextEquals#assertPartialText" locator1="Message#ERROR_2" value1="The structure cannot be deleted because it is required by one or more templates." />
-			</then>
-			<else>
-				<execute macro="Alert#viewSuccessMessage" />
-			</else>
-		</if>
-	</command>
+		if ("${webContentHasReference}" == "true") {
+			Alert.viewRequestFailedToComplete();
 
-	<command name="editSubstructureDefaultValuesCP">
-		<var name="key_ddlDataDefinitionName" value="${substructureName}" />
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_2",
+				value1 = "The structure cannot be deleted because it is required by one or more templates."
+			);
+		}
+		else {
+			Alert.viewSuccessMessage();
+		}
+	}
 
-		<execute function="Type" locator1="NavBar#BASIC_SEARCH_FIELD" value1="${substructureName}" />
+	macro editSubstructureDefaultValuesCP {
+		var key_ddlDataDefinitionName = "${substructureName}";
 
-		<execute function="Click" locator1="Icon#BASIC_SEARCH" />
+		Type(locator1 = "NavBar#BASIC_SEARCH_FIELD", value1 = "${substructureName}");
 
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="Edit Default Values" />
-			<var name="rowEntry" value="${substructureName}" />
-		</execute>
+		Click(locator1 = "Icon#BASIC_SEARCH");
 
-		<for list="${editSubstructureFieldNames}" param="structureFieldName">
-			<var name="key_fieldDefaultValue" value="${structureFieldName}" />
-			<var method="StringUtil#replace('${structureFieldName}', ' ', '')" name="structureFieldName" />
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit Default Values",
+			rowEntry = "${substructureName}"
+		);
 
-			<execute function="Type" locator1="DDMField#DDM_INPUT" value1="Edited ${structureFieldName} Field" />
-		</for>
+		for (var structureFieldName : list "${editSubstructureFieldNames}") {
+			var key_fieldDefaultValue = "${structureFieldName}";
+			var structureFieldName = StringUtil.replace("${structureFieldName}", " ", "");
 
-		<execute macro="Button#clickSave" />
+			Type(
+				locator1 = "DDMField#DDM_INPUT",
+				value1 = "Edited ${structureFieldName} Field"
+			);
+		}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Web Content" />
-		</execute>
+		Button.clickSave();
 
-		<execute macro="WebContentNavigator#gotoManageStructures" />
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Web Content"
+		);
 
-		<var name="key_ddlDataDefinitionName" value="${substructureName}" />
+		WebContentNavigator.gotoManageStructures();
 
-		<execute function="Type" locator1="NavBar#BASIC_SEARCH_FIELD" value1="${substructureName}" />
+		var key_ddlDataDefinitionName = "${substructureName}";
 
-		<execute function="Click" locator1="Icon#BASIC_SEARCH" />
+		Type(locator1 = "NavBar#BASIC_SEARCH_FIELD", value1 = "${substructureName}");
 
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="Edit Default Values" />
-			<var name="rowEntry" value="${substructureName}" />
-		</execute>
+		Click(locator1 = "Icon#BASIC_SEARCH");
 
-		<for list="${editSubstructureFieldNames}" param="structureFieldName">
-			<var name="key_fieldDefaultValue" value="${structureFieldName}" />
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit Default Values",
+			rowEntry = "${substructureName}"
+		);
 
-			<execute function="AssertTextEquals" locator1="DDMField#DDM_INPUT" value1="Edited ${structureFieldName} Field" />
-		</for>
+		for (var structureFieldName : list "${editSubstructureFieldNames}") {
+			var key_fieldDefaultValue = "${structureFieldName}";
 
-		<execute function="SelectFrameTop" />
-	</command>
+			AssertTextEquals(
+				locator1 = "DDMField#DDM_INPUT",
+				value1 = "Edited ${structureFieldName} Field"
+			);
+		}
 
-	<command name="saveCP">
-		<execute function="AssertClick" locator1="DDMEditStructure#SAVE_BUTTON" value1="Save" />
+		SelectFrameTop();
+	}
 
-		<execute macro="Alert#viewSuccessMessage" />
+	macro saveCP {
+		AssertClick(locator1 = "DDMEditStructure#SAVE_BUTTON", value1 = "Save");
 
-		<if>
-			<isset var="addRoleViewPermissions" />
-			<then>
-				<execute macro="LexiconEntry#gotoEntryMenuItem">
-					<var name="menuItem" value="Permissions" />
-					<var name="rowEntry" value="${structureName}" />
-				</execute>
+		Alert.viewSuccessMessage();
 
-				<execute macro="IFrame#selectDialogFrame" />
+		if (isSet(addRoleViewPermissions)) {
+			LexiconEntry.gotoEntryMenuItem(
+				menuItem = "Permissions",
+				rowEntry = "${structureName}"
+			);
 
-				<execute macro="PermissionsInline#addOrRemoveViewPermissionFromAllRoles">
-					<var name="addOrRemoveViewPermission" value="Add" />
-					<var name="roleList" value="${addRoleViewPermissions}" />
-				</execute>
+			IFrame.selectDialogFrame();
 
-				<execute macro="IFrame#selectTopFrame" />
-			</then>
-		</if>
-	</command>
+			PermissionsInline.addOrRemoveViewPermissionFromAllRoles(
+				addOrRemoveViewPermission = "Add",
+				roleList = "${addRoleViewPermissions}"
+			);
 
-	<command name="tearDownCP">
-		<execute macro="Navigator#openURL" />
+			IFrame.selectTopFrame();
+		}
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Web Content" />
-		</execute>
+	macro tearDownCP {
+		Navigator.openURL();
 
-		<execute macro="WebContentNavigator#gotoManageStructures" />
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Web Content"
+		);
 
-		<execute function="Type" locator1="NavBar#BASIC_SEARCH_FIELD" value1="2" />
+		WebContentNavigator.gotoManageStructures();
 
-		<execute function="Click" locator1="Icon#BASIC_SEARCH" />
+		Type(locator1 = "NavBar#BASIC_SEARCH_FIELD", value1 = "2");
 
-		<while>
-			<condition function="IsElementNotPresent" locator1="Message#EMPTY_INFO" />
-			<then>
-				<execute function="Check#checkAll" locator1="Checkbox#SELECT_ALL" />
+		Click(locator1 = "Icon#BASIC_SEARCH");
 
-				<execute function="ClickNoError" locator1="Icon#DELETE" />
+		while (IsElementNotPresent(locator1 = "Message#EMPTY_INFO")) {
+			Check.checkAll(locator1 = "Checkbox#SELECT_ALL");
 
-				<execute function="Confirm" value1="Are you sure you want to delete this? It will be deleted immediately." />
+			ClickNoError(locator1 = "Icon#DELETE");
 
-				<execute macro="Alert#viewSuccessMessage" />
-			</then>
-		</while>
+			Confirm(
+				value1 = "Are you sure you want to delete this? It will be deleted immediately."
+			);
 
-		<execute function="Type" locator1="NavBar#BASIC_SEARCH_FIELD" value1="Structure" />
+			Alert.viewSuccessMessage();
+		}
 
-		<execute function="Click" locator1="Icon#BASIC_SEARCH" />
+		Type(locator1 = "NavBar#BASIC_SEARCH_FIELD", value1 = "Structure");
 
-		<while>
-			<condition function="IsElementNotPresent" locator1="Message#EMPTY_INFO" />
-			<then>
-				<execute function="Check#checkAll" locator1="Checkbox#SELECT_ALL" />
+		Click(locator1 = "Icon#BASIC_SEARCH");
 
-				<execute function="ClickNoError" locator1="Icon#DELETE" />
+		while (IsElementNotPresent(locator1 = "Message#EMPTY_INFO")) {
+			Check.checkAll(locator1 = "Checkbox#SELECT_ALL");
 
-				<execute function="Confirm#assertConfirmationNoWait" value1="Are you sure you want to delete this? It will be deleted immediately." />
+			ClickNoError(locator1 = "Icon#DELETE");
 
-				<execute macro="Alert#viewSuccessMessage" />
-			</then>
-		</while>
+			Confirm.assertConfirmationNoWait(
+				value1 = "Are you sure you want to delete this? It will be deleted immediately."
+			);
 
-		<execute macro="Portlet#viewEmptyMessage" />
-	</command>
+			Alert.viewSuccessMessage();
+		}
 
-	<command name="viewCP">
-		<var name="key_ddlDataDefinitionName" value="${structureName}" />
+		Portlet.viewEmptyMessage();
+	}
 
-		<if>
-			<isset var="structureName" />
-			<then>
-				<execute function="AssertTextEquals" locator1="DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME" value1="${structureName}" />
-			</then>
-		</if>
+	macro viewCP {
+		var key_ddlDataDefinitionName = "${structureName}";
 
-		<if>
-			<isset var="structureDescription" />
-			<then>
-				<execute function="AssertTextEquals" locator1="DDMSelectStructure#DDM_STRUCTURE_TABLE_DESCRIPTION" value1="${structureDescription}" />
-			</then>
-		</if>
+		if (isSet(structureName)) {
+			AssertTextEquals(
+				locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME",
+				value1 = "${structureName}"
+			);
+		}
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		if (isSet(structureDescription)) {
+			AssertTextEquals(
+				locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_DESCRIPTION",
+				value1 = "${structureDescription}"
+			);
+		}
 
-	<command name="viewTableEntryCP">
-		<var name="key_ddlDataDefinitionName" value="${structureName}" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute function="AssertTextEquals" locator1="DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME" value1="${structureName}" />
-		<execute function="AssertTextEquals" locator1="DDMSelectStructure#DDM_STRUCTURE_TABLE_DESCRIPTION" value1="${structureDescription}" />
-	</command>
+	macro viewTableEntryCP {
+		var key_ddlDataDefinitionName = "${structureName}";
 
-	<command name="viewTemplateValidation">
-		<execute function="Confirm" value1="Please add a template to render this structure." />
-	</command>
-</definition>
+		AssertTextEquals(
+			locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME",
+			value1 = "${structureName}"
+		);
+
+		AssertTextEquals(
+			locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_DESCRIPTION",
+			value1 = "${structureDescription}"
+		);
+	}
+
+	macro viewTemplateValidation {
+		Confirm(value1 = "Please add a template to render this structure.");
+	}
+}

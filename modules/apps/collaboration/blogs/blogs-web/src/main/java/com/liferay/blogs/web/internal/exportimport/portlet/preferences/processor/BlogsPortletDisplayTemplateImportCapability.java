@@ -23,12 +23,13 @@ import javax.portlet.PortletPreferences;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
-	service =
-		{Capability.class, BlogsPortletDisplayTemplateImportCapability.class}
+	service = {
+		Capability.class, BlogsPortletDisplayTemplateImportCapability.class
+	}
 )
 public class BlogsPortletDisplayTemplateImportCapability
 	extends PortletDisplayTemplateImportCapability {

@@ -722,6 +722,63 @@ public class CalendarBookingLocalServiceTest {
 	}
 
 	@Test
+	public void testInviteUserCalendarWithWorkflowShouldInviteCalendarBookingOnlyAfterApprovedAndPublished()
+		throws Exception {
+
+		_liveGroup = GroupTestUtil.addGroup();
+
+		CalendarWorkflowTestUtil.activateWorkflow(_liveGroup);
+
+		Calendar invitedCalendar = CalendarTestUtil.addCalendar(_user);
+
+		Calendar liveCalendar = CalendarTestUtil.getDefaultCalendar(_liveGroup);
+
+		CalendarStagingTestUtil.enableLocalStaging(_liveGroup, true);
+
+		Calendar stagingCalendar = CalendarStagingTestUtil.getStagingCalendar(
+			_liveGroup, liveCalendar);
+
+		CalendarBooking childCalendarBooking =
+			CalendarBookingTestUtil.addChildCalendarBooking(
+				stagingCalendar, invitedCalendar);
+
+		assertStatus(
+			childCalendarBooking,
+			CalendarBookingWorkflowConstants.STATUS_MASTER_PENDING);
+
+		CalendarBooking calendarBooking =
+			childCalendarBooking.getParentCalendarBooking();
+
+		assertStatus(
+			calendarBooking, CalendarBookingWorkflowConstants.STATUS_PENDING);
+
+		CalendarWorkflowTestUtil.completeWorkflow(_liveGroup);
+
+		childCalendarBooking =
+			CalendarBookingLocalServiceUtil.fetchCalendarBooking(
+				childCalendarBooking.getCalendarBookingId());
+
+		assertStatus(
+			childCalendarBooking,
+			CalendarBookingWorkflowConstants.STATUS_MASTER_STAGING);
+
+		calendarBooking = childCalendarBooking.getParentCalendarBooking();
+
+		assertStatus(
+			calendarBooking, CalendarBookingWorkflowConstants.STATUS_APPROVED);
+
+		CalendarStagingTestUtil.publishLayouts(_liveGroup, true);
+
+		List<CalendarBooking> childCalendarBookings =
+			CalendarBookingLocalServiceUtil.getCalendarBookings(
+				invitedCalendar.getCalendarId(),
+				new int[] {CalendarBookingWorkflowConstants.STATUS_PENDING});
+
+		Assert.assertEquals(
+			childCalendarBookings.toString(), 1, childCalendarBookings.size());
+	}
+
+	@Test
 	public void testInviteUserCalendarWithWorkflowShouldNotCreatesCalendarBookingAfterPublish()
 		throws Exception {
 
@@ -769,8 +826,37 @@ public class CalendarBookingLocalServiceTest {
 		assertStatus(
 			childCalendarBooking,
 			CalendarBookingWorkflowConstants.STATUS_MASTER_PENDING);
+	}
 
-		CalendarWorkflowTestUtil.deactivateWorkflow(_liveGroup);
+	@Test
+	public void testInviteUserCalendarWithWorkflowShouldNotifieInviteCalendarBookingOnlyAfterApprovedAndPublished()
+		throws Exception {
+
+		_group = GroupTestUtil.addGroup();
+
+		CalendarWorkflowTestUtil.activateWorkflow(_group);
+
+		_invitingUser = UserTestUtil.addUser();
+
+		Calendar invitedCalendar = CalendarTestUtil.addCalendar(_invitingUser);
+
+		Calendar invitingCalendar = CalendarTestUtil.getDefaultCalendar(_group);
+
+		CalendarBooking calendarBooking =
+			CalendarBookingTestUtil.addMasterCalendarBookingWithWorkflow(
+				invitingCalendar, invitedCalendar,
+				WorkflowConstants.ACTION_PUBLISH);
+
+		String mailMessageSubject =
+			"Calendar: Event Notification for " + StringPool.QUOTE +
+				calendarBooking.getTitle(LocaleUtil.getDefault()) +
+					StringPool.QUOTE;
+
+		assertMailSubjectCount(mailMessageSubject, 0);
+
+		CalendarWorkflowTestUtil.completeWorkflow(_group);
+
+		assertMailSubjectCount(mailMessageSubject, 1);
 	}
 
 	@Test
@@ -1563,7 +1649,7 @@ public class CalendarBookingLocalServiceTest {
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), startTime, newEndTime,
-			calendarBooking.getAllDay(), calendarBooking.getRecurrence(),
+			calendarBooking.isAllDay(), calendarBooking.getRecurrence(),
 			calendarBooking.getFirstReminder(),
 			calendarBooking.getFirstReminderType(),
 			calendarBooking.getSecondReminder(),
@@ -1627,7 +1713,7 @@ public class CalendarBookingLocalServiceTest {
 				childCalendarBooking.getTitleMap(),
 				childCalendarBooking.getDescriptionMap(),
 				childCalendarBooking.getLocation(), startTime,
-				startTime + 36000000, childCalendarBooking.getAllDay(),
+				startTime + 36000000, childCalendarBooking.isAllDay(),
 				childCalendarBooking.getRecurrence(), firstReminder,
 				NotificationType.EMAIL.getValue(), secondReminder,
 				NotificationType.EMAIL.getValue(), serviceContext);
@@ -1638,7 +1724,7 @@ public class CalendarBookingLocalServiceTest {
 			new long[] {invitedCalendar.getCalendarId()},
 			calendarBooking.getTitleMap(), calendarBooking.getDescriptionMap(),
 			calendarBooking.getLocation(), startTime, startTime + 37000000,
-			calendarBooking.getAllDay(), calendarBooking.getRecurrence(),
+			calendarBooking.isAllDay(), calendarBooking.getRecurrence(),
 			RandomTestUtil.randomInt(), calendarBooking.getFirstReminderType(),
 			RandomTestUtil.randomInt(), calendarBooking.getSecondReminderType(),
 			serviceContext);
@@ -1707,7 +1793,7 @@ public class CalendarBookingLocalServiceTest {
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), startTime, endTime,
-			calendarBooking.getAllDay(), calendarBooking.getRecurrence(),
+			calendarBooking.isAllDay(), calendarBooking.getRecurrence(),
 			calendarBooking.getFirstReminder(),
 			calendarBooking.getFirstReminderType(),
 			calendarBooking.getSecondReminder(),
@@ -1890,7 +1976,7 @@ public class CalendarBookingLocalServiceTest {
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomString(), startTime, startTime + 36000000,
-				childCalendarBooking.getAllDay(),
+				childCalendarBooking.isAllDay(),
 				childCalendarBooking.getRecurrence(),
 				childCalendarBooking.getFirstReminder(),
 				childCalendarBooking.getFirstReminderType(),
@@ -2210,6 +2296,9 @@ public class CalendarBookingLocalServiceTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@DeleteAfterTestRun
+	private User _invitingUser;
 
 	@DeleteAfterTestRun
 	private Group _liveGroup;

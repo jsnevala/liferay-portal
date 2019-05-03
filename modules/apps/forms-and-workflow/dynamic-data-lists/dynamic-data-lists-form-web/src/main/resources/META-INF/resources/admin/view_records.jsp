@@ -57,7 +57,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "form-entries"));
 
 		<liferay-frontend:management-bar-sort
 			orderByCol="<%= ddlFormViewRecordsDisplayContext.getOrderByCol() %>"
-			orderByType="<%= ddlFormViewRecordsDisplayContext.getOrderByType() %>"
+			orderByType="<%= HtmlUtil.escape(ddlFormViewRecordsDisplayContext.getOrderByType()) %>"
 			orderColumns='<%= new String[] {"modified-date"} %>'
 			portletURL="<%= searchURL %>"
 		/>
@@ -97,7 +97,8 @@ renderResponse.setTitle(LanguageUtil.get(request, "form-entries"));
 				%>
 
 					<liferay-ui:search-container-column-text
-						name="<%= ddlFormViewRecordsDisplayContext.getColumnName(ddmFormField) %>"
+						name="<%= HtmlUtil.escape(ddlFormViewRecordsDisplayContext.getColumnName(ddmFormField)) %>"
+						truncate="<%= true %>"
 						value="<%= ddlFormViewRecordsDisplayContext.getColumnValue(ddmFormField, ddmFormFieldValuesMap.get(ddmFormField.getName())) %>"
 					/>
 
@@ -117,7 +118,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "form-entries"));
 
 				<liferay-ui:search-container-column-text
 					name="author"
-					value="<%= PortalUtil.getUserName(record) %>"
+					value="<%= HtmlUtil.escape(PortalUtil.getUserName(record)) %>"
 				/>
 
 				<liferay-ui:search-container-column-jsp

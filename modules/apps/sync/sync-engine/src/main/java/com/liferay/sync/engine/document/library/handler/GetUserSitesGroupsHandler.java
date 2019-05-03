@@ -50,7 +50,9 @@ public class GetUserSitesGroupsHandler extends BaseJSONHandler {
 
 		if (_remoteSyncSites == null) {
 			_remoteSyncSites = JSONUtil.readValue(
-				response, new TypeReference<List<SyncSite>>() {});
+				response,
+				new TypeReference<List<SyncSite>>() {
+				});
 		}
 
 		for (SyncSite remoteSyncSite : _remoteSyncSites) {
@@ -141,7 +143,9 @@ public class GetUserSitesGroupsHandler extends BaseJSONHandler {
 	protected void logResponse(String response) {
 		try {
 			_remoteSyncSites = JSONUtil.readValue(
-				response, new TypeReference<List<SyncSite>>() {});
+				response,
+				new TypeReference<List<SyncSite>>() {
+				});
 
 			super.logResponse("{\"count\":" + _remoteSyncSites.size() + "}");
 		}

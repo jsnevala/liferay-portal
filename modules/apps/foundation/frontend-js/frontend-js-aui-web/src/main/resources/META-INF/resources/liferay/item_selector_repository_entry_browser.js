@@ -48,6 +48,10 @@ AUI.add(
 					uploadItemURL: {
 						validator: Lang.isString,
 						value: ''
+					},
+					validExtensions: {
+						validator: Lang.isString,
+						value: '*'
 					}
 				},
 
@@ -121,14 +125,21 @@ AUI.add(
 							itemViewer.get(STR_LINKS).on('click', A.bind(STR_ITEM_SELECTED, instance, itemViewer)),
 							itemViewer.after('currentIndexChange', A.bind(STR_ITEM_SELECTED, instance, itemViewer)),
 							itemViewer.after(STR_VISIBLE_CHANGE, instance._afterVisibleChange, instance),
-							uploadItemViewer.after(STR_VISIBLE_CHANGE, instance._afterVisibleChange, instance),
-							itemSelectorUploader.after('itemUploadCancel', instance._onItemUploadCancel, instance),
-							itemSelectorUploader.after('itemUploadComplete', instance._onItemUploadComplete, instance),
-							itemSelectorUploader.after('itemUploadError', A.bind(STR_ITEM_UPLOAD_ERROR, instance)),
-							rootNode.on(STR_DRAG_OVER, instance._ddEventHandler, instance),
-							rootNode.on(STR_DRAG_LEAVE, instance._ddEventHandler, instance),
-							rootNode.on(STR_DROP, instance._ddEventHandler, instance)
 						];
+
+						var uploadItemURL = instance.get('uploadItemURL')
+
+						if (uploadItemURL) {
+							instance._eventHandles.push(
+								uploadItemViewer.after(STR_VISIBLE_CHANGE, instance._afterVisibleChange, instance),
+								itemSelectorUploader.after('itemUploadCancel', instance._onItemUploadCancel, instance),
+								itemSelectorUploader.after('itemUploadComplete', instance._onItemUploadComplete, instance),
+								itemSelectorUploader.after('itemUploadError', A.bind(STR_ITEM_UPLOAD_ERROR, instance)),
+								rootNode.on(STR_DRAG_OVER, instance._ddEventHandler, instance),
+								rootNode.on(STR_DRAG_LEAVE, instance._ddEventHandler, instance),
+								rootNode.on(STR_DROP, instance._ddEventHandler, instance)
+							);
+						}
 
 						var inputFileNode = instance.one('input[type="file"]');
 
@@ -163,7 +174,9 @@ AUI.add(
 									rootNode.removeClass(CSS_DROP_ACTIVE);
 
 									if (eventDrop) {
-										instance._previewFile(dataTransfer.files[0]);
+										var file = dataTransfer.files[0];
+
+										instance._validateFile(file);
 									}
 								}
 							}
@@ -231,7 +244,9 @@ AUI.add(
 					_onInputFileChanged: function(event) {
 						var instance = this;
 
-						instance._previewFile(event.currentTarget.getDOMNode().files[0]);
+						var file = event.currentTarget.getDOMNode().files[0];
+
+						instance._validateFile(file);
 					},
 
 					_onItemSelected: function(itemViewer) {
@@ -347,6 +362,41 @@ AUI.add(
 						instance._uploadItemViewer.show();
 
 						instance._itemSelectorUploader.startUpload(file, instance.get('uploadItemURL'));
+					},
+
+					_validateFile: function(file) {
+						var instance = this;
+
+						var errorMessage = '';
+
+						var fileExtension = file.name.split('.').pop().toLowerCase();
+
+						var validExtensions = instance.get('validExtensions');
+
+						if (validExtensions === '*' || validExtensions.indexOf(fileExtension) != -1) {
+							var maxFileSize = instance.get('maxFileSize');
+							var maxUploadRequestSize = Liferay.PropsValues.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE;
+
+							if (maxFileSize === 0) {
+								maxFileSize = maxUploadRequestSize;
+							}
+
+							if (file.size <= maxFileSize) {
+								instance._previewFile(file);
+							}
+							else {
+								errorMessage = Lang.sub(Liferay.Language.get('please-enter-a-file-with-a-valid-file-size-no-larger-than-x'), [instance.formatStorage(maxFileSize)]);
+							}
+						}
+						else {
+							errorMessage = Lang.sub(Liferay.Language.get('please-enter-a-file-with-a-valid-extension-x'), [validExtensions]);
+						}
+
+						if (errorMessage) {
+							instance.one('input[type="file"]').val('');
+
+							instance._showError(errorMessage);
+						}
 					}
 				}
 			}

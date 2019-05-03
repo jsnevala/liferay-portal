@@ -256,7 +256,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 
 					boolean draggable = false;
 
-					if (DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.UPDATE)) {
+					if (!BrowserSnifferUtil.isMobile(request) && (DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.UPDATE))) {
 						draggable = true;
 
 						if (dlSearchContainer.getRowChecker() == null) {
@@ -343,7 +343,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 											resultRow="<%= row %>"
 											rowChecker="<%= entriesChecker %>"
 											title="<%= latestFileVersion.getTitle() %>"
-											url="<%= rowURL != null ? rowURL.toString() : null %>"
+											url="<%= (rowURL != null) ? rowURL.toString() : null %>"
 										>
 											<%@ include file="/document_library/file_entry_vertical_card.jspf" %>
 										</liferay-frontend:icon-vertical-card>
@@ -357,7 +357,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 											resultRow="<%= row %>"
 											rowChecker="<%= entriesChecker %>"
 											title="<%= latestFileVersion.getTitle() %>"
-											url="<%= rowURL != null ? rowURL.toString() : null %>"
+											url="<%= (rowURL != null) ? rowURL.toString() : null %>"
 										>
 											<%@ include file="/document_library/file_entry_vertical_card.jspf" %>
 										</liferay-frontend:vertical-card>
@@ -394,6 +394,14 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 										</span>
 									</c:if>
 								</liferay-ui:search-container-column-text>
+							</c:if>
+
+							<c:if test='<%= ArrayUtil.contains(entryColumns, "description") %>'>
+								<liferay-ui:search-container-column-text
+									cssClass="table-cell-content"
+									name="description"
+									value="<%= StringUtil.shorten(fileEntry.getDescription(), 100) %>"
+								/>
 							</c:if>
 
 							<c:if test='<%= ArrayUtil.contains(entryColumns, "size") %>'>
@@ -446,7 +454,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 
 					boolean draggable = false;
 
-					if (DLFolderPermission.contains(permissionChecker, curFolder, ActionKeys.DELETE) || DLFolderPermission.contains(permissionChecker, curFolder, ActionKeys.UPDATE)) {
+					if (!BrowserSnifferUtil.isMobile(request) && (DLFolderPermission.contains(permissionChecker, curFolder, ActionKeys.DELETE) || DLFolderPermission.contains(permissionChecker, curFolder, ActionKeys.UPDATE))) {
 						draggable = true;
 
 						if (dlSearchContainer.getRowChecker() == null) {
@@ -535,6 +543,14 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 								/>
 							</c:if>
 
+							<c:if test='<%= ArrayUtil.contains(entryColumns, "description") %>'>
+								<liferay-ui:search-container-column-text
+									cssClass="table-cell-content"
+									name="description"
+									value="<%= StringUtil.shorten(curFolder.getDescription(), 100) %>"
+								/>
+							</c:if>
+
 							<c:if test='<%= ArrayUtil.contains(entryColumns, "size") %>'>
 								<liferay-ui:search-container-column-text
 									name="size"
@@ -566,7 +582,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 							<c:if test='<%= ArrayUtil.contains(entryColumns, "modified-date") %>'>
 								<liferay-ui:search-container-column-date
 									name="modified-date"
-									value="<%= curFolder.getModifiedDate() %>"
+									value="<%= curFolder.getLastPostDate() %>"
 								/>
 							</c:if>
 

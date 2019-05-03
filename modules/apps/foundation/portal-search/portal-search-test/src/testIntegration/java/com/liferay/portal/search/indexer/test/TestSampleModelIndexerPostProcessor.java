@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {"indexer.class.name=com.liferay.portal.test.SampleModel"},
+	property = "indexer.class.name=com.liferay.portal.test.SampleModel",
 	service = IndexerPostProcessor.class
 )
 public class TestSampleModelIndexerPostProcessor
@@ -43,7 +43,7 @@ public class TestSampleModelIndexerPostProcessor
 	}
 
 	/**
-	 * @deprecated As of 1.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override
@@ -71,7 +71,7 @@ public class TestSampleModelIndexerPostProcessor
 	}
 
 	/**
-	 * @deprecated As of 1.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override

@@ -19,11 +19,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>TODAYS_EVENTS_HEADER</td>
-	<td>//th[contains(@id,'todays-events')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>TODAYS_EVENTS_EVENT</td>
 	<td>//div[@class='today-events']//div[@class='event']//a[contains(.,'${key_eventTitle}')]</td>
 	<td></td>
@@ -31,11 +26,6 @@
 <tr>
 	<td>TODAYS_EVENTS_EVENT_TIME</td>
 	<td>//div[@class='today-events']//div[@class='event' and contains(.,'${key_eventTitle}')]//span[@class='event-time']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>UPCOMING_EVENTS_HEADER</td>
-	<td>//th[contains(@id,'upcoming-events')]</td>
 	<td></td>
 </tr>
 <tr>

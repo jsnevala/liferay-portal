@@ -339,8 +339,8 @@ public class AudioProcessorImpl
 
 			_fileVersionIds.remove(destinationFileVersion.getFileVersionId());
 
-			for (int i = 0; i < previewTempFiles.length; i++) {
-				FileUtil.delete(previewTempFiles[i]);
+			for (File previewTempFile : previewTempFiles) {
+				FileUtil.delete(previewTempFile);
 			}
 
 			FileUtil.delete(audioTempFile);

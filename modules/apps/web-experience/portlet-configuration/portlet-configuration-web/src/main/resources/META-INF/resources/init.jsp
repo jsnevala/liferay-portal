@@ -62,7 +62,6 @@ page import="com.liferay.portal.kernel.service.ResourceBlockLocalServiceUtil" %>
 page import="com.liferay.portal.kernel.service.ResourceLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.RoleLocalServiceUtil" %><%@
-page import="com.liferay.portal.kernel.service.permission.RolePermissionUtil" %><%@
 page import="com.liferay.portal.kernel.settings.ArchivedSettings" %><%@
 page import="com.liferay.portal.kernel.settings.SettingsFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@

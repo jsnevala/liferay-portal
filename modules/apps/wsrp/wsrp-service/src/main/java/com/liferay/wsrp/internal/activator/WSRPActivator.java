@@ -106,7 +106,10 @@ public class WSRPActivator {
 			StringPool.FORWARD_SLASH + WSRPPortletKeys.WSRP_CONSUMER + "/*");
 
 		_servletServiceRegistration = _bundleContext.registerService(
-			Servlet.class, new PortletServlet() {}, properties);
+			Servlet.class,
+			new PortletServlet() {
+			},
+			properties);
 	}
 
 	@Deactivate

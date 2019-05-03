@@ -23,6 +23,12 @@ long liveGroupId = layoutsAdminDisplayContext.getLiveGroupId();
 boolean privateLayout = layoutsAdminDisplayContext.isPrivateLayout();
 LayoutSet selLayoutSet = layoutsAdminDisplayContext.getSelLayoutSet();
 
+String backURL = ParamUtil.getString(request, "backURL");
+
+if (Validator.isNull(backURL) && (LayoutLocalServiceUtil.getLayoutsCount(selGroup, privateLayout) > 0)) {
+	backURL = PortalUtil.getGroupFriendlyURL(layoutsAdminDisplayContext.getSelLayoutSet(), themeDisplay);
+}
+
 PortletURL redirectURL = layoutsAdminDisplayContext.getRedirectURL();
 
 if (selGroup.isLayoutSetPrototype()) {
@@ -47,6 +53,7 @@ renderResponse.setTitle(selGroup.getLayoutRootNodeName(privateLayout, locale));
 	<aui:input name="<%= PortletDataHandlerKeys.SELECTED_LAYOUTS %>" type="hidden" />
 
 	<liferay-ui:form-navigator
+		backURL="<%= backURL %>"
 		formModelBean="<%= selLayoutSet %>"
 		id="<%= FormNavigatorConstants.FORM_NAVIGATOR_ID_LAYOUT_SET %>"
 		markupView="lexicon"

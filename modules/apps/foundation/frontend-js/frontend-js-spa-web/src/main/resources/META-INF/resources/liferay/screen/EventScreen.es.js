@@ -3,6 +3,7 @@
 import HtmlScreen from 'senna/src/screen/HtmlScreen';
 import globals from 'senna/src/globals/globals';
 import {CancellablePromise} from 'metal-promise/src/promise/Promise';
+
 import Utils from '../util/Utils.es';
 
 class EventScreen extends HtmlScreen {
@@ -74,10 +75,24 @@ class EventScreen extends HtmlScreen {
 	}
 
 	copyBodyAttributes() {
-		var virtualBody = this.virtualDocument.querySelector('body');
+		const virtualBody = this.virtualDocument.querySelector('body');
 
 		document.body.className = virtualBody.className;
 		document.body.onload = virtualBody.onload;
+	}
+
+	evaluateStyles(surfaces) {
+		const currentLanguageId = document.querySelector('html').lang.replace('-', '_');
+		const languageId = this.virtualDocument.lang.replace('-', '_');
+
+		if (currentLanguageId !== languageId) {
+			this.stylesPermanentSelector_ = HtmlScreen.selectors.stylesPermanent;
+			this.stylesTemporarySelector_ = HtmlScreen.selectors.stylesTemporary;
+
+			this.makePermanentSelectorsTemporary_(currentLanguageId, languageId);
+		}
+
+		return super.evaluateStyles(surfaces).then(this.restoreSelectors_.bind(this));
 	}
 
 	flip(surfaces) {
@@ -143,6 +158,31 @@ class EventScreen extends HtmlScreen {
 			);
 	}
 
+	makePermanentSelectorsTemporary_(currentLanguageId, languageId) {
+		HtmlScreen.selectors.stylesTemporary = HtmlScreen.selectors.stylesTemporary
+			.split(',')
+			.concat(
+				HtmlScreen.selectors.stylesPermanent
+				.split(',')
+				.map(
+					item => `${item}[href*="${currentLanguageId}"]`
+				)
+			)
+			.join();
+
+		HtmlScreen.selectors.stylesPermanent = HtmlScreen.selectors.stylesPermanent
+			.split(',')
+			.map(
+				item => `${item}[href*="${languageId}"]`
+			)
+			.join();
+	}
+
+	restoreSelectors_() {
+		HtmlScreen.selectors.stylesPermanent = this.stylesPermanentSelector_ || HtmlScreen.selectors.stylesPermanent;
+		HtmlScreen.selectors.stylesTemporary = this.stylesTemporarySelector_ || HtmlScreen.selectors.stylesTemporary;
+	}
+
 	runBodyOnLoad() {
 		var onLoad = document.body.onload;
 
@@ -150,6 +190,29 @@ class EventScreen extends HtmlScreen {
 			onLoad();
 		}
 	}
+
+	/**
+	 * Adds the type attribute with 'image/x-icon' when the favicon is an icon,
+	 * this ensures that it works fine in IE 11.
+	 * @param {!Array<Element>} elements
+	 * @private
+	 * @return {CancellablePromise}
+	 */
+
+	runFaviconInElement_(elements) {
+		return super.runFaviconInElement_(elements).then(
+			() => {
+				elements.forEach(
+					element => {
+						if (!element.type && element.href.indexOf('.ico') !== -1) {
+							element.type = 'image/x-icon';
+						}
+					}
+				);
+			}
+		);
+	}
+
 }
 
 export default EventScreen;

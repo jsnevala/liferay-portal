@@ -49,7 +49,6 @@ public class SoyCapabilityBundleTrackerCustomizer
 			soyProviderCapabilityBundleRegister) {
 
 		_soyTofuCacheHandler = soyTofuCacheHandler;
-
 		_soyProviderCapabilityBundleRegister =
 			soyProviderCapabilityBundleRegister;
 	}
@@ -117,12 +116,12 @@ public class SoyCapabilityBundleTrackerCustomizer
 	}
 
 	private void _addTemplateResourcesToList(Bundle bundle) {
-		SoyTemplateResourcesCollector soyTemplateResourceCollector =
+		SoyTemplateResourcesCollector soyTemplateResourcesCollector =
 			new SoyTemplateResourcesCollector(bundle, StringPool.SLASH);
 
 		try {
 			List<TemplateResource> templateResources =
-				soyTemplateResourceCollector.getTemplateResources();
+				soyTemplateResourcesCollector.getTemplateResources();
 
 			Stream<TemplateResource> templateResourcesStream =
 				templateResources.stream();

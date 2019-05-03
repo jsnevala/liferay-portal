@@ -48,8 +48,8 @@ public class HeapUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #heapDump(boolean, boolean,
-	 *             String, OutputProcessor)
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #heapDump(boolean,
+	 *             boolean, String, OutputProcessor)
 	 */
 	@Deprecated
 	public static <O, E> Future<ObjectValuePair<O, E>> heapDump(
@@ -68,8 +68,8 @@ public class HeapUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #heapDump(int, boolean,
-	 *             boolean, String, OutputProcessor)
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #heapDump(int,
+	 *             boolean, boolean, String, OutputProcessor)
 	 */
 	@Deprecated
 	public static <O, E> Future<ObjectValuePair<O, E>> heapDump(
@@ -87,8 +87,8 @@ public class HeapUtil {
 					try {
 						return outputProcessor.processStdErr(stdErrInputStream);
 					}
-					catch (
-						com.liferay.portal.kernel.process.ProcessException pe) {
+					catch (com.liferay.portal.kernel.process.ProcessException
+								pe) {
 
 						throw new ProcessException(pe);
 					}
@@ -101,8 +101,8 @@ public class HeapUtil {
 					try {
 						return outputProcessor.processStdOut(stdOutInputStream);
 					}
-					catch (
-						com.liferay.portal.kernel.process.ProcessException pe) {
+					catch (com.liferay.portal.kernel.process.ProcessException
+								pe) {
 
 						throw new ProcessException(pe);
 					}

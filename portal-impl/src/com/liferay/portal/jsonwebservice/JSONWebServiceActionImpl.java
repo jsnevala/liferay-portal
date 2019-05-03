@@ -175,7 +175,10 @@ public class JSONWebServiceActionImpl implements JSONWebServiceAction {
 
 				if (!valueString.startsWith(StringPool.OPEN_BRACKET)) {
 					valueString = StringPool.OPEN_BRACKET.concat(
-						valueString).concat(StringPool.CLOSE_BRACKET);
+						valueString
+					).concat(
+						StringPool.CLOSE_BRACKET
+					);
 				}
 
 				list = JSONFactoryUtil.looseDeserialize(
@@ -212,7 +215,10 @@ public class JSONWebServiceActionImpl implements JSONWebServiceAction {
 
 				if (!valueString.startsWith(StringPool.OPEN_BRACKET)) {
 					valueString = StringPool.OPEN_BRACKET.concat(
-						valueString).concat(StringPool.CLOSE_BRACKET);
+						valueString
+					).concat(
+						StringPool.CLOSE_BRACKET
+					);
 				}
 
 				list = JSONFactoryUtil.looseDeserialize(

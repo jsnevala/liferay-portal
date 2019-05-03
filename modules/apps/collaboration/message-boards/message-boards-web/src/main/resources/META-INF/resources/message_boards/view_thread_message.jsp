@@ -26,6 +26,10 @@ Boolean showDeletedAttachmentsFileEntries = (Boolean)request.getAttribute("edit-
 Boolean showPermanentLink = (Boolean)request.getAttribute("edit-message.jsp-showPermanentLink");
 Boolean showRecentPosts = (Boolean)request.getAttribute("edit-message.jsp-showRecentPosts");
 MBThread thread = (MBThread)request.getAttribute("edit_message.jsp-thread");
+
+if (message.isAnonymous()) {
+	showRecentPosts = false;
+}
 %>
 
 <a id="<portlet:namespace />message_<%= message.getMessageId() %>"></a>
@@ -80,10 +84,19 @@ MBThread thread = (MBThread)request.getAttribute("edit_message.jsp-thread");
 				</h4>
 
 				<%
-				MBStatsUser statsUser = MBStatsUserLocalServiceUtil.getStatsUser(scopeGroupId, message.getUserId());
+				MBStatsUser statsUser = null;
 
-				int posts = statsUser.getMessageCount();
-				String[] ranks = MBUtil.getUserRank(mbGroupServiceSettings, themeDisplay.getLanguageId(), statsUser);
+				if (!message.isAnonymous()) {
+					statsUser = MBStatsUserLocalServiceUtil.getStatsUser(scopeGroupId, message.getUserId());
+				}
+
+				int posts = message.isAnonymous() ? 1 : statsUser.getMessageCount();
+
+				String[] ranks = {StringPool.BLANK, StringPool.BLANK};
+
+				if (!message.isAnonymous()) {
+					ranks = MBUtil.getUserRank(mbGroupServiceSettings, themeDisplay.getLanguageId(), statsUser);
+				}
 
 				User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 				%>
@@ -104,9 +117,12 @@ MBThread thread = (MBThread)request.getAttribute("edit_message.jsp-thread");
 					<span class="h5 text-default">
 						<span><liferay-ui:message key="posts" />:</span> <%= posts %>
 					</span>
-					<span class="h5 text-default">
-						<span><liferay-ui:message key="join-date" />:</span> <%= dateFormatDate.format(messageUser.getCreateDate()) %>
-					</span>
+
+					<c:if test="<%= !message.isAnonymous() %>">
+						<span class="h5 text-default">
+							<span><liferay-ui:message key="join-date" />:</span> <%= dateFormatDate.format(messageUser.getCreateDate()) %>
+						</span>
+					</c:if>
 
 					<c:if test="<%= showRecentPosts %>">
 						<portlet:renderURL var="recentPostsURL">
@@ -199,7 +215,7 @@ MBThread thread = (MBThread)request.getAttribute("edit_message.jsp-thread");
 					boolean hasDeletePermission = !thread.isLocked() && (thread.getMessageCount() > 1) && MBMessagePermission.contains(permissionChecker, message, ActionKeys.DELETE);
 					boolean hasMoveThreadPermission = (message.getParentMessageId() != MBMessageConstants.DEFAULT_PARENT_MESSAGE_ID) && MBCategoryPermission.contains(permissionChecker, scopeGroupId, category.getCategoryId(), ActionKeys.MOVE_THREAD);
 					boolean hasPermissionsPermission = !thread.isLocked() && !message.isRoot() && MBMessagePermission.contains(permissionChecker, message, ActionKeys.PERMISSIONS);
-					boolean hasReplyPermission = MBCategoryPermission.contains(permissionChecker, scopeGroupId, message.getCategoryId(), ActionKeys.REPLY_TO_MESSAGE);
+					boolean hasReplyPermission = !thread.isLocked() && !message.isDraft() && MBCategoryPermission.contains(permissionChecker, scopeGroupId, message.getCategoryId(), ActionKeys.REPLY_TO_MESSAGE);
 					boolean hasUpdatePermission = !thread.isLocked() && MBMessagePermission.contains(permissionChecker, message, ActionKeys.UPDATE);
 
 					boolean showAnswerFlag = false;
@@ -248,7 +264,7 @@ MBThread thread = (MBThread)request.getAttribute("edit_message.jsp-thread");
 								</c:choose>
 							</c:if>
 
-							<c:if test="<%= hasReplyPermission && !thread.isLocked() %>">
+							<c:if test="<%= hasReplyPermission %>">
 								<portlet:renderURL var="replyURL">
 									<portlet:param name="mvcRenderCommandName" value="/message_boards/edit_message" />
 									<portlet:param name="redirect" value="<%= currentURL %>" />
@@ -483,7 +499,7 @@ MBThread thread = (MBThread)request.getAttribute("edit_message.jsp-thread");
 								</portlet:renderURL>
 
 								<liferay-ui:icon
-									iconCssClass="icon-paperclip"
+									iconCssClass="icon-paper-clip"
 									label="<%= true %>"
 									message='<%= LanguageUtil.format(request, (deletedAttachmentsFileEntriesCount == 1) ? "x-recently-removed-attachment" : "x-recently-removed-attachments", deletedAttachmentsFileEntriesCount, false) %>'
 									url="<%= viewTrashAttachmentsURL %>"

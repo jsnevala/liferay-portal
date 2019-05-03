@@ -105,9 +105,7 @@ public class LayoutPrototypeDisplayContext {
 	}
 
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		return portletURL;
+		return _renderResponse.createRenderURL();
 	}
 
 	public SearchContainer getSearchContainer() {

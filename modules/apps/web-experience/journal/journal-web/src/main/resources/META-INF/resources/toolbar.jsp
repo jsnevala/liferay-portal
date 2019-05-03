@@ -101,12 +101,14 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 			value="<%= journalDisplayContext.getManagementBarStatusFilterValue() %>"
 		/>
 
-		<liferay-frontend:management-bar-sort
-			orderByCol="<%= journalDisplayContext.getOrderByCol() %>"
-			orderByType="<%= journalDisplayContext.getOrderByType() %>"
-			orderColumns="<%= journalDisplayContext.getOrderColumns() %>"
-			portletURL="<%= journalDisplayContext.getPortletURL() %>"
-		/>
+		<c:if test="<%= !journalDisplayContext.isNavigationRecent() %>">
+			<liferay-frontend:management-bar-sort
+				orderByCol="<%= journalDisplayContext.getOrderByCol() %>"
+				orderByType="<%= journalDisplayContext.getOrderByType() %>"
+				orderColumns="<%= journalDisplayContext.getOrderColumns() %>"
+				portletURL="<%= journalDisplayContext.getPortletURL() %>"
+			/>
+		</c:if>
 	</liferay-frontend:management-bar-filters>
 
 	<liferay-frontend:management-bar-action-buttons>

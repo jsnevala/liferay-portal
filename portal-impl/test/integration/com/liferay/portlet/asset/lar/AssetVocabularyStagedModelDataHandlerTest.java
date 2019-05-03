@@ -34,7 +34,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Sync
 public class AssetVocabularyStagedModelDataHandlerTest

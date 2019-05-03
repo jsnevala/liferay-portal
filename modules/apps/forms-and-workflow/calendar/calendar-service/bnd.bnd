@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Calendar Service
 Bundle-SymbolicName: com.liferay.calendar.service
-Bundle-Version: 2.7.2
+Bundle-Version: 2.8.7
 Export-Package:\
 	com.liferay.calendar.model.impl,\
 	com.liferay.calendar.notification.impl,\
@@ -21,7 +21,6 @@ Import-Package:\
 	!org.codehaus.*,\
 	\
 	*
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Calendar
 Liferay-Require-SchemaVersion: 1.0.6
 Liferay-Service: true

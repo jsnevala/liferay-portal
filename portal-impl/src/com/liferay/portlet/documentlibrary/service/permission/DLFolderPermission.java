@@ -35,8 +35,7 @@ import com.liferay.portal.util.PropsValues;
  * @author Brian Wing Shun Chan
  */
 @OSGiBeanProperties(
-	property =
-		{"model.class.name=com.liferay.document.library.kernel.model.DLFolder"}
+	property = "model.class.name=com.liferay.document.library.kernel.model.DLFolder"
 )
 public class DLFolderPermission implements BaseModelPermissionChecker {
 

@@ -31,8 +31,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author Tina Tian
+ * @author     Tina Tian
+ * @deprecated As of Judson (7.1.x), moved to {@link
+ *             com.liferay.portal.search.internal.permission.DefaultSearchResultPermissionFilter}
  */
+@Deprecated
 public class DefaultSearchResultPermissionFilter
 	extends BaseSearchResultPermissionFilter {
 

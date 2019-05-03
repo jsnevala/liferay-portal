@@ -325,7 +325,7 @@ public class FileUtil {
 	public static String getSanitizedFileName(
 		String fileName, String extension) {
 
-		fileName = fileName.trim();
+		fileName = StringUtils.stripEnd(fileName, null);
 
 		for (String blacklistChar : PropsValues.SYNC_FILE_BLACKLIST_CHARS) {
 			blacklistChar = unescapeJava(blacklistChar);
@@ -344,7 +344,7 @@ public class FileUtil {
 		}
 
 		if (!Validator.isBlank(extension)) {
-			extension = extension.trim();
+			extension = StringUtils.stripEnd(extension, null);
 
 			int x = fileName.lastIndexOf(".");
 
@@ -386,6 +386,14 @@ public class FileUtil {
 	public static boolean isHidden(Path filePath) {
 		if (!PropsValues.SYNC_FILE_IGNORE_HIDDEN || !exists(filePath)) {
 			return false;
+		}
+
+		Path fileNamePath = filePath.getFileName();
+
+		String fileName = fileNamePath.toString();
+
+		if (fileName.startsWith(".")) {
+			return true;
 		}
 
 		try {
@@ -439,10 +447,9 @@ public class FileUtil {
 				Date lastSavedDate = MSOfficeFileUtil.getLastSavedDate(
 					filePath);
 
-				if ((lastSavedDate != null) && (lastSavedDate.getTime() ==
-						GetterUtil.getLong(
-							syncFile.getLocalExtraSettingValue(
-								"lastSavedDate")))) {
+				if ((lastSavedDate != null) &&
+					(lastSavedDate.getTime() == GetterUtil.getLong(
+						syncFile.getLocalExtraSettingValue("lastSavedDate")))) {
 
 					return false;
 				}

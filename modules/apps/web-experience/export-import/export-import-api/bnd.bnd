@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Export Import API
 Bundle-SymbolicName: com.liferay.exportimport.api
-Bundle-Version: 2.2.2
+Bundle-Version: 2.2.7
 Export-Package:\
 	com.liferay.exportimport.constants,\
 	com.liferay.exportimport.content.processor,\
@@ -10,5 +10,4 @@ Export-Package:\
 	com.liferay.exportimport.resources.importer.provider,\
 	com.liferay.exportimport.staged.model.repository,\
 	com.liferay.exportimport.util.comparator
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Data Management

@@ -117,7 +117,8 @@ public class AssetEntriesFacetedSearcherTest
 			facet);
 
 		assertFrequencies(
-			facet.getFieldName(), searchContext, toMap(_entryClassNames));
+			facet.getFieldName(), searchContext,
+			toMap(Arrays.asList(JournalArticle.class.getName())));
 	}
 
 	protected static Map<String, Integer> toMap(String key, Integer value) {
@@ -196,7 +197,10 @@ public class AssetEntriesFacetedSearcherTest
 	}
 
 	protected Map<String, Integer> toMap(Collection<String> strings) {
-		return strings.stream().collect(Collectors.toMap(s -> s, s -> 1));
+		return strings.stream(
+		).collect(
+			Collectors.toMap(s -> s, s -> 1)
+		);
 	}
 
 	@Inject

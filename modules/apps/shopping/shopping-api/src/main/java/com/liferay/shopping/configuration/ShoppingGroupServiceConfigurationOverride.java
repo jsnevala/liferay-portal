@@ -23,8 +23,9 @@ public interface ShoppingGroupServiceConfigurationOverride {
 
 	public static final String CC_NONE = "none";
 
-	public static final String[] CC_TYPES =
-		{"visa", "mastercard", "discover", "amex"};
+	public static final String[] CC_TYPES = {
+		"visa", "mastercard", "discover", "amex"
+	};
 
 	public static final double[] INSURANCE_RANGE = {
 		0.01, 9.99, 10.00, 49.99, 50.00, 99.99, 100.00, 199.99, 200.00,

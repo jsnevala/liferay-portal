@@ -26,7 +26,7 @@ public class UploadItemSelectorCriterion extends BaseItemSelectorCriterion {
 	}
 
 	/**
-	 * @deprecated As of 2.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #UploadItemSelectorCriterion(String, String, String)}
 	 */
 	@Deprecated
@@ -37,7 +37,7 @@ public class UploadItemSelectorCriterion extends BaseItemSelectorCriterion {
 	}
 
 	/**
-	 * @deprecated As of 2.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #UploadItemSelectorCriterion(String, String, String, long)}
 	 */
 	@Deprecated
@@ -64,6 +64,21 @@ public class UploadItemSelectorCriterion extends BaseItemSelectorCriterion {
 		_maxFileSize = maxFileSize;
 	}
 
+	public UploadItemSelectorCriterion(
+		String portletId, String url, String repositoryName, long maxFileSize,
+		String[] extensions) {
+
+		_portletId = portletId;
+		_url = url;
+		_repositoryName = repositoryName;
+		_maxFileSize = maxFileSize;
+		_extensions = extensions;
+	}
+
+	public String[] getExtensions() {
+		return _extensions;
+	}
+
 	public long getMaxFileSize() {
 		return _maxFileSize;
 	}
@@ -78,6 +93,10 @@ public class UploadItemSelectorCriterion extends BaseItemSelectorCriterion {
 
 	public String getURL() {
 		return _url;
+	}
+
+	public void setExtensions(String[] extensions) {
+		_extensions = extensions;
 	}
 
 	public void setMaxFileSize(long maxFileSize) {
@@ -96,6 +115,7 @@ public class UploadItemSelectorCriterion extends BaseItemSelectorCriterion {
 		_url = url;
 	}
 
+	private String[] _extensions;
 	private long _maxFileSize;
 	private String _portletId;
 	private String _repositoryName;

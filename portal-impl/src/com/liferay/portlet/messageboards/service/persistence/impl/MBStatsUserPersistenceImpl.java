@@ -19,11 +19,8 @@ import aQute.bnd.annotation.ProviderType;
 import com.liferay.message.boards.kernel.exception.NoSuchStatsUserException;
 import com.liferay.message.boards.kernel.model.MBStatsUser;
 import com.liferay.message.boards.kernel.service.persistence.MBStatsUserPersistence;
-
 import com.liferay.portal.kernel.bean.BeanReference;
-import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
-import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
@@ -36,12 +33,14 @@ import com.liferay.portal.kernel.service.persistence.CompanyProvider;
 import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-
 import com.liferay.portlet.messageboards.model.impl.MBStatsUserImpl;
 import com.liferay.portlet.messageboards.model.impl.MBStatsUserModelImpl;
 
 import java.io.Serializable;
+
+import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -59,52 +58,32 @@ import java.util.Set;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see MBStatsUserPersistence
- * @see com.liferay.message.boards.kernel.service.persistence.MBStatsUserUtil
  * @generated
  */
 @ProviderType
-public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
-	implements MBStatsUserPersistence {
+public class MBStatsUserPersistenceImpl
+	extends BasePersistenceImpl<MBStatsUser> implements MBStatsUserPersistence {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link MBStatsUserUtil} to access the message boards stats user persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
+	 * Never modify or reference this class directly. Always use <code>MBStatsUserUtil</code> to access the message boards stats user persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static final String FINDER_CLASS_NAME_ENTITY = MBStatsUserImpl.class.getName();
-	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List1";
-	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List2";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_ALL = new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL = new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_COUNT_ALL = new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_GROUPID = new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_GROUPID =
-		new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
-			new String[] { Long.class.getName() },
-			MBStatsUserModelImpl.GROUPID_COLUMN_BITMASK |
-			MBStatsUserModelImpl.MESSAGECOUNT_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_GROUPID = new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
-			new String[] { Long.class.getName() });
+	public static final String FINDER_CLASS_NAME_ENTITY =
+		MBStatsUserImpl.class.getName();
+
+	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List1";
+
+	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List2";
+
+	private FinderPath _finderPathWithPaginationFindAll;
+	private FinderPath _finderPathWithoutPaginationFindAll;
+	private FinderPath _finderPathCountAll;
+	private FinderPath _finderPathWithPaginationFindByGroupId;
+	private FinderPath _finderPathWithoutPaginationFindByGroupId;
+	private FinderPath _finderPathCountByGroupId;
 
 	/**
 	 * Returns all the message boards stats users where groupId = &#63;.
@@ -114,14 +93,15 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 */
 	@Override
 	public List<MBStatsUser> findByGroupId(long groupId) {
-		return findByGroupId(groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+		return findByGroupId(
+			groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the message boards stats users where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -138,7 +118,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * Returns an ordered range of all the message boards stats users where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -148,8 +128,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the ordered range of matching message boards stats users
 	 */
 	@Override
-	public List<MBStatsUser> findByGroupId(long groupId, int start, int end,
+	public List<MBStatsUser> findByGroupId(
+		long groupId, int start, int end,
 		OrderByComparator<MBStatsUser> orderByComparator) {
+
 		return findByGroupId(groupId, start, end, orderByComparator, true);
 	}
 
@@ -157,7 +139,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * Returns an ordered range of all the message boards stats users where groupId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -168,29 +150,32 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the ordered range of matching message boards stats users
 	 */
 	@Override
-	public List<MBStatsUser> findByGroupId(long groupId, int start, int end,
+	public List<MBStatsUser> findByGroupId(
+		long groupId, int start, int end,
 		OrderByComparator<MBStatsUser> orderByComparator,
 		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_GROUPID;
-			finderArgs = new Object[] { groupId };
+			finderPath = _finderPathWithoutPaginationFindByGroupId;
+			finderArgs = new Object[] {groupId};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_GROUPID;
-			finderArgs = new Object[] { groupId, start, end, orderByComparator };
+			finderPath = _finderPathWithPaginationFindByGroupId;
+			finderArgs = new Object[] {groupId, start, end, orderByComparator};
 		}
 
 		List<MBStatsUser> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<MBStatsUser>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<MBStatsUser>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBStatsUser mbStatsUser : list) {
@@ -207,8 +192,8 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(3);
@@ -219,11 +204,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 			query.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(MBStatsUserModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -241,24 +225,24 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 				qPos.add(groupId);
 
 				if (!pagination) {
-					list = (List<MBStatsUser>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<MBStatsUser>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<MBStatsUser>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<MBStatsUser>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				FinderCacheUtil.putResult(finderPath, finderArgs, list);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -279,11 +263,12 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @throws NoSuchStatsUserException if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser findByGroupId_First(long groupId,
-		OrderByComparator<MBStatsUser> orderByComparator)
+	public MBStatsUser findByGroupId_First(
+			long groupId, OrderByComparator<MBStatsUser> orderByComparator)
 		throws NoSuchStatsUserException {
-		MBStatsUser mbStatsUser = fetchByGroupId_First(groupId,
-				orderByComparator);
+
+		MBStatsUser mbStatsUser = fetchByGroupId_First(
+			groupId, orderByComparator);
 
 		if (mbStatsUser != null) {
 			return mbStatsUser;
@@ -309,9 +294,11 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the first matching message boards stats user, or <code>null</code> if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser fetchByGroupId_First(long groupId,
-		OrderByComparator<MBStatsUser> orderByComparator) {
-		List<MBStatsUser> list = findByGroupId(groupId, 0, 1, orderByComparator);
+	public MBStatsUser fetchByGroupId_First(
+		long groupId, OrderByComparator<MBStatsUser> orderByComparator) {
+
+		List<MBStatsUser> list = findByGroupId(
+			groupId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -329,10 +316,12 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @throws NoSuchStatsUserException if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser findByGroupId_Last(long groupId,
-		OrderByComparator<MBStatsUser> orderByComparator)
+	public MBStatsUser findByGroupId_Last(
+			long groupId, OrderByComparator<MBStatsUser> orderByComparator)
 		throws NoSuchStatsUserException {
-		MBStatsUser mbStatsUser = fetchByGroupId_Last(groupId, orderByComparator);
+
+		MBStatsUser mbStatsUser = fetchByGroupId_Last(
+			groupId, orderByComparator);
 
 		if (mbStatsUser != null) {
 			return mbStatsUser;
@@ -358,16 +347,17 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the last matching message boards stats user, or <code>null</code> if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser fetchByGroupId_Last(long groupId,
-		OrderByComparator<MBStatsUser> orderByComparator) {
+	public MBStatsUser fetchByGroupId_Last(
+		long groupId, OrderByComparator<MBStatsUser> orderByComparator) {
+
 		int count = countByGroupId(groupId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<MBStatsUser> list = findByGroupId(groupId, count - 1, count,
-				orderByComparator);
+		List<MBStatsUser> list = findByGroupId(
+			groupId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -386,9 +376,11 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @throws NoSuchStatsUserException if a message boards stats user with the primary key could not be found
 	 */
 	@Override
-	public MBStatsUser[] findByGroupId_PrevAndNext(long statsUserId,
-		long groupId, OrderByComparator<MBStatsUser> orderByComparator)
+	public MBStatsUser[] findByGroupId_PrevAndNext(
+			long statsUserId, long groupId,
+			OrderByComparator<MBStatsUser> orderByComparator)
 		throws NoSuchStatsUserException {
+
 		MBStatsUser mbStatsUser = findByPrimaryKey(statsUserId);
 
 		Session session = null;
@@ -398,13 +390,13 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 
 			MBStatsUser[] array = new MBStatsUserImpl[3];
 
-			array[0] = getByGroupId_PrevAndNext(session, mbStatsUser, groupId,
-					orderByComparator, true);
+			array[0] = getByGroupId_PrevAndNext(
+				session, mbStatsUser, groupId, orderByComparator, true);
 
 			array[1] = mbStatsUser;
 
-			array[2] = getByGroupId_PrevAndNext(session, mbStatsUser, groupId,
-					orderByComparator, false);
+			array[2] = getByGroupId_PrevAndNext(
+				session, mbStatsUser, groupId, orderByComparator, false);
 
 			return array;
 		}
@@ -416,14 +408,15 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		}
 	}
 
-	protected MBStatsUser getByGroupId_PrevAndNext(Session session,
-		MBStatsUser mbStatsUser, long groupId,
+	protected MBStatsUser getByGroupId_PrevAndNext(
+		Session session, MBStatsUser mbStatsUser, long groupId,
 		OrderByComparator<MBStatsUser> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -435,7 +428,8 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		query.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -505,10 +499,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		qPos.add(groupId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(mbStatsUser);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(mbStatsUser)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -529,8 +523,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 */
 	@Override
 	public void removeByGroupId(long groupId) {
-		for (MBStatsUser mbStatsUser : findByGroupId(groupId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (MBStatsUser mbStatsUser :
+				findByGroupId(
+					groupId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(mbStatsUser);
 		}
 	}
@@ -543,11 +539,12 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 */
 	@Override
 	public int countByGroupId(long groupId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_GROUPID;
+		FinderPath finderPath = _finderPathCountByGroupId;
 
-		Object[] finderArgs = new Object[] { groupId };
+		Object[] finderArgs = new Object[] {groupId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(
+			finderPath, finderArgs, this);
 
 		if (count == null) {
 			StringBundler query = new StringBundler(2);
@@ -571,10 +568,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -586,27 +583,12 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_GROUPID_GROUPID_2 = "mbStatsUser.groupId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_USERID = new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID =
-		new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
-			new String[] { Long.class.getName() },
-			MBStatsUserModelImpl.USERID_COLUMN_BITMASK |
-			MBStatsUserModelImpl.MESSAGECOUNT_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_USERID = new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
-			new String[] { Long.class.getName() });
+	private static final String _FINDER_COLUMN_GROUPID_GROUPID_2 =
+		"mbStatsUser.groupId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByUserId;
+	private FinderPath _finderPathWithoutPaginationFindByUserId;
+	private FinderPath _finderPathCountByUserId;
 
 	/**
 	 * Returns all the message boards stats users where userId = &#63;.
@@ -623,7 +605,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * Returns a range of all the message boards stats users where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -640,7 +622,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * Returns an ordered range of all the message boards stats users where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -650,8 +632,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the ordered range of matching message boards stats users
 	 */
 	@Override
-	public List<MBStatsUser> findByUserId(long userId, int start, int end,
+	public List<MBStatsUser> findByUserId(
+		long userId, int start, int end,
 		OrderByComparator<MBStatsUser> orderByComparator) {
+
 		return findByUserId(userId, start, end, orderByComparator, true);
 	}
 
@@ -659,7 +643,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * Returns an ordered range of all the message boards stats users where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -670,29 +654,32 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the ordered range of matching message boards stats users
 	 */
 	@Override
-	public List<MBStatsUser> findByUserId(long userId, int start, int end,
+	public List<MBStatsUser> findByUserId(
+		long userId, int start, int end,
 		OrderByComparator<MBStatsUser> orderByComparator,
 		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID;
-			finderArgs = new Object[] { userId };
+			finderPath = _finderPathWithoutPaginationFindByUserId;
+			finderArgs = new Object[] {userId};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_USERID;
-			finderArgs = new Object[] { userId, start, end, orderByComparator };
+			finderPath = _finderPathWithPaginationFindByUserId;
+			finderArgs = new Object[] {userId, start, end, orderByComparator};
 		}
 
 		List<MBStatsUser> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<MBStatsUser>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<MBStatsUser>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBStatsUser mbStatsUser : list) {
@@ -709,8 +696,8 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(3);
@@ -721,11 +708,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 			query.append(_FINDER_COLUMN_USERID_USERID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(MBStatsUserModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -743,24 +729,24 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 				qPos.add(userId);
 
 				if (!pagination) {
-					list = (List<MBStatsUser>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<MBStatsUser>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<MBStatsUser>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<MBStatsUser>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				FinderCacheUtil.putResult(finderPath, finderArgs, list);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -781,10 +767,12 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @throws NoSuchStatsUserException if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser findByUserId_First(long userId,
-		OrderByComparator<MBStatsUser> orderByComparator)
+	public MBStatsUser findByUserId_First(
+			long userId, OrderByComparator<MBStatsUser> orderByComparator)
 		throws NoSuchStatsUserException {
-		MBStatsUser mbStatsUser = fetchByUserId_First(userId, orderByComparator);
+
+		MBStatsUser mbStatsUser = fetchByUserId_First(
+			userId, orderByComparator);
 
 		if (mbStatsUser != null) {
 			return mbStatsUser;
@@ -810,8 +798,9 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the first matching message boards stats user, or <code>null</code> if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser fetchByUserId_First(long userId,
-		OrderByComparator<MBStatsUser> orderByComparator) {
+	public MBStatsUser fetchByUserId_First(
+		long userId, OrderByComparator<MBStatsUser> orderByComparator) {
+
 		List<MBStatsUser> list = findByUserId(userId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -830,9 +819,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @throws NoSuchStatsUserException if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser findByUserId_Last(long userId,
-		OrderByComparator<MBStatsUser> orderByComparator)
+	public MBStatsUser findByUserId_Last(
+			long userId, OrderByComparator<MBStatsUser> orderByComparator)
 		throws NoSuchStatsUserException {
+
 		MBStatsUser mbStatsUser = fetchByUserId_Last(userId, orderByComparator);
 
 		if (mbStatsUser != null) {
@@ -859,16 +849,17 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the last matching message boards stats user, or <code>null</code> if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser fetchByUserId_Last(long userId,
-		OrderByComparator<MBStatsUser> orderByComparator) {
+	public MBStatsUser fetchByUserId_Last(
+		long userId, OrderByComparator<MBStatsUser> orderByComparator) {
+
 		int count = countByUserId(userId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<MBStatsUser> list = findByUserId(userId, count - 1, count,
-				orderByComparator);
+		List<MBStatsUser> list = findByUserId(
+			userId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -887,9 +878,11 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @throws NoSuchStatsUserException if a message boards stats user with the primary key could not be found
 	 */
 	@Override
-	public MBStatsUser[] findByUserId_PrevAndNext(long statsUserId,
-		long userId, OrderByComparator<MBStatsUser> orderByComparator)
+	public MBStatsUser[] findByUserId_PrevAndNext(
+			long statsUserId, long userId,
+			OrderByComparator<MBStatsUser> orderByComparator)
 		throws NoSuchStatsUserException {
+
 		MBStatsUser mbStatsUser = findByPrimaryKey(statsUserId);
 
 		Session session = null;
@@ -899,13 +892,13 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 
 			MBStatsUser[] array = new MBStatsUserImpl[3];
 
-			array[0] = getByUserId_PrevAndNext(session, mbStatsUser, userId,
-					orderByComparator, true);
+			array[0] = getByUserId_PrevAndNext(
+				session, mbStatsUser, userId, orderByComparator, true);
 
 			array[1] = mbStatsUser;
 
-			array[2] = getByUserId_PrevAndNext(session, mbStatsUser, userId,
-					orderByComparator, false);
+			array[2] = getByUserId_PrevAndNext(
+				session, mbStatsUser, userId, orderByComparator, false);
 
 			return array;
 		}
@@ -917,14 +910,15 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		}
 	}
 
-	protected MBStatsUser getByUserId_PrevAndNext(Session session,
-		MBStatsUser mbStatsUser, long userId,
+	protected MBStatsUser getByUserId_PrevAndNext(
+		Session session, MBStatsUser mbStatsUser, long userId,
 		OrderByComparator<MBStatsUser> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -936,7 +930,8 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		query.append(_FINDER_COLUMN_USERID_USERID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -1006,10 +1001,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		qPos.add(userId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(mbStatsUser);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(mbStatsUser)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -1030,8 +1025,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 */
 	@Override
 	public void removeByUserId(long userId) {
-		for (MBStatsUser mbStatsUser : findByUserId(userId, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null)) {
+		for (MBStatsUser mbStatsUser :
+				findByUserId(
+					userId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(mbStatsUser);
 		}
 	}
@@ -1044,11 +1041,12 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 */
 	@Override
 	public int countByUserId(long userId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_USERID;
+		FinderPath finderPath = _finderPathCountByUserId;
 
-		Object[] finderArgs = new Object[] { userId };
+		Object[] finderArgs = new Object[] {userId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(
+			finderPath, finderArgs, this);
 
 		if (count == null) {
 			StringBundler query = new StringBundler(2);
@@ -1072,10 +1070,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -1087,20 +1085,14 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_USERID_USERID_2 = "mbStatsUser.userId = ?";
-	public static final FinderPath FINDER_PATH_FETCH_BY_G_U = new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
-			FINDER_CLASS_NAME_ENTITY, "fetchByG_U",
-			new String[] { Long.class.getName(), Long.class.getName() },
-			MBStatsUserModelImpl.GROUPID_COLUMN_BITMASK |
-			MBStatsUserModelImpl.USERID_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_G_U = new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_U",
-			new String[] { Long.class.getName(), Long.class.getName() });
+	private static final String _FINDER_COLUMN_USERID_USERID_2 =
+		"mbStatsUser.userId = ?";
+
+	private FinderPath _finderPathFetchByG_U;
+	private FinderPath _finderPathCountByG_U;
 
 	/**
-	 * Returns the message boards stats user where groupId = &#63; and userId = &#63; or throws a {@link NoSuchStatsUserException} if it could not be found.
+	 * Returns the message boards stats user where groupId = &#63; and userId = &#63; or throws a <code>NoSuchStatsUserException</code> if it could not be found.
 	 *
 	 * @param groupId the group ID
 	 * @param userId the user ID
@@ -1110,6 +1102,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	@Override
 	public MBStatsUser findByG_U(long groupId, long userId)
 		throws NoSuchStatsUserException {
+
 		MBStatsUser mbStatsUser = fetchByG_U(groupId, userId);
 
 		if (mbStatsUser == null) {
@@ -1156,22 +1149,24 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the matching message boards stats user, or <code>null</code> if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser fetchByG_U(long groupId, long userId,
-		boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] { groupId, userId };
+	public MBStatsUser fetchByG_U(
+		long groupId, long userId, boolean retrieveFromCache) {
+
+		Object[] finderArgs = new Object[] {groupId, userId};
 
 		Object result = null;
 
 		if (retrieveFromCache) {
-			result = finderCache.getResult(FINDER_PATH_FETCH_BY_G_U,
-					finderArgs, this);
+			result = FinderCacheUtil.getResult(
+				_finderPathFetchByG_U, finderArgs, this);
 		}
 
 		if (result instanceof MBStatsUser) {
 			MBStatsUser mbStatsUser = (MBStatsUser)result;
 
 			if ((groupId != mbStatsUser.getGroupId()) ||
-					(userId != mbStatsUser.getUserId())) {
+				(userId != mbStatsUser.getUserId())) {
+
 				result = null;
 			}
 		}
@@ -1203,8 +1198,8 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 				List<MBStatsUser> list = q.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(FINDER_PATH_FETCH_BY_G_U, finderArgs,
-						list);
+					FinderCacheUtil.putResult(
+						_finderPathFetchByG_U, finderArgs, list);
 				}
 				else {
 					MBStatsUser mbStatsUser = list.get(0);
@@ -1212,16 +1207,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 					result = mbStatsUser;
 
 					cacheResult(mbStatsUser);
-
-					if ((mbStatsUser.getGroupId() != groupId) ||
-							(mbStatsUser.getUserId() != userId)) {
-						finderCache.putResult(FINDER_PATH_FETCH_BY_G_U,
-							finderArgs, mbStatsUser);
-					}
 				}
 			}
 			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_FETCH_BY_G_U, finderArgs);
+				FinderCacheUtil.removeResult(_finderPathFetchByG_U, finderArgs);
 
 				throw processException(e);
 			}
@@ -1248,6 +1237,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	@Override
 	public MBStatsUser removeByG_U(long groupId, long userId)
 		throws NoSuchStatsUserException {
+
 		MBStatsUser mbStatsUser = findByG_U(groupId, userId);
 
 		return remove(mbStatsUser);
@@ -1262,11 +1252,12 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 */
 	@Override
 	public int countByG_U(long groupId, long userId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_G_U;
+		FinderPath finderPath = _finderPathCountByG_U;
 
-		Object[] finderArgs = new Object[] { groupId, userId };
+		Object[] finderArgs = new Object[] {groupId, userId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(
+			finderPath, finderArgs, this);
 
 		if (count == null) {
 			StringBundler query = new StringBundler(3);
@@ -1294,10 +1285,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -1309,27 +1300,14 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_G_U_GROUPID_2 = "mbStatsUser.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_G_U_USERID_2 = "mbStatsUser.userId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_G_NOTU_NOTM =
-		new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_NotU_NotM",
-			new String[] {
-				Long.class.getName(), Long.class.getName(),
-				Integer.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_COUNT_BY_G_NOTU_NOTM =
-		new FinderPath(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_NotU_NotM",
-			new String[] {
-				Long.class.getName(), Long.class.getName(),
-				Integer.class.getName()
-			});
+	private static final String _FINDER_COLUMN_G_U_GROUPID_2 =
+		"mbStatsUser.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_U_USERID_2 =
+		"mbStatsUser.userId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByG_NotU_NotM;
+	private FinderPath _finderPathWithPaginationCountByG_NotU_NotM;
 
 	/**
 	 * Returns all the message boards stats users where groupId = &#63; and userId &ne; &#63; and messageCount &ne; &#63;.
@@ -1340,17 +1318,19 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the matching message boards stats users
 	 */
 	@Override
-	public List<MBStatsUser> findByG_NotU_NotM(long groupId, long userId,
-		int messageCount) {
-		return findByG_NotU_NotM(groupId, userId, messageCount,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	public List<MBStatsUser> findByG_NotU_NotM(
+		long groupId, long userId, int messageCount) {
+
+		return findByG_NotU_NotM(
+			groupId, userId, messageCount, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			null);
 	}
 
 	/**
 	 * Returns a range of all the message boards stats users where groupId = &#63; and userId &ne; &#63; and messageCount &ne; &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -1361,16 +1341,18 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the range of matching message boards stats users
 	 */
 	@Override
-	public List<MBStatsUser> findByG_NotU_NotM(long groupId, long userId,
-		int messageCount, int start, int end) {
-		return findByG_NotU_NotM(groupId, userId, messageCount, start, end, null);
+	public List<MBStatsUser> findByG_NotU_NotM(
+		long groupId, long userId, int messageCount, int start, int end) {
+
+		return findByG_NotU_NotM(
+			groupId, userId, messageCount, start, end, null);
 	}
 
 	/**
 	 * Returns an ordered range of all the message boards stats users where groupId = &#63; and userId &ne; &#63; and messageCount &ne; &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -1382,18 +1364,19 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the ordered range of matching message boards stats users
 	 */
 	@Override
-	public List<MBStatsUser> findByG_NotU_NotM(long groupId, long userId,
-		int messageCount, int start, int end,
+	public List<MBStatsUser> findByG_NotU_NotM(
+		long groupId, long userId, int messageCount, int start, int end,
 		OrderByComparator<MBStatsUser> orderByComparator) {
-		return findByG_NotU_NotM(groupId, userId, messageCount, start, end,
-			orderByComparator, true);
+
+		return findByG_NotU_NotM(
+			groupId, userId, messageCount, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the message boards stats users where groupId = &#63; and userId &ne; &#63; and messageCount &ne; &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param groupId the group ID
@@ -1406,32 +1389,32 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the ordered range of matching message boards stats users
 	 */
 	@Override
-	public List<MBStatsUser> findByG_NotU_NotM(long groupId, long userId,
-		int messageCount, int start, int end,
+	public List<MBStatsUser> findByG_NotU_NotM(
+		long groupId, long userId, int messageCount, int start, int end,
 		OrderByComparator<MBStatsUser> orderByComparator,
 		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
-		finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_G_NOTU_NOTM;
+		finderPath = _finderPathWithPaginationFindByG_NotU_NotM;
 		finderArgs = new Object[] {
-				groupId, userId, messageCount,
-				
-				start, end, orderByComparator
-			};
+			groupId, userId, messageCount, start, end, orderByComparator
+		};
 
 		List<MBStatsUser> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<MBStatsUser>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<MBStatsUser>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBStatsUser mbStatsUser : list) {
 					if ((groupId != mbStatsUser.getGroupId()) ||
-							(userId == mbStatsUser.getUserId()) ||
-							(messageCount == mbStatsUser.getMessageCount())) {
+						(userId == mbStatsUser.getUserId()) ||
+						(messageCount == mbStatsUser.getMessageCount())) {
+
 						list = null;
 
 						break;
@@ -1444,8 +1427,8 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(5 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(5);
@@ -1460,11 +1443,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 			query.append(_FINDER_COLUMN_G_NOTU_NOTM_MESSAGECOUNT_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(MBStatsUserModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -1486,24 +1468,24 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 				qPos.add(messageCount);
 
 				if (!pagination) {
-					list = (List<MBStatsUser>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<MBStatsUser>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<MBStatsUser>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<MBStatsUser>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				FinderCacheUtil.putResult(finderPath, finderArgs, list);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -1526,11 +1508,13 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @throws NoSuchStatsUserException if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser findByG_NotU_NotM_First(long groupId, long userId,
-		int messageCount, OrderByComparator<MBStatsUser> orderByComparator)
+	public MBStatsUser findByG_NotU_NotM_First(
+			long groupId, long userId, int messageCount,
+			OrderByComparator<MBStatsUser> orderByComparator)
 		throws NoSuchStatsUserException {
-		MBStatsUser mbStatsUser = fetchByG_NotU_NotM_First(groupId, userId,
-				messageCount, orderByComparator);
+
+		MBStatsUser mbStatsUser = fetchByG_NotU_NotM_First(
+			groupId, userId, messageCount, orderByComparator);
 
 		if (mbStatsUser != null) {
 			return mbStatsUser;
@@ -1564,10 +1548,12 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the first matching message boards stats user, or <code>null</code> if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser fetchByG_NotU_NotM_First(long groupId, long userId,
-		int messageCount, OrderByComparator<MBStatsUser> orderByComparator) {
-		List<MBStatsUser> list = findByG_NotU_NotM(groupId, userId,
-				messageCount, 0, 1, orderByComparator);
+	public MBStatsUser fetchByG_NotU_NotM_First(
+		long groupId, long userId, int messageCount,
+		OrderByComparator<MBStatsUser> orderByComparator) {
+
+		List<MBStatsUser> list = findByG_NotU_NotM(
+			groupId, userId, messageCount, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1587,11 +1573,13 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @throws NoSuchStatsUserException if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser findByG_NotU_NotM_Last(long groupId, long userId,
-		int messageCount, OrderByComparator<MBStatsUser> orderByComparator)
+	public MBStatsUser findByG_NotU_NotM_Last(
+			long groupId, long userId, int messageCount,
+			OrderByComparator<MBStatsUser> orderByComparator)
 		throws NoSuchStatsUserException {
-		MBStatsUser mbStatsUser = fetchByG_NotU_NotM_Last(groupId, userId,
-				messageCount, orderByComparator);
+
+		MBStatsUser mbStatsUser = fetchByG_NotU_NotM_Last(
+			groupId, userId, messageCount, orderByComparator);
 
 		if (mbStatsUser != null) {
 			return mbStatsUser;
@@ -1625,16 +1613,18 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the last matching message boards stats user, or <code>null</code> if a matching message boards stats user could not be found
 	 */
 	@Override
-	public MBStatsUser fetchByG_NotU_NotM_Last(long groupId, long userId,
-		int messageCount, OrderByComparator<MBStatsUser> orderByComparator) {
+	public MBStatsUser fetchByG_NotU_NotM_Last(
+		long groupId, long userId, int messageCount,
+		OrderByComparator<MBStatsUser> orderByComparator) {
+
 		int count = countByG_NotU_NotM(groupId, userId, messageCount);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<MBStatsUser> list = findByG_NotU_NotM(groupId, userId,
-				messageCount, count - 1, count, orderByComparator);
+		List<MBStatsUser> list = findByG_NotU_NotM(
+			groupId, userId, messageCount, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1655,10 +1645,11 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @throws NoSuchStatsUserException if a message boards stats user with the primary key could not be found
 	 */
 	@Override
-	public MBStatsUser[] findByG_NotU_NotM_PrevAndNext(long statsUserId,
-		long groupId, long userId, int messageCount,
-		OrderByComparator<MBStatsUser> orderByComparator)
+	public MBStatsUser[] findByG_NotU_NotM_PrevAndNext(
+			long statsUserId, long groupId, long userId, int messageCount,
+			OrderByComparator<MBStatsUser> orderByComparator)
 		throws NoSuchStatsUserException {
+
 		MBStatsUser mbStatsUser = findByPrimaryKey(statsUserId);
 
 		Session session = null;
@@ -1668,13 +1659,15 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 
 			MBStatsUser[] array = new MBStatsUserImpl[3];
 
-			array[0] = getByG_NotU_NotM_PrevAndNext(session, mbStatsUser,
-					groupId, userId, messageCount, orderByComparator, true);
+			array[0] = getByG_NotU_NotM_PrevAndNext(
+				session, mbStatsUser, groupId, userId, messageCount,
+				orderByComparator, true);
 
 			array[1] = mbStatsUser;
 
-			array[2] = getByG_NotU_NotM_PrevAndNext(session, mbStatsUser,
-					groupId, userId, messageCount, orderByComparator, false);
+			array[2] = getByG_NotU_NotM_PrevAndNext(
+				session, mbStatsUser, groupId, userId, messageCount,
+				orderByComparator, false);
 
 			return array;
 		}
@@ -1686,14 +1679,16 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		}
 	}
 
-	protected MBStatsUser getByG_NotU_NotM_PrevAndNext(Session session,
-		MBStatsUser mbStatsUser, long groupId, long userId, int messageCount,
-		OrderByComparator<MBStatsUser> orderByComparator, boolean previous) {
+	protected MBStatsUser getByG_NotU_NotM_PrevAndNext(
+		Session session, MBStatsUser mbStatsUser, long groupId, long userId,
+		int messageCount, OrderByComparator<MBStatsUser> orderByComparator,
+		boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(6 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -1709,7 +1704,8 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		query.append(_FINDER_COLUMN_G_NOTU_NOTM_MESSAGECOUNT_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -1783,10 +1779,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		qPos.add(messageCount);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(mbStatsUser);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(mbStatsUser)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -1808,9 +1804,14 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @param messageCount the message count
 	 */
 	@Override
-	public void removeByG_NotU_NotM(long groupId, long userId, int messageCount) {
-		for (MBStatsUser mbStatsUser : findByG_NotU_NotM(groupId, userId,
-				messageCount, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+	public void removeByG_NotU_NotM(
+		long groupId, long userId, int messageCount) {
+
+		for (MBStatsUser mbStatsUser :
+				findByG_NotU_NotM(
+					groupId, userId, messageCount, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
 			remove(mbStatsUser);
 		}
 	}
@@ -1825,11 +1826,12 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 */
 	@Override
 	public int countByG_NotU_NotM(long groupId, long userId, int messageCount) {
-		FinderPath finderPath = FINDER_PATH_WITH_PAGINATION_COUNT_BY_G_NOTU_NOTM;
+		FinderPath finderPath = _finderPathWithPaginationCountByG_NotU_NotM;
 
-		Object[] finderArgs = new Object[] { groupId, userId, messageCount };
+		Object[] finderArgs = new Object[] {groupId, userId, messageCount};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(
+			finderPath, finderArgs, this);
 
 		if (count == null) {
 			StringBundler query = new StringBundler(4);
@@ -1861,10 +1863,10 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -1876,9 +1878,14 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_G_NOTU_NOTM_GROUPID_2 = "mbStatsUser.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_G_NOTU_NOTM_USERID_2 = "mbStatsUser.userId != ? AND ";
-	private static final String _FINDER_COLUMN_G_NOTU_NOTM_MESSAGECOUNT_2 = "mbStatsUser.messageCount != ?";
+	private static final String _FINDER_COLUMN_G_NOTU_NOTM_GROUPID_2 =
+		"mbStatsUser.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_NOTU_NOTM_USERID_2 =
+		"mbStatsUser.userId != ? AND ";
+
+	private static final String _FINDER_COLUMN_G_NOTU_NOTM_MESSAGECOUNT_2 =
+		"mbStatsUser.messageCount != ?";
 
 	public MBStatsUserPersistenceImpl() {
 		setModelClass(MBStatsUser.class);
@@ -1891,11 +1898,13 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 */
 	@Override
 	public void cacheResult(MBStatsUser mbStatsUser) {
-		entityCache.putResult(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserImpl.class, mbStatsUser.getPrimaryKey(), mbStatsUser);
+		EntityCacheUtil.putResult(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED, MBStatsUserImpl.class,
+			mbStatsUser.getPrimaryKey(), mbStatsUser);
 
-		finderCache.putResult(FINDER_PATH_FETCH_BY_G_U,
-			new Object[] { mbStatsUser.getGroupId(), mbStatsUser.getUserId() },
+		FinderCacheUtil.putResult(
+			_finderPathFetchByG_U,
+			new Object[] {mbStatsUser.getGroupId(), mbStatsUser.getUserId()},
 			mbStatsUser);
 
 		mbStatsUser.resetOriginalValues();
@@ -1909,9 +1918,11 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	@Override
 	public void cacheResult(List<MBStatsUser> mbStatsUsers) {
 		for (MBStatsUser mbStatsUser : mbStatsUsers) {
-			if (entityCache.getResult(
-						MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-						MBStatsUserImpl.class, mbStatsUser.getPrimaryKey()) == null) {
+			if (EntityCacheUtil.getResult(
+					MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+					MBStatsUserImpl.class, mbStatsUser.getPrimaryKey()) ==
+						null) {
+
 				cacheResult(mbStatsUser);
 			}
 			else {
@@ -1924,43 +1935,45 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * Clears the cache for all message boards stats users.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>com.liferay.portal.kernel.dao.orm.EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache() {
-		entityCache.clearCache(MBStatsUserImpl.class);
+		EntityCacheUtil.clearCache(MBStatsUserImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 	}
 
 	/**
 	 * Clears the cache for the message boards stats user.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>com.liferay.portal.kernel.dao.orm.EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(MBStatsUser mbStatsUser) {
-		entityCache.removeResult(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserImpl.class, mbStatsUser.getPrimaryKey());
+		EntityCacheUtil.removeResult(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED, MBStatsUserImpl.class,
+			mbStatsUser.getPrimaryKey());
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		clearUniqueFindersCache((MBStatsUserModelImpl)mbStatsUser, true);
 	}
 
 	@Override
 	public void clearCache(List<MBStatsUser> mbStatsUsers) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		for (MBStatsUser mbStatsUser : mbStatsUsers) {
-			entityCache.removeResult(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			EntityCacheUtil.removeResult(
+				MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
 				MBStatsUserImpl.class, mbStatsUser.getPrimaryKey());
 
 			clearUniqueFindersCache((MBStatsUserModelImpl)mbStatsUser, true);
@@ -1969,38 +1982,40 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 
 	protected void cacheUniqueFindersCache(
 		MBStatsUserModelImpl mbStatsUserModelImpl) {
-		Object[] args = new Object[] {
-				mbStatsUserModelImpl.getGroupId(),
-				mbStatsUserModelImpl.getUserId()
-			};
 
-		finderCache.putResult(FINDER_PATH_COUNT_BY_G_U, args, Long.valueOf(1),
-			false);
-		finderCache.putResult(FINDER_PATH_FETCH_BY_G_U, args,
-			mbStatsUserModelImpl, false);
+		Object[] args = new Object[] {
+			mbStatsUserModelImpl.getGroupId(), mbStatsUserModelImpl.getUserId()
+		};
+
+		FinderCacheUtil.putResult(
+			_finderPathCountByG_U, args, Long.valueOf(1), false);
+		FinderCacheUtil.putResult(
+			_finderPathFetchByG_U, args, mbStatsUserModelImpl, false);
 	}
 
 	protected void clearUniqueFindersCache(
 		MBStatsUserModelImpl mbStatsUserModelImpl, boolean clearCurrent) {
+
 		if (clearCurrent) {
 			Object[] args = new Object[] {
-					mbStatsUserModelImpl.getGroupId(),
-					mbStatsUserModelImpl.getUserId()
-				};
+				mbStatsUserModelImpl.getGroupId(),
+				mbStatsUserModelImpl.getUserId()
+			};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_G_U, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_G_U, args);
+			FinderCacheUtil.removeResult(_finderPathCountByG_U, args);
+			FinderCacheUtil.removeResult(_finderPathFetchByG_U, args);
 		}
 
 		if ((mbStatsUserModelImpl.getColumnBitmask() &
-				FINDER_PATH_FETCH_BY_G_U.getColumnBitmask()) != 0) {
-			Object[] args = new Object[] {
-					mbStatsUserModelImpl.getOriginalGroupId(),
-					mbStatsUserModelImpl.getOriginalUserId()
-				};
+			 _finderPathFetchByG_U.getColumnBitmask()) != 0) {
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_G_U, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_G_U, args);
+			Object[] args = new Object[] {
+				mbStatsUserModelImpl.getOriginalGroupId(),
+				mbStatsUserModelImpl.getOriginalUserId()
+			};
+
+			FinderCacheUtil.removeResult(_finderPathCountByG_U, args);
+			FinderCacheUtil.removeResult(_finderPathFetchByG_U, args);
 		}
 	}
 
@@ -2030,7 +2045,9 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @throws NoSuchStatsUserException if a message boards stats user with the primary key could not be found
 	 */
 	@Override
-	public MBStatsUser remove(long statsUserId) throws NoSuchStatsUserException {
+	public MBStatsUser remove(long statsUserId)
+		throws NoSuchStatsUserException {
+
 		return remove((Serializable)statsUserId);
 	}
 
@@ -2044,21 +2061,22 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	@Override
 	public MBStatsUser remove(Serializable primaryKey)
 		throws NoSuchStatsUserException {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			MBStatsUser mbStatsUser = (MBStatsUser)session.get(MBStatsUserImpl.class,
-					primaryKey);
+			MBStatsUser mbStatsUser = (MBStatsUser)session.get(
+				MBStatsUserImpl.class, primaryKey);
 
 			if (mbStatsUser == null) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 				}
 
-				throw new NoSuchStatsUserException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-					primaryKey);
+				throw new NoSuchStatsUserException(
+					_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
 			return remove(mbStatsUser);
@@ -2076,16 +2094,14 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 
 	@Override
 	protected MBStatsUser removeImpl(MBStatsUser mbStatsUser) {
-		mbStatsUser = toUnwrappedModel(mbStatsUser);
-
 		Session session = null;
 
 		try {
 			session = openSession();
 
 			if (!session.contains(mbStatsUser)) {
-				mbStatsUser = (MBStatsUser)session.get(MBStatsUserImpl.class,
-						mbStatsUser.getPrimaryKeyObj());
+				mbStatsUser = (MBStatsUser)session.get(
+					MBStatsUserImpl.class, mbStatsUser.getPrimaryKeyObj());
 			}
 
 			if (mbStatsUser != null) {
@@ -2108,11 +2124,26 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 
 	@Override
 	public MBStatsUser updateImpl(MBStatsUser mbStatsUser) {
-		mbStatsUser = toUnwrappedModel(mbStatsUser);
-
 		boolean isNew = mbStatsUser.isNew();
 
-		MBStatsUserModelImpl mbStatsUserModelImpl = (MBStatsUserModelImpl)mbStatsUser;
+		if (!(mbStatsUser instanceof MBStatsUserModelImpl)) {
+			InvocationHandler invocationHandler = null;
+
+			if (ProxyUtil.isProxyClass(mbStatsUser.getClass())) {
+				invocationHandler = ProxyUtil.getInvocationHandler(mbStatsUser);
+
+				throw new IllegalArgumentException(
+					"Implement ModelWrapper in mbStatsUser proxy " +
+						invocationHandler.getClass());
+			}
+
+			throw new IllegalArgumentException(
+				"Implement ModelWrapper in custom MBStatsUser implementation " +
+					mbStatsUser.getClass());
+		}
+
+		MBStatsUserModelImpl mbStatsUserModelImpl =
+			(MBStatsUserModelImpl)mbStatsUser;
 
 		Session session = null;
 
@@ -2135,69 +2166,73 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 
 		if (!MBStatsUserModelImpl.COLUMN_BITMASK_ENABLED) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+			FinderCacheUtil.clearCache(
+				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 		}
-		else
-		 if (isNew) {
-			Object[] args = new Object[] { mbStatsUserModelImpl.getGroupId() };
+		else if (isNew) {
+			Object[] args = new Object[] {mbStatsUserModelImpl.getGroupId()};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_GROUPID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_GROUPID,
-				args);
+			FinderCacheUtil.removeResult(_finderPathCountByGroupId, args);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindByGroupId, args);
 
-			args = new Object[] { mbStatsUserModelImpl.getUserId() };
+			args = new Object[] {mbStatsUserModelImpl.getUserId()};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_USERID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID,
-				args);
+			FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindByUserId, args);
 
-			finderCache.removeResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL,
-				FINDER_ARGS_EMPTY);
+			FinderCacheUtil.removeResult(
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
 		}
-
 		else {
 			if ((mbStatsUserModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_GROUPID.getColumnBitmask()) != 0) {
+				 _finderPathWithoutPaginationFindByGroupId.
+					 getColumnBitmask()) != 0) {
+
 				Object[] args = new Object[] {
-						mbStatsUserModelImpl.getOriginalGroupId()
-					};
+					mbStatsUserModelImpl.getOriginalGroupId()
+				};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_GROUPID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_GROUPID,
-					args);
+				FinderCacheUtil.removeResult(_finderPathCountByGroupId, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByGroupId, args);
 
-				args = new Object[] { mbStatsUserModelImpl.getGroupId() };
+				args = new Object[] {mbStatsUserModelImpl.getGroupId()};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_GROUPID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_GROUPID,
-					args);
+				FinderCacheUtil.removeResult(_finderPathCountByGroupId, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByGroupId, args);
 			}
 
 			if ((mbStatsUserModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID.getColumnBitmask()) != 0) {
+				 _finderPathWithoutPaginationFindByUserId.getColumnBitmask()) !=
+					 0) {
+
 				Object[] args = new Object[] {
-						mbStatsUserModelImpl.getOriginalUserId()
-					};
+					mbStatsUserModelImpl.getOriginalUserId()
+				};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_USERID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID,
-					args);
+				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByUserId, args);
 
-				args = new Object[] { mbStatsUserModelImpl.getUserId() };
+				args = new Object[] {mbStatsUserModelImpl.getUserId()};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_USERID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID,
-					args);
+				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByUserId, args);
 			}
 		}
 
-		entityCache.putResult(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-			MBStatsUserImpl.class, mbStatsUser.getPrimaryKey(), mbStatsUser,
-			false);
+		EntityCacheUtil.putResult(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED, MBStatsUserImpl.class,
+			mbStatsUser.getPrimaryKey(), mbStatsUser, false);
 
 		clearUniqueFindersCache(mbStatsUserModelImpl, false);
 		cacheUniqueFindersCache(mbStatsUserModelImpl);
@@ -2207,28 +2242,8 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		return mbStatsUser;
 	}
 
-	protected MBStatsUser toUnwrappedModel(MBStatsUser mbStatsUser) {
-		if (mbStatsUser instanceof MBStatsUserImpl) {
-			return mbStatsUser;
-		}
-
-		MBStatsUserImpl mbStatsUserImpl = new MBStatsUserImpl();
-
-		mbStatsUserImpl.setNew(mbStatsUser.isNew());
-		mbStatsUserImpl.setPrimaryKey(mbStatsUser.getPrimaryKey());
-
-		mbStatsUserImpl.setStatsUserId(mbStatsUser.getStatsUserId());
-		mbStatsUserImpl.setGroupId(mbStatsUser.getGroupId());
-		mbStatsUserImpl.setCompanyId(mbStatsUser.getCompanyId());
-		mbStatsUserImpl.setUserId(mbStatsUser.getUserId());
-		mbStatsUserImpl.setMessageCount(mbStatsUser.getMessageCount());
-		mbStatsUserImpl.setLastPostDate(mbStatsUser.getLastPostDate());
-
-		return mbStatsUserImpl;
-	}
-
 	/**
-	 * Returns the message boards stats user with the primary key or throws a {@link com.liferay.portal.kernel.exception.NoSuchModelException} if it could not be found.
+	 * Returns the message boards stats user with the primary key or throws a <code>com.liferay.portal.kernel.exception.NoSuchModelException</code> if it could not be found.
 	 *
 	 * @param primaryKey the primary key of the message boards stats user
 	 * @return the message boards stats user
@@ -2237,6 +2252,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	@Override
 	public MBStatsUser findByPrimaryKey(Serializable primaryKey)
 		throws NoSuchStatsUserException {
+
 		MBStatsUser mbStatsUser = fetchByPrimaryKey(primaryKey);
 
 		if (mbStatsUser == null) {
@@ -2244,15 +2260,15 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 				_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
-			throw new NoSuchStatsUserException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-				primaryKey);
+			throw new NoSuchStatsUserException(
+				_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 		}
 
 		return mbStatsUser;
 	}
 
 	/**
-	 * Returns the message boards stats user with the primary key or throws a {@link NoSuchStatsUserException} if it could not be found.
+	 * Returns the message boards stats user with the primary key or throws a <code>NoSuchStatsUserException</code> if it could not be found.
 	 *
 	 * @param statsUserId the primary key of the message boards stats user
 	 * @return the message boards stats user
@@ -2261,6 +2277,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	@Override
 	public MBStatsUser findByPrimaryKey(long statsUserId)
 		throws NoSuchStatsUserException {
+
 		return findByPrimaryKey((Serializable)statsUserId);
 	}
 
@@ -2272,8 +2289,9 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 */
 	@Override
 	public MBStatsUser fetchByPrimaryKey(Serializable primaryKey) {
-		Serializable serializable = entityCache.getResult(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-				MBStatsUserImpl.class, primaryKey);
+		Serializable serializable = EntityCacheUtil.getResult(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED, MBStatsUserImpl.class,
+			primaryKey);
 
 		if (serializable == nullModel) {
 			return null;
@@ -2287,19 +2305,21 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 			try {
 				session = openSession();
 
-				mbStatsUser = (MBStatsUser)session.get(MBStatsUserImpl.class,
-						primaryKey);
+				mbStatsUser = (MBStatsUser)session.get(
+					MBStatsUserImpl.class, primaryKey);
 
 				if (mbStatsUser != null) {
 					cacheResult(mbStatsUser);
 				}
 				else {
-					entityCache.putResult(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+					EntityCacheUtil.putResult(
+						MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
 						MBStatsUserImpl.class, primaryKey, nullModel);
 				}
 			}
 			catch (Exception e) {
-				entityCache.removeResult(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+				EntityCacheUtil.removeResult(
+					MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
 					MBStatsUserImpl.class, primaryKey);
 
 				throw processException(e);
@@ -2326,11 +2346,13 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	@Override
 	public Map<Serializable, MBStatsUser> fetchByPrimaryKeys(
 		Set<Serializable> primaryKeys) {
+
 		if (primaryKeys.isEmpty()) {
 			return Collections.emptyMap();
 		}
 
-		Map<Serializable, MBStatsUser> map = new HashMap<Serializable, MBStatsUser>();
+		Map<Serializable, MBStatsUser> map =
+			new HashMap<Serializable, MBStatsUser>();
 
 		if (primaryKeys.size() == 1) {
 			Iterator<Serializable> iterator = primaryKeys.iterator();
@@ -2349,8 +2371,9 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 		Set<Serializable> uncachedPrimaryKeys = null;
 
 		for (Serializable primaryKey : primaryKeys) {
-			Serializable serializable = entityCache.getResult(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
-					MBStatsUserImpl.class, primaryKey);
+			Serializable serializable = EntityCacheUtil.getResult(
+				MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+				MBStatsUserImpl.class, primaryKey);
 
 			if (serializable != nullModel) {
 				if (serializable == null) {
@@ -2370,8 +2393,8 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 			return map;
 		}
 
-		StringBundler query = new StringBundler((uncachedPrimaryKeys.size() * 2) +
-				1);
+		StringBundler query = new StringBundler(
+			uncachedPrimaryKeys.size() * 2 + 1);
 
 		query.append(_SQL_SELECT_MBSTATSUSER_WHERE_PKS_IN);
 
@@ -2403,7 +2426,8 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 			}
 
 			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				entityCache.putResult(MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+				EntityCacheUtil.putResult(
+					MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
 					MBStatsUserImpl.class, primaryKey, nullModel);
 			}
 		}
@@ -2431,7 +2455,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * Returns a range of all the message boards stats users.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of message boards stats users
@@ -2447,7 +2471,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * Returns an ordered range of all the message boards stats users.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of message boards stats users
@@ -2456,8 +2480,9 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the ordered range of message boards stats users
 	 */
 	@Override
-	public List<MBStatsUser> findAll(int start, int end,
-		OrderByComparator<MBStatsUser> orderByComparator) {
+	public List<MBStatsUser> findAll(
+		int start, int end, OrderByComparator<MBStatsUser> orderByComparator) {
+
 		return findAll(start, end, orderByComparator, true);
 	}
 
@@ -2465,7 +2490,7 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * Returns an ordered range of all the message boards stats users.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MBStatsUserModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MBStatsUserModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of message boards stats users
@@ -2475,29 +2500,31 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * @return the ordered range of message boards stats users
 	 */
 	@Override
-	public List<MBStatsUser> findAll(int start, int end,
-		OrderByComparator<MBStatsUser> orderByComparator,
+	public List<MBStatsUser> findAll(
+		int start, int end, OrderByComparator<MBStatsUser> orderByComparator,
 		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL;
+			finderPath = _finderPathWithoutPaginationFindAll;
 			finderArgs = FINDER_ARGS_EMPTY;
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_ALL;
-			finderArgs = new Object[] { start, end, orderByComparator };
+			finderPath = _finderPathWithPaginationFindAll;
+			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<MBStatsUser> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<MBStatsUser>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<MBStatsUser>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
@@ -2505,13 +2532,13 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(2 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					2 + (orderByComparator.getOrderByFields().length * 2));
 
 				query.append(_SQL_SELECT_MBSTATSUSER);
 
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
 				sql = query.toString();
 			}
@@ -2531,24 +2558,24 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 				Query q = session.createQuery(sql);
 
 				if (!pagination) {
-					list = (List<MBStatsUser>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<MBStatsUser>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<MBStatsUser>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<MBStatsUser>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				FinderCacheUtil.putResult(finderPath, finderArgs, list);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
 				throw processException(e);
 			}
@@ -2578,8 +2605,8 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)finderCache.getResult(FINDER_PATH_COUNT_ALL,
-				FINDER_ARGS_EMPTY, this);
+		Long count = (Long)FinderCacheUtil.getResult(
+			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
 			Session session = null;
@@ -2591,12 +2618,12 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY,
-					count);
+				FinderCacheUtil.putResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_COUNT_ALL,
-					FINDER_ARGS_EMPTY);
+				FinderCacheUtil.removeResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 				throw processException(e);
 			}
@@ -2617,26 +2644,137 @@ public class MBStatsUserPersistenceImpl extends BasePersistenceImpl<MBStatsUser>
 	 * Initializes the message boards stats user persistence.
 	 */
 	public void afterPropertiesSet() {
+		_finderPathWithPaginationFindAll = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+
+		_finderPathWithoutPaginationFindAll = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
+			new String[0]);
+
+		_finderPathCountAll = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
+			new String[0]);
+
+		_finderPathWithPaginationFindByGroupId = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
+			new String[] {Long.class.getName()},
+			MBStatsUserModelImpl.GROUPID_COLUMN_BITMASK |
+			MBStatsUserModelImpl.MESSAGECOUNT_COLUMN_BITMASK);
+
+		_finderPathCountByGroupId = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
+			new String[] {Long.class.getName()});
+
+		_finderPathWithPaginationFindByUserId = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByUserId = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
+			new String[] {Long.class.getName()},
+			MBStatsUserModelImpl.USERID_COLUMN_BITMASK |
+			MBStatsUserModelImpl.MESSAGECOUNT_COLUMN_BITMASK);
+
+		_finderPathCountByUserId = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
+			new String[] {Long.class.getName()});
+
+		_finderPathFetchByG_U = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
+			FINDER_CLASS_NAME_ENTITY, "fetchByG_U",
+			new String[] {Long.class.getName(), Long.class.getName()},
+			MBStatsUserModelImpl.GROUPID_COLUMN_BITMASK |
+			MBStatsUserModelImpl.USERID_COLUMN_BITMASK);
+
+		_finderPathCountByG_U = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_U",
+			new String[] {Long.class.getName(), Long.class.getName()});
+
+		_finderPathWithPaginationFindByG_NotU_NotM = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, MBStatsUserImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_NotU_NotM",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithPaginationCountByG_NotU_NotM = new FinderPath(
+			MBStatsUserModelImpl.ENTITY_CACHE_ENABLED,
+			MBStatsUserModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_NotU_NotM",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Integer.class.getName()
+			});
 	}
 
 	public void destroy() {
-		entityCache.removeCache(MBStatsUserImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		EntityCacheUtil.removeCache(MBStatsUserImpl.class.getName());
+		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
+		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 	}
 
 	@BeanReference(type = CompanyProviderWrapper.class)
 	protected CompanyProvider companyProvider;
-	protected EntityCache entityCache = EntityCacheUtil.getEntityCache();
-	protected FinderCache finderCache = FinderCacheUtil.getFinderCache();
-	private static final String _SQL_SELECT_MBSTATSUSER = "SELECT mbStatsUser FROM MBStatsUser mbStatsUser";
-	private static final String _SQL_SELECT_MBSTATSUSER_WHERE_PKS_IN = "SELECT mbStatsUser FROM MBStatsUser mbStatsUser WHERE statsUserId IN (";
-	private static final String _SQL_SELECT_MBSTATSUSER_WHERE = "SELECT mbStatsUser FROM MBStatsUser mbStatsUser WHERE ";
-	private static final String _SQL_COUNT_MBSTATSUSER = "SELECT COUNT(mbStatsUser) FROM MBStatsUser mbStatsUser";
-	private static final String _SQL_COUNT_MBSTATSUSER_WHERE = "SELECT COUNT(mbStatsUser) FROM MBStatsUser mbStatsUser WHERE ";
+
+	private static final String _SQL_SELECT_MBSTATSUSER =
+		"SELECT mbStatsUser FROM MBStatsUser mbStatsUser";
+
+	private static final String _SQL_SELECT_MBSTATSUSER_WHERE_PKS_IN =
+		"SELECT mbStatsUser FROM MBStatsUser mbStatsUser WHERE statsUserId IN (";
+
+	private static final String _SQL_SELECT_MBSTATSUSER_WHERE =
+		"SELECT mbStatsUser FROM MBStatsUser mbStatsUser WHERE ";
+
+	private static final String _SQL_COUNT_MBSTATSUSER =
+		"SELECT COUNT(mbStatsUser) FROM MBStatsUser mbStatsUser";
+
+	private static final String _SQL_COUNT_MBSTATSUSER_WHERE =
+		"SELECT COUNT(mbStatsUser) FROM MBStatsUser mbStatsUser WHERE ";
+
 	private static final String _ORDER_BY_ENTITY_ALIAS = "mbStatsUser.";
-	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY = "No MBStatsUser exists with the primary key ";
-	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No MBStatsUser exists with the key {";
-	private static final Log _log = LogFactoryUtil.getLog(MBStatsUserPersistenceImpl.class);
+
+	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY =
+		"No MBStatsUser exists with the primary key ";
+
+	private static final String _NO_SUCH_ENTITY_WITH_KEY =
+		"No MBStatsUser exists with the key {";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		MBStatsUserPersistenceImpl.class);
+
 }

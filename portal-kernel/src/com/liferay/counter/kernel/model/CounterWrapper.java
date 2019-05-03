@@ -17,7 +17,6 @@ package com.liferay.counter.kernel.model;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.service.ServiceContext;
 
@@ -38,6 +37,7 @@ import java.util.Objects;
  */
 @ProviderType
 public class CounterWrapper implements Counter, ModelWrapper<Counter> {
+
 	public CounterWrapper(Counter counter) {
 		_counter = counter;
 	}
@@ -78,7 +78,7 @@ public class CounterWrapper implements Counter, ModelWrapper<Counter> {
 	}
 
 	@Override
-	public java.lang.Object clone() {
+	public Object clone() {
 		return new CounterWrapper((Counter)_counter.clone());
 	}
 
@@ -88,10 +88,10 @@ public class CounterWrapper implements Counter, ModelWrapper<Counter> {
 	}
 
 	/**
-	* Returns the current ID of this counter.
-	*
-	* @return the current ID of this counter
-	*/
+	 * Returns the current ID of this counter.
+	 *
+	 * @return the current ID of this counter
+	 */
 	@Override
 	public long getCurrentId() {
 		return _counter.getCurrentId();
@@ -103,22 +103,22 @@ public class CounterWrapper implements Counter, ModelWrapper<Counter> {
 	}
 
 	/**
-	* Returns the name of this counter.
-	*
-	* @return the name of this counter
-	*/
+	 * Returns the name of this counter.
+	 *
+	 * @return the name of this counter
+	 */
 	@Override
-	public java.lang.String getName() {
+	public String getName() {
 		return _counter.getName();
 	}
 
 	/**
-	* Returns the primary key of this counter.
-	*
-	* @return the primary key of this counter
-	*/
+	 * Returns the primary key of this counter.
+	 *
+	 * @return the primary key of this counter
+	 */
 	@Override
-	public java.lang.String getPrimaryKey() {
+	public String getPrimaryKey() {
 		return _counter.getPrimaryKey();
 	}
 
@@ -158,10 +158,10 @@ public class CounterWrapper implements Counter, ModelWrapper<Counter> {
 	}
 
 	/**
-	* Sets the current ID of this counter.
-	*
-	* @param currentId the current ID of this counter
-	*/
+	 * Sets the current ID of this counter.
+	 *
+	 * @param currentId the current ID of this counter
+	 */
 	@Override
 	public void setCurrentId(long currentId) {
 		_counter.setCurrentId(currentId);
@@ -170,6 +170,7 @@ public class CounterWrapper implements Counter, ModelWrapper<Counter> {
 	@Override
 	public void setExpandoBridgeAttributes(
 		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
+
 		_counter.setExpandoBridgeAttributes(baseModel);
 	}
 
@@ -184,12 +185,12 @@ public class CounterWrapper implements Counter, ModelWrapper<Counter> {
 	}
 
 	/**
-	* Sets the name of this counter.
-	*
-	* @param name the name of this counter
-	*/
+	 * Sets the name of this counter.
+	 *
+	 * @param name the name of this counter
+	 */
 	@Override
-	public void setName(java.lang.String name) {
+	public void setName(String name) {
 		_counter.setName(name);
 	}
 
@@ -199,12 +200,12 @@ public class CounterWrapper implements Counter, ModelWrapper<Counter> {
 	}
 
 	/**
-	* Sets the primary key of this counter.
-	*
-	* @param primaryKey the primary key of this counter
-	*/
+	 * Sets the primary key of this counter.
+	 *
+	 * @param primaryKey the primary key of this counter
+	 */
 	@Override
-	public void setPrimaryKey(java.lang.String primaryKey) {
+	public void setPrimaryKey(String primaryKey) {
 		_counter.setPrimaryKey(primaryKey);
 	}
 
@@ -224,7 +225,7 @@ public class CounterWrapper implements Counter, ModelWrapper<Counter> {
 	}
 
 	@Override
-	public java.lang.String toString() {
+	public String toString() {
 		return _counter.toString();
 	}
 
@@ -234,7 +235,7 @@ public class CounterWrapper implements Counter, ModelWrapper<Counter> {
 	}
 
 	@Override
-	public java.lang.String toXmlString() {
+	public String toXmlString() {
 		return _counter.toXmlString();
 	}
 
@@ -278,4 +279,5 @@ public class CounterWrapper implements Counter, ModelWrapper<Counter> {
 	}
 
 	private final Counter _counter;
+
 }

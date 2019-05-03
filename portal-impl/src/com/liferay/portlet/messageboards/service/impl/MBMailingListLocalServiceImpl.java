@@ -198,8 +198,10 @@ public class MBMailingListLocalServiceImpl
 
 	protected String getSchedulerGroupName(MBMailingList mailingList) {
 		return DestinationNames.MESSAGE_BOARDS_MAILING_LIST.concat(
-			StringPool.SLASH).concat(
-				String.valueOf(mailingList.getMailingListId()));
+			StringPool.SLASH
+		).concat(
+			String.valueOf(mailingList.getMailingListId())
+		);
 	}
 
 	protected void scheduleMailingList(MBMailingList mailingList)
@@ -222,10 +224,10 @@ public class MBMailingListLocalServiceImpl
 		mailingListRequest.setInProtocol(mailingList.getInProtocol());
 		mailingListRequest.setInServerName(mailingList.getInServerName());
 		mailingListRequest.setInServerPort(mailingList.getInServerPort());
-		mailingListRequest.setInUseSSL(mailingList.getInUseSSL());
+		mailingListRequest.setInUseSSL(mailingList.isInUseSSL());
 		mailingListRequest.setInUserName(mailingList.getInUserName());
 		mailingListRequest.setInPassword(mailingList.getInPassword());
-		mailingListRequest.setAllowAnonymous(mailingList.getAllowAnonymous());
+		mailingListRequest.setAllowAnonymous(mailingList.isAllowAnonymous());
 
 		SchedulerEngineHelperUtil.schedule(
 			trigger, StorageType.PERSISTED, null,

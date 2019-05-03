@@ -157,7 +157,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "vocabul
 							rowChecker="<%= searchContainer.getRowChecker() %>"
 							subtitle="<%= vocabulary.getDescription(locale) %>"
 							title="<%= vocabulary.getName() %>"
-							url="<%= rowURL != null ? rowURL.toString() : null %>"
+							url="<%= (rowURL != null) ? rowURL.toString() : null %>"
 						>
 							<liferay-frontend:vertical-card-header>
 								<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - vocabulary.getCreateDate().getTime(), true) %>" key="x-ago" translateArguments="<%= false %>" />

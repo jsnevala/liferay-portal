@@ -287,7 +287,6 @@ public class DLFolderTrashHandlerTest
 
 		PermissionThreadLocal.setPermissionChecker(
 			new SimplePermissionChecker() {
-
 				{
 					init(TestPropsValues.getUser());
 				}

@@ -9,7 +9,9 @@ import Component from 'metal-component';
  * @abstract
  * @extends {Component}
  */
+
 class PortletBase extends Component {
+
 	/**
 	 * Returns a NodeList containing all of the matching Element nodes within
 	 * the subtrees of the root object, in tree order. If there are no matching
@@ -22,6 +24,7 @@ class PortletBase extends Component {
 	 * @return {NodeList<Element>} List of Elements matching the selectors in
 	 * tree order
 	 */
+
 	all(selectors, root) {
 		root = dom.toElement(root) || this.rootNode || document;
 
@@ -39,6 +42,7 @@ class PortletBase extends Component {
 	 * @param {string} selectors List of one or more CSS relative selectors
 	 * @return {string} Namespaced id selectors
 	 */
+
 	namespaceSelectors_(namespace, selectors) {
 		return selectors.replace(
 			new RegExp('(#|\\[id=(\\"|\\\'))(?!' + namespace + ')', 'g'),
@@ -53,6 +57,7 @@ class PortletBase extends Component {
 	 * @return {Object|string} An object with its properties namespaced using
 	 * the portlet namespace or a namespaced string
 	 */
+
 	ns(obj) {
 		return Liferay.Util.ns(this.namespace, obj);
 	}
@@ -67,6 +72,7 @@ class PortletBase extends Component {
 	 * the document
 	 * @return {Element|null} List of First Element matching the selectors or null
 	 */
+
 	one(selectors, root) {
 		root = dom.toElement(root) || this.rootNode || document;
 
@@ -82,6 +88,7 @@ class PortletBase extends Component {
 	 * @protected
 	 * @return {Element} The portlet's default root node element
 	 */
+
 	rootNodeValueFn_() {
 		return dom.toElement('#p_p_id' + this.namespace);
 	}
@@ -93,15 +100,18 @@ class PortletBase extends Component {
  * @static
  * @type {!Object}
  */
+
 PortletBase.STATE = {
+
 	/**
 	 * Portlet's namespace
 	 * @instance
 	 * @memberof PortletBase
 	 * @type {string}
 	 */
+
 	namespace: {
-		validator: core.isString,
+		validator: core.isString
 	},
 
 	/**
@@ -110,10 +120,11 @@ PortletBase.STATE = {
 	 * @memberof PortletBase
 	 * @type {Element}
 	 */
+
 	rootNode: {
 		setter: dom.toElement,
-		valueFn: 'rootNodeValueFn_',
-	},
+		valueFn: 'rootNodeValueFn_'
+	}
 };
 
 export default PortletBase;

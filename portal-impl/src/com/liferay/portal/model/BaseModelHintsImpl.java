@@ -118,8 +118,11 @@ public abstract class BaseModelHintsImpl implements ModelHints {
 
 	@Override
 	public String buildCustomValidatorName(String validatorName) {
-		return validatorName.concat(StringPool.UNDERLINE).concat(
-			StringUtil.randomId());
+		return validatorName.concat(
+			StringPool.UNDERLINE
+		).concat(
+			StringUtil.randomId()
+		);
 	}
 
 	@Override
@@ -459,6 +462,7 @@ public abstract class BaseModelHintsImpl implements ModelHints {
 						validatorElement.attributeValue("error-message"));
 					String validatorValue = GetterUtil.getString(
 						validatorElement.getText());
+
 					boolean customValidator = isCustomValidator(validatorName);
 
 					if (customValidator) {

@@ -40,14 +40,11 @@ public class AssetTagsNavigationWebUpgrade implements UpgradeStepRegistrator {
 				@Override
 				protected String[][] getRenamePortletIdsArray() {
 					return new String[][] {
-						new String[] {
+						{
 							"141",
 							AssetTagsNavigationPortletKeys.ASSET_TAGS_NAVIGATION
 						},
-						new String[] {
-							"148",
-							AssetTagsNavigationPortletKeys.ASSET_TAGS_CLOUD
-						}
+						{"148", AssetTagsNavigationPortletKeys.ASSET_TAGS_CLOUD}
 					};
 				}
 

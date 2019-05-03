@@ -16,7 +16,8 @@ package com.liferay.portal.servlet;
 
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.cache.PortalCache;
-import com.liferay.portal.kernel.cache.SingleVMPoolUtil;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
+import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -332,9 +333,12 @@ public class ComboServlet extends HttpServlet {
 
 			String stringFileContent = objectValuePair.getKey();
 
-			if (!StringUtil.endsWith(resourcePath, _CSS_MINIFIED_SUFFIX) &&
+			if (!StringUtil.endsWith(resourcePath, _CSS_MINIFIED_DASH_SUFFIX) &&
+				!StringUtil.endsWith(resourcePath, _CSS_MINIFIED_DOT_SUFFIX) &&
 				!StringUtil.endsWith(
-					resourcePath, _JAVASCRIPT_MINIFIED_SUFFIX)) {
+					resourcePath, _JAVASCRIPT_MINIFIED_DASH_SUFFIX) &&
+				!StringUtil.endsWith(
+					resourcePath, _JAVASCRIPT_MINIFIED_DOT_SUFFIX)) {
 
 				if (minifierType.equals("css")) {
 					try {
@@ -376,6 +380,14 @@ public class ComboServlet extends HttpServlet {
 					stringFileContent = stringFileContent.concat(
 						StringPool.NEW_LINE);
 				}
+			}
+			else if (StringUtil.endsWith(
+						resourcePath, _JAVASCRIPT_MINIFIED_DASH_SUFFIX) ||
+					 StringUtil.endsWith(
+						 resourcePath, _JAVASCRIPT_MINIFIED_DOT_SUFFIX)) {
+
+				stringFileContent = stringFileContent.concat(
+					StringPool.NEW_LINE);
 			}
 
 			fileContentBag = new FileContentBag(
@@ -471,20 +483,25 @@ public class ComboServlet extends HttpServlet {
 
 	private static final String _CSS_EXTENSION = "css";
 
-	private static final String _CSS_MINIFIED_SUFFIX = "-min.css";
+	private static final String _CSS_MINIFIED_DASH_SUFFIX = "-min.css";
+
+	private static final String _CSS_MINIFIED_DOT_SUFFIX = ".min.css";
 
 	private static final FileContentBag _EMPTY_FILE_CONTENT_BAG =
 		new FileContentBag(new byte[0], 0);
 
-	private static final String _JAVASCRIPT_MINIFIED_SUFFIX = "-min.js";
+	private static final String _JAVASCRIPT_MINIFIED_DASH_SUFFIX = "-min.js";
+
+	private static final String _JAVASCRIPT_MINIFIED_DOT_SUFFIX = ".min.js";
 
 	private static final Log _log = LogFactoryUtil.getLog(ComboServlet.class);
 
 	private static final PortalCache<String, byte[][]> _bytesArrayPortalCache =
-		SingleVMPoolUtil.getPortalCache(ComboServlet.class.getName());
+		PortalCacheHelperUtil.getPortalCache(
+			PortalCacheManagerNames.SINGLE_VM, ComboServlet.class.getName());
 	private static final PortalCache<String, FileContentBag>
-		_fileContentBagPortalCache = SingleVMPoolUtil.getPortalCache(
-			FileContentBag.class.getName());
+		_fileContentBagPortalCache = PortalCacheHelperUtil.getPortalCache(
+			PortalCacheManagerNames.SINGLE_VM, FileContentBag.class.getName());
 
 	private final Set<String> _protectedParameters = SetUtil.fromArray(
 		new String[] {

@@ -253,7 +253,7 @@ public class ResourcePermissionLocalServiceImpl
 				resourcePermission.setRoleId((Long)resourcePermissionArray[4]);
 				resourcePermission.setActionIds(resourceActionBitwiseValue);
 				resourcePermission.setViewActionId(
-					resourceActionBitwiseValue % 2 == 1);
+					(resourceActionBitwiseValue % 2) == 1);
 
 				session.save(resourcePermission);
 
@@ -269,6 +269,47 @@ public class ResourcePermissionLocalServiceImpl
 			resourcePermissionPersistence.closeSession(session);
 
 			resourcePermissionPersistence.clearCache();
+		}
+	}
+
+	@Override
+	public void copyModelResourcePermissions(
+			long companyId, String name, long oldPrimKey, long newPrimKey)
+		throws PortalException {
+
+		List<ResourcePermission> oldResourcePermissions =
+			resourcePermissionPersistence.findByC_N_S_P(
+				companyId, name, ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(oldPrimKey));
+
+		if (oldResourcePermissions.isEmpty()) {
+			return;
+		}
+
+		long batchCounter = counterLocalService.increment(
+			ResourcePermission.class.getName(), oldResourcePermissions.size());
+
+		batchCounter -= oldResourcePermissions.size();
+
+		for (ResourcePermission oldResourcePermission :
+				oldResourcePermissions) {
+
+			ResourcePermission resourcePermission =
+				resourcePermissionPersistence.create(++batchCounter);
+
+			resourcePermission.setCompanyId(companyId);
+			resourcePermission.setName(name);
+			resourcePermission.setScope(oldResourcePermission.getScope());
+			resourcePermission.setPrimKey(String.valueOf(newPrimKey));
+			resourcePermission.setPrimKeyId(newPrimKey);
+			resourcePermission.setRoleId(oldResourcePermission.getRoleId());
+			resourcePermission.setOwnerId(oldResourcePermission.getOwnerId());
+			resourcePermission.setActionIds(
+				oldResourcePermission.getActionIds());
+			resourcePermission.setViewActionId(
+				oldResourcePermission.isViewActionId());
+
+			resourcePermissionPersistence.update(resourcePermission);
 		}
 	}
 
@@ -430,7 +471,7 @@ public class ResourcePermissionLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getAvailableResourcePermissionActionIds(long, String, int,
 	 *             String, Collection)}
 	 */
@@ -690,11 +731,11 @@ public class ResourcePermissionLocalServiceImpl
 
 		// See LPS-47464
 
-		if (resourcePermissionPersistence.countByC_N_S_P(
-				individualResource.getCompanyId(), individualResource.getName(),
-				individualResource.getScope(),
-				individualResource.getPrimKey()) < 1) {
+		int count = resourcePermissionPersistence.countByC_N_S_P(
+			individualResource.getCompanyId(), individualResource.getName(),
+			individualResource.getScope(), individualResource.getPrimKey());
 
+		if (count < 1) {
 			StringBundler sb = new StringBundler(9);
 
 			sb.append("{companyId=");
@@ -840,8 +881,8 @@ public class ResourcePermissionLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getRoles(long, String, int,
-	 *             String, String}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #getRoles(long,
+	 *             String, int, String, String}
 	 */
 	@Deprecated
 	@Override
@@ -1289,7 +1330,7 @@ public class ResourcePermissionLocalServiceImpl
 			}
 			else {
 				actionIdsLong =
-					actionIdsLong & (~resourceAction.getBitwiseValue());
+					actionIdsLong & ~resourceAction.getBitwiseValue();
 			}
 		}
 
@@ -1297,7 +1338,7 @@ public class ResourcePermissionLocalServiceImpl
 			resourcePermission.isNew()) {
 
 			resourcePermission.setActionIds(actionIdsLong);
-			resourcePermission.setViewActionId(actionIdsLong % 2 == 1);
+			resourcePermission.setViewActionId((actionIdsLong % 2) == 1);
 
 			resourcePermissionPersistence.update(resourcePermission);
 

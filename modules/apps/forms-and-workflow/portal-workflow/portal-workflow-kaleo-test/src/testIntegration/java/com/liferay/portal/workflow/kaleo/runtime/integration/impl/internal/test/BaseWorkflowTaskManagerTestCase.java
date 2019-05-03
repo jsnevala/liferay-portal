@@ -40,12 +40,14 @@ import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
 import com.liferay.portal.kernel.model.UserNotificationEvent;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -55,11 +57,13 @@ import com.liferay.portal.kernel.service.UserGroupRoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalServiceUtil;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil;
+import com.liferay.portal.kernel.test.randomizerbumpers.NumericStringRandomizerBumper;
+import com.liferay.portal.kernel.test.randomizerbumpers.UniqueStringRandomizerBumper;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -71,10 +75,10 @@ import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManagerUtil;
+import com.liferay.portal.security.permission.SimplePermissionChecker;
 import com.liferay.portal.test.log.CaptureAppender;
 import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -95,20 +99,26 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 
 	@Before
 	public void setUp() throws Exception {
-		group = GroupTestUtil.addGroup();
+		company = CompanyTestUtil.addCompany();
+
+		companyAdminUser = UserTestUtil.addCompanyAdminUser(company);
+
+		group = GroupTestUtil.addGroup(
+			company.getCompanyId(), companyAdminUser.getUserId(), 0);
 
 		serviceContext = ServiceContextTestUtil.getServiceContext(
-			group.getGroupId());
+			group, companyAdminUser.getUserId());
 
-		_originalPermissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
+		setUpPermissionThreadLocal();
+		setUpPrincipalThreadLocal();
 		setUpUsers();
 	}
 
 	@After
 	public void tearDown() throws PortalException {
-		PermissionThreadLocal.setPermissionChecker(_originalPermissionChecker);
+		PermissionThreadLocal.setPermissionChecker(_permissionChecker);
+
+		PrincipalThreadLocal.setName(_name);
 	}
 
 	protected void activateSingleApproverWorkflow(
@@ -124,9 +134,9 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 		throws PortalException {
 
 		WorkflowDefinitionLinkLocalServiceUtil.updateWorkflowDefinitionLink(
-			adminUser.getUserId(), TestPropsValues.getCompanyId(),
-			group.getGroupId(), className, classPK, typePK,
-			workflowDefinitionName, workflowDefinitionVersion);
+			adminUser.getUserId(), company.getCompanyId(), group.getGroupId(),
+			className, classPK, typePK, workflowDefinitionName,
+			workflowDefinitionVersion);
 	}
 
 	protected BlogsEntry addBlogsEntry() throws PortalException {
@@ -338,6 +348,10 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 		}
 	}
 
+	protected User createContentReviewerUser(String roleName) throws Exception {
+		return createUser(roleName, group, false);
+	}
+
 	protected DDMFormValues createDDMFormValues(DDMForm ddmForm) {
 		DDMFormValues ddmFormValues = DDMFormValuesTestUtil.createDDMFormValues(
 			ddmForm);
@@ -360,17 +374,36 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 	}
 
 	protected User createUser(String roleName) throws Exception {
-		User user = UserTestUtil.addUser(group.getGroupId());
+		return createUser(roleName, group, true);
+	}
+
+	protected User createUser(String roleName, Group group) throws Exception {
+		return createUser(roleName, group, true);
+	}
+
+	protected User createUser(
+			String roleName, Group group, boolean addUserToRole)
+		throws Exception {
+
+		User user = UserTestUtil.addUser(
+			company.getCompanyId(), companyAdminUser.getUserId(),
+			RandomTestUtil.randomString(
+				NumericStringRandomizerBumper.INSTANCE,
+				UniqueStringRandomizerBumper.INSTANCE),
+			LocaleUtil.getDefault(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), new long[] {group.getGroupId()},
+			ServiceContextTestUtil.getServiceContext());
 
 		Role role = RoleLocalServiceUtil.getRole(
-			TestPropsValues.getCompanyId(), roleName);
+			company.getCompanyId(), roleName);
 
-		UserLocalServiceUtil.addRoleUser(role.getRoleId(), user);
-
-		long[] userIds = {user.getUserId()};
+		if (addUserToRole) {
+			UserLocalServiceUtil.addRoleUser(role.getRoleId(), user);
+		}
 
 		UserGroupRoleLocalServiceUtil.addUserGroupRoles(
-			userIds, group.getGroupId(), role.getRoleId());
+			new long[] {user.getUserId()}, group.getGroupId(),
+			role.getRoleId());
 
 		return user;
 	}
@@ -380,8 +413,8 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 		throws PortalException {
 
 		WorkflowDefinitionLinkLocalServiceUtil.updateWorkflowDefinitionLink(
-			adminUser.getUserId(), TestPropsValues.getCompanyId(),
-			group.getGroupId(), className, classPK, typePK, null);
+			adminUser.getUserId(), company.getCompanyId(), group.getGroupId(),
+			className, classPK, typePK, null);
 	}
 
 	protected String getBasePath() {
@@ -424,36 +457,65 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 			false, true);
 	}
 
+	protected int searchCountByUserRoles(User user) throws Exception {
+		return WorkflowTaskManagerUtil.searchCount(
+			user.getCompanyId(), user.getUserId(), null, null, false, true);
+	}
+
+	protected void setUpPermissionThreadLocal() throws Exception {
+		_permissionChecker = PermissionThreadLocal.getPermissionChecker();
+
+		PermissionThreadLocal.setPermissionChecker(
+			new SimplePermissionChecker() {
+				{
+					init(companyAdminUser);
+				}
+
+				@Override
+				public boolean hasOwnerPermission(
+					long companyId, String name, String primKey, long ownerId,
+					String actionId) {
+
+					return true;
+				}
+
+			});
+	}
+
+	protected void setUpPrincipalThreadLocal() throws Exception {
+		_name = PrincipalThreadLocal.getName();
+
+		PrincipalThreadLocal.setName(companyAdminUser.getUserId());
+	}
+
 	protected void setUpUsers() throws Exception {
 		adminUser = createUser(RoleConstants.ADMINISTRATOR);
-
-		_users.add(adminUser);
 
 		portalContentReviewerUser = createUser(
 			RoleConstants.PORTAL_CONTENT_REVIEWER);
 
-		_users.add(portalContentReviewerUser);
-
 		siteAdminUser = createUser(RoleConstants.SITE_ADMINISTRATOR);
 
-		_users.add(siteAdminUser);
+		siteContentReviewerUser = createContentReviewerUser(
+			RoleConstants.SITE_CONTENT_REVIEWER);
 	}
 
 	protected User adminUser;
 
 	@DeleteAfterTestRun
-	protected Group group;
+	protected Company company;
 
+	protected User companyAdminUser;
+	protected Group group;
 	protected User portalContentReviewerUser;
 	protected ServiceContext serviceContext;
 	protected User siteAdminUser;
+	protected User siteContentReviewerUser;
 
 	private static final String _MAIL_ENGINE_CLASS_NAME =
 		"com.liferay.util.mail.MailEngine";
 
-	private PermissionChecker _originalPermissionChecker;
-
-	@DeleteAfterTestRun
-	private final List<User> _users = new ArrayList<>();
+	private String _name;
+	private PermissionChecker _permissionChecker;
 
 }

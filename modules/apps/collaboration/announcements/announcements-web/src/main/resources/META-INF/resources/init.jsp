@@ -40,10 +40,12 @@ page import="com.liferay.announcements.kernel.service.AnnouncementsEntryLocalSer
 page import="com.liferay.announcements.kernel.service.AnnouncementsFlagLocalServiceUtil" %><%@
 page import="com.liferay.announcements.kernel.util.AnnouncementsUtil" %><%@
 page import="com.liferay.announcements.web.constants.AnnouncementsWebKeys" %><%@
+page import="com.liferay.announcements.web.internal.configuration.AnnouncementsPortletInstanceConfiguration" %><%@
 page import="com.liferay.announcements.web.internal.display.context.AnnouncementsDisplayContext" %><%@
 page import="com.liferay.announcements.web.internal.display.context.DefaultAnnouncementsDisplayContext" %><%@
 page import="com.liferay.announcements.web.internal.display.context.util.AnnouncementsRequestHelper" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
+page import="com.liferay.portal.configuration.metatype.util.ParameterMapUtil" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
 page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
@@ -92,6 +94,8 @@ page import="javax.portlet.WindowState" %>
 <%
 AnnouncementsRequestHelper announcementsRequestHelper = new AnnouncementsRequestHelper(request);
 AnnouncementsDisplayContext announcementsDisplayContext = new DefaultAnnouncementsDisplayContext(announcementsRequestHelper);
+
+AnnouncementsPortletInstanceConfiguration announcementsPortletInstanceConfiguration = portletDisplay.getPortletInstanceConfiguration(AnnouncementsPortletInstanceConfiguration.class);
 %>
 
 <%@ include file="/init-ext.jsp" %>

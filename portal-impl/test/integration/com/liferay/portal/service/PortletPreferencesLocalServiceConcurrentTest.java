@@ -197,8 +197,8 @@ public class PortletPreferencesLocalServiceConcurrentTest {
 
 					@Override
 					public PortletPreferences call() throws PortalException {
-						return
-							PortletPreferencesLocalServiceUtil.getPreferences(
+						return PortletPreferencesLocalServiceUtil.
+							getPreferences(
 								TestPropsValues.getCompanyId(), ownerId,
 								ownerType, plid, portletId);
 					}

@@ -30,7 +30,7 @@ import javax.portlet.PortletURL;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class JournalItemSelectorViewDisplayContext {
 
@@ -84,6 +84,12 @@ public class JournalItemSelectorViewDisplayContext {
 
 		portletURL.setParameter(
 			ActionRequest.ACTION_NAME, "/journal/upload_image");
+		portletURL.setParameter(
+			"folderId",
+			String.valueOf(_journalItemSelectorCriterion.getFolderId()));
+		portletURL.setParameter(
+			"resourcePrimKey",
+			String.valueOf(_journalItemSelectorCriterion.getResourcePrimKey()));
 
 		return portletURL;
 	}

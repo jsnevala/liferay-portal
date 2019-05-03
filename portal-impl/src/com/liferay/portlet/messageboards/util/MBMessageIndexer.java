@@ -60,7 +60,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portlet.messageboards.service.permission.MBMessagePermission;
 
-import java.util.List;
 import java.util.Locale;
 
 import javax.portlet.PortletRequest;
@@ -326,14 +325,20 @@ public class MBMessageIndexer
 	protected void doReindex(String className, long classPK) throws Exception {
 		MBMessage message = MBMessageLocalServiceUtil.getMessage(classPK);
 
-		doReindex(message);
-
 		if (message.isRoot()) {
-			List<MBMessage> messages =
-				MBMessageLocalServiceUtil.getThreadMessages(
-					message.getThreadId(), WorkflowConstants.STATUS_APPROVED);
+			for (MBMessage curMessage :
+					MBMessageLocalServiceUtil.getThreadMessages(
+						message.getThreadId(),
+						WorkflowConstants.STATUS_APPROVED)) {
 
-			for (MBMessage curMessage : messages) {
+				reindex(curMessage);
+			}
+
+			for (MBMessage curMessage :
+					MBMessageLocalServiceUtil.getThreadMessages(
+						message.getThreadId(),
+						WorkflowConstants.STATUS_IN_TRASH)) {
+
 				reindex(curMessage);
 			}
 		}

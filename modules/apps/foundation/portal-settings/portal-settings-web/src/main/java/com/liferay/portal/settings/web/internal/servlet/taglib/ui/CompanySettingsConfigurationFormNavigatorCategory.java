@@ -27,7 +27,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Philip Jones
  */
 @Component(
-	immediate = true, property = {"form.navigator.category.order:Integer=40"},
+	immediate = true, property = "form.navigator.category.order:Integer=40",
 	service = FormNavigatorCategory.class
 )
 public class CompanySettingsConfigurationFormNavigatorCategory
@@ -40,8 +40,8 @@ public class CompanySettingsConfigurationFormNavigatorCategory
 
 	@Override
 	public String getKey() {
-		return
-			FormNavigatorConstants.CATEGORY_KEY_COMPANY_SETTINGS_CONFIGURATION;
+		return FormNavigatorConstants.
+			CATEGORY_KEY_COMPANY_SETTINGS_CONFIGURATION;
 	}
 
 	@Override

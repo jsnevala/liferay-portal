@@ -66,7 +66,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @RunWith(Arquillian.class)
 public class PermissionExportImportTest {
@@ -254,8 +254,9 @@ public class PermissionExportImportTest {
 		}
 	}
 
-	private static final String[] _ACTION_IDS =
-		{ActionKeys.ADD_TO_PAGE, ActionKeys.VIEW};
+	private static final String[] _ACTION_IDS = {
+		ActionKeys.ADD_TO_PAGE, ActionKeys.VIEW
+	};
 
 	private static final String _PORTLET_ID = PortletKeys.EXPORT_IMPORT;
 

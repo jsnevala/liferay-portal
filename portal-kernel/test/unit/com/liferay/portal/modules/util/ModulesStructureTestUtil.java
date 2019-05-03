@@ -68,6 +68,15 @@ public class ModulesStructureTestUtil {
 		return false;
 	}
 
+	public static String getAbsolutePath(Path path) {
+		Path absolutePath = path.toAbsolutePath();
+
+		absolutePath = absolutePath.normalize();
+
+		return StringUtil.replace(
+			absolutePath.toString(), File.separatorChar, CharPool.SLASH);
+	}
+
 	public static List<GradleDependency> getGradleDependencies(
 			String gradleContent, Path gradlePath, Path rootDirPath)
 		throws IOException {
@@ -108,7 +117,7 @@ public class ModulesStructureTestUtil {
 			try {
 				GradleDependency gradleDependency = new GradleDependency(
 					dependency, configuration, moduleGroup, moduleName,
-					moduleVersion);
+					moduleVersion, false);
 
 				gradleDependencies.add(gradleDependency);
 			}
@@ -137,6 +146,7 @@ public class ModulesStructureTestUtil {
 			String dependency = matcher.group();
 
 			String configuration = matcher.group(1);
+
 			String projectPath = matcher.group(2);
 
 			String projectDirName = StringUtil.replace(
@@ -147,7 +157,7 @@ public class ModulesStructureTestUtil {
 			Assert.assertTrue(
 				StringBundler.concat(
 					"Dependency in ", String.valueOf(gradlePath),
-					" points to non-existent project directory ",
+					" points to nonexistent project directory ",
 					String.valueOf(projectDirPath), ": ", matcher.group()),
 				Files.exists(projectDirPath));
 
@@ -180,7 +190,7 @@ public class ModulesStructureTestUtil {
 
 			GradleDependency gradleDependency = new GradleDependency(
 				dependency, configuration, moduleGroup, moduleName,
-				moduleVersion);
+				moduleVersion, true);
 
 			gradleDependencies.add(gradleDependency);
 		}

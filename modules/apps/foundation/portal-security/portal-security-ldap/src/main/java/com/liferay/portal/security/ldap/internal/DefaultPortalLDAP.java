@@ -59,9 +59,11 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
+import javax.naming.ldap.Rdn;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
@@ -82,6 +84,25 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 	immediate = true, service = PortalLDAP.class
 )
 public class DefaultPortalLDAP implements PortalLDAP {
+
+	@Override
+	public String encodeFilterAttribute(String attribute, boolean rdnEscape) {
+		String[] oldString = {
+			StringPool.STAR, StringPool.OPEN_PARENTHESIS,
+			StringPool.CLOSE_PARENTHESIS, StringPool.NULL_CHAR
+		};
+
+		String[] newString = {"\\2a", "\\28", "\\29", "\\00"};
+
+		String newAttribute = StringUtil.replace(
+			attribute, oldString, newString);
+
+		if (rdnEscape) {
+			newAttribute = Rdn.escapeValue(newAttribute);
+		}
+
+		return newAttribute;
+	}
 
 	@Override
 	public LdapContext getContext(long ldapServerId, long companyId)
@@ -154,11 +175,7 @@ public class DefaultPortalLDAP implements PortalLDAP {
 		}
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to bind to the LDAP server");
-			}
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
+				_log.warn("Unable to bind to the LDAP server", e);
 			}
 		}
 
@@ -205,7 +222,7 @@ public class DefaultPortalLDAP implements PortalLDAP {
 			sb.append(groupMappings.getProperty("groupName"));
 
 			sb.append(StringPool.EQUAL);
-			sb.append(groupName);
+			sb.append(encodeFilterAttribute(groupName, true));
 			sb.append(StringPool.CLOSE_PARENTHESIS);
 
 			if (Validator.isNotNull(groupFilter)) {
@@ -324,11 +341,11 @@ public class DefaultPortalLDAP implements PortalLDAP {
 			_ldapServerConfigurationProvider.getConfiguration(
 				companyId, ldapServerId);
 
-		String groupsDN = ldapServerConfiguration.groupsDN();
+		String baseDN = ldapServerConfiguration.baseDN();
 		String groupSearchFilter = ldapServerConfiguration.groupSearchFilter();
 
 		return getGroups(
-			companyId, ldapContext, cookie, maxResults, groupsDN,
+			companyId, ldapContext, cookie, maxResults, baseDN,
 			groupSearchFilter, searchResults);
 	}
 
@@ -343,11 +360,11 @@ public class DefaultPortalLDAP implements PortalLDAP {
 			_ldapServerConfigurationProvider.getConfiguration(
 				companyId, ldapServerId);
 
-		String groupsDN = ldapServerConfiguration.groupsDN();
+		String baseDN = ldapServerConfiguration.baseDN();
 		String groupSearchFilter = ldapServerConfiguration.groupSearchFilter();
 
 		return getGroups(
-			companyId, ldapContext, cookie, maxResults, groupsDN,
+			companyId, ldapContext, cookie, maxResults, baseDN,
 			groupSearchFilter, attributeIds, searchResults);
 	}
 
@@ -414,8 +431,9 @@ public class DefaultPortalLDAP implements PortalLDAP {
 		SystemLDAPConfiguration systemLDAPConfiguration =
 			_systemLDAPConfigurationProvider.getConfiguration(companyId);
 
-		String[] attributeIds =
-			{_getNextRange(systemLDAPConfiguration, attribute.getID())};
+		String[] attributeIds = {
+			_getNextRange(systemLDAPConfiguration, attribute.getID())
+		};
 
 		while (true) {
 			List<SearchResult> searchResults = new ArrayList<>();
@@ -473,7 +491,7 @@ public class DefaultPortalLDAP implements PortalLDAP {
 	}
 
 	/**
-	 * @deprecated As of 2.2.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override
@@ -499,7 +517,11 @@ public class DefaultPortalLDAP implements PortalLDAP {
 			return name;
 		}
 		else {
-			return name.concat(StringPool.COMMA).concat(baseDN);
+			return name.concat(
+				StringPool.COMMA
+			).concat(
+				baseDN
+			);
 		}
 	}
 
@@ -583,8 +605,7 @@ public class DefaultPortalLDAP implements PortalLDAP {
 
 			sb.append(loginMapping);
 			sb.append(StringPool.EQUAL);
-			sb.append(login);
-
+			sb.append(encodeFilterAttribute(login, false));
 			sb.append(StringPool.CLOSE_PARENTHESIS);
 
 			if (Validator.isNotNull(userSearchFilter)) {
@@ -659,6 +680,8 @@ public class DefaultPortalLDAP implements PortalLDAP {
 		PropertiesUtil.merge(userMappings, contactMappings);
 
 		Collection<Object> values = userMappings.values();
+
+		values.removeIf(object -> Validator.isNull(object));
 
 		String[] mappedUserAttributeIds = ArrayUtil.toStringArray(
 			values.toArray(new Object[userMappings.size()]));
@@ -816,13 +839,19 @@ public class DefaultPortalLDAP implements PortalLDAP {
 			sb.append(StringPool.OPEN_PARENTHESIS);
 			sb.append(groupMappings.getProperty("user"));
 			sb.append(StringPool.EQUAL);
-			sb.append(userDN);
+			sb.append(
+				encodeFilterAttribute(
+					StringUtil.replace(userDN, '\\', "\\\\"), false));
 			sb.append(StringPool.CLOSE_PARENTHESIS);
 
 			SearchControls searchControls = new SearchControls(
 				SearchControls.SUBTREE_SCOPE, 1, 0, null, false, false);
 
-			enu = ldapContext.search(groupDN, sb.toString(), searchControls);
+			Name name = new CompositeName();
+
+			name.add(groupDN);
+
+			enu = ldapContext.search(name, sb.toString(), searchControls);
 
 			if (enu.hasMoreElements()) {
 				return true;
@@ -872,7 +901,9 @@ public class DefaultPortalLDAP implements PortalLDAP {
 			sb.append(StringPool.OPEN_PARENTHESIS);
 			sb.append(userMappings.getProperty(UserConverterKeys.GROUP));
 			sb.append(StringPool.EQUAL);
-			sb.append(groupDN);
+			sb.append(
+				encodeFilterAttribute(
+					StringUtil.replace(groupDN, '\\', "\\\\"), false));
 			sb.append(StringPool.CLOSE_PARENTHESIS);
 
 			SearchControls searchControls = new SearchControls(
@@ -973,13 +1004,6 @@ public class DefaultPortalLDAP implements PortalLDAP {
 		}
 
 		return null;
-	}
-
-	@Reference(policyOption = ReferencePolicyOption.GREEDY, unbind = "-")
-	protected void setLdapFilterValidator(
-		LDAPFilterValidator ldapFilterValidator) {
-
-		_ldapFilterValidator = ldapFilterValidator;
 	}
 
 	@Reference(
@@ -1132,7 +1156,13 @@ public class DefaultPortalLDAP implements PortalLDAP {
 		DefaultPortalLDAP.class);
 
 	private String _companySecurityAuthType;
-	private LDAPFilterValidator _ldapFilterValidator;
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile LDAPFilterValidator _ldapFilterValidator;
+
 	private ConfigurationProvider<LDAPServerConfiguration>
 		_ldapServerConfigurationProvider;
 	private LDAPSettings _ldapSettings;

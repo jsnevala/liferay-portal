@@ -1,6 +1,5 @@
 Bundle-Name: Liferay Site Item Selector Web
 Bundle-SymbolicName: com.liferay.site.item.selector.web
-Bundle-Version: 2.0.21
-Liferay-Releng-Module-Group-Description:
+Bundle-Version: 2.0.24
 Liferay-Releng-Module-Group-Title: Site Management
 Web-ContextPath: /site-item-selector-web

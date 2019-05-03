@@ -63,7 +63,7 @@ public class MultiLanguageConditionEvaluator implements ConditionEvaluator {
 		cardinality = ReferenceCardinality.MULTIPLE,
 		policy = ReferencePolicy.DYNAMIC,
 		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(scripting.language=*)", unbind = "removeConditionEvaluator"
+		target = "(scripting.language=*)"
 	)
 	protected void addConditionEvaluator(
 		ConditionEvaluator conditionEvaluator, Map<String, Object> properties) {

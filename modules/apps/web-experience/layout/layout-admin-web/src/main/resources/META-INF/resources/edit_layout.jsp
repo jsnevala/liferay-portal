@@ -34,6 +34,8 @@ if (Validator.isNull(backURL)) {
 	}
 }
 
+String redirect = ParamUtil.getString(request, "redirect", backURL);
+
 PortletURL redirectURL = layoutsAdminDisplayContext.getRedirectURL();
 
 long refererPlid = ParamUtil.getLong(request, "refererPlid", LayoutConstants.DEFAULT_PLID);
@@ -132,6 +134,7 @@ renderResponse.setTitle(selLayout.getName(locale));
 		</portlet:actionURL>
 
 		<aui:form action='<%= HttpUtil.addParameter(editLayoutURL, "refererPlid", plid) %>' cssClass="edit-layout-form" enctype="multipart/form-data" method="post" name="editLayoutFm">
+			<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 			<aui:input name="backURL" type="hidden" value="<%= backURL %>" />
 			<aui:input name="groupId" type="hidden" value="<%= layoutsAdminDisplayContext.getGroupId() %>" />
 			<aui:input name="liveGroupId" type="hidden" value="<%= layoutsAdminDisplayContext.getLiveGroupId() %>" />

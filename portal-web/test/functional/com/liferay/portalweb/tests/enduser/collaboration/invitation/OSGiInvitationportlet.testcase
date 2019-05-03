@@ -1,33 +1,28 @@
-<definition component-name="portal-plugins-osgi">
-	<property name="osgi.app.includes" value="invitation" />
-	<property name="portal.upstream" value="true" />
-	<property name="plugins.deployment.type" value="osgi" />
-	<property name="testray.main.component.name" value="Invite Members" />
-	<property name="test.assert.warning.exceptions" value="true" />
+@component-name = "portal-plugins-osgi"
+definition {
+	property osgi.app.includes = "invitation";
+	property portal.upstream = "true";
+	property plugins.deployment.type = "osgi";
+	property testray.main.component.name = "Invite Members";
+	property test.assert.warning.exceptions = "true";
 
-	<set-up>
-		<execute macro="User#firstLoginPG" />
+	setUp {
+		User.firstLoginPG();
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Test Page" />
-		</execute>
-	</set-up>
+		Page.add(pageName = "Test Page");
+	}
 
-	<tear-down>
-		<execute macro="Page#tearDownPG" />
-	</tear-down>
+	tearDown {
+		Page.tearDownPG();
+	}
 
-	<command name="InvitationPortletSmoke" priority="4">
-		<property name="portal.release" value="true" />
+	@priority = "4"
+	test InvitationPortletSmoke {
+		property portal.release = "true";
+		var appName = "Invitation";
 
-		<var name="appName" value="Invitation" />
+		Navigator.gotoPage(pageName = "Test Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Test Page" />
-		</execute>
-
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Invitation" />
-		</execute>
-	</command>
-</definition>
+		Portlet.addPG(portletName = "Invitation");
+	}
+}

@@ -146,7 +146,7 @@ public class LayoutsRemotePublisherMessageListener
 	}
 
 	/**
-	 * @deprecated As of 3.2.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected void setExportImportConfigurationLocalService(
@@ -162,7 +162,7 @@ public class LayoutsRemotePublisherMessageListener
 	}
 
 	/**
-	 * @deprecated As of 3.2.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected void setUserLocalService(UserLocalService userLocalService) {

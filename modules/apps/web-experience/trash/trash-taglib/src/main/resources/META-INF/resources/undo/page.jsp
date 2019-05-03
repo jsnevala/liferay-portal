@@ -45,13 +45,13 @@ for (String key : keys) {
 		<liferay-util:buffer
 			var="trashLink"
 		>
+
+			<%
+			PortletURL trashURL = TrashUtil.getViewURL(request);
+			%>
+
 			<c:choose>
-				<c:when test="<%= themeDisplay.isShowSiteAdministrationIcon() %>">
-
-					<%
-					PortletURL trashURL = TrashUtil.getViewURL(request);
-					%>
-
+				<c:when test="<%= themeDisplay.isShowSiteAdministrationIcon() && (trashURL != null) %>">
 					<aui:a cssClass="alert-link" href="<%= trashURL.toString() %>" label="the-recycle-bin" />
 				</c:when>
 				<c:otherwise>

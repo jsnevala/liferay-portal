@@ -61,10 +61,7 @@ public abstract class BaseLicenseUtilTestCase extends PowerMockito {
 	protected InputStream getInputStream(String fileName) throws Exception {
 		Class<?> clazz = getClass();
 
-		InputStream inputStream = clazz.getResourceAsStream(
-			"dependencies/" + fileName + ".txt");
-
-		return inputStream;
+		return clazz.getResourceAsStream("dependencies/" + fileName + ".txt");
 	}
 
 	protected Set<String> getMacAddresses() throws Exception {

@@ -29,11 +29,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>NEEDS_LEGAL_REVIEW_NO_RADIO</td>
-	<td>//div[contains(.,'Needs Legal Review')]//label/input[@value=&quot;no&quot;]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>BANNER_NAME_FIELD</td>
 	<td>//div[@class='lfr-ddm-container']//div[contains(.,'Banner Name')]/input</td>
 	<td></td>

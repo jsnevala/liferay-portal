@@ -202,7 +202,7 @@ public class DDMDataProviderInstanceFinderImpl
 			sql = StringUtil.replace(
 				sql, "[$GROUP_ID$]", getGroupIds(groupIds));
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(DDMDataProviderInstance.name)", StringPool.LIKE,
+				sql, "LOWER(DDMDataProviderInstance.name)", StringPool.LIKE,
 				false, names);
 			sql = CustomSQLUtil.replaceKeywords(
 				sql, "DDMDataProviderInstance.description", StringPool.LIKE,
@@ -269,7 +269,7 @@ public class DDMDataProviderInstanceFinderImpl
 			sql = StringUtil.replace(
 				sql, "[$GROUP_ID$]", getGroupIds(groupIds));
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(DDMDataProviderInstance.name)", StringPool.LIKE,
+				sql, "LOWER(DDMDataProviderInstance.name)", StringPool.LIKE,
 				false, names);
 			sql = CustomSQLUtil.replaceKeywords(
 				sql, "DDMDataProviderInstance.description", StringPool.LIKE,
@@ -313,7 +313,7 @@ public class DDMDataProviderInstanceFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < groupIds.length - 1; i++) {
+		for (int i = 0; i < (groupIds.length - 1); i++) {
 			sb.append("DDMDataProviderInstance.groupId = ? OR ");
 		}
 

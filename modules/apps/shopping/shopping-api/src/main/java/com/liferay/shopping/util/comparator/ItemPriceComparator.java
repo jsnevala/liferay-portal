@@ -31,8 +31,9 @@ public class ItemPriceComparator extends OrderByComparator<ShoppingItem> {
 		"ShoppingItem.categoryId DESC, ShoppingItem.price DESC, " +
 			"ShoppingItem.name DESC";
 
-	public static final String[] ORDER_BY_FIELDS =
-		{"categoryId", "price", "name"};
+	public static final String[] ORDER_BY_FIELDS = {
+		"categoryId", "price", "name"
+	};
 
 	public ItemPriceComparator() {
 		this(false);

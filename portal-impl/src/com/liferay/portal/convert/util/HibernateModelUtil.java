@@ -14,64 +14,35 @@
 
 package com.liferay.portal.convert.util;
 
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
-import com.liferay.portal.kernel.model.ModelHintsUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author Cristina González
+ * @author     Cristina González
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
+@Deprecated
 public class HibernateModelUtil {
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	public static List<Class<? extends BaseModel<?>>> getModelClassNames(
 		ClassLoader classLoader, String regex) {
 
-		List<String> modelNames = ModelHintsUtil.getModels();
-
-		List<Class<? extends BaseModel<?>>> implClassNames = new ArrayList<>();
-
-		for (String modelName : modelNames) {
-			if (!modelName.contains(".model.")) {
-				continue;
-			}
-
-			String implClassName = modelName.replaceFirst(
-				"(\\.model\\.)(\\p{Upper}.*)", "$1impl.$2Impl");
-
-			if (implClassName.matches(regex)) {
-				Class<? extends BaseModel<?>> implClass = getImplClass(
-					classLoader, implClassName);
-
-				if (implClass != null) {
-					implClassNames.add(implClass);
-				}
-			}
-		}
-
-		return implClassNames;
+		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	protected static Class<? extends BaseModel<?>> getImplClass(
 		ClassLoader classLoader, String implClassName) {
 
-		try {
-			return (Class<? extends BaseModel<?>>)classLoader.loadClass(
-				implClassName);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-		}
-
-		return null;
+		throw new UnsupportedOperationException();
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		HibernateModelUtil.class);
 
 }

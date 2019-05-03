@@ -40,6 +40,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
+import com.liferay.portal.kernel.workflow.WorkflowTaskManagerUtil;
 import com.liferay.portal.kernel.workflow.permission.WorkflowPermissionUtil;
 import com.liferay.portal.util.PropsValues;
 
@@ -48,9 +49,7 @@ import com.liferay.portal.util.PropsValues;
  * @author Charles May
  */
 @OSGiBeanProperties(
-	property = {
-		"model.class.name=com.liferay.document.library.kernel.model.DLFileEntry"
-	}
+	property = "model.class.name=com.liferay.document.library.kernel.model.DLFileEntry"
 )
 public class DLFileEntryPermission implements BaseModelPermissionChecker {
 
@@ -126,8 +125,9 @@ public class DLFileEntryPermission implements BaseModelPermissionChecker {
 			// See LPS-10500 and LPS-72547
 
 			if (actionId.equals(ActionKeys.VIEW) && !hasOwnerPermission &&
-				_hasActiveWorkflowInstance(
+				_hasWorkflowTasks(
 					permissionChecker.getCompanyId(), dlFileEntry.getGroupId(),
+					permissionChecker.getUserId(),
 					currentDLFileVersion.getFileVersionId())) {
 
 				return false;
@@ -226,8 +226,8 @@ public class DLFileEntryPermission implements BaseModelPermissionChecker {
 		check(permissionChecker, primaryKey, actionId);
 	}
 
-	private static boolean _hasActiveWorkflowInstance(
-			long companyId, long groupId, long fileVersionId)
+	private static boolean _hasWorkflowTasks(
+			long companyId, long groupId, long userId, long fileVersionId)
 		throws WorkflowException {
 
 		WorkflowInstanceLink workflowInstanceLink =
@@ -244,6 +244,15 @@ public class DLFileEntryPermission implements BaseModelPermissionChecker {
 				companyId, workflowInstanceLink.getWorkflowInstanceId());
 
 		if (workflowInstance.isComplete()) {
+			return false;
+		}
+
+		int count =
+			WorkflowTaskManagerUtil.getWorkflowTaskCountByWorkflowInstance(
+				companyId, userId, workflowInstanceLink.getWorkflowInstanceId(),
+				null);
+
+		if (count > 0) {
 			return false;
 		}
 

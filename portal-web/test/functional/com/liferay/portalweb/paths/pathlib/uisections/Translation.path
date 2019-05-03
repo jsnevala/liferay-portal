@@ -29,33 +29,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>AVAILABLE_TRANSLATIONS_LINK</td>
-	<td>//span[contains(@class,'translation-editing') and contains(.,'${key_localizedLanguage}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>CHANGE_DEFAULT_LANGUAGE</td>
-	<td>//a[contains(@class,'change') and contains(@class,'locale')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>DEFAULT_LANGUAGE</td>
-	<td>//span[contains(@class,'translation')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>CURRENT_LOCALE</td>
 	<td>//span[contains(.,'${key_localizedLanguage}') and contains(@class,'translation')] | //span[contains(@locale,'${key_localizedLanguage}') and contains(@class,'translation')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>UNSELECTED_LOCALE_ICON</td>
-	<td>//span[contains(.,'${key_localizedLanguage}') and contains(@class,'translation')]/img</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SELECTED_LOCALE</td>
-	<td>//span[contains(.,'${key_localizedLanguage}') and contains(@class,'-editing')]</td>
+	<td>DEFAULT_LANGUAGE</td>
+	<td>//span[contains(@class,'translation')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -66,6 +46,16 @@
 <tr>
 	<td>REMOVE_TRANSLATION</td>
 	<td>//span[contains(.,'${key_localizedLanguage}')]//i[contains(@class,'icon-remove')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SELECTED_LOCALE</td>
+	<td>//span[contains(.,'${key_localizedLanguage}') and contains(@class,'-editing')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>UNSELECTED_LOCALE_ICON</td>
+	<td>//span[contains(.,'${key_localizedLanguage}') and contains(@class,'translation')]/img</td>
 	<td></td>
 </tr>
 </tbody>

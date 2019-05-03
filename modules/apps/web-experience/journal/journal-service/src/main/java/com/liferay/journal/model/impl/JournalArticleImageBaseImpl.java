@@ -34,10 +34,11 @@ import com.liferay.journal.service.JournalArticleImageLocalServiceUtil;
 @ProviderType
 public abstract class JournalArticleImageBaseImpl
 	extends JournalArticleImageModelImpl implements JournalArticleImage {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a journal article image model instance should use the {@link JournalArticleImage} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a journal article image model instance should use the <code>JournalArticleImage</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +49,5 @@ public abstract class JournalArticleImageBaseImpl
 			JournalArticleImageLocalServiceUtil.updateJournalArticleImage(this);
 		}
 	}
+
 }

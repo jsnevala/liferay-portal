@@ -120,8 +120,8 @@ public abstract class BaseOverridingRepositoryDefiner
 
 		Optional<RepositoryDefiner> repositoryDefinerOptional =
 			repositoryDefinerStream.filter(
-				repositoryDefiner ->
-					className.equals(repositoryDefiner.getClassName())
+				repositoryDefiner -> className.equals(
+					repositoryDefiner.getClassName())
 			).findFirst();
 
 		_overridenRepositoryDefiner = repositoryDefinerOptional.orElseThrow(
@@ -178,8 +178,8 @@ public abstract class BaseOverridingRepositoryDefiner
 
 			return (T)field.get(repositoryClassDefinitionCatalog);
 		}
-		catch (IllegalAccessException | NoSuchFieldException |
-			   SecurityException e) {
+		catch (IllegalAccessException | NoSuchFieldException | SecurityException
+					e) {
 
 			throw new RepositoryException(e);
 		}

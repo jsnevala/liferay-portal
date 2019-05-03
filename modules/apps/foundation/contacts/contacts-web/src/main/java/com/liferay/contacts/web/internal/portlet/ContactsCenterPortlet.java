@@ -1202,7 +1202,7 @@ public class ContactsCenterPortlet extends MVCPortlet {
 		userService.updateUser(
 			user.getUserId(), user.getPasswordUnencrypted(),
 			user.getPasswordUnencrypted(), user.getPasswordUnencrypted(),
-			user.getPasswordReset(), user.getReminderQueryQuestion(),
+			user.isPasswordReset(), user.getReminderQueryQuestion(),
 			user.getReminderQueryAnswer(), screenName, emailAddress,
 			user.getFacebookId(), user.getOpenId(), true, null,
 			user.getLanguageId(), user.getTimeZoneId(), user.getGreeting(),

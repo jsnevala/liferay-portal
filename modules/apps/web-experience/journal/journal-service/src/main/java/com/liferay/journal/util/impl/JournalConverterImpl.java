@@ -220,7 +220,7 @@ public class JournalConverterImpl implements JournalConverter {
 	}
 
 	/**
-	 * @deprecated As of 3.3.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -231,7 +231,7 @@ public class JournalConverterImpl implements JournalConverter {
 	}
 
 	/**
-	 * @deprecated As of 3.3.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -257,7 +257,7 @@ public class JournalConverterImpl implements JournalConverter {
 	}
 
 	/**
-	 * @deprecated As of 3.3.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -579,8 +579,8 @@ public class JournalConverterImpl implements JournalConverter {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link #getFieldValue(String,
-	 *             String, Element, Locale)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #getFieldValue(String, String, Element, Locale)}
 	 */
 	@Deprecated
 	protected Serializable getFieldValue(
@@ -1078,7 +1078,10 @@ public class JournalConverterImpl implements JournalConverter {
 		}
 
 		String fieldsDisplayValue = fieldName.concat(
-			DDMImpl.INSTANCE_SEPARATOR).concat(instanceId);
+			DDMImpl.INSTANCE_SEPARATOR
+		).concat(
+			instanceId
+		);
 
 		Field fieldsDisplayField = ddmFields.get(DDMImpl.FIELDS_DISPLAY_NAME);
 
@@ -1234,6 +1237,9 @@ public class JournalConverterImpl implements JournalConverter {
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalConverterImpl.class);
 
+	private static final Pattern _oldDocumentLibraryURLPattern =
+		Pattern.compile("uuid=([^&]+)&groupId=([^&]+)");
+
 	private final Map<String, String> _ddmDataTypes;
 	private final Map<String, String> _ddmMetadataAttributes;
 	private final Map<String, String> _ddmTypesToJournalTypes;
@@ -1248,8 +1254,5 @@ public class JournalConverterImpl implements JournalConverter {
 
 	@Reference(unbind = "-")
 	private LayoutLocalService _layoutLocalService;
-
-	private final Pattern _oldDocumentLibraryURLPattern = Pattern.compile(
-		"uuid=([^&]+)&groupId=([^&]+)");
 
 }

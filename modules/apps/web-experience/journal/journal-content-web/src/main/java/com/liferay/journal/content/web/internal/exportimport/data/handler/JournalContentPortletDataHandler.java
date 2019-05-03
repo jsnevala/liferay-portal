@@ -54,15 +54,13 @@ import org.osgi.service.component.annotations.Reference;
  * @author Raymond Augé
  * @author Bruno Farache
  * @author Daniel Kocsis
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @see    com.liferay.journal.internal.exportimport.creation.strategy.JournalCreationStrategy
  * @see    PortletDataHandler
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT
-	},
+	property = "javax.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT,
 	service = PortletDataHandler.class
 )
 public class JournalContentPortletDataHandler extends BasePortletDataHandler {

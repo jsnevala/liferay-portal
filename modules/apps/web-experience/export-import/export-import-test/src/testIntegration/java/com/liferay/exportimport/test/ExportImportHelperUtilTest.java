@@ -67,7 +67,7 @@ import org.junit.runner.RunWith;
 
 /**
  * @author Zsolt Berentey
- * @author Peter Borkuti
+ * @author Péter Borkuti
  */
 @RunWith(Arquillian.class)
 public class ExportImportHelperUtilTest {
@@ -114,8 +114,9 @@ public class ExportImportHelperUtilTest {
 		Layout childLayout = LayoutTestUtil.addLayout(
 			_stagingGroup, layout.getPlid());
 
-		long[] selectedLayoutIds =
-			{layout.getLayoutId(), childLayout.getLayoutId()};
+		long[] selectedLayoutIds = {
+			layout.getLayoutId(), childLayout.getLayoutId()
+		};
 
 		String selectedLayoutsJSON =
 			ExportImportHelperUtil.getSelectedLayoutsJSON(

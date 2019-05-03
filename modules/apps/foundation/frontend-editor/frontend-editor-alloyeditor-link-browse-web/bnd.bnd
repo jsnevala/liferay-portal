@@ -1,6 +1,5 @@
 Bundle-Name: Liferay Frontend Editor AlloyEditor Link Browse Web
 Bundle-SymbolicName: com.liferay.frontend.editor.alloyeditor.link.browse.web
-Bundle-Version: 1.0.8
-Liferay-Releng-Module-Group-Description:
+Bundle-Version: 1.0.14
 Liferay-Releng-Module-Group-Title: Rich Text Editors
 Web-ContextPath: /frontend-editor-alloyeditor-link-browse-web

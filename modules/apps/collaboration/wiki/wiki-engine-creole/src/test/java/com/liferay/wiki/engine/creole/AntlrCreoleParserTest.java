@@ -837,6 +837,33 @@ public class AntlrCreoleParserTest {
 	}
 
 	@Test
+	public void testParseTextWithinAngleBrackets() throws Exception {
+		WikiPageNode wikiPageNode = getWikiPageNode("text-9.creole");
+
+		Assert.assertNotNull(wikiPageNode);
+		Assert.assertEquals(1, wikiPageNode.getChildASTNodesCount());
+
+		ParagraphNode paragraphNode =
+			(ParagraphNode)wikiPageNode.getChildASTNode(0);
+
+		List<ASTNode> astNodes = paragraphNode.getChildASTNodes();
+
+		Assert.assertEquals(astNodes.toString(), 1, astNodes.size());
+
+		LineNode lineNode = (LineNode)paragraphNode.getChildASTNode(0);
+
+		Assert.assertEquals(1, lineNode.getChildASTNodesCount());
+
+		UnformattedTextNode unformattedTextNode =
+			(UnformattedTextNode)lineNode.getChildASTNode(0);
+
+		unformattedTextNode =
+			(UnformattedTextNode)unformattedTextNode.getChildASTNode(0);
+
+		Assert.assertEquals("<<<Text>>>", unformattedTextNode.getContent());
+	}
+
+	@Test
 	public void testSimpleEscapedCharacter() throws Exception {
 		WikiPageNode wikiPageNode = getWikiPageNode("escape-1.creole");
 
@@ -902,11 +929,11 @@ public class AntlrCreoleParserTest {
 	}
 
 	protected WikiPageNode getWikiPageNode(String fileName) throws Exception {
-		_creole10parser = getCreole10Parser(fileName);
+		_creole10Parser = getCreole10Parser(fileName);
 
-		_creole10parser.wikipage();
+		_creole10Parser.wikipage();
 
-		return _creole10parser.getWikiPageNode();
+		return _creole10Parser.getWikiPageNode();
 	}
 
 	protected BaseListNode parseBaseListNode(String fileName) throws Exception {
@@ -919,7 +946,7 @@ public class AntlrCreoleParserTest {
 		return (BaseListNode)listNode.getChildASTNode(0);
 	}
 
-	private Creole10Parser _creole10parser;
+	private Creole10Parser _creole10Parser;
 	private WikiEngineCreoleComponentProvider
 		_wikiEngineCreoleComponentProvider;
 

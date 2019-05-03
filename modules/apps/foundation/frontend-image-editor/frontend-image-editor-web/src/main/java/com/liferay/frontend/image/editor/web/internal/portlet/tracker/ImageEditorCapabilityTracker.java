@@ -137,8 +137,11 @@ public class ImageEditorCapabilityTracker {
 							resourceURL.getFile());
 
 						requiredModules.add(
-							moduleName.concat(StringPool.SLASH).concat(
-								fileName));
+							moduleName.concat(
+								StringPool.SLASH
+							).concat(
+								fileName
+							));
 					}
 				}
 				catch (Exception e) {
@@ -210,10 +213,10 @@ public class ImageEditorCapabilityTracker {
 
 	}
 
-	private class ImageEditorCapabilityServiceTrackerMapListener implements
-		ServiceTrackerMapListener
+	private class ImageEditorCapabilityServiceTrackerMapListener
+		implements ServiceTrackerMapListener
 			<String, ImageEditorCapabilityDescriptor,
-				List<ImageEditorCapabilityDescriptor>> {
+			 List<ImageEditorCapabilityDescriptor>> {
 
 		@Override
 		public synchronized void keyEmitted(

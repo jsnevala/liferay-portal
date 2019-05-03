@@ -31,6 +31,7 @@ import com.liferay.journal.internal.upgrade.v0_0_5.UpgradeJournalDisplayPreferen
 import com.liferay.journal.internal.upgrade.v0_0_5.UpgradeLastPublishDate;
 import com.liferay.journal.internal.upgrade.v0_0_5.UpgradePortletSettings;
 import com.liferay.journal.internal.upgrade.v0_0_6.UpgradeImageTypeContentAttributes;
+import com.liferay.journal.internal.upgrade.v0_0_7.UpgradeJournalArticleDates;
 import com.liferay.journal.internal.upgrade.v0_0_7.UpgradeJournalArticleTreePath;
 import com.liferay.journal.internal.upgrade.v1_0_0.UpgradeJournalArticleImage;
 import com.liferay.journal.internal.upgrade.v1_0_1.UpgradeJournalContentSearch;
@@ -57,7 +58,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(immediate = true, service = UpgradeStepRegistrator.class)
 public class JournalServiceUpgrade implements UpgradeStepRegistrator {
@@ -122,6 +123,7 @@ public class JournalServiceUpgrade implements UpgradeStepRegistrator {
 
 		registry.register(
 			"com.liferay.journal.service", "0.0.7", "1.0.0",
+			new UpgradeJournalArticleDates(),
 			new UpgradeJournalArticleTreePath());
 
 		registry.register(
@@ -163,9 +165,9 @@ public class JournalServiceUpgrade implements UpgradeStepRegistrator {
 
 	@Reference(unbind = "-")
 	protected void setAssetVocabularyLocalService(
-		AssetVocabularyLocalService assetVocabuaryLocalService) {
+		AssetVocabularyLocalService assetVocabularyLocalService) {
 
-		_assetVocabularyLocalService = assetVocabuaryLocalService;
+		_assetVocabularyLocalService = assetVocabularyLocalService;
 	}
 
 	@Reference(unbind = "-")

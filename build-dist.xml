@@ -50,6 +50,25 @@
 		</sequential>
 	</macrodef>
 
+	<macrodef name="replace-multilines">
+		<attribute name="file" />
+		<element name="replace-elements" />
+		<sequential>
+			<if>
+				<os family="windows" />
+				<then>
+					<fixcrlf eol="dos" file="@{file}" fixlast="false" />
+				</then>
+			</if>
+
+			<replace
+				file="@{file}"
+			>
+				<replace-elements />
+			</replace>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="update-jboss-java-opts">
 		<sequential>
 			<replace
@@ -93,6 +112,28 @@
 					<echo append="true" file="${lp.plugins.dir}/build.${user.name}.properties">@{plugins.includes.plugin.dependent-apps},@{plugins.includes.plugin.name},</echo>
 				</then>
 			</if>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="update-websphere-java-opts">
+		<sequential>
+			<replace
+				file="${app.server.websphere.instance.dir}/config/cells/liferay-cell/nodes/liferay-node/servers/server1/server.xml"
+			>
+				<replacefilter
+					token="maximumHeapSize=&quot;1024&quot;"
+					value="initialHeapSize=&quot;6144&quot; maximumHeapSize=&quot;6144&quot;"
+				/>
+			</replace>
+
+			<replace
+				file="${app.server.websphere.instance.dir}/config/cells/liferay-cell/nodes/liferay-node/servers/server1/server.xml"
+			>
+				<replacefilter
+					token="-Xquickstart -Dfile.encoding=UTF-8 -Duser.timezone=GMT"
+					value="-Dfile.encoding=UTF-8 -Duser.timezone=GMT -Xquickstart -XX:MaxNewSize=1536m -XX:NewSize=1536m -XX:SurvivorRatio=7"
+				/>
+			</replace>
 		</sequential>
 	</macrodef>
 
@@ -1009,6 +1050,15 @@ release was successful.</echo>
 		</if>
 	</target>
 
+	<target name="generate-startup-files">
+
+		<!--
+		Remove this target the reference to this target is removed from the
+		release tool
+		-->
+
+	</target>
+
 	<target name="prepare-generated-files">
 		<antcall target="clean" />
 		<antcall target="start" />
@@ -1314,13 +1364,6 @@ this task.
 		<replace
 			file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
 		>
-			<replacetoken><![CDATA[enable-welcome-root="true"]]></replacetoken>
-			<replacevalue><![CDATA[enable-welcome-root="false"]]></replacevalue>
-		</replace>
-
-		<replace
-			file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
-		>
 			<replacetoken><![CDATA[</extensions>]]></replacetoken>
 			<replacevalue>
 				<![CDATA[
@@ -1340,31 +1383,17 @@ this task.
 			<replacevalue><![CDATA[<deployment-scanner deployment-timeout="360" ]]></replacevalue>
 		</replace>
 
-		<replace
+		<replace-multilines
 			file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
 		>
-			<replacetoken><![CDATA[<security-domains>]]></replacetoken>
-			<replacevalue>
-				<![CDATA[
-					<security-domains>
-						<security-domain name="PortalRealm">
-							<authentication>
-								<login-module code="com.liferay.portal.security.jaas.PortalLoginModule" flag="required" />
-							</authentication>
-						</security-domain>
-				]]>
-			</replacevalue>
-		</replace>
-
-		<replace
-			file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
-		>
-			<replacetoken><![CDATA[<formatter>
+			<replace-elements>
+				<replacetoken><![CDATA[<formatter>
                     <named-formatter name="COLOR-PATTERN"]]></replacetoken>
-			<replacevalue><![CDATA[<filter-spec value="not(any(match(&quot;WFLYSRV0059&quot;),match(&quot;WFLYEE0007&quot;)))" />
+				<replacevalue><![CDATA[<filter-spec value="not(any(match(&quot;WFLYSRV0059&quot;),match(&quot;WFLYEE0007&quot;)))" />
                 <formatter>
                     <named-formatter name="COLOR-PATTERN"]]></replacevalue>
-		</replace>
+			</replace-elements>
+		</replace-multilines>
 
 		<echo file="${app.server.jboss.bin.dir}/server.policy">
 			grant {
@@ -1392,10 +1421,13 @@ this task.
 					<replacevalue><![CDATA[JAVA_OPTS="]]></replacevalue>
 				</replace>
 
-				<echo append="true" file="${app.server.jboss.bin.dir}/standalone.conf">${line.separator}<![CDATA[JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true ${java.security.config} -Djboss.as.management.blocking.timeout=480 -Duser.timezone=GMT -Xmx1024m -XX:MaxMetaspaceSize=512m"]]></echo>
+				<echo append="true" file="${app.server.jboss.bin.dir}/standalone.conf">${line.separator}<![CDATA[JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true ${java.security.config} -Djboss.as.management.blocking.timeout=480 -Duser.timezone=GMT -Xms2560m -Xmx2560m -XX:MaxNewSize=1536m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=512m -XX:NewSize=1536m -XX:SurvivorRatio=7"]]></echo>
 			</then>
 			<elseif>
-				<equals arg1="${app.server.jboss.version}" arg2="7.0.0" />
+				<or>
+					<equals arg1="${app.server.jboss.version}" arg2="7.0.0" />
+					<equals arg1="${app.server.jboss.version}" arg2="7.1.0" />
+				</or>
 				<then>
 					<replace
 						file="${app.server.jboss.bin.dir}/standalone.conf"
@@ -1404,7 +1436,94 @@ this task.
 						<replacevalue><![CDATA[JAVA_OPTS="]]></replacevalue>
 					</replace>
 
-					<echo append="true" file="${app.server.jboss.bin.dir}/standalone.conf">${line.separator}<![CDATA[JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true ${java.security.config} -Djboss.as.management.blocking.timeout=480 -Duser.timezone=GMT -Xmx1024m -XX:MaxMetaspaceSize=512m"]]></echo>
+					<echo append="true" file="${app.server.jboss.bin.dir}/standalone.conf">${line.separator}<![CDATA[JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true ${java.security.config} -Djboss.as.management.blocking.timeout=480 -Duser.timezone=GMT -Xms2560m -Xmx2560m -XX:MaxNewSize=1536m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=512m -XX:NewSize=1536m -XX:SurvivorRatio=7"]]></echo>
+				</then>
+			</elseif>
+		</if>
+
+		<if>
+			<or>
+				<equals arg1="${app.server.jboss.version}" arg2="6.4.0" />
+				<equals arg1="${app.server.jboss.version}" arg2="7.0.0" />
+			</or>
+			<then>
+				<replace
+					file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
+				>
+					<replacetoken><![CDATA[<security-domains>]]></replacetoken>
+					<replacevalue>
+						<![CDATA[
+							<security-domains>
+								<security-domain name="PortalRealm">
+									<authentication>
+										<login-module code="com.liferay.portal.security.jaas.PortalLoginModule" flag="required" />
+									</authentication>
+								</security-domain>
+						]]>
+					</replacevalue>
+				</replace>
+
+				<replace
+					file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
+				>
+					<replacetoken><![CDATA[enable-welcome-root="true"]]></replacetoken>
+					<replacevalue><![CDATA[enable-welcome-root="false"]]></replacevalue>
+				</replace>
+
+				<replace
+					file="${app.server.jboss.instance.dir}/configuration/standalone.xml"
+				>
+					<replacetoken><![CDATA[<subsystem xmlns="urn:jboss:domain:web:2.2" default-virtual-server="default-host" native="false">]]></replacetoken>
+					<replacevalue>
+						<![CDATA[
+							<subsystem xmlns="urn:jboss:domain:web:2.2" default-virtual-server="default-host" native="false">
+								<configuration>
+									<jsp-configuration development="true" source-vm="1.8" target-vm="1.8" />
+								</configuration>
+						]]>
+					</replacevalue>
+				</replace>
+			</then>
+			<elseif>
+				<equals arg1="${app.server.jboss.version}" arg2="7.1.0" />
+				<then>
+					<replace
+						file="${app.server.jboss.instance.dir}/configuration/standalone.xml"
+					>
+						<replacetoken><![CDATA[<subsystem xmlns="urn:jboss:domain:security:2.0">
+            <security-domains>]]></replacetoken>
+						<replacevalue><![CDATA[<subsystem xmlns="urn:jboss:domain:security:2.0">
+            <security-domains>
+							<security-domain name="PortalRealm">
+								<authentication>
+									<login-module code="com.liferay.portal.security.jaas.PortalLoginModule" flag="required" />
+								</authentication>
+							</security-domain>]]>
+						</replacevalue>
+					</replace>
+
+					<replace
+						file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
+					>
+						<replacetoken><![CDATA[<location name="/" handler="welcome-content"/>]]></replacetoken>
+						<replacevalue><![CDATA[<!--<location name="/" handler="welcome-content"/>-->]]></replacevalue>
+					</replace>
+
+					<replace
+						file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
+					>
+						<replacetoken><![CDATA[<file name="welcome-content" path="${jboss.home.dir}/welcome-content"/>]]></replacetoken>
+						<replacevalue><![CDATA[<!--<file name="welcome-content" path="${jboss.home.dir}/welcome-content"/>-->]]></replacevalue>
+					</replace>
+
+					<replace
+						file="${app.server.jboss.dir}/standalone/configuration/standalone.xml"
+					>
+						<replacetoken><![CDATA[<jsp-config/>]]></replacetoken>
+						<replacevalue>
+							<![CDATA[<jsp-config development="true" source-vm="1.8" target-vm="1.8" />]]>
+						</replacevalue>
+					</replace>
 				</then>
 			</elseif>
 		</if>
@@ -1426,23 +1545,9 @@ this task.
 			<replacetoken><![CDATA[:JAVA_OPTS_SET]]></replacetoken>
 			<replacevalue>
 				<![CDATA[
-					set "JAVA_OPTS=%JAVA_OPTS% -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true @java.security.config@ -Djboss.as.management.blocking.timeout=480 -Duser.timezone=GMT -Xmx1024m -XX:MaxMetaspaceSize=384m"
+					set "JAVA_OPTS=%JAVA_OPTS% -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true @java.security.config@ -Djboss.as.management.blocking.timeout=480 -Duser.timezone=GMT -Xms2560m -Xmx2560m -XX:MaxNewSize=1536m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=512m -XX:NewSize=1536m -XX:SurvivorRatio=7"
 
 					:JAVA_OPTS_SET
-				]]>
-			</replacevalue>
-		</replace>
-
-		<replace
-			file="${app.server.jboss.instance.dir}/configuration/standalone.xml"
-		>
-			<replacetoken><![CDATA[<subsystem xmlns="urn:jboss:domain:web:2.2" default-virtual-server="default-host" native="false">]]></replacetoken>
-			<replacevalue>
-				<![CDATA[
-					<subsystem xmlns="urn:jboss:domain:web:2.2" default-virtual-server="default-host" native="false">
-						<configuration>
-							<jsp-configuration development="true" source-vm="1.8" target-vm="1.8" />
-						</configuration>
 				]]>
 			</replacevalue>
 		</replace>
@@ -2024,6 +2129,19 @@ wrapper.java.additional.11="-Dfile.encoding=UTF-8"]]></replacevalue>
 	</target>
 
 	<target name="unzip-tomcat">
+		<for list="${app.server.tomcat.legacy.versions}" param="app.server.tomcat.legacy.version">
+			<sequential>
+				<var name="app.server.tomcat.legacy.dir" value="${app.server.parent.dir}/tomcat-@{app.server.tomcat.legacy.version}" />
+
+				<if>
+					<available file="${app.server.tomcat.legacy.dir}" type="dir" />
+					<then>
+						<delete dir="${app.server.tomcat.legacy.dir}" />
+					</then>
+				</if>
+			</sequential>
+		</for>
+
 		<delete dir="${app.server.tomcat.dir}" />
 
 		<if>
@@ -2286,7 +2404,7 @@ closeTemplate()
 							@echo off
 
 							set "MW_HOME=${app.server.weblogic.dir.windows}"
-							set "USER_MEM_ARGS=-Xmx1024m -XX:MetaspaceSize=256m"
+							set "USER_MEM_ARGS=-Xms2560m -Xmx2560m -XX:MaxNewSize=1536m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=512m -XX:NewSize=1536m -XX:SurvivorRatio=7"
 							set "WL_HOME=${app.server.weblogic.wlserver.dir.windows}"
 
 							call %MW_HOME%/oracle_common/common/bin/commEnv.cmd
@@ -2308,7 +2426,7 @@ closeTemplate()
 							@echo off
 
 							set "MW_HOME=${app.server.weblogic.dir.windows}"
-							set "USER_MEM_ARGS=-Xmx1024m -XX:MetaspaceSize=256m"
+							set "USER_MEM_ARGS=-Xms2560m -Xmx2560m -XX:MaxNewSize=1536m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=512m -XX:NewSize=1536m -XX:SurvivorRatio=7"
 							set "WL_HOME=${app.server.weblogic.wlserver.dir.windows}"
 
 							call %WL_HOME%/common/bin/commEnv.cmd
@@ -2340,7 +2458,7 @@ closeTemplate()
 							set DERBY_FLAG="false"
 							set "JAVA_OPTIONS=%JAVA_OPTIONS% -Dfile.encoding=UTF-8 -Duser.timezone=GMT @java.security.manager.option@ -da:org.apache.lucene... -da:org.aspectj..."
 							set "MW_HOME=${app.server.weblogic.dir.windows}"
-							set "USER_MEM_ARGS=-Xmx1024m -XX:PermSize=512m"
+							set "USER_MEM_ARGS=-Xms2560m -Xmx2560m -XX:MaxNewSize=1536m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=512m -XX:NewSize=1536m -XX:SurvivorRatio=7"
 						]]>
 					</replacevalue>
 				</replace>
@@ -2467,7 +2585,7 @@ closeTemplate()
 							#!/bin/sh
 
 							export MW_HOME="${app.server.weblogic.dir}"
-							export USER_MEM_ARGS="-Xmx1024m -XX:MetaspaceSize=256m"
+							export USER_MEM_ARGS="-Xms2560m -Xmx2560m -XX:MaxNewSize=1536m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=512m -XX:NewSize=1536m -XX:SurvivorRatio=7"
 							export WL_HOME="${app.server.weblogic.wlserver.dir}"
 
 							${source.command} ${MW_HOME}/oracle_common/common/bin/commEnv.sh
@@ -2482,7 +2600,7 @@ closeTemplate()
 							#!/bin/sh
 
 							export MW_HOME="${app.server.weblogic.dir}"
-							export USER_MEM_ARGS="-Xmx1024m -XX:MetaspaceSize=256m"
+							export USER_MEM_ARGS="-Xms2560m -Xmx2560m -XX:MaxNewSize=1536m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=512m -XX:NewSize=1536m -XX:SurvivorRatio=7"
 							export WL_HOME="${app.server.weblogic.wlserver.dir}"
 
 							${source.command} ${WL_HOME}/common/bin/commEnv.sh
@@ -2518,7 +2636,7 @@ closeTemplate()
 							export DERBY_FLAG="false"
 							export JAVA_OPTIONS="${JAVA_OPTIONS} -Dfile.encoding=UTF-8 -Duser.timezone=GMT @java.security.manager.option@ -da:org.apache.lucene... -da:org.aspectj... "
 							export MW_HOME="${app.server.weblogic.dir}"
-							export USER_MEM_ARGS="-Xmx1024m -XX:MetaspaceSize=512m"
+							export USER_MEM_ARGS="-Xms2560m -Xmx2560m -XX:MaxNewSize=1536m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=512m -XX:NewSize=1536m -XX:SurvivorRatio=7"
 						]]>
 					</replacevalue>
 				</replace>
@@ -2619,6 +2737,26 @@ this task.
 						value="${env.JAVA_HOME}"
 					/>
 				</replace>
+
+				<chmod
+					perm="a+x"
+				>
+					<fileset
+						dir="${app.server.weblogic.bin.dir}"
+					>
+						<include name="**/*.sh" />
+					</fileset>
+				</chmod>
+
+				<chmod
+					perm="a+x"
+				>
+					<fileset
+						dir="${app.server.weblogic.instance.dir}"
+					>
+						<include name="**/*.sh" />
+					</fileset>
+				</chmod>
 			</then>
 			<elseif>
 				<os family="windows" />
@@ -3045,6 +3183,8 @@ and put it in ${app.server.parent.dir}. Then rerun this task.
 			<replacetoken><![CDATA[<secureSessionCookie xmi:id="SecureSessionCookie_1" cookieDomain="*" cookieName="JSESSIONID" cookiePath="/"/>]]></replacetoken>
 			<replacevalue><![CDATA[]]></replacevalue>
 		</replace>
+
+		<update-websphere-java-opts />
 	</target>
 
 	<target name="unzip-websphere-custom">
@@ -3057,9 +3197,17 @@ and put it in ${app.server.parent.dir}. Then rerun this task.
 					<try>
 						<mkdir dir="${app.server.parent.dir}" />
 
+						<propertyregex
+							input="${app.server.websphere.version}"
+							override="true"
+							property="app.server.websphere.major.version"
+							regexp="(.*)\.\d+"
+							replace="\1"
+						/>
+
 						<mirrors-get
 							dest="${app.server.parent.dir}/${app.server.websphere.custom.zip.name}"
-							src="http://files.liferay.com/private/apps/ibm/websphere/8.5.5/${app.server.websphere.custom.zip.name}"
+							src="http://files.liferay.com/private/apps/ibm/websphere/${app.server.websphere.major.version}/${app.server.websphere.custom.zip.name}"
 							verbose="true"
 						/>
 					</try>
@@ -3068,7 +3216,7 @@ and put it in ${app.server.parent.dir}. Then rerun this task.
 .
 
 Please download the Websphere custom zip file from
-http://mirrors/files.liferay.com/private/apps/ibm/websphere/8.5.5 and
+http://mirrors/files.liferay.com/private/apps/ibm/websphere/${app.server.websphere.major.version} and
 place it here: ${app.server.parent.dir}/${app.server.websphere.custom.zip.name}. Then rerun
 this task.
 						</fail>
@@ -3120,6 +3268,8 @@ this task.
 				</replace>
 			</then>
 		</if>
+
+		<update-websphere-java-opts />
 	</target>
 
 	<target name="unzip-wildfly">
@@ -3205,19 +3355,21 @@ this task.
 			<replacevalue><![CDATA[<deployment-scanner deployment-timeout="360" ]]></replacevalue>
 		</replace>
 
-		<replace
+		<replace-multilines
 			file="${app.server.wildfly.dir}/standalone/configuration/standalone.xml"
 		>
-			<replacetoken><![CDATA[">
+			<replace-elements>
+				<replacetoken><![CDATA[">
             <security-domains>]]></replacetoken>
-			<replacevalue><![CDATA[">
+				<replacevalue><![CDATA[">
             <security-domains>
 				<security-domain name="PortalRealm">
 					<authentication>
 						<login-module code="com.liferay.portal.security.jaas.PortalLoginModule" flag="required" />
 					</authentication>
 				</security-domain>]]></replacevalue>
-		</replace>
+			</replace-elements>
+		</replace-multilines>
 
 		<replace
 			file="${app.server.wildfly.dir}/standalone/configuration/standalone.xml"
@@ -3232,15 +3384,17 @@ this task.
 			replace=""
 		/>
 
-		<replace
+		<replace-multilines
 			file="${app.server.wildfly.dir}/standalone/configuration/standalone.xml"
 		>
-			<replacetoken><![CDATA[<formatter>
+			<replace-elements>
+				<replacetoken><![CDATA[<formatter>
                     <named-formatter name="COLOR-PATTERN"]]></replacetoken>
-			<replacevalue><![CDATA[<filter-spec value="not(any(match(&quot;WFLYSRV0059&quot;),match(&quot;WFLYEE0007&quot;)))" />
+				<replacevalue><![CDATA[<filter-spec value="not(any(match(&quot;WFLYSRV0059&quot;),match(&quot;WFLYEE0007&quot;)))" />
                 <formatter>
                     <named-formatter name="COLOR-PATTERN"]]></replacevalue>
-		</replace>
+			</replace-elements>
+		</replace-multilines>
 
 		<echo file="${app.server.wildfly.bin.dir}/server.policy">
 			grant {
@@ -3267,7 +3421,7 @@ this task.
 
 		<echo append="true" file="${app.server.wildfly.bin.dir}/standalone.conf">
 			<![CDATA[
-				JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true ${java.security.config} -Djboss.as.management.blocking.timeout=480 -Duser.timezone=GMT -Xmx1024m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=200m"
+				JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true ${java.security.config} -Djboss.as.management.blocking.timeout=480 -Duser.timezone=GMT -Xms2560m -Xmx2560m -XX:MaxNewSize=1536m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=512m -XX:NewSize=1536m -XX:SurvivorRatio=7"
 			]]>
 		</echo>
 
@@ -3288,7 +3442,7 @@ this task.
 			<replacetoken><![CDATA[:JAVA_OPTS_SET]]></replacetoken>
 			<replacevalue>
 				<![CDATA[
-					set "JAVA_OPTS=%JAVA_OPTS% -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true @java.security.config@ -Djboss.as.management.blocking.timeout=480 -Duser.timezone=GMT -Xmx1024m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=200m"
+					set "JAVA_OPTS=%JAVA_OPTS% -Dfile.encoding=UTF-8 -Djava.net.preferIPv4Stack=true @java.security.config@ -Djboss.as.management.blocking.timeout=480 -Duser.timezone=GMT -Xms2560m -Xmx2560m -XX:MaxNewSize=1536m -XX:MaxMetaspaceSize=512m -XX:MetaspaceSize=512m -XX:NewSize=1536m -XX:SurvivorRatio=7"
 
 					:JAVA_OPTS_SET
 				]]>
@@ -3394,6 +3548,14 @@ plugins.includes=</echo>
 	<target name="zip-executable">
 		<delete failonerror="false" file="dist/${zip.executable.file}-${lp.version}.zip" />
 
+		<exec dir="${project.dir}" executable="git" outputproperty="githash.rev.parse">
+			<arg line="rev-parse HEAD" />
+		</exec>
+
+		<echo>Recording ${zip.executable.dir}/.githash with ${githash.rev.parse}.</echo>
+
+		<echo file="${zip.executable.dir}/.githash">${githash.rev.parse}</echo>
+
 		<antelope:stringutil property="zip.executable.dir.beginindex" string="${zip.executable.dir}">
 			<lastindexof string="/" />
 		</antelope:stringutil>
@@ -3428,6 +3590,11 @@ plugins.includes=</echo>
 						filemode="744"
 						includes="**/*.sh"
 						prefix="liferay-portal-${lp.version}/${zip.executable.dir.name}"
+					/>
+					<zipfileset
+						dir="${zip.executable.dir}"
+						includes=".githash"
+						prefix="liferay-portal-${lp.version}"
 					/>
 					<zipfileset
 						dir="${zip.executable.dir}/.."

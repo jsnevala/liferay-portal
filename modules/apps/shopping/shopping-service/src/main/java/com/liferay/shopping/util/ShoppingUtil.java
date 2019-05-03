@@ -82,7 +82,7 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Brian Wing Shun Chan
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class ShoppingUtil {
 
@@ -277,8 +277,8 @@ public class ShoppingUtil {
 			Map<ShoppingCartItem, Integer> items)
 		throws PortalException {
 
-		double discount = calculateDiscountSubtotal(
-			items) / calculateSubtotal(items);
+		double discount =
+			calculateDiscountSubtotal(items) / calculateSubtotal(items);
 
 		if (Double.isNaN(discount) || Double.isInfinite(discount)) {
 			discount = 0.0;
@@ -361,7 +361,7 @@ public class ShoppingUtil {
 		double[] range =
 			ShoppingGroupServiceOverriddenConfiguration.INSURANCE_RANGE;
 
-		for (int i = 0; i < range.length - 1; i++) {
+		for (int i = 0; i < (range.length - 1); i++) {
 			if ((subtotal > range[i]) && (subtotal <= range[i + 1])) {
 				int rangeId = i / 2;
 
@@ -449,7 +449,7 @@ public class ShoppingUtil {
 		double[] range =
 			ShoppingGroupServiceOverriddenConfiguration.SHIPPING_RANGE;
 
-		for (int i = 0; i < range.length - 1; i++) {
+		for (int i = 0; i < (range.length - 1); i++) {
 			if ((subtotal > range[i]) && (subtotal <= range[i + 1])) {
 				int rangeId = i / 2;
 
@@ -458,8 +458,8 @@ public class ShoppingUtil {
 				}
 
 				shippingRate = GetterUtil.getDouble(
-					shoppingGroupServiceOverriddenConfiguration.
-						getShipping()[rangeId]);
+					shoppingGroupServiceOverriddenConfiguration.getShipping()
+						[rangeId]);
 			}
 		}
 
@@ -827,9 +827,9 @@ public class ShoppingUtil {
 		List<String> names = new ArrayList<>();
 		List<String[]> values = new ArrayList<>();
 
-		for (int i = 0; i < itemFields.length; i++) {
-			names.add(itemFields[i].getName());
-			values.add(StringUtil.split(itemFields[i].getValues()));
+		for (ShoppingItemField itemField : itemFields) {
+			names.add(itemField.getName());
+			values.add(StringUtil.split(itemField.getValues()));
 		}
 
 		int numOfRows = 1;
@@ -857,7 +857,7 @@ public class ShoppingUtil {
 				int arrayPos = 0;
 
 				for (arrayPos = i / numOfRepeats; arrayPos >= vArray.length;
-					arrayPos = arrayPos - vArray.length) {
+					 arrayPos = arrayPos - vArray.length) {
 				}
 
 				if (!fieldsValues.contains(vArray[arrayPos].trim())) {
@@ -1062,8 +1062,8 @@ public class ShoppingUtil {
 		else {
 			String[] fieldsQuantities = item.getFieldsQuantitiesArray();
 
-			for (int i = 0; i < fieldsQuantities.length; i++) {
-				if (GetterUtil.getInteger(fieldsQuantities[i]) > 0) {
+			for (String fieldsQuantity : fieldsQuantities) {
+				if (GetterUtil.getInteger(fieldsQuantity) > 0) {
 					return true;
 				}
 			}

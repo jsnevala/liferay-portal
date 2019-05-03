@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.naming.AuthenticationException;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.directory.Attribute;
@@ -63,6 +64,7 @@ import javax.naming.ldap.LdapContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
@@ -71,7 +73,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  * @author Josef Sustacek
  */
 @Component(
-	immediate = true, property = {"key=auth.pipeline.pre"},
+	immediate = true, property = "key=auth.pipeline.pre",
 	service = Authenticator.class
 )
 public class LDAPAuth implements Authenticator {
@@ -193,12 +195,32 @@ public class LDAPAuth implements Authenticator {
 				ldapAuthResult.setResponseControl(responseControls);
 			}
 			catch (Exception e) {
+				boolean authenticationException = false;
+
+				if (e instanceof AuthenticationException) {
+					authenticationException = true;
+				}
+
 				if (_log.isDebugEnabled()) {
-					_log.debug(
+					if (authenticationException) {
+						_log.debug(
+							StringBundler.concat(
+								"Failed to bind to the LDAP server, wrong ",
+								"password provided for userDN ", userDN),
+							e);
+					}
+					else {
+						_log.debug(
+							"Failed to bind to the LDAP server with userDN " +
+								userDN,
+							e);
+					}
+				}
+				else if (_log.isWarnEnabled() && !authenticationException) {
+					_log.warn(
 						StringBundler.concat(
 							"Failed to bind to the LDAP server with userDN ",
-							userDN, " and password ", password),
-						e);
+							userDN, " :", e.getMessage()));
 				}
 
 				ldapAuthResult.setAuthenticated(false);
@@ -282,7 +304,9 @@ public class LDAPAuth implements Authenticator {
 			//  Process LDAP auth search filter
 
 			String filter = _ldapSettings.getAuthSearchFilter(
-				ldapServerId, companyId, emailAddress, screenName,
+				ldapServerId, companyId,
+				_portalLDAP.encodeFilterAttribute(emailAddress, false),
+				_portalLDAP.encodeFilterAttribute(screenName, false),
 				String.valueOf(userId));
 
 			Properties userMappings = _ldapSettings.getUserMappings(
@@ -727,11 +751,6 @@ public class LDAPAuth implements Authenticator {
 		_ldapSettings = ldapSettings;
 	}
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY, unbind = "-")
-	protected void setLdapUserImporter(LDAPUserImporter ldapUserImporter) {
-		_ldapUserImporter = ldapUserImporter;
-	}
-
 	@Reference(unbind = "-")
 	protected void setOmniadmin(Omniadmin omniadmin) {
 		_omniadmin = omniadmin;
@@ -740,11 +759,6 @@ public class LDAPAuth implements Authenticator {
 	@Reference(unbind = "-")
 	protected void setPasswordEncryptor(PasswordEncryptor passwordEncryptor) {
 		_passwordEncryptor = passwordEncryptor;
-	}
-
-	@Reference(policyOption = ReferencePolicyOption.GREEDY, unbind = "-")
-	protected void setPortalLDAP(PortalLDAP portalLDAP) {
-		_portalLDAP = portalLDAP;
 	}
 
 	@Reference(unbind = "-")
@@ -781,10 +795,22 @@ public class LDAPAuth implements Authenticator {
 	private ConfigurationProvider<LDAPServerConfiguration>
 		_ldapServerConfigurationProvider;
 	private LDAPSettings _ldapSettings;
-	private LDAPUserImporter _ldapUserImporter;
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile LDAPUserImporter _ldapUserImporter;
+
 	private Omniadmin _omniadmin;
 	private PasswordEncryptor _passwordEncryptor;
-	private PortalLDAP _portalLDAP;
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile PortalLDAP _portalLDAP;
+
 	private Props _props;
 	private ConfigurationProvider<SystemLDAPConfiguration>
 		_systemLDAPConfigurationProvider;

@@ -123,8 +123,8 @@ SearchContainer searchContainer = new SearchContainer(renderRequest, null, null,
 Map orderableHeaders = new HashMap();
 
 if (navigation.equals("all-pages") || navigation.equals("categorized-pages") || navigation.equals("tagged-pages")) {
-	orderableHeaders.put("page", "title");
 	orderableHeaders.put("date", "modifiedDate");
+	orderableHeaders.put("page", "title");
 }
 
 searchContainer.setOrderableHeaders(orderableHeaders);
@@ -210,7 +210,7 @@ for (int i = 0; i < pages.size(); i++) {
 	// Date
 
 	if (!curWikiPage.isNew()) {
-		row.addDate(curWikiPage.getCreateDate(), rowURL);
+		row.addDate(curWikiPage.getStatusDate(), rowURL);
 	}
 	else {
 		row.addText(StringPool.BLANK);

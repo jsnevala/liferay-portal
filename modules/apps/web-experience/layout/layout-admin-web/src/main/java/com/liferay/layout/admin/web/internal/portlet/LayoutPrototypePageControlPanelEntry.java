@@ -27,7 +27,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + LayoutAdminPortletKeys.LAYOUT_PROTOTYPE_PAGE},
+	property = "javax.portlet.name=" + LayoutAdminPortletKeys.LAYOUT_PROTOTYPE_PAGE,
 	service = ControlPanelEntry.class
 )
 public class LayoutPrototypePageControlPanelEntry

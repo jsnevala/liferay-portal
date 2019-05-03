@@ -82,9 +82,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + AssetPublisherPortletKeys.ASSET_PUBLISHER
-	},
+	property = "javax.portlet.name=" + AssetPublisherPortletKeys.ASSET_PUBLISHER,
 	service = ConfigurationAction.class
 )
 public class AssetPublisherConfigurationAction
@@ -340,10 +338,7 @@ public class AssetPublisherConfigurationAction
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
 				className);
 
-		String assetClassName = AssetPublisherUtil.getClassName(
-			assetRendererFactory);
-
-		return assetClassName;
+		return AssetPublisherUtil.getClassName(assetRendererFactory);
 	}
 
 	protected String[] getClassTypeIds(
@@ -567,7 +562,7 @@ public class AssetPublisherConfigurationAction
 		if (selectionStyle.equals("manual") ||
 			selectionStyle.equals("view-count")) {
 
-			preferences.setValue("enableRss", String.valueOf(false));
+			preferences.setValue("enableRss", Boolean.FALSE.toString());
 			preferences.setValue("showQueryLogic", Boolean.FALSE.toString());
 
 			preferences.reset("rssDelta");
@@ -621,6 +616,12 @@ public class AssetPublisherConfigurationAction
 		layout = layoutLocalService.updateLayout(
 			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
 			layout.getTypeSettings());
+
+		if (layout.isSupportsEmbeddedPortlets() &&
+			layout.isPortletEmbedded(portletResource, layout.getGroupId())) {
+
+			return;
+		}
 
 		if (LayoutStagingUtil.isBranchingLayout(layout)) {
 			HttpServletRequest request = portal.getHttpServletRequest(

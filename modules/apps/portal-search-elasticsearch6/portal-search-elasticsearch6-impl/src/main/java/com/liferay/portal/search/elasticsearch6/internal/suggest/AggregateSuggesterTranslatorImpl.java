@@ -53,10 +53,7 @@ public class AggregateSuggesterTranslatorImpl
 			for (Map.Entry<String, SuggestionBuilder<?>> suggestionBuilder :
 					suggestionBuilders.entrySet()) {
 
-				suggestionBuilder.getValue(
-				).text(
-					null
-				);
+				suggestionBuilder.getValue().text(null);
 
 				// GSearch modified
 				// Bug in original code: having multiple suggester with same name causes a name conflict

@@ -211,6 +211,10 @@ public class AssetUtil {
 			PermissionChecker permissionChecker, long[] categoryIds)
 		throws PortalException {
 
+		if (permissionChecker == null) {
+			return categoryIds;
+		}
+
 		List<Long> viewableCategoryIds = new ArrayList<>();
 
 		for (long categoryId : categoryIds) {
@@ -240,8 +244,8 @@ public class AssetUtil {
 
 				@Override
 				public boolean filter(AssetVocabulary assetVocabulary) {
-					return
-						assetVocabulary.isAssociatedToClassNameIdAndClassTypePK(
+					return assetVocabulary.
+						isAssociatedToClassNameIdAndClassTypePK(
 							classNameId, classTypePK);
 				}
 
@@ -380,7 +384,7 @@ public class AssetUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getAddPortletURL(LiferayPortletRequest,
 	 *             LiferayPortletResponse, long, String, long, long[], String[],
 	 *             String)}
@@ -485,7 +489,7 @@ public class AssetUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getAddPortletURLs(LiferayPortletRequest,
 	 *             LiferayPortletResponse, long, long[], long[], long[],
 	 *             String[], String)}
@@ -841,7 +845,8 @@ public class AssetUtil {
 
 		searchContext.setClassTypeIds(assetEntryQuery.getClassTypeIds());
 		searchContext.setEnd(end);
-		searchContext.setGroupIds(assetEntryQuery.getGroupIds());
+		searchContext.setGroupIds(
+			ArrayUtil.clone(assetEntryQuery.getGroupIds()));
 
 		if (Validator.isNull(assetEntryQuery.getKeywords())) {
 			QueryConfig queryConfig = searchContext.getQueryConfig();

@@ -19,6 +19,7 @@ import com.liferay.document.library.kernel.model.DLSyncConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -102,14 +103,15 @@ public abstract class DLAppTestUtil {
 			FileEntry fileEntry, ServiceContext serviceContext)
 		throws Exception {
 
+		FileVersion fileVersion = fileEntry.getFileVersion();
+
 		Map<String, Serializable> workflowContext = new HashMap<>();
 
 		workflowContext.put(WorkflowConstants.CONTEXT_URL, "http://localhost");
 		workflowContext.put("event", DLSyncConstants.EVENT_ADD);
 
 		DLFileEntryLocalServiceUtil.updateStatus(
-			TestPropsValues.getUserId(),
-			fileEntry.getFileVersion().getFileVersionId(),
+			TestPropsValues.getUserId(), fileVersion.getFileVersionId(),
 			WorkflowConstants.STATUS_APPROVED, serviceContext, workflowContext);
 
 		return DLAppLocalServiceUtil.getFileEntry(fileEntry.getFileEntryId());

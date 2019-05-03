@@ -652,6 +652,7 @@ public class WSRPConsumerPortletLocalServiceImpl
 
 	protected com.liferay.portal.kernel.xml.QName getQName(QName qName) {
 		String localPart = qName.getLocalPart();
+
 		String prefix = qName.getPrefix();
 		String namespaceURI = qName.getNamespaceURI();
 

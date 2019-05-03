@@ -23,8 +23,6 @@ import java.io.IOException;
 
 import java.nio.file.Path;
 
-import java.util.List;
-
 import name.pachler.nio.file.ClosedWatchServiceException;
 import name.pachler.nio.file.FileSystem;
 import name.pachler.nio.file.FileSystems;
@@ -144,19 +142,17 @@ public class JPathWatcher extends Watcher {
 					continue;
 				}
 
-				List<WatchEvent<?>> watchEvents = watchKey.pollEvents();
+				for (WatchEvent<?> watchEvent : watchKey.pollEvents()) {
+					WatchEvent<Path> pathWatchEvent =
+						(WatchEvent<Path>)watchEvent;
 
-				for (int i = 0; i < watchEvents.size(); i++) {
-					WatchEvent<Path> watchEvent =
-						(WatchEvent<Path>)watchEvents.get(i);
-
-					PathImpl pathImpl = (PathImpl)watchEvent.context();
+					PathImpl pathImpl = (PathImpl)pathWatchEvent.context();
 
 					if (pathImpl == null) {
 						continue;
 					}
 
-					WatchEvent.Kind<?> kind = watchEvent.kind();
+					WatchEvent.Kind<?> kind = pathWatchEvent.kind();
 
 					Path childFilePath = parentFilePath.resolve(
 						pathImpl.toString());

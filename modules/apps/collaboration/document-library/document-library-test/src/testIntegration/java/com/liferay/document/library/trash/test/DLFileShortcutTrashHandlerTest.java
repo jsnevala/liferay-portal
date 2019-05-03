@@ -267,7 +267,6 @@ public class DLFileShortcutTrashHandlerTest
 
 		PermissionThreadLocal.setPermissionChecker(
 			new SimplePermissionChecker() {
-
 				{
 					init(TestPropsValues.getUser());
 				}

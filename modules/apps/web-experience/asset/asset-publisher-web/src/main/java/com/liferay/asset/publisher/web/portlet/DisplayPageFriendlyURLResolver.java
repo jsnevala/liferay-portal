@@ -29,6 +29,10 @@ import com.liferay.portal.kernel.model.LayoutTypePortletConstants;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.InheritableMap;
@@ -37,6 +41,8 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.permission.WorkflowPermissionUtil;
 
 import java.util.List;
 import java.util.Locale;
@@ -50,7 +56,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(service = FriendlyURLResolver.class)
 public class DisplayPageFriendlyURLResolver implements FriendlyURLResolver {
@@ -66,7 +72,25 @@ public class DisplayPageFriendlyURLResolver implements FriendlyURLResolver {
 			JournalArticleConstants.CANONICAL_URL_SEPARATOR.length());
 
 		JournalArticle journalArticle =
-			_journalArticleLocalService.getArticleByUrlTitle(groupId, urlTitle);
+			_journalArticleLocalService.fetchLatestArticleByUrlTitle(
+				groupId, urlTitle, WorkflowConstants.STATUS_APPROVED);
+
+		if (journalArticle == null) {
+			PermissionChecker permissionChecker =
+				PermissionThreadLocal.getPermissionChecker();
+
+			journalArticle =
+				_journalArticleLocalService.getLatestArticleByUrlTitle(
+					groupId, urlTitle, WorkflowConstants.STATUS_PENDING);
+
+			if (!WorkflowPermissionUtil.hasPermission(
+					permissionChecker, groupId,
+					"com.liferay.journal.mode.JournalArticle",
+					journalArticle.getId(), ActionKeys.VIEW)) {
+
+				throw new PrincipalException();
+			}
+		}
 
 		Layout layout = getJournalArticleLayout(
 			groupId, privateLayout, friendlyURL);
@@ -188,7 +212,14 @@ public class DisplayPageFriendlyURLResolver implements FriendlyURLResolver {
 			JournalArticleConstants.CANONICAL_URL_SEPARATOR.length());
 
 		JournalArticle journalArticle =
-			_journalArticleLocalService.getArticleByUrlTitle(groupId, urlTitle);
+			_journalArticleLocalService.fetchLatestArticleByUrlTitle(
+				groupId, urlTitle, WorkflowConstants.STATUS_APPROVED);
+
+		if (journalArticle == null) {
+			journalArticle =
+				_journalArticleLocalService.getLatestArticleByUrlTitle(
+					groupId, urlTitle, WorkflowConstants.STATUS_ANY);
+		}
 
 		return _layoutLocalService.getLayoutByUuidAndGroupId(
 			journalArticle.getLayoutUuid(), groupId, privateLayout);

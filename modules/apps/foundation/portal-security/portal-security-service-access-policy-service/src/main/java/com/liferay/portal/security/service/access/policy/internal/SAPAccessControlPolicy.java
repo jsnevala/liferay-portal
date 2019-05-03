@@ -93,7 +93,10 @@ public class SAPAccessControlPolicy extends BaseAccessControlPolicy {
 		}
 
 		String classNameAndMethodName = className.concat(
-			StringPool.POUND).concat(methodName);
+			StringPool.POUND
+		).concat(
+			methodName
+		);
 
 		if (allowedServiceSignatures.contains(classNameAndMethodName)) {
 			return;

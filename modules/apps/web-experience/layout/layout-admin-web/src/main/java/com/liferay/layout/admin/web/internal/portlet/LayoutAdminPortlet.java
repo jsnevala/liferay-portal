@@ -143,14 +143,14 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=Layouts Admin",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + LayoutAdminPortletKeys.LAYOUT_ADMIN,
 		"javax.portlet.resource-bundle=content.Language",
 		"javax.portlet.security-role-ref=administrator",
 		"javax.portlet.supports.mime-type=text/html"
 	},
-	service = {Portlet.class}
+	service = Portlet.class
 )
 public class LayoutAdminPortlet extends MVCPortlet {
 
@@ -467,6 +467,7 @@ public class LayoutAdminPortlet extends MVCPortlet {
 			groupId, privateLayout, layoutId);
 
 		String currentType = layout.getType();
+		String oldFriendlyURL = layout.getFriendlyURL();
 
 		layout = layoutService.updateLayout(
 			groupId, privateLayout, layoutId, layout.getParentLayoutId(),
@@ -537,9 +538,18 @@ public class LayoutAdminPortlet extends MVCPortlet {
 			stagingGroupId, privateLayout, layout.getLayoutId(),
 			layout.getTypeSettingsProperties());
 
-		String redirect = portal.getLayoutFullURL(layout, themeDisplay);
-
 		MultiSessionMessages.add(actionRequest, "layoutUpdated", layout);
+
+		String redirect = ParamUtil.getString(actionRequest, "redirect");
+
+		if (Validator.isNull(redirect) || redirect.endsWith(oldFriendlyURL)) {
+			redirect = portal.getLayoutFullURL(layout, themeDisplay);
+		}
+
+		if (layout.isTypeURL()) {
+			redirect = portal.getGroupFriendlyURL(
+				layout.getLayoutSet(), themeDisplay);
+		}
 
 		actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
 	}
@@ -568,8 +578,6 @@ public class LayoutAdminPortlet extends MVCPortlet {
 			stagingGroupId, privateLayout, layoutSet.getSettingsProperties());
 
 		updateMergePages(actionRequest, liveGroupId);
-
-		updateRobots(actionRequest, liveGroupId, privateLayout);
 
 		updateSettings(
 			actionRequest, liveGroupId, stagingGroupId, privateLayout,
@@ -1315,7 +1323,7 @@ public class LayoutAdminPortlet extends MVCPortlet {
 		groupService.updateGroup(liveGroupId, liveGroup.getTypeSettings());
 	}
 
-	protected void updateRobots(
+	protected String updateRobots(
 			ActionRequest actionRequest, long liveGroupId,
 			boolean privateLayout)
 		throws Exception {
@@ -1339,6 +1347,8 @@ public class LayoutAdminPortlet extends MVCPortlet {
 
 		groupService.updateGroup(
 			liveGroup.getGroupId(), typeSettingsProperties.toString());
+
+		return robots;
 	}
 
 	protected void updateSettings(
@@ -1357,6 +1367,16 @@ public class LayoutAdminPortlet extends MVCPortlet {
 		if (stagingGroupId > 0) {
 			groupId = stagingGroupId;
 		}
+
+		String robots = updateRobots(actionRequest, liveGroupId, privateLayout);
+
+		String robotsPropertyName = "false-robots.txt";
+
+		if (privateLayout) {
+			robotsPropertyName = "true-robots.txt";
+		}
+
+		settingsProperties.put(robotsPropertyName, robots);
 
 		layoutSetService.updateSettings(
 			groupId, privateLayout, settingsProperties.toString());

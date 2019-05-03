@@ -15,8 +15,6 @@
 package com.liferay.portlet.ratings.service.impl;
 
 import com.liferay.asset.kernel.model.AssetEntry;
-import com.liferay.blogs.kernel.model.BlogsEntry;
-import com.liferay.blogs.kernel.model.BlogsStatsUser;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -91,6 +89,21 @@ public class RatingsEntryLocalServiceImpl
 		stats.setAverageScore(averageScore);
 
 		ratingsStatsPersistence.update(stats);
+
+		// Social
+
+		AssetEntry assetEntry = assetEntryLocalService.fetchEntry(
+			className, classPK);
+
+		if (assetEntry != null) {
+			JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
+
+			extraDataJSONObject.put("title", assetEntry.getTitle());
+
+			SocialActivityManagerUtil.addActivity(
+				userId, assetEntry, SocialActivityConstants.TYPE_REVOKE_VOTE,
+				extraDataJSONObject.toString(), 0);
+		}
 	}
 
 	@Override
@@ -104,7 +117,7 @@ public class RatingsEntryLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -176,8 +189,6 @@ public class RatingsEntryLocalServiceImpl
 
 		// Entry
 
-		boolean newEntry = false;
-
 		long classNameId = classNameLocalService.getClassNameId(className);
 		double oldScore = 0;
 
@@ -209,8 +220,6 @@ public class RatingsEntryLocalServiceImpl
 			ratingsStatsPersistence.update(stats);
 		}
 		else {
-			newEntry = true;
-
 			User user = userPersistence.findByPrimaryKey(userId);
 
 			long entryId = counterLocalService.increment();
@@ -241,38 +250,6 @@ public class RatingsEntryLocalServiceImpl
 				stats.getTotalScore() / stats.getTotalEntries());
 
 			ratingsStatsPersistence.update(stats);
-		}
-
-		// Blogs entry
-
-		if (className.equals(BlogsEntry.class.getName())) {
-			BlogsEntry blogsEntry = blogsEntryPersistence.findByPrimaryKey(
-				classPK);
-
-			BlogsStatsUser blogsStatsUser =
-				blogsStatsUserLocalService.getStatsUser(
-					blogsEntry.getGroupId(), blogsEntry.getUserId());
-
-			int ratingsTotalEntries = blogsStatsUser.getRatingsTotalEntries();
-			double ratingsTotalScore = blogsStatsUser.getRatingsTotalScore();
-			double ratingsAverageScore =
-				blogsStatsUser.getRatingsAverageScore();
-
-			if (newEntry) {
-				ratingsTotalEntries++;
-				ratingsTotalScore += score;
-			}
-			else {
-				ratingsTotalScore = ratingsTotalScore - oldScore + score;
-			}
-
-			ratingsAverageScore = ratingsTotalScore / ratingsTotalEntries;
-
-			blogsStatsUser.setRatingsTotalEntries(ratingsTotalEntries);
-			blogsStatsUser.setRatingsTotalScore(ratingsTotalScore);
-			blogsStatsUser.setRatingsAverageScore(ratingsAverageScore);
-
-			blogsStatsUserPersistence.update(blogsStatsUser);
 		}
 
 		// Social

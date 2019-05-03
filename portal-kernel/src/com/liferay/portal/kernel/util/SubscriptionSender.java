@@ -66,7 +66,7 @@ import javax.mail.internet.InternetAddress;
 
 /**
  * @author Brian Wing Shun Chan
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Raymond Augé
  * @author Sergio González
  * @author Roberto Díaz
@@ -232,7 +232,8 @@ public class SubscriptionSender implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link getCurrentUserId()}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             getCurrentUserId()}
 	 */
 	@Deprecated
 	public long getUserId() {
@@ -370,15 +371,14 @@ public class SubscriptionSender implements Serializable {
 		_localizedContext.put(key, value);
 	}
 
-	public <T extends Serializable & Function<Locale, String>>
-		void setLocalizedContextAttribute(String key, T function) {
+	public <T extends Serializable & Function<Locale, String>> void
+		setLocalizedContextAttribute(String key, T function) {
 
 		setLocalizedContextAttribute(key, function, true);
 	}
 
-	public <T extends Serializable & Function<Locale, String>>
-		void setLocalizedContextAttribute(
-			String key, T function, boolean escape) {
+	public <T extends Serializable & Function<Locale, String>> void
+		setLocalizedContextAttribute(String key, T function, boolean escape) {
 
 		setLocalizedContextAttribute(
 			key, new EscapableLocalizableFunction(function, escape));
@@ -457,7 +457,8 @@ public class SubscriptionSender implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #setCurrentUserId(long)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #setCurrentUserId(long)}
 	 */
 	@Deprecated
 	public void setUserId(long userId) {
@@ -636,7 +637,7 @@ public class SubscriptionSender implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #notifyPersistedSubscriber(Subscription)}
 	 */
 	@Deprecated

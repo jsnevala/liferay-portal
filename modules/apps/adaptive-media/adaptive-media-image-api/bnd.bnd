@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Adaptive Media Image API
 Bundle-SymbolicName: com.liferay.adaptive.media.image.api
-Bundle-Version: 1.1.4
+Bundle-Version: 1.1.13
 Export-Package:\
 	com.liferay.adaptive.media.image.configuration,\
 	com.liferay.adaptive.media.image.constants,\
@@ -19,5 +19,4 @@ Export-Package:\
 	com.liferay.adaptive.media.image.url,\
 	com.liferay.adaptive.media.image.util,\
 	com.liferay.adaptive.media.image.validator
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Adaptive Media

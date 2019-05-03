@@ -17,7 +17,6 @@ package com.liferay.portlet.messageboards.service.http;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.message.boards.kernel.service.MBCategoryServiceUtil;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -26,19 +25,20 @@ import java.rmi.RemoteException;
 
 /**
  * Provides the SOAP utility for the
- * {@link MBCategoryServiceUtil} service utility. The
- * static methods of this class calls the same methods of the service utility.
- * However, the signatures are different because it is difficult for SOAP to
- * support certain types.
+ * <code>MBCategoryServiceUtil</code> service
+ * utility. The static methods of this class call the same methods of the
+ * service utility. However, the signatures are different because it is
+ * difficult for SOAP to support certain types.
  *
  * <p>
  * ServiceBuilder follows certain rules in translating the methods. For example,
- * if the method in the service utility returns a {@link java.util.List}, that
- * is translated to an array of {@link com.liferay.message.boards.kernel.model.MBCategorySoap}.
- * If the method in the service utility returns a
- * {@link com.liferay.message.boards.kernel.model.MBCategory}, that is translated to a
- * {@link com.liferay.message.boards.kernel.model.MBCategorySoap}. Methods that SOAP cannot
- * safely wire are skipped.
+ * if the method in the service utility returns a <code>java.util.List</code>,
+ * that is translated to an array of
+ * <code>com.liferay.message.boards.kernel.model.MBCategorySoap</code>. If the method in the
+ * service utility returns a
+ * <code>com.liferay.message.boards.kernel.model.MBCategory</code>, that is translated to a
+ * <code>com.liferay.message.boards.kernel.model.MBCategorySoap</code>. Methods that SOAP
+ * cannot safely wire are skipped.
  * </p>
  *
  * <p>
@@ -60,53 +60,26 @@ import java.rmi.RemoteException;
  *
  * @author Brian Wing Shun Chan
  * @see MBCategoryServiceHttp
- * @see com.liferay.message.boards.kernel.model.MBCategorySoap
- * @see MBCategoryServiceUtil
  * @generated
  */
 @ProviderType
 public class MBCategoryServiceSoap {
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap addCategory(
-		long userId, long parentCategoryId, java.lang.String name,
-		java.lang.String description,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap
+			addCategory(
+				long userId, long parentCategoryId, String name,
+				String description,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws RemoteException {
+
 		try {
-			com.liferay.message.boards.kernel.model.MBCategory returnValue = MBCategoryServiceUtil.addCategory(userId,
-					parentCategoryId, name, description, serviceContext);
-
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModel(returnValue);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-
-			throw new RemoteException(e.getMessage());
-		}
-	}
-
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap addCategory(
-		long parentCategoryId, java.lang.String name,
-		java.lang.String description, java.lang.String displayStyle,
-		java.lang.String emailAddress, java.lang.String inProtocol,
-		java.lang.String inServerName, int inServerPort, boolean inUseSSL,
-		java.lang.String inUserName, java.lang.String inPassword,
-		int inReadInterval, java.lang.String outEmailAddress,
-		boolean outCustom, java.lang.String outServerName, int outServerPort,
-		boolean outUseSSL, java.lang.String outUserName,
-		java.lang.String outPassword, boolean mailingListActive,
-		boolean allowAnonymousEmail,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws RemoteException {
-		try {
-			com.liferay.message.boards.kernel.model.MBCategory returnValue = MBCategoryServiceUtil.addCategory(parentCategoryId,
-					name, description, displayStyle, emailAddress, inProtocol,
-					inServerName, inServerPort, inUseSSL, inUserName,
-					inPassword, inReadInterval, outEmailAddress, outCustom,
-					outServerName, outServerPort, outUseSSL, outUserName,
-					outPassword, mailingListActive, allowAnonymousEmail,
+			com.liferay.message.boards.kernel.model.MBCategory returnValue =
+				MBCategoryServiceUtil.addCategory(
+					userId, parentCategoryId, name, description,
 					serviceContext);
 
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModel(returnValue);
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -115,11 +88,46 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static void deleteCategory(long categoryId,
-		boolean includeTrashedEntries) throws RemoteException {
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap
+			addCategory(
+				long parentCategoryId, String name, String description,
+				String displayStyle, String emailAddress, String inProtocol,
+				String inServerName, int inServerPort, boolean inUseSSL,
+				String inUserName, String inPassword, int inReadInterval,
+				String outEmailAddress, boolean outCustom, String outServerName,
+				int outServerPort, boolean outUseSSL, String outUserName,
+				String outPassword, boolean mailingListActive,
+				boolean allowAnonymousEmail,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws RemoteException {
+
 		try {
-			MBCategoryServiceUtil.deleteCategory(categoryId,
-				includeTrashedEntries);
+			com.liferay.message.boards.kernel.model.MBCategory returnValue =
+				MBCategoryServiceUtil.addCategory(
+					parentCategoryId, name, description, displayStyle,
+					emailAddress, inProtocol, inServerName, inServerPort,
+					inUseSSL, inUserName, inPassword, inReadInterval,
+					outEmailAddress, outCustom, outServerName, outServerPort,
+					outUseSSL, outUserName, outPassword, mailingListActive,
+					allowAnonymousEmail, serviceContext);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModel(returnValue);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			throw new RemoteException(e.getMessage());
+		}
+	}
+
+	public static void deleteCategory(
+			long categoryId, boolean includeTrashedEntries)
+		throws RemoteException {
+
+		try {
+			MBCategoryServiceUtil.deleteCategory(
+				categoryId, includeTrashedEntries);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -130,6 +138,7 @@ public class MBCategoryServiceSoap {
 
 	public static void deleteCategory(long groupId, long categoryId)
 		throws RemoteException {
+
 		try {
 			MBCategoryServiceUtil.deleteCategory(groupId, categoryId);
 		}
@@ -140,45 +149,98 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap[] getCategories(
-		long groupId) throws RemoteException {
-		try {
-			java.util.List<com.liferay.message.boards.kernel.model.MBCategory> returnValue =
-				MBCategoryServiceUtil.getCategories(groupId);
-
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModels(returnValue);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-
-			throw new RemoteException(e.getMessage());
-		}
-	}
-
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap[] getCategories(
-		long groupId, int status) throws RemoteException {
-		try {
-			java.util.List<com.liferay.message.boards.kernel.model.MBCategory> returnValue =
-				MBCategoryServiceUtil.getCategories(groupId, status);
-
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModels(returnValue);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-
-			throw new RemoteException(e.getMessage());
-		}
-	}
-
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap[] getCategories(
-		long groupId, long parentCategoryId, int start, int end)
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap[]
+			getCategories(long groupId)
 		throws RemoteException {
+
 		try {
-			java.util.List<com.liferay.message.boards.kernel.model.MBCategory> returnValue =
-				MBCategoryServiceUtil.getCategories(groupId, parentCategoryId,
+			java.util.List<com.liferay.message.boards.kernel.model.MBCategory>
+				returnValue = MBCategoryServiceUtil.getCategories(groupId);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModels(returnValue);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			throw new RemoteException(e.getMessage());
+		}
+	}
+
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap[]
+			getCategories(long groupId, int status)
+		throws RemoteException {
+
+		try {
+			java.util.List<com.liferay.message.boards.kernel.model.MBCategory>
+				returnValue = MBCategoryServiceUtil.getCategories(
+					groupId, status);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModels(returnValue);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			throw new RemoteException(e.getMessage());
+		}
+	}
+
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap[]
+			getCategories(
+				long groupId, long parentCategoryId, int start, int end)
+		throws RemoteException {
+
+		try {
+			java.util.List<com.liferay.message.boards.kernel.model.MBCategory>
+				returnValue = MBCategoryServiceUtil.getCategories(
+					groupId, parentCategoryId, start, end);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModels(returnValue);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			throw new RemoteException(e.getMessage());
+		}
+	}
+
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap[]
+			getCategories(
+				long groupId, long parentCategoryId, int status, int start,
+				int end)
+		throws RemoteException {
+
+		try {
+			java.util.List<com.liferay.message.boards.kernel.model.MBCategory>
+				returnValue = MBCategoryServiceUtil.getCategories(
+					groupId, parentCategoryId, status, start, end);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModels(returnValue);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			throw new RemoteException(e.getMessage());
+		}
+	}
+
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap[]
+			getCategories(
+				long groupId, long excludedCategoryId, long parentCategoryId,
+				int status, int start, int end)
+		throws RemoteException {
+
+		try {
+			java.util.List<com.liferay.message.boards.kernel.model.MBCategory>
+				returnValue = MBCategoryServiceUtil.getCategories(
+					groupId, excludedCategoryId, parentCategoryId, status,
 					start, end);
 
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModels(returnValue);
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModels(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -187,15 +249,18 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap[] getCategories(
-		long groupId, long parentCategoryId, int status, int start, int end)
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap[]
+			getCategories(
+				long groupId, long[] parentCategoryIds, int start, int end)
 		throws RemoteException {
-		try {
-			java.util.List<com.liferay.message.boards.kernel.model.MBCategory> returnValue =
-				MBCategoryServiceUtil.getCategories(groupId, parentCategoryId,
-					status, start, end);
 
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModels(returnValue);
+		try {
+			java.util.List<com.liferay.message.boards.kernel.model.MBCategory>
+				returnValue = MBCategoryServiceUtil.getCategories(
+					groupId, parentCategoryIds, start, end);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModels(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -204,32 +269,41 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap[] getCategories(
-		long groupId, long excludedCategoryId, long parentCategoryId,
-		int status, int start, int end) throws RemoteException {
-		try {
-			java.util.List<com.liferay.message.boards.kernel.model.MBCategory> returnValue =
-				MBCategoryServiceUtil.getCategories(groupId,
-					excludedCategoryId, parentCategoryId, status, start, end);
-
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModels(returnValue);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-
-			throw new RemoteException(e.getMessage());
-		}
-	}
-
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap[] getCategories(
-		long groupId, long[] parentCategoryIds, int start, int end)
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap[]
+			getCategories(
+				long groupId, long[] parentCategoryIds, int status, int start,
+				int end)
 		throws RemoteException {
+
 		try {
-			java.util.List<com.liferay.message.boards.kernel.model.MBCategory> returnValue =
-				MBCategoryServiceUtil.getCategories(groupId, parentCategoryIds,
+			java.util.List<com.liferay.message.boards.kernel.model.MBCategory>
+				returnValue = MBCategoryServiceUtil.getCategories(
+					groupId, parentCategoryIds, status, start, end);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModels(returnValue);
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			throw new RemoteException(e.getMessage());
+		}
+	}
+
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap[]
+			getCategories(
+				long groupId, long[] excludedCategoryIds,
+				long[] parentCategoryIds, int status, int start, int end)
+		throws RemoteException {
+
+		try {
+			java.util.List<com.liferay.message.boards.kernel.model.MBCategory>
+				returnValue = MBCategoryServiceUtil.getCategories(
+					groupId, excludedCategoryIds, parentCategoryIds, status,
 					start, end);
 
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModels(returnValue);
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModels(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -238,45 +312,14 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap[] getCategories(
-		long groupId, long[] parentCategoryIds, int status, int start, int end)
+	public static int getCategoriesAndThreadsCount(
+			long groupId, long categoryId)
 		throws RemoteException {
+
 		try {
-			java.util.List<com.liferay.message.boards.kernel.model.MBCategory> returnValue =
-				MBCategoryServiceUtil.getCategories(groupId, parentCategoryIds,
-					status, start, end);
-
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModels(returnValue);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-
-			throw new RemoteException(e.getMessage());
-		}
-	}
-
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap[] getCategories(
-		long groupId, long[] excludedCategoryIds, long[] parentCategoryIds,
-		int status, int start, int end) throws RemoteException {
-		try {
-			java.util.List<com.liferay.message.boards.kernel.model.MBCategory> returnValue =
-				MBCategoryServiceUtil.getCategories(groupId,
-					excludedCategoryIds, parentCategoryIds, status, start, end);
-
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModels(returnValue);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-
-			throw new RemoteException(e.getMessage());
-		}
-	}
-
-	public static int getCategoriesAndThreadsCount(long groupId, long categoryId)
-		throws RemoteException {
-		try {
-			int returnValue = MBCategoryServiceUtil.getCategoriesAndThreadsCount(groupId,
-					categoryId);
+			int returnValue =
+				MBCategoryServiceUtil.getCategoriesAndThreadsCount(
+					groupId, categoryId);
 
 			return returnValue;
 		}
@@ -287,11 +330,14 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static int getCategoriesAndThreadsCount(long groupId,
-		long categoryId, int status) throws RemoteException {
+	public static int getCategoriesAndThreadsCount(
+			long groupId, long categoryId, int status)
+		throws RemoteException {
+
 		try {
-			int returnValue = MBCategoryServiceUtil.getCategoriesAndThreadsCount(groupId,
-					categoryId, status);
+			int returnValue =
+				MBCategoryServiceUtil.getCategoriesAndThreadsCount(
+					groupId, categoryId, status);
 
 			return returnValue;
 		}
@@ -302,13 +348,16 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static int getCategoriesAndThreadsCount(long groupId,
-		long categoryId,
-		com.liferay.portal.kernel.dao.orm.QueryDefinition<?> queryDefinition)
+	public static int getCategoriesAndThreadsCount(
+			long groupId, long categoryId,
+			com.liferay.portal.kernel.dao.orm.QueryDefinition<?>
+				queryDefinition)
 		throws RemoteException {
+
 		try {
-			int returnValue = MBCategoryServiceUtil.getCategoriesAndThreadsCount(groupId,
-					categoryId, queryDefinition);
+			int returnValue =
+				MBCategoryServiceUtil.getCategoriesAndThreadsCount(
+					groupId, categoryId, queryDefinition);
 
 			return returnValue;
 		}
@@ -321,9 +370,10 @@ public class MBCategoryServiceSoap {
 
 	public static int getCategoriesCount(long groupId, long parentCategoryId)
 		throws RemoteException {
+
 		try {
-			int returnValue = MBCategoryServiceUtil.getCategoriesCount(groupId,
-					parentCategoryId);
+			int returnValue = MBCategoryServiceUtil.getCategoriesCount(
+				groupId, parentCategoryId);
 
 			return returnValue;
 		}
@@ -334,11 +384,13 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static int getCategoriesCount(long groupId, long parentCategoryId,
-		int status) throws RemoteException {
+	public static int getCategoriesCount(
+			long groupId, long parentCategoryId, int status)
+		throws RemoteException {
+
 		try {
-			int returnValue = MBCategoryServiceUtil.getCategoriesCount(groupId,
-					parentCategoryId, status);
+			int returnValue = MBCategoryServiceUtil.getCategoriesCount(
+				groupId, parentCategoryId, status);
 
 			return returnValue;
 		}
@@ -349,11 +401,14 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static int getCategoriesCount(long groupId, long excludedCategoryId,
-		long parentCategoryId, int status) throws RemoteException {
+	public static int getCategoriesCount(
+			long groupId, long excludedCategoryId, long parentCategoryId,
+			int status)
+		throws RemoteException {
+
 		try {
-			int returnValue = MBCategoryServiceUtil.getCategoriesCount(groupId,
-					excludedCategoryId, parentCategoryId, status);
+			int returnValue = MBCategoryServiceUtil.getCategoriesCount(
+				groupId, excludedCategoryId, parentCategoryId, status);
 
 			return returnValue;
 		}
@@ -366,9 +421,10 @@ public class MBCategoryServiceSoap {
 
 	public static int getCategoriesCount(long groupId, long[] parentCategoryIds)
 		throws RemoteException {
+
 		try {
-			int returnValue = MBCategoryServiceUtil.getCategoriesCount(groupId,
-					parentCategoryIds);
+			int returnValue = MBCategoryServiceUtil.getCategoriesCount(
+				groupId, parentCategoryIds);
 
 			return returnValue;
 		}
@@ -379,27 +435,13 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static int getCategoriesCount(long groupId,
-		long[] parentCategoryIds, int status) throws RemoteException {
-		try {
-			int returnValue = MBCategoryServiceUtil.getCategoriesCount(groupId,
-					parentCategoryIds, status);
-
-			return returnValue;
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-
-			throw new RemoteException(e.getMessage());
-		}
-	}
-
-	public static int getCategoriesCount(long groupId,
-		long[] excludedCategoryIds, long[] parentCategoryIds, int status)
+	public static int getCategoriesCount(
+			long groupId, long[] parentCategoryIds, int status)
 		throws RemoteException {
+
 		try {
-			int returnValue = MBCategoryServiceUtil.getCategoriesCount(groupId,
-					excludedCategoryIds, parentCategoryIds, status);
+			int returnValue = MBCategoryServiceUtil.getCategoriesCount(
+				groupId, parentCategoryIds, status);
 
 			return returnValue;
 		}
@@ -410,12 +452,34 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap getCategory(
-		long categoryId) throws RemoteException {
-		try {
-			com.liferay.message.boards.kernel.model.MBCategory returnValue = MBCategoryServiceUtil.getCategory(categoryId);
+	public static int getCategoriesCount(
+			long groupId, long[] excludedCategoryIds, long[] parentCategoryIds,
+			int status)
+		throws RemoteException {
 
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModel(returnValue);
+		try {
+			int returnValue = MBCategoryServiceUtil.getCategoriesCount(
+				groupId, excludedCategoryIds, parentCategoryIds, status);
+
+			return returnValue;
+		}
+		catch (Exception e) {
+			_log.error(e, e);
+
+			throw new RemoteException(e.getMessage());
+		}
+	}
+
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap
+			getCategory(long categoryId)
+		throws RemoteException {
+
+		try {
+			com.liferay.message.boards.kernel.model.MBCategory returnValue =
+				MBCategoryServiceUtil.getCategory(categoryId);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -426,9 +490,10 @@ public class MBCategoryServiceSoap {
 
 	public static long[] getCategoryIds(long groupId, long categoryId)
 		throws RemoteException {
+
 		try {
-			long[] returnValue = MBCategoryServiceUtil.getCategoryIds(groupId,
-					categoryId);
+			long[] returnValue = MBCategoryServiceUtil.getCategoryIds(
+				groupId, categoryId);
 
 			return returnValue;
 		}
@@ -439,13 +504,16 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static java.lang.Long[] getSubcategoryIds(Long[] categoryIds,
-		long groupId, long categoryId) throws RemoteException {
-		try {
-			java.util.List<java.lang.Long> returnValue = MBCategoryServiceUtil.getSubcategoryIds(ListUtil.toList(
-						categoryIds), groupId, categoryId);
+	public static Long[] getSubcategoryIds(
+			Long[] categoryIds, long groupId, long categoryId)
+		throws RemoteException {
 
-			return returnValue.toArray(new java.lang.Long[returnValue.size()]);
+		try {
+			java.util.List<Long> returnValue =
+				MBCategoryServiceUtil.getSubcategoryIds(
+					ListUtil.toList(categoryIds), groupId, categoryId);
+
+			return returnValue.toArray(new Long[returnValue.size()]);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -454,15 +522,18 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap[] getSubscribedCategories(
-		long groupId, long userId, int start, int end)
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap[]
+			getSubscribedCategories(
+				long groupId, long userId, int start, int end)
 		throws RemoteException {
-		try {
-			java.util.List<com.liferay.message.boards.kernel.model.MBCategory> returnValue =
-				MBCategoryServiceUtil.getSubscribedCategories(groupId, userId,
-					start, end);
 
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModels(returnValue);
+		try {
+			java.util.List<com.liferay.message.boards.kernel.model.MBCategory>
+				returnValue = MBCategoryServiceUtil.getSubscribedCategories(
+					groupId, userId, start, end);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModels(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -473,9 +544,11 @@ public class MBCategoryServiceSoap {
 
 	public static int getSubscribedCategoriesCount(long groupId, long userId)
 		throws RemoteException {
+
 		try {
-			int returnValue = MBCategoryServiceUtil.getSubscribedCategoriesCount(groupId,
-					userId);
+			int returnValue =
+				MBCategoryServiceUtil.getSubscribedCategoriesCount(
+					groupId, userId);
 
 			return returnValue;
 		}
@@ -486,14 +559,19 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap moveCategory(
-		long categoryId, long parentCategoryId, boolean mergeWithParentCategory)
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap
+			moveCategory(
+				long categoryId, long parentCategoryId,
+				boolean mergeWithParentCategory)
 		throws RemoteException {
-		try {
-			com.liferay.message.boards.kernel.model.MBCategory returnValue = MBCategoryServiceUtil.moveCategory(categoryId,
-					parentCategoryId, mergeWithParentCategory);
 
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModel(returnValue);
+		try {
+			com.liferay.message.boards.kernel.model.MBCategory returnValue =
+				MBCategoryServiceUtil.moveCategory(
+					categoryId, parentCategoryId, mergeWithParentCategory);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -502,13 +580,17 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap moveCategoryFromTrash(
-		long categoryId, long newCategoryId) throws RemoteException {
-		try {
-			com.liferay.message.boards.kernel.model.MBCategory returnValue = MBCategoryServiceUtil.moveCategoryFromTrash(categoryId,
-					newCategoryId);
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap
+			moveCategoryFromTrash(long categoryId, long newCategoryId)
+		throws RemoteException {
 
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModel(returnValue);
+		try {
+			com.liferay.message.boards.kernel.model.MBCategory returnValue =
+				MBCategoryServiceUtil.moveCategoryFromTrash(
+					categoryId, newCategoryId);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -517,12 +599,16 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap moveCategoryToTrash(
-		long categoryId) throws RemoteException {
-		try {
-			com.liferay.message.boards.kernel.model.MBCategory returnValue = MBCategoryServiceUtil.moveCategoryToTrash(categoryId);
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap
+			moveCategoryToTrash(long categoryId)
+		throws RemoteException {
 
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModel(returnValue);
+		try {
+			com.liferay.message.boards.kernel.model.MBCategory returnValue =
+				MBCategoryServiceUtil.moveCategoryToTrash(categoryId);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -533,6 +619,7 @@ public class MBCategoryServiceSoap {
 
 	public static void restoreCategoryFromTrash(long categoryId)
 		throws RemoteException {
+
 		try {
 			MBCategoryServiceUtil.restoreCategoryFromTrash(categoryId);
 		}
@@ -545,6 +632,7 @@ public class MBCategoryServiceSoap {
 
 	public static void subscribeCategory(long groupId, long categoryId)
 		throws RemoteException {
+
 		try {
 			MBCategoryServiceUtil.subscribeCategory(groupId, categoryId);
 		}
@@ -557,6 +645,7 @@ public class MBCategoryServiceSoap {
 
 	public static void unsubscribeCategory(long groupId, long categoryId)
 		throws RemoteException {
+
 		try {
 			MBCategoryServiceUtil.unsubscribeCategory(groupId, categoryId);
 		}
@@ -567,29 +656,33 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBCategorySoap updateCategory(
-		long categoryId, long parentCategoryId, java.lang.String name,
-		java.lang.String description, java.lang.String displayStyle,
-		java.lang.String emailAddress, java.lang.String inProtocol,
-		java.lang.String inServerName, int inServerPort, boolean inUseSSL,
-		java.lang.String inUserName, java.lang.String inPassword,
-		int inReadInterval, java.lang.String outEmailAddress,
-		boolean outCustom, java.lang.String outServerName, int outServerPort,
-		boolean outUseSSL, java.lang.String outUserName,
-		java.lang.String outPassword, boolean mailingListActive,
-		boolean allowAnonymousEmail, boolean mergeWithParentCategory,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+	public static com.liferay.message.boards.kernel.model.MBCategorySoap
+			updateCategory(
+				long categoryId, long parentCategoryId, String name,
+				String description, String displayStyle, String emailAddress,
+				String inProtocol, String inServerName, int inServerPort,
+				boolean inUseSSL, String inUserName, String inPassword,
+				int inReadInterval, String outEmailAddress, boolean outCustom,
+				String outServerName, int outServerPort, boolean outUseSSL,
+				String outUserName, String outPassword,
+				boolean mailingListActive, boolean allowAnonymousEmail,
+				boolean mergeWithParentCategory,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws RemoteException {
-		try {
-			com.liferay.message.boards.kernel.model.MBCategory returnValue = MBCategoryServiceUtil.updateCategory(categoryId,
-					parentCategoryId, name, description, displayStyle,
-					emailAddress, inProtocol, inServerName, inServerPort,
-					inUseSSL, inUserName, inPassword, inReadInterval,
-					outEmailAddress, outCustom, outServerName, outServerPort,
-					outUseSSL, outUserName, outPassword, mailingListActive,
-					allowAnonymousEmail, mergeWithParentCategory, serviceContext);
 
-			return com.liferay.message.boards.kernel.model.MBCategorySoap.toSoapModel(returnValue);
+		try {
+			com.liferay.message.boards.kernel.model.MBCategory returnValue =
+				MBCategoryServiceUtil.updateCategory(
+					categoryId, parentCategoryId, name, description,
+					displayStyle, emailAddress, inProtocol, inServerName,
+					inServerPort, inUseSSL, inUserName, inPassword,
+					inReadInterval, outEmailAddress, outCustom, outServerName,
+					outServerPort, outUseSSL, outUserName, outPassword,
+					mailingListActive, allowAnonymousEmail,
+					mergeWithParentCategory, serviceContext);
+
+			return com.liferay.message.boards.kernel.model.MBCategorySoap.
+				toSoapModel(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -598,5 +691,7 @@ public class MBCategoryServiceSoap {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(MBCategoryServiceSoap.class);
+	private static Log _log = LogFactoryUtil.getLog(
+		MBCategoryServiceSoap.class);
+
 }

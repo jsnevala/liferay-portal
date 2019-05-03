@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutStagingHandler;
+import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -545,7 +546,7 @@ public class LayoutLocalServiceStagingAdvice implements MethodInterceptor {
 
 				proxiedLayout = ProxyUtil.newProxyInstance(
 					ClassLoaderUtil.getPortalClassLoader(),
-					new Class<?>[] {Layout.class},
+					new Class<?>[] {Layout.class, ModelWrapper.class},
 					new LayoutStagingHandler(layout));
 
 				proxiedLayouts.put(layout, proxiedLayout);
@@ -556,7 +557,8 @@ public class LayoutLocalServiceStagingAdvice implements MethodInterceptor {
 
 		Object proxiedLayout = ProxyUtil.newProxyInstance(
 			ClassLoaderUtil.getPortalClassLoader(),
-			new Class<?>[] {Layout.class}, new LayoutStagingHandler(layout));
+			new Class<?>[] {Layout.class, ModelWrapper.class},
+			new LayoutStagingHandler(layout));
 
 		Map<Layout, Object> proxiedLayouts = new HashMap<>();
 
@@ -635,8 +637,8 @@ public class LayoutLocalServiceStagingAdvice implements MethodInterceptor {
 
 		List<Layout> wrappedLayouts = new ArrayList<>(layouts.size());
 
-		for (int i = 0; i < layouts.size(); i++) {
-			Layout wrappedLayout = wrapLayout(layouts.get(i));
+		for (Layout layout : layouts) {
+			Layout wrappedLayout = wrapLayout(layout);
 
 			if (showIncomplete ||
 				!StagingUtil.isIncomplete(wrappedLayout, layoutSetBranchId)) {
@@ -666,6 +668,16 @@ public class LayoutLocalServiceStagingAdvice implements MethodInterceptor {
 				}
 			}
 		}
+		else if (returnValue instanceof Map<?, ?>) {
+			Map<Object, Object> map = (Map<Object, Object>)returnValue;
+
+			if (map.isEmpty()) {
+				return returnValue;
+			}
+
+			map.replaceAll(
+				(key, value) -> wrapReturnValue(value, showIncomplete));
+		}
 
 		return returnValue;
 	}
@@ -673,8 +685,9 @@ public class LayoutLocalServiceStagingAdvice implements MethodInterceptor {
 	@BeanReference(type = LayoutLocalServiceHelper.class)
 	protected LayoutLocalServiceHelper layoutLocalServiceHelper;
 
-	private static final Class<?>[] _GET_LAYOUTS_TYPES =
-		{Long.TYPE, Boolean.TYPE, Long.TYPE};
+	private static final Class<?>[] _GET_LAYOUTS_TYPES = {
+		Long.TYPE, Boolean.TYPE, Long.TYPE
+	};
 
 	private static final Class<?>[] _UPDATE_LAYOUT_PARAMETER_TYPES = {
 		long.class, boolean.class, long.class, long.class, Map.class, Map.class,

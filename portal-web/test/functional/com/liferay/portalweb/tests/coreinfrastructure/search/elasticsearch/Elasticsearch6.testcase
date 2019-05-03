@@ -1,0 +1,156 @@
+@component-name = "portal-search"
+definition {
+	property osgi.app.includes = "portal-search-elasticsearch6";
+	property osgi.module.configuration.file.names = "com.liferay.portal.bundle.blacklist.internal.BundleBlacklistConfiguration.config";
+	property osgi.module.configurations = "blacklistBundleSymbolicNames=&quot;com.liferay.portal.mobile.device.detection.fiftyonedegrees.api,com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise,com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise.test.data,com.liferay.portal.mobile.device.detection.fiftyonedegrees,com.liferay.portal.search.elasticsearch,com.liferay.portal.search.elasticsearch.shield,com.liferay.portal.search.elasticsearch.shield.fragment,com.liferay.portal.search.elasticsearch.marvel.web&quot;";
+	property portal.release = "true";
+	property portal.suite.search.engine = "elasticsearch6";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Elastic Search Impl";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			MessageboardsThread.tearDownCP();
+
+			DMDocument.tearDownCP();
+
+			Page.tearDownPG();
+		}
+	}
+
+	@description = "This test asserts that index on startup works consistently on remote Elasticsearch."
+	@priority = "5"
+	test AssertRemoteIndexOnStartup {
+		property portal.acceptance = "true";
+		property remote.elasticsearch.enabled = "true";
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations"
+		);
+
+		User.viewCP(
+			userEmailAddress = "test@liferay.com",
+			userFirstName = "Test",
+			userLastName = "Test",
+			userScreenName = "test"
+		);
+	}
+
+	@ignore = "true"
+	@priority = "3"
+	test AssertSystemSettingsPropogateToModule {
+		property test.name.skip.portal.instance = "Elasticsearch6#AssertSystemSettingsPropogateToModule";
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "System Settings"
+		);
+
+		SystemSettings.gotoCategory(category = "Foundation");
+
+		SystemSettings.viewConfiguration(configurationName = "Elasticsearch");
+
+		SystemSettings.editTextAreaSetting(
+			settingName = "clusterName",
+			settingValue = "LiferayElasticsearchCluster1"
+		);
+
+		SystemSettings.saveConfiguration();
+
+		Navigator.openSpecificURL(url = "http://localhost:9200");
+
+		// LRQA-28998
+
+		/* <execute macro="Elasticsearch#viewClusterStatus">
+			<var name="clusterStatus" value="&quot;cluster_name&quot; : &quot;LiferayElasticsearchCluster1&quot;" />
+		</execute> */
+	}
+
+	@priority = "5"
+	test ElasticsearchRemoteClusterSmokeTest {
+		property remote.elasticsearch.cluster.size = "2";
+		property remote.elasticsearch.enabled = "true";
+		property test.name.skip.portal.instance = "Elasticsearch6#ElasticsearchRemoteClusterSmokeTest";
+
+		Elasticsearch.viewClusterStatusViaClusterHealthAPI(numberOfNodes = "2");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Message Boards"
+		);
+
+		MessageboardsThread.addCP(threadBody = "Orange", threadSubject = "Apple");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.addCP(
+			dmDocumentDescription = "Orange",
+			dmDocumentFile = "Document_1.txt",
+			dmDocumentTitle = "Apple"
+		);
+
+		Navigator.openURL();
+
+		Search.searchPG(searchTerm = "Apple");
+
+		SearchPortlet.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Document"
+		);
+
+		SearchPortlet.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Message Boards Message"
+		);
+
+		Navigator.openURL();
+
+		Search.searchPG(searchTerm = "Orange");
+
+		SearchPortlet.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Document"
+		);
+
+		SearchPortlet.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Message Boards Message"
+		);
+	}
+
+	@priority = "5"
+	test OSGiConfigSmokeTest {
+		property osgi.module.configuration.file.names = "com.liferay.portal.search.elasticsearch6.configuration.ElasticsearchConfiguration.config:com.liferay.portal.bundle.blacklist.internal.BundleBlacklistConfiguration.config";
+		property osgi.module.configurations = "clusterName=&quot;LiferayElasticsearchCluster1&quot;:blacklistBundleSymbolicNames=&quot;com.liferay.portal.mobile.device.detection.fiftyonedegrees.api,com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise,com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise.test.data,com.liferay.portal.mobile.device.detection.fiftyonedegrees,com.liferay.portal.search.elasticsearch,com.liferay.portal.search.elasticsearch.shield,com.liferay.portal.search.elasticsearch.shield.fragment,com.liferay.portal.search.elasticsearch.marvel.web&quot;";
+		property portal.acceptance = "true";
+
+		Navigator.openSpecificURL(url = "http://localhost:9200");
+
+		Elasticsearch.viewClusterStatus(
+			clusterStatus = "&quot;cluster_name&quot; : &quot;LiferayElasticsearchCluster1&quot;"
+		);
+	}
+}

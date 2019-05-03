@@ -1,50 +1,41 @@
-<definition component-name="portal-util-misc">
-	<property name="osgi.app.includes" value="loan-calculator" />
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Util" />
+@component-name = "portal-util-misc"
+definition {
+	property osgi.app.includes = "loan-calculator";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Util";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
+		User.firstLoginPG();
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Loan Calculator Page" />
-		</execute>
+		Page.add(pageName = "Loan Calculator Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Loan Calculator Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Loan Calculator Page");
 
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Loan Calculator" />
-		</execute>
-	</set-up>
+		Portlet.addPG(portletName = "Loan Calculator");
+	}
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-		</if>
-	</tear-down>
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
 
-	<command name="CalculateLoanAmounts" priority="2">
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Loan Calculator Page" />
-		</execute>
+	@priority = "2"
+	test CalculateLoanAmounts {
+		Navigator.gotoPage(pageName = "Loan Calculator Page");
 
-		<execute macro="LoanCalculator#calculatePG">
-			<var name="loanAmount" value="400,000" />
-			<var name="loanInterestPaid" value="526,421" />
-			<var name="loanInterestRate" value="10.00" />
-			<var name="loanMonthlyPayment" value="3,860" />
-			<var name="loanTotalPaid" value="926,421" />
-			<var name="loanYears" value="20" />
-		</execute>
-	</command>
-</definition>
+		LoanCalculator.calculatePG(
+			loanAmount = "400,000",
+			loanInterestPaid = "526,421",
+			loanInterestRate = "10.00",
+			loanMonthlyPayment = "3,860",
+			loanTotalPaid = "926,421",
+			loanYears = "20"
+		);
+	}
+}

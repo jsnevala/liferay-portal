@@ -105,10 +105,7 @@ public class TrashIndexer extends BaseIndexer<TrashEntry> {
 			fullQueryBooleanFilter.addRequiredTerm(
 				Field.STATUS, WorkflowConstants.STATUS_IN_TRASH);
 
-			BooleanQuery fullQuery = createFullQuery(
-				fullQueryBooleanFilter, searchContext);
-
-			return fullQuery;
+			return createFullQuery(fullQueryBooleanFilter, searchContext);
 		}
 		catch (SearchException se) {
 			throw se;
@@ -194,7 +191,7 @@ public class TrashIndexer extends BaseIndexer<TrashEntry> {
 	}
 
 	/**
-	 * @deprecated As of 1.0.0, added strictly to support backwards
+	 * @deprecated As of Judson (7.1.x), added strictly to support backwards
 	 *             compatibility of {@link
 	 *             TrashHandler#getExcludeQuery(SearchContext)}
 	 */

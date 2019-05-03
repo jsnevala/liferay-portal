@@ -38,6 +38,8 @@ import com.liferay.message.boards.web.constants.MBPortletKeys;
 import com.liferay.portal.kernel.captcha.CaptchaConfigurationException;
 import com.liferay.portal.kernel.captcha.CaptchaTextException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -49,6 +51,9 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.transaction.Propagation;
+import com.liferay.portal.kernel.transaction.TransactionConfig;
+import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.upload.LiferayFileItemException;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
@@ -147,7 +152,9 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 			else if (cmd.equals(Constants.ADD) ||
 					 cmd.equals(Constants.UPDATE)) {
 
-				message = updateMessage(actionRequest, actionResponse);
+				message = TransactionInvokerUtil.invoke(
+					_transactionConfig,
+					() -> updateMessage(actionRequest, actionResponse));
 			}
 			else if (cmd.equals(Constants.ADD_ANSWER)) {
 				addAnswer(actionRequest);
@@ -225,6 +232,14 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 				throw e;
 			}
 		}
+		catch (Throwable t) {
+			_log.error(t);
+
+			actionResponse.setRenderParameter(
+				"mvcPath", "/message_boards/error.jsp");
+
+			hideDefaultSuccessMessage(actionRequest);
+		}
 	}
 
 	protected String getRedirect(
@@ -232,9 +247,7 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		MBMessage message) {
 
 		if (message == null) {
-			String redirect = ParamUtil.getString(actionRequest, "redirect");
-
-			return redirect;
+			return ParamUtil.getString(actionRequest, "redirect");
 		}
 
 		int workflowAction = ParamUtil.getInteger(
@@ -243,9 +256,6 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		if (workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT) {
 			return getSaveAndContinueRedirect(
 				actionRequest, actionResponse, message);
-		}
-		else if (message == null) {
-			return ParamUtil.getString(actionRequest, "redirect");
 		}
 
 		ActionResponseImpl actionResponseImpl =
@@ -292,8 +302,8 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 			long[] threadIds = StringUtil.split(
 				ParamUtil.getString(actionRequest, "threadIds"), 0L);
 
-			for (int i = 0; i < threadIds.length; i++) {
-				_mbThreadService.lockThread(threadIds[i]);
+			for (long curThreadId : threadIds) {
+				_mbThreadService.lockThread(curThreadId);
 			}
 		}
 	}
@@ -338,8 +348,8 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 			long[] threadIds = StringUtil.split(
 				ParamUtil.getString(actionRequest, "threadIds"), 0L);
 
-			for (int i = 0; i < threadIds.length; i++) {
-				_mbThreadService.unlockThread(threadIds[i]);
+			for (long curThreadId : threadIds) {
+				_mbThreadService.unlockThread(curThreadId);
 			}
 		}
 	}
@@ -361,7 +371,6 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 
 		long messageId = ParamUtil.getLong(actionRequest, "messageId");
 
-		long groupId = themeDisplay.getScopeGroupId();
 		long categoryId = ParamUtil.getLong(actionRequest, "mbCategoryId");
 		long threadId = ParamUtil.getLong(actionRequest, "threadId");
 		long parentMessageId = ParamUtil.getLong(
@@ -370,7 +379,7 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		String body = ParamUtil.getString(actionRequest, "body");
 
 		MBGroupServiceSettings mbGroupServiceSettings =
-			MBGroupServiceSettings.getInstance(groupId);
+			MBGroupServiceSettings.getInstance(themeDisplay.getSiteGroupId());
 
 		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
 			new ArrayList<>(5);
@@ -435,8 +444,8 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 					// Post new thread
 
 					message = _mbMessageService.addMessage(
-						groupId, categoryId, subject, body,
-						mbGroupServiceSettings.getMessageFormat(),
+						themeDisplay.getScopeGroupId(), categoryId, subject,
+						body, mbGroupServiceSettings.getMessageFormat(),
 						inputStreamOVPs, anonymous, priority, allowPingbacks,
 						serviceContext);
 
@@ -505,6 +514,13 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditMessageMVCActionCommand.class);
+
+	private static final TransactionConfig _transactionConfig =
+		TransactionConfig.Factory.create(
+			Propagation.REQUIRED, new Class<?>[] {Exception.class});
 
 	private MBCategoryService _mbCategoryService;
 	private MBMessageService _mbMessageService;

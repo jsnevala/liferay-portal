@@ -36,6 +36,7 @@ public class SerializableSessionAttributeListener
 		HttpSessionBindingEvent httpSessionBindingEvent) {
 
 		String name = httpSessionBindingEvent.getName();
+
 		Object value = httpSessionBindingEvent.getValue();
 
 		if ((value instanceof Serializable) || (value == null)) {

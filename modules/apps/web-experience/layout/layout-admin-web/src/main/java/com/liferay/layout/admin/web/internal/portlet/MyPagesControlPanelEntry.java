@@ -32,7 +32,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + LayoutAdminPortletKeys.MY_PAGES},
+	property = "javax.portlet.name=" + LayoutAdminPortletKeys.MY_PAGES,
 	service = ControlPanelEntry.class
 )
 public class MyPagesControlPanelEntry extends BaseControlPanelEntry {

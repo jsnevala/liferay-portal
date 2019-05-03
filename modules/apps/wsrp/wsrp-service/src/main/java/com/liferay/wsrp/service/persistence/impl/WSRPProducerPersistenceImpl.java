@@ -31,12 +31,12 @@ import com.liferay.portal.kernel.service.persistence.CompanyProvider;
 import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
-
 import com.liferay.wsrp.exception.NoSuchProducerException;
 import com.liferay.wsrp.model.WSRPProducer;
 import com.liferay.wsrp.model.impl.WSRPProducerImpl;
@@ -46,6 +46,7 @@ import com.liferay.wsrp.service.persistence.WSRPProducerPersistence;
 import java.io.Serializable;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
 import java.util.Date;
@@ -65,51 +66,33 @@ import java.util.Set;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see WSRPProducerPersistence
- * @see com.liferay.wsrp.service.persistence.WSRPProducerUtil
  * @generated
  */
 @ProviderType
-public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProducer>
+public class WSRPProducerPersistenceImpl
+	extends BasePersistenceImpl<WSRPProducer>
 	implements WSRPProducerPersistence {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link WSRPProducerUtil} to access the wsrp producer persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
+	 * Never modify or reference this class directly. Always use <code>WSRPProducerUtil</code> to access the wsrp producer persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static final String FINDER_CLASS_NAME_ENTITY = WSRPProducerImpl.class.getName();
-	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List1";
-	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List2";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_ALL = new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL = new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_COUNT_ALL = new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID = new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
-			new String[] {
-				String.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID = new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
-			new String[] { String.class.getName() },
-			WSRPProducerModelImpl.UUID_COLUMN_BITMASK |
-			WSRPProducerModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_UUID = new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] { String.class.getName() });
+	public static final String FINDER_CLASS_NAME_ENTITY =
+		WSRPProducerImpl.class.getName();
+
+	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List1";
+
+	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List2";
+
+	private FinderPath _finderPathWithPaginationFindAll;
+	private FinderPath _finderPathWithoutPaginationFindAll;
+	private FinderPath _finderPathCountAll;
+	private FinderPath _finderPathWithPaginationFindByUuid;
+	private FinderPath _finderPathWithoutPaginationFindByUuid;
+	private FinderPath _finderPathCountByUuid;
 
 	/**
 	 * Returns all the wsrp producers where uuid = &#63;.
@@ -126,7 +109,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Returns a range of all the wsrp producers where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -143,7 +126,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Returns an ordered range of all the wsrp producers where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -153,8 +136,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the ordered range of matching wsrp producers
 	 */
 	@Override
-	public List<WSRPProducer> findByUuid(String uuid, int start, int end,
+	public List<WSRPProducer> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<WSRPProducer> orderByComparator) {
+
 		return findByUuid(uuid, start, end, orderByComparator, true);
 	}
 
@@ -162,7 +147,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Returns an ordered range of all the wsrp producers where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -173,33 +158,38 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the ordered range of matching wsrp producers
 	 */
 	@Override
-	public List<WSRPProducer> findByUuid(String uuid, int start, int end,
+	public List<WSRPProducer> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<WSRPProducer> orderByComparator,
 		boolean retrieveFromCache) {
+
+		uuid = Objects.toString(uuid, "");
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID;
-			finderArgs = new Object[] { uuid };
+			finderPath = _finderPathWithoutPaginationFindByUuid;
+			finderArgs = new Object[] {uuid};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID;
-			finderArgs = new Object[] { uuid, start, end, orderByComparator };
+			finderPath = _finderPathWithPaginationFindByUuid;
+			finderArgs = new Object[] {uuid, start, end, orderByComparator};
 		}
 
 		List<WSRPProducer> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<WSRPProducer>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<WSRPProducer>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (WSRPProducer wsrpProducer : list) {
-					if (!Objects.equals(uuid, wsrpProducer.getUuid())) {
+					if (!uuid.equals(wsrpProducer.getUuid())) {
 						list = null;
 
 						break;
@@ -212,8 +202,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(3);
@@ -223,10 +213,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
@@ -236,11 +223,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 			}
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(WSRPProducerModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -260,16 +246,16 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 				}
 
 				if (!pagination) {
-					list = (List<WSRPProducer>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<WSRPProducer>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<WSRPProducer>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<WSRPProducer>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -298,9 +284,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @throws NoSuchProducerException if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer findByUuid_First(String uuid,
-		OrderByComparator<WSRPProducer> orderByComparator)
+	public WSRPProducer findByUuid_First(
+			String uuid, OrderByComparator<WSRPProducer> orderByComparator)
 		throws NoSuchProducerException {
+
 		WSRPProducer wsrpProducer = fetchByUuid_First(uuid, orderByComparator);
 
 		if (wsrpProducer != null) {
@@ -327,8 +314,9 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the first matching wsrp producer, or <code>null</code> if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer fetchByUuid_First(String uuid,
-		OrderByComparator<WSRPProducer> orderByComparator) {
+	public WSRPProducer fetchByUuid_First(
+		String uuid, OrderByComparator<WSRPProducer> orderByComparator) {
+
 		List<WSRPProducer> list = findByUuid(uuid, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -347,9 +335,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @throws NoSuchProducerException if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer findByUuid_Last(String uuid,
-		OrderByComparator<WSRPProducer> orderByComparator)
+	public WSRPProducer findByUuid_Last(
+			String uuid, OrderByComparator<WSRPProducer> orderByComparator)
 		throws NoSuchProducerException {
+
 		WSRPProducer wsrpProducer = fetchByUuid_Last(uuid, orderByComparator);
 
 		if (wsrpProducer != null) {
@@ -376,16 +365,17 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the last matching wsrp producer, or <code>null</code> if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer fetchByUuid_Last(String uuid,
-		OrderByComparator<WSRPProducer> orderByComparator) {
+	public WSRPProducer fetchByUuid_Last(
+		String uuid, OrderByComparator<WSRPProducer> orderByComparator) {
+
 		int count = countByUuid(uuid);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<WSRPProducer> list = findByUuid(uuid, count - 1, count,
-				orderByComparator);
+		List<WSRPProducer> list = findByUuid(
+			uuid, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -404,9 +394,13 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @throws NoSuchProducerException if a wsrp producer with the primary key could not be found
 	 */
 	@Override
-	public WSRPProducer[] findByUuid_PrevAndNext(long wsrpProducerId,
-		String uuid, OrderByComparator<WSRPProducer> orderByComparator)
+	public WSRPProducer[] findByUuid_PrevAndNext(
+			long wsrpProducerId, String uuid,
+			OrderByComparator<WSRPProducer> orderByComparator)
 		throws NoSuchProducerException {
+
+		uuid = Objects.toString(uuid, "");
+
 		WSRPProducer wsrpProducer = findByPrimaryKey(wsrpProducerId);
 
 		Session session = null;
@@ -416,13 +410,13 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 			WSRPProducer[] array = new WSRPProducerImpl[3];
 
-			array[0] = getByUuid_PrevAndNext(session, wsrpProducer, uuid,
-					orderByComparator, true);
+			array[0] = getByUuid_PrevAndNext(
+				session, wsrpProducer, uuid, orderByComparator, true);
 
 			array[1] = wsrpProducer;
 
-			array[2] = getByUuid_PrevAndNext(session, wsrpProducer, uuid,
-					orderByComparator, false);
+			array[2] = getByUuid_PrevAndNext(
+				session, wsrpProducer, uuid, orderByComparator, false);
 
 			return array;
 		}
@@ -434,14 +428,15 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		}
 	}
 
-	protected WSRPProducer getByUuid_PrevAndNext(Session session,
-		WSRPProducer wsrpProducer, String uuid,
+	protected WSRPProducer getByUuid_PrevAndNext(
+		Session session, WSRPProducer wsrpProducer, String uuid,
 		OrderByComparator<WSRPProducer> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -452,10 +447,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_UUID_1);
-		}
-		else if (uuid.equals("")) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_UUID_3);
 		}
 		else {
@@ -465,7 +457,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -537,10 +530,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		}
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(wsrpProducer);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(wsrpProducer)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -561,8 +554,9 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public void removeByUuid(String uuid) {
-		for (WSRPProducer wsrpProducer : findByUuid(uuid, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null)) {
+		for (WSRPProducer wsrpProducer :
+				findByUuid(uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(wsrpProducer);
 		}
 	}
@@ -575,9 +569,11 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public int countByUuid(String uuid) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_UUID;
+		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] { uuid };
+		FinderPath finderPath = _finderPathCountByUuid;
+
+		Object[] finderArgs = new Object[] {uuid};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -588,10 +584,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
@@ -632,22 +625,17 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_UUID_UUID_1 = "wsrpProducer.uuid IS NULL";
-	private static final String _FINDER_COLUMN_UUID_UUID_2 = "wsrpProducer.uuid = ?";
-	private static final String _FINDER_COLUMN_UUID_UUID_3 = "(wsrpProducer.uuid IS NULL OR wsrpProducer.uuid = '')";
-	public static final FinderPath FINDER_PATH_FETCH_BY_UUID_G = new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
-			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
-			new String[] { String.class.getName(), Long.class.getName() },
-			WSRPProducerModelImpl.UUID_COLUMN_BITMASK |
-			WSRPProducerModelImpl.GROUPID_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_UUID_G = new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] { String.class.getName(), Long.class.getName() });
+	private static final String _FINDER_COLUMN_UUID_UUID_2 =
+		"wsrpProducer.uuid = ?";
+
+	private static final String _FINDER_COLUMN_UUID_UUID_3 =
+		"(wsrpProducer.uuid IS NULL OR wsrpProducer.uuid = '')";
+
+	private FinderPath _finderPathFetchByUUID_G;
+	private FinderPath _finderPathCountByUUID_G;
 
 	/**
-	 * Returns the wsrp producer where uuid = &#63; and groupId = &#63; or throws a {@link NoSuchProducerException} if it could not be found.
+	 * Returns the wsrp producer where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchProducerException</code> if it could not be found.
 	 *
 	 * @param uuid the uuid
 	 * @param groupId the group ID
@@ -657,6 +645,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	@Override
 	public WSRPProducer findByUUID_G(String uuid, long groupId)
 		throws NoSuchProducerException {
+
 		WSRPProducer wsrpProducer = fetchByUUID_G(uuid, groupId);
 
 		if (wsrpProducer == null) {
@@ -703,22 +692,26 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the matching wsrp producer, or <code>null</code> if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer fetchByUUID_G(String uuid, long groupId,
-		boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] { uuid, groupId };
+	public WSRPProducer fetchByUUID_G(
+		String uuid, long groupId, boolean retrieveFromCache) {
+
+		uuid = Objects.toString(uuid, "");
+
+		Object[] finderArgs = new Object[] {uuid, groupId};
 
 		Object result = null;
 
 		if (retrieveFromCache) {
-			result = finderCache.getResult(FINDER_PATH_FETCH_BY_UUID_G,
-					finderArgs, this);
+			result = finderCache.getResult(
+				_finderPathFetchByUUID_G, finderArgs, this);
 		}
 
 		if (result instanceof WSRPProducer) {
 			WSRPProducer wsrpProducer = (WSRPProducer)result;
 
 			if (!Objects.equals(uuid, wsrpProducer.getUuid()) ||
-					(groupId != wsrpProducer.getGroupId())) {
+				(groupId != wsrpProducer.getGroupId())) {
+
 				result = null;
 			}
 		}
@@ -730,10 +723,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_G_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_G_UUID_3);
 			}
 			else {
@@ -764,8 +754,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 				List<WSRPProducer> list = q.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(FINDER_PATH_FETCH_BY_UUID_G,
-						finderArgs, list);
+					finderCache.putResult(
+						_finderPathFetchByUUID_G, finderArgs, list);
 				}
 				else {
 					WSRPProducer wsrpProducer = list.get(0);
@@ -773,17 +763,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 					result = wsrpProducer;
 
 					cacheResult(wsrpProducer);
-
-					if ((wsrpProducer.getUuid() == null) ||
-							!wsrpProducer.getUuid().equals(uuid) ||
-							(wsrpProducer.getGroupId() != groupId)) {
-						finderCache.putResult(FINDER_PATH_FETCH_BY_UUID_G,
-							finderArgs, wsrpProducer);
-					}
 				}
 			}
 			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_FETCH_BY_UUID_G, finderArgs);
+				finderCache.removeResult(_finderPathFetchByUUID_G, finderArgs);
 
 				throw processException(e);
 			}
@@ -810,6 +793,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	@Override
 	public WSRPProducer removeByUUID_G(String uuid, long groupId)
 		throws NoSuchProducerException {
+
 		WSRPProducer wsrpProducer = findByUUID_G(uuid, groupId);
 
 		return remove(wsrpProducer);
@@ -824,9 +808,11 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_UUID_G;
+		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] { uuid, groupId };
+		FinderPath finderPath = _finderPathCountByUUID_G;
+
+		Object[] finderArgs = new Object[] {uuid, groupId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -837,10 +823,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_G_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_G_UUID_3);
 			}
 			else {
@@ -885,31 +868,18 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_UUID_G_UUID_1 = "wsrpProducer.uuid IS NULL AND ";
-	private static final String _FINDER_COLUMN_UUID_G_UUID_2 = "wsrpProducer.uuid = ? AND ";
-	private static final String _FINDER_COLUMN_UUID_G_UUID_3 = "(wsrpProducer.uuid IS NULL OR wsrpProducer.uuid = '') AND ";
-	private static final String _FINDER_COLUMN_UUID_G_GROUPID_2 = "wsrpProducer.groupId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID_C = new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
-			new String[] {
-				String.class.getName(), Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C =
-		new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
-			new String[] { String.class.getName(), Long.class.getName() },
-			WSRPProducerModelImpl.UUID_COLUMN_BITMASK |
-			WSRPProducerModelImpl.COMPANYID_COLUMN_BITMASK |
-			WSRPProducerModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_UUID_C = new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] { String.class.getName(), Long.class.getName() });
+	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
+		"wsrpProducer.uuid = ? AND ";
+
+	private static final String _FINDER_COLUMN_UUID_G_UUID_3 =
+		"(wsrpProducer.uuid IS NULL OR wsrpProducer.uuid = '') AND ";
+
+	private static final String _FINDER_COLUMN_UUID_G_GROUPID_2 =
+		"wsrpProducer.groupId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByUuid_C;
+	private FinderPath _finderPathWithoutPaginationFindByUuid_C;
+	private FinderPath _finderPathCountByUuid_C;
 
 	/**
 	 * Returns all the wsrp producers where uuid = &#63; and companyId = &#63;.
@@ -920,15 +890,15 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public List<WSRPProducer> findByUuid_C(String uuid, long companyId) {
-		return findByUuid_C(uuid, companyId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return findByUuid_C(
+			uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the wsrp producers where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -938,8 +908,9 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the range of matching wsrp producers
 	 */
 	@Override
-	public List<WSRPProducer> findByUuid_C(String uuid, long companyId,
-		int start, int end) {
+	public List<WSRPProducer> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
 		return findByUuid_C(uuid, companyId, start, end, null);
 	}
 
@@ -947,7 +918,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Returns an ordered range of all the wsrp producers where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -958,16 +929,19 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the ordered range of matching wsrp producers
 	 */
 	@Override
-	public List<WSRPProducer> findByUuid_C(String uuid, long companyId,
-		int start, int end, OrderByComparator<WSRPProducer> orderByComparator) {
-		return findByUuid_C(uuid, companyId, start, end, orderByComparator, true);
+	public List<WSRPProducer> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<WSRPProducer> orderByComparator) {
+
+		return findByUuid_C(
+			uuid, companyId, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the wsrp producers where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -979,38 +953,42 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the ordered range of matching wsrp producers
 	 */
 	@Override
-	public List<WSRPProducer> findByUuid_C(String uuid, long companyId,
-		int start, int end, OrderByComparator<WSRPProducer> orderByComparator,
+	public List<WSRPProducer> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<WSRPProducer> orderByComparator,
 		boolean retrieveFromCache) {
+
+		uuid = Objects.toString(uuid, "");
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C;
-			finderArgs = new Object[] { uuid, companyId };
+			finderPath = _finderPathWithoutPaginationFindByUuid_C;
+			finderArgs = new Object[] {uuid, companyId};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID_C;
+			finderPath = _finderPathWithPaginationFindByUuid_C;
 			finderArgs = new Object[] {
-					uuid, companyId,
-					
-					start, end, orderByComparator
-				};
+				uuid, companyId, start, end, orderByComparator
+			};
 		}
 
 		List<WSRPProducer> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<WSRPProducer>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<WSRPProducer>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (WSRPProducer wsrpProducer : list) {
-					if (!Objects.equals(uuid, wsrpProducer.getUuid()) ||
-							(companyId != wsrpProducer.getCompanyId())) {
+					if (!uuid.equals(wsrpProducer.getUuid()) ||
+						(companyId != wsrpProducer.getCompanyId())) {
+
 						list = null;
 
 						break;
@@ -1023,8 +1001,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(4 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(4);
@@ -1034,10 +1012,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
@@ -1049,11 +1024,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 			query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(WSRPProducerModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -1075,16 +1049,16 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 				qPos.add(companyId);
 
 				if (!pagination) {
-					list = (List<WSRPProducer>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<WSRPProducer>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<WSRPProducer>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<WSRPProducer>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -1114,11 +1088,13 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @throws NoSuchProducerException if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer findByUuid_C_First(String uuid, long companyId,
-		OrderByComparator<WSRPProducer> orderByComparator)
+	public WSRPProducer findByUuid_C_First(
+			String uuid, long companyId,
+			OrderByComparator<WSRPProducer> orderByComparator)
 		throws NoSuchProducerException {
-		WSRPProducer wsrpProducer = fetchByUuid_C_First(uuid, companyId,
-				orderByComparator);
+
+		WSRPProducer wsrpProducer = fetchByUuid_C_First(
+			uuid, companyId, orderByComparator);
 
 		if (wsrpProducer != null) {
 			return wsrpProducer;
@@ -1148,10 +1124,12 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the first matching wsrp producer, or <code>null</code> if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer fetchByUuid_C_First(String uuid, long companyId,
+	public WSRPProducer fetchByUuid_C_First(
+		String uuid, long companyId,
 		OrderByComparator<WSRPProducer> orderByComparator) {
-		List<WSRPProducer> list = findByUuid_C(uuid, companyId, 0, 1,
-				orderByComparator);
+
+		List<WSRPProducer> list = findByUuid_C(
+			uuid, companyId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1170,11 +1148,13 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @throws NoSuchProducerException if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer findByUuid_C_Last(String uuid, long companyId,
-		OrderByComparator<WSRPProducer> orderByComparator)
+	public WSRPProducer findByUuid_C_Last(
+			String uuid, long companyId,
+			OrderByComparator<WSRPProducer> orderByComparator)
 		throws NoSuchProducerException {
-		WSRPProducer wsrpProducer = fetchByUuid_C_Last(uuid, companyId,
-				orderByComparator);
+
+		WSRPProducer wsrpProducer = fetchByUuid_C_Last(
+			uuid, companyId, orderByComparator);
 
 		if (wsrpProducer != null) {
 			return wsrpProducer;
@@ -1204,16 +1184,18 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the last matching wsrp producer, or <code>null</code> if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer fetchByUuid_C_Last(String uuid, long companyId,
+	public WSRPProducer fetchByUuid_C_Last(
+		String uuid, long companyId,
 		OrderByComparator<WSRPProducer> orderByComparator) {
+
 		int count = countByUuid_C(uuid, companyId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<WSRPProducer> list = findByUuid_C(uuid, companyId, count - 1,
-				count, orderByComparator);
+		List<WSRPProducer> list = findByUuid_C(
+			uuid, companyId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1233,10 +1215,13 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @throws NoSuchProducerException if a wsrp producer with the primary key could not be found
 	 */
 	@Override
-	public WSRPProducer[] findByUuid_C_PrevAndNext(long wsrpProducerId,
-		String uuid, long companyId,
-		OrderByComparator<WSRPProducer> orderByComparator)
+	public WSRPProducer[] findByUuid_C_PrevAndNext(
+			long wsrpProducerId, String uuid, long companyId,
+			OrderByComparator<WSRPProducer> orderByComparator)
 		throws NoSuchProducerException {
+
+		uuid = Objects.toString(uuid, "");
+
 		WSRPProducer wsrpProducer = findByPrimaryKey(wsrpProducerId);
 
 		Session session = null;
@@ -1246,13 +1231,15 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 			WSRPProducer[] array = new WSRPProducerImpl[3];
 
-			array[0] = getByUuid_C_PrevAndNext(session, wsrpProducer, uuid,
-					companyId, orderByComparator, true);
+			array[0] = getByUuid_C_PrevAndNext(
+				session, wsrpProducer, uuid, companyId, orderByComparator,
+				true);
 
 			array[1] = wsrpProducer;
 
-			array[2] = getByUuid_C_PrevAndNext(session, wsrpProducer, uuid,
-					companyId, orderByComparator, false);
+			array[2] = getByUuid_C_PrevAndNext(
+				session, wsrpProducer, uuid, companyId, orderByComparator,
+				false);
 
 			return array;
 		}
@@ -1264,14 +1251,15 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		}
 	}
 
-	protected WSRPProducer getByUuid_C_PrevAndNext(Session session,
-		WSRPProducer wsrpProducer, String uuid, long companyId,
+	protected WSRPProducer getByUuid_C_PrevAndNext(
+		Session session, WSRPProducer wsrpProducer, String uuid, long companyId,
 		OrderByComparator<WSRPProducer> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -1282,10 +1270,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-		}
-		else if (uuid.equals("")) {
+		if (uuid.isEmpty()) {
 			query.append(_FINDER_COLUMN_UUID_C_UUID_3);
 		}
 		else {
@@ -1297,7 +1282,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -1371,10 +1357,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		qPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(wsrpProducer);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(wsrpProducer)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -1396,8 +1382,11 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public void removeByUuid_C(String uuid, long companyId) {
-		for (WSRPProducer wsrpProducer : findByUuid_C(uuid, companyId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (WSRPProducer wsrpProducer :
+				findByUuid_C(
+					uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
 			remove(wsrpProducer);
 		}
 	}
@@ -1411,9 +1400,11 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public int countByUuid_C(String uuid, long companyId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_UUID_C;
+		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] { uuid, companyId };
+		FinderPath finderPath = _finderPathCountByUuid_C;
+
+		Object[] finderArgs = new Object[] {uuid, companyId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -1424,10 +1415,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-			}
-			else if (uuid.equals("")) {
+			if (uuid.isEmpty()) {
 				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
@@ -1472,31 +1460,18 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_UUID_C_UUID_1 = "wsrpProducer.uuid IS NULL AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_2 = "wsrpProducer.uuid = ? AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_3 = "(wsrpProducer.uuid IS NULL OR wsrpProducer.uuid = '') AND ";
-	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 = "wsrpProducer.companyId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_COMPANYID =
-		new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID =
-		new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
-			new String[] { Long.class.getName() },
-			WSRPProducerModelImpl.COMPANYID_COLUMN_BITMASK |
-			WSRPProducerModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_COMPANYID = new FinderPath(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] { Long.class.getName() });
+	private static final String _FINDER_COLUMN_UUID_C_UUID_2 =
+		"wsrpProducer.uuid = ? AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_UUID_3 =
+		"(wsrpProducer.uuid IS NULL OR wsrpProducer.uuid = '') AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 =
+		"wsrpProducer.companyId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByCompanyId;
+	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
+	private FinderPath _finderPathCountByCompanyId;
 
 	/**
 	 * Returns all the wsrp producers where companyId = &#63;.
@@ -1506,15 +1481,15 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public List<WSRPProducer> findByCompanyId(long companyId) {
-		return findByCompanyId(companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			null);
+		return findByCompanyId(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the wsrp producers where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1523,7 +1498,9 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the range of matching wsrp producers
 	 */
 	@Override
-	public List<WSRPProducer> findByCompanyId(long companyId, int start, int end) {
+	public List<WSRPProducer> findByCompanyId(
+		long companyId, int start, int end) {
+
 		return findByCompanyId(companyId, start, end, null);
 	}
 
@@ -1531,7 +1508,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Returns an ordered range of all the wsrp producers where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1541,8 +1518,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the ordered range of matching wsrp producers
 	 */
 	@Override
-	public List<WSRPProducer> findByCompanyId(long companyId, int start,
-		int end, OrderByComparator<WSRPProducer> orderByComparator) {
+	public List<WSRPProducer> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<WSRPProducer> orderByComparator) {
+
 		return findByCompanyId(companyId, start, end, orderByComparator, true);
 	}
 
@@ -1550,7 +1529,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Returns an ordered range of all the wsrp producers where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -1561,29 +1540,34 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the ordered range of matching wsrp producers
 	 */
 	@Override
-	public List<WSRPProducer> findByCompanyId(long companyId, int start,
-		int end, OrderByComparator<WSRPProducer> orderByComparator,
+	public List<WSRPProducer> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<WSRPProducer> orderByComparator,
 		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID;
-			finderArgs = new Object[] { companyId };
+			finderPath = _finderPathWithoutPaginationFindByCompanyId;
+			finderArgs = new Object[] {companyId};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_COMPANYID;
-			finderArgs = new Object[] { companyId, start, end, orderByComparator };
+			finderPath = _finderPathWithPaginationFindByCompanyId;
+			finderArgs = new Object[] {
+				companyId, start, end, orderByComparator
+			};
 		}
 
 		List<WSRPProducer> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<WSRPProducer>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<WSRPProducer>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (WSRPProducer wsrpProducer : list) {
@@ -1600,8 +1584,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(3);
@@ -1612,11 +1596,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 			query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(WSRPProducerModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -1634,16 +1617,16 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 				qPos.add(companyId);
 
 				if (!pagination) {
-					list = (List<WSRPProducer>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<WSRPProducer>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<WSRPProducer>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<WSRPProducer>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -1672,11 +1655,12 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @throws NoSuchProducerException if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer findByCompanyId_First(long companyId,
-		OrderByComparator<WSRPProducer> orderByComparator)
+	public WSRPProducer findByCompanyId_First(
+			long companyId, OrderByComparator<WSRPProducer> orderByComparator)
 		throws NoSuchProducerException {
-		WSRPProducer wsrpProducer = fetchByCompanyId_First(companyId,
-				orderByComparator);
+
+		WSRPProducer wsrpProducer = fetchByCompanyId_First(
+			companyId, orderByComparator);
 
 		if (wsrpProducer != null) {
 			return wsrpProducer;
@@ -1702,10 +1686,11 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the first matching wsrp producer, or <code>null</code> if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer fetchByCompanyId_First(long companyId,
-		OrderByComparator<WSRPProducer> orderByComparator) {
-		List<WSRPProducer> list = findByCompanyId(companyId, 0, 1,
-				orderByComparator);
+	public WSRPProducer fetchByCompanyId_First(
+		long companyId, OrderByComparator<WSRPProducer> orderByComparator) {
+
+		List<WSRPProducer> list = findByCompanyId(
+			companyId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1723,11 +1708,12 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @throws NoSuchProducerException if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer findByCompanyId_Last(long companyId,
-		OrderByComparator<WSRPProducer> orderByComparator)
+	public WSRPProducer findByCompanyId_Last(
+			long companyId, OrderByComparator<WSRPProducer> orderByComparator)
 		throws NoSuchProducerException {
-		WSRPProducer wsrpProducer = fetchByCompanyId_Last(companyId,
-				orderByComparator);
+
+		WSRPProducer wsrpProducer = fetchByCompanyId_Last(
+			companyId, orderByComparator);
 
 		if (wsrpProducer != null) {
 			return wsrpProducer;
@@ -1753,16 +1739,17 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the last matching wsrp producer, or <code>null</code> if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer fetchByCompanyId_Last(long companyId,
-		OrderByComparator<WSRPProducer> orderByComparator) {
+	public WSRPProducer fetchByCompanyId_Last(
+		long companyId, OrderByComparator<WSRPProducer> orderByComparator) {
+
 		int count = countByCompanyId(companyId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<WSRPProducer> list = findByCompanyId(companyId, count - 1, count,
-				orderByComparator);
+		List<WSRPProducer> list = findByCompanyId(
+			companyId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1781,9 +1768,11 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @throws NoSuchProducerException if a wsrp producer with the primary key could not be found
 	 */
 	@Override
-	public WSRPProducer[] findByCompanyId_PrevAndNext(long wsrpProducerId,
-		long companyId, OrderByComparator<WSRPProducer> orderByComparator)
+	public WSRPProducer[] findByCompanyId_PrevAndNext(
+			long wsrpProducerId, long companyId,
+			OrderByComparator<WSRPProducer> orderByComparator)
 		throws NoSuchProducerException {
+
 		WSRPProducer wsrpProducer = findByPrimaryKey(wsrpProducerId);
 
 		Session session = null;
@@ -1793,13 +1782,13 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 			WSRPProducer[] array = new WSRPProducerImpl[3];
 
-			array[0] = getByCompanyId_PrevAndNext(session, wsrpProducer,
-					companyId, orderByComparator, true);
+			array[0] = getByCompanyId_PrevAndNext(
+				session, wsrpProducer, companyId, orderByComparator, true);
 
 			array[1] = wsrpProducer;
 
-			array[2] = getByCompanyId_PrevAndNext(session, wsrpProducer,
-					companyId, orderByComparator, false);
+			array[2] = getByCompanyId_PrevAndNext(
+				session, wsrpProducer, companyId, orderByComparator, false);
 
 			return array;
 		}
@@ -1811,14 +1800,15 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		}
 	}
 
-	protected WSRPProducer getByCompanyId_PrevAndNext(Session session,
-		WSRPProducer wsrpProducer, long companyId,
+	protected WSRPProducer getByCompanyId_PrevAndNext(
+		Session session, WSRPProducer wsrpProducer, long companyId,
 		OrderByComparator<WSRPProducer> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -1830,7 +1820,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -1900,10 +1891,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		qPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(wsrpProducer);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(wsrpProducer)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -1924,8 +1915,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public void removeByCompanyId(long companyId) {
-		for (WSRPProducer wsrpProducer : findByCompanyId(companyId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (WSRPProducer wsrpProducer :
+				findByCompanyId(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(wsrpProducer);
 		}
 	}
@@ -1938,9 +1931,9 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public int countByCompanyId(long companyId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_COMPANYID;
+		FinderPath finderPath = _finderPathCountByCompanyId;
 
-		Object[] finderArgs = new Object[] { companyId };
+		Object[] finderArgs = new Object[] {companyId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -1981,20 +1974,21 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 = "wsrpProducer.companyId = ?";
+	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 =
+		"wsrpProducer.companyId = ?";
 
 	public WSRPProducerPersistenceImpl() {
 		setModelClass(WSRPProducer.class);
 
+		Map<String, String> dbColumnNames = new HashMap<String, String>();
+
+		dbColumnNames.put("uuid", "uuid_");
+
 		try {
 			Field field = BasePersistenceImpl.class.getDeclaredField(
-					"_dbColumnNames");
+				"_dbColumnNames");
 
 			field.setAccessible(true);
-
-			Map<String, String> dbColumnNames = new HashMap<String, String>();
-
-			dbColumnNames.put("uuid", "uuid_");
 
 			field.set(this, dbColumnNames);
 		}
@@ -2012,11 +2006,13 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public void cacheResult(WSRPProducer wsrpProducer) {
-		entityCache.putResult(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerImpl.class, wsrpProducer.getPrimaryKey(), wsrpProducer);
+		entityCache.putResult(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED, WSRPProducerImpl.class,
+			wsrpProducer.getPrimaryKey(), wsrpProducer);
 
-		finderCache.putResult(FINDER_PATH_FETCH_BY_UUID_G,
-			new Object[] { wsrpProducer.getUuid(), wsrpProducer.getGroupId() },
+		finderCache.putResult(
+			_finderPathFetchByUUID_G,
+			new Object[] {wsrpProducer.getUuid(), wsrpProducer.getGroupId()},
 			wsrpProducer);
 
 		wsrpProducer.resetOriginalValues();
@@ -2031,8 +2027,10 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	public void cacheResult(List<WSRPProducer> wsrpProducers) {
 		for (WSRPProducer wsrpProducer : wsrpProducers) {
 			if (entityCache.getResult(
-						WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-						WSRPProducerImpl.class, wsrpProducer.getPrimaryKey()) == null) {
+					WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+					WSRPProducerImpl.class, wsrpProducer.getPrimaryKey()) ==
+						null) {
+
 				cacheResult(wsrpProducer);
 			}
 			else {
@@ -2045,7 +2043,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Clears the cache for all wsrp producers.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
@@ -2061,13 +2059,14 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Clears the cache for the wsrp producer.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(WSRPProducer wsrpProducer) {
-		entityCache.removeResult(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerImpl.class, wsrpProducer.getPrimaryKey());
+		entityCache.removeResult(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED, WSRPProducerImpl.class,
+			wsrpProducer.getPrimaryKey());
 
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
@@ -2081,7 +2080,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		for (WSRPProducer wsrpProducer : wsrpProducers) {
-			entityCache.removeResult(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			entityCache.removeResult(
+				WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
 				WSRPProducerImpl.class, wsrpProducer.getPrimaryKey());
 
 			clearUniqueFindersCache((WSRPProducerModelImpl)wsrpProducer, true);
@@ -2090,38 +2090,40 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 	protected void cacheUniqueFindersCache(
 		WSRPProducerModelImpl wsrpProducerModelImpl) {
-		Object[] args = new Object[] {
-				wsrpProducerModelImpl.getUuid(),
-				wsrpProducerModelImpl.getGroupId()
-			};
 
-		finderCache.putResult(FINDER_PATH_COUNT_BY_UUID_G, args,
-			Long.valueOf(1), false);
-		finderCache.putResult(FINDER_PATH_FETCH_BY_UUID_G, args,
-			wsrpProducerModelImpl, false);
+		Object[] args = new Object[] {
+			wsrpProducerModelImpl.getUuid(), wsrpProducerModelImpl.getGroupId()
+		};
+
+		finderCache.putResult(
+			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
+		finderCache.putResult(
+			_finderPathFetchByUUID_G, args, wsrpProducerModelImpl, false);
 	}
 
 	protected void clearUniqueFindersCache(
 		WSRPProducerModelImpl wsrpProducerModelImpl, boolean clearCurrent) {
+
 		if (clearCurrent) {
 			Object[] args = new Object[] {
-					wsrpProducerModelImpl.getUuid(),
-					wsrpProducerModelImpl.getGroupId()
-				};
+				wsrpProducerModelImpl.getUuid(),
+				wsrpProducerModelImpl.getGroupId()
+			};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_G, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_UUID_G, args);
+			finderCache.removeResult(_finderPathCountByUUID_G, args);
+			finderCache.removeResult(_finderPathFetchByUUID_G, args);
 		}
 
 		if ((wsrpProducerModelImpl.getColumnBitmask() &
-				FINDER_PATH_FETCH_BY_UUID_G.getColumnBitmask()) != 0) {
-			Object[] args = new Object[] {
-					wsrpProducerModelImpl.getOriginalUuid(),
-					wsrpProducerModelImpl.getOriginalGroupId()
-				};
+			 _finderPathFetchByUUID_G.getColumnBitmask()) != 0) {
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_G, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_UUID_G, args);
+			Object[] args = new Object[] {
+				wsrpProducerModelImpl.getOriginalUuid(),
+				wsrpProducerModelImpl.getOriginalGroupId()
+			};
+
+			finderCache.removeResult(_finderPathCountByUUID_G, args);
+			finderCache.removeResult(_finderPathFetchByUUID_G, args);
 		}
 	}
 
@@ -2157,6 +2159,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	@Override
 	public WSRPProducer remove(long wsrpProducerId)
 		throws NoSuchProducerException {
+
 		return remove((Serializable)wsrpProducerId);
 	}
 
@@ -2170,21 +2173,22 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	@Override
 	public WSRPProducer remove(Serializable primaryKey)
 		throws NoSuchProducerException {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			WSRPProducer wsrpProducer = (WSRPProducer)session.get(WSRPProducerImpl.class,
-					primaryKey);
+			WSRPProducer wsrpProducer = (WSRPProducer)session.get(
+				WSRPProducerImpl.class, primaryKey);
 
 			if (wsrpProducer == null) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 				}
 
-				throw new NoSuchProducerException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-					primaryKey);
+				throw new NoSuchProducerException(
+					_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
 			return remove(wsrpProducer);
@@ -2202,16 +2206,14 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 	@Override
 	protected WSRPProducer removeImpl(WSRPProducer wsrpProducer) {
-		wsrpProducer = toUnwrappedModel(wsrpProducer);
-
 		Session session = null;
 
 		try {
 			session = openSession();
 
 			if (!session.contains(wsrpProducer)) {
-				wsrpProducer = (WSRPProducer)session.get(WSRPProducerImpl.class,
-						wsrpProducer.getPrimaryKeyObj());
+				wsrpProducer = (WSRPProducer)session.get(
+					WSRPProducerImpl.class, wsrpProducer.getPrimaryKeyObj());
 			}
 
 			if (wsrpProducer != null) {
@@ -2234,11 +2236,27 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 	@Override
 	public WSRPProducer updateImpl(WSRPProducer wsrpProducer) {
-		wsrpProducer = toUnwrappedModel(wsrpProducer);
-
 		boolean isNew = wsrpProducer.isNew();
 
-		WSRPProducerModelImpl wsrpProducerModelImpl = (WSRPProducerModelImpl)wsrpProducer;
+		if (!(wsrpProducer instanceof WSRPProducerModelImpl)) {
+			InvocationHandler invocationHandler = null;
+
+			if (ProxyUtil.isProxyClass(wsrpProducer.getClass())) {
+				invocationHandler = ProxyUtil.getInvocationHandler(
+					wsrpProducer);
+
+				throw new IllegalArgumentException(
+					"Implement ModelWrapper in wsrpProducer proxy " +
+						invocationHandler.getClass());
+			}
+
+			throw new IllegalArgumentException(
+				"Implement ModelWrapper in custom WSRPProducer implementation " +
+					wsrpProducer.getClass());
+		}
+
+		WSRPProducerModelImpl wsrpProducerModelImpl =
+			(WSRPProducerModelImpl)wsrpProducer;
 
 		if (Validator.isNull(wsrpProducer.getUuid())) {
 			String uuid = PortalUUIDUtil.generate();
@@ -2246,7 +2264,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 			wsrpProducer.setUuid(uuid);
 		}
 
-		ServiceContext serviceContext = ServiceContextThreadLocal.getServiceContext();
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
 
 		Date now = new Date();
 
@@ -2264,7 +2283,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 				wsrpProducer.setModifiedDate(now);
 			}
 			else {
-				wsrpProducer.setModifiedDate(serviceContext.getModifiedDate(now));
+				wsrpProducer.setModifiedDate(
+					serviceContext.getModifiedDate(now));
 			}
 		}
 
@@ -2294,94 +2314,98 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		if (!WSRPProducerModelImpl.COLUMN_BITMASK_ENABLED) {
 			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 		}
-		else
-		 if (isNew) {
-			Object[] args = new Object[] { wsrpProducerModelImpl.getUuid() };
+		else if (isNew) {
+			Object[] args = new Object[] {wsrpProducerModelImpl.getUuid()};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-				args);
+			finderCache.removeResult(_finderPathCountByUuid, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByUuid, args);
 
 			args = new Object[] {
+				wsrpProducerModelImpl.getUuid(),
+				wsrpProducerModelImpl.getCompanyId()
+			};
+
+			finderCache.removeResult(_finderPathCountByUuid_C, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByUuid_C, args);
+
+			args = new Object[] {wsrpProducerModelImpl.getCompanyId()};
+
+			finderCache.removeResult(_finderPathCountByCompanyId, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByCompanyId, args);
+
+			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
+		}
+		else {
+			if ((wsrpProducerModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
+					 0) {
+
+				Object[] args = new Object[] {
+					wsrpProducerModelImpl.getOriginalUuid()
+				};
+
+				finderCache.removeResult(_finderPathCountByUuid, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByUuid, args);
+
+				args = new Object[] {wsrpProducerModelImpl.getUuid()};
+
+				finderCache.removeResult(_finderPathCountByUuid, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByUuid, args);
+			}
+
+			if ((wsrpProducerModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
+					 0) {
+
+				Object[] args = new Object[] {
+					wsrpProducerModelImpl.getOriginalUuid(),
+					wsrpProducerModelImpl.getOriginalCompanyId()
+				};
+
+				finderCache.removeResult(_finderPathCountByUuid_C, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByUuid_C, args);
+
+				args = new Object[] {
 					wsrpProducerModelImpl.getUuid(),
 					wsrpProducerModelImpl.getCompanyId()
 				};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-				args);
-
-			args = new Object[] { wsrpProducerModelImpl.getCompanyId() };
-
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-				args);
-
-			finderCache.removeResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL,
-				FINDER_ARGS_EMPTY);
-		}
-
-		else {
-			if ((wsrpProducerModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						wsrpProducerModelImpl.getOriginalUuid()
-					};
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-					args);
-
-				args = new Object[] { wsrpProducerModelImpl.getUuid() };
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-					args);
+				finderCache.removeResult(_finderPathCountByUuid_C, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByUuid_C, args);
 			}
 
 			if ((wsrpProducerModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C.getColumnBitmask()) != 0) {
+				 _finderPathWithoutPaginationFindByCompanyId.
+					 getColumnBitmask()) != 0) {
+
 				Object[] args = new Object[] {
-						wsrpProducerModelImpl.getOriginalUuid(),
-						wsrpProducerModelImpl.getOriginalCompanyId()
-					};
+					wsrpProducerModelImpl.getOriginalCompanyId()
+				};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-					args);
+				finderCache.removeResult(_finderPathCountByCompanyId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByCompanyId, args);
 
-				args = new Object[] {
-						wsrpProducerModelImpl.getUuid(),
-						wsrpProducerModelImpl.getCompanyId()
-					};
+				args = new Object[] {wsrpProducerModelImpl.getCompanyId()};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-					args);
-			}
-
-			if ((wsrpProducerModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						wsrpProducerModelImpl.getOriginalCompanyId()
-					};
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-					args);
-
-				args = new Object[] { wsrpProducerModelImpl.getCompanyId() };
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-					args);
+				finderCache.removeResult(_finderPathCountByCompanyId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByCompanyId, args);
 			}
 		}
 
-		entityCache.putResult(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-			WSRPProducerImpl.class, wsrpProducer.getPrimaryKey(), wsrpProducer,
-			false);
+		entityCache.putResult(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED, WSRPProducerImpl.class,
+			wsrpProducer.getPrimaryKey(), wsrpProducer, false);
 
 		clearUniqueFindersCache(wsrpProducerModelImpl, false);
 		cacheUniqueFindersCache(wsrpProducerModelImpl);
@@ -2391,32 +2415,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		return wsrpProducer;
 	}
 
-	protected WSRPProducer toUnwrappedModel(WSRPProducer wsrpProducer) {
-		if (wsrpProducer instanceof WSRPProducerImpl) {
-			return wsrpProducer;
-		}
-
-		WSRPProducerImpl wsrpProducerImpl = new WSRPProducerImpl();
-
-		wsrpProducerImpl.setNew(wsrpProducer.isNew());
-		wsrpProducerImpl.setPrimaryKey(wsrpProducer.getPrimaryKey());
-
-		wsrpProducerImpl.setUuid(wsrpProducer.getUuid());
-		wsrpProducerImpl.setWsrpProducerId(wsrpProducer.getWsrpProducerId());
-		wsrpProducerImpl.setGroupId(wsrpProducer.getGroupId());
-		wsrpProducerImpl.setCompanyId(wsrpProducer.getCompanyId());
-		wsrpProducerImpl.setCreateDate(wsrpProducer.getCreateDate());
-		wsrpProducerImpl.setModifiedDate(wsrpProducer.getModifiedDate());
-		wsrpProducerImpl.setName(wsrpProducer.getName());
-		wsrpProducerImpl.setVersion(wsrpProducer.getVersion());
-		wsrpProducerImpl.setPortletIds(wsrpProducer.getPortletIds());
-		wsrpProducerImpl.setLastPublishDate(wsrpProducer.getLastPublishDate());
-
-		return wsrpProducerImpl;
-	}
-
 	/**
-	 * Returns the wsrp producer with the primary key or throws a {@link com.liferay.portal.kernel.exception.NoSuchModelException} if it could not be found.
+	 * Returns the wsrp producer with the primary key or throws a <code>com.liferay.portal.kernel.exception.NoSuchModelException</code> if it could not be found.
 	 *
 	 * @param primaryKey the primary key of the wsrp producer
 	 * @return the wsrp producer
@@ -2425,6 +2425,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	@Override
 	public WSRPProducer findByPrimaryKey(Serializable primaryKey)
 		throws NoSuchProducerException {
+
 		WSRPProducer wsrpProducer = fetchByPrimaryKey(primaryKey);
 
 		if (wsrpProducer == null) {
@@ -2432,15 +2433,15 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 				_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
-			throw new NoSuchProducerException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-				primaryKey);
+			throw new NoSuchProducerException(
+				_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 		}
 
 		return wsrpProducer;
 	}
 
 	/**
-	 * Returns the wsrp producer with the primary key or throws a {@link NoSuchProducerException} if it could not be found.
+	 * Returns the wsrp producer with the primary key or throws a <code>NoSuchProducerException</code> if it could not be found.
 	 *
 	 * @param wsrpProducerId the primary key of the wsrp producer
 	 * @return the wsrp producer
@@ -2449,6 +2450,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	@Override
 	public WSRPProducer findByPrimaryKey(long wsrpProducerId)
 		throws NoSuchProducerException {
+
 		return findByPrimaryKey((Serializable)wsrpProducerId);
 	}
 
@@ -2460,8 +2462,9 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public WSRPProducer fetchByPrimaryKey(Serializable primaryKey) {
-		Serializable serializable = entityCache.getResult(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-				WSRPProducerImpl.class, primaryKey);
+		Serializable serializable = entityCache.getResult(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED, WSRPProducerImpl.class,
+			primaryKey);
 
 		if (serializable == nullModel) {
 			return null;
@@ -2475,19 +2478,21 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 			try {
 				session = openSession();
 
-				wsrpProducer = (WSRPProducer)session.get(WSRPProducerImpl.class,
-						primaryKey);
+				wsrpProducer = (WSRPProducer)session.get(
+					WSRPProducerImpl.class, primaryKey);
 
 				if (wsrpProducer != null) {
 					cacheResult(wsrpProducer);
 				}
 				else {
-					entityCache.putResult(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+					entityCache.putResult(
+						WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
 						WSRPProducerImpl.class, primaryKey, nullModel);
 				}
 			}
 			catch (Exception e) {
-				entityCache.removeResult(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+				entityCache.removeResult(
+					WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
 					WSRPProducerImpl.class, primaryKey);
 
 				throw processException(e);
@@ -2514,11 +2519,13 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	@Override
 	public Map<Serializable, WSRPProducer> fetchByPrimaryKeys(
 		Set<Serializable> primaryKeys) {
+
 		if (primaryKeys.isEmpty()) {
 			return Collections.emptyMap();
 		}
 
-		Map<Serializable, WSRPProducer> map = new HashMap<Serializable, WSRPProducer>();
+		Map<Serializable, WSRPProducer> map =
+			new HashMap<Serializable, WSRPProducer>();
 
 		if (primaryKeys.size() == 1) {
 			Iterator<Serializable> iterator = primaryKeys.iterator();
@@ -2537,8 +2544,9 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 		Set<Serializable> uncachedPrimaryKeys = null;
 
 		for (Serializable primaryKey : primaryKeys) {
-			Serializable serializable = entityCache.getResult(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
-					WSRPProducerImpl.class, primaryKey);
+			Serializable serializable = entityCache.getResult(
+				WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+				WSRPProducerImpl.class, primaryKey);
 
 			if (serializable != nullModel) {
 				if (serializable == null) {
@@ -2558,8 +2566,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 			return map;
 		}
 
-		StringBundler query = new StringBundler((uncachedPrimaryKeys.size() * 2) +
-				1);
+		StringBundler query = new StringBundler(
+			uncachedPrimaryKeys.size() * 2 + 1);
 
 		query.append(_SQL_SELECT_WSRPPRODUCER_WHERE_PKS_IN);
 
@@ -2591,7 +2599,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 			}
 
 			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				entityCache.putResult(WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+				entityCache.putResult(
+					WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
 					WSRPProducerImpl.class, primaryKey, nullModel);
 			}
 		}
@@ -2619,7 +2628,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Returns a range of all the wsrp producers.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of wsrp producers
@@ -2635,7 +2644,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Returns an ordered range of all the wsrp producers.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of wsrp producers
@@ -2644,8 +2653,9 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the ordered range of wsrp producers
 	 */
 	@Override
-	public List<WSRPProducer> findAll(int start, int end,
-		OrderByComparator<WSRPProducer> orderByComparator) {
+	public List<WSRPProducer> findAll(
+		int start, int end, OrderByComparator<WSRPProducer> orderByComparator) {
+
 		return findAll(start, end, orderByComparator, true);
 	}
 
@@ -2653,7 +2663,7 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Returns an ordered range of all the wsrp producers.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of wsrp producers
@@ -2663,29 +2673,31 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * @return the ordered range of wsrp producers
 	 */
 	@Override
-	public List<WSRPProducer> findAll(int start, int end,
-		OrderByComparator<WSRPProducer> orderByComparator,
+	public List<WSRPProducer> findAll(
+		int start, int end, OrderByComparator<WSRPProducer> orderByComparator,
 		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL;
+			finderPath = _finderPathWithoutPaginationFindAll;
 			finderArgs = FINDER_ARGS_EMPTY;
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_ALL;
-			finderArgs = new Object[] { start, end, orderByComparator };
+			finderPath = _finderPathWithPaginationFindAll;
+			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<WSRPProducer> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<WSRPProducer>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<WSRPProducer>)finderCache.getResult(
+				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
@@ -2693,13 +2705,13 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(2 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					2 + (orderByComparator.getOrderByFields().length * 2));
 
 				query.append(_SQL_SELECT_WSRPPRODUCER);
 
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
 				sql = query.toString();
 			}
@@ -2719,16 +2731,16 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 				Query q = session.createQuery(sql);
 
 				if (!pagination) {
-					list = (List<WSRPProducer>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<WSRPProducer>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<WSRPProducer>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<WSRPProducer>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -2766,8 +2778,8 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)finderCache.getResult(FINDER_PATH_COUNT_ALL,
-				FINDER_ARGS_EMPTY, this);
+		Long count = (Long)finderCache.getResult(
+			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
 			Session session = null;
@@ -2779,12 +2791,12 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY,
-					count);
+				finderCache.putResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_COUNT_ALL,
-					FINDER_ARGS_EMPTY);
+				finderCache.removeResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 				throw processException(e);
 			}
@@ -2810,6 +2822,107 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 	 * Initializes the wsrp producer persistence.
 	 */
 	public void afterPropertiesSet() {
+		_finderPathWithPaginationFindAll = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+
+		_finderPathWithoutPaginationFindAll = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
+			new String[0]);
+
+		_finderPathCountAll = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
+			new String[0]);
+
+		_finderPathWithPaginationFindByUuid = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
+			new String[] {
+				String.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByUuid = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
+			new String[] {String.class.getName()},
+			WSRPProducerModelImpl.UUID_COLUMN_BITMASK |
+			WSRPProducerModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByUuid = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
+			new String[] {String.class.getName()});
+
+		_finderPathFetchByUUID_G = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
+			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
+			new String[] {String.class.getName(), Long.class.getName()},
+			WSRPProducerModelImpl.UUID_COLUMN_BITMASK |
+			WSRPProducerModelImpl.GROUPID_COLUMN_BITMASK);
+
+		_finderPathCountByUUID_G = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
+			new String[] {String.class.getName(), Long.class.getName()});
+
+		_finderPathWithPaginationFindByUuid_C = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
+			new String[] {
+				String.class.getName(), Long.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
+			new String[] {String.class.getName(), Long.class.getName()},
+			WSRPProducerModelImpl.UUID_COLUMN_BITMASK |
+			WSRPProducerModelImpl.COMPANYID_COLUMN_BITMASK |
+			WSRPProducerModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByUuid_C = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
+			new String[] {String.class.getName(), Long.class.getName()});
+
+		_finderPathWithPaginationFindByCompanyId = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, WSRPProducerImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
+			new String[] {Long.class.getName()},
+			WSRPProducerModelImpl.COMPANYID_COLUMN_BITMASK |
+			WSRPProducerModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByCompanyId = new FinderPath(
+			WSRPProducerModelImpl.ENTITY_CACHE_ENABLED,
+			WSRPProducerModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
+			new String[] {Long.class.getName()});
 	}
 
 	public void destroy() {
@@ -2821,20 +2934,40 @@ public class WSRPProducerPersistenceImpl extends BasePersistenceImpl<WSRPProduce
 
 	@ServiceReference(type = CompanyProviderWrapper.class)
 	protected CompanyProvider companyProvider;
+
 	@ServiceReference(type = EntityCache.class)
 	protected EntityCache entityCache;
+
 	@ServiceReference(type = FinderCache.class)
 	protected FinderCache finderCache;
-	private static final String _SQL_SELECT_WSRPPRODUCER = "SELECT wsrpProducer FROM WSRPProducer wsrpProducer";
-	private static final String _SQL_SELECT_WSRPPRODUCER_WHERE_PKS_IN = "SELECT wsrpProducer FROM WSRPProducer wsrpProducer WHERE wsrpProducerId IN (";
-	private static final String _SQL_SELECT_WSRPPRODUCER_WHERE = "SELECT wsrpProducer FROM WSRPProducer wsrpProducer WHERE ";
-	private static final String _SQL_COUNT_WSRPPRODUCER = "SELECT COUNT(wsrpProducer) FROM WSRPProducer wsrpProducer";
-	private static final String _SQL_COUNT_WSRPPRODUCER_WHERE = "SELECT COUNT(wsrpProducer) FROM WSRPProducer wsrpProducer WHERE ";
+
+	private static final String _SQL_SELECT_WSRPPRODUCER =
+		"SELECT wsrpProducer FROM WSRPProducer wsrpProducer";
+
+	private static final String _SQL_SELECT_WSRPPRODUCER_WHERE_PKS_IN =
+		"SELECT wsrpProducer FROM WSRPProducer wsrpProducer WHERE wsrpProducerId IN (";
+
+	private static final String _SQL_SELECT_WSRPPRODUCER_WHERE =
+		"SELECT wsrpProducer FROM WSRPProducer wsrpProducer WHERE ";
+
+	private static final String _SQL_COUNT_WSRPPRODUCER =
+		"SELECT COUNT(wsrpProducer) FROM WSRPProducer wsrpProducer";
+
+	private static final String _SQL_COUNT_WSRPPRODUCER_WHERE =
+		"SELECT COUNT(wsrpProducer) FROM WSRPProducer wsrpProducer WHERE ";
+
 	private static final String _ORDER_BY_ENTITY_ALIAS = "wsrpProducer.";
-	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY = "No WSRPProducer exists with the primary key ";
-	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No WSRPProducer exists with the key {";
-	private static final Log _log = LogFactoryUtil.getLog(WSRPProducerPersistenceImpl.class);
-	private static final Set<String> _badColumnNames = SetUtil.fromArray(new String[] {
-				"uuid"
-			});
+
+	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY =
+		"No WSRPProducer exists with the primary key ";
+
+	private static final String _NO_SUCH_ENTITY_WITH_KEY =
+		"No WSRPProducer exists with the key {";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		WSRPProducerPersistenceImpl.class);
+
+	private static final Set<String> _badColumnNames = SetUtil.fromArray(
+		new String[] {"uuid"});
+
 }

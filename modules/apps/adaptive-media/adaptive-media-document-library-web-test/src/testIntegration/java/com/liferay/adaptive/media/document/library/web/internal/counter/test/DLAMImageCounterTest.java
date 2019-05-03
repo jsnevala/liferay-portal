@@ -38,12 +38,14 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.test.randomizerbumpers.TikaSafeRandomizerBumper;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portlet.blogs.constants.BlogsConstants;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -217,7 +219,8 @@ public class DLAMImageCounterTest {
 			_user1.getUserId(), _group1.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(),
-			ContentTypes.APPLICATION_OCTET_STREAM, RandomTestUtil.randomBytes(),
+			ContentTypes.APPLICATION_OCTET_STREAM,
+			RandomTestUtil.randomBytes(TikaSafeRandomizerBumper.INSTANCE),
 			serviceContext);
 
 		Assert.assertEquals(
@@ -239,7 +242,9 @@ public class DLAMImageCounterTest {
 
 			Collection<T> services = registry.getServices(clazz, filter);
 
-			return services.iterator().next();
+			Iterator<T> iterator = services.iterator();
+
+			return iterator.next();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);

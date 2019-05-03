@@ -76,8 +76,7 @@ import org.apache.commons.lang.time.StopWatch;
  * 		SomeWidget.class.getName(), SomeWidget.getPrimaryKey(),
  * 		serviceContext.getGroupPermissions, serviceContext.getGuestPermissions);
  * </code>
- * </pre>
- * </p>
+ * </pre></p>
  *
  * <p>
  * Just prior to deleting an entity instance, you should delete its resource at
@@ -93,8 +92,7 @@ import org.apache.commons.lang.time.StopWatch;
  * 		SomeWidget.getCompanyId(), SomeWidget.class.getName(),
  * 		ResourceConstants.SCOPE_INDIVIDUAL, SomeWidget.getPrimaryKey());
  * </code>
- * </pre>
- * </p>
+ * </pre></p>
  *
  * @author Brian Wing Shun Chan
  * @author Wilson S. Man
@@ -339,6 +337,15 @@ public class ResourceLocalServiceImpl extends ResourceLocalServiceBaseImpl {
 
 		addResources(
 			companyId, groupId, 0, name, null, portletActions, false, false);
+	}
+
+	@Override
+	public void copyModelResources(
+			long companyId, String name, long oldPrimKey, long newPrimKey)
+		throws PortalException {
+
+		resourcePermissionLocalService.copyModelResourcePermissions(
+			companyId, name, oldPrimKey, newPrimKey);
 	}
 
 	/**

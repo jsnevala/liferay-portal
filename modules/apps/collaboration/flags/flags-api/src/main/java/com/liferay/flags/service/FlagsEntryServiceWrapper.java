@@ -26,30 +26,33 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @generated
  */
 @ProviderType
-public class FlagsEntryServiceWrapper implements FlagsEntryService,
-	ServiceWrapper<FlagsEntryService> {
+public class FlagsEntryServiceWrapper
+	implements FlagsEntryService, ServiceWrapper<FlagsEntryService> {
+
 	public FlagsEntryServiceWrapper(FlagsEntryService flagsEntryService) {
 		_flagsEntryService = flagsEntryService;
 	}
 
 	@Override
-	public void addEntry(java.lang.String className, long classPK,
-		java.lang.String reporterEmailAddress, long reportedUserId,
-		java.lang.String contentTitle, java.lang.String contentURL,
-		java.lang.String reason,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+	public void addEntry(
+			String className, long classPK, String reporterEmailAddress,
+			long reportedUserId, String contentTitle, String contentURL,
+			String reason,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		_flagsEntryService.addEntry(className, classPK, reporterEmailAddress,
-			reportedUserId, contentTitle, contentURL, reason, serviceContext);
+
+		_flagsEntryService.addEntry(
+			className, classPK, reporterEmailAddress, reportedUserId,
+			contentTitle, contentURL, reason, serviceContext);
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
-	public java.lang.String getOSGiServiceIdentifier() {
+	public String getOSGiServiceIdentifier() {
 		return _flagsEntryService.getOSGiServiceIdentifier();
 	}
 
@@ -64,4 +67,5 @@ public class FlagsEntryServiceWrapper implements FlagsEntryService,
 	}
 
 	private FlagsEntryService _flagsEntryService;
+
 }

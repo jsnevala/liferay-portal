@@ -26,7 +26,7 @@ import javax.portlet.PortletPreferences;
 
 /**
  * @author Sergio González
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class UpgradeBlogs extends BaseUpgradePortletPreferences {
 

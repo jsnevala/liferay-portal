@@ -66,6 +66,10 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 public interface KeyValueDDMFormFieldTypeSettings
 	extends DefaultDDMFormFieldTypeSettings {
 
+	@DDMFormField(visibilityExpression = "FALSE")
+	@Override
+	public String indexType();
+
 	@DDMFormField(dataType = "string", label = "%field-tip", type = "text")
 	public LocalizedValue placeholder();
 

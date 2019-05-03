@@ -30,9 +30,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {
-		"indexer.class.name=com.liferay.portlet.usersadmin.util.OrganizationIndexer"
-	},
+	property = "indexer.class.name=com.liferay.portlet.usersadmin.util.OrganizationIndexer",
 	service = IndexerPostProcessor.class
 )
 public class TestSingleIndexerPostProcessor implements IndexerPostProcessor {
@@ -44,7 +42,7 @@ public class TestSingleIndexerPostProcessor implements IndexerPostProcessor {
 	}
 
 	/**
-	 * @deprecated As of 1.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override
@@ -72,7 +70,7 @@ public class TestSingleIndexerPostProcessor implements IndexerPostProcessor {
 	}
 
 	/**
-	 * @deprecated As of 1.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override

@@ -21,7 +21,7 @@ import java.io.InputStream;
 
 /**
  * @author     Tina Tian
- * @deprecated As of 7.0.0, with no direct replacement
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
 @Deprecated
 public class Base64InputStream extends InputStream {
@@ -206,10 +206,8 @@ public class Base64InputStream extends InputStream {
 					count++;
 				}
 
-				int returnValue = decode(
+				return decode(
 					decodeUnitBuffer, outputBuffer, position, padNumber);
-
-				return returnValue;
 			}
 
 			decodeUnitBuffer[count++] = (byte)intValue;

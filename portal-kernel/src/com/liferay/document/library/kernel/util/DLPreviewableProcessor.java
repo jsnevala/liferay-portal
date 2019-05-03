@@ -157,7 +157,7 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 
 	@Override
 	public boolean isSupported(FileVersion fileVersion) {
-		if (fileVersion == null) {
+		if ((fileVersion == null) || (fileVersion.getSize() == 0)) {
 			return false;
 		}
 
@@ -175,7 +175,7 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 		if (getFileVersionIds().contains(
 				destinationFileVersion.getFileVersionId())) {
 
-			String processIdentity = Long.toString(
+			String processIdentity = String.valueOf(
 				destinationFileVersion.getFileVersionId());
 
 			destroyProcess(processIdentity);
@@ -513,7 +513,7 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 			binPathSegment = previewType;
 		}
 		else {
-			binPathSegment = Integer.toString(fileIndex + 1);
+			binPathSegment = String.valueOf(fileIndex + 1);
 		}
 
 		String binPath = getBinPath(
@@ -1043,7 +1043,7 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 			binPathSegment = previewType;
 		}
 		else {
-			binPathSegment = Integer.toString(fileIndex + 1);
+			binPathSegment = String.valueOf(fileIndex + 1);
 		}
 
 		StringBundler sb = new StringBundler(4);
@@ -1188,21 +1188,21 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 		}
 		else if ((index == THUMBNAIL_INDEX_CUSTOM_1) &&
 				 ((PrefsPropsUtil.getInteger(
-					 PropsKeys.
-						 DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_HEIGHT) > 0) ||
+					 PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_HEIGHT) >
+						 0) ||
 				  (PrefsPropsUtil.getInteger(
-					  PropsKeys.
-						  DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_WIDTH) > 0))) {
+					  PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_WIDTH) >
+						  0))) {
 
 			return true;
 		}
 		else if ((index == THUMBNAIL_INDEX_CUSTOM_2) &&
 				 ((PrefsPropsUtil.getInteger(
-					 PropsKeys.
-						 DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_HEIGHT) > 0) ||
+					 PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_HEIGHT) >
+						 0) ||
 				  (PrefsPropsUtil.getInteger(
-					  PropsKeys.
-						  DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_WIDTH) > 0))) {
+					  PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_WIDTH) >
+						  0))) {
 
 			return true;
 		}

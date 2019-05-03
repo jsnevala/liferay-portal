@@ -225,7 +225,7 @@ public class MVCPortlet extends LiferayPortlet {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public void invokeTaglibDiscussion(
@@ -239,7 +239,7 @@ public class MVCPortlet extends LiferayPortlet {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public void invokeTaglibDiscussionPagination(
@@ -503,8 +503,11 @@ public class MVCPortlet extends LiferayPortlet {
 	}
 
 	protected String getMVCPathAttributeName(String namespace) {
-		return namespace.concat(StringPool.PERIOD).concat(
-			MVCRenderConstants.MVC_PATH_REQUEST_ATTRIBUTE_NAME);
+		return namespace.concat(
+			StringPool.PERIOD
+		).concat(
+			MVCRenderConstants.MVC_PATH_REQUEST_ATTRIBUTE_NAME
+		);
 	}
 
 	protected String getPath(

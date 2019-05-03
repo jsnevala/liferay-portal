@@ -1,11 +1,14 @@
-<definition>
-	<command name="clickFormContent">
-		<execute function="Click" locator1="FormPortlet#FORM_CONTENT" />
-	</command>
+definition {
+	macro clickFormContent {
+		Click(locator1 = "FormPortlet#FORM_CONTENT");
+	}
 
-	<command name="gotoSelectForm">
-		<execute function="AssertClick#pauseMakeVisibleAssertTextEqualsClickAt" locator1="FormPortlet#SELECT_FORM" value1="Select Form" />
+	macro gotoSelectForm {
+		AssertClick.pauseMakeVisibleAssertTextEqualsClickAt(
+			locator1 = "FormPortlet#SELECT_FORM",
+			value1 = "Select Form"
+		);
 
-		<execute macro="IFrame#selectDialogFrame" />
-	</command>
-</definition>
+		IFrame.selectDialogFrame();
+	}
+}

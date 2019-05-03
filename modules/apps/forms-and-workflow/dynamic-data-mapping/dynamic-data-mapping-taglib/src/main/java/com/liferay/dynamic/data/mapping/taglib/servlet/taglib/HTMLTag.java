@@ -104,8 +104,8 @@ public class HTMLTag extends BaseHTMLTag {
 		try {
 			long ddmStructureId = getClassPK();
 
-			if (getClassNameId() ==
-					PortalUtil.getClassNameId(DDMTemplate.class)) {
+			if (getClassNameId() == PortalUtil.getClassNameId(
+					DDMTemplate.class)) {
 
 				DDMTemplate ddmTemplate =
 					DDMTemplateLocalServiceUtil.getTemplate(getClassPK());
@@ -155,6 +155,10 @@ public class HTMLTag extends BaseHTMLTag {
 		return null;
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	protected String getRandomNamespace() {
 		return PortalUtil.generateRandomKey(request, "taglib_ddm_init-ext");
 	}

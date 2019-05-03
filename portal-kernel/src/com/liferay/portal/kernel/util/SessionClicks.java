@@ -63,7 +63,11 @@ public class SessionClicks {
 		HttpSession session, String namespace, String key,
 		String defaultValue) {
 
-		String sessionKey = namespace.concat(StringPool.COLON).concat(key);
+		String sessionKey = namespace.concat(
+			StringPool.COLON
+		).concat(
+			key
+		);
 
 		return GetterUtil.getString(
 			session.getAttribute(sessionKey), defaultValue);
@@ -133,7 +137,11 @@ public class SessionClicks {
 	public static void put(
 		HttpSession session, String namespace, String key, String value) {
 
-		String sessionKey = namespace.concat(StringPool.COLON).concat(key);
+		String sessionKey = namespace.concat(
+			StringPool.COLON
+		).concat(
+			key
+		);
 
 		session.setAttribute(sessionKey, value);
 	}

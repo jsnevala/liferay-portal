@@ -50,7 +50,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Sync
 public class AssetUtilTest {
@@ -111,13 +111,13 @@ public class AssetUtilTest {
 			long[] assetCategoryIds, String[] assetTagNames,
 			Map<String, Serializable> attributes, long companyId,
 			String keywords, Layout layout, Locale locale, long scopeGroupId,
-			TimeZone timezone, long userId)
+			TimeZone timeZone, long userId)
 		throws Exception {
 
 		BaseModelSearchResult<AssetEntry> baseModelSearchResult =
 			AssetUtil.searchAssetEntries(
 				assetEntryQuery, assetCategoryIds, assetTagNames, attributes,
-				companyId, keywords, layout, locale, scopeGroupId, timezone,
+				companyId, keywords, layout, locale, scopeGroupId, timeZone,
 				userId, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		Assert.assertEquals(

@@ -95,31 +95,31 @@ public class DDMFormInstanceFactoryTest {
 
 		ddmFormValues.addDDMFormFieldValue(
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
-				"double", Double.toString(expectedDoubleValue)));
+				"double", String.valueOf(expectedDoubleValue)));
 
 		float expectedFloatValue = 3.5F;
 
 		ddmFormValues.addDDMFormFieldValue(
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
-				"float", Float.toString(expectedFloatValue)));
+				"float", String.valueOf(expectedFloatValue)));
 
 		int expectedIntegerValue = 2015;
 
 		ddmFormValues.addDDMFormFieldValue(
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
-				"integer", Integer.toString(expectedIntegerValue)));
+				"integer", String.valueOf(expectedIntegerValue)));
 
 		long expectedLongValue = 1000L;
 
 		ddmFormValues.addDDMFormFieldValue(
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
-				"long", Long.toString(expectedLongValue)));
+				"long", String.valueOf(expectedLongValue)));
 
 		short expectedShortValue = 5;
 
 		ddmFormValues.addDDMFormFieldValue(
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
-				"short", Short.toString(expectedShortValue)));
+				"short", String.valueOf(expectedShortValue)));
 
 		String expectedStringValue = "Frank Sinatra";
 
@@ -150,18 +150,7 @@ public class DDMFormInstanceFactoryTest {
 	}
 
 	@DDMForm
-	private interface DynamicFormWithPrimitiveArrayTypes {
-
-		@DDMFormField(name = "boolean")
-		public Boolean[] booleanValues();
-
-		@DDMFormField(name = "string")
-		public String[] stringValues();
-
-	}
-
-	@DDMForm
-	private interface DynamicFormWithPrimitiveTypes {
+	public interface DynamicFormWithPrimitiveTypes {
 
 		@DDMFormField(name = "boolean")
 		public boolean booleanValue();
@@ -183,6 +172,17 @@ public class DDMFormInstanceFactoryTest {
 
 		@DDMFormField(name = "string")
 		public String stringValue();
+
+	}
+
+	@DDMForm
+	private interface DynamicFormWithPrimitiveArrayTypes {
+
+		@DDMFormField(name = "boolean")
+		public Boolean[] booleanValues();
+
+		@DDMFormField(name = "string")
+		public String[] stringValues();
 
 	}
 

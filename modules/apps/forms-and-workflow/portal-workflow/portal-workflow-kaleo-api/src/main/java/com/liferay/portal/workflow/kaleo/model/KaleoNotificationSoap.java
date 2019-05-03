@@ -30,6 +30,7 @@ import java.util.List;
  */
 @ProviderType
 public class KaleoNotificationSoap implements Serializable {
+
 	public static KaleoNotificationSoap toSoapModel(KaleoNotification model) {
 		KaleoNotificationSoap soapModel = new KaleoNotificationSoap();
 
@@ -56,7 +57,9 @@ public class KaleoNotificationSoap implements Serializable {
 
 	public static KaleoNotificationSoap[] toSoapModels(
 		KaleoNotification[] models) {
-		KaleoNotificationSoap[] soapModels = new KaleoNotificationSoap[models.length];
+
+		KaleoNotificationSoap[] soapModels =
+			new KaleoNotificationSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -67,10 +70,12 @@ public class KaleoNotificationSoap implements Serializable {
 
 	public static KaleoNotificationSoap[][] toSoapModels(
 		KaleoNotification[][] models) {
+
 		KaleoNotificationSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new KaleoNotificationSoap[models.length][models[0].length];
+			soapModels =
+				new KaleoNotificationSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new KaleoNotificationSoap[0][0];
@@ -85,7 +90,9 @@ public class KaleoNotificationSoap implements Serializable {
 
 	public static KaleoNotificationSoap[] toSoapModels(
 		List<KaleoNotification> models) {
-		List<KaleoNotificationSoap> soapModels = new ArrayList<KaleoNotificationSoap>(models.size());
+
+		List<KaleoNotificationSoap> soapModels =
+			new ArrayList<KaleoNotificationSoap>(models.size());
 
 		for (KaleoNotification model : models) {
 			soapModels.add(toSoapModel(model));
@@ -258,4 +265,5 @@ public class KaleoNotificationSoap implements Serializable {
 	private String _template;
 	private String _templateLanguage;
 	private String _notificationTypes;
+
 }

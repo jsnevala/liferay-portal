@@ -137,7 +137,7 @@ String type = GetterUtil.getString((String)request.getAttribute("liferay-ui:tabs
 								</c:if>
 				</c:when>
 				<c:otherwise>
-					<ul class="lfr-nav nav nav-<%= type %> <%= cssClass %>">
+					<ul class="lfr-nav nav nav-<%= type %> <%= cssClass %>" data-tabs-namespace="<%= namespace + param %>">
 				</c:otherwise>
 			</c:choose>
 		</c:otherwise>
@@ -216,7 +216,7 @@ String type = GetterUtil.getString((String)request.getAttribute("liferay-ui:tabs
 				/>
 			</c:when>
 			<c:otherwise>
-				<li class="<%= cssClassName %>" id="<%= namespace %><%= param %><%= StringUtil.toCharCode(values[i]) %>TabsId">
+				<li class="<%= cssClassName %>" data-tab-name="<%= names[i] %>" id="<%= namespace %><%= param %><%= StringUtil.toCharCode(values[i]) %>TabsId">
 					<a href="<%= Validator.isNotNull(curURL) ? HtmlUtil.escapeAttribute(curURL) : "javascript:;" %>" onClick="<%= Validator.isNotNull(curOnClick) ? curOnClick : StringPool.BLANK %>">
 						<%= LanguageUtil.get(resourceBundle, HtmlUtil.escape(names[i])) %>
 					</a>

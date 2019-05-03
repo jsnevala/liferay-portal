@@ -99,6 +99,10 @@ AUI.add(
 						value: true
 					},
 
+					autoHighlight: {
+						value: false
+					},
+
 					className: {
 						value: null
 					},

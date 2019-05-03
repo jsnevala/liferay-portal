@@ -26,7 +26,7 @@ import com.liferay.portal.kernel.xml.Attribute;
 import com.liferay.portal.kernel.xml.Element;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class ThemeImporter {
 

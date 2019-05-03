@@ -30,11 +30,15 @@ import java.util.List;
  */
 @ProviderType
 public class KaleoTaskAssignmentInstanceSoap implements Serializable {
+
 	public static KaleoTaskAssignmentInstanceSoap toSoapModel(
 		KaleoTaskAssignmentInstance model) {
-		KaleoTaskAssignmentInstanceSoap soapModel = new KaleoTaskAssignmentInstanceSoap();
 
-		soapModel.setKaleoTaskAssignmentInstanceId(model.getKaleoTaskAssignmentInstanceId());
+		KaleoTaskAssignmentInstanceSoap soapModel =
+			new KaleoTaskAssignmentInstanceSoap();
+
+		soapModel.setKaleoTaskAssignmentInstanceId(
+			model.getKaleoTaskAssignmentInstanceId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setUserId(model.getUserId());
@@ -44,12 +48,13 @@ public class KaleoTaskAssignmentInstanceSoap implements Serializable {
 		soapModel.setKaleoDefinitionId(model.getKaleoDefinitionId());
 		soapModel.setKaleoInstanceId(model.getKaleoInstanceId());
 		soapModel.setKaleoInstanceTokenId(model.getKaleoInstanceTokenId());
-		soapModel.setKaleoTaskInstanceTokenId(model.getKaleoTaskInstanceTokenId());
+		soapModel.setKaleoTaskInstanceTokenId(
+			model.getKaleoTaskInstanceTokenId());
 		soapModel.setKaleoTaskId(model.getKaleoTaskId());
 		soapModel.setKaleoTaskName(model.getKaleoTaskName());
 		soapModel.setAssigneeClassName(model.getAssigneeClassName());
 		soapModel.setAssigneeClassPK(model.getAssigneeClassPK());
-		soapModel.setCompleted(model.getCompleted());
+		soapModel.setCompleted(model.isCompleted());
 		soapModel.setCompletionDate(model.getCompletionDate());
 
 		return soapModel;
@@ -57,7 +62,9 @@ public class KaleoTaskAssignmentInstanceSoap implements Serializable {
 
 	public static KaleoTaskAssignmentInstanceSoap[] toSoapModels(
 		KaleoTaskAssignmentInstance[] models) {
-		KaleoTaskAssignmentInstanceSoap[] soapModels = new KaleoTaskAssignmentInstanceSoap[models.length];
+
+		KaleoTaskAssignmentInstanceSoap[] soapModels =
+			new KaleoTaskAssignmentInstanceSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -68,10 +75,12 @@ public class KaleoTaskAssignmentInstanceSoap implements Serializable {
 
 	public static KaleoTaskAssignmentInstanceSoap[][] toSoapModels(
 		KaleoTaskAssignmentInstance[][] models) {
+
 		KaleoTaskAssignmentInstanceSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new KaleoTaskAssignmentInstanceSoap[models.length][models[0].length];
+			soapModels = new KaleoTaskAssignmentInstanceSoap
+				[models.length][models[0].length];
 		}
 		else {
 			soapModels = new KaleoTaskAssignmentInstanceSoap[0][0];
@@ -86,13 +95,16 @@ public class KaleoTaskAssignmentInstanceSoap implements Serializable {
 
 	public static KaleoTaskAssignmentInstanceSoap[] toSoapModels(
 		List<KaleoTaskAssignmentInstance> models) {
-		List<KaleoTaskAssignmentInstanceSoap> soapModels = new ArrayList<KaleoTaskAssignmentInstanceSoap>(models.size());
+
+		List<KaleoTaskAssignmentInstanceSoap> soapModels =
+			new ArrayList<KaleoTaskAssignmentInstanceSoap>(models.size());
 
 		for (KaleoTaskAssignmentInstance model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new KaleoTaskAssignmentInstanceSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new KaleoTaskAssignmentInstanceSoap[soapModels.size()]);
 	}
 
 	public KaleoTaskAssignmentInstanceSoap() {
@@ -112,6 +124,7 @@ public class KaleoTaskAssignmentInstanceSoap implements Serializable {
 
 	public void setKaleoTaskAssignmentInstanceId(
 		long kaleoTaskAssignmentInstanceId) {
+
 		_kaleoTaskAssignmentInstanceId = kaleoTaskAssignmentInstanceId;
 	}
 
@@ -264,4 +277,5 @@ public class KaleoTaskAssignmentInstanceSoap implements Serializable {
 	private long _assigneeClassPK;
 	private boolean _completed;
 	private Date _completionDate;
+
 }

@@ -40,7 +40,7 @@ import org.junit.Rule;
 import org.junit.runner.RunWith;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @RunWith(Arquillian.class)
 public class MBCategoryTrashHandlerTest

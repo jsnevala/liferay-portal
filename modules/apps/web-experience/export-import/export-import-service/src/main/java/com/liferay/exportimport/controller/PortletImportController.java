@@ -14,12 +14,6 @@
 
 package com.liferay.exportimport.controller;
 
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_FAILED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_STARTED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_SUCCEEDED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.PROCESS_FLAG_PORTLET_IMPORT_IN_PROCESS;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.PROCESS_FLAG_PORTLET_STAGING_IN_PROCESS;
-
 import com.liferay.asset.kernel.model.adapter.StagedAssetLink;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetLinkLocalService;
@@ -49,6 +43,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataHandlerStatusMessageSender
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.exportimport.kernel.lar.UserIdStrategy;
+import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
@@ -131,11 +126,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Bruno Farache
  * @author Zsigmond Rab
  * @author Douglas Wong
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
-	property = {"model.class.name=com.liferay.portal.kernel.model.Portlet"},
+	property = "model.class.name=com.liferay.portal.kernel.model.Portlet",
 	service = {ExportImportController.class, PortletImportController.class}
 )
 public class PortletImportController implements ImportController {
@@ -216,7 +211,8 @@ public class PortletImportController implements ImportController {
 				exportImportConfiguration, file);
 
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_PORTLET_IMPORT_STARTED, getProcessFlag(),
+				ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_STARTED,
+				getProcessFlag(),
 				String.valueOf(
 					exportImportConfiguration.getExportImportConfigurationId()),
 				_portletDataContextFactory.clonePortletDataContext(
@@ -232,7 +228,8 @@ public class PortletImportController implements ImportController {
 			ExportImportThreadLocal.setPortletImportInProcess(false);
 
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_PORTLET_IMPORT_SUCCEEDED, getProcessFlag(),
+				ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_SUCCEEDED,
+				getProcessFlag(),
 				String.valueOf(
 					exportImportConfiguration.getExportImportConfigurationId()),
 				_portletDataContextFactory.clonePortletDataContext(
@@ -243,7 +240,8 @@ public class PortletImportController implements ImportController {
 			ExportImportThreadLocal.setPortletImportInProcess(false);
 
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_PORTLET_IMPORT_FAILED, getProcessFlag(),
+				ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_FAILED,
+				getProcessFlag(),
 				String.valueOf(
 					exportImportConfiguration.getExportImportConfigurationId()),
 				_portletDataContextFactory.clonePortletDataContext(
@@ -306,7 +304,7 @@ public class PortletImportController implements ImportController {
 	}
 
 	/**
-	 * @deprecated As of 3.2.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #importPortletData(PortletDataContext portletDataContext,
 	 *             javax.portlet.PortletPreferences portletPreferences, Element
 	 *             portletDataElement)}
@@ -345,6 +343,7 @@ public class PortletImportController implements ImportController {
 
 			String portletId = MapUtil.getString(settingsMap, "portletId");
 			long targetGroupId = MapUtil.getLong(settingsMap, "targetGroupId");
+
 			long targetPlid = MapUtil.getLong(settingsMap, "targetPlid");
 
 			Layout layout = _layoutLocalService.getLayout(targetPlid);
@@ -465,7 +464,7 @@ public class PortletImportController implements ImportController {
 	}
 
 	/**
-	 * @deprecated As of 3.2.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             deletePortletData(PortletDataContext portletDataContext,
 	 *             javax.portlet.PortletPreferences portletPreferences)}
 	 */
@@ -773,10 +772,12 @@ public class PortletImportController implements ImportController {
 
 	protected int getProcessFlag() {
 		if (ExportImportThreadLocal.isPortletStagingInProcess()) {
-			return PROCESS_FLAG_PORTLET_STAGING_IN_PROCESS;
+			return ExportImportLifecycleConstants.
+				PROCESS_FLAG_PORTLET_STAGING_IN_PROCESS;
 		}
 
-		return PROCESS_FLAG_PORTLET_IMPORT_IN_PROCESS;
+		return ExportImportLifecycleConstants.
+			PROCESS_FLAG_PORTLET_IMPORT_IN_PROCESS;
 	}
 
 	protected void importAssetLinks(PortletDataContext portletDataContext)
@@ -895,6 +896,7 @@ public class PortletImportController implements ImportController {
 
 				long ownerId = GetterUtil.getLong(
 					element.attributeValue("owner-id"));
+
 				int ownerType = GetterUtil.getInteger(
 					element.attributeValue("owner-type"));
 
@@ -1285,7 +1287,7 @@ public class PortletImportController implements ImportController {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Reference(unbind = "-")

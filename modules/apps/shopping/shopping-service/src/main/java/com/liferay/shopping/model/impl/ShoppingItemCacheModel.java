@@ -19,7 +19,6 @@ import aQute.bnd.annotation.ProviderType;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-
 import com.liferay.shopping.model.ShoppingItem;
 
 import java.io.Externalizable;
@@ -33,12 +32,12 @@ import java.util.Date;
  * The cache model class for representing ShoppingItem in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see ShoppingItem
  * @generated
  */
 @ProviderType
-public class ShoppingItemCacheModel implements CacheModel<ShoppingItem>,
-	Externalizable {
+public class ShoppingItemCacheModel
+	implements CacheModel<ShoppingItem>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -49,7 +48,8 @@ public class ShoppingItemCacheModel implements CacheModel<ShoppingItem>,
 			return false;
 		}
 
-		ShoppingItemCacheModel shoppingItemCacheModel = (ShoppingItemCacheModel)obj;
+		ShoppingItemCacheModel shoppingItemCacheModel =
+			(ShoppingItemCacheModel)obj;
 
 		if (itemId == shoppingItemCacheModel.itemId) {
 			return true;
@@ -316,8 +316,7 @@ public class ShoppingItemCacheModel implements CacheModel<ShoppingItem>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(itemId);
 
 		objectOutput.writeLong(groupId);
@@ -465,4 +464,5 @@ public class ShoppingItemCacheModel implements CacheModel<ShoppingItem>,
 	public boolean largeImage;
 	public long largeImageId;
 	public String largeImageURL;
+
 }

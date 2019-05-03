@@ -1,78 +1,46 @@
-<definition>
-	<command name="getFileContent" returns="fileContent">
-		<var method="TestPropsUtil#get('test.base.dir.name')" name="baseDir" />
-		<var method="TestPropsUtil#get('test.dependencies.dir.name')" name="dependenciesDir" />
+definition {
+	macro getFileContent {
+		var baseDir = PropsUtil.get("test.base.dir.name");
+		var dependenciesDir = PropsUtil.get("test.dependencies.dir.name");
+		var fileContent = FileUtil.read("${baseDir}${dependenciesDir}/${fileName}");
 
-		<execute class="com.liferay.poshi.runner.util.FileUtil" method="read">
-			<arg value="${baseDir}${dependenciesDir}/${fileName}" />
-			<return name="fileContent" />
-		</execute>
+		return "${fileContent}";
+	}
 
-		<return name="fileContent" value="${fileContent}" />
-	</command>
+	macro getSiteName {
+		var testNameSkipPortalInstance = PropsUtil.get("test.name.skip.portal.instance");
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-	<command name="getSiteName" returns="siteName">
-		<var method="TestPropsUtil#get('test.name.skip.portal.instance')" name="testNameSkipPortalInstance" />
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+		if (("${siteName}" == "Liferay") || (!(isSet(siteName)))) {
+			if (("${testPortalInstance}" == "true") && (!(IsTestName(locator1 = "", value1 = "${testNameSkipPortalInstance}")))) {
+				var portalURL = PropsUtil.get("portal.url");
+				var portalURL = StringUtil.replace("${portalURL}", "http://", "");
+				var portalURL = StringUtil.replace("${portalURL}", ":8080", "");
 
-		<if>
-			<or>
-				<equals arg1="${siteName}" arg2="Liferay" />
-				<not>
-					<isset var="siteName" />
-				</not>
-			</or>
-			<then>
-				<if>
-					<and>
-						<equals arg1="${testPortalInstance}" arg2="true" />
-						<not>
-							<condition function="IsTestName" locator1="" value1="${testNameSkipPortalInstance}" />
-						</not>
-					</and>
-					<then>
-						<var method="TestPropsUtil#get('portal.url')" name="portalURL" />
+				return "${portalURL}";
+			}
+			else {
+				var testRunEnvironment = PropsUtil.get("test.run.environment");
 
-						<var method="StringUtil#replace('${portalURL}', 'http://', '')" name="portalURL" />
-						<var method="StringUtil#replace('${portalURL}', ':8080', '')" name="portalURL" />
+				if ("${testRunEnvironment}" == "EE") {
+					return "Liferay DXP";
+				}
+				else {
+					return "Liferay";
+				}
+			}
+		}
+		else {
+			return "${siteName}";
+		}
+	}
 
-						<return name="siteName" value="${portalURL}" />
-					</then>
-					<else>
-						<var method="TestPropsUtil#get('test.run.environment')" name="testRunEnvironment" />
+	macro setUpPortalInstance {
+		var testNameSkipPortalInstance = PropsUtil.get("test.name.skip.portal.instance");
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-						<if>
-							<equals arg1="${testRunEnvironment}" arg2="EE" />
-							<then>
-								<return name="siteName" value="Liferay DXP" />
-							</then>
-							<else>
-								<return name="siteName" value="Liferay" />
-							</else>
-						</if>
-					</else>
-				</if>
-			</then>
-			<else>
-				<return name="siteName" value="${siteName}" />
-			</else>
-		</if>
-	</command>
-
-	<command name="setUpPortalInstance">
-		<var method="TestPropsUtil#get('test.name.skip.portal.instance')" name="testNameSkipPortalInstance" />
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
-
-		<if>
-			<and>
-				<equals arg1="${testPortalInstance}" arg2="true" />
-				<not>
-					<condition function="IsTestName" locator1="" value1="${testNameSkipPortalInstance}" />
-				</not>
-			</and>
-			<then>
-				<execute macro="SignIn#signInPortalInstanceSetUp" />
-			</then>
-		</if>
-	</command>
-</definition>
+		if (("${testPortalInstance}" == "true") && (!(IsTestName(locator1 = "", value1 = "${testNameSkipPortalInstance}")))) {
+			SignIn.signInPortalInstanceSetUp();
+		}
+	}
+}

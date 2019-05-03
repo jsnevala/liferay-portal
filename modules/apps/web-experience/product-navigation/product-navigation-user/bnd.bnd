@@ -1,6 +1,5 @@
 Bundle-Name: Liferay Product Navigation User
 Bundle-SymbolicName: com.liferay.product.navigation.user
-Bundle-Version: 2.0.8
-Liferay-Releng-Module-Group-Description:
+Bundle-Version: 2.0.10
 Liferay-Releng-Module-Group-Title: Product Navigation
 Web-ContextPath: /product-navigation-user

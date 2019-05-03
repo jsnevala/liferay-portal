@@ -164,9 +164,9 @@ public class TemplateManagerTest {
 
 		template.processTemplate(unsyncStringWriter);
 
-		String result = unsyncStringWriter.toString().trim();
+		String result = unsyncStringWriter.toString();
 
-		Assert.assertEquals("PASS", result);
+		Assert.assertEquals("PASS", result.trim());
 	}
 
 	@Test

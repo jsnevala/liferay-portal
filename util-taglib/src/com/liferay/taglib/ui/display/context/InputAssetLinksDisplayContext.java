@@ -27,6 +27,8 @@ import com.liferay.asset.kernel.util.comparator.AssetRendererFactoryTypeNameComp
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
@@ -73,6 +75,8 @@ public class InputAssetLinksDisplayContext {
 		_assetEntryId = GetterUtil.getLong(
 			(String)_request.getAttribute(
 				"liferay-ui:input-asset-links:assetEntryId"));
+		_className = GetterUtil.getString(
+			_request.getAttribute("liferay-ui:input-asset-links:className"));
 		_portletRequest = (PortletRequest)_request.getAttribute(
 			JavaConstants.JAVAX_PORTLET_REQUEST);
 		_themeDisplay = (ThemeDisplay)_request.getAttribute(
@@ -137,7 +141,30 @@ public class InputAssetLinksDisplayContext {
 		AssetRendererFactory<?> assetRendererFactory =
 			entry.getAssetRendererFactory();
 
-		return assetRendererFactory.getTypeName(_themeDisplay.getLocale());
+		String assetType = assetRendererFactory.getTypeName(
+			_themeDisplay.getLocale());
+
+		if (!assetRendererFactory.isSupportsClassTypes()) {
+			return assetType;
+		}
+
+		ClassTypeReader classTypeReader =
+			assetRendererFactory.getClassTypeReader();
+
+		try {
+			ClassType classType = classTypeReader.getClassType(
+				entry.getClassTypeId(), _themeDisplay.getLocale());
+
+			assetType = classType.getName();
+		}
+		catch (PortalException pe) {
+			_log.error(
+				"Unable to get asset type for class type primary key " +
+					entry.getClassTypeId(),
+				pe);
+		}
+
+		return assetType;
 	}
 
 	public String getEventName() {
@@ -174,8 +201,34 @@ public class InputAssetLinksDisplayContext {
 	public List<Map<String, Object>> getSelectorEntries() throws Exception {
 		List<Map<String, Object>> selectorEntries = new ArrayList<>();
 
+		AssetRendererFactory baseAssetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+				_className);
+
+		Group group = _themeDisplay.getScopeGroup();
+
+		String portletId = baseAssetRendererFactory.getPortletId();
+
+		boolean groupStaged = group.isStaged();
+		boolean baseAssetStaged = false;
+
+		if (groupStaged) {
+			baseAssetStaged = group.isStagedPortlet(portletId);
+		}
+
 		for (AssetRendererFactory<?> assetRendererFactory :
 				getAssetRendererFactories()) {
+
+			boolean assetStaged = false;
+			portletId = assetRendererFactory.getPortletId();
+
+			if (groupStaged) {
+				assetStaged = group.isStagedPortlet(portletId);
+			}
+
+			if (!baseAssetStaged && assetStaged) {
+				continue;
+			}
 
 			if (assetRendererFactory.isSupportsClassTypes()) {
 				selectorEntries.addAll(
@@ -481,8 +534,12 @@ public class InputAssetLinksDisplayContext {
 		return _stagedReferrerPortlet;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		InputAssetLinksDisplayContext.class);
+
 	private final long _assetEntryId;
 	private List<AssetLink> _assetLinks;
+	private final String _className;
 	private String _eventName;
 	private final PageContext _pageContext;
 	private final PortletRequest _portletRequest;

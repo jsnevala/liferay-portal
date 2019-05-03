@@ -105,7 +105,7 @@ public class PortletRatingsDefinitionUtil {
 			_serviceTrackerCustomizer =
 				new ServiceTrackerCustomizer
 					<PortletRatingsDefinition,
-						PortletRatingsDefinitionValues>() {
+					 PortletRatingsDefinitionValues>() {
 
 					@Override
 					public PortletRatingsDefinitionValues addingService(

@@ -22,7 +22,8 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
  * @author Carlos Sierra Andrés
  */
 @ExtendedObjectClassDefinition(
-	category = "foundation", scope = ExtendedObjectClassDefinition.Scope.SYSTEM
+	category = "foundation", factoryInstanceLabelAttribute = "contextPaths",
+	scope = ExtendedObjectClassDefinition.Scope.SYSTEM
 )
 @Meta.OCD(
 	factory = true,

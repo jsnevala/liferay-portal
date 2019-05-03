@@ -63,6 +63,7 @@ public class KaleoTaskAssignmentLocalServiceImpl
 		kaleoTaskAssignment.setKaleoClassName(kaleoClassName);
 		kaleoTaskAssignment.setKaleoClassPK(kaleoClassPK);
 		kaleoTaskAssignment.setKaleoDefinitionId(kaleoDefinitionId);
+
 		setAssignee(kaleoTaskAssignment, assignment, serviceContext);
 
 		kaleoTaskAssignmentPersistence.update(kaleoTaskAssignment);

@@ -41,7 +41,7 @@ if (portletTitleBasedNavigation) {
 	<c:if test="<%= !portletTitleBasedNavigation %>">
 		<liferay-ui:header
 			backURL="<%= redirect %>"
-			localizeTitle="<%= (category == null) %>"
+			localizeTitle="<%= category == null %>"
 			title='<%= LanguageUtil.format(request, "move-x", category.getName(), false) %>'
 		/>
 	</c:if>
@@ -79,7 +79,7 @@ if (portletTitleBasedNavigation) {
 					String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('parentCategoryId', 'parentCategoryName', this, '" + renderResponse.getNamespace() + "');";
 					%>
 
-					<aui:button disabled="<%= (parentCategoryId <= 0) %>" name="removeCategoryButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
+					<aui:button disabled="<%= parentCategoryId <= 0 %>" name="removeCategoryButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
 				</div>
 
 				<aui:input label="merge-with-parent-category" name="mergeWithParentCategory" type="checkbox" />

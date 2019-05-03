@@ -38,8 +38,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @author Roberto Díaz
- * @deprecated As of 1.1.0, replaced by {@link
+ * @author     Roberto Díaz
+ * @deprecated As of Judson (7.1.x), replaced by {@link
  *             com.liferay.layout.item.selector.web.internal.BaseLayoutsItemSelectorView}
  */
 @Deprecated

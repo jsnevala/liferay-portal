@@ -77,6 +77,30 @@ AUI.add(
 						(new A.EventHandle(instance._eventHandlers)).detach();
 					},
 
+					getFormId: function() {
+						var instance = this;
+
+						var formNode = instance.getFormNode();
+
+						if (!formNode) {
+							return 0;
+						}
+
+						return formNode.getData('DDLRecordSetId');
+					},
+
+					getFormName: function() {
+						var instance = this;
+
+						var formNode = instance.getFormNode();
+
+						if (!formNode) {
+							return '';
+						}
+
+						return formNode.getData('DDLRecordSetName');
+					},
+
 					getFormNode: function() {
 						var instance = this;
 
@@ -104,6 +128,17 @@ AUI.add(
 									var formNode = instance.getFormNode();
 
 									instance.showLoadingFeedback();
+
+									var formId = instance.getFormId();
+
+									if (formId > 0) {
+										Liferay.fire(
+											'ddmFormSubmit',
+											{
+												formId: formId
+											}
+										);
+									}
 
 									Liferay.Util.submitForm(formNode);
 								}
@@ -138,6 +173,18 @@ AUI.add(
 
 						if (submitButton) {
 							submitButton.attr('disabled', false);
+						}
+
+						var formId = instance.getFormId();
+
+						if (formId > 0) {
+							Liferay.fire(
+								'ddmFormView',
+								{
+									formId: formId,
+									title: instance.getFormName()
+								}
+							);
 						}
 					},
 

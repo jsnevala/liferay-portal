@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Michael C. Han
  */
 @Component(
-	immediate = true, property = {"type=REPLICATED"},
+	immediate = true, property = "type=REPLICATED",
 	service = SolrClientFactory.class
 )
 public class ReplicatedSolrClientFactory implements SolrClientFactory {
@@ -67,10 +67,8 @@ public class ReplicatedSolrClientFactory implements SolrClientFactory {
 		LBHttpSolrClient writerLBHttpSolrClient = new LBHttpSolrClient(
 			writerHttpClient, writeURLs);
 
-		ReadWriteSolrClient readWriteSolrClient = new ReadWriteSolrClient(
+		return new ReadWriteSolrClient(
 			readerLBHttpSolrClient, writerLBHttpSolrClient);
-
-		return readWriteSolrClient;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

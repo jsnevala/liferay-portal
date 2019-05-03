@@ -44,14 +44,15 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Zsolt Berentey
  * @author Gergely Mathe
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = StagedModelDataHandler.class)
 public class AssetVocabularyStagedModelDataHandler
 	extends BaseStagedModelDataHandler<AssetVocabulary> {
 
-	public static final String[] CLASS_NAMES =
-		{AssetVocabulary.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		AssetVocabulary.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(AssetVocabulary vocabulary)

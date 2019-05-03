@@ -1,0 +1,186 @@
+@component-name = "portal-collaboration"
+definition {
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Blogs";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		ProductMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites"
+		);
+
+		Site.addBlankCP(siteName = "Site Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites"
+		);
+
+		Page.add(pageName = "Staging Blogs Page", siteName = "Site Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Publishing",
+			panel = "Site Administration",
+			portlet = "Staging"
+		);
+
+		Staging.activateStagingCP(siteName = "Site Name");
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			BlogsEntry.tearDownCP();
+		}
+	}
+
+	@description = "This is a use case for LPS-78833."
+	@priority = "5"
+	test PublishEntryWithDeletedSmallImage {
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Blogs Page",
+			siteName = "Site Name"
+		);
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Blogs"
+		);
+
+		BlogsNavigator.gotoAddEntry();
+
+		BlogsEntry.addEntryContent(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title"
+		);
+
+		Panel.expandPanel(panelHeading = "Configuration");
+
+		BlogsEntry.addSmallImage(
+			navTab = "Upload Image",
+			uploadFileName = "Document_3.jpg"
+		);
+
+		PortletEntry.publish();
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Blogs Page",
+			siteName = "Site Name"
+		);
+
+		Staging.gotoPublishToLive();
+
+		Staging.publishToLive();
+
+		ProductMenu.gotoLiveSite();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Blogs"
+		);
+
+		Portlet.changeDisplayStyle(displayStyle = "Descriptive");
+
+		AssertElementPresent(
+			locator1 = "Blogs#DESCRIPTIVE_VIEW_ENTRY_TITLE",
+			key_entryTitle = "Blogs Entry Title"
+		);
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Blogs Page",
+			siteName = "Site Name"
+		);
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Blogs"
+		);
+
+		BlogsNavigator.gotoEditCP(entryTitle = "Blogs Entry Title");
+
+		Panel.expandPanel(panelHeading = "Configuration");
+
+		BlogsEntry.removeSmallImage(uploadFileName = "Document_3.jpg");
+
+		PortletEntry.publish();
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Blogs Page",
+			siteName = "Site Name"
+		);
+
+		Staging.gotoPublishToLive();
+
+		Staging.publishToLive();
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Blogs Page",
+			siteName = "Site Name"
+		);
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Blogs"
+		);
+
+		BlogsNavigator.gotoEditCP(entryTitle = "Blogs Entry Title");
+
+		AssertElementNotPresent(
+			locator1 = "BlogsEntry#SMALL_IMAGE",
+			key_smallImage = "Document_3.jpg"
+		);
+
+		AssertTextEquals(
+			locator1 = "Button#SELECT_FILE_SMALL_IMAGE",
+			value1 = "Select File"
+		);
+
+		ProductMenu.gotoLiveSite();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Blogs"
+		);
+
+		Portlet.changeDisplayStyle(displayStyle = "Descriptive");
+
+		AssertElementPresent(
+			locator1 = "Blogs#DESCRIPTIVE_VIEW_ENTRY_TITLE",
+			key_entryTitle = "Blogs Entry Title"
+		);
+
+		AssertClick(
+			locator1 = "NavBar#NAV_BAR_GENERAL",
+			value1 = "Images",
+			key_navItem = "Images"
+		);
+
+		Portlet.changeDisplayStyle(displayStyle = "Descriptive");
+
+		AssertElementPresent(
+			locator1 = "ControlMenuAddPanel#CONTENT_TITLE",
+			key_assetTitle = "Document_3.jpg"
+		);
+
+		AssertElementNotPresent(
+			locator1 = "ControlMenuAddPanel#CONTENT_TITLE",
+			key_assetTitle = "Document_3 (1).jpg"
+		);
+	}
+}

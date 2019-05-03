@@ -180,7 +180,10 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 				tuple = serviceGet(_TEST_META_NAME);
 
 				assertCode(HttpServletResponse.SC_OK, tuple);
-				Assert.assertTrue(getResponseBody(tuple).length == 0);
+
+				byte[] responseBody = getResponseBody(tuple);
+
+				Assert.assertTrue(responseBody.length == 0);
 			}
 
 			unlock(_TEST_META_NAME);
@@ -355,7 +358,10 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 		tuple = serviceGet(_TEST_META_NAME);
 
 		assertCode(HttpServletResponse.SC_OK, tuple);
-		Assert.assertTrue(getResponseBody(tuple).length == 0);
+
+		byte[] responseBody = getResponseBody(tuple);
+
+		Assert.assertTrue(responseBody.length == 0);
 
 		assertCode(
 			HttpServletResponse.SC_CREATED,

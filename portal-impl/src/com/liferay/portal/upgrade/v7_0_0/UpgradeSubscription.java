@@ -41,7 +41,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  * @author Roberto Díaz
  * @author Iván Zaera
  */
@@ -173,7 +173,7 @@ public class UpgradeSubscription extends UpgradeProcess {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	protected void updateSubscriptionGroupId(
@@ -195,6 +195,7 @@ public class UpgradeSubscription extends UpgradeProcess {
 
 			while (rs.next()) {
 				long subscriptionId = rs.getLong("subscriptionId");
+
 				long classNameId = rs.getLong("classNameId");
 				long classPK = rs.getLong("classPK");
 

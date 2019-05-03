@@ -88,8 +88,8 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 3.3.0, replaced by {@link #getContentByLocale(Document,
-	 *             String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getContentByLocale(Document, String)}
 	 */
 	@Deprecated
 	public static String getContentByLocale(
@@ -285,7 +285,8 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 3.3.0, replaced by {@link #getDDMStructureKey()}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getDDMStructureKey()}
 	 */
 	@Deprecated
 	@Override
@@ -294,7 +295,8 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 3.3.0, replaced by {@link #getDDMTemplateKey()}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getDDMTemplateKey()}
 	 */
 	@Deprecated
 	@Override
@@ -339,7 +341,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 3.3.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -392,7 +394,8 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 3.3.0, replaced by {@link #setDDMStructureKey(String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #setDDMStructureKey(String)}
 	 */
 	@Deprecated
 	@Override
@@ -401,7 +404,8 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 3.3.0, replaced by {@link #setDDMTemplateKey(String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #setDDMTemplateKey(String)}
 	 */
 	@Deprecated
 	@Override

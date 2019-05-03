@@ -34,12 +34,12 @@
 		"metal-tooltip": "^2.0.0",
 		"metal-treeview": "^2.0.0",
 		"metal-uri": "^2.0.2",
-		"metal-useragent": "^2.1.1"
+		"metal-useragent": "3.0.0"
 	},
 	"devDependencies": {
 		"liferay-module-config-generator": "^1.2.1",
 		"metal-cli": "^4.0.1"
 	},
 	"name": "frontend-js-metal-web",
-	"version": "1.0.21"
+	"version": "1.0.26"
 }

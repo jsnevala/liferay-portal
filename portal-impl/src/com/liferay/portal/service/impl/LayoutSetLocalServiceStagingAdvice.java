@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetStagingHandler;
+import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.util.ClassLoaderUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portlet.exportimport.staging.StagingAdvicesThreadLocal;
@@ -63,7 +64,7 @@ public class LayoutSetLocalServiceStagingAdvice implements MethodInterceptor {
 	protected LayoutSet wrapLayoutSet(LayoutSet layoutSet) {
 		try {
 			if (!LayoutStagingUtil.isBranchingLayoutSet(
-					layoutSet.getGroup(), layoutSet.getPrivateLayout())) {
+					layoutSet.getGroup(), layoutSet.isPrivateLayout())) {
 
 				return layoutSet;
 			}
@@ -81,7 +82,7 @@ public class LayoutSetLocalServiceStagingAdvice implements MethodInterceptor {
 
 		return (LayoutSet)ProxyUtil.newProxyInstance(
 			ClassLoaderUtil.getPortalClassLoader(),
-			new Class<?>[] {LayoutSet.class},
+			new Class<?>[] {LayoutSet.class, ModelWrapper.class},
 			new LayoutSetStagingHandler(layoutSet));
 	}
 

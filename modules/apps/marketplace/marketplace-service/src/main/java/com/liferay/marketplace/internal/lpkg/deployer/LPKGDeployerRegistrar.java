@@ -19,6 +19,7 @@ import com.liferay.marketplace.service.AppLocalService;
 import com.liferay.marketplace.service.ModuleLocalService;
 import com.liferay.marketplace.util.ContextUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.StringPool;
@@ -54,6 +55,13 @@ public class LPKGDeployerRegistrar {
 
 			_register(entry.getKey(), entry.getValue());
 		}
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.marketplace.service)(release.schema.version=2.0.2))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
 	}
 
 	private void _register(Bundle lpkgBundle, List<Bundle> bundles)

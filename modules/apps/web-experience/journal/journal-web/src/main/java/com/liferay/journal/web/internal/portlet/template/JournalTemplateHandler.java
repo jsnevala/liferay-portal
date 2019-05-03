@@ -50,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + JournalPortletKeys.JOURNAL},
+	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = TemplateHandler.class
 )
 public class JournalTemplateHandler extends BaseDDMTemplateHandler {
@@ -86,8 +86,11 @@ public class JournalTemplateHandler extends BaseDDMTemplateHandler {
 		String portletTitle = _portal.getPortletTitle(
 			JournalPortletKeys.JOURNAL, resourceBundle);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override

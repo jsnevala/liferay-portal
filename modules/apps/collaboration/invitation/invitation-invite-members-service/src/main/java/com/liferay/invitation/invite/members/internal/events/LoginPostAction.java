@@ -28,10 +28,10 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
-	immediate = true, property = {"key=" + PropsKeys.LOGIN_EVENTS_POST},
+	immediate = true, property = "key=" + PropsKeys.LOGIN_EVENTS_POST,
 	service = LifecycleAction.class
 )
 public class LoginPostAction implements LifecycleAction {

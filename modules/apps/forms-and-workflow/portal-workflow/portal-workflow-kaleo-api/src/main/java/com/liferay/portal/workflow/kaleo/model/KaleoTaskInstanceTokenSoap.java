@@ -30,11 +30,14 @@ import java.util.List;
  */
 @ProviderType
 public class KaleoTaskInstanceTokenSoap implements Serializable {
+
 	public static KaleoTaskInstanceTokenSoap toSoapModel(
 		KaleoTaskInstanceToken model) {
+
 		KaleoTaskInstanceTokenSoap soapModel = new KaleoTaskInstanceTokenSoap();
 
-		soapModel.setKaleoTaskInstanceTokenId(model.getKaleoTaskInstanceTokenId());
+		soapModel.setKaleoTaskInstanceTokenId(
+			model.getKaleoTaskInstanceTokenId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setUserId(model.getUserId());
@@ -49,7 +52,7 @@ public class KaleoTaskInstanceTokenSoap implements Serializable {
 		soapModel.setClassName(model.getClassName());
 		soapModel.setClassPK(model.getClassPK());
 		soapModel.setCompletionUserId(model.getCompletionUserId());
-		soapModel.setCompleted(model.getCompleted());
+		soapModel.setCompleted(model.isCompleted());
 		soapModel.setCompletionDate(model.getCompletionDate());
 		soapModel.setDueDate(model.getDueDate());
 		soapModel.setWorkflowContext(model.getWorkflowContext());
@@ -59,7 +62,9 @@ public class KaleoTaskInstanceTokenSoap implements Serializable {
 
 	public static KaleoTaskInstanceTokenSoap[] toSoapModels(
 		KaleoTaskInstanceToken[] models) {
-		KaleoTaskInstanceTokenSoap[] soapModels = new KaleoTaskInstanceTokenSoap[models.length];
+
+		KaleoTaskInstanceTokenSoap[] soapModels =
+			new KaleoTaskInstanceTokenSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -70,10 +75,12 @@ public class KaleoTaskInstanceTokenSoap implements Serializable {
 
 	public static KaleoTaskInstanceTokenSoap[][] toSoapModels(
 		KaleoTaskInstanceToken[][] models) {
+
 		KaleoTaskInstanceTokenSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new KaleoTaskInstanceTokenSoap[models.length][models[0].length];
+			soapModels =
+				new KaleoTaskInstanceTokenSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new KaleoTaskInstanceTokenSoap[0][0];
@@ -88,13 +95,16 @@ public class KaleoTaskInstanceTokenSoap implements Serializable {
 
 	public static KaleoTaskInstanceTokenSoap[] toSoapModels(
 		List<KaleoTaskInstanceToken> models) {
-		List<KaleoTaskInstanceTokenSoap> soapModels = new ArrayList<KaleoTaskInstanceTokenSoap>(models.size());
+
+		List<KaleoTaskInstanceTokenSoap> soapModels =
+			new ArrayList<KaleoTaskInstanceTokenSoap>(models.size());
 
 		for (KaleoTaskInstanceToken model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new KaleoTaskInstanceTokenSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new KaleoTaskInstanceTokenSoap[soapModels.size()]);
 	}
 
 	public KaleoTaskInstanceTokenSoap() {
@@ -283,4 +293,5 @@ public class KaleoTaskInstanceTokenSoap implements Serializable {
 	private Date _completionDate;
 	private Date _dueDate;
 	private String _workflowContext;
+
 }

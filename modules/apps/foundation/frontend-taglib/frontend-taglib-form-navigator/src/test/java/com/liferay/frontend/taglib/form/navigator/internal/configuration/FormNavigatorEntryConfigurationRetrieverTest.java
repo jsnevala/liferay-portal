@@ -55,7 +55,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testOnlyTheFirstOcurrenceIsRetrieved() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "general", "add").get();
+					getFormNavigatorEntryKeys(
+						"form1", "general", "add"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 4,
@@ -85,7 +87,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testReturnsEmptyList() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "general", "add").get();
+					getFormNavigatorEntryKeys(
+						"form1", "general", "add"
+					).get();
 
 			Assert.assertTrue(
 				formNavigatorEntryKeys.toString(),
@@ -124,7 +128,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testContainsValuesForLine1() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "general", "add").get();
+					getFormNavigatorEntryKeys(
+						"form1", "general", "add"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 3,
@@ -141,8 +147,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testContainsValuesForLine2() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "general", "update").
-					get();
+					getFormNavigatorEntryKeys(
+						"form1", "general", "update"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 3,
@@ -177,7 +184,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testTheyAreTrimmed() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "general", "add").get();
+					getFormNavigatorEntryKeys(
+						"form1", "general", "add"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 2,
@@ -207,7 +216,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testContainsValuesForTheEmptyCategoryAndAnyContext() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "", "add").get();
+					getFormNavigatorEntryKeys(
+						"form1", "", "add"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 2,
@@ -223,7 +234,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testContainsValuesForTheEmptyCategoryAndNoContext() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "", null).get();
+					getFormNavigatorEntryKeys(
+						"form1", "", null
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 2,
@@ -266,7 +279,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testReturnsTheKeysInThatLineWhenAskedForAContext() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "general", "add").get();
+					getFormNavigatorEntryKeys(
+						"form1", "general", "add"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 2,
@@ -282,7 +297,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testReturnsTheKeysInThatLineWhenAskedForNoConext() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "general", null).get();
+					getFormNavigatorEntryKeys(
+						"form1", "general", null
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 2,
@@ -316,7 +333,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testReturnsTheKeysInThatLineWhenAskedForANullCategory() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", null, "add").get();
+					getFormNavigatorEntryKeys(
+						"form1", null, "add"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 2,
@@ -359,7 +378,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testContainsValuesForForm1() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "general", "add").get();
+					getFormNavigatorEntryKeys(
+						"form1", "general", "add"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 3,
@@ -376,7 +397,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testContainsValuesForForm2() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form2", "general", "add").get();
+					getFormNavigatorEntryKeys(
+						"form2", "general", "add"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 3,
@@ -431,7 +454,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testContainsValuesForEntry1() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "general", "add").get();
+					getFormNavigatorEntryKeys(
+						"form1", "general", "add"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 3,
@@ -449,7 +474,8 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
 					getFormNavigatorEntryKeys(
-						"form1", "general", "update").get();
+						"form1", "general", "update"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 3,
@@ -536,7 +562,9 @@ public class FormNavigatorEntryConfigurationRetrieverTest {
 		public void testTheLastOneHasPrecedence() {
 			List<String> formNavigatorEntryKeys =
 				formNavigatorEntryConfigurationRetriever.
-					getFormNavigatorEntryKeys("form1", "general", "add").get();
+					getFormNavigatorEntryKeys(
+						"form1", "general", "add"
+					).get();
 
 			Assert.assertEquals(
 				formNavigatorEntryKeys.toString(), 3,

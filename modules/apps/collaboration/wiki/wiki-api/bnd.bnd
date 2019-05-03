@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Wiki API
 Bundle-SymbolicName: com.liferay.wiki.api
-Bundle-Version: 2.5.5
+Bundle-Version: 2.6.10
 Export-Package:\
 	com.liferay.wiki.configuration,\
 	com.liferay.wiki.configuration.definition,\
@@ -16,5 +16,4 @@ Export-Package:\
 	com.liferay.wiki.service,\
 	com.liferay.wiki.service.persistence,\
 	com.liferay.wiki.validator
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Wiki

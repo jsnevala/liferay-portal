@@ -17,8 +17,10 @@ package com.liferay.exportimport.kernel.lar;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 import com.liferay.portal.kernel.model.StagedModel;
+import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
@@ -30,7 +32,7 @@ import java.io.Serializable;
  * Provides utility methods for generating paths for entities being serialized
  * with the portal's export/import framework.
  *
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Daniel Kocsis
  * @since  6.2
  */
@@ -48,7 +50,7 @@ public class ExportImportPathUtil {
 	public static final String PATH_PREFIX_GROUP = "group";
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	public static final String PATH_PREFIX_LAYOUT = "layout";
@@ -85,8 +87,7 @@ public class ExportImportPathUtil {
 	 * <code>
 	 * /group/10184/com.liferay.dynamic.data.mapping.kernel.DDMStructure/10951-expando.xml
 	 * </code>
-	 * </pre>
-	 * </p>
+	 * </pre></p>
 	 *
 	 * @param  path the previously generated entity path
 	 * @return the expando-specific path for the entity path
@@ -106,12 +107,18 @@ public class ExportImportPathUtil {
 					" because it is not an XML file");
 		}
 
-		return path.substring(0, pos).concat("-expando").concat(
-			path.substring(pos));
+		return path.substring(
+			0, pos
+		).concat(
+			"-expando"
+		).concat(
+			path.substring(pos)
+		);
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getModelPath(StagedModel)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getModelPath(StagedModel)}
 	 */
 	@Deprecated
 	public static String getLayoutPath(
@@ -141,8 +148,7 @@ public class ExportImportPathUtil {
 	 * <code>
 	 * /group/"groupId"/"className"/"classPK".xml
 	 * </code>
-	 * </pre>
-	 * </p>
+	 * </pre></p>
 	 *
 	 * @param  groupId the group ID of the entity's group
 	 * @param  className the entity's class name
@@ -170,8 +176,7 @@ public class ExportImportPathUtil {
 	 * <code>
 	 * /group/"queried groupId"/"className"/"classPK".xml
 	 * </code>
-	 * </pre>
-	 * </p>
+	 * </pre></p>
 	 *
 	 * @param  portletDataContext the context of the current export/import
 	 *         process
@@ -200,8 +205,7 @@ public class ExportImportPathUtil {
 	 * <code>
 	 * /group/"queried groupId"/"className"/"classPK"/"dependentFileName"
 	 * </code>
-	 * </pre>
-	 * </p>
+	 * </pre></p>
 	 *
 	 * @param  portletDataContext the context of the current export/import
 	 *         process
@@ -232,8 +236,7 @@ public class ExportImportPathUtil {
 	 * <code>
 	 * /group/"queried groupId"/"queried className"/"queried classPK".xml
 	 * </code>
-	 * </pre>
-	 * </p>
+	 * </pre></p>
 	 *
 	 * @param  stagedModel the staged model the path is needed for
 	 * @return a model path for the staged model
@@ -262,8 +265,7 @@ public class ExportImportPathUtil {
 	 * <code>
 	 * /group/"queried groupId"/"queried className"/"queried classPK"/"dependentFileName"
 	 * </code>
-	 * </pre>
-	 * </p>
+	 * </pre></p>
 	 *
 	 * @param  stagedModel the staged model the path is needed for
 	 * @param  dependentFileName the dependent object's file name
@@ -291,6 +293,36 @@ public class ExportImportPathUtil {
 		}
 	}
 
+	public static String getPortletDataPath(
+		PortletDataContext portletDataContext) {
+
+		return getPortletDataPath(
+			portletDataContext, portletDataContext.getPortletId(),
+			portletDataContext.getPlid());
+	}
+
+	public static String getPortletDataPath(
+		PortletDataContext portletDataContext, String portletId, long plid) {
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(getPortletPath(portletDataContext, portletId));
+		sb.append(StringPool.SLASH);
+
+		Portlet portlet = PortletLocalServiceUtil.getPortletById(portletId);
+
+		if (portlet.isPreferencesUniquePerLayout()) {
+			sb.append(plid);
+		}
+		else {
+			sb.append(portletDataContext.getScopeGroupId());
+		}
+
+		sb.append("/portlet-data.xml");
+
+		return sb.toString();
+	}
+
 	/**
 	 * Returns a portlet path for the portlet ID.
 	 *
@@ -303,8 +335,7 @@ public class ExportImportPathUtil {
 	 * <code>
 	 * /group/"queried groupId"/portlet/"portletId"
 	 * </code>
-	 * </pre>
-	 * </p>
+	 * </pre></p>
 	 *
 	 * @param  portletDataContext the context of the current export/import
 	 *         process
@@ -327,8 +358,7 @@ public class ExportImportPathUtil {
 	 * <code>
 	 * /group/"queried groupId"/portlet/"portletId"
 	 * </code>
-	 * </pre>
-	 * </p>
+	 * </pre></p>
 	 *
 	 * @param  portletDataContext the context of the current export/import
 	 *         process
@@ -380,8 +410,7 @@ public class ExportImportPathUtil {
 	 * <code>
 	 * /group/"queried groupId"
 	 * </code>
-	 * </pre>
-	 * </p>
+	 * </pre></p>
 	 *
 	 * @param  portletDataContext the context of the current export/import
 	 *         process
@@ -415,7 +444,7 @@ public class ExportImportPathUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getModelPath(PortletDataContext, String, long)}
 	 */
 	@Deprecated
@@ -434,7 +463,7 @@ public class ExportImportPathUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static String getSourcePortletPath(
@@ -466,8 +495,7 @@ public class ExportImportPathUtil {
 	 * <code>
 	 * /group/"queried groupId"
 	 * </code>
-	 * </pre>
-	 * </p>
+	 * </pre></p>
 	 *
 	 * @param  portletDataContext the context of the current export/import
 	 *         process

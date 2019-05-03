@@ -47,13 +47,11 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + AssetCategoriesNavigationPortletKeys.ASSET_CATEGORIES_NAVIGATION
-	},
+	property = "javax.portlet.name=" + AssetCategoriesNavigationPortletKeys.ASSET_CATEGORIES_NAVIGATION,
 	service = ExportImportPortletPreferencesProcessor.class
 )
 public class AssetCategoriesNavigationPortletPreferencesProcessor
@@ -84,7 +82,9 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 		}
 		catch (Exception e) {
 			throw new PortletDataException(
-				"Unable to update portlet preferences during export", e);
+				"Unable to update asset categories navigation portlet " +
+					"preferences during export",
+				e);
 		}
 	}
 
@@ -100,7 +100,9 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 		}
 		catch (Exception e) {
 			throw new PortletDataException(
-				"Unable to update portlet preferences during import", e);
+				"Unable to update asset categories navigation portlet " +
+					"preferences during import",
+				e);
 		}
 	}
 

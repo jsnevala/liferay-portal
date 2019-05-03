@@ -1,53 +1,54 @@
-<definition component-name="portal-test-plugins">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Test Plugins" />
-	<property name="portlet.plugins.includes" value="test-oauth-portlet" />
-	<property name="test.run.environment" value="EE" />
+@component-name = "portal-test-plugins"
+definition {
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Test Plugins";
+	property portlet.plugins.includes = "test-oauth-portlet";
+	property test.run.environment = "EE";
 
-	<set-up>
-		<execute macro="User#firstLoginPG" />
-	</set-up>
+	setUp {
+		User.firstLoginPG();
+	}
 
-	<tear-down>
-		<execute macro="Page#tearDownPG" />
-	</tear-down>
+	tearDown {
+		Page.tearDownPG();
+	}
 
-	<command name="ViewOAuth" priority="4">
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Configuration" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="OAuth Admin" />
-		</execute>
+	@priority = "4"
+	test ViewOAuth {
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "OAuth Admin"
+		);
 
-		<execute macro="TestOAuth#addApplication">
-			<var name="applicationName" value="oauth1" />
-			<var name="callbackURI" value="http://localhost:8080" />
-			<var name="websiteURL" value="http://www.liferay.com" />
-		</execute>
+		TestOAuth.addApplication(
+			applicationName = "oauth1",
+			callbackURI = "http://localhost:8080",
+			websiteURL = "http://www.liferay.com"
+		);
 
-		<execute macro="TestOAuth#getConsumerKeyAndSecret">
-			<return from="consumerKey" name="consumerKey" />
-			<return from="consumerSecret" name="consumerSecret" />
-			<var name="applicationName" value="oauth1" />
-		</execute>
+		var applicationCredentials = TestOAuth.getApplicationCredentials(applicationName = "oauth1");
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Test Page" />
-		</execute>
+		var consumerSecret = TestOAuth.getConsumerSecret(
+			applicationCredentials = "${applicationCredentials}"
+		);
 
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Test OAuth" />
-		</execute>
+		var consumerKey = TestOAuth.getConsumerKey(
+			applicationCredentials = "${applicationCredentials}",
+			consumerSecret = "${consumerSecret}"
+		);
 
-		<execute macro="TestOAuth#testConsumerKeyAndSecret">
-			<var name="consumerKey" value="${consumerKey}" />
-			<var name="consumerSecret" value="${consumerSecret}" />
-			<var name="webID" value="liferay.com" />
-		</execute>
+		Page.add(pageName = "Test Page");
 
-		<execute macro="TestOAuth#viewJSON">
-			<var name="domainName" value="liferay.com" />
-		</execute>
-	</command>
-</definition>
+		Portlet.addPG(portletName = "Test OAuth");
+
+		TestOAuth.testConsumerKeyAndSecret(
+			consumerKey = "${consumerKey}",
+			consumerSecret = "${consumerSecret}",
+			webID = "liferay.com"
+		);
+
+		TestOAuth.viewJSON(domainName = "liferay.com");
+	}
+}

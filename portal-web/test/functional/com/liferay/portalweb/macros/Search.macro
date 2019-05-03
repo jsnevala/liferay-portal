@@ -1,246 +1,245 @@
-<definition>
-	<command name="addTagFacet">
-		<execute function="AssertClick#assertPartialTextClickAt" locator1="SearchResults#USER_FACET_TAGS" value1="${tagName}">
-			<var name="key_tagName" value="${tagName}" />
-		</execute>
-	</command>
+definition {
+	macro addTagFacet {
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "SearchResults#USER_FACET_TAGS",
+			value1 = "${tagName}",
+			key_tagName = "${tagName}"
+		);
+	}
 
-	<command name="clearSearchPG">
-		<execute function="AssertClick" locator1="Button#CLEAR" value1="Clear" />
+	macro configureSearchScopePG {
+		var key_searchScope = "${searchScope}";
 
-		<execute function="AssertElementNotPresent" locator1="SearchResults#RESULTS_TABLE_GENERIC" />
-	</command>
+		if (("${searchScope}" == "Everything") || ("${searchScope}" == "Let the User Choose") || ("${searchScope}" == "This Site")) {
+			IFrame.selectConfigurationFrame();
 
-	<command name="configureSearchScopePG">
-		<var name="key_searchScope" value="${searchScope}" />
+			Select(locator1 = "Select#SCOPE", value1 = "${searchScope}");
+		}
+		else {
+			fail("Invalid search scope. Must be (Everything|Let the User Choose|This Site).");
+		}
 
-		<if>
-			<or>
-				<equals arg1="${searchScope}" arg2="Everything" />
-				<equals arg1="${searchScope}" arg2="Let the User Choose" />
-				<equals arg1="${searchScope}" arg2="This Site" />
-			</or>
-			<then>
-				<execute macro="IFrame#selectConfigurationFrame" />
+		if (isSet(uncheckDisplayFacet)) {
+			var key_facetName = "${uncheckDisplayFacet}";
 
-				<execute function="Select" locator1="Select#SCOPE" value1="${searchScope}" />
-			</then>
-			<else>
-				<fail message="Invalid search scope. Must be (Everything|Let the User Choose|This Site)." />
-			</else>
-		</if>
+			AssertClick(locator1 = "Search#FACET_CONFIGURE", value1 = "Configure");
 
-		<if>
-			<isset var="uncheckDisplayFacet" />
-			<then>
-				<var name="key_facetName" value="${uncheckDisplayFacet}" />
+			Uncheck(locator1 = "Checkbox#DISPLAY_FACET");
+		}
 
-				<execute function="AssertClick" locator1="Search#FACET_CONFIGURE" value1="Configure" />
+		PortletEntry.save();
+	}
 
-				<execute function="Uncheck" locator1="Checkbox#DISPLAY_FACET" />
-			</then>
-		</if>
+	macro gotoModifiedRangeFacetPG {
+		var key_searchModifiedRange = "${searchModifiedRange}";
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "SearchResults#MODIFIED_RANGE_FACET_TIME_RANGE",
+			value1 = "${searchModifiedRange}"
+		);
+	}
 
-	<command name="gotoModifiedRangeFacetPG">
-		<var name="key_searchModifiedRange" value="${searchModifiedRange}" />
+	macro gotoUserSearchResultPG {
+		var key_searchAssetTitle = "${searchAssetTitle}";
 
-		<execute function="AssertClick#assertPartialTextClickAt" locator1="SearchResults#MODIFIED_RANGE_FACET_TIME_RANGE" value1="${searchModifiedRange}" />
-	</command>
+		AssertClick(
+			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE",
+			value1 = "${searchAssetTitle}"
+		);
+	}
 
-	<command name="gotoUserSearchResultPG">
-		<var name="key_searchAssetTitle" value="${searchAssetTitle}" />
+	macro removeUserFacetDisplayPG {
+		ProductMenuHelper.closeProductMenu();
 
-		<execute function="AssertClick" locator1="SearchResults#ASSET_ENTRY_TABLE_TITLE" value1="${searchAssetTitle}" />
-	</command>
+		Click(locator1 = "Search#SEARCH_FIELD");
 
-	<command name="removeFacetValuePG">
-		<var name="key_searchFacetValue" value="${searchFacetValue}" />
+		Click.makeVisibleClickAt(locator1 = "Search#SEARCH_PORTLET_OPTIONS_WRENCH");
 
-		<execute function="Click" locator1="SearchResults#FACET_VALUE_REMOVE" />
-	</command>
+		MenuItem.click(menuItem = "Configuration");
 
-	<command name="removeUserFacetDisplayPG">
-		<execute macro="ProductMenuHelper#closeProductMenu" />
+		IFrame.selectConfigurationFrame();
 
-		<execute function="Click" locator1="Search#SEARCH_FIELD" />
+		Uncheck(locator1 = "SearchConfiguration#BASIC_DISPLAY_USER_FACET_CHECKBOX");
 
-		<execute function="Click#makeVisibleClickAt" locator1="Search#SEARCH_PORTLET_OPTIONS_WRENCH" />
+		Button.clickSave();
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Configuration">
-			<var name="key_menuItem" value="Configuration" />
-		</execute>
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute macro="IFrame#selectConfigurationFrame" />
+	macro searchCP {
+		AssertElementPresent(locator1 = "NavBar#BASIC_SEARCH_FIELD");
 
-		<execute function="Uncheck" locator1="SearchConfiguration#BASIC_DISPLAY_USER_FACET_CHECKBOX" />
+		AssertElementPresent(locator1 = "Button#SEARCH");
 
-		<execute macro="Button#clickSave" />
+		Type(locator1 = "NavBar#BASIC_SEARCH_FIELD", value1 = "${searchTerm}");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		KeyPress(locator1 = "NavBar#BASIC_SEARCH_FIELD", value1 = "\RETURN");
+	}
 
-	<command name="searchCP">
-		<execute function="AssertElementPresent" locator1="NavBar#BASIC_SEARCH_FIELD" />
-		<execute function="AssertElementPresent" locator1="NavBar#SEARCH_BUTTON" />
+	macro searchPG {
+		AssertElementPresent(locator1 = "Search#SEARCH_FIELD");
 
-		<execute function="Type" locator1="NavBar#BASIC_SEARCH_FIELD" value1="${searchTerm}" />
+		AssertElementPresent(locator1 = "Search#SEARCH_PORTLET_SEARCH_BUTTON");
 
-		<execute function="KeyPress" locator1="NavBar#BASIC_SEARCH_FIELD" value1="\RETURN" />
-	</command>
+		Type(locator1 = "Search#SEARCH_FIELD", value1 = "${searchTerm}");
 
-	<command name="searchPG">
-		<execute function="AssertElementPresent" locator1="Search#SEARCH_FIELD" />
-		<execute function="AssertElementPresent" locator1="Search#SEARCH_PORTLET_SEARCH_BUTTON" />
+		if (isSet(localizationIDName)) {
+			var key_searchIDName = "${localizationIDName}";
+		}
+		else {
+			var key_searchIDName = "Search";
+		}
 
-		<execute function="Type" locator1="Search#SEARCH_FIELD" value1="${searchTerm}" />
+		var key_searchScope = "${searchScope}";
 
-		<if>
-			<isset var="localizationIDName" />
-			<then>
-				<var name="key_searchIDName" value="${localizationIDName}" />
-			</then>
-			<else>
-				<var name="key_searchIDName" value="Search" />
-			</else>
-		</if>
+		if ("${searchScope}" == "Everything") {
+			Select(locator1 = "Select#SCOPE", value1 = "${searchScope}");
+		}
+		else if ("${searchScope}" == "This Site") {
+			Select(locator1 = "Select#SCOPE", value1 = "${searchScope}");
+		}
 
-		<var name="key_searchScope" value="${searchScope}" />
+		KeyPress(locator1 = "Search#SEARCH_FIELD", value1 = "\RETURN");
+	}
 
-		<if>
-			<equals arg1="${searchScope}" arg2="Everything" />
-			<then>
-				<execute function="Select" locator1="Select#SCOPE" value1="${searchScope}" />
-			</then>
-			<elseif>
-				<equals arg1="${searchScope}" arg2="This Site" />
-				<then>
-					<execute function="Select" locator1="Select#SCOPE" value1="${searchScope}" />
-				</then>
-			</elseif>
-		</if>
+	macro unscopeAssetFacetPG {
+		Click(locator1 = "SearchResults#ASSET_TYPE_FACET_ANY_ASSET");
+	}
 
-		<execute function="KeyPress" locator1="Search#SEARCH_FIELD" value1="\RETURN" />
-	</command>
+	macro viewAssetTypeFacetPG {
+		var key_searchAssetType = "${searchAssetType}";
 
-	<command name="unscopeAssetFacetPG">
-		<execute function="Click" locator1="SearchResults#ASSET_TYPE_FACET_ANY_ASSET" />
-	</command>
+		AssertTextEquals(
+			locator1 = "SearchResults#ASSET_TYPE_FACET_ANY_ASSET",
+			value1 = "Any Asset"
+		);
 
-	<command name="viewAssetTypeFacetPG">
-		<var name="key_searchAssetType" value="${searchAssetType}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "SearchResults#ASSET_TYPE_FACET_FREQUENCY",
+			value1 = "${facetFrequency}"
+		);
 
-		<execute function="AssertTextEquals" locator1="SearchResults#ASSET_TYPE_FACET_ANY_ASSET" value1="Any Asset" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#ASSET_TYPE_FACET_FREQUENCY" value1="${facetFrequency}" />
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "SearchResults#ASSET_TYPE_FACET_ASSET",
+			value1 = "${searchAssetType}"
+		);
 
-		<execute function="AssertClick#assertPartialTextClickAt" locator1="SearchResults#ASSET_TYPE_FACET_ASSET" value1="${searchAssetType}" />
+		Search.viewSearchResultPG(
+			searchAssetSummary = "${searchAssetSummary}",
+			searchAssetTitle = "${searchAssetTitle}",
+			searchAssetType = "${searchAssetType}"
+		);
+	}
 
-		<execute macro="Search#viewSearchResultPG">
-			<var name="searchAssetSummary" value="${searchAssetSummary}" />
-			<var name="searchAssetTitle" value="${searchAssetTitle}" />
-			<var name="searchAssetType" value="${searchAssetType}" />
-		</execute>
-	</command>
+	macro viewSearchAssetTitle {
+		var key_searchAssetTitle = "${searchAssetTitle}";
 
-	<command name="viewIncrementalSearchPG">
-		<execute function="Type" locator1="Search#SEARCH_FIELD" value1="${searchTerm}" />
-		<var name="key_kbArticleTitle" value="${kbArticleTitle}" />
+		AssertTextEquals(
+			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE",
+			value1 = "${searchAssetTitle}"
+		);
+	}
 
-		<execute function="AssertTextEquals" locator1="Search#INCREMENTAL_SEARCH_SUGGESTION" value1="${kbArticleTitle}" />
+	macro viewSearchNoPG {
+		var key_searchAssetTitle = "${searchAssetTitle}";
 
-		<execute function="AssertClick" locator1="Search#INCREMENTAL_SEARCH_SUGGESTION" value1="${kbArticleTitle}" />
-	</command>
+		AssertElementNotPresent(locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE");
 
-	<command name="viewSearchAssetTitle">
-		<var name="key_searchAssetTitle" value="${searchAssetTitle}" />
+		AssertElementNotPresent(locator1 = "SearchResults#ASSET_ENTRY_TABLE_TYPE");
 
-		<execute function="AssertTextEquals" locator1="SearchResults#ASSET_ENTRY_TABLE_TITLE" value1="${searchAssetTitle}" />
-	</command>
+		if (isSet(searchAssetSummary)) {
+			AssertElementNotPresent(locator1 = "SearchResults#ASSET_ENTRY_TABLE_SUMMARY");
+		}
 
-	<command name="viewSearchNoAssetTitle">
-		<var name="key_searchAssetTitle" value="${searchAssetTitle}" />
+		if ("${searchNoResults}" == "true") {
+			AssertTextEquals(
+				locator1 = "Message#EMPTY_INFO",
+				value1 = "No results were found that matched the keywords: ${searchTerm}."
+			);
+		}
+	}
 
-		<execute function="AssertTextNotPresent" locator1="SearchResults#ASSET_ENTRY_TABLE_TITLE" value1="${searchAssetTitle}" />
-	</command>
+	macro viewSearchResultPG {
+		var key_searchAssetTitle = "${searchAssetTitle}";
 
-	<command name="viewSearchNoPG">
-		<var name="key_searchAssetTitle" value="${searchAssetTitle}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE",
+			value1 = "${searchAssetTitle}"
+		);
 
-		<execute function="AssertElementNotPresent" locator1="SearchResults#ASSET_ENTRY_TABLE_TITLE" />
-		<execute function="AssertElementNotPresent" locator1="SearchResults#ASSET_ENTRY_TABLE_TYPE" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TYPE",
+			value1 = "${searchAssetType}"
+		);
 
-		<if>
-			<isset var="searchAssetSummary" />
-			<then>
-				<execute function="AssertElementNotPresent" locator1="SearchResults#ASSET_ENTRY_TABLE_SUMMARY" />
-			</then>
-		</if>
+		if (isSet(searchAssetSummary)) {
+			AssertTextEquals.assertPartialText(
+				locator1 = "SearchResults#ASSET_ENTRY_TABLE_SUMMARY",
+				value1 = "${searchAssetSummary}"
+			);
+		}
+	}
 
-		<if>
-			<equals arg1="${searchNoResults}" arg2="true" />
-			<then>
-				<execute function="AssertTextEquals" locator1="Message#EMPTY_INFO" value1="No results were found that matched the keywords: ${searchTerm}." />
-			</then>
-		</if>
-	</command>
+	macro viewSearchResultsPG {
+		var key_searchAssetTitle = "${searchAssetTitle}";
+		var key_searchAssetType = "${searchAssetType}";
 
-	<command name="viewSearchResultPG">
-		<var name="key_searchAssetTitle" value="${searchAssetTitle}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE_SPECIFIC",
+			value1 = "${searchAssetTitle}"
+		);
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#ASSET_ENTRY_TABLE_TITLE" value1="${searchAssetTitle}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#ASSET_ENTRY_TABLE_TYPE" value1="${searchAssetType}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TYPE_SPECIFIC",
+			value1 = "${searchAssetType}"
+		);
 
-		<if>
-			<isset var="searchAssetSummary" />
-			<then>
-				<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#ASSET_ENTRY_TABLE_SUMMARY" value1="${searchAssetSummary}" />
-			</then>
-		</if>
-	</command>
+		if (isSet(searchAssetSummary)) {
+			AssertTextEquals.assertPartialText(
+				locator1 = "SearchResults#ASSET_ENTRY_TABLE_SUMMARY_SPECIFIC",
+				value1 = "${searchAssetSummary}"
+			);
+		}
+	}
 
-	<command name="viewSearchResultsPG">
-		<var name="key_searchAssetTitle" value="${searchAssetTitle}" />
-		<var name="key_searchAssetType" value="${searchAssetType}" />
+	macro viewSearchResultWithNoPermissions {
+		AssertTextEquals(
+			locator1 = "Message#INFO_NO_RESULTS_FOUND",
+			value1 = "No results were found that matched the keywords: ${searchTerm}."
+		);
+	}
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#ASSET_ENTRY_TABLE_TITLE_SPECIFIC" value1="${searchAssetTitle}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#ASSET_ENTRY_TABLE_TYPE_SPECIFIC" value1="${searchAssetType}" />
+	macro viewUserFacetPG {
+		var key_facetFrequency = "${facetFrequency}";
 
-		<if>
-			<isset var="searchAssetSummary" />
-			<then>
-				<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#ASSET_ENTRY_TABLE_SUMMARY_SPECIFIC" value1="${searchAssetSummary}" />
-			</then>
-		</if>
-	</command>
+		AssertTextEquals(
+			locator1 = "SearchResults#USER_FACET_ANY_USER",
+			value1 = "Any User"
+		);
 
-	<command name="viewSearchResultWithNoPermissions">
-		<execute function="AssertTextEquals" locator1="Message#INFO_NO_RESULTS_FOUND" value1="No results were found that matched the keywords: ${searchTerm}." />
-	</command>
+		var userLoginFullName = StringUtil.lowerCase("${userLoginFullName}");
+		var key_userLoginFullName = "${userLoginFullName}";
 
-	<command name="viewUserFacetPG">
-		<var name="key_facetFrequency" value="${facetFrequency}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "SearchResults#USER_FACET_FREQUENCY",
+			value1 = "${facetFrequency}"
+		);
 
-		<execute function="AssertTextEquals" locator1="SearchResults#USER_FACET_ANY_USER" value1="Any User" />
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "SearchResults#USER_FACET_USER_NAME",
+			value1 = "${userLoginFullName}"
+		);
 
-		<var method="StringUtil#lowerCase('${userLoginFullName}')" name="userLoginFullName" />
+		Search.viewSearchResultPG(
+			searchAssetSummary = "${searchAssetSummary}",
+			searchAssetTitle = "${searchAssetTitle}",
+			searchAssetType = "${searchAssetType}"
+		);
+	}
 
-		<var name="key_userLoginFullName" value="${userLoginFullName}" />
+	macro viewUserSearchResultPG {
+		AssertTextEquals(locator1 = "Home#USER_NAME_HEADER", value1 = "${userName}");
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#USER_FACET_FREQUENCY" value1="${facetFrequency}" />
-
-		<execute function="AssertClick#assertPartialTextClickAt" locator1="SearchResults#USER_FACET_USER_NAME" value1="${userLoginFullName}" />
-
-		<execute macro="Search#viewSearchResultPG">
-			<var name="searchAssetSummary" value="${searchAssetSummary}" />
-			<var name="searchAssetTitle" value="${searchAssetTitle}" />
-			<var name="searchAssetType" value="${searchAssetType}" />
-		</execute>
-	</command>
-
-	<command name="viewUserSearchResultPG">
-		<execute function="AssertTextEquals" locator1="Home#USER_NAME_HEADER" value1="${userName}" />
-		<execute function="AssertTextEquals" locator1="Home#PAGE_1" value1="${pageName}" />
-	</command>
-</definition>
+		AssertTextEquals(locator1 = "Home#PAGE_1", value1 = "${pageName}");
+	}
+}

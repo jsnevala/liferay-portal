@@ -15,6 +15,7 @@
 package com.liferay.journal.internal.exportimport.content.processor;
 
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
+import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.content.processor.base.BaseTextExportImportContentProcessor;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
@@ -48,6 +49,7 @@ import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.xml.Attribute;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.DocumentException;
 import com.liferay.portal.kernel.xml.Element;
@@ -66,7 +68,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Gergely Mathe
  */
 @Component(
-	property = {"model.class.name=com.liferay.journal.model.JournalArticle"},
+	property = "model.class.name=com.liferay.journal.model.JournalArticle",
 	service = {
 		ExportImportContentProcessor.class,
 		JournalArticleExportImportContentProcessor.class
@@ -82,8 +84,11 @@ public class JournalArticleExportImportContentProcessor
 			boolean escapeContent)
 		throws Exception {
 
-		content = replaceExportJournalArticleReferences(
-			portletDataContext, stagedModel, content, exportReferencedContent);
+		if (Validator.isXml(content)) {
+			content = replaceExportJournalArticleReferences(
+				portletDataContext, stagedModel, content,
+				exportReferencedContent);
+		}
 
 		content = super.replaceExportContentReferences(
 			portletDataContext, stagedModel, content, exportReferencedContent,
@@ -103,6 +108,11 @@ public class JournalArticleExportImportContentProcessor
 
 		content = super.replaceImportContentReferences(
 			portletDataContext, stagedModel, content);
+
+		if (Validator.isXml(content)) {
+			content = replaceImportImageFileEntryIds(
+				portletDataContext, content);
+		}
 
 		return content;
 	}
@@ -162,7 +172,8 @@ public class JournalArticleExportImportContentProcessor
 		}
 
 		if (group.isStaged() && !group.isStagedRemotely() &&
-			!group.isStagedPortlet(PortletKeys.DOCUMENT_LIBRARY)) {
+			!group.isStagedPortlet(PortletKeys.DOCUMENT_LIBRARY) &&
+			ExportImportThreadLocal.isStagingInProcess()) {
 
 			return content;
 		}
@@ -297,18 +308,7 @@ public class JournalArticleExportImportContentProcessor
 			return content;
 		}
 
-		Document document = null;
-
-		try {
-			document = SAXReaderUtil.read(content);
-		}
-		catch (DocumentException de) {
-			if (_log.isDebugEnabled()) {
-				_log.debug("Invalid content:\n" + content);
-			}
-
-			return content;
-		}
+		Document document = SAXReaderUtil.read(content);
 
 		XPath xPath = SAXReaderUtil.createXPath(
 			"//dynamic-element[@type='ddm-journal-article']");
@@ -412,6 +412,53 @@ public class JournalArticleExportImportContentProcessor
 		}
 
 		return document.asXML();
+	}
+
+	protected String replaceImportImageFileEntryIds(
+			PortletDataContext portletDataContext, String content)
+		throws Exception {
+
+		Map<Long, Long> dlFileEntryIds =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				DLFileEntry.class);
+
+		if (MapUtil.isNotEmpty(dlFileEntryIds)) {
+			Document contentDocument = SAXReaderUtil.read(content);
+
+			contentDocument = contentDocument.clone();
+
+			for (Map.Entry entry : dlFileEntryIds.entrySet()) {
+				StringBuffer sb = new StringBuffer(4);
+
+				sb.append("//dynamic-element[@type='image']");
+				sb.append("/dynamic-content[@fileEntryId='");
+				sb.append(entry.getKey());
+				sb.append("']");
+
+				XPath xPath = SAXReaderUtil.createXPath(sb.toString());
+
+				List<Node> imageNodes = xPath.selectNodes(contentDocument);
+
+				for (Node imageNode : imageNodes) {
+					Element imageElement = (Element)imageNode;
+
+					List<Attribute> attributes = imageElement.attributes();
+
+					for (Attribute attribute : attributes) {
+						if (StringUtil.equals(
+								attribute.getName(), "fileEntryId")) {
+
+							attribute.setValue(
+								String.valueOf(entry.getValue()));
+						}
+					}
+				}
+			}
+
+			content = contentDocument.formattedString();
+		}
+
+		return content;
 	}
 
 	protected String replaceImportJournalArticleReferences(

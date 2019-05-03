@@ -47,13 +47,13 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 			<liferay-portlet:param name="actionRequired" value="<%= StringPool.FALSE %>" />
 		</liferay-portlet:renderURL>
 
-		<aui:nav-item href="<%= viewNotificationsURL %>" label="notifications-list" selected="<%= !actionRequired %>" />
+		<aui:nav-item href="<%= viewNotificationsURL %>" label='<%= LanguageUtil.format(request, "notifications-list-x", String.valueOf(UserNotificationEventLocalServiceUtil.getDeliveredUserNotificationEventsCount(themeDisplay.getUserId(), UserNotificationDeliveryConstants.TYPE_WEBSITE, true, false))) %>' selected="<%= !actionRequired %>" />
 
 		<liferay-portlet:renderURL var="viewRequestsURL">
 			<liferay-portlet:param name="actionRequired" value="<%= StringPool.TRUE %>" />
 		</liferay-portlet:renderURL>
 
-		<aui:nav-item href="<%= viewRequestsURL %>" label="requests-list" selected="<%= actionRequired %>" />
+		<aui:nav-item href="<%= viewRequestsURL %>" label='<%= LanguageUtil.format(request, "requests-list-x", String.valueOf(UserNotificationEventLocalServiceUtil.getDeliveredUserNotificationEventsCount(themeDisplay.getUserId(), UserNotificationDeliveryConstants.TYPE_WEBSITE, true, true))) %>' selected="<%= actionRequired %>" />
 	</aui:nav>
 </aui:nav-bar>
 
@@ -109,7 +109,7 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 		</c:if>
 
 		<liferay-frontend:management-bar-button
-			href='<%= "javascript:" + renderResponse.getNamespace() + "deleteAllNotifications();" %>'
+			href='<%= "javascript:" + renderResponse.getNamespace() + "deleteNotifications();" %>'
 			icon="times"
 			label="delete"
 		/>
@@ -141,12 +141,12 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 </div>
 
 <aui:script>
-	function <portlet:namespace />deleteAllNotifications() {
+	function <portlet:namespace />deleteNotifications() {
 		var form = AUI.$(document.<portlet:namespace />fm);
 
 		form.attr('method', 'post');
 
-		submitForm(form, '<portlet:actionURL name="deleteAllNotifications"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>');
+		submitForm(form, '<portlet:actionURL name="deleteNotifications"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>');
 	}
 
 	function <portlet:namespace />markNotificationsAsRead() {
@@ -213,7 +213,7 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 			notice = new Liferay.Notice(
 				{
 					closeText: false,
-					content: '<liferay-ui:message key="an-unexpected-error-occurred" /><button class="close" type="button">&times;</button>',
+					content: '<liferay-ui:message key="an-unexpected-error-occurred" /><button aria-label="' + Liferay.Language.get("close") + '" class="close" type="button">&times;</button>',
 					timeout: 5000,
 					toggleText: false,
 					type: 'warning',

@@ -1,314 +1,281 @@
-<definition component-name="portal-collaboration">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="custom.properties" value="default.layout.template.id=1_column" />
-	<property name="testray.main.component.name" value="Announcements" />
+@component-name = "portal-collaboration"
+definition {
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property custom.properties = "default.layout.template.id=1_column";
+	property testray.main.component.name = "Announcements";
+	var pageName = "Announcements Page";
+	var portletName = "Announcements";
 
-	<var name="pageName" value="Announcements Page" />
-	<var name="portletName" value="Announcements" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+		User.firstLoginPG();
 
-		<execute macro="User#firstLoginPG" />
+		Page.add(pageName = "Announcements Page");
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		Portlet.addPG(portletName = "Announcements");
+	}
 
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Announcements" />
-		</execute>
-	</set-up>
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			Navigator.gotoPage(pageName = "Announcements Page");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="Navigator#gotoPage">
-					<var name="pageName" value="Announcements Page" />
-				</execute>
+			AnnouncementsEntry.tearDownPG();
 
-				<execute macro="AnnouncementsEntry#tearDownPG" />
+			Page.tearDownPG();
+		}
+	}
 
-				<execute macro="Page#tearDownPG" />
-			</else>
-		</if>
-	</tear-down>
+	@priority = "4"
+	test AddAnnouncementsEntry {
+		property test.name.skip.portal.instance = "PGAnnouncements#AddAnnouncementsEntry";
 
-	<command name="AddAnnouncementsEntry" priority="4">
-		<property name="test.name.skip.portal.instance" value="PGAnnouncements#AddAnnouncementsEntry" />
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		AnnouncementsEntry.addPG(
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title",
+			entryURL = "http://www.liferay.com"
+		);
 
-		<execute macro="AnnouncementsEntry#addPG">
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-			<var name="entryURL" value="http://www.liferay.com" />
-		</execute>
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		AnnouncementsEntry.viewPG(
+			announcementType = "General",
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title",
+			entryURL = "http://www.liferay.com"
+		);
+	}
 
-		<execute macro="AnnouncementsEntry#viewPG">
-			<var name="announcementType" value="General" />
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-			<var name="entryURL" value="http://www.liferay.com" />
-		</execute>
-	</command>
+	@priority = "4"
+	test AddAnnouncementsEntryFutureDate {
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-	<command name="AddAnnouncementsEntryFutureDate" priority="4">
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		AnnouncementsEntry.addEntryWithFutureDate(
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title",
+			entryURL = "http://www.liferay.com"
+		);
 
-		<execute macro="AnnouncementsEntry#addEntryWithFutureDate">
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-			<var name="entryURL" value="http://www.liferay.com" />
-		</execute>
+		Pause(locator1 = "10000");
 
-		<execute function="Pause" locator1="10000" />
+		AssertClick(
+			locator1 = "Announcements#NAVIGATION_ENTRIES_UNREAD",
+			value1 = "Unread"
+		);
 
-		<execute function="AssertClick" locator1="Announcements#NAVIGATION_ENTRIES_UNREAD" value1="Unread" />
+		AssertTextNotPresent(value1 = "Announcements Entry Title");
 
-		<execute function="AssertTextNotPresent" value1="Announcements Entry Title" />
-		<execute function="Pause" locator1="120000" />
+		Pause(locator1 = "120000");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="AnnouncementsEntry#viewPG">
-			<var name="announcementType" value="General" />
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-			<var name="entryURL" value="http://www.liferay.com" />
-		</execute>
-	</command>
+		AnnouncementsEntry.viewPG(
+			announcementType = "General",
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title",
+			entryURL = "http://www.liferay.com"
+		);
+	}
 
-	<command name="AddAnnouncementsEntryPastExpirationDate" priority="3">
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+	@priority = "3"
+	test AddAnnouncementsEntryPastExpirationDate {
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="AnnouncementsEntry#addPG">
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-			<var name="entryURL" value="http://www.liferay.com" />
-			<var name="expirationDate" value="12/31/2013" />
-			<var name="pastDate" value="true" />
-		</execute>
+		AnnouncementsEntry.addPG(
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title",
+			entryURL = "http://www.liferay.com",
+			expirationDate = "12/31/2013",
+			pastDate = "true"
+		);
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute function="AssertTextNotPresent" value1="Announcements Entry Title" />
+		AssertTextNotPresent(value1 = "Announcements Entry Title");
 
-		<execute function="Click" locator1="Announcements#NAVIGATION_MANAGE_ENTRIES" />
+		Click(locator1 = "Announcements#NAVIGATION_MANAGE_ENTRIES");
 
-		<execute function="Select" locator1="AnnouncementsManageEntries#DISTRIBUTION_SCOPE_SELECT" value1="General" />
+		Select(
+			locator1 = "AnnouncementsManageEntries#DISTRIBUTION_SCOPE_SELECT",
+			value1 = "General"
+		);
 
-		<execute function="AssertTextEquals" locator1="Message#NO_ENTRIES" value1="No entries were found." />
-	</command>
+		AssertTextEquals(
+			locator1 = "Message#NO_ENTRIES",
+			value1 = "No entries were found."
+		);
+	}
 
-	<command name="AddAnnouncementsEntryPriorityImportant" priority="4">
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+	@priority = "4"
+	test AddAnnouncementsEntryPriorityImportant {
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="AnnouncementsEntry#addPG">
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-			<var name="entryURL" value="http://www.liferay.com" />
-			<var name="priority" value="Important" />
-		</execute>
+		AnnouncementsEntry.addPG(
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title",
+			entryURL = "http://www.liferay.com",
+			priority = "Important"
+		);
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="AnnouncementsEntry#viewPG">
-			<var name="announcementType" value="General" />
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-		</execute>
-	</command>
+		AnnouncementsEntry.viewPG(
+			announcementType = "General",
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title"
+		);
+	}
 
-	<command name="AddAnnouncementsEntrySite" priority="3">
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Sites" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Sites" />
-		</execute>
+	@priority = "3"
+	test AddAnnouncementsEntrySite {
+		ProductMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites"
+		);
 
-		<execute macro="Site#addBlankCP">
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Site.addBlankCP(siteName = "Site Name");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Sites" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Sites" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites"
+		);
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Announcements Page" />
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Page.add(pageName = "Announcements Page", siteName = "Site Name");
 
-		<execute macro="Navigator#gotoSitePage">
-			<var name="pageName" value="Announcements Page" />
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Navigator.gotoSitePage(pageName = "Announcements Page", siteName = "Site Name");
 
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Announcements" />
-		</execute>
+		Portlet.addPG(portletName = "Announcements");
 
-		<execute macro="AnnouncementsEntry#addPG">
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-			<var name="entryURL" value="http://www.liferay.com" />
-		</execute>
+		AnnouncementsEntry.addPG(
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title",
+			entryURL = "http://www.liferay.com"
+		);
 
-		<execute macro="Navigator#gotoSitePage">
-			<var name="pageName" value="Announcements Page" />
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Navigator.gotoSitePage(pageName = "Announcements Page", siteName = "Site Name");
 
-		<execute macro="AnnouncementsEntry#viewPG">
-			<var name="announcementType" value="General" />
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-		</execute>
-	</command>
+		AnnouncementsEntry.viewPG(
+			announcementType = "General",
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title"
+		);
+	}
 
-	<command name="DeleteAnnouncementsEntry" priority="5">
-		<property name="portal.acceptance" value="true" />
-		<property name="test.name.skip.portal.instance" value="PGAnnouncements#DeleteAnnouncementsEntry" />
+	@priority = "5"
+	test DeleteAnnouncementsEntry {
+		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "PGAnnouncements#DeleteAnnouncementsEntry";
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="AnnouncementsEntry#addPG">
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-			<var name="entryURL" value="http://www.liferay.com" />
-		</execute>
+		AnnouncementsEntry.addPG(
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title",
+			entryURL = "http://www.liferay.com"
+		);
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="AnnouncementsEntry#deletePG">
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-		</execute>
+		AnnouncementsEntry.deletePG(
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title"
+		);
 
-		<execute macro="AnnouncementsEntry#viewDeletePG">
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-		</execute>
-	</command>
+		AnnouncementsEntry.viewDeletePG(
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title"
+		);
+	}
 
-	<command name="EditAnnouncementsEntry" priority="5">
-		<property name="portal.acceptance" value="true" />
-		<property name="test.name.skip.portal.instance" value="PGAnnouncements#EditAnnouncementsEntry" />
+	@priority = "5"
+	test EditAnnouncementsEntry {
+		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "PGAnnouncements#EditAnnouncementsEntry";
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="AnnouncementsEntry#addPG">
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-			<var name="entryURL" value="http://www.liferay.com" />
-		</execute>
+		AnnouncementsEntry.addPG(
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title",
+			entryURL = "http://www.liferay.com"
+		);
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="AnnouncementsEntry#editPG">
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryContentEdit" value="Announcements Entry Content Edit" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-			<var name="entryTitleEdit" value="Announcements Entry Title Edit" />
-			<var name="entryURLEdit" value="http://www.alloyui.com" />
-		</execute>
+		AnnouncementsEntry.editPG(
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryContentEdit = "Announcements Entry Content Edit",
+			entryTitle = "Announcements Entry Title",
+			entryTitleEdit = "Announcements Entry Title Edit",
+			entryURLEdit = "http://www.alloyui.com"
+		);
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="AnnouncementsEntry#viewPG">
-			<var name="announcementType" value="General" />
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content Edit" />
-			<var name="entryTitle" value="Announcements Entry Title Edit" />
-		</execute>
-	</command>
+		AnnouncementsEntry.viewPG(
+			announcementType = "General",
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content Edit",
+			entryTitle = "Announcements Entry Title Edit"
+		);
+	}
 
-	<command name="ViewPreviousAnnouncementEntries" priority="5">
-		<property name="portal.acceptance" value="true" />
-		<property name="test.name.skip.portal.instance" value="PGAnnouncements#ViewPreviousAnnouncementEntries" />
+	@priority = "5"
+	test ViewPreviousAnnouncementEntries {
+		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "PGAnnouncements#ViewPreviousAnnouncementEntries";
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="AnnouncementsEntry#addPG">
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-			<var name="entryURL" value="http://www.liferay.com" />
-		</execute>
+		AnnouncementsEntry.addPG(
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title",
+			entryURL = "http://www.liferay.com"
+		);
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Announcements Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Announcements Page");
 
-		<execute macro="AnnouncementsEntry#markAsReadPG">
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-		</execute>
+		AnnouncementsEntry.markAsReadPG(
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title"
+		);
 
-		<execute macro="AnnouncementsEntry#viewReadPG">
-			<var name="announcementType" value="General" />
-			<var name="distributionScope" value="General" />
-			<var name="entryContent" value="Announcements Entry Content" />
-			<var name="entryTitle" value="Announcements Entry Title" />
-		</execute>
+		AnnouncementsEntry.viewReadPG(
+			announcementType = "General",
+			distributionScope = "General",
+			entryContent = "Announcements Entry Content",
+			entryTitle = "Announcements Entry Title"
+		);
 
-		<execute function="AssertClick" locator1="Announcements#NAVIGATION_ENTRIES_UNREAD" value1="Unread" />
+		AssertClick(
+			locator1 = "Announcements#NAVIGATION_ENTRIES_UNREAD",
+			value1 = "Unread"
+		);
 
-		<execute macro="AnnouncementsEntry#viewNoPG">
-			<var name="entryTitle" value="Announcements Entry Title" />
-		</execute>
-	</command>
-</definition>
+		AnnouncementsEntry.viewNoPG(entryTitle = "Announcements Entry Title");
+	}
+}

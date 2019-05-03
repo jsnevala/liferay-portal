@@ -53,6 +53,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.comparator.GroupIdComparator;
 import com.liferay.portal.service.base.GroupServiceBaseImpl;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.ratings.kernel.transformer.RatingsDataTransformerUtil;
@@ -152,8 +153,8 @@ public class GroupServiceImpl extends GroupServiceBaseImpl {
 	 *             staging
 	 * @return     the group
 	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of 7.0.0, replaced by {@link #addGroup(long, long, Map,
-	 *             Map, int, boolean, int, String, boolean, boolean,
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #addGroup(long,
+	 *             long, Map, Map, int, boolean, int, String, boolean, boolean,
 	 *             ServiceContext)}
 	 */
 	@Deprecated
@@ -362,6 +363,123 @@ public class GroupServiceImpl extends GroupServiceBaseImpl {
 
 		return filterGroups(
 			groupLocalService.getGroups(companyId, parentGroupId, site));
+	}
+
+	/**
+	 * Returns all the groups that are direct children of the parent group.
+	 *
+	 * @param  companyId the primary key of the company
+	 * @param  parentGroupId the primary key of the parent group
+	 * @param  site whether the group is to be associated with a main site
+	 * @param  start the lower bound of the range of results
+	 * @param  end the upper bound of the range of results (not inclusive)
+	 * @return the matching groups, or <code>null</code> if no matches were
+	 *         found
+	 * @throws PortalException if a portal exception occurred
+	 */
+	@Override
+	public List<Group> getGroups(
+			long companyId, long parentGroupId, boolean site, int start,
+			int end)
+		throws PortalException {
+
+		return filterGroups(
+			groupLocalService.getGroups(
+				companyId, parentGroupId, site, start, end));
+	}
+
+	@Override
+	public List<Group> getGroups(
+			long companyId, long parentGroupId, String name, boolean site,
+			int start, int end)
+		throws PortalException {
+
+		return filterGroups(
+			groupLocalService.getGroups(
+				companyId, parentGroupId, name, site, start, end));
+	}
+
+	/**
+	 * Returns the number of groups that are direct children of the parent
+	 * group.
+	 *
+	 * @param  companyId the primary key of the company
+	 * @param  parentGroupId the primary key of the parent group
+	 * @param  site whether the group is to be associated with a main site
+	 * @return the number of matching groups
+	 */
+	@Override
+	public int getGroupsCount(long companyId, long parentGroupId, boolean site)
+		throws PortalException {
+
+		if (parentGroupId > 0) {
+			GroupPermissionUtil.check(
+				getPermissionChecker(), parentGroupId, ActionKeys.VIEW);
+		}
+		else {
+			GroupPermissionUtil.check(getPermissionChecker(), ActionKeys.VIEW);
+		}
+
+		return groupLocalService.getGroupsCount(companyId, parentGroupId, site);
+	}
+
+	@Override
+	public int getGroupsCount(
+			long companyId, long parentGroupId, String name, boolean site)
+		throws PortalException {
+
+		if (parentGroupId > 0) {
+			GroupPermissionUtil.check(
+				getPermissionChecker(), parentGroupId, ActionKeys.VIEW);
+		}
+		else {
+			GroupPermissionUtil.check(getPermissionChecker(), ActionKeys.VIEW);
+		}
+
+		return groupLocalService.getGroupsCount(
+			companyId, parentGroupId, name, site);
+	}
+
+	/**
+	 * Returns the number of groups that are direct children of the parent group
+	 * with the matching className.
+	 *
+	 * @param  companyId the primary key of the company
+	 * @param  className the class name of the group
+	 * @param  parentGroupId the primary key of the parent group
+	 * @return the number of matching groups
+	 */
+	@Override
+	public int getGroupsCount(
+			long companyId, String className, long parentGroupId)
+		throws PortalException {
+
+		if (parentGroupId > 0) {
+			GroupPermissionUtil.check(
+				getPermissionChecker(), parentGroupId, ActionKeys.VIEW);
+		}
+		else {
+			GroupPermissionUtil.check(getPermissionChecker(), ActionKeys.VIEW);
+		}
+
+		return groupLocalService.getGroupsCount(
+			companyId, className, parentGroupId);
+	}
+
+	public List<Group> getGtGroups(
+			long gtGroupId, long companyId, long parentGroupId, boolean site,
+			int size)
+		throws PortalException {
+
+		PermissionChecker permissionChecker = getPermissionChecker();
+
+		if (!permissionChecker.isCompanyAdmin(companyId)) {
+			throw new PrincipalException.MustBeCompanyAdmin(permissionChecker);
+		}
+
+		return groupPersistence.findByG_C_P_S(
+			gtGroupId, companyId, parentGroupId, site, 0, size,
+			new GroupIdComparator(true));
 	}
 
 	/**
@@ -989,9 +1107,9 @@ public class GroupServiceImpl extends GroupServiceBaseImpl {
 	 *             tag names for the group.
 	 * @return     the group
 	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of 7.0.0, replaced by {@link #updateGroup(long, long, Map,
-	 *             Map, int, boolean, int, String, boolean, boolean,
-	 *             ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateGroup(long, long, Map, Map, int, boolean, int, String,
+	 *             boolean, boolean, ServiceContext)}
 	 */
 	@Deprecated
 	@Override

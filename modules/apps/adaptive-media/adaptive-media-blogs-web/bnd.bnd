@@ -1,6 +1,5 @@
 Bundle-Name: Liferay Adaptive Media Blogs Web
 Bundle-SymbolicName: com.liferay.adaptive.media.blogs.web
-Bundle-Version: 1.0.5
-Liferay-Releng-Module-Group-Description:
+Bundle-Version: 1.0.9
 Liferay-Releng-Module-Group-Title: Adaptive Media
 -dsannotations-options: inherit

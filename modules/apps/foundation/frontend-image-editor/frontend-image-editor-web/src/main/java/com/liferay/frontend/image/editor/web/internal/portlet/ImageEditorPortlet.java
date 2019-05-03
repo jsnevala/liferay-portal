@@ -61,13 +61,13 @@ public class ImageEditorPortlet extends SoyPortlet {
 		javaScriptRequiredModules.addAll(
 			super.getJavaScriptRequiredModules(path));
 		javaScriptRequiredModules.addAll(
-			_imageEditoryCapabilityTracker.
+			_imageEditorCapabilityTracker.
 				getImageEditorCapabilitiesRequirements());
 
 		return javaScriptRequiredModules;
 	}
 
 	@Reference
-	private ImageEditorCapabilityTracker _imageEditoryCapabilityTracker;
+	private ImageEditorCapabilityTracker _imageEditorCapabilityTracker;
 
 }

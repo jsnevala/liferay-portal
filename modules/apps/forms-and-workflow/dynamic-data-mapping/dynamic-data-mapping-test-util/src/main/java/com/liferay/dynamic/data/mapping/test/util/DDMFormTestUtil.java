@@ -143,4 +143,14 @@ public class DDMFormTestUtil {
 			name, label, "text", "string", localizable, repeatable, required);
 	}
 
+	public static void setIndexTypeProperty(
+		DDMForm ddmForm, String indexTypeValue) {
+
+		List<DDMFormField> ddmFormFields = ddmForm.getDDMFormFields();
+
+		for (DDMFormField ddmFormField : ddmFormFields) {
+			ddmFormField.setIndexType(indexTypeValue);
+		}
+	}
+
 }

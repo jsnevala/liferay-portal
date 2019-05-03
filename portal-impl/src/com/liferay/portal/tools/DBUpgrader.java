@@ -17,7 +17,8 @@ package com.liferay.portal.tools;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
-import com.liferay.portal.kernel.cache.MultiVMPoolUtil;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
+import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
@@ -203,7 +204,8 @@ public class DBUpgrader {
 		}
 
 		if (StartupHelperUtil.isUpgraded()) {
-			MultiVMPoolUtil.clear();
+			PortalCacheHelperUtil.clearPortalCaches(
+				PortalCacheManagerNames.MULTI_VM);
 		}
 	}
 
@@ -280,7 +282,7 @@ public class DBUpgrader {
 		}
 
 		release = ReleaseLocalServiceUtil.updateRelease(
-			release.getReleaseId(), ReleaseInfo.getVersion(),
+			release.getReleaseId(), _LATEST_PORTAL_SCHEMA_VERSION,
 			ReleaseInfo.getParentBuildNumber(), ReleaseInfo.getBuildDate(),
 			verified);
 
@@ -383,9 +385,7 @@ public class DBUpgrader {
 			rs = ps.executeQuery();
 
 			if (rs.next()) {
-				int count = rs.getInt(1);
-
-				return count;
+				return rs.getInt(1);
 			}
 
 			return 0;
@@ -410,7 +410,9 @@ public class DBUpgrader {
 		properties.put("service.version", ReleaseInfo.getVersion());
 
 		registry.registerService(
-			ModuleServiceLifecycle.class, new ModuleServiceLifecycle() {},
+			ModuleServiceLifecycle.class,
+			new ModuleServiceLifecycle() {
+			},
 			properties);
 	}
 
@@ -441,6 +443,8 @@ public class DBUpgrader {
 			DataAccess.cleanUp(con, ps);
 		}
 	}
+
+	private static final String _LATEST_PORTAL_SCHEMA_VERSION = "0.0.6";
 
 	private static final Log _log = LogFactoryUtil.getLog(DBUpgrader.class);
 

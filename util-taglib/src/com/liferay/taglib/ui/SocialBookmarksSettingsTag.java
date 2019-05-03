@@ -44,8 +44,8 @@ public class SocialBookmarksSettingsTag extends IncludeTag {
 	protected void cleanUp() {
 		super.cleanUp();
 
-		_displayStyle = null;
 		_displayPosition = null;
+		_displayStyle = null;
 		_enabled = false;
 		_types = null;
 	}

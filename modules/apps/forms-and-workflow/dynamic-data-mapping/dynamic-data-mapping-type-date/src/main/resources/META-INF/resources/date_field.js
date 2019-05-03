@@ -2,6 +2,7 @@ AUI.add(
 	'liferay-ddm-form-field-date',
 	function(A) {
 		var isArray = Array.isArray;
+		var Lang = A.Lang;
 
 		var datePicker = new A.DatePicker(
 			{
@@ -20,7 +21,7 @@ AUI.add(
 					},
 
 					mask: {
-						value: Liferay.AUI.getDateFormat()
+						valueFn: '_maskValueFn'
 					},
 
 					type: {
@@ -42,7 +43,10 @@ AUI.add(
 						);
 
 						if (!instance.get('readOnly')) {
+							instance.bindContainerEvent('blur', instance._onBlurInput, '.form-control');
 							instance.bindContainerEvent('click', instance._onClickCalendar, '.input-group-addon');
+							instance.bindContainerEvent('focus', instance._fireFocusEvent, '.form-control');
+							instance.bindContainerEvent('keypress', instance._onKeyPressDateForm, '#inputDateForm');
 						}
 					},
 
@@ -91,6 +95,24 @@ AUI.add(
 						return container.one('.trigger');
 					},
 
+					hasFocus: function(node) {
+						var instance = this;
+
+						var hasFocus = false;
+
+						if (node) {
+							var calendar = datePicker.getCalendar();
+
+							var popover = datePicker.getPopover();
+
+							if (calendar.get('boundingBox').contains(node) || popover.get('visible')) {
+								hasFocus = true;
+							}
+						}
+
+						return hasFocus;
+					},
+
 					setValue: function(isoDate) {
 						var instance = this;
 
@@ -113,10 +135,27 @@ AUI.add(
 								date = date[0];
 							}
 
-							instance.setValue(instance.getISODate(date));
+							if (Lang.isDate(date)) {
+								instance.setValue(instance.getISODate(date));
+							}
 
 							instance.validate();
 						}
+
+						instance._fireStartedFillingEvent();
+					},
+
+					_maskValueFn: function() {
+						var dateFormat = Liferay.AUI.getDateFormat();
+						var languageId = Liferay.ThemeDisplay.getLanguageId().replace('_', '-');
+
+						var customDateFormat = A.Intl.get('datatype-date-format', 'x', languageId);
+
+						if (customDateFormat) {
+							dateFormat = customDateFormat;
+						}
+
+						return dateFormat;
 					},
 
 					_onActiveInputChange: function(event) {
@@ -129,12 +168,44 @@ AUI.add(
 						}
 					},
 
+					_onBlurInput: function() {
+						var instance = this;
+
+						var inputDate = document.getElementById('inputDateForm');
+
+						if (inputDate.value.length == 0) {
+							var nullDate = instance.getISODate(null);
+
+							instance.setValue(nullDate);
+						}
+
+						if (!instance.hasFocus(document.activeElement)) {
+							instance._fireBlurEvent();
+						}
+					},
+
 					_onClickCalendar: function() {
 						var instance = this;
 
 						instance.getTriggerNode().focus();
 
 						datePicker.show();
+					},
+
+					_onKeyPressDateForm: function(event) {
+						var backspaceKeyCodes = [8, 46];
+
+						var keyCode = event.keyCode;
+
+						var expression = String.fromCharCode(keyCode);
+
+						var inputDate = document.getElementById('inputDateForm');
+
+						var regex = /[\d|//|\b]/;
+
+						if (!regex.test(expression) || (inputDate.value.length > 9 && backspaceKeyCodes.indexOf(keyCode) == -1)) {
+							event.preventDefault();
+						}
 					},
 
 					_renderErrorMessage: function() {

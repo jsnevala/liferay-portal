@@ -34,9 +34,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {
-		"model.class.name=com.liferay.portal.kernel.servlet.taglib.ui.LanguageEntry"
-	},
+	property = "model.class.name=com.liferay.portal.kernel.servlet.taglib.ui.LanguageEntry",
 	service = ViewPortletProvider.class
 )
 public class SiteNavigationLanguageViewPortletProvider
@@ -56,7 +54,7 @@ public class SiteNavigationLanguageViewPortletProvider
 	}
 
 	/**
-	 * @deprecated As of 2.1.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override

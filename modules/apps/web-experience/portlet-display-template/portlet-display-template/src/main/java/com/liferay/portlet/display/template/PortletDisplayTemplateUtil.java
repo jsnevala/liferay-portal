@@ -30,7 +30,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class PortletDisplayTemplateUtil {
 
@@ -50,7 +50,7 @@ public class PortletDisplayTemplateUtil {
 	}
 
 	/**
-	 * @deprecated As of 2.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@SuppressWarnings("deprecation")
@@ -92,7 +92,7 @@ public class PortletDisplayTemplateUtil {
 	}
 
 	/**
-	 * @deprecated As of 2.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@SuppressWarnings("deprecation")

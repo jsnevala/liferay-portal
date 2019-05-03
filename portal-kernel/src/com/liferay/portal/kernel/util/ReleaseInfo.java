@@ -105,6 +105,8 @@ public class ReleaseInfo {
 
 	public static final int RELEASE_7_0_5_BUILD_NUMBER = 7005;
 
+	public static final int RELEASE_7_0_6_BUILD_NUMBER = 7006;
+
 	public static final int RELEASE_7_0_10_BUILD_NUMBER = 7010;
 
 	public static final int RELEASE_7_1_0_BUILD_NUMBER = 7100;
@@ -160,13 +162,13 @@ public class ReleaseInfo {
 		return _VERSION;
 	}
 
-	private static final String _BUILD = "7005";
+	private static final String _BUILD = "7006";
 
 	private static final int _BUILD_NUMBER = GetterUtil.getInteger(_BUILD);
 
 	private static final String _CODE_NAME = "Wilberforce";
 
-	private static final String _DATE = "March 26, 2018";
+	private static final String _DATE = "May 22, 2018";
 
 	private static final String _NAME = "Liferay Community Edition Portal";
 
@@ -180,9 +182,9 @@ public class ReleaseInfo {
 
 	private static final String _VENDOR = "Liferay, Inc.";
 
-	private static final String _VERSION = "7.0.5";
+	private static final String _VERSION = "7.0.6";
 
-	private static final String _VERSION_DISPLAY_NAME = "7.0.5 GA6";
+	private static final String _VERSION_DISPLAY_NAME = "7.0.6 GA7";
 
 	private static String _releaseInfo;
 	private static String _serverInfo;

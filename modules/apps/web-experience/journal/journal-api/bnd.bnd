@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Journal API
 Bundle-SymbolicName: com.liferay.journal.api
-Bundle-Version: 2.12.7
+Bundle-Version: 2.13.9
 Export-Package:\
 	com.liferay.journal,\
 	com.liferay.journal.constants,\
@@ -10,5 +10,4 @@ Export-Package:\
 	com.liferay.journal.service.persistence,\
 	com.liferay.journal.util,\
 	com.liferay.journal.util.comparator
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Web Content

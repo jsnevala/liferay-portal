@@ -66,6 +66,7 @@ public class UpgradeAsset extends UpgradeProcess {
 
 				while (rs.next()) {
 					long resourcePrimKey = rs.getLong("resourcePrimKey");
+
 					String structureId = rs.getString("structureId");
 
 					long journalStructureId = getJournalStructureId(

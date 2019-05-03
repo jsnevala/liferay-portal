@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Social Private Messaging API
 Bundle-SymbolicName: com.liferay.social.privatemessaging.api
-Bundle-Version: 2.0.15
+Bundle-Version: 2.0.26
 Export-Package:\
 	com.liferay.social.privatemessaging.configuration,\
 	com.liferay.social.privatemessaging.constants,\
@@ -8,5 +8,4 @@ Export-Package:\
 	com.liferay.social.privatemessaging.model,\
 	com.liferay.social.privatemessaging.service,\
 	com.liferay.social.privatemessaging.service.persistence
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Social Private Messaging

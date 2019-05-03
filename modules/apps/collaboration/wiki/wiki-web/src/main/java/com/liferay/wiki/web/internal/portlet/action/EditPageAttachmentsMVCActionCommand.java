@@ -163,8 +163,8 @@ public class EditPageAttachmentsMVCActionCommand extends BaseMVCActionCommand {
 				}
 			}
 		}
-		catch (NoSuchNodeException | NoSuchPageException |
-			   PrincipalException e) {
+		catch (NoSuchNodeException | NoSuchPageException | PrincipalException
+					e) {
 
 			SessionErrors.add(actionRequest, e.getClass());
 

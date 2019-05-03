@@ -38,6 +38,7 @@ public class CookieUtil {
 		String name = deserializer.readString();
 		String path = deserializer.readString();
 		boolean secure = deserializer.readBoolean();
+
 		String value = deserializer.readString();
 
 		if (value.isEmpty()) {

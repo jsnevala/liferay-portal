@@ -198,8 +198,8 @@ public abstract class StateAwareResponseImpl
 			throw new IllegalArgumentException();
 		}
 
-		for (int i = 0; i < values.length; i++) {
-			if (values[i] == null) {
+		for (String value : values) {
+			if (value == null) {
 				throw new IllegalArgumentException();
 			}
 		}
@@ -278,8 +278,8 @@ public abstract class StateAwareResponseImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #init(PortletRequestImpl,
-	 *             HttpServletResponse, User, Layout)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #init(PortletRequestImpl, HttpServletResponse, User, Layout)}
 	 */
 	@Deprecated
 	protected void init(

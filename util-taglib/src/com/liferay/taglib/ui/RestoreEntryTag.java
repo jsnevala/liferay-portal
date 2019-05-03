@@ -21,7 +21,7 @@ import javax.portlet.PortletURL;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @author Roberto Diaz
+ * @author Roberto Díaz
  */
 public class RestoreEntryTag extends IncludeTag {
 

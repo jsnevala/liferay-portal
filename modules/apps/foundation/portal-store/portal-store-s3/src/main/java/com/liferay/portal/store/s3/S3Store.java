@@ -85,7 +85,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Sten Martinez
  * @author Edward C. Han
  * @author Vilmos Papp
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Manuel de la Peña
  * @author Daniel Sanz
  */
@@ -803,7 +803,6 @@ public class S3Store extends BaseStore {
 
 	private static volatile S3StoreConfiguration _s3StoreConfiguration;
 
-	private AbortedMultipartUploadCleaner _abortedMultipartUploadCleaner;
 	private AmazonS3 _amazonS3;
 	private AWSCredentialsProvider _awsCredentialsProvider;
 	private String _bucketName;

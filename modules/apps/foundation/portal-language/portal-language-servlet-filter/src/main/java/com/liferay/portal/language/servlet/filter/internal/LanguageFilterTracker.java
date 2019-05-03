@@ -101,8 +101,8 @@ public class LanguageFilterTracker {
 		}
 
 		/**
-		 * @deprecated As of 2.0.0, replaced by {@link #loadResourceBundle(
-		 *             Locale)}
+		 * @deprecated As of Judson (7.1.x), replaced by {@link
+		 *             #loadResourceBundle(Locale)}
 		 */
 		@Deprecated
 		public ResourceBundle loadResourceBundle(String languageId) {
@@ -115,9 +115,8 @@ public class LanguageFilterTracker {
 	}
 
 	private class ServletContextHelperServiceTrackerCustomizer
-		implements
-			ServiceTrackerCustomizer
-				<ServletContextHelper, ServiceTracker<?, ?>> {
+		implements ServiceTrackerCustomizer
+			<ServletContextHelper, ServiceTracker<?, ?>> {
 
 		public ServletContextHelperServiceTrackerCustomizer(
 			BundleContext bundleContext) {
@@ -200,9 +199,8 @@ public class LanguageFilterTracker {
 		private final BundleContext _bundleContext;
 
 		private class ResourceBundleLoaderServiceTrackerCustomizer
-			implements
-				ServiceTrackerCustomizer
-					<ResourceBundleLoader, TrackedServletContextHelper> {
+			implements ServiceTrackerCustomizer
+				<ResourceBundleLoader, TrackedServletContextHelper> {
 
 			public ResourceBundleLoaderServiceTrackerCustomizer(
 				Map<String, Object> properties, String filterString,

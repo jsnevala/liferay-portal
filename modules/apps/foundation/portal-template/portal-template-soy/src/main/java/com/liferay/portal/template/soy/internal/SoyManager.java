@@ -42,7 +42,7 @@ import org.osgi.util.tracker.BundleTracker;
  */
 @Component(
 	immediate = true,
-	property = {"language.type=" + TemplateConstants.LANG_TYPE_SOY},
+	property = "language.type=" + TemplateConstants.LANG_TYPE_SOY,
 	service = {SoyManager.class, TemplateManager.class}
 )
 public class SoyManager extends BaseMultiTemplateManager {
@@ -50,8 +50,6 @@ public class SoyManager extends BaseMultiTemplateManager {
 	@Override
 	public void destroy() {
 		templateContextHelper.removeAllHelperUtilities();
-
-		templateContextHelper = null;
 	}
 
 	@Override

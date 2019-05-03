@@ -66,8 +66,7 @@ public class DDLExporterFactory {
 	@Reference(
 		cardinality = ReferenceCardinality.MULTIPLE,
 		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		unbind = "removeDDLExporter"
+		policyOption = ReferencePolicyOption.GREEDY
 	)
 	protected void addDDLExporter(DDLExporter ddlExporter) {
 		_ddlExporters.put(ddlExporter.getFormat(), ddlExporter);

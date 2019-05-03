@@ -29,8 +29,6 @@ import com.liferay.portal.kernel.image.ImageBag;
 import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -257,6 +255,14 @@ public class UploadImageMVCActionCommand extends BaseMVCActionCommand {
 						"an-unexpected-error-occurred-while-uploading-your-" +
 							"file");
 				}
+				else if (e instanceof UploadRequestSizeException) {
+					errorMessage = themeDisplay.translate(
+						"request-is-larger-than-x-and-could-not-be-processed",
+						TextFormatter.formatStorageSize(
+							PrefsPropsUtil.getLong(
+								PropsKeys.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE),
+							themeDisplay.getLocale()));
+				}
 
 				JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
@@ -355,9 +361,6 @@ public class UploadImageMVCActionCommand extends BaseMVCActionCommand {
 			StreamUtil.cleanUp(tempImageStream);
 		}
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		UploadImageMVCActionCommand.class);
 
 	@Reference
 	private Portal _portal;

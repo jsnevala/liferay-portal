@@ -22,12 +22,10 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
-	property = {
-		"portal.cache.manager.name=" + PortalCacheManagerNames.MULTI_VM
-	},
+	property = "portal.cache.manager.name=" + PortalCacheManagerNames.MULTI_VM,
 	service = PortalCacheConfiguratorSettings.class
 )
 public class JournalMultiVMClusteredCacheConfiguratorSettings
@@ -35,8 +33,8 @@ public class JournalMultiVMClusteredCacheConfiguratorSettings
 
 	public JournalMultiVMClusteredCacheConfiguratorSettings() {
 		super(
-			JournalMultiVMClusteredCacheConfiguratorSettings.
-				class.getClassLoader(),
+			JournalMultiVMClusteredCacheConfiguratorSettings.class.
+				getClassLoader(),
 			"META-INF/module-multi-vm-clustered.xml");
 	}
 

@@ -90,7 +90,8 @@ public class FinderPath {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #encodeCacheKey(String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #encodeCacheKey(String)}
 	 */
 	@Deprecated
 	public Serializable encodeCacheKey(Object[] arguments) {
@@ -113,7 +114,8 @@ public class FinderPath {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #encodeLocalCacheKey(String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #encodeLocalCacheKey(String)}
 	 */
 	@Deprecated
 	public Serializable encodeLocalCacheKey(Object[] arguments) {
@@ -184,8 +186,11 @@ public class FinderPath {
 	}
 
 	private void _initLocalCacheKeyPrefix() {
-		_localCacheKeyPrefix = _cacheName.concat(StringPool.PERIOD).concat(
-			_cacheKeyPrefix);
+		_localCacheKeyPrefix = _cacheName.concat(
+			StringPool.PERIOD
+		).concat(
+			_cacheKeyPrefix
+		);
 	}
 
 	private static final String _ARGS_SEPARATOR = "_A_";

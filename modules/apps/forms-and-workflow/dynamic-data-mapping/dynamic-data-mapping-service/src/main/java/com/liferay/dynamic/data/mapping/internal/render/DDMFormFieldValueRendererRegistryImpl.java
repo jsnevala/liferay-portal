@@ -84,14 +84,12 @@ public class DDMFormFieldValueRendererRegistryImpl
 	private final BundleContext _bundleContext;
 	private final Map<String, List<DDMFormFieldValueRenderer>>
 		_ddmFormFieldValueRenderersMap = new ConcurrentHashMap<>();
-	private final
-		ServiceTracker<DDMFormFieldValueRenderer, DDMFormFieldValueRenderer>
-			_serviceTracker;
+	private final ServiceTracker
+		<DDMFormFieldValueRenderer, DDMFormFieldValueRenderer> _serviceTracker;
 
 	private class DDMFormFieldValueRendererServiceTrackerCustomizer
-		implements
-			ServiceTrackerCustomizer
-				<DDMFormFieldValueRenderer, DDMFormFieldValueRenderer> {
+		implements ServiceTrackerCustomizer
+			<DDMFormFieldValueRenderer, DDMFormFieldValueRenderer> {
 
 		@Override
 		public DDMFormFieldValueRenderer addingService(

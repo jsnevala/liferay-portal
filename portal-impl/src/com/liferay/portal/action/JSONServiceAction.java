@@ -115,6 +115,7 @@ public class JSONServiceAction extends JSONAction {
 		}
 
 		Method method = (Method)methodAndParameterTypes[0];
+
 		Type[] parameterTypes = (Type[])methodAndParameterTypes[1];
 		Object[] args = new Object[serviceParameters.length];
 
@@ -538,8 +539,9 @@ public class JSONServiceAction extends JSONAction {
 		}
 
 		if (method != null) {
-			methodAndParameterTypes =
-				new Object[] {method, methodParameterTypes};
+			methodAndParameterTypes = new Object[] {
+				method, methodParameterTypes
+			};
 
 			_methodCache.put(key, methodAndParameterTypes);
 
@@ -632,8 +634,11 @@ public class JSONServiceAction extends JSONAction {
 				fieldDescriptor = "S";
 			}
 			else {
-				fieldDescriptor = "L".concat(fieldDescriptor).concat(
-					StringPool.SEMICOLON);
+				fieldDescriptor = "L".concat(
+					fieldDescriptor
+				).concat(
+					StringPool.SEMICOLON
+				);
 			}
 
 			return dimensions.concat(fieldDescriptor);

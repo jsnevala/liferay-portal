@@ -18,11 +18,6 @@
 	<td>//div[contains(@id,'breadcrumb')]//li[@class='active']</td>
 	<td></td>
 </tr>
-<tr>
-	<td>BREADCRUMB_ENTRY_LINK</td>
-	<td>//div[contains(@id,'breadcrumb')]//li/a[contains(.,'${key_breadcrumbName}')]</td>
-	<td></td>
-</tr>
 </tbody>
 </table>
 </body>

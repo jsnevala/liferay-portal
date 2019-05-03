@@ -42,10 +42,10 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
-	property = {"javax.portlet.name=" + PortletKeys.PORTLET_DISPLAY_TEMPLATE},
+	property = "javax.portlet.name=" + PortletKeys.PORTLET_DISPLAY_TEMPLATE,
 	service = DDMDisplay.class
 )
 public class PortletDisplayTemplateDDMDisplay extends BaseDDMDisplay {

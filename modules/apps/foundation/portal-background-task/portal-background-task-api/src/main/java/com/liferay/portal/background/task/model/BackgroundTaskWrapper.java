@@ -17,7 +17,6 @@ package com.liferay.portal.background.task.model;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.service.ServiceContext;
 
@@ -38,8 +37,9 @@ import java.util.Objects;
  * @generated
  */
 @ProviderType
-public class BackgroundTaskWrapper implements BackgroundTask,
-	ModelWrapper<BackgroundTask> {
+public class BackgroundTaskWrapper
+	implements BackgroundTask, ModelWrapper<BackgroundTask> {
+
 	public BackgroundTaskWrapper(BackgroundTask backgroundTask) {
 		_backgroundTask = backgroundTask;
 	}
@@ -70,7 +70,7 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 		attributes.put("servletContextNames", getServletContextNames());
 		attributes.put("taskExecutorClassName", getTaskExecutorClassName());
 		attributes.put("taskContextMap", getTaskContextMap());
-		attributes.put("completed", getCompleted());
+		attributes.put("completed", isCompleted());
 		attributes.put("completionDate", getCompletionDate());
 		attributes.put("status", getStatus());
 		attributes.put("statusMessage", getStatusMessage());
@@ -135,21 +135,21 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 		}
 
 		String servletContextNames = (String)attributes.get(
-				"servletContextNames");
+			"servletContextNames");
 
 		if (servletContextNames != null) {
 			setServletContextNames(servletContextNames);
 		}
 
 		String taskExecutorClassName = (String)attributes.get(
-				"taskExecutorClassName");
+			"taskExecutorClassName");
 
 		if (taskExecutorClassName != null) {
 			setTaskExecutorClassName(taskExecutorClassName);
 		}
 
-		Map<String, Serializable> taskContextMap = (Map<String, Serializable>)attributes.get(
-				"taskContextMap");
+		Map<String, Serializable> taskContextMap =
+			(Map<String, Serializable>)attributes.get("taskContextMap");
 
 		if (taskContextMap != null) {
 			setTaskContextMap(taskContextMap);
@@ -181,28 +181,32 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	@Override
-	public void addAttachment(long userId, java.lang.String fileName,
-		java.io.File file)
+	public void addAttachment(long userId, String fileName, java.io.File file)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_backgroundTask.addAttachment(userId, fileName, file);
 	}
 
 	@Override
-	public void addAttachment(long userId, java.lang.String fileName,
-		java.io.InputStream inputStream)
+	public void addAttachment(
+			long userId, String fileName, java.io.InputStream inputStream)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_backgroundTask.addAttachment(userId, fileName, inputStream);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.repository.model.Folder addAttachmentsFolder()
+	public com.liferay.portal.kernel.repository.model.Folder
+			addAttachmentsFolder()
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _backgroundTask.addAttachmentsFolder();
 	}
 
 	@Override
-	public java.lang.Object clone() {
-		return new BackgroundTaskWrapper((BackgroundTask)_backgroundTask.clone());
+	public Object clone() {
+		return new BackgroundTaskWrapper(
+			(BackgroundTask)_backgroundTask.clone());
 	}
 
 	@Override
@@ -211,21 +215,25 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry> getAttachmentsFileEntries()
+	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry>
+			getAttachmentsFileEntries()
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _backgroundTask.getAttachmentsFileEntries();
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry> getAttachmentsFileEntries(
-		int start, int end)
+	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry>
+			getAttachmentsFileEntries(int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _backgroundTask.getAttachmentsFileEntries(start, end);
 	}
 
 	@Override
 	public int getAttachmentsFileEntriesCount()
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _backgroundTask.getAttachmentsFileEntriesCount();
 	}
 
@@ -235,50 +243,50 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	/**
-	* Returns the background task ID of this background task.
-	*
-	* @return the background task ID of this background task
-	*/
+	 * Returns the background task ID of this background task.
+	 *
+	 * @return the background task ID of this background task
+	 */
 	@Override
 	public long getBackgroundTaskId() {
 		return _backgroundTask.getBackgroundTaskId();
 	}
 
 	/**
-	* Returns the company ID of this background task.
-	*
-	* @return the company ID of this background task
-	*/
+	 * Returns the company ID of this background task.
+	 *
+	 * @return the company ID of this background task
+	 */
 	@Override
 	public long getCompanyId() {
 		return _backgroundTask.getCompanyId();
 	}
 
 	/**
-	* Returns the completed of this background task.
-	*
-	* @return the completed of this background task
-	*/
+	 * Returns the completed of this background task.
+	 *
+	 * @return the completed of this background task
+	 */
 	@Override
 	public boolean getCompleted() {
 		return _backgroundTask.getCompleted();
 	}
 
 	/**
-	* Returns the completion date of this background task.
-	*
-	* @return the completion date of this background task
-	*/
+	 * Returns the completion date of this background task.
+	 *
+	 * @return the completion date of this background task
+	 */
 	@Override
 	public Date getCompletionDate() {
 		return _backgroundTask.getCompletionDate();
 	}
 
 	/**
-	* Returns the create date of this background task.
-	*
-	* @return the create date of this background task
-	*/
+	 * Returns the create date of this background task.
+	 *
+	 * @return the create date of this background task
+	 */
 	@Override
 	public Date getCreateDate() {
 		return _backgroundTask.getCreateDate();
@@ -290,50 +298,50 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	/**
-	* Returns the group ID of this background task.
-	*
-	* @return the group ID of this background task
-	*/
+	 * Returns the group ID of this background task.
+	 *
+	 * @return the group ID of this background task
+	 */
 	@Override
 	public long getGroupId() {
 		return _backgroundTask.getGroupId();
 	}
 
 	/**
-	* Returns the modified date of this background task.
-	*
-	* @return the modified date of this background task
-	*/
+	 * Returns the modified date of this background task.
+	 *
+	 * @return the modified date of this background task
+	 */
 	@Override
 	public Date getModifiedDate() {
 		return _backgroundTask.getModifiedDate();
 	}
 
 	/**
-	* Returns the mvcc version of this background task.
-	*
-	* @return the mvcc version of this background task
-	*/
+	 * Returns the mvcc version of this background task.
+	 *
+	 * @return the mvcc version of this background task
+	 */
 	@Override
 	public long getMvccVersion() {
 		return _backgroundTask.getMvccVersion();
 	}
 
 	/**
-	* Returns the name of this background task.
-	*
-	* @return the name of this background task
-	*/
+	 * Returns the name of this background task.
+	 *
+	 * @return the name of this background task
+	 */
 	@Override
-	public java.lang.String getName() {
+	public String getName() {
 		return _backgroundTask.getName();
 	}
 
 	/**
-	* Returns the primary key of this background task.
-	*
-	* @return the primary key of this background task
-	*/
+	 * Returns the primary key of this background task.
+	 *
+	 * @return the primary key of this background task
+	 */
 	@Override
 	public long getPrimaryKey() {
 		return _backgroundTask.getPrimaryKey();
@@ -345,87 +353,87 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	/**
-	* Returns the servlet context names of this background task.
-	*
-	* @return the servlet context names of this background task
-	*/
+	 * Returns the servlet context names of this background task.
+	 *
+	 * @return the servlet context names of this background task
+	 */
 	@Override
-	public java.lang.String getServletContextNames() {
+	public String getServletContextNames() {
 		return _backgroundTask.getServletContextNames();
 	}
 
 	/**
-	* Returns the status of this background task.
-	*
-	* @return the status of this background task
-	*/
+	 * Returns the status of this background task.
+	 *
+	 * @return the status of this background task
+	 */
 	@Override
 	public int getStatus() {
 		return _backgroundTask.getStatus();
 	}
 
 	@Override
-	public java.lang.String getStatusLabel() {
+	public String getStatusLabel() {
 		return _backgroundTask.getStatusLabel();
 	}
 
 	/**
-	* Returns the status message of this background task.
-	*
-	* @return the status message of this background task
-	*/
+	 * Returns the status message of this background task.
+	 *
+	 * @return the status message of this background task
+	 */
 	@Override
-	public java.lang.String getStatusMessage() {
+	public String getStatusMessage() {
 		return _backgroundTask.getStatusMessage();
 	}
 
 	/**
-	* Returns the task context map of this background task.
-	*
-	* @return the task context map of this background task
-	*/
+	 * Returns the task context map of this background task.
+	 *
+	 * @return the task context map of this background task
+	 */
 	@Override
-	public Map<java.lang.String, Serializable> getTaskContextMap() {
+	public Map<String, Serializable> getTaskContextMap() {
 		return _backgroundTask.getTaskContextMap();
 	}
 
 	/**
-	* Returns the task executor class name of this background task.
-	*
-	* @return the task executor class name of this background task
-	*/
+	 * Returns the task executor class name of this background task.
+	 *
+	 * @return the task executor class name of this background task
+	 */
 	@Override
-	public java.lang.String getTaskExecutorClassName() {
+	public String getTaskExecutorClassName() {
 		return _backgroundTask.getTaskExecutorClassName();
 	}
 
 	/**
-	* Returns the user ID of this background task.
-	*
-	* @return the user ID of this background task
-	*/
+	 * Returns the user ID of this background task.
+	 *
+	 * @return the user ID of this background task
+	 */
 	@Override
 	public long getUserId() {
 		return _backgroundTask.getUserId();
 	}
 
 	/**
-	* Returns the user name of this background task.
-	*
-	* @return the user name of this background task
-	*/
+	 * Returns the user name of this background task.
+	 *
+	 * @return the user name of this background task
+	 */
 	@Override
-	public java.lang.String getUserName() {
+	public String getUserName() {
 		return _backgroundTask.getUserName();
 	}
 
 	/**
-	* Returns the user uuid of this background task.
-	*
-	* @return the user uuid of this background task
-	*/
+	 * Returns the user uuid of this background task.
+	 *
+	 * @return the user uuid of this background task
+	 */
 	@Override
-	public java.lang.String getUserUuid() {
+	public String getUserUuid() {
 		return _backgroundTask.getUserUuid();
 	}
 
@@ -440,10 +448,10 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	/**
-	* Returns <code>true</code> if this background task is completed.
-	*
-	* @return <code>true</code> if this background task is completed; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this background task is completed.
+	 *
+	 * @return <code>true</code> if this background task is completed; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isCompleted() {
 		return _backgroundTask.isCompleted();
@@ -470,10 +478,10 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	/**
-	* Sets the background task ID of this background task.
-	*
-	* @param backgroundTaskId the background task ID of this background task
-	*/
+	 * Sets the background task ID of this background task.
+	 *
+	 * @param backgroundTaskId the background task ID of this background task
+	 */
 	@Override
 	public void setBackgroundTaskId(long backgroundTaskId) {
 		_backgroundTask.setBackgroundTaskId(backgroundTaskId);
@@ -485,40 +493,40 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	/**
-	* Sets the company ID of this background task.
-	*
-	* @param companyId the company ID of this background task
-	*/
+	 * Sets the company ID of this background task.
+	 *
+	 * @param companyId the company ID of this background task
+	 */
 	@Override
 	public void setCompanyId(long companyId) {
 		_backgroundTask.setCompanyId(companyId);
 	}
 
 	/**
-	* Sets whether this background task is completed.
-	*
-	* @param completed the completed of this background task
-	*/
+	 * Sets whether this background task is completed.
+	 *
+	 * @param completed the completed of this background task
+	 */
 	@Override
 	public void setCompleted(boolean completed) {
 		_backgroundTask.setCompleted(completed);
 	}
 
 	/**
-	* Sets the completion date of this background task.
-	*
-	* @param completionDate the completion date of this background task
-	*/
+	 * Sets the completion date of this background task.
+	 *
+	 * @param completionDate the completion date of this background task
+	 */
 	@Override
 	public void setCompletionDate(Date completionDate) {
 		_backgroundTask.setCompletionDate(completionDate);
 	}
 
 	/**
-	* Sets the create date of this background task.
-	*
-	* @param createDate the create date of this background task
-	*/
+	 * Sets the create date of this background task.
+	 *
+	 * @param createDate the create date of this background task
+	 */
 	@Override
 	public void setCreateDate(Date createDate) {
 		_backgroundTask.setCreateDate(createDate);
@@ -527,6 +535,7 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	@Override
 	public void setExpandoBridgeAttributes(
 		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
+
 		_backgroundTask.setExpandoBridgeAttributes(baseModel);
 	}
 
@@ -541,42 +550,42 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	/**
-	* Sets the group ID of this background task.
-	*
-	* @param groupId the group ID of this background task
-	*/
+	 * Sets the group ID of this background task.
+	 *
+	 * @param groupId the group ID of this background task
+	 */
 	@Override
 	public void setGroupId(long groupId) {
 		_backgroundTask.setGroupId(groupId);
 	}
 
 	/**
-	* Sets the modified date of this background task.
-	*
-	* @param modifiedDate the modified date of this background task
-	*/
+	 * Sets the modified date of this background task.
+	 *
+	 * @param modifiedDate the modified date of this background task
+	 */
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		_backgroundTask.setModifiedDate(modifiedDate);
 	}
 
 	/**
-	* Sets the mvcc version of this background task.
-	*
-	* @param mvccVersion the mvcc version of this background task
-	*/
+	 * Sets the mvcc version of this background task.
+	 *
+	 * @param mvccVersion the mvcc version of this background task
+	 */
 	@Override
 	public void setMvccVersion(long mvccVersion) {
 		_backgroundTask.setMvccVersion(mvccVersion);
 	}
 
 	/**
-	* Sets the name of this background task.
-	*
-	* @param name the name of this background task
-	*/
+	 * Sets the name of this background task.
+	 *
+	 * @param name the name of this background task
+	 */
 	@Override
-	public void setName(java.lang.String name) {
+	public void setName(String name) {
 		_backgroundTask.setName(name);
 	}
 
@@ -586,10 +595,10 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	/**
-	* Sets the primary key of this background task.
-	*
-	* @param primaryKey the primary key of this background task
-	*/
+	 * Sets the primary key of this background task.
+	 *
+	 * @param primaryKey the primary key of this background task
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		_backgroundTask.setPrimaryKey(primaryKey);
@@ -601,88 +610,89 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	/**
-	* Sets the servlet context names of this background task.
-	*
-	* @param servletContextNames the servlet context names of this background task
-	*/
+	 * Sets the servlet context names of this background task.
+	 *
+	 * @param servletContextNames the servlet context names of this background task
+	 */
 	@Override
-	public void setServletContextNames(java.lang.String servletContextNames) {
+	public void setServletContextNames(String servletContextNames) {
 		_backgroundTask.setServletContextNames(servletContextNames);
 	}
 
 	/**
-	* Sets the status of this background task.
-	*
-	* @param status the status of this background task
-	*/
+	 * Sets the status of this background task.
+	 *
+	 * @param status the status of this background task
+	 */
 	@Override
 	public void setStatus(int status) {
 		_backgroundTask.setStatus(status);
 	}
 
 	/**
-	* Sets the status message of this background task.
-	*
-	* @param statusMessage the status message of this background task
-	*/
+	 * Sets the status message of this background task.
+	 *
+	 * @param statusMessage the status message of this background task
+	 */
 	@Override
-	public void setStatusMessage(java.lang.String statusMessage) {
+	public void setStatusMessage(String statusMessage) {
 		_backgroundTask.setStatusMessage(statusMessage);
 	}
 
 	/**
-	* Sets the task context map of this background task.
-	*
-	* @param taskContextMap the task context map of this background task
-	*/
+	 * Sets the task context map of this background task.
+	 *
+	 * @param taskContextMap the task context map of this background task
+	 */
 	@Override
-	public void setTaskContextMap(
-		Map<java.lang.String, Serializable> taskContextMap) {
+	public void setTaskContextMap(Map<String, Serializable> taskContextMap) {
 		_backgroundTask.setTaskContextMap(taskContextMap);
 	}
 
 	/**
-	* Sets the task executor class name of this background task.
-	*
-	* @param taskExecutorClassName the task executor class name of this background task
-	*/
+	 * Sets the task executor class name of this background task.
+	 *
+	 * @param taskExecutorClassName the task executor class name of this background task
+	 */
 	@Override
-	public void setTaskExecutorClassName(java.lang.String taskExecutorClassName) {
+	public void setTaskExecutorClassName(String taskExecutorClassName) {
 		_backgroundTask.setTaskExecutorClassName(taskExecutorClassName);
 	}
 
 	/**
-	* Sets the user ID of this background task.
-	*
-	* @param userId the user ID of this background task
-	*/
+	 * Sets the user ID of this background task.
+	 *
+	 * @param userId the user ID of this background task
+	 */
 	@Override
 	public void setUserId(long userId) {
 		_backgroundTask.setUserId(userId);
 	}
 
 	/**
-	* Sets the user name of this background task.
-	*
-	* @param userName the user name of this background task
-	*/
+	 * Sets the user name of this background task.
+	 *
+	 * @param userName the user name of this background task
+	 */
 	@Override
-	public void setUserName(java.lang.String userName) {
+	public void setUserName(String userName) {
 		_backgroundTask.setUserName(userName);
 	}
 
 	/**
-	* Sets the user uuid of this background task.
-	*
-	* @param userUuid the user uuid of this background task
-	*/
+	 * Sets the user uuid of this background task.
+	 *
+	 * @param userUuid the user uuid of this background task
+	 */
 	@Override
-	public void setUserUuid(java.lang.String userUuid) {
+	public void setUserUuid(String userUuid) {
 		_backgroundTask.setUserUuid(userUuid);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.CacheModel<BackgroundTask> toCacheModel() {
+	public com.liferay.portal.kernel.model.CacheModel<BackgroundTask>
+		toCacheModel() {
+
 		return _backgroundTask.toCacheModel();
 	}
 
@@ -692,7 +702,7 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	@Override
-	public java.lang.String toString() {
+	public String toString() {
 		return _backgroundTask.toString();
 	}
 
@@ -702,7 +712,7 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	@Override
-	public java.lang.String toXmlString() {
+	public String toXmlString() {
 		return _backgroundTask.toXmlString();
 	}
 
@@ -716,10 +726,12 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 			return false;
 		}
 
-		BackgroundTaskWrapper backgroundTaskWrapper = (BackgroundTaskWrapper)obj;
+		BackgroundTaskWrapper backgroundTaskWrapper =
+			(BackgroundTaskWrapper)obj;
 
-		if (Objects.equals(_backgroundTask,
-					backgroundTaskWrapper._backgroundTask)) {
+		if (Objects.equals(
+				_backgroundTask, backgroundTaskWrapper._backgroundTask)) {
+
 			return true;
 		}
 
@@ -747,4 +759,5 @@ public class BackgroundTaskWrapper implements BackgroundTask,
 	}
 
 	private final BackgroundTask _backgroundTask;
+
 }

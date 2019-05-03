@@ -114,8 +114,9 @@ public class LayoutPrototypeLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #addLayoutPrototype(long,
-	 *             long, Map, Map, boolean, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #addLayoutPrototype(long, long, Map, Map, boolean,
+	 *             ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -145,8 +146,8 @@ public class LayoutPrototypeLocalServiceImpl
 
 		if (!CompanyThreadLocal.isDeleteInProcess() &&
 			(layoutPersistence.countByC_L(
-				layoutPrototype.getCompanyId(),
-				layoutPrototype.getUuid()) > 0)) {
+				layoutPrototype.getCompanyId(), layoutPrototype.getUuid()) >
+					0)) {
 
 			throw new RequiredLayoutPrototypeException();
 		}
@@ -265,8 +266,9 @@ public class LayoutPrototypeLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #updateLayoutPrototype(long,
-	 *             Map, Map, boolean, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateLayoutPrototype(long, Map, Map, boolean,
+	 *             ServiceContext)}
 	 */
 	@Deprecated
 	@Override

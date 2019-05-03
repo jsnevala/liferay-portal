@@ -73,6 +73,16 @@
 	/>
 </liferay-ui:search-container>
 
+<%
+Group scopeGroup = themeDisplay.getScopeGroup();
+%>
+
+<c:if test="<%= scopeGroup.hasStagingGroup() %>">
+	<div>
+		<liferay-ui:message key="related-assets-for-staged-asset-types-can-be-managed-on-the-staging-site" />
+	</div>
+</c:if>
+
 <liferay-ui:icon-menu
 	cssClass="select-existing-selector"
 	direction="right"

@@ -19,7 +19,6 @@ import aQute.bnd.annotation.ProviderType;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-
 import com.liferay.social.networking.model.MeetupsRegistration;
 
 import java.io.Externalizable;
@@ -33,12 +32,12 @@ import java.util.Date;
  * The cache model class for representing MeetupsRegistration in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see MeetupsRegistration
  * @generated
  */
 @ProviderType
-public class MeetupsRegistrationCacheModel implements CacheModel<MeetupsRegistration>,
-	Externalizable {
+public class MeetupsRegistrationCacheModel
+	implements CacheModel<MeetupsRegistration>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -49,9 +48,12 @@ public class MeetupsRegistrationCacheModel implements CacheModel<MeetupsRegistra
 			return false;
 		}
 
-		MeetupsRegistrationCacheModel meetupsRegistrationCacheModel = (MeetupsRegistrationCacheModel)obj;
+		MeetupsRegistrationCacheModel meetupsRegistrationCacheModel =
+			(MeetupsRegistrationCacheModel)obj;
 
-		if (meetupsRegistrationId == meetupsRegistrationCacheModel.meetupsRegistrationId) {
+		if (meetupsRegistrationId ==
+				meetupsRegistrationCacheModel.meetupsRegistrationId) {
+
 			return true;
 		}
 
@@ -92,7 +94,8 @@ public class MeetupsRegistrationCacheModel implements CacheModel<MeetupsRegistra
 
 	@Override
 	public MeetupsRegistration toEntityModel() {
-		MeetupsRegistrationImpl meetupsRegistrationImpl = new MeetupsRegistrationImpl();
+		MeetupsRegistrationImpl meetupsRegistrationImpl =
+			new MeetupsRegistrationImpl();
 
 		meetupsRegistrationImpl.setMeetupsRegistrationId(meetupsRegistrationId);
 		meetupsRegistrationImpl.setCompanyId(companyId);
@@ -152,8 +155,7 @@ public class MeetupsRegistrationCacheModel implements CacheModel<MeetupsRegistra
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(meetupsRegistrationId);
 
 		objectOutput.writeLong(companyId);
@@ -191,4 +193,5 @@ public class MeetupsRegistrationCacheModel implements CacheModel<MeetupsRegistra
 	public long meetupsEntryId;
 	public int status;
 	public String comments;
+
 }

@@ -66,7 +66,7 @@ public abstract class VerifyProcess extends BaseDBProcess {
 			_log.info("Verifying " + ClassUtil.getClassName(this));
 		}
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection()) {
+		try (Connection con = DataAccess.getConnection()) {
 			connection = con;
 
 			doVerify();
@@ -83,7 +83,7 @@ public abstract class VerifyProcess extends BaseDBProcess {
 						"Completed verification process ",
 						ClassUtil.getClassName(this), " in ",
 						String.valueOf(System.currentTimeMillis() - start),
-						"ms"));
+						" ms"));
 			}
 		}
 	}
@@ -186,8 +186,9 @@ public abstract class VerifyProcess extends BaseDBProcess {
 
 	private static final Log _log = LogFactoryUtil.getLog(VerifyProcess.class);
 
-	private final Pattern _createTablePattern = Pattern.compile(
+	private static final Pattern _createTablePattern = Pattern.compile(
 		"create table (\\S*) \\(");
+
 	private Set<String> _portalTableNames;
 
 }

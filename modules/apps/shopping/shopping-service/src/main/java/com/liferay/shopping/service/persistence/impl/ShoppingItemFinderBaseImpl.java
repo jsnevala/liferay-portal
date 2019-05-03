@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-
 import com.liferay.shopping.model.ShoppingItem;
 import com.liferay.shopping.service.persistence.ShoppingItemPersistence;
 
@@ -32,21 +31,23 @@ import java.util.Set;
  * @author Brian Wing Shun Chan
  * @generated
  */
-public class ShoppingItemFinderBaseImpl extends BasePersistenceImpl<ShoppingItem> {
+public class ShoppingItemFinderBaseImpl
+	extends BasePersistenceImpl<ShoppingItem> {
+
 	public ShoppingItemFinderBaseImpl() {
 		setModelClass(ShoppingItem.class);
 
+		Map<String, String> dbColumnNames = new HashMap<String, String>();
+
+		dbColumnNames.put("fields", "fields_");
+		dbColumnNames.put("featured", "featured_");
+		dbColumnNames.put("sale", "sale_");
+
 		try {
 			Field field = BasePersistenceImpl.class.getDeclaredField(
-					"_dbColumnNames");
+				"_dbColumnNames");
 
 			field.setAccessible(true);
-
-			Map<String, String> dbColumnNames = new HashMap<String, String>();
-
-			dbColumnNames.put("fields", "fields_");
-			dbColumnNames.put("featured", "featured_");
-			dbColumnNames.put("sale", "sale_");
 
 			field.set(this, dbColumnNames);
 		}
@@ -78,10 +79,14 @@ public class ShoppingItemFinderBaseImpl extends BasePersistenceImpl<ShoppingItem
 	 */
 	public void setShoppingItemPersistence(
 		ShoppingItemPersistence shoppingItemPersistence) {
+
 		this.shoppingItemPersistence = shoppingItemPersistence;
 	}
 
 	@BeanReference(type = ShoppingItemPersistence.class)
 	protected ShoppingItemPersistence shoppingItemPersistence;
-	private static final Log _log = LogFactoryUtil.getLog(ShoppingItemFinderBaseImpl.class);
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ShoppingItemFinderBaseImpl.class);
+
 }

@@ -96,7 +96,8 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, Replaced by {@link #deleteCategories(long[])}
+	 * @deprecated As of Wilberforce (7.0.x), Replaced by {@link
+	 *             #deleteCategories(long[])}
 	 */
 	@Deprecated
 	@Override
@@ -299,7 +300,7 @@ public class AssetCategoryServiceImpl extends AssetCategoryServiceBaseImpl {
 		int total = 0;
 
 		if (Validator.isNotNull(name)) {
-			name = (CustomSQLUtil.keywords(name))[0];
+			name = CustomSQLUtil.keywords(name)[0];
 
 			categories = getVocabularyCategories(
 				groupId, name, vocabularyId, start, end, obc);

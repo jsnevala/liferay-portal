@@ -113,8 +113,7 @@ public class PermissionThreadLocal {
 			HashSet::new);
 	private static final ThreadLocal<Set<String>>
 		_flushResourcePermissionEnabled = new CentralizedThreadLocal<>(
-			PermissionThreadLocal.class +
-				"._flushResourcePermissionEnabled",
+			PermissionThreadLocal.class + "._flushResourcePermissionEnabled",
 			HashSet::new);
 	private static final ThreadLocal<PermissionChecker> _permissionChecker =
 		new CentralizedThreadLocal<>(

@@ -29,13 +29,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TableMapperFactory {
 
-	public static
-		<L extends BaseModel<L>, R extends BaseModel<R>> TableMapper<L, R>
-			getTableMapper(
-				String tableName, String companyColumnName,
-				String leftColumnName, String rightColumnName,
-				BasePersistence<L> leftPersistence,
-				BasePersistence<R> rightPersistence) {
+	public static <L extends BaseModel<L>, R extends BaseModel<R>>
+		TableMapper<L, R> getTableMapper(
+			String tableName, String companyColumnName, String leftColumnName,
+			String rightColumnName, BasePersistence<L> leftPersistence,
+			BasePersistence<R> rightPersistence) {
 
 		TableMapper<?, ?> tableMapper = tableMappers.get(tableName);
 
@@ -76,7 +74,7 @@ public class TableMapperFactory {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected static final Set<String> cacheMappingTableNames = null;

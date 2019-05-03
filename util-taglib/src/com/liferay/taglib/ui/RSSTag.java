@@ -26,7 +26,7 @@ import javax.portlet.ResourceURL;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class RSSTag extends IncludeTag {
 

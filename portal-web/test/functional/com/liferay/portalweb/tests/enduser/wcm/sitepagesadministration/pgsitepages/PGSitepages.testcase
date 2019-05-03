@@ -1,162 +1,114 @@
-<definition component-name="portal-wcm">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Site Pages Administration" />
+@component-name = "portal-wcm"
+definition {
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Site Pages Administration";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
-	</set-up>
+		User.firstLoginPG();
+	}
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="WebContent#tearDownCP" />
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			WebContent.tearDownCP();
 
-				<execute macro="Page#tearDownPG" />
-			</else>
-		</if>
-	</tear-down>
+			Page.tearDownPG();
+		}
+	}
 
-	<command name="AddPageFromExistingPage" priority="5">
-		<property name="testray.component.names" value="Training" />
+	@priority = "5"
+	test AddPageFromExistingPage {
+		property testray.component.names = "Training";
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Site Page" />
-		</execute>
+		Page.add(pageName = "Site Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Site Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Site Page");
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Site Page Name" />
-			<var name="pageTemplateName" value="Content Display Page" />
-		</execute>
+		Page.add(pageName = "Site Page Name", pageTemplateName = "Content Display Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Site Page Name" />
-		</execute>
+		Navigator.gotoPage(pageName = "Site Page Name");
 
-		<for list="Tags Navigation,Categories Navigation,Asset Publisher" param="portletName">
-			<execute macro="Portlet#viewSpecificPG">
-				<var name="portletName" value="${portletName}" />
-			</execute>
-		</for>
-	</command>
+		for (var portletName : list "Tags Navigation,Categories Navigation,Asset Publisher") {
+			Portlet.viewSpecificPG(portletName = "${portletName}");
+		}
+	}
 
-	<command name="DeletePages" priority="5">
-		<execute macro="Page#add">
-			<var name="pageName" value="Page1" />
-		</execute>
+	@priority = "5"
+	test DeletePages {
+		Page.add(pageName = "Page1");
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Page2" />
-		</execute>
+		Page.add(pageName = "Page2");
 
-		<execute macro="Page#deletePG">
-			<var name="pageName" value="Page1" />
-		</execute>
+		Page.deletePG(pageName = "Page1");
 
-		<execute macro="Page#viewDeletedPage">
-			<var name="pageName" value="Page1" />
-		</execute>
+		Page.viewDeletedPage(pageName = "Page1");
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="Page#deleteViaX">
-			<var name="pageName" value="Page2" />
-		</execute>
+		Page.deleteViaX(pageName = "Page2");
 
-		<execute macro="Page#viewDeletedPage">
-			<var name="pageName" value="Page2" />
-		</execute>
-	</command>
+		Page.viewDeletedPage(pageName = "Page2");
+	}
 
-	<command name="EditPageViaControlMenu" priority="5">
-		<description message="This is a use case for LPS-71160" />
+	@description = "This is a use case for LPS-71160"
+	@priority = "5"
+	test EditPageViaControlMenu {
+		property testray.component.names = "Training";
 
-		<property name="testray.component.names" value="Training" />
+		Page.add(pageName = "Site Page");
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Site Page" />
-		</execute>
+		Navigator.gotoEditPageViaControlMenu(pageName = "Site Page");
 
-		<execute macro="Navigator#gotoEditPageViaControlMenu">
-			<var name="pageName" value="Site Page" />
-		</execute>
+		Page.editName(pageNameEdit = "Site Page Edit");
 
-		<execute macro="Page#editName">
-			<var name="pageNameEdit" value="Site Page Edit" />
-		</execute>
+		Page.view(pageName = "Site Page Edit");
 
-		<execute macro="Page#view">
-			<var name="pageName" value="Site Page Edit" />
-		</execute>
+		Navigator.gotoPage(pageName = "Site Page Edit");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Site Page Edit" />
-		</execute>
+		Navigator.gotoEditPageViaControlMenu(pageName = "Site Page Edit");
 
-		<execute macro="Navigator#gotoEditPageViaControlMenu">
-			<var name="pageName" value="Site Page Edit" />
-		</execute>
+		Navigator.gotoSEOPanel();
 
-		<execute macro="Navigator#gotoSEOPanel" />
+		Page.editPageMetadata(
+			HTMLTitle = "S.P.A.C.E.Home",
+			metaTagsDescription = "Welcome to S.P.A.C.E., a graduate-level school for those passionate about expanding their horizons through science, research, and space travel",
+			metaTagsKeywords = "space, education, space travel, graduateschool"
+		);
 
-		<execute macro="Page#editPageMetadata">
-			<var name="HTMLTitle" value="S.P.A.C.E.Home" />
-			<var name="metaTagsDescription" value="Welcome to S.P.A.C.E., a graduate-level school for those passionate about expanding their horizons through science, research, and space travel" />
-			<var name="metaTagsKeywords" value="space, education, space travel, graduateschool" />
-		</execute>
+		Navigator.gotoPage(pageName = "Site Page Edit");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Site Page Edit" />
-		</execute>
+		Navigator.gotoEditPageViaControlMenu(pageName = "Site Page Edit");
 
-		<execute macro="Navigator#gotoEditPageViaControlMenu">
-			<var name="pageName" value="Site Page Edit" />
-		</execute>
+		Navigator.gotoSEOPanel();
 
-		<execute macro="Navigator#gotoSEOPanel" />
+		Page.viewPageMetadata(
+			HTMLTitle = "S.P.A.C.E.Home",
+			metaTagsDescription = "Welcome to S.P.A.C.E., a graduate-level school for those passionate about expanding their horizons through science, research, and space travel",
+			metaTagsKeywords = "space, education, space travel, graduateschool"
+		);
+	}
 
-		<execute macro="Page#viewPageMetadata">
-			<var name="HTMLTitle" value="S.P.A.C.E.Home" />
-			<var name="metaTagsDescription" value="Welcome to S.P.A.C.E., a graduate-level school for those passionate about expanding their horizons through science, research, and space travel" />
-			<var name="metaTagsKeywords" value="space, education, space travel, graduateschool" />
-		</execute>
-	</command>
+	@priority = "4"
+	test EditSitePage {
+		Navigator.openURL();
 
-	<command name="EditSitePage" priority="4">
-		<execute macro="Navigator#openURL" />
+		Page.add(pageName = "Site Page");
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Site Page" />
-		</execute>
+		SitePageNavigator.gotoEditPage(page = "Site Page");
 
-		<execute macro="SitePageNavigator#gotoEditPage">
-			<var name="page" value="Site Page" />
-		</execute>
+		Page.editName(pageNameEdit = "Site Page Edit");
 
-		<execute macro="Page#editName">
-			<var name="pageNameEdit" value="Site Page Edit" />
-		</execute>
+		Navigator.gotoPage(pageName = "Site Page Edit");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Site Page Edit" />
-		</execute>
-
-		<execute macro="Page#view">
-			<var name="pageName" value="Site Page Edit" />
-		</execute>
-	</command>
-</definition>
+		Page.view(pageName = "Site Page Edit");
+	}
+}

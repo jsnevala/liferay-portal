@@ -142,22 +142,35 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "passwor
 				keyProperty="passwordPolicyId"
 				modelVar="passwordPolicy"
 			>
-				<portlet:renderURL var="rowURL">
-					<portlet:param name="mvcPath" value="/edit_password_policy_assignments.jsp" />
-					<portlet:param name="redirect" value="<%= passwordPolicySearchContainer.getIteratorURL().toString() %>" />
-					<portlet:param name="passwordPolicyId" value="<%= String.valueOf(passwordPolicy.getPasswordPolicyId()) %>" />
-				</portlet:renderURL>
+
+				<%
+				String rowHREF = null;
+
+				if (PasswordPolicyPermissionUtil.contains(permissionChecker, passwordPolicy.getPasswordPolicyId(), ActionKeys.ASSIGN_MEMBERS)) {
+					PortletURL rowURL = renderResponse.createRenderURL();
+
+					rowURL.setParameter("mvcPath", "/edit_password_policy_assignments.jsp");
+
+					PortletURL redirectURL = passwordPolicySearchContainer.getIteratorURL();
+
+					rowURL.setParameter("redirect", redirectURL.toString());
+
+					rowURL.setParameter("passwordPolicyId", String.valueOf(passwordPolicy.getPasswordPolicyId()));
+
+					rowHREF = rowURL.toString();
+				}
+				%>
 
 				<liferay-ui:search-container-column-text
 					cssClass="table-cell-content"
-					href="<%= rowURL %>"
+					href="<%= rowHREF %>"
 					name="name"
 					property="name"
 				/>
 
 				<liferay-ui:search-container-column-text
 					cssClass="table-cell-content"
-					href="<%= rowURL %>"
+					href="<%= rowHREF %>"
 					name="description"
 					orderable="<%= true %>"
 					property="description"

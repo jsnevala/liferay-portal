@@ -33,9 +33,7 @@ public class TermFilterTranslatorImpl implements TermFilterTranslator {
 	public Query translate(TermFilter termFilter) {
 		Term term = new Term(termFilter.getField(), termFilter.getValue());
 
-		TermQuery termQuery = new TermQuery(term);
-
-		return termQuery;
+		return new TermQuery(term);
 	}
 
 }

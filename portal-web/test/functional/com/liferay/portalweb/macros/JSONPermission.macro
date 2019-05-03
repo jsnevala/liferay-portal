@@ -1,24 +1,15 @@
-<definition>
-	<command name="editPermission">
-		<execute macro="JSONCompany#getPortalURL">
-			<return from="portalURL" name="portalURL" />
-		</execute>
+definition {
 
-		<execute macro="JSONRole#getRoleIdByName">
-			<var name="roleName" value="${roleName}" />
-			<return from="roleId" name="roleId" />
-		</execute>
+	macro editPermission {
+		var portalURL = JSONCompany.getPortalURL();
 
-		<execute macro="JSONCompany#getCompanyId">
-			<return from="companyId" name="companyId" />
-		</execute>
+		var roleId = JSONRole.getRoleIdByName(roleName = "${roleName}");
 
-		<execute macro="JSONGroup#getGroupIdByName">
-			<var name="groupName" value="${groupName}" />
-			<return from="groupId" name="groupId" />
-		</execute>
+		var companyId = JSONCompany.getCompanyId();
 
-		<var name="curl">
+		var groupId = JSONGroup.getGroupIdByName(groupName = "${groupName}");
+
+		var curl = '''
 			${portalURL}/api/jsonws/resourcepermission/${method} \
 				-u test@liferay.com:test \
 				-d groupId=${groupId} \
@@ -28,12 +19,8 @@
 				-d primKey=${companyId} \
 				-d roleId=${roleId} \
 				-d actionId=${resourceAction}
-		</var>
+		''';
 
-		<execute class="com.liferay.poshi.runner.util.JSONCurlUtil" method="get">
-			<arg value="${curl}" />
-			<arg value="" />
-			<return name="temp" />
-		</execute>
-	</command>
-</definition>
+		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+	}
+}

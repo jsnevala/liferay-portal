@@ -28,6 +28,7 @@ import com.liferay.portal.workflow.kaleo.runtime.util.comparator.KaleoDefinition
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionLocalService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -41,7 +42,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  * @author Eduardo Lundgren
  */
 @Component(
-	immediate = true, property = {"proxy.bean=false"},
+	immediate = true, property = "proxy.bean=false",
 	service = WorkflowDefinitionManager.class
 )
 public class WorkflowDefinitionManagerImpl
@@ -119,7 +120,7 @@ public class WorkflowDefinitionManagerImpl
 						orderByComparator, _kaleoWorkflowModelConverter),
 					serviceContext);
 
-			return toWorkflowDefinitions(kaleoDefinitions);
+			return toWorkflowDefinitions(kaleoDefinitions, orderByComparator);
 		}
 		catch (Exception e) {
 			throw new WorkflowException(e);
@@ -144,7 +145,7 @@ public class WorkflowDefinitionManagerImpl
 						orderByComparator, _kaleoWorkflowModelConverter),
 					serviceContext);
 
-			return toWorkflowDefinitions(kaleoDefinitions);
+			return toWorkflowDefinitions(kaleoDefinitions, orderByComparator);
 		}
 		catch (Exception e) {
 			throw new WorkflowException(e);
@@ -247,7 +248,7 @@ public class WorkflowDefinitionManagerImpl
 						orderByComparator, _kaleoWorkflowModelConverter),
 					serviceContext);
 
-			return toWorkflowDefinitions(kaleoDefinitions);
+			return toWorkflowDefinitions(kaleoDefinitions, orderByComparator);
 		}
 		catch (Exception e) {
 			throw new WorkflowException(e);
@@ -272,7 +273,7 @@ public class WorkflowDefinitionManagerImpl
 						orderByComparator, _kaleoWorkflowModelConverter),
 					serviceContext);
 
-			return toWorkflowDefinitions(kaleoDefinitions);
+			return toWorkflowDefinitions(kaleoDefinitions, orderByComparator);
 		}
 		catch (Exception e) {
 			throw new WorkflowException(e);
@@ -358,7 +359,8 @@ public class WorkflowDefinitionManagerImpl
 	}
 
 	protected List<WorkflowDefinition> toWorkflowDefinitions(
-		List<KaleoDefinition> kaleoDefinitions) {
+		List<KaleoDefinition> kaleoDefinitions,
+		OrderByComparator<WorkflowDefinition> orderByComparator) {
 
 		List<WorkflowDefinition> workflowDefinitions = new ArrayList<>(
 			kaleoDefinitions.size());
@@ -369,6 +371,10 @@ public class WorkflowDefinitionManagerImpl
 					kaleoDefinition);
 
 			workflowDefinitions.add(workflowDefinition);
+		}
+
+		if (orderByComparator != null) {
+			Collections.sort(workflowDefinitions, orderByComparator);
 		}
 
 		return workflowDefinitions;

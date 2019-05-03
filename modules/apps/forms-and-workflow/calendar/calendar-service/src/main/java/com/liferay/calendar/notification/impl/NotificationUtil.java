@@ -235,7 +235,11 @@ public class NotificationUtil {
 
 		Set<User> users = new HashSet<>();
 
-		users.add(UserLocalServiceUtil.fetchUser(calendarBooking.getUserId()));
+		if (calendarBooking.isMasterBooking()) {
+			users.add(
+				UserLocalServiceUtil.fetchUser(calendarBooking.getUserId()));
+		}
+
 		users.add(UserLocalServiceUtil.fetchUser(calendarResource.getUserId()));
 
 		for (User user : users) {

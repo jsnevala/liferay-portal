@@ -663,7 +663,15 @@ public class DDLRecordSetLocalServiceImpl
 		// Record set
 
 		validateDDMStructureId(ddmStructureId);
-		validateName(nameMap);
+
+		DDMStructure ddmStructure = ddmStructureLocalService.fetchStructure(
+			ddmStructureId);
+
+		if (LocaleUtil.fromLanguageId(ddmStructure.getDefaultLanguageId()) ==
+				LocaleUtil.getSiteDefault()) {
+
+			validateName(nameMap);
+		}
 
 		long oldDDMStructureId = recordSet.getDDMStructureId();
 
@@ -718,7 +726,14 @@ public class DDLRecordSetLocalServiceImpl
 			}
 		}
 
-		validateName(nameMap);
+		DDMStructure ddmStructure = ddmStructureLocalService.fetchStructure(
+			ddmStructureId);
+
+		if (LocaleUtil.fromLanguageId(ddmStructure.getDefaultLanguageId()) ==
+				LocaleUtil.getSiteDefault()) {
+
+			validateName(nameMap);
+		}
 	}
 
 	protected void validateDDMStructureId(long ddmStructureId)

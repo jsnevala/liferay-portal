@@ -155,8 +155,8 @@ public class UpgradeJournal extends UpgradeProcess {
 			sb.append("and DDMStructure.structureKey = JournalArticle.");
 			sb.append("DDMStructureKey and JournalArticle.classNameId != ?)");
 
-			try (PreparedStatement ps =
-					connection.prepareStatement(sb.toString())) {
+			try (PreparedStatement ps = connection.prepareStatement(
+					sb.toString())) {
 
 				ps.setString(1, GroupConstants.GLOBAL_FRIENDLY_URL);
 				ps.setLong(
@@ -167,6 +167,7 @@ public class UpgradeJournal extends UpgradeProcess {
 
 					while (rs.next()) {
 						long structureId = rs.getLong("structureId");
+
 						long id = rs.getLong("id_");
 
 						List<Long> ddmStructureIds = ddmStructureIdsMap.get(id);
@@ -506,7 +507,8 @@ public class UpgradeJournal extends UpgradeProcess {
 				invalidDDMFormFieldNamesMap.entrySet()) {
 
 			content = StringUtil.replace(
-				content, entry.getKey(), entry.getValue());
+				content, "name=\"" + entry.getKey() + "\"",
+				"name=\"" + entry.getValue() + "\"");
 		}
 
 		return content;
@@ -598,6 +600,8 @@ public class UpgradeJournal extends UpgradeProcess {
 
 	private static final DateFormat _dateFormat =
 		DateFormatFactoryUtil.getSimpleDateFormat("yyyy-MM-dd");
+	private static final Pattern _nameAttributePattern = Pattern.compile(
+		"name=\"([^\"]+)\"");
 
 	private final CompanyLocalService _companyLocalService;
 	private final DDMStorageLinkLocalService _ddmStorageLinkLocalService;
@@ -605,8 +609,6 @@ public class UpgradeJournal extends UpgradeProcess {
 	private final DDMTemplateLinkLocalService _ddmTemplateLinkLocalService;
 	private final DefaultDDMStructureHelper _defaultDDMStructureHelper;
 	private final GroupLocalService _groupLocalService;
-	private final Pattern _nameAttributePattern = Pattern.compile(
-		"name=\"([^\"]+)\"");
 	private final ResourceActionLocalService _resourceActionLocalService;
 	private final ResourceActions _resourceActions;
 	private final UserLocalService _userLocalService;

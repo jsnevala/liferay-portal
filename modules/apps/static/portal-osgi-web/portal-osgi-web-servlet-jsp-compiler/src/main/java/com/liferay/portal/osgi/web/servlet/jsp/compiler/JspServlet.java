@@ -556,14 +556,15 @@ public class JspServlet extends HttpServlet {
 	}
 
 	private static final String _ANALYZED_TLDS =
-		JspServlet.class.getName().concat("#ANALYZED_TLDS");
+		JspServlet.class.getName() + "#ANALYZED_TLDS";
 
 	private static final String _DIR_NAME_RESOURCES = "/META-INF/resources";
 
 	private static final String _INIT_PARAMETER_NAME_SCRATCH_DIR = "scratchdir";
 
-	private static final Class<?>[] _INTERFACES =
-		{JspServletContext.class, ServletContext.class};
+	private static final Class<?>[] _INTERFACES = {
+		JspServletContext.class, ServletContext.class
+	};
 
 	private static final String _WORK_DIR = StringBundler.concat(
 		PropsValues.LIFERAY_HOME, File.separator, "work", File.separator);

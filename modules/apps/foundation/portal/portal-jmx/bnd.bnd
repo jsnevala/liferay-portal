@@ -1,5 +1,4 @@
 Bundle-Name: Liferay Portal JMX
 Bundle-SymbolicName: com.liferay.portal.jmx
-Bundle-Version: 4.0.1
-Liferay-Releng-Module-Group-Description:
+Bundle-Version: 4.0.5
 Liferay-Releng-Module-Group-Title: Monitoring and Management

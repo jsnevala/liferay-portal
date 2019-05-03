@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author M Murali Krishna Reddy
  */
 @Component(
-	property = {"javax.portlet.name=" + SocialNetworkingPortletKeys.MEMBERS},
+	property = "javax.portlet.name=" + SocialNetworkingPortletKeys.MEMBERS,
 	service = SocialRequestInterpreter.class
 )
 public class MembersRequestInterpreter extends BaseSocialRequestInterpreter {
@@ -171,8 +171,9 @@ public class MembersRequestInterpreter extends BaseSocialRequestInterpreter {
 		_userLocalService = userLocalService;
 	}
 
-	private static final String[] _CLASS_NAMES =
-		{Group.class.getName(), Organization.class.getName()};
+	private static final String[] _CLASS_NAMES = {
+		Group.class.getName(), Organization.class.getName()
+	};
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		MembersRequestInterpreter.class);

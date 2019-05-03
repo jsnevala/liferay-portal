@@ -29,7 +29,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Roberto Díaz
  */
 @Component(
-	property = {"model.class.name=com.liferay.knowledge.base.model.KBTemplate"},
+	property = "model.class.name=com.liferay.knowledge.base.model.KBTemplate",
 	service = BaseModelPermissionChecker.class
 )
 public class KBTemplatePermission implements BaseModelPermissionChecker {

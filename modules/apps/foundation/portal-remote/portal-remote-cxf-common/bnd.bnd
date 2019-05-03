@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Remote CXF Common
 Bundle-SymbolicName: com.liferay.portal.remote.cxf.common
-Bundle-Version: 3.0.9
+Bundle-Version: 3.0.19
 Import-Package:\
 	!com.sun.*,\
 	\
@@ -31,10 +31,9 @@ Import-Package:\
 	!org.springframework.*,\
 	\
 	*
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Remote Service Engines
 -exportcontents:\
 	javax.wsdl.*;version="1.2",\
 	\
-	org.apache.cxf.*;version="3.1.9",\
-	org.apache.ws.commons.schema.*;version="2.1.0"
+	org.apache.cxf.*,\
+	org.apache.ws.commons.schema.*

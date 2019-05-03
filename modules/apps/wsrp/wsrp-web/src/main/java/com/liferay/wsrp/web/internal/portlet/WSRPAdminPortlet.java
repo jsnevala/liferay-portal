@@ -61,7 +61,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=WSRP", "javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.copy-request-parameters=true",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/admin/view.jsp",
 		"javax.portlet.name=" + WSRPPortletKeys.WSRP_ADMIN,
 		"javax.portlet.portlet-info.keywords=WSRP",

@@ -1,51 +1,55 @@
-<definition>
-	<command name="clickAddRow">
-		<execute function="Click" locator1="Button#ADD_ROW" />
-	</command>
+definition {
+	macro click {
+		Click.mouseDownMouseUp(locator1 = "Button#ANY", key_text = "${button}");
+	}
 
-	<command name="clickCancel">
-		<execute function="AssertClick" locator1="Button#CANCEL" value1="Cancel" />
-	</command>
+	macro clickAddRow {
+		Click(locator1 = "Button#ADD_ROW");
+	}
 
-	<command name="clickConfirm">
-		<execute function="AssertClick" locator1="Button#CONFIRM" value1="Confirm" />
-	</command>
+	macro clickCancel {
+		Button.click(button = "Cancel");
+	}
 
-	<command name="clickDelete">
-		<execute function="AssertClick" locator1="Button#DELETE" value1="Delete" />
-	</command>
+	macro clickConfirm {
+		Button.click(button = "Confirm");
+	}
 
-	<command name="clickDone">
-		<execute function="AssertClick" locator1="Button#DONE" value1="Done" />
-	</command>
+	macro clickDone {
+		Button.click(button = "Done");
+	}
 
-	<command name="clickInstall">
-		<execute function="AssertClick" locator1="Button#SUBMIT" value1="Install" />
-	</command>
+	macro clickInstall {
+		Button.click(button = "Install");
+	}
 
-	<command name="clickNext">
-		<execute function="AssertClick" locator1="Button#NEXT" value1="Next" />
-	</command>
+	macro clickNext {
+		Button.click(button = "Next");
+	}
 
-	<command name="clickPublish">
-		<execute function="ScrollWebElementIntoView" locator1="Button#PUBLISH" />
+	macro clickPublish {
+		ScrollWebElementIntoView(locator1 = "Button#ANY", key_text = "Publish");
 
-		<execute function="AssertClick" locator1="Button#PUBLISH" value1="Publish" />
-	</command>
+		Button.click(button = "Publish");
+	}
 
-	<command name="clickSave">
-		<execute function="AssertClick" locator1="Button#SAVE" value1="Save" />
-	</command>
+	macro clickSave {
+		Button.click(button = "Save");
+	}
 
-	<command name="clickSaveAsDraft">
-		<execute function="AssertClick" locator1="Button#SAVE_AS_DRAFT" value1="Save as Draft" />
-	</command>
+	macro clickSaveAsDraft {
+		Button.click(button = "Save as Draft");
+	}
 
-	<command name="clickSubmitForPublication">
-		<execute function="AssertClick" locator1="Button#SUBMIT_FOR_PUBLICATION" value1="Submit for Publication" />
-	</command>
+	macro clickSubmitForPublication {
+		Button.click(button = "Submit for Publication");
+	}
 
-	<command name="clickUpdate">
-		<execute function="AssertClick" locator1="Button#UPDATE" value1="Update" />
-	</command>
-</definition>
+	macro clickUpdate {
+		Button.click(button = "Update");
+	}
+
+	macro viewNotPresent {
+		AssertElementNotPresent(locator1 = "Button#ANY", key_text = "${button}");
+	}
+}

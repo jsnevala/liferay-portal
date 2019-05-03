@@ -118,7 +118,11 @@ public class StagedModelType {
 			return _className;
 		}
 
-		return _className.concat(StringPool.POUND).concat(_referrerClassName);
+		return _className.concat(
+			StringPool.POUND
+		).concat(
+			_referrerClassName
+		);
 	}
 
 	protected String getSimpleName(String className) {

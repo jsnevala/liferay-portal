@@ -327,7 +327,7 @@
 					instance.refreshLayout(portletBound);
 
 					if (window.location.hash) {
-						window.location.hash = 'p_' + portletId;
+						window.location.href = window.location.hash;
 					}
 
 					portletBoundary = portletBound;
@@ -570,10 +570,13 @@
 				// Functions to run on portlet load
 
 				if (canEditTitle) {
-					var events = ['focus', 'gesturemovestart'];
+
+					// https://github.com/yui/yui3/issues/1808
+
+					var events = 'focus';
 
 					if (!A.UA.touch) {
-						events.push('mousemove');
+						events = ['focus', 'mousemove'];
 					}
 
 					var handle = portlet.on(
@@ -591,10 +594,6 @@
 							handle.detach();
 						}
 					);
-
-					if (A.UA.chrome) {
-						handle.detach();
-					}
 				}
 			}
 

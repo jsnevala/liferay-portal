@@ -45,6 +45,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.search.IndexStatusManagerThreadLocal;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.RemoteAuthException;
@@ -86,7 +87,7 @@ import javax.portlet.PortletRequest;
 
 /**
  * @author Michael C. Han
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Vilmos Papp
  */
 public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
@@ -150,6 +151,10 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 	public void cleanUpStagingRequest(long stagingRequestId)
 		throws PortalException {
 
+		boolean indexReadOnly = IndexStatusManagerThreadLocal.isIndexReadOnly();
+
+		IndexStatusManagerThreadLocal.setIndexReadOnly(true);
+
 		try {
 			PortletFileRepositoryUtil.deletePortletFolder(stagingRequestId);
 		}
@@ -160,23 +165,36 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 					nsfe);
 			}
 		}
+		finally {
+			IndexStatusManagerThreadLocal.setIndexReadOnly(indexReadOnly);
+		}
 	}
 
 	@Override
 	public long createStagingRequest(long userId, long groupId, String checksum)
 		throws PortalException {
 
-		ServiceContext serviceContext = new ServiceContext();
+		boolean indexReadOnly = IndexStatusManagerThreadLocal.isIndexReadOnly();
 
-		Repository repository = PortletFileRepositoryUtil.addPortletRepository(
-			groupId, _PORTLET_REPOSITORY_ID, serviceContext);
+		IndexStatusManagerThreadLocal.setIndexReadOnly(true);
 
-		Folder folder = PortletFileRepositoryUtil.addPortletFolder(
-			userId, repository.getRepositoryId(),
-			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, checksum,
-			serviceContext);
+		try {
+			ServiceContext serviceContext = new ServiceContext();
 
-		return folder.getFolderId();
+			Repository repository =
+				PortletFileRepositoryUtil.addPortletRepository(
+					groupId, _PORTLET_REPOSITORY_ID, serviceContext);
+
+			Folder folder = PortletFileRepositoryUtil.addPortletFolder(
+				userId, repository.getRepositoryId(),
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, checksum,
+				serviceContext);
+
+			return folder.getFolderId();
+		}
+		finally {
+			IndexStatusManagerThreadLocal.setIndexReadOnly(indexReadOnly);
+		}
 	}
 
 	@Override
@@ -267,10 +285,20 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 			disableStaging(liveGroup, serviceContext);
 		}
 
+		UnicodeProperties typeSettingsProperties =
+			liveGroup.getTypeSettingsProperties();
+
 		boolean hasStagingGroup = liveGroup.hasStagingGroup();
 
 		if (!hasStagingGroup) {
-			serviceContext.setAttribute("staging", String.valueOf(true));
+			serviceContext.setAttribute("staging", Boolean.TRUE.toString());
+
+			String languageId = typeSettingsProperties.getProperty(
+				"languageId");
+
+			if (Validator.isNotNull(languageId)) {
+				serviceContext.setLanguageId(languageId);
+			}
 
 			addStagingGroup(userId, liveGroup, serviceContext);
 		}
@@ -278,9 +306,6 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 		checkDefaultLayoutSetBranches(
 			userId, liveGroup, branchingPublic, branchingPrivate, false,
 			serviceContext);
-
-		UnicodeProperties typeSettingsProperties =
-			liveGroup.getTypeSettingsProperties();
 
 		typeSettingsProperties.setProperty(
 			"branchingPrivate", String.valueOf(branchingPrivate));
@@ -291,7 +316,7 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 			typeSettingsProperties.setProperty(
 				"staged", Boolean.TRUE.toString());
 			typeSettingsProperties.setProperty(
-				"stagedRemotely", String.valueOf(false));
+				"stagedRemotely", Boolean.FALSE.toString());
 
 			setCommonStagingOptions(typeSettingsProperties, serviceContext);
 		}
@@ -371,7 +396,7 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 
 		HttpPrincipal httpPrincipal = new HttpPrincipal(
 			remoteURL, user.getLogin(), user.getPassword(),
-			user.getPasswordEncrypted());
+			user.isPasswordEncrypted());
 
 		if (!stagedRemotely) {
 			enableRemoteStaging(httpPrincipal, remoteGroupId);
@@ -415,7 +440,7 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -497,16 +522,25 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 		Folder folder = PortletFileRepositoryUtil.getPortletFolder(
 			stagingRequestId);
 
-		PortletFileRepositoryUtil.addPortletFileEntry(
-			folder.getGroupId(), userId, Group.class.getName(),
-			folder.getGroupId(), _PORTLET_REPOSITORY_ID, folder.getFolderId(),
-			new UnsyncByteArrayInputStream(bytes), fileName,
-			ContentTypes.APPLICATION_ZIP, false);
+		boolean indexReadOnly = IndexStatusManagerThreadLocal.isIndexReadOnly();
+
+		IndexStatusManagerThreadLocal.setIndexReadOnly(true);
+
+		try {
+			PortletFileRepositoryUtil.addPortletFileEntry(
+				folder.getGroupId(), userId, Group.class.getName(),
+				folder.getGroupId(), _PORTLET_REPOSITORY_ID,
+				folder.getFolderId(), new UnsyncByteArrayInputStream(bytes),
+				fileName, ContentTypes.APPLICATION_ZIP, false);
+		}
+		finally {
+			IndexStatusManagerThreadLocal.setIndexReadOnly(indexReadOnly);
+		}
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #publishStagingRequest(long,
-	 *             long, boolean, Map)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #publishStagingRequest(long, long, boolean, Map)}
 	 */
 	@Deprecated
 	@Override
@@ -692,7 +726,7 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 
 		HttpPrincipal httpPrincipal = new HttpPrincipal(
 			remoteURL, user.getLogin(), user.getPassword(),
-			user.getPasswordEncrypted());
+			user.isPasswordEncrypted());
 
 		try {
 			GroupServiceHttp.disableStaging(httpPrincipal, remoteGroupId);
@@ -873,6 +907,10 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 			return stagingRequestFileEntry;
 		}
 
+		boolean indexReadOnly = IndexStatusManagerThreadLocal.isIndexReadOnly();
+
+		IndexStatusManagerThreadLocal.setIndexReadOnly(true);
+
 		FileOutputStream fileOutputStream = null;
 
 		File tempFile = null;
@@ -933,6 +971,8 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 				ioe);
 		}
 		finally {
+			IndexStatusManagerThreadLocal.setIndexReadOnly(indexReadOnly);
+
 			StreamUtil.cleanUp(fileOutputStream);
 
 			FileUtil.delete(tempFile);
@@ -975,7 +1015,7 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 		layout.setUserName(layoutRevision.getUserName());
 		layout.setCreateDate(layoutRevision.getCreateDate());
 		layout.setModifiedDate(layoutRevision.getModifiedDate());
-		layout.setPrivateLayout(layoutRevision.getPrivateLayout());
+		layout.setPrivateLayout(layoutRevision.isPrivateLayout());
 		layout.setName(layoutRevision.getName());
 		layout.setTitle(layoutRevision.getTitle());
 		layout.setDescription(layoutRevision.getDescription());
@@ -1021,7 +1061,7 @@ public class StagingLocalServiceImpl extends StagingLocalServiceBaseImpl {
 
 		HttpPrincipal httpPrincipal = new HttpPrincipal(
 			remoteURL, user.getLogin(), user.getPassword(),
-			user.getPasswordEncrypted());
+			user.isPasswordEncrypted());
 
 		Map<String, String> stagedPortletIds = new HashMap<>();
 

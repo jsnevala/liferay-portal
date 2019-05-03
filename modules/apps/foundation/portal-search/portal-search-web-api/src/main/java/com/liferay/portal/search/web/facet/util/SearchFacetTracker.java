@@ -26,8 +26,8 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
- * @author Eudaldo Alonso
- * @deprecated As of 1.0.0, with no direct replacement
+ * @author     Eudaldo Alonso
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
 @Component(immediate = true, service = SearchFacetTracker.class)
 @Deprecated
@@ -40,8 +40,7 @@ public class SearchFacetTracker {
 	@Reference(
 		cardinality = ReferenceCardinality.MULTIPLE,
 		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		unbind = "removeSearchFacet"
+		policyOption = ReferencePolicyOption.GREEDY
 	)
 	protected void addSearchFacet(SearchFacet searchFacet) {
 		_searchFacets.add(searchFacet);

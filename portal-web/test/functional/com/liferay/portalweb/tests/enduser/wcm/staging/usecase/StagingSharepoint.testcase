@@ -1,186 +1,161 @@
-<definition component-name="portal-staging" ignore="true">
-	<property name="cmis.repository.type" value="sharepoint2010" />
-	<property name="custom.properties" value="session.store.password=true${line.separator}company.security.auth.type=screenName${line.separator}default.layout.template.id=1_column" />
-	<property name="osgi.app.includes" value="sharepoint" />
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="test.run.environment" value="EE" />
-	<property name="testray.main.component.name" value="Staging" />
+@component-name = "portal-staging"
+definition {
+	property cmis.repository.type = "sharepoint2010";
+	property custom.properties = "session.store.password=true${line.separator}company.security.auth.type=screenName${line.separator}default.layout.template.id=1_column";
+	property dummy.socket.proxy.disabled = "true";
+	property osgi.app.includes = "sharepoint";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property test.run.environment = "EE";
+	property testray.main.component.name = "Staging";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<var method="TestPropsUtil#get('cmis.repository.vm.host.name')" name="sharepointVMHostName" />
+		var sharepointVMHostName = PropsUtil.get("cmis.repository.vm.host.name");
 
-		<execute function="AntCommand" locator1="build-test-sharepoint.xml" value1="clean-sharepoint-repository -Dssh.host=${sharepointVMHostName}" />
+		AntCommand(
+			locator1 = "build-test-sharepoint.xml",
+			value1 = "clean-sharepoint-repository -Dssh.host=${sharepointVMHostName}"
+		);
 
-		<execute macro="User#loginPG">
-			<var name="authenticationMethod" value="By Screen Name" />
-			<var name="userScreenName" value="test" />
-		</execute>
+		User.loginPG(authenticationMethod = "By Screen Name", userScreenName = "test");
 
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="Account Settings" />
-		</execute>
+		Page.gotoMyAccount(portletName = "Account Settings");
 
-		<execute macro="User#editDetailsViaMyAccount">
-			<var name="userScreenNameEdit" value="administrator" />
-		</execute>
+		User.editDetailsViaMyAccount(userScreenNameEdit = "administrator");
 
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="Account Settings" />
-		</execute>
+		Page.gotoMyAccount(portletName = "Account Settings");
 
-		<execute macro="User#editPasswordViaMyAccount">
-			<var name="currentPassword" value="test" />
-			<var name="newPassword" value="password" />
-		</execute>
+		User.editPasswordViaMyAccount(
+			currentPassword = "test",
+			newPassword = "password"
+		);
 
-		<execute macro="User#logoutPG" />
+		User.logoutPG();
 
-		<execute macro="User#loginPG">
-			<var name="authenticationMethod" value="By Screen Name" />
-			<var name="password" value="password" />
-			<var name="userScreenName" value="administrator" />
-		</execute>
+		User.loginPG(
+			authenticationMethod = "By Screen Name",
+			password = "password",
+			userScreenName = "administrator"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Sites" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Sites" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites"
+		);
 
-		<execute macro="Site#addBlankCP">
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Site.addBlankCP(siteName = "Site Name");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Sites" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Sites" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites"
+		);
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Staging Test Page" />
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Page.add(pageName = "Staging Test Page", siteName = "Site Name");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Publishing" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Staging" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Publishing",
+			panel = "Site Administration",
+			portlet = "Staging"
+		);
 
-		<execute macro="Staging#activateStagingCP">
-			<var name="siteName" value="Site Name" />
-		</execute>
-	</set-up>
+		Staging.activateStagingCP(siteName = "Site Name");
+	}
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="DMRepository#tearDownCP" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-				<execute macro="DMDocument#tearDownCP" />
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			DMRepository.tearDownCP();
 
-				<execute macro="Site#tearDownCP" />
+			DMDocument.tearDownCP();
 
-				<execute macro="Page#gotoMyAccount">
-					<var name="portletName" value="Account Settings" />
-				</execute>
+			Site.tearDownCP();
 
-				<execute macro="User#editDetailsViaMyAccount">
-					<var name="userScreenNameEdit" value="test" />
-				</execute>
+			Page.gotoMyAccount(portletName = "Account Settings");
 
-				<execute macro="Page#gotoMyAccount">
-					<var name="portletName" value="Account Settings" />
-				</execute>
+			User.editDetailsViaMyAccount(userScreenNameEdit = "test");
 
-				<execute macro="User#editPasswordViaMyAccount">
-					<var name="currentPassword" value="password" />
-					<var name="newPassword" value="test" />
-				</execute>
+			Page.gotoMyAccount(portletName = "Account Settings");
 
-				<execute macro="User#logoutPG" />
+			User.editPasswordViaMyAccount(
+				currentPassword = "password",
+				newPassword = "test"
+			);
 
-				<execute macro="User#loginPG">
-					<var name="authenticationMethod" value="By Screen Name" />
-					<var name="password" value="test" />
-					<var name="userScreenName" value="test" />
-				</execute>
-			</else>
-		</if>
-	</tear-down>
+			User.logoutPG();
 
-	<command name="StagingSharepointRepositoryPG" priority="4">
-		<description message="This is a use case for LPS-72304 and LPS-72866." />
+			User.loginPG(
+				authenticationMethod = "By Screen Name",
+				password = "test",
+				userScreenName = "test"
+			);
+		}
+	}
 
-		<property name="test.name.skip.portal.instance" value="StagingSharepoint#StagingSharepointRepositoryPG" />
+	@description = "This is a use case for LPS-72304 and LPS-72866."
+	@priority = "4"
+	test StagingSharepointRepositoryPG {
+		property test.name.skip.portal.instance = "StagingSharepoint#StagingSharepointRepositoryPG";
+		var sharepointVMHostName = PropsUtil.get("cmis.repository.vm.host.name");
 
-		<execute macro="Navigator#gotoStagedSitePage">
-			<var name="pageName" value="Staging Test Page" />
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Test Page",
+			siteName = "Site Name"
+		);
 
-		<execute macro="Portlet#addPG">
-			<var name="pageName" value="Staging Test Page" />
-			<var name="portletName" value="Documents and Media" />
-		</execute>
+		Portlet.addPG(
+			pageName = "Staging Test Page",
+			portletName = "Documents and Media"
+		);
 
-		<execute macro="DMNavigator#gotoAddRepositoryPG" />
+		DMNavigator.gotoAddRepositoryPG();
 
-		<execute macro="DMRepository#edit">
-			<var name="dmRepositoryName" value="Sharepoint Repository Name" />
-		</execute>
+		PortletEntry.inputName(name = "Sharepoint Repository Name");
 
-		<execute macro="DMRepository#addSharepoint">
-			<var name="dmRepositoryLibraryName" value="Documents" />
-			<var name="dmRepositoryName" value="Sharepoint" />
-			<var name="dmRepositorySiteURL" value="http://${sharepointVMHostName}" />
-		</execute>
+		DMRepository.addSharepoint(
+			dmRepositoryLibraryName = "Documents",
+			dmRepositoryName = "Sharepoint",
+			dmRepositorySiteURL = "http://${sharepointVMHostName}"
+		);
 
-		<execute macro="PortletEntry#save" />
+		PortletEntry.save();
 
-		<execute macro="Navigator#gotoStagedSitePage">
-			<var name="pageName" value="Staging Test Page" />
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Test Page",
+			siteName = "Site Name"
+		);
 
-		<execute macro="Staging#gotoPublishToLive" />
+		Staging.gotoPublishToLive();
 
-		<execute macro="Staging#publishToLive" />
+		Staging.publishToLive();
 
-		<execute macro="Navigator#gotoSitePage">
-			<var name="pageName" value="Staging Test Page" />
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Navigator.gotoSitePage(pageName = "Staging Test Page", siteName = "Site Name");
 
-		<execute macro="DMPortlet#setDescriptiveView" />
+		DMPortlet.setDescriptiveView();
 
-		<execute function="AssertTextEquals" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE" value1="Sharepoint Repository Name">
-			<var name="key_dmFolderName" value="Sharepoint Repository Name" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE",
+			value1 = "Sharepoint Repository Name",
+			key_dmFolderName = "Sharepoint Repository Name"
+		);
 
-		<execute macro="Navigator#openSiteURL">
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Navigator.openSiteURL(siteName = "Site Name");
 
-		<execute macro="Navigator#gotoStagedView" />
+		Navigator.gotoStagedView();
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Publishing" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Staging" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Publishing",
+			panel = "Site Administration",
+			portlet = "Staging"
+		);
 
-		<execute macro="Staging#deactivateStagingCP">
-			<var name="siteName" value="Site Name" />
-		</execute>
-	</command>
-</definition>
+		Staging.deactivateStagingCP(siteName = "Site Name");
+	}
+}

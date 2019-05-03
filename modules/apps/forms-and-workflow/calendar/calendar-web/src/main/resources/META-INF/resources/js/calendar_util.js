@@ -856,12 +856,9 @@ AUI.add(
 							var eventRecorder = scheduler.get('eventRecorder');
 
 							eventRecorder.hidePopover();
+						}
 
-							CalendarUtil.destroyEvent(schedulerEvent);
-						}
-						else {
-							schedulerEvent.set('status', calendarBooking.status);
-						}
+						schedulerEvent.set('status', calendarBooking.status);
 					}
 				);
 			},

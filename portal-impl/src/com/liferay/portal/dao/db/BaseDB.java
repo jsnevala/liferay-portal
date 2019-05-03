@@ -273,9 +273,8 @@ public abstract class BaseDB implements DB {
 		try {
 			s = con.createStatement();
 
-			for (int i = 0; i < sqls.length; i++) {
-				String sql = buildSQL(
-					applyMaxStringIndexLengthLimitation(sqls[i]));
+			for (String sql : sqls) {
+				sql = buildSQL(applyMaxStringIndexLengthLimitation(sql));
 
 				sql = SQLTransformer.transform(sql.trim());
 
@@ -365,6 +364,16 @@ public abstract class BaseDB implements DB {
 			boolean failOnError)
 		throws IOException, NamingException, SQLException {
 
+		template = StringUtil.trim(template);
+
+		if ((template == null) || template.isEmpty()) {
+			return;
+		}
+
+		if (!template.endsWith(StringPool.SEMICOLON)) {
+			template += StringPool.SEMICOLON;
+		}
+
 		template = applyMaxStringIndexLengthLimitation(template);
 
 		if (evaluate) {
@@ -391,7 +400,13 @@ public abstract class BaseDB implements DB {
 				if (line.startsWith("@include ")) {
 					int pos = line.indexOf(" ");
 
-					String includeFileName = line.substring(pos + 1);
+					int end = line.length();
+
+					if (StringUtil.endsWith(line, StringPool.SEMICOLON)) {
+						end -= 1;
+					}
+
+					String includeFileName = line.substring(pos + 1, end);
 
 					ClassLoader classLoader =
 						ClassLoaderUtil.getContextClassLoader();
@@ -623,9 +638,7 @@ public abstract class BaseDB implements DB {
 			nullable = "not null;";
 		}
 
-		String[] template = {words[1], words[2], words[3], words[4], nullable};
-
-		return template;
+		return new String[] {words[1], words[2], words[3], words[4], nullable};
 	}
 
 	protected String[] buildColumnTypeTokens(String line) {
@@ -647,9 +660,7 @@ public abstract class BaseDB implements DB {
 			}
 		}
 
-		String[] template = {words[1], words[2], "", words[3], nullable};
-
-		return template;
+		return new String[] {words[1], words[2], "", words[3], nullable};
 	}
 
 	protected abstract String buildCreateFileContent(
@@ -1027,9 +1038,9 @@ public abstract class BaseDB implements DB {
 
 					String portalTableData = portalData.substring(x, y);
 
-					for (int i = 0; i < columns.length; i++) {
+					for (String column : columns) {
 						if (portalTableData.contains(
-								columns[i].trim() + " BOOLEAN")) {
+								column.trim() + " BOOLEAN")) {
 
 							append = false;
 
@@ -1156,11 +1167,13 @@ public abstract class BaseDB implements DB {
 
 	protected static final String DROP_PRIMARY_KEY = "drop primary key";
 
-	protected static final String[] RENAME_TABLE_TEMPLATE =
-		{"@old-table@", "@new-table@"};
+	protected static final String[] RENAME_TABLE_TEMPLATE = {
+		"@old-table@", "@new-table@"
+	};
 
-	protected static final String[] REWORD_TEMPLATE =
-		{"@table@", "@old-column@", "@new-column@", "@type@", "@nullable@"};
+	protected static final String[] REWORD_TEMPLATE = {
+		"@table@", "@old-column@", "@new-column@", "@type@", "@nullable@"
+	};
 
 	protected static final String[] TEMPLATE = {
 		"##", "TRUE", "FALSE", "'01/01/1970'", "CURRENT_TIMESTAMP", " BLOB",

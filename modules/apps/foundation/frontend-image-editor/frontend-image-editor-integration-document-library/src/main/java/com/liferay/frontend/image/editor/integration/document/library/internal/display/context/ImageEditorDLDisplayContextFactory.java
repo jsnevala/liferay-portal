@@ -22,7 +22,7 @@ import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.FileVersion;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
+import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Ambrin Chaudhary
+ * @author Ambrín Chaudhary
  */
 @Component(immediate = true, service = DLDisplayContextFactory.class)
 public class ImageEditorDLDisplayContextFactory
@@ -72,7 +72,11 @@ public class ImageEditorDLDisplayContextFactory
 
 		return new ImageEditorDLViewFileVersionDisplayContext(
 			parentDLViewFileVersionDisplayContext, request, response,
-			fileVersion, _resourceBundleLoader);
+			fileVersion,
+			ResourceBundleLoaderUtil.
+				getResourceBundleLoaderByBundleSymbolicName(
+					"com.liferay.frontend.image.editor.integration.document." +
+						"library"));
 	}
 
 	@Reference(unbind = "-")
@@ -80,17 +84,6 @@ public class ImageEditorDLDisplayContextFactory
 		_dlAppService = dlAppService;
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.frontend.image.editor.integration.document.library)",
-		unbind = "-"
-	)
-	protected void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = resourceBundleLoader;
-	}
-
 	private DLAppService _dlAppService;
-	private ResourceBundleLoader _resourceBundleLoader;
 
 }

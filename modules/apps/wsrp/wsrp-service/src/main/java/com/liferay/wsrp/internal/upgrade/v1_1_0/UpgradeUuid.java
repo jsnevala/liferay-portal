@@ -25,7 +25,6 @@ import com.liferay.wsrp.internal.consumer.portlet.ConsumerPortlet;
 import com.liferay.wsrp.model.WSRPConsumerPortlet;
 import com.liferay.wsrp.service.WSRPConsumerPortletLocalServiceUtil;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -67,13 +66,10 @@ public class UpgradeUuid extends UpgradeProcess {
 	protected void updateLayout(long plid, String typeSettings)
 		throws Exception {
 
-		Connection con = null;
 		PreparedStatement ps = null;
 
 		try {
-			con = DataAccess.getConnection();
-
-			ps = con.prepareStatement(
+			ps = connection.prepareStatement(
 				"update Layout set typeSettings = ? where plid = " + plid);
 
 			ps.setString(1, typeSettings);
@@ -81,21 +77,18 @@ public class UpgradeUuid extends UpgradeProcess {
 			ps.executeUpdate();
 		}
 		finally {
-			DataAccess.cleanUp(con, ps);
+			DataAccess.cleanUp(ps);
 		}
 	}
 
 	protected void updateLayout(String oldPortletId, String newPortletId)
 		throws Exception {
 
-		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		try {
-			con = DataAccess.getConnection();
-
-			ps = con.prepareStatement(
+			ps = connection.prepareStatement(
 				"select plid, typeSettings from Layout where typeSettings " +
 					"like ?");
 
@@ -106,6 +99,7 @@ public class UpgradeUuid extends UpgradeProcess {
 
 			while (rs.next()) {
 				long plid = rs.getLong("plid");
+
 				String typeSettings = rs.getString("typeSettings");
 
 				typeSettings = StringUtil.replace(
@@ -115,7 +109,7 @@ public class UpgradeUuid extends UpgradeProcess {
 			}
 		}
 		finally {
-			DataAccess.cleanUp(con, ps, rs);
+			DataAccess.cleanUp(ps, rs);
 		}
 	}
 
@@ -123,13 +117,10 @@ public class UpgradeUuid extends UpgradeProcess {
 			String oldPortletId, String newPortletId)
 		throws Exception {
 
-		Connection con = null;
 		PreparedStatement ps = null;
 
 		try {
-			con = DataAccess.getConnection();
-
-			ps = con.prepareStatement(
+			ps = connection.prepareStatement(
 				"update ResourceAction set name = ? where name = ? ");
 
 			ps.setString(1, newPortletId);
@@ -138,7 +129,7 @@ public class UpgradeUuid extends UpgradeProcess {
 			ps.executeUpdate();
 		}
 		finally {
-			DataAccess.cleanUp(con, ps);
+			DataAccess.cleanUp(ps);
 		}
 	}
 
@@ -146,13 +137,10 @@ public class UpgradeUuid extends UpgradeProcess {
 			long resourcePermissionId, String name, String primKey)
 		throws Exception {
 
-		Connection con = null;
 		PreparedStatement ps = null;
 
 		try {
-			con = DataAccess.getConnection();
-
-			ps = con.prepareStatement(
+			ps = connection.prepareStatement(
 				"update ResourcePermission set name = ?, primKey = ? where " +
 					"resourcePermissionId = ?");
 
@@ -163,7 +151,7 @@ public class UpgradeUuid extends UpgradeProcess {
 			ps.executeUpdate();
 		}
 		finally {
-			DataAccess.cleanUp(con, ps);
+			DataAccess.cleanUp(ps);
 		}
 	}
 
@@ -171,14 +159,11 @@ public class UpgradeUuid extends UpgradeProcess {
 			String oldPortletId, String newPortletId)
 		throws Exception {
 
-		Connection con = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		try {
-			con = DataAccess.getConnection();
-
-			ps = con.prepareStatement(
+			ps = connection.prepareStatement(
 				"select resourcePermissionId, primKey from " +
 					"ResourcePermission where name = ?");
 
@@ -188,6 +173,7 @@ public class UpgradeUuid extends UpgradeProcess {
 
 			while (rs.next()) {
 				long resourcePermissionId = rs.getLong("resourcePermissionId");
+
 				String primKey = rs.getString("primKey");
 
 				primKey = StringUtil.replace(
@@ -198,7 +184,7 @@ public class UpgradeUuid extends UpgradeProcess {
 			}
 		}
 		finally {
-			DataAccess.cleanUp(con, ps, rs);
+			DataAccess.cleanUp(ps, rs);
 		}
 	}
 

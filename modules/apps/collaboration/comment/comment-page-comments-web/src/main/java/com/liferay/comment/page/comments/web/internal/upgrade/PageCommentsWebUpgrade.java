@@ -39,7 +39,7 @@ public class PageCommentsWebUpgrade implements UpgradeStepRegistrator {
 			@Override
 			protected String[][] getRenamePortletIdsArray() {
 				return new String[][] {
-					new String[] {"107", PageCommentsPortletKeys.PAGE_COMMENTS}
+					{"107", PageCommentsPortletKeys.PAGE_COMMENTS}
 				};
 			}
 

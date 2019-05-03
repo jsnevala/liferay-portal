@@ -91,7 +91,7 @@ public class PortletServletResponse extends HttpServletResponseWrapper {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -105,7 +105,7 @@ public class PortletServletResponse extends HttpServletResponseWrapper {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -195,10 +195,7 @@ public class PortletServletResponse extends HttpServletResponseWrapper {
 			OutputStream portletOutputStream =
 				mimeResponse.getPortletOutputStream();
 
-			ServletOutputStream servletOutputStream =
-				new ServletOutputStreamAdapter(portletOutputStream);
-
-			return servletOutputStream;
+			return new ServletOutputStreamAdapter(portletOutputStream);
 		}
 		else {
 			return new NullServletOutputStream();
@@ -371,7 +368,7 @@ public class PortletServletResponse extends HttpServletResponseWrapper {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override

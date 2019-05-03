@@ -24,6 +24,7 @@ import javax.naming.ldap.LdapContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
@@ -31,6 +32,12 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  */
 @Component(immediate = true)
 public class PortalLDAPUtil {
+
+	public static String encodeFilterAttribute(
+		String attribute, boolean rdnEscape) {
+
+		return getInstance().encodeFilterAttribute(attribute, rdnEscape);
+	}
 
 	public static LdapContext getContext(long ldapServerId, long companyId)
 		throws Exception {
@@ -140,7 +147,7 @@ public class PortalLDAPUtil {
 	}
 
 	/**
-	 * @deprecated As of 2.2.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	public static String getNameInNamespace(
@@ -268,9 +275,15 @@ public class PortalLDAPUtil {
 		return _portalLDAP;
 	}
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY, unbind = "-")
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
 	protected void setPortalLDAP(PortalLDAP portalLDAP) {
 		_portalLDAP = portalLDAP;
+	}
+
+	protected void unsetPortalLDAP(PortalLDAP portalLDAP) {
 	}
 
 	private static PortalLDAP _portalLDAP;

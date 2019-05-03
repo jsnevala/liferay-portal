@@ -1,7 +1,6 @@
 Bundle-Name: Liferay Site Navigation Breadcrumb Web
 Bundle-SymbolicName: com.liferay.site.navigation.breadcrumb.web
-Bundle-Version: 3.0.4
-Liferay-Releng-Module-Group-Description:
+Bundle-Version: 3.0.17
 Liferay-Releng-Module-Group-Title: Site Navigation
 Web-ContextPath: /site-navigation-breadcrumb-web
 -dsannotations-options: inherit

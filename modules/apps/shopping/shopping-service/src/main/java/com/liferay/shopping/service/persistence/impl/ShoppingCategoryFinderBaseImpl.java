@@ -16,7 +16,6 @@ package com.liferay.shopping.service.persistence.impl;
 
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-
 import com.liferay.shopping.model.ShoppingCategory;
 import com.liferay.shopping.service.persistence.ShoppingCategoryPersistence;
 
@@ -24,7 +23,9 @@ import com.liferay.shopping.service.persistence.ShoppingCategoryPersistence;
  * @author Brian Wing Shun Chan
  * @generated
  */
-public class ShoppingCategoryFinderBaseImpl extends BasePersistenceImpl<ShoppingCategory> {
+public class ShoppingCategoryFinderBaseImpl
+	extends BasePersistenceImpl<ShoppingCategory> {
+
 	public ShoppingCategoryFinderBaseImpl() {
 		setModelClass(ShoppingCategory.class);
 	}
@@ -45,9 +46,11 @@ public class ShoppingCategoryFinderBaseImpl extends BasePersistenceImpl<Shopping
 	 */
 	public void setShoppingCategoryPersistence(
 		ShoppingCategoryPersistence shoppingCategoryPersistence) {
+
 		this.shoppingCategoryPersistence = shoppingCategoryPersistence;
 	}
 
 	@BeanReference(type = ShoppingCategoryPersistence.class)
 	protected ShoppingCategoryPersistence shoppingCategoryPersistence;
+
 }

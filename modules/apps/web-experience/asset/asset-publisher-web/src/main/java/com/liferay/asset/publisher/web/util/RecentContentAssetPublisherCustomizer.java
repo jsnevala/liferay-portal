@@ -19,6 +19,7 @@ import com.liferay.asset.kernel.util.AssetEntryQueryProcessor;
 import com.liferay.asset.publisher.web.constants.AssetPublisherPortletKeys;
 import com.liferay.asset.publisher.web.internal.configuration.AssetPublisherWebConfigurationValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
 
@@ -37,7 +38,11 @@ public class RecentContentAssetPublisherCustomizer
 
 	@Override
 	public Integer getDelta(HttpServletRequest request) {
-		return PropsValues.RECENT_CONTENT_MAX_DISPLAY_ITEMS;
+		PortletPreferences portletPreferences = getPortletPreferences(request);
+
+		return GetterUtil.getInteger(
+			portletPreferences.getValue("delta", null),
+			PropsValues.RECENT_CONTENT_MAX_DISPLAY_ITEMS);
 	}
 
 	@Override

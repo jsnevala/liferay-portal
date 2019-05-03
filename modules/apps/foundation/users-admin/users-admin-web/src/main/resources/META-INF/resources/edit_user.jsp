@@ -117,24 +117,20 @@ if (selUser != null) {
 	inheritedSiteRoles = UserGroupGroupRoleLocalServiceUtil.getUserGroupGroupRolesByUser(selUser.getUserId());
 }
 
-List<Group> inheritedSites = GroupLocalServiceUtil.getUserGroupsRelatedGroups(userGroups);
-List<Group> organizationsRelatedGroups = Collections.emptyList();
+SortedSet<Group> inheritedSitesSet = new TreeSet<>();
+
+inheritedSitesSet.addAll(GroupLocalServiceUtil.getUserGroupsRelatedGroups(userGroups));
 
 if (!organizations.isEmpty()) {
-	organizationsRelatedGroups = GroupLocalServiceUtil.getOrganizationsRelatedGroups(organizations);
-
-	for (Group group : organizationsRelatedGroups) {
-		if (!inheritedSites.contains(group)) {
-			inheritedSites.add(group);
-		}
-	}
+	inheritedSitesSet.addAll(GroupLocalServiceUtil.getOrganizationsRelatedGroups(organizations));
 }
+
+List<Group> inheritedSites = ListUtil.fromCollection(inheritedSitesSet);
 
 List<Group> allGroups = new ArrayList<Group>();
 
 allGroups.addAll(groups);
 allGroups.addAll(inheritedSites);
-allGroups.addAll(organizationsRelatedGroups);
 allGroups.addAll(GroupLocalServiceUtil.getOrganizationsGroups(organizations));
 allGroups.addAll(GroupLocalServiceUtil.getUserGroupsGroups(userGroups));
 
@@ -212,7 +208,16 @@ for (Group group : allGroups) {
 		formModelBean="<%= selUser %>"
 		id="<%= FormNavigatorConstants.FORM_NAVIGATOR_ID_USERS %>"
 		markupView="lexicon"
+		showButtons="<%= false %>"
 	/>
+
+	<aui:button-row>
+		<aui:button cssClass="btn-lg" primary="<%= true %>" type="submit" />
+
+		<c:if test="<%= !portletName.equals(myAccountPortletId) %>">
+			<aui:button cssClass="btn-lg" href="<%= backURL %>" type="cancel" />
+		</c:if>
+	</aui:button-row>
 </aui:form>
 
 <%

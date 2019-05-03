@@ -25,7 +25,7 @@ import com.liferay.portal.kernel.util.Validator;
 /**
  * @author     Brian Wing Shun Chan
  * @author     Manuel de la Peña
- * @deprecated As of 6.2.0, replaced by {@link
+ * @deprecated As of Newton (6.2.x), replaced by {@link
  *             com.liferay.portal.format.USAPhoneNumberFormatImpl}
  */
 @Deprecated
@@ -64,8 +64,13 @@ public class USAPhoneNumberFormat implements PhoneNumberFormat {
 			return sb.toString();
 		}
 		else if (phoneNumber.length() == 7) {
-			return phoneNumber.substring(0, 3).concat(StringPool.DASH).concat(
-				phoneNumber.substring(3));
+			return phoneNumber.substring(
+				0, 3
+			).concat(
+				StringPool.DASH
+			).concat(
+				phoneNumber.substring(3)
+			);
 		}
 
 		return phoneNumber;

@@ -21,7 +21,7 @@ import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = UpgradeStepRegistrator.class)
 public class MDRWebUpgrade implements UpgradeStepRegistrator {

@@ -88,7 +88,7 @@
 		 */
 		render: function() {
 			return (
-				<div>
+				<div className="ae-container-link-edit-browse">
 					<AlloyEditor.ButtonLinkEdit ref='linkEditButton' {...this.props} />
 					<button aria-label="Browse" className="ae-button" onClick={this._browseClick} title="browse">
 						<FolderIconSvg />
@@ -152,6 +152,10 @@
 			var modifySelection = { advance: true };
 
 			if (linkHref) {
+				if (editor.plugins && editor.plugins.creole) {
+					linkHref = location.origin + linkHref;
+				}
+
 				if (this.state.element) {
 					linkAttrs.href = linkHref;
 

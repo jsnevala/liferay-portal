@@ -20,8 +20,6 @@ import com.liferay.application.list.PanelCategory;
 import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
@@ -252,9 +250,6 @@ public class SimulationProductNavigationControlMenuEntry
 
 	private static final String _ICON_TMPL_CONTENT = StringUtil.read(
 		SimulationProductNavigationControlMenuEntry.class, "icon.tmpl");
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		SimulationProductNavigationControlMenuEntry.class);
 
 	@Reference
 	private Html _html;

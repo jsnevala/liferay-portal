@@ -34,14 +34,15 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = StagedModelDataHandler.class)
 public class RepositoryEntryStagedModelDataHandler
 	extends BaseStagedModelDataHandler<RepositoryEntry> {
 
-	public static final String[] CLASS_NAMES =
-		{RepositoryEntry.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		RepositoryEntry.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(RepositoryEntry repositoryEntry) {

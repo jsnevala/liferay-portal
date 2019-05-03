@@ -32,13 +32,18 @@ import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.util.DLAppHelperThreadLocal;
 import com.liferay.document.library.kernel.util.comparator.DLFileVersionVersionComparator;
 import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.WildcardMode;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.interval.IntervalActionProcessor;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.lock.Lock;
+import com.liferay.portal.kernel.messaging.async.Async;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
 import com.liferay.portal.kernel.portlet.PortletProvider;
@@ -55,6 +60,7 @@ import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.repository.model.RepositoryModel;
+import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -327,7 +333,7 @@ public class DLAppHelperLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #moveDependentsToTrash(DLFolder)}
 	 */
 	@Deprecated
@@ -591,6 +597,53 @@ public class DLAppHelperLocalServiceImpl
 		}
 	}
 
+	@Async
+	@Override
+	public void reindex(long companyId, List<Long> dlFileEntryIds)
+		throws PortalException {
+
+		IntervalActionProcessor<Void> intervalActionProcessor =
+			new IntervalActionProcessor<>(dlFileEntryIds.size());
+
+		intervalActionProcessor.setPerformIntervalActionMethod(
+			(start, end) -> {
+				List<Long> sublist = dlFileEntryIds.subList(start, end);
+
+				Indexer<DLFileEntry> indexer =
+					IndexerRegistryUtil.nullSafeGetIndexer(DLFileEntry.class);
+
+				IndexableActionableDynamicQuery
+					indexableActionableDynamicQuery =
+						dlFileEntryLocalService.
+							getIndexableActionableDynamicQuery();
+
+				indexableActionableDynamicQuery.setAddCriteriaMethod(
+					dynamicQuery -> {
+						Property dlFileEntryId = PropertyFactoryUtil.forName(
+							"fileEntryId");
+
+						dynamicQuery.add(dlFileEntryId.in(sublist));
+					});
+				indexableActionableDynamicQuery.setCompanyId(companyId);
+				indexableActionableDynamicQuery.setPerformActionMethod(
+					(DLFileEntry dlFileEntry) -> {
+						Document document = indexer.getDocument(dlFileEntry);
+
+						indexableActionableDynamicQuery.addDocuments(document);
+					});
+				indexableActionableDynamicQuery.setSearchEngineId(
+					indexer.getSearchEngineId());
+
+				indexableActionableDynamicQuery.performActions();
+
+				intervalActionProcessor.incrementStart(sublist.size());
+
+				return null;
+			});
+
+		intervalActionProcessor.performIntervalActions();
+	}
+
 	@Override
 	public void restoreDependentsFromTrash(DLFolder dlFolder)
 		throws PortalException {
@@ -599,7 +652,7 @@ public class DLAppHelperLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #restoreDependentsFromTrash(DLFolder)}
 	 */
 	@Deprecated
@@ -638,7 +691,7 @@ public class DLAppHelperLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #restoreDependentsFromTrash(List)}
 	 */
 	@Deprecated
@@ -1144,9 +1197,11 @@ public class DLAppHelperLocalServiceImpl
 					fileEntry.getFileEntryId());
 
 				if (assetEntry != null) {
-					assetEntryLocalService.updateVisible(
-						DLFileEntryConstants.getClassName(),
-						fileEntry.getFileEntryId(), true);
+					assetEntryLocalService.updateEntry(
+						assetEntry.getClassName(), assetEntry.getClassPK(),
+						assetEntry.getCreateDate(),
+						assetEntry.getExpirationDate(), assetEntry.isListable(),
+						true);
 				}
 			}
 
@@ -1852,6 +1907,8 @@ public class DLAppHelperLocalServiceImpl
 			TrashEntry trashEntry)
 		throws PortalException {
 
+		List<Long> dlFileEntryIds = new ArrayList<>();
+
 		List<DLFileEntry> dlFileEntries =
 			dlFileEntryLocalService.getFileEntries(
 				childDLFolder.getGroupId(), childDLFolder.getFolderId());
@@ -1947,12 +2004,12 @@ public class DLAppHelperLocalServiceImpl
 				}
 			}
 
-			// Indexer
+			dlFileEntryIds.add(dlFileEntry.getFileEntryId());
+		}
 
-			Indexer<DLFileEntry> indexer =
-				IndexerRegistryUtil.nullSafeGetIndexer(DLFileEntry.class);
-
-			indexer.reindex(dlFileEntry);
+		if (!dlFileEntryIds.isEmpty()) {
+			dlAppHelperLocalService.reindex(
+				dlFolder.getCompanyId(), dlFileEntryIds);
 		}
 
 		List<DLFileShortcut> dlFileShortcuts =

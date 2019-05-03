@@ -17,7 +17,6 @@ package com.liferay.portal.kernel.model;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.portal.kernel.service.ServiceContext;
 
 import java.io.Serializable;
@@ -36,8 +35,9 @@ import java.util.Objects;
  * @generated
  */
 @ProviderType
-public class ServiceComponentWrapper implements ServiceComponent,
-	ModelWrapper<ServiceComponent> {
+public class ServiceComponentWrapper
+	implements ServiceComponent, ModelWrapper<ServiceComponent> {
+
 	public ServiceComponentWrapper(ServiceComponent serviceComponent) {
 		_serviceComponent = serviceComponent;
 	}
@@ -106,8 +106,9 @@ public class ServiceComponentWrapper implements ServiceComponent,
 	}
 
 	@Override
-	public java.lang.Object clone() {
-		return new ServiceComponentWrapper((ServiceComponent)_serviceComponent.clone());
+	public Object clone() {
+		return new ServiceComponentWrapper(
+			(ServiceComponent)_serviceComponent.clone());
 	}
 
 	@Override
@@ -116,42 +117,42 @@ public class ServiceComponentWrapper implements ServiceComponent,
 	}
 
 	/**
-	* Returns the build date of this service component.
-	*
-	* @return the build date of this service component
-	*/
+	 * Returns the build date of this service component.
+	 *
+	 * @return the build date of this service component
+	 */
 	@Override
 	public long getBuildDate() {
 		return _serviceComponent.getBuildDate();
 	}
 
 	/**
-	* Returns the build namespace of this service component.
-	*
-	* @return the build namespace of this service component
-	*/
+	 * Returns the build namespace of this service component.
+	 *
+	 * @return the build namespace of this service component
+	 */
 	@Override
-	public java.lang.String getBuildNamespace() {
+	public String getBuildNamespace() {
 		return _serviceComponent.getBuildNamespace();
 	}
 
 	/**
-	* Returns the build number of this service component.
-	*
-	* @return the build number of this service component
-	*/
+	 * Returns the build number of this service component.
+	 *
+	 * @return the build number of this service component
+	 */
 	@Override
 	public long getBuildNumber() {
 		return _serviceComponent.getBuildNumber();
 	}
 
 	/**
-	* Returns the data of this service component.
-	*
-	* @return the data of this service component
-	*/
+	 * Returns the data of this service component.
+	 *
+	 * @return the data of this service component
+	 */
 	@Override
-	public java.lang.String getData() {
+	public String getData() {
 		return _serviceComponent.getData();
 	}
 
@@ -161,25 +162,25 @@ public class ServiceComponentWrapper implements ServiceComponent,
 	}
 
 	@Override
-	public java.lang.String getIndexesSQL() {
+	public String getIndexesSQL() {
 		return _serviceComponent.getIndexesSQL();
 	}
 
 	/**
-	* Returns the mvcc version of this service component.
-	*
-	* @return the mvcc version of this service component
-	*/
+	 * Returns the mvcc version of this service component.
+	 *
+	 * @return the mvcc version of this service component
+	 */
 	@Override
 	public long getMvccVersion() {
 		return _serviceComponent.getMvccVersion();
 	}
 
 	/**
-	* Returns the primary key of this service component.
-	*
-	* @return the primary key of this service component
-	*/
+	 * Returns the primary key of this service component.
+	 *
+	 * @return the primary key of this service component
+	 */
 	@Override
 	public long getPrimaryKey() {
 		return _serviceComponent.getPrimaryKey();
@@ -191,22 +192,22 @@ public class ServiceComponentWrapper implements ServiceComponent,
 	}
 
 	@Override
-	public java.lang.String getSequencesSQL() {
+	public String getSequencesSQL() {
 		return _serviceComponent.getSequencesSQL();
 	}
 
 	/**
-	* Returns the service component ID of this service component.
-	*
-	* @return the service component ID of this service component
-	*/
+	 * Returns the service component ID of this service component.
+	 *
+	 * @return the service component ID of this service component
+	 */
 	@Override
 	public long getServiceComponentId() {
 		return _serviceComponent.getServiceComponentId();
 	}
 
 	@Override
-	public java.lang.String getTablesSQL() {
+	public String getTablesSQL() {
 		return _serviceComponent.getTablesSQL();
 	}
 
@@ -236,30 +237,30 @@ public class ServiceComponentWrapper implements ServiceComponent,
 	}
 
 	/**
-	* Sets the build date of this service component.
-	*
-	* @param buildDate the build date of this service component
-	*/
+	 * Sets the build date of this service component.
+	 *
+	 * @param buildDate the build date of this service component
+	 */
 	@Override
 	public void setBuildDate(long buildDate) {
 		_serviceComponent.setBuildDate(buildDate);
 	}
 
 	/**
-	* Sets the build namespace of this service component.
-	*
-	* @param buildNamespace the build namespace of this service component
-	*/
+	 * Sets the build namespace of this service component.
+	 *
+	 * @param buildNamespace the build namespace of this service component
+	 */
 	@Override
-	public void setBuildNamespace(java.lang.String buildNamespace) {
+	public void setBuildNamespace(String buildNamespace) {
 		_serviceComponent.setBuildNamespace(buildNamespace);
 	}
 
 	/**
-	* Sets the build number of this service component.
-	*
-	* @param buildNumber the build number of this service component
-	*/
+	 * Sets the build number of this service component.
+	 *
+	 * @param buildNumber the build number of this service component
+	 */
 	@Override
 	public void setBuildNumber(long buildNumber) {
 		_serviceComponent.setBuildNumber(buildNumber);
@@ -271,12 +272,12 @@ public class ServiceComponentWrapper implements ServiceComponent,
 	}
 
 	/**
-	* Sets the data of this service component.
-	*
-	* @param data the data of this service component
-	*/
+	 * Sets the data of this service component.
+	 *
+	 * @param data the data of this service component
+	 */
 	@Override
-	public void setData(java.lang.String data) {
+	public void setData(String data) {
 		_serviceComponent.setData(data);
 	}
 
@@ -296,10 +297,10 @@ public class ServiceComponentWrapper implements ServiceComponent,
 	}
 
 	/**
-	* Sets the mvcc version of this service component.
-	*
-	* @param mvccVersion the mvcc version of this service component
-	*/
+	 * Sets the mvcc version of this service component.
+	 *
+	 * @param mvccVersion the mvcc version of this service component
+	 */
 	@Override
 	public void setMvccVersion(long mvccVersion) {
 		_serviceComponent.setMvccVersion(mvccVersion);
@@ -311,10 +312,10 @@ public class ServiceComponentWrapper implements ServiceComponent,
 	}
 
 	/**
-	* Sets the primary key of this service component.
-	*
-	* @param primaryKey the primary key of this service component
-	*/
+	 * Sets the primary key of this service component.
+	 *
+	 * @param primaryKey the primary key of this service component
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		_serviceComponent.setPrimaryKey(primaryKey);
@@ -326,10 +327,10 @@ public class ServiceComponentWrapper implements ServiceComponent,
 	}
 
 	/**
-	* Sets the service component ID of this service component.
-	*
-	* @param serviceComponentId the service component ID of this service component
-	*/
+	 * Sets the service component ID of this service component.
+	 *
+	 * @param serviceComponentId the service component ID of this service component
+	 */
 	@Override
 	public void setServiceComponentId(long serviceComponentId) {
 		_serviceComponent.setServiceComponentId(serviceComponentId);
@@ -346,17 +347,18 @@ public class ServiceComponentWrapper implements ServiceComponent,
 	}
 
 	@Override
-	public java.lang.String toString() {
+	public String toString() {
 		return _serviceComponent.toString();
 	}
 
 	@Override
 	public ServiceComponent toUnescapedModel() {
-		return new ServiceComponentWrapper(_serviceComponent.toUnescapedModel());
+		return new ServiceComponentWrapper(
+			_serviceComponent.toUnescapedModel());
 	}
 
 	@Override
-	public java.lang.String toXmlString() {
+	public String toXmlString() {
 		return _serviceComponent.toXmlString();
 	}
 
@@ -370,10 +372,12 @@ public class ServiceComponentWrapper implements ServiceComponent,
 			return false;
 		}
 
-		ServiceComponentWrapper serviceComponentWrapper = (ServiceComponentWrapper)obj;
+		ServiceComponentWrapper serviceComponentWrapper =
+			(ServiceComponentWrapper)obj;
 
-		if (Objects.equals(_serviceComponent,
-					serviceComponentWrapper._serviceComponent)) {
+		if (Objects.equals(
+				_serviceComponent, serviceComponentWrapper._serviceComponent)) {
+
 			return true;
 		}
 
@@ -401,4 +405,5 @@ public class ServiceComponentWrapper implements ServiceComponent,
 	}
 
 	private final ServiceComponent _serviceComponent;
+
 }

@@ -58,7 +58,7 @@ name = namespace + name;
 	var MapControls = Liferay.MapBase.CONTROLS;
 
 	var mapConfig = {
-	boundingBox: '#<%= name %>Map',
+	boundingBox: '#<%= HtmlUtil.escapeJS(name) %>Map',
 
 	<c:if test="<%= geolocation %>">
 		<c:choose>
@@ -98,7 +98,7 @@ name = namespace + name;
 	var createMap = function() {
 		var map = new Liferay['GoogleMap'](mapConfig).render();
 
-		Liferay.MapBase.register('<%= name %>', map);
+		Liferay.MapBase.register('<%= HtmlUtil.escapeJS(name) %>', map);
 
 		Liferay.on('destroyPortlet', A.rbind(destroyMap, destroyMap, map));
 	};

@@ -234,7 +234,10 @@ public class ServletContextHelperRegistrationImpl
 			new String[] {"*.jsp", "*.jspx"});
 
 		return _bundleContext.registerService(
-			Servlet.class, new JspServlet() {}, properties);
+			Servlet.class,
+			new JspServlet() {
+			},
+			properties);
 	}
 
 	protected ServiceRegistration<Servlet> createPortletServlet() {
@@ -255,7 +258,10 @@ public class ServletContextHelperRegistrationImpl
 			"/portlet-servlet/*");
 
 		return _bundleContext.registerService(
-			Servlet.class, new PortletServlet() {}, properties);
+			Servlet.class,
+			new PortletServlet() {
+			},
+			properties);
 	}
 
 	protected ServiceRegistration<ServletContextHelper>

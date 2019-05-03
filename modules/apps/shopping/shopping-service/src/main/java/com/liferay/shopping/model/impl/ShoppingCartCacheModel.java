@@ -19,7 +19,6 @@ import aQute.bnd.annotation.ProviderType;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-
 import com.liferay.shopping.model.ShoppingCart;
 
 import java.io.Externalizable;
@@ -33,12 +32,12 @@ import java.util.Date;
  * The cache model class for representing ShoppingCart in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see ShoppingCart
  * @generated
  */
 @ProviderType
-public class ShoppingCartCacheModel implements CacheModel<ShoppingCart>,
-	Externalizable {
+public class ShoppingCartCacheModel
+	implements CacheModel<ShoppingCart>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -49,7 +48,8 @@ public class ShoppingCartCacheModel implements CacheModel<ShoppingCart>,
 			return false;
 		}
 
-		ShoppingCartCacheModel shoppingCartCacheModel = (ShoppingCartCacheModel)obj;
+		ShoppingCartCacheModel shoppingCartCacheModel =
+			(ShoppingCartCacheModel)obj;
 
 		if (cartId == shoppingCartCacheModel.cartId) {
 			return true;
@@ -167,8 +167,7 @@ public class ShoppingCartCacheModel implements CacheModel<ShoppingCart>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(cartId);
 
 		objectOutput.writeLong(groupId);
@@ -217,4 +216,5 @@ public class ShoppingCartCacheModel implements CacheModel<ShoppingCart>,
 	public String couponCodes;
 	public int altShipping;
 	public boolean insure;
+
 }

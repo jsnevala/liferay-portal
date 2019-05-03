@@ -240,7 +240,7 @@ public class DBInspector {
 		DatabaseMetaData metadata = _connection.getMetaData();
 
 		try (ResultSet rs = metadata.getTables(
-				getCatalog(), getSchema(), tableName, null);) {
+				getCatalog(), getSchema(), tableName, null)) {
 
 			while (rs.next()) {
 				return true;

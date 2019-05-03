@@ -31,6 +31,7 @@ import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -163,6 +164,8 @@ public class JournalTestUtil {
 			ddmGroupId, ddmStructure.getStructureId(),
 			PortalUtil.getClassNameId(JournalArticle.class));
 
+		User user = TestPropsValues.getUser();
+
 		boolean neverExpire = true;
 
 		int expirationDateDay = 0;
@@ -175,7 +178,7 @@ public class JournalTestUtil {
 			neverExpire = false;
 
 			Calendar expirationCal = CalendarFactoryUtil.getCalendar(
-				TestPropsValues.getUser().getTimeZone());
+				user.getTimeZone());
 
 			expirationCal.setTime(expirationDate);
 
@@ -187,7 +190,7 @@ public class JournalTestUtil {
 		}
 
 		Calendar displayCal = CalendarFactoryUtil.getCalendar(
-			TestPropsValues.getUser().getTimeZone());
+			user.getTimeZone());
 
 		int displayDateDay = displayCal.get(Calendar.DATE);
 		int displayDateMonth = displayCal.get(Calendar.MONTH);
@@ -256,6 +259,22 @@ public class JournalTestUtil {
 			_getLocalizedMap(RandomTestUtil.randomString()),
 			_getLocalizedMap(RandomTestUtil.randomString()), null,
 			LocaleUtil.getSiteDefault(), null, false, false, serviceContext);
+	}
+
+	public static JournalArticle addArticle(
+			long groupId, long folderId, String title)
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(groupId);
+
+		serviceContext.setCommand(Constants.ADD);
+		serviceContext.setLayoutFullURL("http://localhost");
+
+		return addArticle(
+			groupId, folderId, JournalArticleConstants.CLASSNAME_ID_DEFAULT,
+			title, RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			LocaleUtil.getSiteDefault(), false, false, serviceContext);
 	}
 
 	public static JournalArticle addArticle(
@@ -831,8 +850,10 @@ public class JournalTestUtil {
 		int displayDateMinute = 0;
 
 		if (displayDate != null) {
+			User user = TestPropsValues.getUser();
+
 			Calendar displayCal = CalendarFactoryUtil.getCalendar(
-				TestPropsValues.getUser().getTimeZone());
+				user.getTimeZone());
 
 			displayCal.setTime(displayDate);
 
@@ -853,7 +874,7 @@ public class JournalTestUtil {
 			article.getDDMTemplateKey(), article.getLayoutUuid(),
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
 			displayDateMinute, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true,
-			article.getIndexable(), article.isSmallImage(),
+			article.isIndexable(), article.isSmallImage(),
 			article.getSmallImageURL(), null, null, null, serviceContext);
 	}
 
@@ -959,7 +980,8 @@ public class JournalTestUtil {
 		return map;
 	}
 
-	private static final Locale[] _locales =
-		{LocaleUtil.US, LocaleUtil.GERMANY, LocaleUtil.SPAIN};
+	private static final Locale[] _locales = {
+		LocaleUtil.US, LocaleUtil.GERMANY, LocaleUtil.SPAIN
+	};
 
 }

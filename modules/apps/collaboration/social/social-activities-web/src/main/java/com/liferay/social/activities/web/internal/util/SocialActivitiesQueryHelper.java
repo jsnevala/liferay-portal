@@ -42,6 +42,11 @@ public class SocialActivitiesQueryHelper {
 					group.getGroupId(), start, end);
 			}
 
+			if (layout.isPublicLayout()) {
+				return _socialActivitySetLocalService.getUserActivitySets(
+					group.getClassPK(), start, end);
+			}
+
 			return _socialActivitySetLocalService.getUserViewableActivitySets(
 				group.getClassPK(), start, end);
 		}
@@ -85,8 +90,13 @@ public class SocialActivitiesQueryHelper {
 					group.getGroupId());
 			}
 
-			return _socialActivitySetLocalService
-				.getUserViewableActivitySetsCount(group.getClassPK());
+			if (layout.isPublicLayout()) {
+				return _socialActivitySetLocalService.getUserActivitySetsCount(
+					group.getClassPK());
+			}
+
+			return _socialActivitySetLocalService.
+				getUserViewableActivitySetsCount(group.getClassPK());
 		}
 		else if (group.isOrganization()) {
 			return _socialActivitySetLocalService.

@@ -1,5 +1,4 @@
 Bundle-Name: Liferay Portal Configuration Cluster
 Bundle-SymbolicName: com.liferay.portal.configuration.cluster
-Bundle-Version: 3.0.1
-Liferay-Releng-Module-Group-Description:
+Bundle-Version: 3.0.4
 Liferay-Releng-Module-Group-Title: Configuration Framework

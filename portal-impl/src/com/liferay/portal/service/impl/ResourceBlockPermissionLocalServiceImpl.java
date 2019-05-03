@@ -71,7 +71,7 @@ public class ResourceBlockPermissionLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getAvailableResourceBlockPermissionActionIds(String, long,
 	 *             List)}
 	 */
@@ -135,18 +135,18 @@ public class ResourceBlockPermissionLocalServiceImpl
 			resourceBlockPermissionPersistence.findByResourceBlockId(
 				resourceBlockId);
 
-		ResourceBlockPermissionsContainer resourceBlockPermissionContainer =
+		ResourceBlockPermissionsContainer resourceBlockPermissionsContainer =
 			new ResourceBlockPermissionsContainer();
 
 		for (ResourceBlockPermission resourceBlockPermission :
 				resourceBlockPermissions) {
 
-			resourceBlockPermissionContainer.setPermissions(
+			resourceBlockPermissionsContainer.setPermissions(
 				resourceBlockPermission.getRoleId(),
 				resourceBlockPermission.getActionIds());
 		}
 
-		return resourceBlockPermissionContainer;
+		return resourceBlockPermissionsContainer;
 	}
 
 	@Override
@@ -184,7 +184,7 @@ public class ResourceBlockPermissionLocalServiceImpl
 		}
 		else if (operator == ResourceBlockConstants.OPERATOR_REMOVE) {
 			actionIdsLong =
-				resourceBlockPermission.getActionIds() & (~actionIdsLong);
+				resourceBlockPermission.getActionIds() & ~actionIdsLong;
 		}
 
 		if (actionIdsLong == 0) {

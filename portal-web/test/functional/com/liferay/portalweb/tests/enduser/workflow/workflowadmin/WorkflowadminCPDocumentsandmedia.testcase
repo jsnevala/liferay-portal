@@ -1,1143 +1,1072 @@
-<definition component-name="portal-workflow">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Workflow" />
-
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
-
-		<execute macro="User#firstLoginPG" />
-	</set-up>
-
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
-
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="DMDocument#tearDownCP" />
-
-				<execute macro="Navigator#openURL" />
-
-				<execute macro="ProductMenu#gotoPortlet">
-					<var name="category" value="Content" />
-					<var name="panel" value="Site Administration" />
-					<var name="portlet" value="Documents and Media" />
-				</execute>
-
-				<execute macro="Workflow#configureWorkflowViaPortlet">
-					<var name="workflowDefinition" value="No Workflow" />
-				</execute>
-
-				<execute macro="DMDocumentType#tearDownCP" />
-			</else>
-		</if>
-	</tear-down>
-
-	<command name="ApproveInDMFolderCustomWorkflow" priority="5">
-		<property name="portal.acceptance" value="true" />
-		<property name="testray.component.names" value="Training" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
-
-		<execute macro="Organization#addCP">
-			<var name="orgName" value="Space Program Academy of Continuing Education" />
-			<var name="orgType" value="Organization" />
-		</execute>
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
-
-		<execute macro="UsersAndOrganizationsNavigator#gotoOrganizations" />
-
-		<execute macro="Organization#addSiteCP">
-			<var name="orgName" value="Space Program Academy of Continuing Education" />
-		</execute>
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Sites" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Sites" />
-		</execute>
-
-		<execute macro="Site#viewCP">
-			<var name="siteMember" value="Organization" />
-			<var name="siteName" value="Space Program Academy of Continuing Education" />
-			<var name="siteType" value="Private" />
-		</execute>
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
-
-		<execute macro="User#addCP">
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
-
-		<execute macro="User#editPasswordCP">
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
-
-		<execute macro="UsersAndOrganizationsNavigator#gotoOrganizations" />
-
-		<execute macro="Organization#addMemberCP">
-			<var name="orgName" value="Space Program Academy of Continuing Education" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Configuration" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Workflow Definition" />
-		</execute>
-
-		<execute macro="Workflow#uploadDefinition">
-			<var name="workflowDefinitionFile" value="advanced-governors-review.xml" />
-			<var name="workflowDefinitionTitle" value="Quarterly Reports Review Process" />
-		</execute>
-
-		<execute macro="Workflow#viewDefinition">
-			<var name="workflowDefinitionName" value="Quarterly Reports Review Process" />
-			<var name="workflowDefinitionTitle" value="Quarterly Reports Review Process" />
-			<var name="workflowDefinitionVersionNumber" value="1" />
-		</execute>
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
-
-		<execute macro="User#assignRegularRoleCP">
-			<var name="roleName" value="Board Member" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
-
-		<execute macro="ProductMenu#gotoSite">
-			<var name="site" value="Space Program Academy of Continuing Education" />
-		</execute>
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#addCP">
-			<var name="dmFolderDescription" value="Financial Reports Description" />
-			<var name="dmFolderName" value="Financial Reports" />
-		</execute>
-
-		<execute macro="DMFolder#configureWorkflowCP">
-			<var name="dmFolderName" value="Financial Reports" />
-			<var name="workflowDefinition" value="Quarterly Reports Review Process (Version 1)" />
-			<var name="workflowRestriction" value="Default Workflow" />
-		</execute>
-
-		<for list="1,2,3" param="entryCount">
-			<execute macro="ProductMenu#gotoPortlet">
-				<var name="category" value="Content" />
-				<var name="panel" value="Site Administration" />
-				<var name="portlet" value="Documents and Media" />
-			</execute>
-
-			<execute macro="DMFolder#gotoCP">
-				<var name="dmFolderName" value="Financial Reports" />
-			</execute>
-
-			<execute macro="DMDocument#addWithWorkflowCP">
-				<var name="dmDocumentDescription" value="DM Document Description" />
-				<var name="dmDocumentFile" value="Document_${entryCount}.doc" />
-				<var name="dmDocumentTitle" value="Document_${entryCount}.doc" />
-			</execute>
-		</for>
-
-		<execute macro="User#logoutAndLoginPG">
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<for list="1,2,3,4" param="i">
-			<execute macro="Page#gotoMyAccount">
-				<var name="portletName" value="My Workflow Tasks" />
-			</execute>
-
-			<execute macro="Workflow#assignToMeTaskByActions">
-				<var name="workflowAssetTitle" value="Document_1.doc" />
-				<var name="workflowAssetType" value="Document" />
-				<var name="workflowTask" value="Board Member Review ${i}" />
-			</execute>
-
-			<execute macro="Navigator#openURL" />
-
-			<execute macro="Page#gotoMyAccount">
-				<var name="portletName" value="My Workflow Tasks" />
-			</execute>
-
-			<execute macro="Workflow#approveTaskByActions">
-				<var name="boardWorkflowTask" value="${i}" />
-				<var name="workflowAssetTitle" value="Document_1.doc" />
-				<var name="workflowAssetType" value="Document" />
-				<var name="workflowTask" value="Board Member Review ${i}" />
-			</execute>
-		</for>
-
-		<for list="1,2,3,4" param="i">
-			<execute macro="Page#gotoMyAccount">
-				<var name="portletName" value="My Workflow Tasks" />
-			</execute>
-
-			<execute macro="Workflow#assignToMeTaskByActions">
-				<var name="workflowAssetTitle" value="Document_2.doc" />
-				<var name="workflowAssetType" value="Document" />
-				<var name="workflowTask" value="Board Member Review ${i}" />
-			</execute>
-
-			<execute macro="Navigator#openURL" />
-
-			<execute macro="Page#gotoMyAccount">
-				<var name="portletName" value="My Workflow Tasks" />
-			</execute>
-
-			<execute macro="Workflow#approveTaskByActions">
-				<var name="boardWorkflowTask" value="${i}" />
-				<var name="workflowAssetTitle" value="Document_2.doc" />
-				<var name="workflowAssetType" value="Document" />
-				<var name="workflowTask" value="Board Member Review ${i}" />
-			</execute>
-		</for>
-
-		<for list="1,2,3,4" param="i">
-			<execute macro="Page#gotoMyAccount">
-				<var name="portletName" value="My Workflow Tasks" />
-			</execute>
-
-			<execute macro="Workflow#assignToMeTaskByActions">
-				<var name="workflowAssetTitle" value="Document_3.doc" />
-				<var name="workflowAssetType" value="Document" />
-				<var name="workflowTask" value="Board Member Review ${i}" />
-			</execute>
-
-			<execute macro="Navigator#openURL" />
-
-			<execute macro="Page#gotoMyAccount">
-				<var name="portletName" value="My Workflow Tasks" />
-			</execute>
-
-			<execute macro="Workflow#approveTaskByActions">
-				<var name="boardWorkflowTask" value="${i}" />
-				<var name="workflowAssetTitle" value="Document_3.doc" />
-				<var name="workflowAssetType" value="Document" />
-				<var name="workflowTask" value="Board Member Review ${i}" />
-			</execute>
-		</for>
-
-		<execute macro="User#logoutAndLoginPG">
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoSite">
-			<var name="site" value="Space Program Academy of Continuing Education" />
-		</execute>
-
-		<for list="1,2,3" param="entryCount">
-			<execute macro="ProductMenu#gotoPortlet">
-				<var name="category" value="Content" />
-				<var name="panel" value="Site Administration" />
-				<var name="portlet" value="Documents and Media" />
-			</execute>
-
-			<execute macro="DMFolder#gotoCP">
-				<var name="dmFolderName" value="Financial Reports" />
-			</execute>
-
-			<execute macro="DMDocument#viewCPStatus">
-				<var name="dmDocumentStatus" value="Approved" />
-				<var name="dmDocumentTitle" value="Document_${entryCount}.doc" />
-			</execute>
-		</for>
-	</command>
-
-	<command name="ApproveInDMFolderNoWorkflowWithHomeFolderSingleApproverWorkflowCP" priority="5">
-		<property name="portal.acceptance" value="true" />
-		<property name="testray.component.names" value="Training" />
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="Workflow#configureWorkflowViaPortlet">
-			<var name="workflowDefinition" value="Single Approver (Version 1)" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#addCP">
-			<var name="dmFolderDescription" value="DM Folder Description" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMFolder#configureWorkflowCP">
-			<var name="dmFolderName" value="DM Folder Name" />
-			<var name="workflowDefinition" value="No Workflow" />
-			<var name="workflowRestriction" value="Default Workflow" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMDocument#addCP">
-			<var name="dmDocumentDescription" value="DM Folder Document Description" />
-			<var name="dmDocumentFile" value="Document_1.doc" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-		</execute>
-
-		<execute macro="DMDocument#viewCPStatus">
-			<var name="dmDocumentStatus" value="Approved" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMDocument#addWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Document Description" />
-			<var name="dmDocumentFile" value="Document_2.doc" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Document Description" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#assignToMeTaskByActions">
-			<var name="workflowAssetTitle" value="DM Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Document Description" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#approveTaskByActions">
-			<var name="workflowAssetTitle" value="DM Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMDocument#viewCPStatus">
-			<var name="dmDocumentStatus" value="Approved" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-		</execute>
-	</command>
-
-	<command name="ApproveInDMFolderSingleApproverTypeSpecificWorkflowCP" priority="5">
-		<property name="portal.acceptance" value="true" />
-		<property name="testray.component.names" value="Training" />
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMNavigator#gotoDocumentType" />
-
-		<execute macro="DMDocumentType#add">
-			<var name="dmDocumentTypeDescription" value="DM Document Type Description" />
-			<var name="dmDocumentTypeFieldNames" value="Text" />
-			<var name="dmDocumentTypeName" value="DM Document Type Name" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#addCP">
-			<var name="dmFolderDescription" value="DM Folder Description" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMFolder#configureWorkflowCP">
-			<var name="dmDocumentTypeName" value="DM Document Type Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-			<var name="workflowDefinition" value="Single Approver (Version 1)" />
-			<var name="workflowRestriction" value="Specific Restrictions" />
-		</execute>
-
-		<execute macro="DMFolder#configureWorkflowCP">
-			<var name="dmDocumentTypeName" value="Basic Document" />
-			<var name="dmFolderName" value="DM Folder Name" />
-			<var name="workflowDefinition" value="No Workflow" />
-			<var name="workflowRestriction" value="Specific Restrictions" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMDocument#addDocumentTypeWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Folder Type Description" />
-			<var name="dmDocumentFile" value="Document_2.doc" />
-			<var name="dmDocumentTitle" value="DM Folder Document Type Title" />
-			<var name="dmDocumentTypeName" value="DM Document Type Name" />
-			<var name="textField" value="DM Folder Document Type Text" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentTitle" value="DM Folder Document Type Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMDocument#addCP">
-			<var name="dmDocumentDescription" value="DM Folder Document Description" />
-			<var name="dmDocumentFile" value="Document_1.doc" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-		</execute>
-
-		<execute macro="DMDocument#viewCPStatus">
-			<var name="dmDocumentStatus" value="Approved" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMDocument#addDocumentTypeCP">
-			<var name="dmDocumentFile" value="Document_3.doc" />
-			<var name="dmDocumentTitle" value="DM Document Type Title" />
-			<var name="dmDocumentTypeName" value="DM Document Type Name" />
-			<var name="textField" value="DM Document Type Text" />
-		</execute>
-
-		<execute macro="DMDocument#viewCPStatus">
-			<var name="dmDocumentStatus" value="Approved" />
-			<var name="dmDocumentTitle" value="DM Document Type Title" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#assignToMeTaskByActions">
-			<var name="workflowAssetTitle" value="DM Folder Document Type Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentTitle" value="DM Folder Document Type Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#approveTaskByActions">
-			<var name="workflowAssetTitle" value="DM Folder Document Type Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMDocument#viewCPStatus">
-			<var name="dmDocumentStatus" value="Approved" />
-			<var name="dmDocumentTitle" value="DM Folder Document Type Title" />
-		</execute>
-	</command>
-
-	<command name="ApproveInDMFolderSingleApproverWorkflowWithNoHomeFolderWorkflowCP" priority="4">
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#addCP">
-			<var name="dmFolderDescription" value="DM Folder Description" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMFolder#configureWorkflowCP">
-			<var name="dmFolderName" value="DM Folder Name" />
-			<var name="workflowDefinition" value="Single Approver (Version 1)" />
-			<var name="workflowRestriction" value="Default Workflow" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMDocument#addCP">
-			<var name="dmDocumentDescription" value="DM Document Description" />
-			<var name="dmDocumentFile" value="Document_1.doc" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-		</execute>
-
-		<execute macro="DMDocument#viewCPStatus">
-			<var name="dmDocumentStatus" value="Approved" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMDocument#addWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Folder Document Description" />
-			<var name="dmDocumentFile" value="Document_2.doc" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Folder Document Description" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#assignToMeTaskByActions">
-			<var name="workflowAssetTitle" value="DM Folder Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Folder Document Description" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#approveTaskByActions">
-			<var name="workflowAssetTitle" value="DM Folder Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMDocument#viewCPStatus">
-			<var name="dmDocumentStatus" value="Approved" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-		</execute>
-	</command>
-
-	<command name="ApproveInDMFolderWithParentFolderSingleApproverWorkflowCP" priority="4">
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="Workflow#configureWorkflowViaPortlet">
-			<var name="workflowDefinition" value="Single Approver (Version 1)" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#addCP">
-			<var name="dmFolderDescription" value="DM Folder Description" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMFolder#configureWorkflowCP">
-			<var name="dmFolderName" value="DM Folder Name" />
-			<var name="workflowRestriction" value="Parent Folder" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMDocument#addWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Folder Document Description" />
-			<var name="dmDocumentFile" value="Document_2.doc" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Folder Document Description" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMDocument#addWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Document Description" />
-			<var name="dmDocumentFile" value="Document_3.doc" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Document Description" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#assignToMeTaskByActions">
-			<var name="workflowAssetTitle" value="DM Folder Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Workflow#assignToMeTaskByActions">
-			<var name="workflowAssetTitle" value="DM Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Folder Document Description" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Document Description" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#approveTaskByActions">
-			<var name="workflowAssetTitle" value="DM Folder Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#approveTaskByActions">
-			<var name="workflowAssetTitle" value="DM Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMDocument#viewCPStatus">
-			<var name="dmDocumentStatus" value="Approved" />
-			<var name="dmDocumentTitle" value="DM Folder Document Title" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMDocument#viewCPStatus">
-			<var name="dmDocumentStatus" value="Approved" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-		</execute>
-	</command>
-
-	<command name="RejectDMDocumentCP" priority="4">
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="Workflow#configureWorkflowViaPortlet">
-			<var name="workflowDefinition" value="Single Approver (Version 1)" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMDocument#addWithWorkflowCP">
-			<var name="dmDocumentDescription" value="DM Document Description" />
-			<var name="dmDocumentFile" value="Document_1.txt" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#assignToMeTaskByActions">
-			<var name="workflowAssetTitle" value="DM Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentTitle" value="DM Document Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#rejectTaskByActions">
-			<var name="workflowAssetTitle" value="DM Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#viewRejectedTask">
-			<var name="workflowAssetTitle" value="DM Document Title" />
-			<var name="workflowAssetType" value="Document" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMDocument#viewWithWorkflowCP">
-			<var name="dmDocumentTitle" value="DM Document Title" />
-			<var name="workflowStatus" value="Pending" />
-			<var name="workflowTask" value="Update" />
-		</execute>
-	</command>
-
-	<command name="SaveAsDraftAndViewCategories" priority="5">
-		<description message="This is a use case for LPS-60870." />
-
-		<property name="custom.properties" value="dl.file.entry.drafts.enabled=true" />
-		<property name="portal.acceptance" value="pending" />
-		<property name="testray.component.names" value="Training" />
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Categories" />
-		</execute>
-
-		<execute macro="Vocabulary#addCP">
-			<var name="vocabularyName" value="Vocabulary Name" />
-		</execute>
-
-		<execute macro="Category#addCP">
-			<var name="categoryName" value="legal" />
-			<var name="vocabularyName" value="Vocabulary Name" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Categories" />
-		</execute>
-
-		<execute macro="Category#addCP">
-			<var name="categoryName" value="Outlook" />
-			<var name="vocabularyName" value="Vocabulary Name" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#addCP">
-			<var name="dmFolderDescription" value="DM Folder Description" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMFolder#configureWorkflowCP">
-			<var name="dmFolderName" value="DM Folder Name" />
-			<var name="workflowDefinition" value="Single Approver (Version 1)" />
-			<var name="workflowRestriction" value="Default Workflow" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMNavigator#gotoAddDocumentType" />
-
-		<execute macro="DMDocument#editDocument">
-			<var name="dmDocumentDescription" value="DM Document Description" />
-			<var name="dmDocumentFile" value="Document_1.doc" />
-			<var name="dmDocumentTitle" value="DM Document Title" />
-		</execute>
-
-		<execute macro="DMDocument#addCategories">
-			<var name="categoryNameList" value="legal,Outlook" />
-			<var name="vocabularyName" value="Vocabulary Name" />
-		</execute>
-
-		<execute macro="Button#clickSubmitForPublication" />
-
-		<execute macro="Alert#viewSuccessMessage" />
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#assignToMeTaskByActions">
-			<var name="workflowAssetTitle" value="DM Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Workflow#approveTaskByActions">
-			<var name="workflowAssetTitle" value="DM Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
-
-		<execute macro="DMFolder#gotoCP">
-			<var name="dmDocumentTitle" value="DM Folder Name" />
-			<var name="dmFolderName" value="DM Folder Name" />
-		</execute>
-
-		<execute macro="DMNavigator#gotoEditDocument">
-			<var name="dmDocumentTitle" value="DM Document Title" />
-		</execute>
-
-		<execute macro="DMDocument#viewCategories">
-			<var name="categoryNameList" value="legal,Outlook" />
-		</execute>
-
-		<execute macro="Button#clickSaveAsDraft" />
-
-		<execute macro="Alert#viewSuccessMessage" />
-
-		<execute macro="DMNavigator#gotoEditDocument">
-			<var name="dmDocumentTitle" value="DM Document Title" />
-		</execute>
-
-		<execute macro="DMDocument#viewCategories">
-			<var name="categoryNameList" value="legal,Outlook" />
-		</execute>
-
-		<execute macro="Button#clickSubmitForPublication" />
-
-		<execute macro="DMNavigator#gotoEditDocument">
-			<var name="dmDocumentTitle" value="DM Document Title" />
-		</execute>
-
-		<execute macro="DMDocument#viewCategories">
-			<var name="categoryNameList" value="legal,Outlook" />
-		</execute>
-
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Workflow Tasks" />
-		</execute>
-
-		<execute macro="Workflow#assignToMeTaskByActions">
-			<var name="workflowAssetTitle" value="DM Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Workflow#viewTaskAssignedToMeDetails">
-			<var name="workflowAssetContent" value="DM Document Title" />
-			<var name="workflowAssetTitle" value="DM Document Title" />
-			<var name="workflowAssetType" value="Document" />
-			<var name="workflowTask" value="Review" />
-		</execute>
-
-		<execute macro="Workflow#gotoPreviewEdit" />
-
-		<execute macro="DMDocument#viewCategories">
-			<var name="categoryNameList" value="legal,Outlook" />
-		</execute>
-	</command>
-</definition>
+@component-name = "portal-workflow"
+definition {
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Workflow";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			DMDocument.tearDownCP();
+
+			Navigator.openURL();
+
+			ProductMenu.gotoPortlet(
+				category = "Content",
+				panel = "Site Administration",
+				portlet = "Documents and Media"
+			);
+
+			Workflow.configureWorkflowViaPortlet(workflowDefinition = "No Workflow");
+
+			DMDocumentType.tearDownCP();
+		}
+	}
+
+	@priority = "5"
+	test ApproveInDMFolderCustomWorkflow {
+		property portal.release = "false";
+		property testray.component.names = "Training";
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations"
+		);
+
+		Organization.addCP(
+			orgName = "Space Program Academy of Continuing Education",
+			orgType = "Organization"
+		);
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations"
+		);
+
+		UsersAndOrganizationsNavigator.gotoOrganizations();
+
+		Organization.addSiteCP(
+			orgName = "Space Program Academy of Continuing Education"
+		);
+
+		ProductMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites"
+		);
+
+		Site.viewCP(
+			siteMember = "Organization",
+			siteName = "Space Program Academy of Continuing Education",
+			siteType = "Private"
+		);
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations"
+		);
+
+		User.addCP(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn"
+		);
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations"
+		);
+
+		User.editPasswordCP(
+			userEmailAddress = "userea@liferay.com",
+			userScreenName = "usersn"
+		);
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations"
+		);
+
+		UsersAndOrganizationsNavigator.gotoOrganizations();
+
+		Organization.addMemberCP(
+			orgName = "Space Program Academy of Continuing Education",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn"
+		);
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Workflow Definition"
+		);
+
+		Workflow.uploadDefinition(
+			workflowDefinitionFile = "advanced-governors-review.xml",
+			workflowDefinitionTitle = "Quarterly Reports Review Process"
+		);
+
+		Workflow.viewDefinition(
+			workflowDefinitionName = "Quarterly Reports Review Process",
+			workflowDefinitionTitle = "Quarterly Reports Review Process",
+			workflowDefinitionVersionNumber = "1"
+		);
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations"
+		);
+
+		User.assignRegularRoleCP(roleName = "Board Member", userScreenName = "usersn");
+
+		ProductMenu.gotoSite(site = "Space Program Academy of Continuing Education");
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.addCP(
+			dmFolderDescription = "Financial Reports Description",
+			dmFolderName = "Financial Reports"
+		);
+
+		DMFolder.configureWorkflowCP(
+			dmFolderName = "Financial Reports",
+			workflowDefinition = "Quarterly Reports Review Process (Version 1)",
+			workflowRestriction = "Default Workflow"
+		);
+
+		for (var entryCount : list "1,2,3") {
+			ProductMenu.gotoPortlet(
+				category = "Content",
+				panel = "Site Administration",
+				portlet = "Documents and Media"
+			);
+
+			DMFolder.gotoCP(dmFolderName = "Financial Reports");
+
+			DMDocument.addWithWorkflowCP(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentFile = "Document_${entryCount}.doc",
+				dmDocumentTitle = "Document_${entryCount}.doc"
+			);
+		}
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
+
+		Navigator.openURL();
+
+		for (var i : list "1,2,3,4") {
+			Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+			Workflow.assignToMeTaskByActions(
+				workflowAssetTitle = "Document_1.doc",
+				workflowAssetType = "Document",
+				workflowTask = "Board Member Review ${i}"
+			);
+
+			Navigator.openURL();
+
+			Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+			Workflow.approveTaskByActions(
+				boardWorkflowTask = "${i}",
+				workflowAssetTitle = "Document_1.doc",
+				workflowAssetType = "Document",
+				workflowTask = "Board Member Review ${i}"
+			);
+		}
+
+		for (var i : list "1,2,3,4") {
+			Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+			Workflow.assignToMeTaskByActions(
+				workflowAssetTitle = "Document_2.doc",
+				workflowAssetType = "Document",
+				workflowTask = "Board Member Review ${i}"
+			);
+
+			Navigator.openURL();
+
+			Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+			Workflow.approveTaskByActions(
+				boardWorkflowTask = "${i}",
+				workflowAssetTitle = "Document_2.doc",
+				workflowAssetType = "Document",
+				workflowTask = "Board Member Review ${i}"
+			);
+		}
+
+		for (var i : list "1,2,3,4") {
+			Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+			Workflow.assignToMeTaskByActions(
+				workflowAssetTitle = "Document_3.doc",
+				workflowAssetType = "Document",
+				workflowTask = "Board Member Review ${i}"
+			);
+
+			Navigator.openURL();
+
+			Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+			Workflow.approveTaskByActions(
+				boardWorkflowTask = "${i}",
+				workflowAssetTitle = "Document_3.doc",
+				workflowAssetType = "Document",
+				workflowTask = "Board Member Review ${i}"
+			);
+		}
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoSite(site = "Space Program Academy of Continuing Education");
+
+		for (var entryCount : list "1,2,3") {
+			ProductMenu.gotoPortlet(
+				category = "Content",
+				panel = "Site Administration",
+				portlet = "Documents and Media"
+			);
+
+			DMFolder.gotoCP(dmFolderName = "Financial Reports");
+
+			DMDocument.viewCPStatus(
+				dmDocumentStatus = "Approved",
+				dmDocumentTitle = "Document_${entryCount}.doc"
+			);
+		}
+	}
+
+	@priority = "5"
+	test ApproveInDMFolderNoWorkflowWithHomeFolderSingleApproverWorkflowCP {
+		property portal.acceptance = "true";
+		property testray.component.names = "Training";
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		Workflow.configureWorkflowViaPortlet(
+			workflowDefinition = "Single Approver (Version 1)"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.addCP(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMFolder.configureWorkflowCP(
+			dmFolderName = "DM Folder Name",
+			workflowDefinition = "No Workflow",
+			workflowRestriction = "Default Workflow"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Folder Document Description",
+			dmDocumentFile = "Document_1.doc",
+			dmDocumentTitle = "DM Folder Document Title"
+		);
+
+		DMDocument.viewCPStatus(
+			dmDocumentStatus = "Approved",
+			dmDocumentTitle = "DM Folder Document Title"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.addWithWorkflowCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_2.doc",
+			dmDocumentTitle = "DM Document Title"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			workflowStatus = "Pending",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "DM Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			workflowStatus = "Pending",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "DM Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.viewCPStatus(
+			dmDocumentStatus = "Approved",
+			dmDocumentTitle = "DM Document Title"
+		);
+	}
+
+	@priority = "5"
+	test ApproveInDMFolderSingleApproverTypeSpecificWorkflowCP {
+		property portal.acceptance = "true";
+		property testray.component.names = "Training";
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Document Types");
+
+		DMDocumentType.add(
+			dmDocumentTypeDescription = "DM Document Type Description",
+			dmDocumentTypeFieldNames = "Text",
+			dmDocumentTypeName = "DM Document Type Name"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.addCP(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMFolder.configureWorkflowCP(
+			dmDocumentTypeName = "DM Document Type Name",
+			dmFolderName = "DM Folder Name",
+			workflowDefinition = "Single Approver (Version 1)",
+			workflowRestriction = "Specific Restrictions"
+		);
+
+		DMFolder.configureWorkflowCP(
+			dmDocumentTypeName = "Basic Document",
+			dmFolderName = "DM Folder Name",
+			workflowDefinition = "No Workflow",
+			workflowRestriction = "Specific Restrictions"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMDocument.addDocumentTypeWithWorkflowCP(
+			dmDocumentDescription = "DM Folder Type Description",
+			dmDocumentFile = "Document_2.doc",
+			dmDocumentTitle = "DM Folder Document Type Title",
+			dmDocumentTypeName = "DM Document Type Name",
+			textField = "DM Folder Document Type Text"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentTitle = "DM Folder Document Type Title",
+			workflowStatus = "Pending",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Folder Document Description",
+			dmDocumentFile = "Document_1.doc",
+			dmDocumentTitle = "DM Folder Document Title"
+		);
+
+		DMDocument.viewCPStatus(
+			dmDocumentStatus = "Approved",
+			dmDocumentTitle = "DM Folder Document Title"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.addDocumentTypeCP(
+			dmDocumentFile = "Document_3.doc",
+			dmDocumentTitle = "DM Document Type Title",
+			dmDocumentTypeName = "DM Document Type Name",
+			textField = "DM Document Type Text"
+		);
+
+		DMDocument.viewCPStatus(
+			dmDocumentStatus = "Approved",
+			dmDocumentTitle = "DM Document Type Title"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "DM Folder Document Type Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentTitle = "DM Folder Document Type Title",
+			workflowStatus = "Pending",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "DM Folder Document Type Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMDocument.viewCPStatus(
+			dmDocumentStatus = "Approved",
+			dmDocumentTitle = "DM Folder Document Type Title"
+		);
+	}
+
+	@priority = "4"
+	test ApproveInDMFolderSingleApproverWorkflowWithNoHomeFolderWorkflowCP {
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.addCP(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMFolder.configureWorkflowCP(
+			dmFolderName = "DM Folder Name",
+			workflowDefinition = "Single Approver (Version 1)",
+			workflowRestriction = "Default Workflow"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.doc",
+			dmDocumentTitle = "DM Document Title"
+		);
+
+		DMDocument.viewCPStatus(
+			dmDocumentStatus = "Approved",
+			dmDocumentTitle = "DM Document Title"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMDocument.addWithWorkflowCP(
+			dmDocumentDescription = "DM Folder Document Description",
+			dmDocumentFile = "Document_2.doc",
+			dmDocumentTitle = "DM Folder Document Title"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentDescription = "DM Folder Document Description",
+			dmDocumentTitle = "DM Folder Document Title",
+			workflowStatus = "Pending",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "DM Folder Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentDescription = "DM Folder Document Description",
+			dmDocumentTitle = "DM Folder Document Title",
+			workflowStatus = "Pending",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "DM Folder Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMDocument.viewCPStatus(
+			dmDocumentStatus = "Approved",
+			dmDocumentTitle = "DM Folder Document Title"
+		);
+	}
+
+	@priority = "4"
+	test ApproveInDMFolderWithParentFolderSingleApproverWorkflowCP {
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		Workflow.configureWorkflowViaPortlet(
+			workflowDefinition = "Single Approver (Version 1)"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.addCP(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMFolder.configureWorkflowCP(
+			dmFolderName = "DM Folder Name",
+			workflowRestriction = "Parent Folder"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMDocument.addWithWorkflowCP(
+			dmDocumentDescription = "DM Folder Document Description",
+			dmDocumentFile = "Document_2.doc",
+			dmDocumentTitle = "DM Folder Document Title"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentDescription = "DM Folder Document Description",
+			dmDocumentTitle = "DM Folder Document Title",
+			workflowStatus = "Pending",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.addWithWorkflowCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_3.doc",
+			dmDocumentTitle = "DM Document Title"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			workflowStatus = "Pending",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "DM Folder Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "DM Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentDescription = "DM Folder Document Description",
+			dmDocumentTitle = "DM Folder Document Title",
+			workflowStatus = "Pending",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			workflowStatus = "Pending",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "DM Folder Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "DM Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMDocument.viewCPStatus(
+			dmDocumentStatus = "Approved",
+			dmDocumentTitle = "DM Folder Document Title"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.viewCPStatus(
+			dmDocumentStatus = "Approved",
+			dmDocumentTitle = "DM Document Title"
+		);
+	}
+
+	@priority = "4"
+	test RejectDMDocumentCP {
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		Workflow.configureWorkflowViaPortlet(
+			workflowDefinition = "Single Approver (Version 1)"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.addWithWorkflowCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.txt",
+			dmDocumentTitle = "DM Document Title"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "DM Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentTitle = "DM Document Title",
+			workflowStatus = "Pending",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.rejectTaskByActions(
+			workflowAssetTitle = "DM Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.viewRejectedTask(
+			workflowAssetTitle = "DM Document Title",
+			workflowAssetType = "Document"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMDocument.viewWithWorkflowCP(
+			dmDocumentTitle = "DM Document Title",
+			workflowStatus = "Pending",
+			workflowTask = "Update"
+		);
+	}
+
+	@description = "This is a use case for LPS-60870."
+	@priority = "5"
+	test SaveAsDraftAndViewCategories {
+		property custom.properties = "dl.file.entry.drafts.enabled=true";
+		property portal.acceptance = "false";
+		property testray.component.names = "Training";
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Categories"
+		);
+
+		Vocabulary.addCP(vocabularyName = "Vocabulary Name");
+
+		Category.addCP(categoryName = "legal", vocabularyName = "Vocabulary Name");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Categories"
+		);
+
+		Category.addCP(categoryName = "Outlook", vocabularyName = "Vocabulary Name");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.addCP(
+			dmFolderDescription = "DM Folder Description",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMFolder.configureWorkflowCP(
+			dmFolderName = "DM Folder Name",
+			workflowDefinition = "Single Approver (Version 1)",
+			workflowRestriction = "Default Workflow"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMNavigator.gotoAddDocumentType();
+
+		DMDocument.editDocument(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.doc",
+			dmDocumentTitle = "DM Document Title"
+		);
+
+		DMDocument.addCategories(
+			categoryNameList = "legal,Outlook",
+			vocabularyName = "Vocabulary Name"
+		);
+
+		Button.clickSubmitForPublication();
+
+		Alert.viewSuccessMessage();
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "DM Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "DM Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
+
+		DMFolder.gotoCP(
+			dmDocumentTitle = "DM Folder Name",
+			dmFolderName = "DM Folder Name"
+		);
+
+		DMNavigator.gotoEditDocument(dmDocumentTitle = "DM Document Title");
+
+		DMDocument.viewCategories(categoryNameList = "legal,Outlook");
+
+		Button.clickSaveAsDraft();
+
+		Alert.viewSuccessMessage();
+
+		DMNavigator.gotoEditDocument(dmDocumentTitle = "DM Document Title");
+
+		DMDocument.viewCategories(categoryNameList = "legal,Outlook");
+
+		Button.clickSubmitForPublication();
+
+		DMNavigator.gotoEditDocument(dmDocumentTitle = "DM Document Title");
+
+		DMDocument.viewCategories(categoryNameList = "legal,Outlook");
+
+		Page.gotoMyAccount(portletName = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "DM Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Workflow.viewTaskAssignedToMeDetails(
+			workflowAssetContent = "DM Document Title",
+			workflowAssetTitle = "DM Document Title",
+			workflowAssetType = "Document",
+			workflowTask = "Review"
+		);
+
+		Workflow.gotoPreviewEdit();
+
+		DMDocument.viewCategories(categoryNameList = "legal,Outlook");
+	}
+}

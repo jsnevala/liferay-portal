@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN},
+	property = "javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
 	service = PortletConfigurationIcon.class
 )
 public class DocumentTypesPortletConfigurationIcon

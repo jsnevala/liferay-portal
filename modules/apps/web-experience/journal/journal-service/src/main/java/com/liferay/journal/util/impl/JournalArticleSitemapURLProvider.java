@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(immediate = true, service = SitemapURLProvider.class)
 public class JournalArticleSitemapURLProvider implements SitemapURLProvider {
@@ -119,7 +119,7 @@ public class JournalArticleSitemapURLProvider implements SitemapURLProvider {
 
 			Layout layout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
 				journalArticle.getLayoutUuid(), layoutSet.getGroupId(),
-				layoutSet.getPrivateLayout());
+				layoutSet.isPrivateLayout());
 
 			if (layout == null) {
 				continue;

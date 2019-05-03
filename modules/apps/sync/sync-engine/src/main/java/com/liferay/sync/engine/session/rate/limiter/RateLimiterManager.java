@@ -99,6 +99,7 @@ public class RateLimiterManager {
 				_downloadRateLimiters.entrySet()) {
 
 			long syncAccountId = entry.getKey();
+
 			List<RateLimiter> rateLimiters = entry.getValue();
 
 			if (rateLimiters.isEmpty()) {
@@ -127,6 +128,7 @@ public class RateLimiterManager {
 				_uploadRateLimiters.entrySet()) {
 
 			long syncAccountId = entry.getKey();
+
 			List<RateLimiter> rateLimiters = entry.getValue();
 
 			if (rateLimiters.isEmpty()) {

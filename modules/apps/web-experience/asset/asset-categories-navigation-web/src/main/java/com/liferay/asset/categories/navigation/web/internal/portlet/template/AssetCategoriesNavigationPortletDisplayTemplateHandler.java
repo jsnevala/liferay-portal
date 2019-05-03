@@ -45,9 +45,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + AssetCategoriesNavigationPortletKeys.ASSET_CATEGORIES_NAVIGATION
-	},
+	property = "javax.portlet.name=" + AssetCategoriesNavigationPortletKeys.ASSET_CATEGORIES_NAVIGATION,
 	service = TemplateHandler.class
 )
 public class AssetCategoriesNavigationPortletDisplayTemplateHandler
@@ -67,8 +65,11 @@ public class AssetCategoriesNavigationPortletDisplayTemplateHandler
 			AssetCategoriesNavigationPortletKeys.ASSET_CATEGORIES_NAVIGATION,
 			resourceBundle);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override

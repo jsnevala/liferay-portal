@@ -78,9 +78,8 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 			List<ObjectValuePair<String, InputStream>> inputStreamOVPs)
 		throws PortalException {
 
-		for (int i = 0; i < inputStreamOVPs.size(); i++) {
-			ObjectValuePair<String, InputStream> inputStreamOVP =
-				inputStreamOVPs.get(i);
+		for (ObjectValuePair<String, InputStream> inputStreamOVP :
+				inputStreamOVPs) {
 
 			InputStream inputStream = inputStreamOVP.getValue();
 			String fileName = inputStreamOVP.getKey();
@@ -279,7 +278,8 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #deletePortletFolder}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #deletePortletFolder}
 	 */
 	@Deprecated
 	@Override

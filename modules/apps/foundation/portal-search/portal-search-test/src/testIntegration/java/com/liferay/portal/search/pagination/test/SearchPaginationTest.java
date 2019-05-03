@@ -178,7 +178,10 @@ public class SearchPaginationTest {
 		Hits hits = getSearchWithoutResults(1000, 1001);
 
 		Assert.assertEquals(hits.toString(), 0, hits.getLength());
-		Assert.assertEquals(hits.toString(), 0, hits.getDocs().length);
+
+		Document[] docs = hits.getDocs();
+
+		Assert.assertEquals(hits.toString(), 0, docs.length);
 	}
 
 	@Test
@@ -186,7 +189,10 @@ public class SearchPaginationTest {
 		Hits hits = getHits(QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		Assert.assertEquals(hits.toString(), _USERS_COUNT, hits.getLength());
-		Assert.assertEquals(hits.toString(), 5, hits.getDocs().length);
+
+		Document[] docs = hits.getDocs();
+
+		Assert.assertEquals(hits.toString(), 5, docs.length);
 	}
 
 	@Test
@@ -194,8 +200,10 @@ public class SearchPaginationTest {
 		Hits hits = getHits(_USERS_COUNT, 2 * _USERS_COUNT);
 
 		Assert.assertEquals(hits.toString(), _USERS_COUNT, hits.getLength());
-		Assert.assertEquals(
-			hits.toString(), _USERS_COUNT, hits.getDocs().length);
+
+		Document[] docs = hits.getDocs();
+
+		Assert.assertEquals(hits.toString(), _USERS_COUNT, docs.length);
 	}
 
 	@Test
@@ -212,7 +220,10 @@ public class SearchPaginationTest {
 		Hits hits = getHits(1000, 1001);
 
 		Assert.assertEquals(hits.toString(), _USERS_COUNT, hits.getLength());
-		Assert.assertEquals(hits.toString(), 1, hits.getDocs().length);
+
+		Document[] docs = hits.getDocs();
+
+		Assert.assertEquals(hits.toString(), 1, docs.length);
 	}
 
 	protected Hits getHits(int start, int end) throws Exception {
@@ -260,12 +271,13 @@ public class SearchPaginationTest {
 
 		Hits hits = getHits(start, end);
 
-		Assert.assertEquals(
-			hits.toString(), expectedTotal, hits.getDocs().length);
+		Document[] docs = hits.getDocs();
+
+		Assert.assertEquals(hits.toString(), expectedTotal, docs.length);
 
 		List<User> returnedUsers = new ArrayList<>();
 
-		for (int i = 0; i < hits.getDocs().length; i++) {
+		for (int i = 0; i < docs.length; i++) {
 			Document doc = hits.doc(i);
 
 			long userId = GetterUtil.getLong(doc.get(Field.USER_ID));
@@ -293,7 +305,7 @@ public class SearchPaginationTest {
 			sb.toString(),
 			_users.subList(
 				expectedRecalculatedStart,
-				expectedRecalculatedStart + hits.getDocs().length),
+				expectedRecalculatedStart + docs.length),
 			returnedUsers);
 	}
 

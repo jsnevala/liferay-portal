@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.comparator.LayoutRevisionCreateDateComparator;
 import com.liferay.portal.kernel.util.comparator.LayoutRevisionModifiedDateComparator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -267,7 +268,7 @@ public class LayoutRevisionLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -313,7 +314,7 @@ public class LayoutRevisionLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -362,6 +363,14 @@ public class LayoutRevisionLocalServiceImpl
 		long layoutSetBranchId, boolean head) {
 
 		return layoutRevisionPersistence.findByL_H(layoutSetBranchId, head);
+	}
+
+	@Override
+	public List<LayoutRevision> getLayoutRevisions(
+		long layoutSetBranchId, boolean head, int status) {
+
+		return layoutRevisionPersistence.findByL_H_S(
+			layoutSetBranchId, head, status);
 	}
 
 	@Override
@@ -476,10 +485,10 @@ public class LayoutRevisionLocalServiceImpl
 			layoutRevision.setUserName(user.getFullName());
 			layoutRevision.setLayoutSetBranchId(
 				oldLayoutRevision.getLayoutSetBranchId());
+			layoutRevision.setLayoutBranchId(layoutBranchId);
 			layoutRevision.setParentLayoutRevisionId(
 				oldLayoutRevision.getLayoutRevisionId());
 			layoutRevision.setHead(false);
-			layoutRevision.setLayoutBranchId(layoutBranchId);
 			layoutRevision.setPlid(oldLayoutRevision.getPlid());
 			layoutRevision.setPrivateLayout(
 				oldLayoutRevision.isPrivateLayout());
@@ -673,7 +682,11 @@ public class LayoutRevisionLocalServiceImpl
 	protected boolean isWorkflowEnabled(long plid) throws PortalException {
 		Layout layout = layoutLocalService.getLayout(plid);
 
-		if (layout.isTypeLinkToLayout() || layout.isTypeURL()) {
+		String layoutType = layout.getType();
+
+		if (layout.isTypeLinkToLayout() || layout.isTypeURL() ||
+			StringUtil.equals(layoutType, "node")) {
+
 			return false;
 		}
 

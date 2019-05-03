@@ -1,27 +1,39 @@
-<definition>
-	<command name="gotoEventToday">
-		<var name="key_eventTitle" value="${eventTitle}" />
+definition {
+	macro gotoEventToday {
+		var key_eventTitle = "${eventTitle}";
 
-		<execute function="AssertClick" locator1="EventsListPortlet#TODAYS_EVENTS_EVENT" value1="${eventTitle}" />
-	</command>
+		AssertClick(
+			locator1 = "EventsListPortlet#TODAYS_EVENTS_EVENT",
+			value1 = "${eventTitle}"
+		);
+	}
 
-	<command name="gotoEventUpcoming">
-		<var name="key_eventTitle" value="${eventTitle}" />
+	macro gotoEventUpcoming {
+		var key_eventTitle = "${eventTitle}";
 
-		<execute function="AssertClick" locator1="EventsListPortlet#UPCOMING_EVENTS_EVENT" value1="${eventTitle}" />
-	</command>
+		AssertClick(
+			locator1 = "EventsListPortlet#UPCOMING_EVENTS_EVENT",
+			value1 = "${eventTitle}"
+		);
+	}
 
-	<command name="viewDefaultMessage">
-		<execute function="AssertTextEquals" locator1="EventsListPortlet#PORTLET_NO_EVENTS" value1="There are no more events today." />
-	</command>
+	macro viewDefaultMessage {
+		AssertTextEquals(
+			locator1 = "EventsListPortlet#PORTLET_NO_EVENTS",
+			value1 = "There are no more events today."
+		);
+	}
 
-	<command name="viewEventTime">
-		<var name="key_eventTitle" value="${eventTitle}" />
+	macro viewEventTime {
+		var key_eventTitle = "${eventTitle}";
 
-		<execute function="AssertElementPresent" locator1="EventsListPortlet#TODAYS_EVENTS_EVENT_TIME" />
-	</command>
+		AssertElementPresent(locator1 = "EventsListPortlet#TODAYS_EVENTS_EVENT_TIME");
+	}
 
-	<command name="viewHeader">
-		<execute function="AssertTextEquals" locator1="EventsListPortlet#PORTLET_TITLE" value1="Events List" />
-	</command>
-</definition>
+	macro viewHeader {
+		AssertTextEquals(
+			locator1 = "EventsListPortlet#PORTLET_TITLE",
+			value1 = "Events List"
+		);
+	}
+}

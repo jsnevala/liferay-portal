@@ -56,7 +56,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.display-name=Notifications",
 		"javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.add-process-action-success-action=false",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/notifications/view.jsp",
 		"javax.portlet.name=" + NotificationsPortletKeys.NOTIFICATIONS,
 		"javax.portlet.resource-bundle=content.Language",
@@ -67,7 +67,7 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class NotificationsPortlet extends MVCPortlet {
 
-	public void deleteAllNotifications(
+	public void deleteNotifications(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
@@ -75,14 +75,11 @@ public class NotificationsPortlet extends MVCPortlet {
 			actionRequest, "rowIds");
 
 		for (long userNotificationEventId : userNotificationEventIds) {
-			try {
-				_userNotificationEventLocalService.deleteUserNotificationEvent(
-					userNotificationEventId);
-			}
-			catch (Exception e) {
-				throw new PortletException(e);
-			}
+			_deleteUserNotificationEvent(userNotificationEventId);
 		}
+
+		_addSuccessMessage(
+			actionRequest, "notifications-were-deleted-successfully");
 
 		_sendRedirect(actionRequest, actionResponse);
 	}
@@ -94,13 +91,10 @@ public class NotificationsPortlet extends MVCPortlet {
 		long userNotificationEventId = ParamUtil.getLong(
 			actionRequest, "userNotificationEventId");
 
-		try {
-			_userNotificationEventLocalService.deleteUserNotificationEvent(
-				userNotificationEventId);
-		}
-		catch (Exception e) {
-			throw new PortletException(e);
-		}
+		_deleteUserNotificationEvent(userNotificationEventId);
+
+		_addSuccessMessage(
+			actionRequest, "notification-was-deleted-successfully");
 
 		_sendRedirect(actionRequest, actionResponse);
 	}
@@ -119,14 +113,9 @@ public class NotificationsPortlet extends MVCPortlet {
 			themeDisplay.getUserId(),
 			UserNotificationDeliveryConstants.TYPE_WEBSITE, actionRequired);
 
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(themeDisplay.getLocale());
-
-		SessionMessages.add(
-			actionRequest, "requestProcessed",
-			LanguageUtil.get(
-				resourceBundle,
-				"all-notifications-were-marked-as-read-successfully"));
+		_addSuccessMessage(
+			actionRequest,
+			"all-notifications-were-marked-as-read-successfully");
 
 		_sendRedirect(actionRequest, actionResponse);
 	}
@@ -140,6 +129,9 @@ public class NotificationsPortlet extends MVCPortlet {
 
 		updateArchived(userNotificationEventId, true);
 
+		_addSuccessMessage(
+			actionRequest, "notification-was-marked-as-read-successfully");
+
 		_sendRedirect(actionRequest, actionResponse);
 	}
 
@@ -151,6 +143,9 @@ public class NotificationsPortlet extends MVCPortlet {
 			actionRequest, "userNotificationEventId");
 
 		updateArchived(userNotificationEventId, false);
+
+		_addSuccessMessage(
+			actionRequest, "notification-was-marked-as-unread-successfully");
 
 		_sendRedirect(actionRequest, actionResponse);
 	}
@@ -166,6 +161,9 @@ public class NotificationsPortlet extends MVCPortlet {
 			updateArchived(userNotificationEventId, true);
 		}
 
+		_addSuccessMessage(
+			actionRequest, "notifications-were-marked-as-read-successfully");
+
 		_sendRedirect(actionRequest, actionResponse);
 	}
 
@@ -179,6 +177,9 @@ public class NotificationsPortlet extends MVCPortlet {
 		for (long userNotificationEventId : userNotificationEventIds) {
 			updateArchived(userNotificationEventId, false);
 		}
+
+		_addSuccessMessage(
+			actionRequest, "notifications-were-marked-as-unread-successfully");
 
 		_sendRedirect(actionRequest, actionResponse);
 	}
@@ -199,8 +200,8 @@ public class NotificationsPortlet extends MVCPortlet {
 			String actionName = ParamUtil.getString(
 				actionRequest, ActionRequest.ACTION_NAME);
 
-			if (actionName.equals("deleteAllNotifications")) {
-				deleteAllNotifications(actionRequest, actionResponse);
+			if (actionName.equals("deleteNotifications")) {
+				deleteNotifications(actionRequest, actionResponse);
 			}
 			else if (actionName.equals("deleteUserNotificationEvent")) {
 				deleteUserNotificationEvent(actionRequest, actionResponse);
@@ -252,14 +253,15 @@ public class NotificationsPortlet extends MVCPortlet {
 				updateArchived(userNotificationEventId, true);
 			}
 		}
+
+		_addSuccessMessage(
+			actionRequest,
+			"you-have-unsubscribed-from-this-asset-successfully");
 	}
 
 	public void updateUserNotificationDelivery(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
 
 		long[] userNotificationDeliveryIds = ParamUtil.getLongValues(
 			actionRequest, "userNotificationDeliveryIds");
@@ -273,13 +275,8 @@ public class NotificationsPortlet extends MVCPortlet {
 					userNotificationDeliveryId, deliver);
 		}
 
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(themeDisplay.getLocale());
-
-		SessionMessages.add(
-			actionRequest, "requestProcessed",
-			LanguageUtil.get(
-				resourceBundle, "your-configuration-was-saved-sucessfully"));
+		_addSuccessMessage(
+			actionRequest, "your-configuration-was-saved-sucessfully");
 
 		_sendRedirect(actionRequest, actionResponse);
 	}
@@ -291,32 +288,8 @@ public class NotificationsPortlet extends MVCPortlet {
 	protected void setRelease(Release release) {
 	}
 
-	@Reference(unbind = "-")
-	protected void setSubscriptionLocalService(
-		SubscriptionLocalService subscriptionLocalService) {
-
-		_subscriptionLocalService = subscriptionLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserNotificationDeliveryLocalService(
-		UserNotificationDeliveryLocalService
-			userNotificationDeliveryLocalService) {
-
-		_userNotificationDeliveryLocalService =
-			userNotificationDeliveryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserNotificationEventLocalService(
-		UserNotificationEventLocalService userNotificationEventLocalService) {
-
-		_userNotificationEventLocalService = userNotificationEventLocalService;
-	}
-
 	protected void updateArchived(
-			long userNotificationEventId, boolean archived)
-		throws Exception {
+		long userNotificationEventId, boolean archived) {
 
 		UserNotificationEvent userNotificationEvent =
 			_userNotificationEventLocalService.fetchUserNotificationEvent(
@@ -332,6 +305,31 @@ public class NotificationsPortlet extends MVCPortlet {
 			userNotificationEvent);
 	}
 
+	private void _addSuccessMessage(
+		ActionRequest actionRequest, String message) {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		ResourceBundle resourceBundle =
+			_resourceBundleLoader.loadResourceBundle(themeDisplay.getLocale());
+
+		SessionMessages.add(
+			actionRequest, "requestProcessed",
+			LanguageUtil.get(resourceBundle, message));
+	}
+
+	private void _deleteUserNotificationEvent(long userNotificationEventId) {
+		UserNotificationEvent userNotificationEvent =
+			_userNotificationEventLocalService.fetchUserNotificationEvent(
+				userNotificationEventId);
+
+		if (userNotificationEvent != null) {
+			_userNotificationEventLocalService.deleteUserNotificationEvent(
+				userNotificationEvent);
+		}
+	}
+
 	private void _sendRedirect(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws IOException {
@@ -343,15 +341,17 @@ public class NotificationsPortlet extends MVCPortlet {
 		}
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.notifications.web)",
-		unbind = "-"
-	)
+	@Reference(target = "(bundle.symbolic.name=com.liferay.notifications.web)")
 	private ResourceBundleLoader _resourceBundleLoader;
 
+	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;
+
+	@Reference
 	private UserNotificationDeliveryLocalService
 		_userNotificationDeliveryLocalService;
+
+	@Reference
 	private UserNotificationEventLocalService
 		_userNotificationEventLocalService;
 

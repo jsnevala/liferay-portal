@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Remote SOAP Extender Implementation
 Bundle-SymbolicName: com.liferay.portal.remote.soap.extender.impl
-Bundle-Version: 1.0.4
+Bundle-Version: 1.0.13
 Import-Package:\
 	!com.sun.*,\
 	\
@@ -31,5 +31,5 @@ Import-Package:\
 	!org.springframework.*,\
 	\
 	*
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Remote Service Engines
+Liferay-Require-SchemaVersion: 1.0.0

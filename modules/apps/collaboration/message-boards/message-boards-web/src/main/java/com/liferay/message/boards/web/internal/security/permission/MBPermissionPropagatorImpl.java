@@ -152,8 +152,8 @@ public class MBPermissionPropagatorImpl extends BasePermissionPropagator {
 						});
 					actionableDynamicQuery.setGroupId(category.getGroupId());
 					actionableDynamicQuery.setPerformActionMethod(
-						new ActionableDynamicQuery.
-							PerformActionMethod<MBMessage>() {
+						new ActionableDynamicQuery.PerformActionMethod
+							<MBMessage>() {
 
 							@Override
 							public void performAction(MBMessage message)

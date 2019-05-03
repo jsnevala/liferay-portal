@@ -30,9 +30,7 @@ public class BidirectionalMap<K, V> extends HashMap<K, V> {
 	}
 
 	public K getKey(Object value) {
-		K key = _invertedMap.get(value);
-
-		return key;
+		return _invertedMap.get(value);
 	}
 
 	@Override

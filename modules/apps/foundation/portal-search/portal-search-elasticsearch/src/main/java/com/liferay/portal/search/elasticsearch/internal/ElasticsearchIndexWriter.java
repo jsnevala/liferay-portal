@@ -57,7 +57,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Milen Dyankov
  */
 @Component(
-	immediate = true, property = {"search.engine.impl=Elasticsearch"},
+	immediate = true, property = "search.engine.impl=Elasticsearch",
 	service = IndexWriter.class
 )
 public class ElasticsearchIndexWriter extends BaseIndexWriter {
@@ -199,7 +199,7 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 			try {
 				searchResponseScroller.prepare();
 
-				searchResponseScroller.scroll(_searchHitsProcessor);
+				while (searchResponseScroller.scroll(_searchHitsProcessor));
 			}
 			finally {
 				searchResponseScroller.close();

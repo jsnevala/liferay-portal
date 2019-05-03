@@ -132,6 +132,7 @@ public class FriendlyURLMapperTrackerImpl implements FriendlyURLMapperTracker {
 
 		for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
 			String name = entry.getKey();
+
 			String[] values = entry.getValue();
 
 			if (values.length == 0) {
@@ -157,9 +158,8 @@ public class FriendlyURLMapperTrackerImpl implements FriendlyURLMapperTracker {
 		_serviceTracker;
 
 	private class FriendlyURLMapperServiceTrackerCustomizer
-		extends
-			ServiceTrackerFieldUpdaterCustomizer
-				<FriendlyURLMapper, FriendlyURLMapper> {
+		extends ServiceTrackerFieldUpdaterCustomizer
+			<FriendlyURLMapper, FriendlyURLMapper> {
 
 		@Override
 		protected FriendlyURLMapper doAddingService(

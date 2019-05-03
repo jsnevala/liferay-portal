@@ -38,13 +38,11 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN
-	},
+	property = "javax.portlet.name=" + AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN,
 	service = PortletDataHandler.class
 )
 public class AssetCategoryPortletDataHandler extends BasePortletDataHandler {
@@ -178,7 +176,7 @@ public class AssetCategoryPortletDataHandler extends BasePortletDataHandler {
 	}
 
 	/**
-	 * @deprecated As of 1.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected ActionableDynamicQuery getCategoryActionableDynamicQuery(
@@ -196,7 +194,7 @@ public class AssetCategoryPortletDataHandler extends BasePortletDataHandler {
 	}
 
 	/**
-	 * @deprecated As of 1.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected ActionableDynamicQuery getVocabularyActionableDynamicQuery(

@@ -1,162 +1,160 @@
-<definition>
-	<var name="dmDocumentTypeName" value="Basic Document" />
+definition {
+	var dmDocumentTypeName = "Basic Document";
 
-	<command name="gotoAddDocumentType">
-		<execute macro="LexiconEntry#gotoAdd" />
+	macro gotoAddDocumentType {
+		LexiconEntry.gotoAdd();
 
-		<var name="key_dmDocumentTypeName" value="${dmDocumentTypeName}" />
+		var key_dmDocumentTypeName = "${dmDocumentTypeName}";
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="${dmDocumentTypeName}">
-			<var name="key_menuItem" value="${dmDocumentTypeName}" />
-		</execute>
-	</command>
+		MenuItem.click(menuItem = "${dmDocumentTypeName}");
+	}
 
-	<command name="gotoAddRepositoryCP">
-		<execute function="AssertVisible" locator1="Button#PLUS" />
+	macro gotoAddRepositoryCP {
+		AssertVisible(locator1 = "Button#PLUS");
 
-		<execute macro="LexiconEntry#gotoAddMenuItem">
-			<var name="menuItem" value="Repository" />
-		</execute>
-	</command>
+		LexiconEntry.gotoAddMenuItem(menuItem = "Repository");
+	}
 
-	<command name="gotoAddRepositoryPG">
-		<execute macro="Portlet#clickPortletPlusIconPG">
-			<var name="portletName" value="Documents and Media" />
-		</execute>
+	macro gotoAddRepositoryPG {
+		Portlet.clickPortletPlusIconPG(portletName = "Documents and Media");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Repository">
-			<var name="key_menuItem" value="Repository" />
-		</execute>
-	</command>
+		MenuItem.click(menuItem = "Repository");
+	}
 
-	<command name="gotoCheckedOutDocument">
-		<var name="key_dmDocumentTitle" value="${dmDocumentTitle}" />
+	macro gotoCheckedOutDocument {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
 
-		<execute function="AssertClick" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE" value1="${dmCheckedOutDocumentTitle}" />
-	</command>
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
+			value1 = "${dmCheckedOutDocumentTitle}"
+		);
+	}
 
-	<command name="gotoDocumentCP">
-		<var name="key_dmDocumentTitle" value="${dmDocumentTitle}" />
+	macro gotoDocumentCP {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
 
-		<if>
-			<condition function="IsElementPresent" locator1="Icon#DISPLAY_STYLE_DESCRIPTIVE_ACTIVE" />
-			<then>
-				<execute function="AssertClick" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE" value1="${dmDocumentTitle}" />
-			</then>
-			<else>
-				<execute function="AssertClick" locator1="DocumentsAndMedia#ICON_DOCUMENT_TITLE_LINK" value1="${dmDocumentTitle}" />
-			</else>
-		</if>
-	</command>
+		if (IsElementPresent(locator1 = "Icon#DISPLAY_STYLE_DESCRIPTIVE_ACTIVE")) {
+			AssertClick(
+				locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
+				value1 = "${dmDocumentTitle}"
+			);
+		}
+		else {
+			AssertClick(
+				locator1 = "DocumentsAndMedia#ICON_DOCUMENT_TITLE_LINK",
+				value1 = "${dmDocumentTitle}"
+			);
+		}
+	}
 
-	<command name="gotoDocumentDetails">
-		<execute function="Click" locator1="Button#INFO" />
+	macro gotoDocumentDetails {
+		Click(locator1 = "Button#INFO");
 
-		<execute function="AssertClick" locator1="NavBar#DETAILS" value1="Details" />
-	</command>
+		AssertClick(locator1 = "NavBar#DETAILS", value1 = "Details");
+	}
 
-	<command name="gotoDocumentPermissionsCP">
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="Permissions" />
-			<var name="rowEntry" value="${dmDocumentTitle}" />
-		</execute>
+	macro gotoDocumentPermissionsCP {
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Permissions",
+			rowEntry = "${dmDocumentTitle}"
+		);
 
-		<execute macro="IFrame#selectDialogFrame" />
-	</command>
+		IFrame.selectDialogFrame();
+	}
 
-	<command name="gotoDocumentPG">
-		<var name="key_dmDocumentTitle" value="${dmDocumentTitle}" />
+	macro gotoDocumentPG {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
 
-		<execute function="AssertClick" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE" value1="${dmDocumentTitle}" />
-	</command>
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
+			value1 = "${dmDocumentTitle}"
+		);
+	}
 
-	<command name="gotoDocumentType">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+	macro gotoDocumentVersion {
+		DMNavigator.gotoDocumentDetails();
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Document Types">
-			<var name="key_menuItem" value="Document Types" />
-		</execute>
-	</command>
+		MenuItem.click(menuItem = "Versions");
+	}
 
-	<command name="gotoDocumentVersion">
-		<execute macro="DMNavigator#gotoDocumentDetails" />
+	macro gotoEditDocument {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Versions">
-			<var name="key_menuItem" value="Versions" />
-		</execute>
-	</command>
+		Click(locator1 = "DocumentsAndMedia#ICON_DOCUMENT_VERTICAL_ELLIPSIS");
 
-	<command name="gotoEditDocument">
-		<var name="key_dmDocumentTitle" value="${dmDocumentTitle}" />
+		MenuItem.click(menuItem = "Edit");
+	}
 
-		<execute function="Click" locator1="DocumentsAndMedia#ICON_DOCUMENT_VERTICAL_ELLIPSIS" />
+	macro gotoFolder {
+		var key_dmFolderName = "${dmFolderName}";
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit">
-			<var name="key_menuItem" value="Edit" />
-		</execute>
-	</command>
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE",
+			value1 = "${dmFolderName}"
+		);
 
-	<command name="gotoFolder">
-		<var name="key_dmFolderName" value="${dmFolderName}" />
+		AssertVisible(locator1 = "DocumentsAndMedia#BREADCRUMB_FOLDER_NAME");
+	}
 
-		<execute function="AssertClick" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE" value1="${dmFolderName}" />
+	macro gotoFolderPermissions {
+		var key_dmFolderName = "${dmFolderName}";
 
-		<execute function="AssertVisible" locator1="DocumentsAndMedia#BREADCRUMB_FOLDER_NAME" />
-	</command>
+		Click(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_VERTICAL_ELLIPSIS");
 
-	<command name="gotoFolderPermissions">
-		<var name="key_dmFolderName" value="${dmFolderName}" />
+		MenuItem.click(menuItem = "Permissions");
 
-		<execute function="Click" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_VERTICAL_ELLIPSIS" />
+		IFrame.selectDialogFrame();
+	}
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
-			<var name="key_menuItem" value="Permissions" />
-		</execute>
+	macro gotoHomeCP {
+		AssertClick(locator1 = "DocumentsAndMedia#BREADCRUMB_HOME", value1 = "HOME");
+	}
 
-		<execute macro="IFrame#selectDialogFrame" />
-	</command>
+	macro gotoRelatedAssetPG {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
 
-	<command name="gotoHomeCP">
-		<execute function="AssertClick" locator1="DocumentsAndMedia#BREADCRUMB_HOME" value1="HOME" />
-	</command>
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
+			value1 = "${dmDocumentTitle}"
+		);
 
-	<command name="gotoMetadataSets">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+		var key_assetTitle = "${key_assetTitle}";
 
-		<execute function="AssertElementPresent" locator1="MenuItem#ANY_MENU_ITEM">
-			<var name="key_menuItem" value="Metadata Sets" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_TITLE",
+			value1 = "${dmDocumentTitle}"
+		);
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Metadata Sets">
-			<var name="key_menuItem" value="Metadata Sets" />
-		</execute>
-	</command>
+		AssertTextEquals(
+			locator1 = "AssetRelatedAssets#HEADER",
+			value1 = "Related Assets:"
+		);
 
-	<command name="gotoRelatedAssetPG">
-		<var name="key_dmDocumentTitle" value="${dmDocumentTitle}" />
+		AssertTextEquals(
+			locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_RELATED_ASSETS_TITLE",
+			value1 = "${assetTitle}"
+		);
 
-		<execute function="AssertClick" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE" value1="${dmDocumentTitle}" />
+		AssertClick(
+			locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_RELATED_ASSETS_TITLE",
+			value1 = "${assetTitle}"
+		);
+	}
 
-		<var name="key_assetTitle" value="${key_assetTitle}" />
+	macro gotoRepository {
+		var key_dmFolderName = "${dmRepositoryName}";
 
-		<execute function="AssertTextEquals" locator1="DocumentsAndMediaDocument#DOCUMENT_INFO_TITLE" value1="${dmDocumentTitle}" />
-		<execute function="AssertTextEquals" locator1="DocumentsAndMediaDocument#DOCUMENT_INFO_RELATED_ASSETS_HEADER" value1="Related Assets:" />
-		<execute function="AssertTextEquals" locator1="DocumentsAndMediaDocument#DOCUMENT_INFO_RELATED_ASSETS_TITLE" value1="${assetTitle}" />
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE",
+			value1 = "${dmRepositoryName}"
+		);
 
-		<execute function="AssertClick" locator1="DocumentsAndMediaDocument#DOCUMENT_INFO_RELATED_ASSETS_TITLE" value1="${assetTitle}" />
-	</command>
+		AssertVisible(locator1 = "DocumentsAndMedia#BREADCRUMB_FOLDER_NAME");
+	}
 
-	<command name="gotoRepository">
-		<var name="key_dmFolderName" value="${dmRepositoryName}" />
+	macro gotoURLDetail {
+		Click(locator1 = "Icon#INFO");
 
-		<execute function="AssertClick" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE" value1="${dmRepositoryName}" />
-
-		<execute function="AssertVisible" locator1="DocumentsAndMedia#BREADCRUMB_FOLDER_NAME" />
-	</command>
-
-	<command name="gotoURLDetail">
-		<execute function="Click" locator1="Icon#INFO" />
-
-		<execute function="Click" locator1="DocumentsAndMediaDocument#DETAILS_URL" />
-	</command>
-</definition>
+		Click(locator1 = "DocumentsAndMediaDocument#DETAILS_URL");
+	}
+}

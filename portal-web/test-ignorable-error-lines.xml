@@ -53,6 +53,14 @@
 			<matches></matches>
 		</ignore-error>
 		<ignore-error description="">
+			<contains>Do NOT use embedded Elasticsearch in production</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="">
+			<contains>Do NOT use Hypersonic in production</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="">
 			<contains>INFO:</contains>
 			<matches></matches>
 		</ignore-error>
@@ -187,6 +195,42 @@
 		<ignore-error description="LPS-70839">
 			<contains></contains>
 			<matches>.*\[com.liferay.saml.opensaml.integration.internal.bootstrap.OpenSamlBootstrap\([0-9]+\)\].*The activate method has thrown an exception.*</matches>
+		</ignore-error>
+		<ignore-error description="LPS-88391, LPS-88417 - temporarily ignore until fixed">
+			<contains></contains>
+			<matches>Attempting to upgrade table .* by recreating the table [\s\S]*</matches>
+		</ignore-error>
+		<ignore-error description="LPS-88391, LPS-88417 - temporarily ignore until fixed">
+			<contains></contains>
+			<matches>Successfully recreated and upgraded table .*</matches>
+		</ignore-error>
+		<ignore-error description="LPS-88394 - temporarily ignore warning until fixed">
+			<contains>Duplicate column name 'kaleoClassName': alter table KaleoNotification add kaleoClassName</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88394 - temporarily ignore warning until fixed">
+			<contains>Duplicate column name 'kaleoClassPK': alter table KaleoNotification add kaleoClassPK</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88394 - temporarily ignore warning until fixed">
+			<contains>Duplicate column name 'uuid_': alter table KaleoProcess add uuid_</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88395 - temporarily ignore until fixed">
+			<contains>IX_CED31606</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88431">
+			<contains></contains>
+			<matches>.*Unable to find class loader for com.liferay.portal.cluster.multiple_.* class loader com.liferay.portal.cluster.multiple_.*</matches>
+		</ignore-error>
+		<ignore-error description="LPS-88431">
+			<contains></contains>
+			<matches>.*Unable to find class loader for com.liferay.portal.scheduler.quartz_.* class loader com.liferay.portal.scheduler.quartz_.*</matches>
+		</ignore-error>
+		<ignore-error description="LPS-88522 - temporarily ignore until fixed">
+			<contains>already has the column lastPublishDate</contains>
+			<matches></matches>
 		</ignore-error>
 		<ignore-error description="LRQA-14442, temporary workaround until Kiyoshi Lee fixes it">
 			<contains>[org_eclipse_equinox_http_servlet.*Framework Event Dispatcher: Equinox Container:</contains>

@@ -40,9 +40,7 @@ public class SiteBrowserWebUpgrade implements UpgradeStepRegistrator {
 				@Override
 				protected String[][] getRenamePortletIdsArray() {
 					return new String[][] {
-						new String[] {
-							"185", SiteBrowserPortletKeys.SITE_BROWSER
-						}
+						{"185", SiteBrowserPortletKeys.SITE_BROWSER}
 					};
 				}
 

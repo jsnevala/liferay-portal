@@ -1,74 +1,69 @@
-<definition component-name="portal-upgrades">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="ignore.errors" value="Plugin security management is not enabled. Enable a security manager, then restart." />
-	<property name="testray.main.component.name" value="Upgrades WEM" />
+@component-name = "portal-upgrades"
+definition {
+	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property ignore.errors = "Plugin security management is not enabled. Enable a security manager, then restart.";
+	property testray.main.component.name = "Upgrades WEM";
 
-	<set-up>
-		<execute macro="SignIn#signIn" />
+	setUp {
+		SignIn.signIn();
 
-		<execute macro="Smoke#viewWelcomePage" />
+		Smoke.viewWelcomePage();
 
-		<execute macro="Upgrade#reindexSearches" />
-	</set-up>
+		Upgrade.reindexSearches();
+	}
 
-	<command name="ViewNestedPortletsArchive6012" priority="5">
-		<property name="data.archive.type" value="data-archive-nested-portlets" />
-		<property name="portal.version" value="6.0.12" />
+	@priority = "5"
+	test ViewNestedPortletsArchive621015 {
+		property data.archive.type = "data-archive-nested-portlets";
+		property portal.version = "6.2.10.15";
 
-		<execute macro="Upgrade#viewNestedPortlets" />
-	</command>
+		Upgrade.viewNestedPortlets();
+	}
 
-	<command name="ViewNestedPortletsArchive612" priority="5">
-		<property name="data.archive.type" value="data-archive-nested-portlets" />
-		<property name="portal.version" value="6.1.2" />
+	@priority = "5"
+	test ViewNestedPortletsArchive621021 {
+		property data.archive.type = "data-archive-nested-portlets";
+		property portal.version = "6.2.10.21";
 
-		<execute macro="Upgrade#viewNestedPortlets" />
-	</command>
+		Upgrade.viewNestedPortlets();
+	}
 
-	<command name="ViewNestedPortletsArchive6130" priority="5">
-		<property name="data.archive.type" value="data-archive-nested-portlets" />
-		<property name="portal.version" value="6.1.30" />
+	@priority = "5"
+	test ViewNestedPortletsArchive625 {
+		property data.archive.type = "data-archive-nested-portlets";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "6.2.5";
 
-		<execute macro="Upgrade#viewNestedPortlets" />
-	</command>
+		Upgrade.viewNestedPortlets();
+	}
 
-	<command name="ViewNestedPortletsArchive621015" priority="5">
-		<property name="data.archive.type" value="data-archive-nested-portlets" />
-		<property name="portal.version" value="6.2.10.15" />
+	@description = "This is a use case for LPS-66141."
+	@priority = "5"
+	test ViewStagingNestedPortletsArchive621015 {
+		property data.archive.type = "data-archive-staging-nested-portlets";
+		property portal.version = "6.2.10.15";
 
-		<execute macro="Upgrade#viewNestedPortlets" />
-	</command>
+		Upgrade.viewStagingNestedPortlets();
+	}
 
-	<command name="ViewNestedPortletsArchive623" priority="5">
-		<property name="data.archive.type" value="data-archive-nested-portlets" />
-		<property name="portal.version" value="6.2.3" />
+	@description = "This is a use case for LPS-66141."
+	@priority = "5"
+	test ViewStagingNestedPortletsArchive621021 {
+		property data.archive.type = "data-archive-staging-nested-portlets";
+		property portal.version = "6.2.10.21";
 
-		<execute macro="Upgrade#viewNestedPortlets" />
-	</command>
+		Upgrade.viewStagingNestedPortlets();
+	}
 
-	<command name="ViewNestedPortletsArchive625" priority="5">
-		<property name="data.archive.type" value="data-archive-nested-portlets" />
-		<property name="portal.version" value="6.2.5" />
+	@description = "This is a use case for LPS-66141."
+	@priority = "5"
+	test ViewStagingNestedPortletsArchive625 {
+		property data.archive.type = "data-archive-staging-nested-portlets";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "6.2.5";
 
-		<execute macro="Upgrade#viewNestedPortlets" />
-	</command>
-
-	<command name="ViewStagingNestedPortletsArchive621015" priority="5">
-		<description message="This is a use case for LPS-66141." />
-
-		<property name="data.archive.type" value="data-archive-staging-nested-portlets" />
-		<property name="portal.version" value="6.2.10.15" />
-
-		<execute macro="Upgrade#viewStagingNestedPortlets" />
-	</command>
-
-	<command name="ViewStagingNestedPortletsArchive625" priority="5">
-		<description message="This is a use case for LPS-66141." />
-
-		<property name="data.archive.type" value="data-archive-staging-nested-portlets" />
-		<property name="portal.version" value="6.2.5" />
-
-		<execute macro="Upgrade#viewStagingNestedPortlets" />
-	</command>
-</definition>
+		Upgrade.viewStagingNestedPortlets();
+	}
+}

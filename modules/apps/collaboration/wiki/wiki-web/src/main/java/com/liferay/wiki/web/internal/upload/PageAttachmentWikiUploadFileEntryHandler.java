@@ -60,8 +60,8 @@ public class PageAttachmentWikiUploadFileEntryHandler
 		String contentType = uploadPortletRequest.getContentType(
 			_PARAMETER_NAME);
 
-		try (InputStream inputStream =
-				uploadPortletRequest.getFileAsStream(_PARAMETER_NAME)) {
+		try (InputStream inputStream = uploadPortletRequest.getFileAsStream(
+				_PARAMETER_NAME)) {
 
 			return _wikiPageService.addPageAttachment(
 				page.getNodeId(), page.getTitle(), fileName, inputStream,

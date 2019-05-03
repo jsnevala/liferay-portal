@@ -34,7 +34,8 @@ public class WallEntryTable {
 
 	public static final String TABLE_NAME = "SN_WallEntry";
 
-	public static final String TABLE_SQL_CREATE = "create table SN_WallEntry (wallEntryId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,comments STRING null)";
+	public static final String TABLE_SQL_CREATE =
+		"create table SN_WallEntry (wallEntryId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,comments STRING null)";
 
 	public static final String TABLE_SQL_DROP = "drop table SN_WallEntry";
 

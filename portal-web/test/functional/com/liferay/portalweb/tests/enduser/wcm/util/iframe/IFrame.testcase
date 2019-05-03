@@ -1,45 +1,36 @@
-<definition component-name="portal-util-misc">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="IFrame Portlet" />
+@component-name = "portal-util-misc"
+definition {
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "IFrame Portlet";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
+		User.firstLoginPG();
 
-		<execute macro="Page#add">
-			<var name="pageName" value="IFrame Page" />
-		</execute>
+		Page.add(pageName = "IFrame Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="IFrame Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "IFrame Page");
 
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="IFrame" />
-		</execute>
-	</set-up>
+		Portlet.addPG(portletName = "IFrame");
+	}
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-		</if>
-	</tear-down>
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
 
-	<command name="ViewIFramePortlet" priority="3">
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="IFrame Page" />
-		</execute>
+	@priority = "3"
+	test ViewIFramePortlet {
+		Navigator.gotoPage(pageName = "IFrame Page");
 
-		<execute macro="Portlet#viewPG">
-			<var name="portletBody" value="Please configure this portlet to make it visible to all users." />
-			<var name="portletName" value="IFrame" />
-		</execute>
-	</command>
-</definition>
+		Portlet.viewPG(
+			portletBody = "Please configure this portlet to make it visible to all users.",
+			portletName = "IFrame"
+		);
+	}
+}

@@ -31,8 +31,6 @@ import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutSetException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -41,6 +39,7 @@ import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.test.log.CaptureAppender;
@@ -53,7 +52,6 @@ import java.io.Serializable;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.apache.log4j.Level;
@@ -99,7 +97,7 @@ public class ExportImportLifecycleEventTest {
 			ExportImportConfigurationSettingsMapFactory.
 				buildExportLayoutSettingsMap(
 					TestPropsValues.getUserId(), 0, false, new long[0],
-					_parameterMap, Locale.US, TimeZoneUtil.GMT);
+					_parameterMap, LocaleUtil.US, TimeZoneUtil.GMT);
 
 		ExportImportConfiguration exportImportConfiguration =
 			ExportImportConfigurationLocalServiceUtil.
@@ -136,7 +134,7 @@ public class ExportImportLifecycleEventTest {
 			ExportImportConfigurationSettingsMapFactory.
 				buildImportLayoutSettingsMap(
 					TestPropsValues.getUserId(), 0, false, new long[0],
-					_parameterMap, Locale.US, TimeZoneUtil.GMT);
+					_parameterMap, LocaleUtil.US, TimeZoneUtil.GMT);
 
 		ExportImportConfiguration exportImportConfiguration =
 			ExportImportConfigurationLocalServiceUtil.
@@ -219,7 +217,7 @@ public class ExportImportLifecycleEventTest {
 			ExportImportConfigurationSettingsMapFactory.
 				buildExportPortletSettingsMap(
 					TestPropsValues.getUserId(), plid, _group.getGroupId(),
-					StringPool.BLANK, _parameterMap, Locale.US,
+					StringPool.BLANK, _parameterMap, LocaleUtil.US,
 					TimeZoneUtil.GMT, StringPool.BLANK);
 
 		ExportImportConfiguration exportImportConfiguration =
@@ -252,7 +250,7 @@ public class ExportImportLifecycleEventTest {
 			ExportImportConfigurationSettingsMapFactory.
 				buildImportPortletSettingsMap(
 					TestPropsValues.getUserId(), 0, _group.getGroupId(),
-					StringPool.BLANK, _parameterMap, Locale.US,
+					StringPool.BLANK, _parameterMap, LocaleUtil.US,
 					TimeZoneUtil.GMT);
 
 		ExportImportConfiguration exportImportConfiguration =
@@ -390,9 +388,6 @@ public class ExportImportLifecycleEventTest {
 				ExportImportLifecycleConstants.
 					EVENT_STAGED_MODEL_IMPORT_SUCCEEDED));
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		ExportImportLifecycleEventTest.class);
 
 	private Map<Integer, ExportImportLifecycleEvent>
 		_firedExportImportLifecycleEventsMap;

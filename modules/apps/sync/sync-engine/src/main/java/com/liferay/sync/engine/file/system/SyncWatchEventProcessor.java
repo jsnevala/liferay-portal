@@ -881,8 +881,7 @@ public class SyncWatchEventProcessor implements Runnable {
 
 	protected boolean verifySite(SyncFile syncFile, SyncFile parentSyncFile) {
 		if ((syncFile != null) &&
-			((syncFile.getRepositoryId() !=
-				parentSyncFile.getRepositoryId()) ||
+			((syncFile.getRepositoryId() != parentSyncFile.getRepositoryId()) ||
 			 (syncFile.getSyncAccountId() !=
 				 parentSyncFile.getSyncAccountId()))) {
 

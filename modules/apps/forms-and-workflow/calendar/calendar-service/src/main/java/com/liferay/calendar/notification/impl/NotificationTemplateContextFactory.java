@@ -231,21 +231,17 @@ public class NotificationTemplateContextFactory {
 
 		TimeZone userTimezone = user.getTimeZone();
 
-		Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(
+		return FastDateFormatFactoryUtil.getDateTime(
 			user.getLocale(),
 			CalendarUtil.getCalendarBookingDisplayTimeZone(
 				calendarBooking, userTimezone));
-
-		return dateTimeFormat;
 	}
 
 	private static String _getUserTimezoneDisplayName(User user) {
 		TimeZone userTimezone = user.getTimeZone();
 
-		String userTimezoneDisplayName = userTimezone.getDisplayName(
+		return userTimezone.getDisplayName(
 			false, TimeZone.SHORT, user.getLocale());
-
-		return userTimezoneDisplayName;
 	}
 
 	private static PortletConfig _portletConfig;

@@ -40,12 +40,12 @@ import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	configurationPid = "com.liferay.site.navigation.language.web.configuration.SiteNavigationLanguageWebTemplateConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
-	property = {"javax.portlet.name=" + SiteNavigationLanguagePortletKeys.SITE_NAVIGATION_LANGUAGE},
+	property = "javax.portlet.name=" + SiteNavigationLanguagePortletKeys.SITE_NAVIGATION_LANGUAGE,
 	service = TemplateHandler.class
 )
 public class SiteNavigationLanguagePortletDisplayTemplateHandler
@@ -70,8 +70,11 @@ public class SiteNavigationLanguagePortletDisplayTemplateHandler
 			SiteNavigationLanguagePortletKeys.SITE_NAVIGATION_LANGUAGE,
 			resourceBundle);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override

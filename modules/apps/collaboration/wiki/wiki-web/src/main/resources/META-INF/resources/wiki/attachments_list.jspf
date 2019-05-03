@@ -62,3 +62,29 @@
 		paginate="<%= paginate %>"
 	/>
 </liferay-ui:search-container>
+
+<aui:script use="liferay-search-container">
+	var searchContainer = Liferay.SearchContainer.get('<portlet:namespace />pageAttachments');
+
+	searchContainer.get('contentBox').delegate(
+		'click',
+		function(event) {
+			var link = event.currentTarget;
+
+			var deleteURL = link.getAttribute('data-url');
+
+			fetch(
+				deleteURL,
+				{
+					credentials: 'include'
+				}
+			).then(
+				function() {
+					searchContainer.deleteRow(link.ancestor('tr'), link.getAttribute('data-rowid'));
+					searchContainer.updateDataStore();
+				}
+			);
+		},
+		'.delete-attachment'
+	);
+</aui:script>

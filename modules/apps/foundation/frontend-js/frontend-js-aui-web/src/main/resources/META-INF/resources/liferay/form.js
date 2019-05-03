@@ -9,12 +9,24 @@ AUI.add(
 
 		var defaultAcceptFiles = DEFAULTS_FORM_VALIDATOR.RULES.acceptFiles;
 
+		var TABS_SECTION_STR = 'TabsSection';
+
 		var acceptFiles = function(val, node, ruleValue) {
 			if (ruleValue == '*') {
 				return true;
 			}
 
 			return defaultAcceptFiles(val, node, ruleValue);
+		};
+
+		var maxFileSize = function(val, node, ruleValue) {
+			var nodeType = node.get('type').toLowerCase();
+
+			if (nodeType === 'file') {
+				return (ruleValue === 0 || node._node.files[0].size <= ruleValue);
+			}
+
+			return true;
 		};
 
 		var number = function(val, node, ruleValue) {
@@ -27,6 +39,7 @@ AUI.add(
 			DEFAULTS_FORM_VALIDATOR.RULES,
 			{
 				acceptFiles: acceptFiles,
+				maxFileSize: maxFileSize,
 				number: number
 			},
 			true
@@ -44,6 +57,7 @@ AUI.add(
 				email: Liferay.Language.get('please-enter-a-valid-email-address'),
 				equalTo: Liferay.Language.get('please-enter-the-same-value-again'),
 				max: Liferay.Language.get('please-enter-a-value-less-than-or-equal-to-x'),
+				maxFileSize: Liferay.Language.get('please-enter-a-file-with-a-valid-file-size-no-larger-than-x'),
 				maxLength: Liferay.Language.get('please-enter-no-more-than-x-characters'),
 				min: Liferay.Language.get('please-enter-a-value-greater-than-or-equal-to-x'),
 				minLength: Liferay.Language.get('please-enter-at-list-x-characters'),
@@ -104,6 +118,9 @@ AUI.add(
 									validateOnBlur: instance.get('validateOnBlur')
 								}
 							);
+
+							A.Do.before('_focusInvalidFieldTab', formValidator, 'focusInvalidField', instance);
+
 							instance.formValidator = formValidator;
 
 							instance._processFieldRules();
@@ -208,6 +225,43 @@ AUI.add(
 						return ruleIndex;
 					},
 
+					_focusInvalidFieldTab: function() {
+						var instance = this;
+
+						var formNode = instance.formNode;
+
+						var field = formNode.one('.' + instance.formValidator.get('errorClass'));
+
+						if (field) {
+							var formTabs = formNode.one('.lfr-nav');
+
+							if (formTabs) {
+								var tabs = formTabs.all('.tab');
+								var tabsNamespace = formTabs.getAttribute('data-tabs-namespace');
+
+								var tabNames = AArray.map(
+									tabs._nodes,
+									function(tab) {
+										return tab.getAttribute('data-tab-name');
+									}
+								)
+
+								var fieldWrapper = field.ancestor('form > div');
+
+								var fieldWrapperId = fieldWrapper.getAttribute('id').slice(0, -TABS_SECTION_STR.length);
+
+								var fieldTabId = AArray.find(
+									tabs._nodes,
+									function(tab) {
+										return tab.getAttribute('id').indexOf(fieldWrapperId) !== -1;
+									}
+								)
+
+								Liferay.Portal.Tabs.show(tabsNamespace, tabNames, fieldTabId.getAttribute('data-tab-name'));
+							}
+						}
+					},
+
 					_onEditorBlur: function(event) {
 						var instance = this;
 
@@ -273,7 +327,7 @@ AUI.add(
 						var fieldName = rule.fieldName;
 						var validatorName = rule.validatorName;
 
-						if (rule.body && !rule.custom) {
+						if ((rule.body || rule.body === 0) && !rule.custom) {
 							value = rule.body;
 						}
 

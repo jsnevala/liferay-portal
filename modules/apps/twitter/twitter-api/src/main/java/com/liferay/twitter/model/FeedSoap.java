@@ -30,6 +30,7 @@ import java.util.List;
  */
 @ProviderType
 public class FeedSoap implements Serializable {
+
 	public static FeedSoap toSoapModel(Feed model) {
 		FeedSoap soapModel = new FeedSoap();
 
@@ -175,4 +176,5 @@ public class FeedSoap implements Serializable {
 	private long _twitterUserId;
 	private String _twitterScreenName;
 	private long _lastStatusId;
+
 }

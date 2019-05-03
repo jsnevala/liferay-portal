@@ -38,7 +38,9 @@ public class UserGroupRoleModelListener
 	public void onAfterRemove(UserGroupRole userGroupRole)
 		throws ModelListenerException {
 
-		onRemoveRoleAssociation(userGroupRole.getRoleId());
+		if (userGroupRole != null) {
+			onRemoveRoleAssociation(userGroupRole.getRoleId());
+		}
 	}
 
 }

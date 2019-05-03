@@ -9,80 +9,13 @@
 </thead>
 <tbody>
 <tr>
-	<td>MY_ACCOUNT_IFRAME</td>
-	<td>//iframe[contains(@class,'dialog-iframe-node')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SUCCESS_MESSAGE</td>
-	<td>//div[contains(@class,'alert') and contains(@class,'alert-success')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ASSIGNED_TO_ME_INFO_MESSAGE</td>
-	<td>//div[contains(@id,'workflowTasksSearchContainerSearchContainer')]//div[contains(@class,'empty-message')]/span</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ASSIGNED_TO_MY_ROLES_INFO_MESSAGE</td>
-	<td>//div[contains(@id,'workflowTasksSearchContainerSearchContainer')]//div[contains(@class,'empty-message')]/span</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ASSIGNED_TO_ME_COLLAPSED</td>
-	<td>//div[@class='panel-heading toggler-header toggler-header-collapsed']//span[contains(.,'Assigned to Me')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ASSIGNED_TO_ME_EXPANDED</td>
-	<td>//div[@class='panel-heading toggler-header toggler-header-expanded']//span[contains(.,'Assigned to Me')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ASSIGNED_TO_MY_ROLES_COLLAPSED</td>
-	<td>//div[@class='panel-heading toggler-header toggler-header-collapsed']//span[contains(.,'Assigned to My Roles')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ASSIGNED_TO_MY_ROLES_EXPANDED</td>
-	<td>//div[@class='panel-heading toggler-header toggler-header-expanded']//span[contains(.,'Assigned to My Roles')]</td>
+	<td>TABLE_GENERIC_ASSET_TITLE</td>
+	<td>//tr[contains(.,'${key_workflowAssetTitle}')]/td[1]//a</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ASSIGNED_TO_ME_ACTIVE</td>
 	<td>//li[contains(@class,'active')]/a[@role='menuitem' and contains(.,'Assigned to Me')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ASSIGNED_TO_MY_ROLES_ACTIVE</td>
-	<td>//li[contains(@class,'active')]/a[@role='menuitem' and contains(.,'Assigned to My Roles')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td></td>
-	<td></td>
-	<td></td>
-</tr>
-<!--NAVIGATION-->
-<tr>
-	<td>NAVIGATION_PENDING</td>
-	<td>//ul[contains(@class,'nav') and contains(@class,'nav-tabs')]/li/a[contains(.,'Pending')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NAVIGATION_COMPLETED</td>
-	<td>//ul[contains(@class,'nav') and contains(@class,'nav-tabs')]/li/a[contains(.,'Completed')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td></td>
-	<td></td>
-	<td></td>
-</tr>
-<!--TABLE_GENERIC-->
-<tr>
-	<td>TABLE_GENERIC_ASSET_TITLE</td>
-	<td>//tr[contains(.,'${key_workflowAssetTitle}')]/td[1]//a</td>
 	<td></td>
 </tr>
 <tr>
@@ -174,11 +107,6 @@
 </tr>
 <!--DIALOG_BOX-->
 <tr>
-	<td>DIALOG_BOX_TITLE</td>
-	<td>//div[contains(@class,'modal-header')]/h3</td>
-	<td></td>
-</tr>
-<tr>
 	<td>DIALOG_BOX_DUE_DATE</td>
 	<td>//input[contains(@id,'_dueDate')]</td>
 	<td></td>
@@ -196,22 +124,6 @@
 <tr>
 	<td>DIALOG_BOX_ASSIGN_TO_SELECT</td>
 	<td>//form[contains(@id,'MyWorkflowTaskPortlet_assignFm')]//select</td>
-	<td></td>
-</tr>
-<tr>
-	<td></td>
-	<td></td>
-	<td></td>
-</tr>
-<!--PREVIEW-->
-<tr>
-	<td>PREVIEW_ACTIVITY</td>
-	<td>//div[@class='panel-toggle' and contains(.,'Activities')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>PREVIEW_ACTIVITY_ENTRY</td>
-	<td>//div[@class='panel-body']/div/div[contains(.,'${key_workflowActivityComment}')]</td>
 	<td></td>
 </tr>
 <tr>

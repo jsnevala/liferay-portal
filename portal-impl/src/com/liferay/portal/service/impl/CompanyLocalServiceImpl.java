@@ -312,12 +312,16 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		Locale localeThreadLocalDefaultLocale =
 			LocaleThreadLocal.getDefaultLocale();
+		Locale localeThreadSiteDefaultLocale =
+			LocaleThreadLocal.getSiteDefaultLocale();
 
 		try {
 			Locale companyDefaultLocale = LocaleUtil.fromLanguageId(
 				PropsValues.COMPANY_DEFAULT_LOCALE);
 
 			LocaleThreadLocal.setDefaultLocale(companyDefaultLocale);
+
+			LocaleThreadLocal.setSiteDefaultLocale(null);
 
 			final long companyId = company.getCompanyId();
 
@@ -427,7 +431,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 			// Default admin
 
-			if (userPersistence.countByCompanyId(companyId) == 1) {
+			if (userPersistence.countByCompanyId(companyId) == 0) {
 				String emailAddress =
 					PropsValues.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX + "@" + mx;
 
@@ -461,6 +465,8 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			_companyProviderWrapper.setCompanyProvider(currentCompanyProvider);
 
 			LocaleThreadLocal.setDefaultLocale(localeThreadLocalDefaultLocale);
+			LocaleThreadLocal.setSiteDefaultLocale(
+				localeThreadSiteDefaultLocale);
 		}
 
 		return company;
@@ -958,9 +964,10 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	 * @param      size the company's account size (optionally
 	 *             <code>null</code>)
 	 * @return     the company with the primary key
-	 * @deprecated As of 7.0.0, replaced by {@link #updateCompany(long, String,
-	 *             String, String, boolean, byte[], String, String, String,
-	 *             String, String, String, String, String, String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateCompany(long, String, String, String, boolean, byte[],
+	 *             String, String, String, String, String, String, String,
+	 *             String, String)}
 	 */
 	@Deprecated
 	@Override
@@ -1182,6 +1189,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 			for (Map.Entry<String, String> entry : properties.entrySet()) {
 				String key = entry.getKey();
+
 				String value = entry.getValue();
 
 				if (value.equals(Portal.TEMP_OBFUSCATION_VALUE)) {
@@ -1400,8 +1408,8 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		layoutSetPrototypeActionableDynamicQuery.setCompanyId(companyId);
 		layoutSetPrototypeActionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.
-				PerformActionMethod<LayoutSetPrototype>() {
+			new ActionableDynamicQuery.PerformActionMethod
+				<LayoutSetPrototype>() {
 
 				@Override
 				public void performAction(LayoutSetPrototype layoutSetPrototype)

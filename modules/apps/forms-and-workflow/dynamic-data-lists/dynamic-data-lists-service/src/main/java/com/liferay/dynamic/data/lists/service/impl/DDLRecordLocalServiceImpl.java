@@ -180,8 +180,8 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	 *             the record.
 	 * @return     the record
 	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of 1.1.0, replaced by {@link #addRecord(long, long, int,
-	 *             DDMFormValues, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #addRecord(long, long, int, DDMFormValues, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -217,8 +217,8 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	 *             the record.
 	 * @return     the record
 	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of 1.1.0, replaced by {@link #addRecord(long, long, int,
-	 *             DDMFormValues, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #addRecord(long, long, int, DDMFormValues, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -311,8 +311,9 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	 *             set the record modified date.
 	 * @return     the affected record
 	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of 1.1.0, replaced by {@link #updateRecord(long, boolean,
-	 *             int, DDMFormValues, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateRecord(long, boolean, int, DDMFormValues,
+	 *             ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -440,7 +441,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             DDLRecordVersionLocalService#getLatestRecordVersion(long)}
 	 */
 	@Deprecated
@@ -579,7 +580,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService#getRecordVersion(
 	 *             long)}
 	 */
@@ -593,7 +594,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService#getRecordVersion(
 	 *             long, String)}
 	 */
@@ -607,7 +608,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService#getRecordVersions(
 	 *             long, int, int, OrderByComparator)}
 	 */
@@ -623,7 +624,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService#getRecordVersionsCount(
 	 *             long)}
 	 */
@@ -668,8 +669,8 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link #revertRecord(long, long,
-	 *             String, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #revertRecord(long, long, String, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -925,8 +926,9 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	 *             set the record modified date.
 	 * @return     the record
 	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of 1.1.0, replaced by {@link #updateRecord(long, long,
-	 *             boolean, int, DDMFormValues, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateRecord(long, long, boolean, int, DDMFormValues,
+	 *             ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -974,8 +976,9 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	 *             set the record modified date.
 	 * @return     the record
 	 * @throws     PortalException if a portal exception occurred
-	 * @deprecated As of 1.1.0, replaced by {@link #updateRecord(long, long,
-	 *             boolean, int, DDMFormValues, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateRecord(long, long, boolean, int, DDMFormValues,
+	 *             ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -1147,10 +1150,7 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 	}
 
 	protected Indexer<DDLRecord> getDDLRecordIndexer() {
-		Indexer<DDLRecord> indexer = indexerRegistry.nullSafeGetIndexer(
-			DDLRecord.class);
-
-		return indexer;
+		return indexerRegistry.nullSafeGetIndexer(DDLRecord.class);
 	}
 
 	protected String getNextVersion(

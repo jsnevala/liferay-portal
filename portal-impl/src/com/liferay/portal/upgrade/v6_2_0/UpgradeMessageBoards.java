@@ -24,7 +24,7 @@ import com.liferay.portal.kernel.util.Validator;
 import javax.portlet.PortletPreferences;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  * @author Daniel Kocsis
  */
 public class UpgradeMessageBoards extends BaseUpgradePortletPreferences {

@@ -15,8 +15,8 @@
 package com.liferay.layout.type.controller.shared.portlet.internal.constants;
 
 /**
- * @author Leonardo Barros
- * @deprecated As of 2.0.0, with no direct replacement
+ * @author     Leonardo Barros
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
 @Deprecated
 public class SharedPortletLayoutTypeControllerConstants {

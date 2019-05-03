@@ -24,10 +24,10 @@ import java.util.Map;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Ambrin Chaudhary
+ * @author Ambrín Chaudhary
  * @author Sergio González
  */
-@Component(property = {"editor.name=ckeditor_creole"})
+@Component(property = "editor.name=ckeditor_creole")
 public class CKEditorCreoleOptionsContributor
 	implements EditorOptionsContributor {
 

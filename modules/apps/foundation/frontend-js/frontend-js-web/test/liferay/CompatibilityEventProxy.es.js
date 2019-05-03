@@ -4,24 +4,26 @@ import EventEmitter from 'metal-events/src/EventEmitter';
 import CompatibilityEventProxy from '../../src/main/resources/META-INF/resources/liferay/CompatibilityEventProxy.es';
 
 describe('CompatibilityEventProxy', () => {
+
 	/**
 	 * Mocks a target so it can be used for testing
 	 * @param {string} event The event to configure for the target
 	 * @param {boolean} emitFacade Whether the configured event should use a Facade or not
 	 * @return {Object} The mocked target object
 	 */
+
 	function createMockedTarget(event, emitFacade) {
 		let mockedTarget = {
 			fire: function() {},
 
 			_yuievt: {
-				events: {},
-			},
+				events: {}
+			}
 		};
 
 		if (event) {
 			mockedTarget._yuievt.events[event] = {
-				emitFacade: emitFacade,
+				emitFacade: emitFacade
 			};
 		}
 
@@ -31,11 +33,11 @@ describe('CompatibilityEventProxy', () => {
 	let eventNameToEmit = 'eventToEmit';
 
 	let eventObjectToEmit = {
-		key: eventNameToEmit,
+		key: eventNameToEmit
 	};
 
 	let eventFacadeObjectToEmit = {
-		type: eventNameToEmit,
+		type: eventNameToEmit
 	};
 
 	let host;
@@ -54,7 +56,7 @@ describe('CompatibilityEventProxy', () => {
 
 	it('should not emit any event when no targets have been added', done => {
 		let component = new CompatibilityEventProxy({
-			host: host,
+			host: host
 		});
 
 		let spy = sinon.spy(component, 'emitCompatibleEvents_');
@@ -70,7 +72,7 @@ describe('CompatibilityEventProxy', () => {
 		let mockedTarget = {};
 
 		let component = new CompatibilityEventProxy({
-			host: host,
+			host: host
 		});
 
 		let spy = sinon.spy(component, 'emitCompatibleEvents_');
@@ -90,7 +92,7 @@ describe('CompatibilityEventProxy', () => {
 		let spy = sinon.spy(mockedTarget, 'fire');
 
 		let component = new CompatibilityEventProxy({
-			host: host,
+			host: host
 		});
 
 		component.addTarget(mockedTarget);
@@ -114,7 +116,7 @@ describe('CompatibilityEventProxy', () => {
 
 		let component = new CompatibilityEventProxy({
 			host: host,
-			namespace: namespace,
+			namespace: namespace
 		});
 
 		component.addTarget(mockedTarget);
@@ -135,7 +137,7 @@ describe('CompatibilityEventProxy', () => {
 		let spy = sinon.spy(mockedTarget, 'fire');
 
 		let component = new CompatibilityEventProxy({
-			host: host,
+			host: host
 		});
 
 		component.addTarget(mockedTarget);
@@ -156,7 +158,7 @@ describe('CompatibilityEventProxy', () => {
 		let spy = sinon.spy(mockedTarget, 'fire');
 
 		let component = new CompatibilityEventProxy({
-			host: host,
+			host: host
 		});
 
 		component.addTarget(mockedTarget);
@@ -179,7 +181,7 @@ describe('CompatibilityEventProxy', () => {
 		let spy = sinon.spy(mockedTarget, 'fire');
 
 		let component = new CompatibilityEventProxy({
-			host: host,
+			host: host
 		});
 
 		component.addTarget(mockedTarget);
@@ -207,7 +209,7 @@ describe('CompatibilityEventProxy', () => {
 
 		let component = new CompatibilityEventProxy({
 			emitFacade: true,
-			host: host,
+			host: host
 		});
 
 		component.addTarget(mockedTarget);
@@ -230,11 +232,11 @@ describe('CompatibilityEventProxy', () => {
 		let eventNameToEmit = 'eventChanged';
 
 		let eventObjectToEmit = {
-			key: eventNameToEmit,
+			key: eventNameToEmit
 		};
 
 		let eventFacadeObjectToEmit = {
-			type: eventNameToEmit,
+			type: eventNameToEmit
 		};
 
 		let adaptedEventNameToEmit = 'eventChange';
@@ -246,9 +248,9 @@ describe('CompatibilityEventProxy', () => {
 		let component = new CompatibilityEventProxy({
 			adaptedEvents: {
 				match: /(.*)(Changed)$/,
-				replace: '$1Change',
+				replace: '$1Change'
 			},
-			host: host,
+			host: host
 		});
 
 		component.addTarget(mockedTarget);

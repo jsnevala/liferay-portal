@@ -40,9 +40,7 @@ public class AssetBrowserWebUpgrade implements UpgradeStepRegistrator {
 				@Override
 				protected String[][] getRenamePortletIdsArray() {
 					return new String[][] {
-						new String[] {
-							"172", AssetBrowserPortletKeys.ASSET_BROWSER
-						}
+						{"172", AssetBrowserPortletKeys.ASSET_BROWSER}
 					};
 				}
 

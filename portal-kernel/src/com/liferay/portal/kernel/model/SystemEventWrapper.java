@@ -17,7 +17,6 @@ package com.liferay.portal.kernel.model;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.portal.kernel.service.ServiceContext;
 
 import java.io.Serializable;
@@ -37,8 +36,9 @@ import java.util.Objects;
  * @generated
  */
 @ProviderType
-public class SystemEventWrapper implements SystemEvent,
-	ModelWrapper<SystemEvent> {
+public class SystemEventWrapper
+	implements SystemEvent, ModelWrapper<SystemEvent> {
+
 	public SystemEventWrapper(SystemEvent systemEvent) {
 		_systemEvent = systemEvent;
 	}
@@ -170,7 +170,7 @@ public class SystemEventWrapper implements SystemEvent,
 	}
 
 	@Override
-	public java.lang.Object clone() {
+	public Object clone() {
 		return new SystemEventWrapper((SystemEvent)_systemEvent.clone());
 	}
 
@@ -180,60 +180,60 @@ public class SystemEventWrapper implements SystemEvent,
 	}
 
 	/**
-	* Returns the fully qualified class name of this system event.
-	*
-	* @return the fully qualified class name of this system event
-	*/
+	 * Returns the fully qualified class name of this system event.
+	 *
+	 * @return the fully qualified class name of this system event
+	 */
 	@Override
-	public java.lang.String getClassName() {
+	public String getClassName() {
 		return _systemEvent.getClassName();
 	}
 
 	/**
-	* Returns the class name ID of this system event.
-	*
-	* @return the class name ID of this system event
-	*/
+	 * Returns the class name ID of this system event.
+	 *
+	 * @return the class name ID of this system event
+	 */
 	@Override
 	public long getClassNameId() {
 		return _systemEvent.getClassNameId();
 	}
 
 	/**
-	* Returns the class pk of this system event.
-	*
-	* @return the class pk of this system event
-	*/
+	 * Returns the class pk of this system event.
+	 *
+	 * @return the class pk of this system event
+	 */
 	@Override
 	public long getClassPK() {
 		return _systemEvent.getClassPK();
 	}
 
 	/**
-	* Returns the class uuid of this system event.
-	*
-	* @return the class uuid of this system event
-	*/
+	 * Returns the class uuid of this system event.
+	 *
+	 * @return the class uuid of this system event
+	 */
 	@Override
-	public java.lang.String getClassUuid() {
+	public String getClassUuid() {
 		return _systemEvent.getClassUuid();
 	}
 
 	/**
-	* Returns the company ID of this system event.
-	*
-	* @return the company ID of this system event
-	*/
+	 * Returns the company ID of this system event.
+	 *
+	 * @return the company ID of this system event
+	 */
 	@Override
 	public long getCompanyId() {
 		return _systemEvent.getCompanyId();
 	}
 
 	/**
-	* Returns the create date of this system event.
-	*
-	* @return the create date of this system event
-	*/
+	 * Returns the create date of this system event.
+	 *
+	 * @return the create date of this system event
+	 */
 	@Override
 	public Date getCreateDate() {
 		return _systemEvent.getCreateDate();
@@ -245,50 +245,50 @@ public class SystemEventWrapper implements SystemEvent,
 	}
 
 	/**
-	* Returns the extra data of this system event.
-	*
-	* @return the extra data of this system event
-	*/
+	 * Returns the extra data of this system event.
+	 *
+	 * @return the extra data of this system event
+	 */
 	@Override
-	public java.lang.String getExtraData() {
+	public String getExtraData() {
 		return _systemEvent.getExtraData();
 	}
 
 	/**
-	* Returns the group ID of this system event.
-	*
-	* @return the group ID of this system event
-	*/
+	 * Returns the group ID of this system event.
+	 *
+	 * @return the group ID of this system event
+	 */
 	@Override
 	public long getGroupId() {
 		return _systemEvent.getGroupId();
 	}
 
 	/**
-	* Returns the mvcc version of this system event.
-	*
-	* @return the mvcc version of this system event
-	*/
+	 * Returns the mvcc version of this system event.
+	 *
+	 * @return the mvcc version of this system event
+	 */
 	@Override
 	public long getMvccVersion() {
 		return _systemEvent.getMvccVersion();
 	}
 
 	/**
-	* Returns the parent system event ID of this system event.
-	*
-	* @return the parent system event ID of this system event
-	*/
+	 * Returns the parent system event ID of this system event.
+	 *
+	 * @return the parent system event ID of this system event
+	 */
 	@Override
 	public long getParentSystemEventId() {
 		return _systemEvent.getParentSystemEventId();
 	}
 
 	/**
-	* Returns the primary key of this system event.
-	*
-	* @return the primary key of this system event
-	*/
+	 * Returns the primary key of this system event.
+	 *
+	 * @return the primary key of this system event
+	 */
 	@Override
 	public long getPrimaryKey() {
 		return _systemEvent.getPrimaryKey();
@@ -300,77 +300,77 @@ public class SystemEventWrapper implements SystemEvent,
 	}
 
 	@Override
-	public java.lang.String getReferrerClassName() {
+	public String getReferrerClassName() {
 		return _systemEvent.getReferrerClassName();
 	}
 
 	/**
-	* Returns the referrer class name ID of this system event.
-	*
-	* @return the referrer class name ID of this system event
-	*/
+	 * Returns the referrer class name ID of this system event.
+	 *
+	 * @return the referrer class name ID of this system event
+	 */
 	@Override
 	public long getReferrerClassNameId() {
 		return _systemEvent.getReferrerClassNameId();
 	}
 
 	/**
-	* Returns the system event ID of this system event.
-	*
-	* @return the system event ID of this system event
-	*/
+	 * Returns the system event ID of this system event.
+	 *
+	 * @return the system event ID of this system event
+	 */
 	@Override
 	public long getSystemEventId() {
 		return _systemEvent.getSystemEventId();
 	}
 
 	/**
-	* Returns the system event set key of this system event.
-	*
-	* @return the system event set key of this system event
-	*/
+	 * Returns the system event set key of this system event.
+	 *
+	 * @return the system event set key of this system event
+	 */
 	@Override
 	public long getSystemEventSetKey() {
 		return _systemEvent.getSystemEventSetKey();
 	}
 
 	/**
-	* Returns the type of this system event.
-	*
-	* @return the type of this system event
-	*/
+	 * Returns the type of this system event.
+	 *
+	 * @return the type of this system event
+	 */
 	@Override
 	public int getType() {
 		return _systemEvent.getType();
 	}
 
 	/**
-	* Returns the user ID of this system event.
-	*
-	* @return the user ID of this system event
-	*/
+	 * Returns the user ID of this system event.
+	 *
+	 * @return the user ID of this system event
+	 */
 	@Override
 	public long getUserId() {
 		return _systemEvent.getUserId();
 	}
 
 	/**
-	* Returns the user name of this system event.
-	*
-	* @return the user name of this system event
-	*/
+	 * Returns the user name of this system event.
+	 *
+	 * @return the user name of this system event
+	 */
 	@Override
-	public java.lang.String getUserName() {
+	public String getUserName() {
 		return _systemEvent.getUserName();
 	}
 
 	/**
-	* Returns the user uuid of this system event.
-	*
-	* @return the user uuid of this system event
-	*/
+	 * Returns the user uuid of this system event.
+	 *
+	 * @return the user uuid of this system event
+	 */
 	@Override
-	public java.lang.String getUserUuid() {
+	public String getUserUuid() {
 		return _systemEvent.getUserUuid();
 	}
 
@@ -405,55 +405,55 @@ public class SystemEventWrapper implements SystemEvent,
 	}
 
 	@Override
-	public void setClassName(java.lang.String className) {
+	public void setClassName(String className) {
 		_systemEvent.setClassName(className);
 	}
 
 	/**
-	* Sets the class name ID of this system event.
-	*
-	* @param classNameId the class name ID of this system event
-	*/
+	 * Sets the class name ID of this system event.
+	 *
+	 * @param classNameId the class name ID of this system event
+	 */
 	@Override
 	public void setClassNameId(long classNameId) {
 		_systemEvent.setClassNameId(classNameId);
 	}
 
 	/**
-	* Sets the class pk of this system event.
-	*
-	* @param classPK the class pk of this system event
-	*/
+	 * Sets the class pk of this system event.
+	 *
+	 * @param classPK the class pk of this system event
+	 */
 	@Override
 	public void setClassPK(long classPK) {
 		_systemEvent.setClassPK(classPK);
 	}
 
 	/**
-	* Sets the class uuid of this system event.
-	*
-	* @param classUuid the class uuid of this system event
-	*/
+	 * Sets the class uuid of this system event.
+	 *
+	 * @param classUuid the class uuid of this system event
+	 */
 	@Override
-	public void setClassUuid(java.lang.String classUuid) {
+	public void setClassUuid(String classUuid) {
 		_systemEvent.setClassUuid(classUuid);
 	}
 
 	/**
-	* Sets the company ID of this system event.
-	*
-	* @param companyId the company ID of this system event
-	*/
+	 * Sets the company ID of this system event.
+	 *
+	 * @param companyId the company ID of this system event
+	 */
 	@Override
 	public void setCompanyId(long companyId) {
 		_systemEvent.setCompanyId(companyId);
 	}
 
 	/**
-	* Sets the create date of this system event.
-	*
-	* @param createDate the create date of this system event
-	*/
+	 * Sets the create date of this system event.
+	 *
+	 * @param createDate the create date of this system event
+	 */
 	@Override
 	public void setCreateDate(Date createDate) {
 		_systemEvent.setCreateDate(createDate);
@@ -475,30 +475,30 @@ public class SystemEventWrapper implements SystemEvent,
 	}
 
 	/**
-	* Sets the extra data of this system event.
-	*
-	* @param extraData the extra data of this system event
-	*/
+	 * Sets the extra data of this system event.
+	 *
+	 * @param extraData the extra data of this system event
+	 */
 	@Override
-	public void setExtraData(java.lang.String extraData) {
+	public void setExtraData(String extraData) {
 		_systemEvent.setExtraData(extraData);
 	}
 
 	/**
-	* Sets the group ID of this system event.
-	*
-	* @param groupId the group ID of this system event
-	*/
+	 * Sets the group ID of this system event.
+	 *
+	 * @param groupId the group ID of this system event
+	 */
 	@Override
 	public void setGroupId(long groupId) {
 		_systemEvent.setGroupId(groupId);
 	}
 
 	/**
-	* Sets the mvcc version of this system event.
-	*
-	* @param mvccVersion the mvcc version of this system event
-	*/
+	 * Sets the mvcc version of this system event.
+	 *
+	 * @param mvccVersion the mvcc version of this system event
+	 */
 	@Override
 	public void setMvccVersion(long mvccVersion) {
 		_systemEvent.setMvccVersion(mvccVersion);
@@ -510,20 +510,20 @@ public class SystemEventWrapper implements SystemEvent,
 	}
 
 	/**
-	* Sets the parent system event ID of this system event.
-	*
-	* @param parentSystemEventId the parent system event ID of this system event
-	*/
+	 * Sets the parent system event ID of this system event.
+	 *
+	 * @param parentSystemEventId the parent system event ID of this system event
+	 */
 	@Override
 	public void setParentSystemEventId(long parentSystemEventId) {
 		_systemEvent.setParentSystemEventId(parentSystemEventId);
 	}
 
 	/**
-	* Sets the primary key of this system event.
-	*
-	* @param primaryKey the primary key of this system event
-	*/
+	 * Sets the primary key of this system event.
+	 *
+	 * @param primaryKey the primary key of this system event
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		_systemEvent.setPrimaryKey(primaryKey);
@@ -535,77 +535,77 @@ public class SystemEventWrapper implements SystemEvent,
 	}
 
 	@Override
-	public void setReferrerClassName(java.lang.String referrerClassName) {
+	public void setReferrerClassName(String referrerClassName) {
 		_systemEvent.setReferrerClassName(referrerClassName);
 	}
 
 	/**
-	* Sets the referrer class name ID of this system event.
-	*
-	* @param referrerClassNameId the referrer class name ID of this system event
-	*/
+	 * Sets the referrer class name ID of this system event.
+	 *
+	 * @param referrerClassNameId the referrer class name ID of this system event
+	 */
 	@Override
 	public void setReferrerClassNameId(long referrerClassNameId) {
 		_systemEvent.setReferrerClassNameId(referrerClassNameId);
 	}
 
 	/**
-	* Sets the system event ID of this system event.
-	*
-	* @param systemEventId the system event ID of this system event
-	*/
+	 * Sets the system event ID of this system event.
+	 *
+	 * @param systemEventId the system event ID of this system event
+	 */
 	@Override
 	public void setSystemEventId(long systemEventId) {
 		_systemEvent.setSystemEventId(systemEventId);
 	}
 
 	/**
-	* Sets the system event set key of this system event.
-	*
-	* @param systemEventSetKey the system event set key of this system event
-	*/
+	 * Sets the system event set key of this system event.
+	 *
+	 * @param systemEventSetKey the system event set key of this system event
+	 */
 	@Override
 	public void setSystemEventSetKey(long systemEventSetKey) {
 		_systemEvent.setSystemEventSetKey(systemEventSetKey);
 	}
 
 	/**
-	* Sets the type of this system event.
-	*
-	* @param type the type of this system event
-	*/
+	 * Sets the type of this system event.
+	 *
+	 * @param type the type of this system event
+	 */
 	@Override
 	public void setType(int type) {
 		_systemEvent.setType(type);
 	}
 
 	/**
-	* Sets the user ID of this system event.
-	*
-	* @param userId the user ID of this system event
-	*/
+	 * Sets the user ID of this system event.
+	 *
+	 * @param userId the user ID of this system event
+	 */
 	@Override
 	public void setUserId(long userId) {
 		_systemEvent.setUserId(userId);
 	}
 
 	/**
-	* Sets the user name of this system event.
-	*
-	* @param userName the user name of this system event
-	*/
+	 * Sets the user name of this system event.
+	 *
+	 * @param userName the user name of this system event
+	 */
 	@Override
-	public void setUserName(java.lang.String userName) {
+	public void setUserName(String userName) {
 		_systemEvent.setUserName(userName);
 	}
 
 	/**
-	* Sets the user uuid of this system event.
-	*
-	* @param userUuid the user uuid of this system event
-	*/
+	 * Sets the user uuid of this system event.
+	 *
+	 * @param userUuid the user uuid of this system event
+	 */
 	@Override
-	public void setUserUuid(java.lang.String userUuid) {
+	public void setUserUuid(String userUuid) {
 		_systemEvent.setUserUuid(userUuid);
 	}
 
@@ -620,7 +620,7 @@ public class SystemEventWrapper implements SystemEvent,
 	}
 
 	@Override
-	public java.lang.String toString() {
+	public String toString() {
 		return _systemEvent.toString();
 	}
 
@@ -630,7 +630,7 @@ public class SystemEventWrapper implements SystemEvent,
 	}
 
 	@Override
-	public java.lang.String toXmlString() {
+	public String toXmlString() {
 		return _systemEvent.toXmlString();
 	}
 
@@ -674,4 +674,5 @@ public class SystemEventWrapper implements SystemEvent,
 	}
 
 	private final SystemEvent _systemEvent;
+
 }

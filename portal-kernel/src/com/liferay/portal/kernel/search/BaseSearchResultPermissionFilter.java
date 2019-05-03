@@ -29,8 +29,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * @author Tina Tian
+ * @author     Tina Tian
+ * @deprecated As of Judson (7.1.x), moved to {@link
+ *             com.liferay.portal.search.internal.permission.DefaultSearchResultPermissionFilter}
  */
+@Deprecated
 public abstract class BaseSearchResultPermissionFilter
 	implements SearchResultPermissionFilter {
 
@@ -186,7 +189,8 @@ public abstract class BaseSearchResultPermissionFilter
 					PropsKeys.
 						INDEX_PERMISSION_FILTER_SEARCH_AMPLIFICATION_FACTOR));
 
-	private static final String[] _PERMISSION_SELECTED_FIELD_NAMES =
-		{Field.COMPANY_ID, Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK};
+	private static final String[] _PERMISSION_SELECTED_FIELD_NAMES = {
+		Field.COMPANY_ID, Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK
+	};
 
 }

@@ -44,6 +44,10 @@ public class ItemSelectorUploadViewDisplayContext {
 			itemSelectorReturnTypeResolverHandler;
 	}
 
+	public String[] getExtensions() {
+		return _uploadItemSelectorCriterion.getExtensions();
+	}
+
 	public String getItemSelectedEventName() {
 		return _itemSelectedEventName;
 	}

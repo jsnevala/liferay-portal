@@ -18,13 +18,12 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
+import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
-import com.liferay.portal.language.LanguageResources;
 import com.liferay.wiki.configuration.WikiGroupServiceConfiguration;
 import com.liferay.wiki.engine.BaseWikiEngine;
 import com.liferay.wiki.engine.WikiEngine;
@@ -244,7 +243,9 @@ public class MediaWikiEngine extends BaseWikiEngine {
 
 	@Override
 	protected ResourceBundleLoader getResourceBundleLoader() {
-		return _resourceBundleLoader;
+		return ResourceBundleLoaderUtil.
+			getResourceBundleLoaderByBundleSymbolicName(
+				"com.liferay.wiki.engine.mediawiki");
 	}
 
 	protected String parsePage(
@@ -313,17 +314,6 @@ public class MediaWikiEngine extends BaseWikiEngine {
 	}
 
 	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.wiki.engine.mediawiki)",
-		unbind = "-"
-	)
-	protected void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader, LanguageResources.RESOURCE_BUNDLE_LOADER);
-	}
-
-	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.wiki.engine.mediawiki)",
 		unbind = "-"
 	)
@@ -354,7 +344,6 @@ public class MediaWikiEngine extends BaseWikiEngine {
 	private static final Log _log = LogFactoryUtil.getLog(
 		MediaWikiEngine.class);
 
-	private ResourceBundleLoader _resourceBundleLoader;
 	private ServletContext _servletContext;
 
 	@Reference(
@@ -387,8 +376,8 @@ public class MediaWikiEngine extends BaseWikiEngine {
 
 					ClassLoader parentClassLoader = getParent();
 
-					try (InputStream in =
-							parentClassLoader.getResourceAsStream(name)) {
+					try (InputStream in = parentClassLoader.getResourceAsStream(
+							name)) {
 
 						Files.copy(in, tempPath);
 					}

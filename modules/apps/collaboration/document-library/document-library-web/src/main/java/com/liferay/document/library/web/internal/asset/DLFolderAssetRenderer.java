@@ -19,8 +19,6 @@ import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -28,6 +26,7 @@ import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.trash.TrashRenderer;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -73,7 +72,7 @@ public class DLFolderAssetRenderer
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -130,6 +129,14 @@ public class DLFolderAssetRenderer
 		throws Exception {
 
 		Group group = GroupLocalServiceUtil.fetchGroup(_folder.getGroupId());
+
+		if (group.isCompany()) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)liferayPortletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			group = themeDisplay.getScopeGroup();
+		}
 
 		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
 			liferayPortletRequest, group, DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
@@ -225,9 +232,6 @@ public class DLFolderAssetRenderer
 
 		return true;
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		DLFolderAssetRenderer.class);
 
 	private final Folder _folder;
 

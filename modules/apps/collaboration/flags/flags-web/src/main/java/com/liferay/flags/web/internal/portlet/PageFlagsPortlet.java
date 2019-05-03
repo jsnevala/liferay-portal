@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=Page Flags",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + FlagsPortletKeys.PAGE_FLAGS,
 		"javax.portlet.resource-bundle=content.Language",
@@ -50,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
 public class PageFlagsPortlet extends MVCPortlet {
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.flags.web)(release.schema.version=1.0.0))",
+		target = "(&(release.bundle.symbolic.name=com.liferay.flags.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=1.1.0))))",
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {

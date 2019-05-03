@@ -20,6 +20,8 @@ import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
 import com.liferay.portal.kernel.exception.NoSuchBackgroundTaskException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -65,7 +67,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=Staging Configuration",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + StagingConfigurationPortletKeys.STAGING_CONFIGURATION,
 		"javax.portlet.resource-bundle=content.Language",
@@ -93,6 +95,10 @@ public class StagingConfigurationPortlet extends MVCPortlet {
 				e instanceof PrincipalException) {
 
 				SessionErrors.add(actionRequest, e.getClass());
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(e, e);
+				}
 			}
 			else {
 				throw e;
@@ -135,6 +141,10 @@ public class StagingConfigurationPortlet extends MVCPortlet {
 			}
 			catch (Exception e) {
 				SessionErrors.add(actionRequest, Exception.class, e);
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(e, e);
+				}
 			}
 		}
 		else if (stagingType == StagingConstants.TYPE_REMOTE_STAGING) {
@@ -249,6 +259,9 @@ public class StagingConfigurationPortlet extends MVCPortlet {
 
 		_stagingLocalService = null;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		StagingConfigurationPortlet.class);
 
 	@Reference
 	private BackgroundTaskManager _backgroundTaskManager;

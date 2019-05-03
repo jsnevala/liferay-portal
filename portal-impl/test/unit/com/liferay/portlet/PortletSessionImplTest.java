@@ -14,12 +14,10 @@
 
 package com.liferay.portlet;
 
-import static com.liferay.portal.kernel.portlet.LiferayPortletSession.LAYOUT_SEPARATOR;
-import static com.liferay.portal.kernel.portlet.LiferayPortletSession.PORTLET_SCOPE_NAMESPACE;
-
 import com.liferay.petra.lang.ClassLoaderPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
+import com.liferay.portal.kernel.portlet.LiferayPortletSession;
 import com.liferay.portal.kernel.servlet.HttpSessionWrapper;
 import com.liferay.portal.kernel.test.CaptureHandler;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
@@ -103,9 +101,9 @@ public class PortletSessionImplTest {
 
 		StringBundler sb = new StringBundler(5);
 
-		sb.append(PORTLET_SCOPE_NAMESPACE);
+		sb.append(LiferayPortletSession.PORTLET_SCOPE_NAMESPACE);
 		sb.append(_PORTLET_NAME);
-		sb.append(LAYOUT_SEPARATOR);
+		sb.append(LiferayPortletSession.LAYOUT_SEPARATOR);
 		sb.append(_PLID);
 		sb.append(StringPool.QUESTION);
 
@@ -445,8 +443,9 @@ public class PortletSessionImplTest {
 	}
 
 	@AdviseWith(
-		adviceClasses =
-			{PropsUtilAdvice.class, PortalClassLoaderUtilAdvice.class}
+		adviceClasses = {
+			PropsUtilAdvice.class, PortalClassLoaderUtilAdvice.class
+		}
 	)
 	@Test
 	public void testSerializableHttpSessionWrapper() {

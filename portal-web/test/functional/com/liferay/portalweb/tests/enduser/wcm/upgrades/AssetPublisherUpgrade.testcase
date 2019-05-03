@@ -1,56 +1,42 @@
-<definition component-name="portal-upgrades">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="ignore.errors" value="Plugin security management is not enabled. Enable a security manager, then restart." />
-	<property name="testray.main.component.name" value="Upgrades WEM" />
+@component-name = "portal-upgrades"
+definition {
+	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property ignore.errors = "Plugin security management is not enabled. Enable a security manager, then restart.";
+	property testray.main.component.name = "Upgrades WEM";
 
-	<set-up>
-		<execute macro="SignIn#signIn" />
+	setUp {
+		SignIn.signIn();
 
-		<execute macro="Smoke#viewWelcomePage" />
+		Smoke.viewWelcomePage();
 
-		<execute macro="Upgrade#reindexSearches" />
-	</set-up>
+		Upgrade.reindexSearches();
+	}
 
-	<command name="ViewAssetPublisherArchive6012" priority="5">
-		<property name="data.archive.type" value="data-archive-asset-publisher" />
-		<property name="portal.version" value="6.0.12" />
+	@priority = "5"
+	test ViewAssetPublisherArchive621015 {
+		property data.archive.type = "data-archive-asset-publisher";
+		property portal.version = "6.2.10.15";
 
-		<execute macro="Upgrade#viewAssetPublisher" />
-	</command>
+		Upgrade.viewAssetPublisher();
+	}
 
-	<command name="ViewAssetPublisherArchive612" priority="5">
-		<property name="data.archive.type" value="data-archive-asset-publisher" />
-		<property name="portal.version" value="6.1.2" />
+	@priority = "5"
+	test ViewAssetPublisherArchive621021 {
+		property data.archive.type = "data-archive-asset-publisher";
+		property database.types = "db2,mysql,oracle,postgresql,sybase";
+		property portal.version = "6.2.10.21";
 
-		<execute macro="Upgrade#viewAssetPublisher" />
-	</command>
+		Upgrade.viewAssetPublisher();
+	}
 
-	<command name="ViewAssetPublisherArchive6130" priority="5">
-		<property name="data.archive.type" value="data-archive-asset-publisher" />
-		<property name="portal.version" value="6.1.30" />
+	@priority = "5"
+	test ViewAssetPublisherArchive625 {
+		property data.archive.type = "data-archive-asset-publisher";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "6.2.5";
 
-		<execute macro="Upgrade#viewAssetPublisher" />
-	</command>
-
-	<command name="ViewAssetPublisherArchive621015" priority="5">
-		<property name="data.archive.type" value="data-archive-asset-publisher" />
-		<property name="portal.version" value="6.2.10.15" />
-
-		<execute macro="Upgrade#viewAssetPublisher" />
-	</command>
-
-	<command name="ViewAssetPublisherArchive623" priority="5">
-		<property name="data.archive.type" value="data-archive-asset-publisher" />
-		<property name="portal.version" value="6.2.3" />
-
-		<execute macro="Upgrade#viewAssetPublisher" />
-	</command>
-
-	<command name="ViewAssetPublisherArchive625" priority="5">
-		<property name="data.archive.type" value="data-archive-asset-publisher" />
-		<property name="portal.version" value="6.2.5" />
-
-		<execute macro="Upgrade#viewAssetPublisher" />
-	</command>
-</definition>
+		Upgrade.viewAssetPublisher();
+	}
+}

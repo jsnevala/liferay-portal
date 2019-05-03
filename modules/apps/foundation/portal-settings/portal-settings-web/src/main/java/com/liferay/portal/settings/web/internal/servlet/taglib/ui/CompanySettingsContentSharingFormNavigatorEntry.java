@@ -27,7 +27,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Philip Jones
  */
 @Component(
-	immediate = true, property = {"form.navigator.entry.order:Integer=20"},
+	immediate = true, property = "form.navigator.entry.order:Integer=20",
 	service = FormNavigatorEntry.class
 )
 public class CompanySettingsContentSharingFormNavigatorEntry
@@ -35,8 +35,8 @@ public class CompanySettingsContentSharingFormNavigatorEntry
 
 	@Override
 	public String getCategoryKey() {
-		return
-			FormNavigatorConstants.CATEGORY_KEY_COMPANY_SETTINGS_CONFIGURATION;
+		return FormNavigatorConstants.
+			CATEGORY_KEY_COMPANY_SETTINGS_CONFIGURATION;
 	}
 
 	@Override

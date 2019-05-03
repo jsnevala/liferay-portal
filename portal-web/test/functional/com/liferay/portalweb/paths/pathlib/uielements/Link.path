@@ -9,11 +9,6 @@
 </thead>
 <tbody>
 <tr>
-	<td>ACCESS_FROM_DESKTOP</td>
-	<td>//span[contains(@class,'taglib-text') and contains(.,'Access from Desktop')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>ADD_CHILD_PAGE</td>
 	<td>//a/span[contains(.,'Add Child Page')]</td>
 	<td></td>
@@ -34,11 +29,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>CHANGE_EMAIL_ADDRESS</td>
-	<td>//div/a[contains(.,'Change Email Address')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>CONFIRM</td>
 	<td>//a[contains(.,'Confirm')]</td>
 	<td></td>
@@ -55,7 +45,7 @@
 </tr>
 <tr>
 	<td>DOWNLOAD</td>
-	<td>//a[contains(@class,'taglib-icon')]/span[contains(@class,'taglib-text') and contains(.,'Download')]</td>
+	<td>//span[@class='download-document']/a</td>
 	<td></td>
 </tr>
 <tr>
@@ -74,8 +64,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>MANAGE_DISPLAY_TEMPLATES_FOR_LIFERAY</td>
-	<td>//a[contains(.,'Manage Display Templates for Liferay')]</td>
+	<td>MARK_AS_SPAM</td>
+	<td>//a[contains(.,'Mark as Spam')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -84,23 +74,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>MARK_AS_SPAM</td>
-	<td>//a[contains(.,'Mark as Spam')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>MOVE</td>
 	<td>//span[contains(.,'Move')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>MOVE_TO_THE_RECYCLING_BIN</td>
+	<td>MOVE_TO_THE_RECYCLE_BIN</td>
 	<td>//a/span[contains(@class,'taglib-text') and contains(.,'Move to the Recycle Bin')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NEW_PAGE</td>
-	<td>//a[contains(.,'New Page')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -111,6 +91,11 @@
 <tr>
 	<td>PAGE_LOCALE</td>
 	<td>//div[contains(@id,'portalMessageContainer')]/a[contains(.,'${key_pageLocale}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PERMISSIONS</td>
+	<td>//a/span[contains(@class,'taglib-text') and contains(.,'Permissions')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -129,23 +114,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>RSS</td>
-	<td>//a/span[contains(@class,'taglib-text') and contains(.,'RSS')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>PERMISSIONS</td>
-	<td>//a/span[contains(@class,'taglib-text') and contains(.,'Permissions')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>REFRESH_COUNTS</td>
 	<td>//a[contains(@id,'rangeLink')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SEND_NEW_VERIFICATION_CODE</td>
-	<td>//div/a[contains(.,'Send New Verification Code')]</td>
+	<td>RSS</td>
+	<td>//a/span[contains(@class,'taglib-text') and contains(.,'RSS')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -159,11 +134,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>VIEW_IN_CONTEXT</td>
-	<td>//a[contains(.,'View in Context')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>UNSUBSCRIBE</td>
 	<td>//a/span[contains(@class,'taglib-text') and contains(.,'Unsubscribe')]</td>
 	<td></td>
@@ -171,6 +141,11 @@
 <tr>
 	<td>URL</td>
 	<td>//a[contains(@class,'show-url-file')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>VIEW_IN_CONTEXT</td>
+	<td>//a[contains(.,'View in Context')]</td>
 	<td></td>
 </tr>
 <tr>

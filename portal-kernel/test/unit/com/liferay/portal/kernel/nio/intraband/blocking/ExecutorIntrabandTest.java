@@ -467,6 +467,7 @@ public class ExecutorIntrabandTest {
 		// Submitted callback
 
 		Pipe readPipe = Pipe.open();
+
 		Pipe writePipe = Pipe.open();
 
 		GatheringByteChannel gatheringByteChannel = writePipe.sink();
@@ -711,8 +712,9 @@ public class ExecutorIntrabandTest {
 			Assert.fail();
 		}
 		catch (ExecutionException ee) {
-			Assert.assertEquals(
-				IllegalStateException.class, ee.getCause().getClass());
+			Throwable cause = ee.getCause();
+
+			Assert.assertEquals(IllegalStateException.class, cause.getClass());
 		}
 
 		writingThread.join();

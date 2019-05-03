@@ -73,7 +73,7 @@ boolean search = mvcRenderCommandName.equals("/document_library/search");
 			</portlet:renderURL>
 
 			<liferay-frontend:management-bar-filter-item
-				active='<%= ((navigation.equals("home")) && (folderId == rootFolderId) && (fileEntryTypeId == -1)) %>'
+				active='<%= navigation.equals("home") && (folderId == rootFolderId) && (fileEntryTypeId == -1) %>'
 				label="all"
 				url="<%= viewDocumentsHomeURL.toString() %>"
 			/>
@@ -127,7 +127,7 @@ boolean search = mvcRenderCommandName.equals("/document_library/search");
 		Group scopeGroup = themeDisplay.getScopeGroup();
 		%>
 
-		<c:if test="<%= !scopeGroup.isStaged() || scopeGroup.isStagingGroup() || !scopeGroup.isStagedPortlet(DLPortletKeys.DOCUMENT_LIBRARY) %>">
+		<c:if test="<%= !scopeGroup.hasLocalOrRemoteStagingGroup() || !scopeGroup.isStagedPortlet(DLPortletKeys.DOCUMENT_LIBRARY) %>">
 
 			<%
 			String taglibURL = "javascript:Liferay.fire('" + renderResponse.getNamespace() + "editEntry', {action: '" + Constants.CHECKIN + "'}); void(0);";

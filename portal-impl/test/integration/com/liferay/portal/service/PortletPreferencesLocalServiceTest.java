@@ -14,11 +14,13 @@
 
 package com.liferay.portal.service;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.deploy.hot.ServiceBag;
 import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.model.PortletApp;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.PortletPreferencesIds;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
@@ -33,6 +35,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.util.ClassLoaderUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.model.impl.PortletAppImpl;
 import com.liferay.portal.service.util.test.PortletPreferencesImplTestUtil;
 import com.liferay.portal.service.util.test.PortletPreferencesTestUtil;
 import com.liferay.portal.spring.aop.ServiceBeanAopCacheManagerUtil;
@@ -46,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -76,6 +80,13 @@ public class PortletPreferencesLocalServiceTest {
 
 		_portlet = PortletLocalServiceUtil.getPortletById(
 			_layout.getCompanyId(), String.valueOf(_PORTLET_ID));
+	}
+
+	@After
+	public void tearDown() {
+		_portlet.setPortletApp(_portletApp);
+
+		PortletLocalServiceUtil.destroyPortlet(_portlet);
 	}
 
 	@Test
@@ -409,8 +420,9 @@ public class PortletPreferencesLocalServiceTest {
 	@Test
 	public void testFetchLayoutJxPortletPreferences() throws Exception {
 		PortletPreferencesImpl portletPreferencesImpl =
-			(PortletPreferencesImpl)PortletPreferencesTestUtil.
-				fetchLayoutJxPortletPreferences(_layout, _portlet);
+			(PortletPreferencesImpl)
+				PortletPreferencesTestUtil.fetchLayoutJxPortletPreferences(
+					_layout, _portlet);
 
 		Assert.assertNull(portletPreferencesImpl);
 	}
@@ -574,11 +586,11 @@ public class PortletPreferencesLocalServiceTest {
 			portletPreferencesList.toString(), 1,
 			portletPreferencesList.size());
 
-		PortletPreferencesImpl portletPreferenesImpl =
+		PortletPreferencesImpl portletPreferencesImpl =
 			PortletPreferencesImplTestUtil.toPortletPreferencesImpl(
 				portletPreferencesList.get(0));
 
-		assertOwner(_layout.getGroup(), portletPreferenesImpl);
+		assertOwner(_layout.getGroup(), portletPreferencesImpl);
 	}
 
 	@Test
@@ -813,11 +825,11 @@ public class PortletPreferencesLocalServiceTest {
 			portletPreferencesList.toString(), 1,
 			portletPreferencesList.size());
 
-		PortletPreferencesImpl portletPreferenesImpl =
+		PortletPreferencesImpl portletPreferencesImpl =
 			PortletPreferencesImplTestUtil.toPortletPreferencesImpl(
 				portletPreferencesList.get(0));
 
-		assertOwner(_layout, portletPreferenesImpl);
+		assertOwner(_layout, portletPreferencesImpl);
 	}
 
 	@Test
@@ -832,6 +844,8 @@ public class PortletPreferencesLocalServiceTest {
 
 		PortletPreferencesTestUtil.addLayoutPortletPreferences(
 			_layout, _portlet);
+
+		PortletLocalServiceUtil.deployPortlet(_portlet);
 
 		Assert.assertEquals(
 			1,
@@ -1147,11 +1161,11 @@ public class PortletPreferencesLocalServiceTest {
 			portletPreferencesList.toString(), 1,
 			portletPreferencesList.size());
 
-		PortletPreferencesImpl portletPreferenesImpl =
+		PortletPreferencesImpl portletPreferencesImpl =
 			PortletPreferencesImplTestUtil.toPortletPreferencesImpl(
 				portletPreferencesList.get(0));
 
-		assertOwner(_layout, portletPreferenesImpl);
+		assertOwner(_layout, portletPreferencesImpl);
 
 		Group group = GroupTestUtil.addGroup();
 
@@ -1179,6 +1193,8 @@ public class PortletPreferencesLocalServiceTest {
 
 		PortletPreferencesTestUtil.addLayoutPortletPreferences(
 			_layout, _portlet);
+
+		PortletLocalServiceUtil.deployPortlet(_portlet);
 
 		Assert.assertEquals(
 			1,
@@ -1531,13 +1547,19 @@ public class PortletPreferencesLocalServiceTest {
 
 	private static final String[] _SINGLE_VALUE = {"value"};
 
+	private static final PortletApp _portletApp = new PortletAppImpl(
+		StringPool.CONTENT);
+
 	private Group _group;
 
 	@DeleteAfterTestRun
 	private final List<Group> _groups = new ArrayList<>();
 
 	private Layout _layout;
+
+	@DeleteAfterTestRun
 	private Portlet _portlet;
+
 	private ServiceBag<PortletPreferencesLocalService> _serviceBag;
 
 	private static class TestPortletPreferencesLocalServiceWrapper

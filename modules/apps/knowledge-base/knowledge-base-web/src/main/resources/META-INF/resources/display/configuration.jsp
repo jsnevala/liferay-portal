@@ -17,7 +17,7 @@
 <%@ include file="/display/init.jsp" %>
 
 <%
-String tabsNames = Objects.equals(portletResource, KBPortletKeys.KNOWLEDGE_BASE_ARTICLE_DEFAULT_INSTANCE) ? "display-settings" : "general,display-settings";
+String tabsNames = "general,display-settings";
 
 kbDisplayPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(KBDisplayPortletInstanceConfiguration.class, kbDisplayPortletInstanceConfiguration, request.getParameterMap(), "preferences--", "--");
 %>
@@ -44,46 +44,42 @@ kbDisplayPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(KBDispl
 			refresh="<%= false %>"
 			type="tabs nav-tabs-default"
 		>
-			<c:if test='<%= tabsNames.contains("general") %>'>
-				<liferay-ui:section>
-					<div class="container-fluid-1280">
-						<aui:fieldset-group markupView="lexicon">
-							<aui:fieldset>
-								<div class="input-append kb-field-wrapper">
-									<aui:field-wrapper label="article-or-folder">
+			<liferay-ui:section>
+				<div class="container-fluid-1280">
+					<aui:fieldset-group markupView="lexicon">
+						<aui:fieldset>
+							<div class="form-group">
 
-										<%
-										String title = StringPool.BLANK;
+								<%
+								String title = StringPool.BLANK;
 
-										if (resourceClassNameId != kbFolderClassNameId) {
-											KBArticle kbArticle = KBArticleServiceUtil.fetchLatestKBArticle(kbDisplayPortletInstanceConfiguration.resourcePrimKey(), WorkflowConstants.STATUS_APPROVED);
+								if (resourceClassNameId != kbFolderClassNameId) {
+									KBArticle kbArticle = KBArticleServiceUtil.fetchLatestKBArticle(kbDisplayPortletInstanceConfiguration.resourcePrimKey(), WorkflowConstants.STATUS_APPROVED);
 
-											if (kbArticle != null) {
-												title = kbArticle.getTitle();
-											}
-										}
-										else if (kbDisplayPortletInstanceConfiguration.resourcePrimKey() == KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-											title = LanguageUtil.get(resourceBundle, "home");
-										}
-										else {
-											KBFolder kbFolder = KBFolderServiceUtil.fetchKBFolder(kbDisplayPortletInstanceConfiguration.resourcePrimKey());
+									if (kbArticle != null) {
+										title = kbArticle.getTitle();
+									}
+								}
+								else if (kbDisplayPortletInstanceConfiguration.resourcePrimKey() == KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+									title = LanguageUtil.get(resourceBundle, "home");
+								}
+								else {
+									KBFolder kbFolder = KBFolderServiceUtil.fetchKBFolder(kbDisplayPortletInstanceConfiguration.resourcePrimKey());
 
-											if (kbFolder != null) {
-												title = kbFolder.getName();
-											}
-										}
-										%>
+									if (kbFolder != null) {
+										title = kbFolder.getName();
+									}
+								}
+								%>
 
-										<liferay-ui:input-resource id="configurationKBObject" url="<%= title %>" />
+								<aui:input label="article-or-folder" name="configurationKBObject" type="resource" value="<%= title %>" />
 
-										<aui:button name="selectKBObjectButton" value="select" />
-									</aui:field-wrapper>
-								</div>
-							</aui:fieldset>
-						</aui:fieldset-group>
-					</div>
-				</liferay-ui:section>
-			</c:if>
+								<aui:button name="selectKBObjectButton" value="select" />
+							</div>
+						</aui:fieldset>
+					</aui:fieldset-group>
+				</div>
+			</liferay-ui:section>
 
 			<liferay-ui:section>
 				<div class="container-fluid-1280">
@@ -129,46 +125,44 @@ kbDisplayPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(KBDispl
 	</aui:button-row>
 </aui:form>
 
-<c:if test='<%= tabsNames.contains("general") %>'>
-	<aui:script>
-		AUI.$('#<portlet:namespace />selectKBObjectButton').on(
-			'click',
-			function(event) {
-				Liferay.Util.selectEntity(
-					{
-						dialog: {
-							constrain: true,
-							destroyOnHide: true,
-							modal: true,
-							width: 600
-						},
-						id: '<portlet:namespace />selectKBObject',
-						title: '<liferay-ui:message key="select-entry" />',
-
-						<liferay-portlet:renderURL portletName="<%= portletResource %>" var="selectKBObjectURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-							<portlet:param name="mvcPath" value="/display/select_parent.jsp" />
-							<portlet:param name="parentResourceClassNameId" value="<%= String.valueOf(resourceClassNameId) %>" />
-							<portlet:param name="parentResourcePrimKey" value="<%= String.valueOf(kbDisplayPortletInstanceConfiguration.resourcePrimKey()) %>" />
-							<portlet:param name="originalParentResourcePrimKey" value="<%= String.valueOf(kbDisplayPortletInstanceConfiguration.resourcePrimKey()) %>" />
-							<portlet:param name="eventName" value='<%= liferayPortletResponse.getNamespace() + "selectKBObject" %>' />
-						</liferay-portlet:renderURL>
-
-						uri: '<%= HtmlUtil.escapeJS(selectKBObjectURL) %>'
+<aui:script>
+	AUI.$('#<portlet:namespace />selectKBObjectButton').on(
+		'click',
+		function(event) {
+			Liferay.Util.selectEntity(
+				{
+					dialog: {
+						constrain: true,
+						destroyOnHide: true,
+						modal: true,
+						width: 600
 					},
-					function(event) {
-						document.<portlet:namespace />fm.<portlet:namespace />resourceClassNameId.value = event.resourceclassnameid;
+					id: '<portlet:namespace />selectKBObject',
+					title: '<liferay-ui:message key="select-entry" />',
 
-						var kbObjectData = {
-							idString: 'resourcePrimKey',
-							idValue: event.resourceprimkey,
-							nameString: 'configurationKBObject',
-							nameValue: event.title
-						};
+					<liferay-portlet:renderURL portletName="<%= portletResource %>" var="selectKBObjectURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+						<portlet:param name="mvcPath" value="/display/select_parent.jsp" />
+						<portlet:param name="parentResourceClassNameId" value="<%= String.valueOf(resourceClassNameId) %>" />
+						<portlet:param name="parentResourcePrimKey" value="<%= String.valueOf(kbDisplayPortletInstanceConfiguration.resourcePrimKey()) %>" />
+						<portlet:param name="originalParentResourcePrimKey" value="<%= String.valueOf(kbDisplayPortletInstanceConfiguration.resourcePrimKey()) %>" />
+						<portlet:param name="eventName" value='<%= liferayPortletResponse.getNamespace() + "selectKBObject" %>' />
+					</liferay-portlet:renderURL>
 
-						Liferay.Util.selectFolder(kbObjectData, '<portlet:namespace />');
-					}
-				);
-			}
-		);
-	</aui:script>
-</c:if>
+					uri: '<%= HtmlUtil.escapeJS(selectKBObjectURL) %>'
+				},
+				function(event) {
+					document.<portlet:namespace />fm.<portlet:namespace />resourceClassNameId.value = event.resourceclassnameid;
+
+					var kbObjectData = {
+						idString: 'resourcePrimKey',
+						idValue: event.resourceprimkey,
+						nameString: 'configurationKBObject',
+						nameValue: event.title
+					};
+
+					Liferay.Util.selectFolder(kbObjectData, '<portlet:namespace />');
+				}
+			);
+		}
+	);
+</aui:script>

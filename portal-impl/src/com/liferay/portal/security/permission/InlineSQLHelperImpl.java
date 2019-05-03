@@ -512,11 +512,12 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 		int pos = sql.indexOf(_WHERE_CLAUSE);
 
 		if (pos != -1) {
-			StringBundler sb = new StringBundler(4);
+			StringBundler sb = new StringBundler(5);
 
-			sb.append(sql.substring(0, pos));
-			sb.append(permissionWhere);
-			sb.append(" AND ");
+			sb.append(sql.substring(0, pos + 7));
+			sb.append("(");
+			sb.append(permissionWhere.substring(7));
+			sb.append(") AND ");
 			sb.append(sql.substring(pos + 7));
 
 			return sb.toString();
@@ -525,18 +526,32 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 		pos = sql.indexOf(_GROUP_BY_CLAUSE);
 
 		if (pos != -1) {
-			return sql.substring(0, pos + 1).concat(permissionWhere).concat(
-				sql.substring(pos + 1));
+			return sql.substring(
+				0, pos + 1
+			).concat(
+				permissionWhere
+			).concat(
+				sql.substring(pos + 1)
+			);
 		}
 
 		pos = sql.indexOf(_ORDER_BY_CLAUSE);
 
 		if (pos != -1) {
-			return sql.substring(0, pos + 1).concat(permissionWhere).concat(
-				sql.substring(pos + 1));
+			return sql.substring(
+				0, pos + 1
+			).concat(
+				permissionWhere
+			).concat(
+				sql.substring(pos + 1)
+			);
 		}
 
-		return sql.concat(StringPool.SPACE).concat(permissionWhere);
+		return sql.concat(
+			StringPool.SPACE
+		).concat(
+			permissionWhere
+		);
 	}
 
 	protected String replacePermissionCheckJoin(

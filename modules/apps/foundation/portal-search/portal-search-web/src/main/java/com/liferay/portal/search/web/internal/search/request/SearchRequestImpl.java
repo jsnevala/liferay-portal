@@ -81,10 +81,7 @@ public class SearchRequestImpl implements SearchRequest {
 
 		searchContainer.setTotal(hits.getLength());
 
-		SearchResponseImpl searchResponseImpl = buildSearchResponse(
-			hits, searchContext, searchContainer);
-
-		return searchResponseImpl;
+		return buildSearchResponse(hits, searchContext, searchContainer);
 	}
 
 	protected void addScopeFacet(SearchContext searchContext) {
@@ -104,6 +101,7 @@ public class SearchRequestImpl implements SearchRequest {
 	protected SearchContext buildSearchContext() {
 		SearchContext searchContext = _searchContextBuilder.getSearchContext();
 
+		searchContext.setAttribute("filterExpired", Boolean.TRUE);
 		searchContext.setAttribute("paginationType", "more");
 
 		addScopeFacet(searchContext);

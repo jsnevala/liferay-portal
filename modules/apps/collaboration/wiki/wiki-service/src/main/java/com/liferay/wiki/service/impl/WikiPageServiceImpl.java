@@ -165,8 +165,8 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.2.0, replaced by {@link #addTempFileEntry(long,
-	 *             String, String, InputStream, String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #addTempFileEntry(long, String, String, InputStream, String)}
 	 */
 	@Deprecated
 	@Override
@@ -188,7 +188,7 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 		WikiPage page = wikiPageLocalService.getPage(nodeId, title, null);
 
 		WikiPagePermissionChecker.check(
-			getPermissionChecker(), page, ActionKeys.DELETE);
+			getPermissionChecker(), page, ActionKeys.UPDATE);
 
 		WikiNodePermissionChecker.check(
 			getPermissionChecker(), nodeId, ActionKeys.ADD_PAGE);
@@ -611,7 +611,7 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 
 		calendar.add(Calendar.WEEK_OF_YEAR, -1);
 
-		return wikiPageFinder.filterFindByCreateDate(
+		return wikiPageFinder.findByModifiedDate(
 			groupId, nodeId, calendar.getTime(), false, start, end);
 	}
 
@@ -626,7 +626,7 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 
 		calendar.add(Calendar.WEEK_OF_YEAR, -1);
 
-		return wikiPageFinder.filterCountByCreateDate(
+		return wikiPageFinder.countByModifiedDate(
 			groupId, nodeId, calendar.getTime(), false);
 	}
 
@@ -695,7 +695,7 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 		WikiPage page = wikiPageLocalService.fetchPage(nodeId, title);
 
 		WikiPagePermissionChecker.check(
-			getPermissionChecker(), page, ActionKeys.DELETE);
+			getPermissionChecker(), page, ActionKeys.UPDATE);
 
 		WikiNodePermissionChecker.check(
 			getPermissionChecker(), nodeId, ActionKeys.ADD_PAGE);
@@ -909,11 +909,10 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 				page.getTitle() + StringPool.SPACE + page.getVersion();
 
 			if (page.isMinorEdit()) {
-				title +=
-					StringBundler.concat(
-						StringPool.SPACE, StringPool.OPEN_PARENTHESIS,
-						LanguageUtil.get(locale, "minor-edit"),
-						StringPool.CLOSE_PARENTHESIS);
+				title += StringBundler.concat(
+					StringPool.SPACE, StringPool.OPEN_PARENTHESIS,
+					LanguageUtil.get(locale, "minor-edit"),
+					StringPool.CLOSE_PARENTHESIS);
 			}
 
 			syndEntry.setTitle(title);

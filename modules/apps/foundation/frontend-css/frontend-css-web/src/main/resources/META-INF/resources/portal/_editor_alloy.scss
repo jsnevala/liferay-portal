@@ -1,7 +1,7 @@
 * [class*="ae-toolbar-"][role="toolbar"] {
 	z-index: 1000;
 
-	@include media-query($screen-sm) {
+	@media (max-width: $screen-sm) {
 		z-index: 1050;
 	}
 }
@@ -39,7 +39,12 @@
 		}
 
 		a {
+			color: #65B6F0;
 			cursor: auto;
+		}
+
+		a:hover, a:focus {
+			color: #40A4EC;
 		}
 
 		p:only-child {
@@ -52,6 +57,10 @@
 			~ .alloy-editor-icon {
 				display: block;
 			}
+		}
+
+		.cke_widget_wrapper {
+			max-width: 100%;
 		}
 	}
 
@@ -90,4 +99,8 @@
 	font-weight: normal;
 	line-height: 1.4em;
 	text-align: left;
+}
+
+.ie11 .alloy-editor-container .cke_widget_inline {
+	display: inline-block;
 }

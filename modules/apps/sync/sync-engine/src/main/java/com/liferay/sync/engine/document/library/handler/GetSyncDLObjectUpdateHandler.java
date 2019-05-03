@@ -67,6 +67,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.util.EntityUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +101,8 @@ public class GetSyncDLObjectUpdateHandler extends BaseJSONHandler {
 				StatusLine statusLine = httpResponse.getStatusLine();
 
 				if (statusLine.getStatusCode() != HttpStatus.SC_OK) {
+					EntityUtils.consume(httpResponse.getEntity());
+
 					doCancel();
 
 					return;
@@ -921,6 +924,7 @@ public class GetSyncDLObjectUpdateHandler extends BaseJSONHandler {
 			}
 		}
 		else if (targetSyncFile.isFile() &&
+				 (targetSyncFile.getVersionId() != previousVersionId) &&
 				 FileUtil.isModified(targetSyncFile, filePath)) {
 
 			downloadFile(

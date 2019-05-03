@@ -65,8 +65,7 @@ public class AMBlogsEntryAttachmentContentUpdaterTest extends PowerMockito {
 
 		Assert.assertEquals(
 			"<img data-fileEntryId=\"" + _IMAGE_FILE_ENTRY_ID + "\" src=\"" +
-				_FILE_ENTRY_IMAGE_URL +
-					"\" />",
+				_FILE_ENTRY_IMAGE_URL + "\" />",
 			imgTag);
 	}
 

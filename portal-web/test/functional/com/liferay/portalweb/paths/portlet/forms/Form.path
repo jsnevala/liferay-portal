@@ -14,16 +14,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SAVE_BUTTON_DISABLED</td>
-	<td>//div[@class='button-holder ddl-form-builder-buttons']//button[contains(.,'Save') and contains(@class,'disabled')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SAVE_BUTTON_DROPDOWN</td>
-	<td>//div[@class='button-holder ddl-form-builder-buttons']//button[contains(@id,'submitToggle')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>NAME_FIELD</td>
 	<td>//div[contains(@id,'nameEditorContainer')]/div</td>
 	<td></td>
@@ -36,11 +26,6 @@
 <tr>
 	<td>PAGE_TITLE_FIELD</td>
 	<td>//textarea[contains(@class,'form-builder-page-header-title')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>PAGE_DESCRIPTION_FIELD</td>
-	<td>//textarea[contains(@class,'form-builder-page-header-description')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -65,11 +50,6 @@
 	<td></td>
 </tr>
 <!--ADD_COLUMN-->
-<tr>
-	<td>ADD_COLUMN_LEFT</td>
-	<td>//div[@class='layout-row-container-row'][${key_rowNumber}]//div[contains(@class,'last-col')]/following-sibling::div[1]//div[contains(@class,'resize-col-draggable-handle')]</td>
-	<td></td>
-</tr>
 <tr>
 	<td>ADD_COLUMN_RIGHT</td>
 	<td>//div[@class='layout-row-container-row'][${key_rowNumber}]//div[contains(@class,'last-col')]/following-sibling::div[2]//div[contains(@class,'resize-col-draggable-handle')]</td>

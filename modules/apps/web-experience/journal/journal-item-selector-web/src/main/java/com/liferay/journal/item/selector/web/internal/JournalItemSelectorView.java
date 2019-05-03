@@ -42,10 +42,10 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
-	property = {"item.selector.view.order:Integer=100"},
+	property = "item.selector.view.order:Integer=100",
 	service = ItemSelectorView.class
 )
 public class JournalItemSelectorView

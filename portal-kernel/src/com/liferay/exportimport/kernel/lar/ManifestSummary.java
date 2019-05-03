@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Zsolt Berentey
  * @author Daniel Kocsis
  */
@@ -189,7 +189,7 @@ public class ManifestSummary implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getModelAdditionCount(StagedModel)}
 	 */
 	@Deprecated
@@ -198,7 +198,7 @@ public class ManifestSummary implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getModelAdditionCount(StagedModelType)}
 	 */
 	@Deprecated
@@ -235,7 +235,8 @@ public class ManifestSummary implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getAllModelDeletionCounts()}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getAllModelDeletionCounts()}
 	 */
 	@Deprecated
 	public long getModelDeletionCount() {
@@ -243,7 +244,7 @@ public class ManifestSummary implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getModelDeletionCount(StagedModel)}
 	 */
 	@Deprecated
@@ -367,7 +368,11 @@ public class ManifestSummary implements Serializable {
 			return modelName;
 		}
 
-		return modelName.concat(StringPool.POUND).concat(referrerModelName);
+		return modelName.concat(
+			StringPool.POUND
+		).concat(
+			referrerModelName
+		);
 	}
 
 	protected long getModelAdditionCount(

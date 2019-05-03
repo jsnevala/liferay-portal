@@ -5,22 +5,27 @@ task processSanitizerConfiguration(type: Copy)
 String sanitizerConfigurationUrl = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/owaspantisamy/antisamy-ebay-1.4.4.xml"
 
 dependencies {
-	compileInclude group: "commons-httpclient", name: "commons-httpclient", version: "3.1"
+	compileInclude group: "commons-io", name: "commons-io", version: "1.3.1"
+	compileInclude group: "commons-logging", name: "commons-logging", version: "1.0.4"
 	compileInclude group: "net.sourceforge.nekohtml", name: "nekohtml", version: "1.9.16"
-	compileInclude group: "org.apache.xmlgraphics", name: "batik-css", version: "1.7"
-	compileInclude group: "org.apache.xmlgraphics", name: "batik-ext", version: "1.7"
-	compileInclude group: "org.apache.xmlgraphics", name: "batik-util", version: "1.7"
-	compileInclude group: "org.owasp.antisamy", name: "antisamy", version: "1.5.3"
+	compileInclude group: "org.apache.httpcomponents", name: "httpclient", version: "4.5.5"
+	compileInclude group: "org.apache.httpcomponents", name: "httpcore", version: "4.4.9"
+	compileInclude group: "org.apache.xmlgraphics", name: "batik-constants", version: "1.10"
+	compileInclude group: "org.apache.xmlgraphics", name: "batik-css", version: "1.10"
+	compileInclude group: "org.apache.xmlgraphics", name: "batik-i18n", version: "1.10"
+	compileInclude group: "org.apache.xmlgraphics", name: "batik-util", version: "1.10"
+	compileInclude group: "org.apache.xmlgraphics", name: "xmlgraphics-commons", version: "2.2"
+	compileInclude group: "org.owasp.antisamy", name: "antisamy", version: "1.5.7"
 	compileInclude group: "xml-apis", name: "xml-apis-ext", version: "1.3.04"
 
-	provided group: "biz.aQute.bnd", name: "biz.aQute.bndlib", version: "3.1.0"
-	provided group: "com.liferay", name: "com.liferay.petra.string", version: "1.0.0"
-	provided group: "com.liferay", name: "com.liferay.portal.configuration.metatype", version: "2.0.0"
-	provided group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "2.49.0"
-	provided group: "org.osgi", name: "org.osgi.core", version: "5.0.0"
-	provided group: "org.osgi", name: "org.osgi.service.component.annotations", version: "1.3.0"
-	provided group: "xerces", name: "xercesImpl", version: "2.9.1"
-	provided group: "xml-apis", name: "xml-apis", version: "1.3.04"
+	compileOnly group: "biz.aQute.bnd", name: "biz.aQute.bndlib", version: "3.1.0"
+	compileOnly group: "com.liferay", name: "com.liferay.petra.string", version: "1.0.0"
+	compileOnly group: "com.liferay", name: "com.liferay.portal.configuration.metatype", version: "2.0.0"
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "2.49.0"
+	compileOnly group: "org.osgi", name: "org.osgi.core", version: "5.0.0"
+	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations", version: "1.3.0"
+	compileOnly group: "xerces", name: "xercesImpl", version: "2.9.1"
+	compileOnly group: "xml-apis", name: "xml-apis", version: "1.3.04"
 }
 
 processResources {
@@ -39,6 +44,13 @@ processSanitizerConfiguration {
 
 		if (line.contains('<directive name="maxInputSize" value="20000"/>')) {
 			line = line.replace "20000", "200000"
+		}
+
+		if (line.contains('<regexp name="onsiteURL" value=')) {
+			line = '		<regexp name="onsiteURL" value="^(?![\\p{L}\\p{N}\\\\\\.\\#@\\$%\\*\\+&amp;;\\-_~,\\?=/!]*(&amp;colon))[\\p{L}\\p{N}\\\\\\.\\#@\\$%\\*\\+&amp;;\\-_~,\\?=/!]*"/>'
+		}
+		else if (line.contains('<regexp name="offsiteURL" value=')) {
+			line = '		<regexp name="offsiteURL" value="(\\s)*((ht|f)tp(s?)://|mailto:)[\\p{L}\\p{N}]+[\\p{L}\\p{N}\\p{Zs}\\.\\#@\\$%\\*\\+&amp;;:\\-_~,\\?=/!\\(\\)]*(\\s)*"/>'
 		}
 		else if (line.contains('<tag-rules>')) {
 			line = """\
@@ -92,6 +104,20 @@ processSanitizerConfiguration {
 				|					<regexp name="positiveInteger"/>
 				|				</regexp-list>
 				|			</attribute>""".stripMargin()
+		}
+		else if (line.contains('<tag name="ol" action="validate"/>')) {
+			line = """\
+				|		<tag name="ol" action="validate">
+				|			<attribute name="type">
+				|				<literal-list>
+				|					<literal value="1"/>
+				|					<literal value="a"/>
+				|					<literal value="A"/>
+				|					<literal value="i"/>
+				|					<literal value="I"/>
+				|				</literal-list>
+				|			</attribute>
+				|		</tag>""".stripMargin()
 		}
 
 		return line

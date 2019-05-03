@@ -19,7 +19,6 @@ import aQute.bnd.annotation.ProviderType;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-
 import com.liferay.social.networking.model.WallEntry;
 
 import java.io.Externalizable;
@@ -33,12 +32,12 @@ import java.util.Date;
  * The cache model class for representing WallEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see WallEntry
  * @generated
  */
 @ProviderType
-public class WallEntryCacheModel implements CacheModel<WallEntry>,
-	Externalizable {
+public class WallEntryCacheModel
+	implements CacheModel<WallEntry>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -146,8 +145,7 @@ public class WallEntryCacheModel implements CacheModel<WallEntry>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(wallEntryId);
 
 		objectOutput.writeLong(groupId);
@@ -182,4 +180,5 @@ public class WallEntryCacheModel implements CacheModel<WallEntry>,
 	public long createDate;
 	public long modifiedDate;
 	public String comments;
+
 }

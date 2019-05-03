@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Juan Fernández
  */
 @Component(
-	immediate = true, property = {"javax.portlet.name=" + WikiPortletKeys.WIKI},
+	immediate = true, property = "javax.portlet.name=" + WikiPortletKeys.WIKI,
 	service = TemplateHandler.class
 )
 public class WikiPortletDisplayTemplateHandler
@@ -61,8 +61,11 @@ public class WikiPortletDisplayTemplateHandler
 		String portletTitle = _portal.getPortletTitle(
 			WikiPortletKeys.WIKI, resourceBundle);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override

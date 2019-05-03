@@ -25,7 +25,6 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
@@ -42,7 +41,8 @@ public class SingleVMPoolImpl implements SingleVMPool {
 	}
 
 	/**
-	 * @deprecated As of 2.1.0, replaced by {@link #getPortalCache(String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getPortalCache(String)}
 	 */
 	@Deprecated
 	@Override
@@ -53,8 +53,8 @@ public class SingleVMPoolImpl implements SingleVMPool {
 	}
 
 	/**
-	 * @deprecated As of 2.1.0, replaced by {@link #getPortalCache(String,
-	 *             boolean)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getPortalCache(String, boolean)}
 	 */
 	@Deprecated
 	@Override
@@ -65,7 +65,8 @@ public class SingleVMPoolImpl implements SingleVMPool {
 	}
 
 	/**
-	 * @deprecated As of 2.1.0, replaced by {@link #getPortalCacheManager()}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getPortalCacheManager()}
 	 */
 	@Deprecated
 	@Override
@@ -95,7 +96,8 @@ public class SingleVMPoolImpl implements SingleVMPool {
 	}
 
 	/**
-	 * @deprecated As of 2.1.0, replaced by {@link #removePortalCache(String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #removePortalCache(String)}
 	 */
 	@Deprecated
 	@Override
@@ -112,11 +114,6 @@ public class SingleVMPoolImpl implements SingleVMPool {
 	@Modified
 	protected void activate(Map<String, Object> properties) {
 		_portalCacheManager.clearAll();
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		_portalCacheManager.destroy();
 	}
 
 	@Reference(

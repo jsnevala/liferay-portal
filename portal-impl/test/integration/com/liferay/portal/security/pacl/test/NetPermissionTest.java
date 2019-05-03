@@ -40,7 +40,9 @@ public class NetPermissionTest {
 	@Test
 	public void test1() throws Exception {
 		try {
-			Authenticator.setDefault(new Authenticator() {});
+			Authenticator.setDefault(
+				new Authenticator() {
+				});
 
 			Assert.fail();
 		}

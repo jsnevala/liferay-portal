@@ -237,7 +237,7 @@ public class FileSystemImporter extends BaseImporter {
 					ddmTemplate.getClassPK(), getMap(name), null,
 					DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY,
 					StringPool.BLANK, getDDMTemplateLanguage(file.getName()),
-					script, ddmTemplate.getCacheable(), serviceContext);
+					script, ddmTemplate.isCacheable(), serviceContext);
 			}
 		}
 		catch (PortalException pe) {
@@ -619,7 +619,7 @@ public class FileSystemImporter extends BaseImporter {
 					userId, ddmTemplate.getTemplateId(),
 					portal.getClassNameId(DDMStructure.class), getMap(name),
 					null, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, null,
-					language, script, ddmTemplate.getCacheable(),
+					language, script, ddmTemplate.isCacheable(),
 					serviceContext);
 			}
 		}
@@ -716,7 +716,7 @@ public class FileSystemImporter extends BaseImporter {
 					portal.getClassNameId(DDMStructure.class), getMap(name),
 					null, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, null,
 					language, replaceFileEntryURL(script),
-					ddmTemplate.getCacheable(), serviceContext);
+					ddmTemplate.isCacheable(), serviceContext);
 			}
 		}
 		catch (PortalException pe) {
@@ -1287,7 +1287,7 @@ public class FileSystemImporter extends BaseImporter {
 		Map<Locale, String> nameMap = getMap(
 			layoutTemplateJSONObject.getString("name"));
 
-		String name = nameMap.get(Locale.getDefault());
+		String name = nameMap.get(LocaleUtil.getDefault());
 
 		Map<Locale, String> descriptionMap = getMap(
 			layoutTemplateJSONObject, "description");
@@ -2054,14 +2054,15 @@ public class FileSystemImporter extends BaseImporter {
 	private static final Log _log = LogFactoryUtil.getLog(
 		FileSystemImporter.class);
 
+	private static final Pattern _fileEntryPattern = Pattern.compile(
+		"\\[\\$FILE=([^\\$]+)\\$\\]");
+	private static final Pattern _groupIdPattern = Pattern.compile(
+		"\\[\\$GROUP_ID\\$\\]");
+
 	private final Map<String, JSONObject> _assetJSONObjectMap = new HashMap<>();
 	private final Set<String> _ddmStructureKeys = new HashSet<>();
 	private String _defaultLayoutTemplateId;
 	private final Map<String, FileEntry> _fileEntries = new HashMap<>();
-	private final Pattern _fileEntryPattern = Pattern.compile(
-		"\\[\\$FILE=([^\\$]+)\\$\\]");
-	private final Pattern _groupIdPattern = Pattern.compile(
-		"\\[\\$GROUP_ID\\$\\]");
 	private final Map<String, Set<Long>> _primaryKeys = new HashMap<>();
 	private File _resourcesDir;
 

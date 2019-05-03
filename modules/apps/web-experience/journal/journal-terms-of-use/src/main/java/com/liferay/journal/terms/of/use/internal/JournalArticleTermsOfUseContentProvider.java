@@ -26,11 +26,11 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	immediate = true,
-	property = {"model.class.name=com.liferay.journal.model.JournalArticle"},
+	property = "model.class.name=com.liferay.journal.model.JournalArticle",
 	service = TermsOfUseContentProvider.class
 )
 public class JournalArticleTermsOfUseContentProvider

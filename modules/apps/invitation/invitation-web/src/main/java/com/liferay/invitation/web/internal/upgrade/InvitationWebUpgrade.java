@@ -66,7 +66,7 @@ public class InvitationWebUpgrade implements UpgradeStepRegistrator {
 				@Override
 				protected String[][] getRenamePortletIdsArray() {
 					return new String[][] {
-						new String[] {"100", InvitationPortletKeys.INVITATION}
+						{"100", InvitationPortletKeys.INVITATION}
 					};
 				}
 

@@ -37,7 +37,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + SocialGroupStatisticsPortletKeys.SOCIAL_GROUP_STATISTICS},
+	property = "javax.portlet.name=" + SocialGroupStatisticsPortletKeys.SOCIAL_GROUP_STATISTICS,
 	service = ConfigurationAction.class
 )
 public class SocialGroupStatisticsConfigurationAction

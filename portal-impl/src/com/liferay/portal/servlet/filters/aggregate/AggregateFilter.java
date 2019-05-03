@@ -401,8 +401,8 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 			_tempDir, cacheCommonFileName + "_E_DATA");
 
 		if (cacheDataFile.exists() &&
-			(cacheDataFile.lastModified() ==
-				URLUtil.getLastModifiedTime(resourceURL)) &&
+			(cacheDataFile.lastModified() == URLUtil.getLastModifiedTime(
+				resourceURL)) &&
 			!_isLegacyIe(request)) {
 
 			if (cacheContentTypeFile.exists()) {

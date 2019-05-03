@@ -34,10 +34,11 @@ import com.liferay.wsrp.service.WSRPConsumerPortletLocalServiceUtil;
 @ProviderType
 public abstract class WSRPConsumerPortletBaseImpl
 	extends WSRPConsumerPortletModelImpl implements WSRPConsumerPortlet {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a wsrp consumer portlet model instance should use the {@link WSRPConsumerPortlet} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a wsrp consumer portlet model instance should use the <code>WSRPConsumerPortlet</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +49,5 @@ public abstract class WSRPConsumerPortletBaseImpl
 			WSRPConsumerPortletLocalServiceUtil.updateWSRPConsumerPortlet(this);
 		}
 	}
+
 }

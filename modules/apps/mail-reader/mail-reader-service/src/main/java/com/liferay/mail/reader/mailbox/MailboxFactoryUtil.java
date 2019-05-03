@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Scott Lee
  */
 @Component(
-	immediate = true, property = {"javax.portlet.name=" + MailPortletKeys.MAIL},
+	immediate = true, property = "javax.portlet.name=" + MailPortletKeys.MAIL,
 	service = MailboxFactoryUtil.class
 )
 public class MailboxFactoryUtil {
@@ -44,6 +44,7 @@ public class MailboxFactoryUtil {
 		throws PortalException {
 
 		User user = _userLocalService.getUser(userId);
+
 		Account account = _accountLocalService.getAccount(accountId);
 
 		MailboxFactory mailboxFactory = _mailboxFactories.get(

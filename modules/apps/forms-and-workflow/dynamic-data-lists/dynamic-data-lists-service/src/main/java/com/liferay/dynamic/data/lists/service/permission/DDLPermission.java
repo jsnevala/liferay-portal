@@ -31,8 +31,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Levente Hudák
  */
 @Component(
-	immediate = true,
-	property = {"resource.name=" + DDLPermission.RESOURCE_NAME},
+	immediate = true, property = "resource.name=" + DDLPermission.RESOURCE_NAME,
 	service = ResourcePermissionChecker.class
 )
 public class DDLPermission extends BaseResourcePermissionChecker {

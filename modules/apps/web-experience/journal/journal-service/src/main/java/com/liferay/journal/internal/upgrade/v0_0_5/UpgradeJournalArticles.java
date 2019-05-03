@@ -161,9 +161,7 @@ public class UpgradeJournalArticles extends BaseUpgradePortletId {
 	@Override
 	protected String[][] getRenamePortletIdsArray() {
 		return new String[][] {
-			new String[] {
-				_PORTLET_ID_JOURNAL_CONTENT_LIST, _PORTLET_ID_ASSET_PUBLISHER
-			}
+			{_PORTLET_ID_JOURNAL_CONTENT_LIST, _PORTLET_ID_ASSET_PUBLISHER}
 		};
 	}
 
@@ -214,6 +212,7 @@ public class UpgradeJournalArticles extends BaseUpgradePortletId {
 				long portletPreferencesId = rs.getLong("portletPreferencesId");
 				long plid = rs.getLong("plid");
 				String portletId = rs.getString("portletId");
+
 				String preferences = rs.getString("preferences");
 
 				if (preferences.equals("<portlet-preferences />")) {
@@ -259,8 +258,7 @@ public class UpgradeJournalArticles extends BaseUpgradePortletId {
 
 		try (PreparedStatement ps = connection.prepareStatement(
 				"update PortletPreferences set preferences = ?, portletId = " +
-					"? where portletPreferencesId = " +
-						portletPreferencesId)) {
+					"? where portletPreferencesId = " + portletPreferencesId)) {
 
 			ps.setString(1, newPreferences);
 			ps.setString(2, newPortletId);

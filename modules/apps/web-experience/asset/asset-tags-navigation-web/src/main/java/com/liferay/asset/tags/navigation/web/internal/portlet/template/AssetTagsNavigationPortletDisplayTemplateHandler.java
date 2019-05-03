@@ -42,9 +42,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + AssetTagsNavigationPortletKeys.ASSET_TAGS_NAVIGATION
-	},
+	property = "javax.portlet.name=" + AssetTagsNavigationPortletKeys.ASSET_TAGS_NAVIGATION,
 	service = TemplateHandler.class
 )
 public class AssetTagsNavigationPortletDisplayTemplateHandler
@@ -64,8 +62,11 @@ public class AssetTagsNavigationPortletDisplayTemplateHandler
 			AssetTagsNavigationPortletKeys.ASSET_TAGS_NAVIGATION,
 			resourceBundle);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override
@@ -110,8 +111,8 @@ public class AssetTagsNavigationPortletDisplayTemplateHandler
 
 	@Override
 	protected String getTemplatesConfigPath() {
-		return
-			AssetTagsNavigationWebConfigurationValues.DISPLAY_TEMPLATES_CONFIG;
+		return AssetTagsNavigationWebConfigurationValues.
+			DISPLAY_TEMPLATES_CONFIG;
 	}
 
 	@Reference

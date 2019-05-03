@@ -122,9 +122,9 @@ public class ShoppingItemLocalServiceImpl
 				item.setMaxQuantity(itemPrice.getMaxQuantity());
 				item.setPrice(itemPrice.getPrice());
 				item.setDiscount(itemPrice.getDiscount());
-				item.setTaxable(itemPrice.getTaxable());
+				item.setTaxable(itemPrice.isTaxable());
 				item.setShipping(itemPrice.getShipping());
-				item.setUseShippingFormula(itemPrice.getUseShippingFormula());
+				item.setUseShippingFormula(itemPrice.isUseShippingFormula());
 			}
 
 			if ((sale == null) && (itemPrice.getDiscount() > 0) &&
@@ -506,9 +506,9 @@ public class ShoppingItemLocalServiceImpl
 				item.setMaxQuantity(itemPrice.getMaxQuantity());
 				item.setPrice(itemPrice.getPrice());
 				item.setDiscount(itemPrice.getDiscount());
-				item.setTaxable(itemPrice.getTaxable());
+				item.setTaxable(itemPrice.isTaxable());
 				item.setShipping(itemPrice.getShipping());
-				item.setUseShippingFormula(itemPrice.getUseShippingFormula());
+				item.setUseShippingFormula(itemPrice.isUseShippingFormula());
 			}
 
 			if ((sale == null) && (itemPrice.getDiscount() > 0) &&

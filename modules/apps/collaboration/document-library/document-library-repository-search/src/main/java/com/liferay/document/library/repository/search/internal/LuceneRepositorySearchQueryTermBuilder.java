@@ -105,8 +105,8 @@ public class LuceneRepositorySearchQueryTermBuilder
 		return BooleanClauseOccur.SHOULD;
 	}
 
-	protected BooleanClause.Occur
-		getBooleanClauseOccur(BooleanClauseOccur occur) {
+	protected BooleanClause.Occur getBooleanClauseOccur(
+		BooleanClauseOccur occur) {
 
 		if (occur.equals(BooleanClauseOccur.MUST)) {
 			return BooleanClause.Occur.MUST;
@@ -176,7 +176,9 @@ public class LuceneRepositorySearchQueryTermBuilder
 
 			Term term = fuzzyQuery.getTerm();
 
-			String termValue = term.text().concat(StringPool.STAR);
+			String termText = term.text();
+
+			String termValue = termText.concat(StringPool.STAR);
 
 			WildcardQuery wildcardQuery = new WildcardQueryImpl(
 				term.field(), termValue);
@@ -205,7 +207,9 @@ public class LuceneRepositorySearchQueryTermBuilder
 
 			Term prefixTerm = prefixQuery.getPrefix();
 
-			String termValue = prefixTerm.text().concat(StringPool.STAR);
+			String prefixTermText = prefixTerm.text();
+
+			String termValue = prefixTermText.concat(StringPool.STAR);
 
 			WildcardQuery wildcardQuery = new WildcardQueryImpl(
 				prefixTerm.field(), termValue);

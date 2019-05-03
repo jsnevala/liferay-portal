@@ -26,9 +26,7 @@ import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 /**
  * @author Jorge Ferrer
  */
-@OSGiBeanProperties(
-	property = {"resource.name=" + BlogsPermission.RESOURCE_NAME}
-)
+@OSGiBeanProperties(property = "resource.name=" + BlogsPermission.RESOURCE_NAME)
 public class BlogsPermission extends BaseResourcePermissionChecker {
 
 	public static final String RESOURCE_NAME = "com.liferay.blogs";

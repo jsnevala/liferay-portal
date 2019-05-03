@@ -159,7 +159,7 @@ public class SyncChunkedFile implements ChunkedInput<ByteBuf> {
 	}
 
 	/**
-	 * @deprecated As of 3.3.0, As of Netty 4.1.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), As of Netty 4.1.0, replaced by {@link
 	 *             #readChunk(ByteBufAllocator)}
 	 */
 	@Deprecated

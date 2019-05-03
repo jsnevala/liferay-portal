@@ -186,8 +186,7 @@ import org.junit.runner.RunWith;
  * Test
  * </td>
  * </tr>
- * </table>
- * </p>
+ * </table></p>
  *
  * @author Alexander Chow
  */

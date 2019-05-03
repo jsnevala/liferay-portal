@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(immediate = true, service = DDMDisplayRegistry.class)
 @ProviderType
@@ -51,7 +51,7 @@ public class DDMDisplayRegistry {
 	@Reference(
 		cardinality = ReferenceCardinality.MULTIPLE,
 		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY, unbind = "unsetDDMDisplay"
+		policyOption = ReferencePolicyOption.GREEDY
 	)
 	protected void setDDMDisplay(DDMDisplay ddmDisplay) {
 		_ddmDisplays.put(ddmDisplay.getPortletId(), ddmDisplay);

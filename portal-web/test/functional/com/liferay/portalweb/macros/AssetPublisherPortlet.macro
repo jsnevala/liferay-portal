@@ -1,1360 +1,1571 @@
-<definition>
-	<command name="addAsset">
-		<execute function="Click#clickNoWaitForVisible" locator1="Portlet#ICON_PLUS_SIGN">
-			<var name="key_portletName" value="Asset Publisher" />
-		</execute>
+definition {
+	macro addAsset {
+		Click.clickNoWaitForVisible(
+			locator1 = "Portlet#ICON_PLUS_SIGN",
+			key_portletName = "Asset Publisher"
+		);
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="${assetType}">
-			<var name="key_menuItem" value="${assetType}" />
-		</execute>
+		MenuItem.click(menuItem = "${assetType}");
 
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-	</command>
+		SelectFrame(locator1 = "IFrame#DIALOG");
+	}
 
-	<command name="assertSiteScopeSearch">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+	macro assertSiteScopeSearch {
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+		Panel.expandPanel(panelHeading = "Source");
 
-		<execute function="AssertClick" locator1="Configuration#SOURCE_SCOPE_SELECT" value1="Select" />
+		AssertClick(locator1 = "Configuration#SOURCE_SCOPE_SELECT", value1 = "Select");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Other Site...">
-			<var name="key_menuItem" value="Other Site..." />
-		</execute>
+		MenuItem.click(menuItem = "Other Site...");
 
-		<execute function="SelectFrame" value1="relative=top" />
+		SelectFrame(value1 = "relative=top");
 
-		<execute function="SelectFrame" locator1="IFrame#SELECT_SITES" />
+		SelectFrame(locator1 = "IFrame#SELECT_SITES");
 
-		<execute macro="SiteSelector#viewSite">
-			<var name="site" value="${siteName}" />
-		</execute>
-	</command>
+		SiteSelector.viewSite(site = "${siteName}");
+	}
 
-	<command name="configureAddSiteScopes">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+	macro configureAddSiteScopes {
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+		Panel.expandPanel(panelHeading = "Source");
 
-		<if>
-			<isset var="globalSite" />
-			<then>
-				<execute function="Click" locator1="Configuration#SOURCE_SCOPE_SELECT" />
+		if (isSet(globalSite)) {
+			Click(locator1 = "Configuration#SOURCE_SCOPE_SELECT");
 
-				<execute function="Click" locator1="MenuItem#ANY_MENU_ITEM">
-					<var name="key_menuItem" value="Global" />
-				</execute>
-			</then>
-		</if>
+			MenuItem.click(menuItem = "Global");
+		}
 
-		<if>
-			<isset var="otherSite" />
-			<then>
-				<execute function="Click" locator1="Configuration#SOURCE_SCOPE_SELECT" />
+		if (isSet(otherSite)) {
+			Click(locator1 = "Configuration#SOURCE_SCOPE_SELECT");
 
-				<execute function="Click" locator1="MenuItem#ANY_MENU_ITEM">
-					<var name="key_menuItem" value="Other Site..." />
-				</execute>
+			MenuItem.click(menuItem = "Other Site...");
 
-				<execute function="SelectFrame" value1="relative=top" />
+			SelectFrame(value1 = "relative=top");
 
-				<execute function="SelectFrame" locator1="IFrame#SELECT_SITES" />
+			SelectFrame(locator1 = "IFrame#SELECT_SITES");
 
-				<execute macro="SiteSelector#selectSite">
-					<var name="site" value="${otherSite}" />
-				</execute>
-			</then>
-		</if>
+			SiteSelector.selectSite(site = "${otherSite}");
+		}
 
-		<if>
-			<isset var="defaultSite" />
-			<then>
-				<execute function="Click" locator1="Configuration#SOURCE_SCOPE_SELECT" />
+		if (isSet(defaultSite)) {
+			Click(locator1 = "Configuration#SOURCE_SCOPE_SELECT");
 
-				<execute function="Click" locator1="MenuItem#ANY_MENU_ITEM">
-					<var name="key_menuItem" value="Current Site" />
-				</execute>
-			</then>
-		</if>
+			MenuItem.click(menuItem = "Current Site");
+		}
 
-		<execute function="SelectFrameTop" />
+		SelectFrameTop();
 
-		<execute macro="IFrame#selectDialogFrame" />
+		IFrame.selectDialogFrame();
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		Alert.viewSuccessMessage();
+	}
 
-	<command name="configureAPSelectMoreThanOnePG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Asset Publisher" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+	macro configureAPSelectMoreThanOnePG {
+		Portlet.gotoPortletOptions(
+			portletName = "Asset Publisher",
+			portletOption = "Configuration"
+		);
 
-		<execute macro="IFrame#selectDialogFrame" />
+		IFrame.selectDialogFrame();
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
-
-		<execute function="Select" locator1="APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT" value1="Select More Than One..." />
+		Panel.expandPanel(panelHeading = "Source");
 
-		<for list="${selectContent}" param="contentName">
-			<var name="key_contentName" value="${contentName}" />
+		Select(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+			value1 = "Select More Than One..."
+		);
 
-			<execute function="Click" locator1="APConfiguration#SELECT_MORE_THAN_ONE_ASSET_TYPE_CONTENT" />
+		for (var contentName : list "${selectContent}") {
+			var key_contentName = "${contentName}";
 
-			<if>
-				<equals arg1="${moveSelected}" arg2="true" />
-				<then>
-					<execute function="Click" locator1="APConfiguration#SELECT_MORE_THAN_ONE_ASSET_TYPE_MOVE_SELECTED" />
-				</then>
-				<else>
-					<execute function="Click" locator1="APConfiguration#SELECT_MORE_THAN_ONE_ASSET_TYPE_MOVE_AVAILABLE" />
-				</else>
-			</if>
-		</for>
+			Click(locator1 = "APConfiguration#SELECT_MORE_THAN_ONE_ASSET_TYPE_CONTENT");
 
-		<execute macro="PortletEntry#save" />
-	</command>
+			if ("${moveSelected}" == "true") {
+				Click(
+					locator1 = "APConfiguration#SELECT_MORE_THAN_ONE_ASSET_TYPE_MOVE_SELECTED"
+				);
+			}
+			else {
+				Click(
+					locator1 = "APConfiguration#SELECT_MORE_THAN_ONE_ASSET_TYPE_MOVE_AVAILABLE"
+				);
+			}
+		}
 
-	<command name="configureAssetDisplayOrderPG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+		PortletEntry.save();
+	}
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Ordering and Grouping" />
-		</execute>
+	macro configureAssetDisplayOrderPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
+
+		Panel.expandPanel(panelHeading = "Ordering and Grouping");
+
+		Select(
+			locator1 = "APConfiguration#ORDERING_AND_GROUPING_ORDER_BY_SELECT",
+			value1 = "${fieldNameOrder}"
+		);
+
+		Select(
+			locator1 = "APConfiguration#ORDERING_AND_GROUPING_ORDER_DIRECTION_SELECT",
+			value1 = "${sortOrder}"
+		);
+
+		PortletEntry.save();
+	}
+
+	macro configureAssetLinkBehaviorPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
+
+		Navigator.gotoNavTab(navTab = "Display Settings");
+
+		if (isSet(disableConfiguration)) {
+			Uncheck.uncheckToggleSwitch(
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH",
+				key_toggleSwitchLabel = "${disableConfiguration}"
+			);
+		}
+
+		Select(
+			locator1 = "APConfigurationDisplaysettings#ASSET_LINK_BEHAVIOR_SELECT",
+			value1 = "${assetLinkBehavior}"
+		);
+
+		PortletEntry.save();
+	}
+
+	macro configureAssetTypePG {
+		AssetPublisherPortlet.gotoConfigurationPG(
+			order = "${order}",
+			portletName = "${portletName}"
+		);
+
+		Panel.expandPanel(panelHeading = "Source");
+
+		Select(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+			value1 = "${selectedAsset}"
+		);
+
+		if ("${selectMoreThanOneSubtype}" == "true") {
+			Select(
+				locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT",
+				value1 = "Select More Than One..."
+			);
+
+			for (var contentName : list "${selectContent}") {
+				Click(
+					locator1 = "APConfiguration#SELECT_MORE_THAN_ONE_ASSET_TYPE_CONTENT",
+					key_contentName = "${contentName}"
+				);
+
+				if ("${moveSelected}" == "true") {
+					Click(
+						locator1 = "APConfiguration#SELECT_MORE_THAN_ONE_ASSET_SUBTYPE_MOVE_SELECTED"
+					);
+				}
+				else {
+					Click(
+						locator1 = "APConfiguration#SELECT_MORE_THAN_ONE_ASSET_SUBTYPE_MOVE_AVAILABLE"
+					);
+				}
+			}
+		}
+		else {
+			Select(
+				locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT",
+				value1 = "${assetSubtype}"
+			);
+		}
+
+		PortletEntry.save();
+	}
+
+	macro configureCategoriesFilterPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
+
+		Panel.expandPanel(panelHeading = "Filter");
+
+		Select(
+			locator1 = "APConfiguration#FILTER_CATEGORIZATION_SELECT",
+			value1 = "Categories"
+		);
+
+		if (isSet(queryAndOperator)) {
+			Select(
+				locator1 = "APConfiguration#FILTER_QUERY_AND_OPERATOR",
+				value1 = "${queryAndOperator}"
+			);
+		}
+
+		AssetCategorization.addCategory(
+			categoryName = "${categoryName}",
+			vocabularyName = "${vocabularyName}"
+		);
+
+		PortletEntry.save();
+
+		IFrame.selectTopFrame();
+	}
+
+	macro configureDisplayConversionsPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
+
+		Navigator.gotoNavTab(navTab = "Display Settings");
+
+		for (var documentType : list "${documentTypes}") {
+			var documentTypeUppercase = StringUtil.upperCase("${documentType}");
+
+			if ("${check}" == "true") {
+				Check.checkToggleSwitch(
+					locator1 = "APConfigurationDisplaysettings#ENABLE_CONVERSION_${documentTypeUppercase}_CHECKBOX"
+				);
+			}
+			else if ("${uncheck}" == "true") {
+				Uncheck.uncheckToggleSwitch(
+					locator1 = "APConfigurationDisplaysettings#ENABLE_CONVERSION_${documentTypeUppercase}_CHECKBOX"
+				);
+			}
+		}
+
+		PortletEntry.save();
+	}
+
+	macro configureDisplayTemplatePG {
+		IFrame.selectDialogFrame();
 
-		<execute function="Select" locator1="APConfiguration#ORDERING_AND_GROUPING_ORDER_BY_SELECT" value1="${fieldNameOrder}" />
+		Navigator.gotoNavTab(navTab = "Display Settings");
 
-		<execute function="Select" locator1="APConfiguration#ORDERING_AND_GROUPING_ORDER_DIRECTION_SELECT" value1="${sortOrder}" />
-
-		<execute macro="PortletEntry#save" />
-	</command>
-
-	<command name="configureAssetLinkBehaviorPG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
-
-		<execute macro="Navigator#gotoNavTab">
-			<var name="navTab" value="Display Settings" />
-		</execute>
-
-		<if>
-			<isset var="disableConfiguration" />
-			<then>
-				<execute function="Uncheck#uncheckToggleSwitch" locator1="ToggleSwitch#ANY_TOGGLE_SWITCH">
-					<var name="key_toggleSwitchLabel" value="${disableConfiguration}" />
-				</execute>
-			</then>
-		</if>
+		Select(
+			locator1 = "Configuration#SETUP_DISPLAY_SETTINGS_DISPLAY_TEMPLATE_SELECT",
+			value1 = "${displayTemplate}"
+		);
 
-		<execute function="Select" locator1="APConfigurationDisplaysettings#ASSET_LINK_BEHAVIOR_SELECT" value1="${assetLinkBehavior}" />
+		PortletEntry.save();
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		SelectFrame(value1 = "relative=top");
+	}
 
-	<command name="configureAssetTypePG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+	macro configureFilterByFieldPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+		Panel.expandPanel(panelHeading = "Source");
 
-		<execute function="Select" locator1="APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT" value1="${selectedAsset}" />
+		Select(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+			value1 = "${selectedAsset}"
+		);
 
-		<if>
-			<equals arg1="${selectMoreThanOneSubtype}" arg2="true" />
-			<then>
-				<execute function="Select" locator1="APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT" value1="Select More Than One..." />
+		Select(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT",
+			value1 = "${assetSubtype}"
+		);
 
-				<for list="${selectContent}" param="contentName">
-					<var name="key_contentName" value="${contentName}" />
+		Check.checkToggleSwitch(
+			locator1 = "APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_CHECKBOX"
+		);
 
-					<execute function="Click" locator1="APConfiguration#SELECT_MORE_THAN_ONE_ASSET_TYPE_CONTENT" />
+		AssertClick(
+			locator1 = "APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_SELECT_BUTTON",
+			value1 = "Select"
+		);
 
-					<if>
-						<equals arg1="${moveSelected}" arg2="true" />
-						<then>
-							<execute function="Click" locator1="APConfiguration#SELECT_MORE_THAN_ONE_ASSET_SUBTYPE_MOVE_SELECTED" />
-						</then>
-						<else>
-							<execute function="Click" locator1="APConfiguration#SELECT_MORE_THAN_ONE_ASSET_SUBTYPE_MOVE_AVAILABLE" />
-						</else>
-					</if>
-				</for>
-			</then>
-			<else>
-				<execute function="Select" locator1="APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT" value1="${assetSubtype}" />
-			</else>
-		</if>
+		SelectFrame();
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		SelectFrame(locator1 = "IFrame#SELECT_STRUCTURE_FIELD");
 
-	<command name="configureCategoriesFilterPG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+		var key_fieldName = "${fieldFilter}";
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Filter" />
-		</execute>
+		if (isSet(fieldFilter)) {
+			Check(locator1 = "APConfigurationFilterbyfield#FIELD_FILTER_RADIO_BUTTON");
+		}
 
-		<execute function="Select" locator1="APConfiguration#FILTER_CATEGORIZATION_SELECT" value1="Categories" />
+		if (isSet(fieldValue)) {
+			Type(locator1 = "TextInput#FIELD_FILTER_INPUT", value1 = "${fieldValue}");
+		}
 
-		<execute macro="AssetCategorization#addCategory">
-			<var name="categoryName" value="${categoryName}" />
-			<var name="vocabularyName" value="${vocabularyName}" />
-		</execute>
+		AssertClick(locator1 = "Button#FIELD_FILTER_APPLY", value1 = "Apply");
 
-		<execute macro="PortletEntry#save" />
+		SelectFrame(value1 = "relative=top");
 
-		<execute macro="IFrame#selectTopFrame" />
-	</command>
+		IFrame.selectDialogFrame();
 
-	<command name="configureDisplayConversionsPG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+		if (isSet(fieldValue)) {
+			AssertTextEquals.assertPartialText(
+				locator1 = "APConfiguration#SOURCE_SCOPE_FIELD_FILTER_AND_VALUE",
+				value1 = "${fieldFilter}: ${fieldValue}"
+			);
+		}
 
-		<execute macro="Navigator#gotoNavTab">
-			<var name="navTab" value="Display Settings" />
-		</execute>
+		PortletEntry.save();
 
-		<for list="${documentTypes}" param="documentType">
-			<var method="StringUtil#upperCase('${documentType}')" name="documentTypeUppercase" />
+		Panel.expandPanel(panelHeading = "Source");
 
-			<if>
-				<equals arg1="${check}" arg2="true" />
-				<then>
-					<execute function="Check#checkToggleSwitch" locator1="APConfigurationDisplaysettings#ENABLE_CONVERSION_${documentTypeUppercase}_CHECKBOX" />
-				</then>
-				<elseif>
-					<equals arg1="${uncheck}" arg2="true" />
-					<then>
-						<execute function="Uncheck#uncheckToggleSwitch" locator1="APConfigurationDisplaysettings#ENABLE_CONVERSION_${documentTypeUppercase}_CHECKBOX" />
-					</then>
-				</elseif>
-			</if>
-		</for>
+		AssertSelectedLabel(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+			value1 = "${selectedAsset}"
+		);
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		AssertSelectedLabel(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT",
+			value1 = "${assetSubtype}"
+		);
+	}
 
-	<command name="configureDisplayTemplatePG">
-		<execute macro="IFrame#selectDialogFrame" />
+	macro configureFlagAllDisplaySettingsCheckboxes {
+		Portlet.gotoPortletOptions(
+			portletName = "Asset Publisher",
+			portletOption = "Configuration"
+		);
 
-		<execute macro="Navigator#gotoNavTab">
-			<var name="navTab" value="Display Settings" />
-		</execute>
+		IFrame.selectDialogFrame();
 
-		<execute function="Select" locator1="APConfigurationDisplaysettings#DISPLAY_TEMPLATE_SELECT" value1="${displayTemplate}" />
+		if (IsElementPresent(locator1 = "Configuration#SETUP_DISPLAY_SETTINGS")) {
+			AssertClick(
+				locator1 = "Configuration#SETUP_DISPLAY_SETTINGS",
+				value1 = "Display Settings"
+			);
+		}
 
-		<execute macro="PortletEntry#save" />
+		Check.checkHiddenToggleSwitch(locator1 = "ToggleSwitch#ENABLE_PRINT");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		Check.checkHiddenToggleSwitch(locator1 = "ToggleSwitch#ENABLE_FLAGS");
 
-	<command name="configureFilterByFieldPG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+		Check.checkHiddenToggleSwitch(locator1 = "ToggleSwitch#ENABLE_RELATED_ASSETS");
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+		Check.checkHiddenToggleSwitch(locator1 = "ToggleSwitch#ENABLE_RATINGS");
 
-		<execute function="Select" locator1="APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT" value1="${selectedAsset}" />
+		Check.checkHiddenToggleSwitch(locator1 = "ToggleSwitch#ENABLE_COMMENTS");
 
-		<execute function="Select" locator1="APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT" value1="${assetSubtype}" />
+		Check.checkHiddenToggleSwitch(locator1 = "ToggleSwitch#ENABLE_COMMENT_RATINGS");
 
-		<execute function="Check#checkToggleSwitch" locator1="APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_CHECKBOX" />
+		Check.checkHiddenToggleSwitch(locator1 = "ToggleSwitch#ENABLE_SOCIAL_BOOKMARKS");
 
-		<execute function="AssertClick" locator1="APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_SELECT_BUTTON" value1="Select" />
+		PortletEntry.save();
 
-		<execute function="SelectFrame" />
+		SelectFrameTop(value1 = "relative=top");
+	}
 
-		<execute function="SelectFrame" locator1="IFrame#SELECT_STRUCTURE_FIELD" />
+	macro configureFlaggableDisplaySettingsPG {
+		Portlet.gotoPortletOptions(
+			portletName = "${portletName}",
+			portletOption = "Configuration"
+		);
 
-		<var name="key_fieldName" value="${fieldFilter}" />
+		IFrame.selectDialogFrame();
 
-		<if>
-			<isset var="fieldFilter" />
-			<then>
-				<execute function="Check" locator1="APConfigurationFilterbyfield#FIELD_FILTER_RADIO_BUTTON" />
-			</then>
-		</if>
+		Navigator.gotoNavTab(navTab = "Display Settings");
 
-		<if>
-			<isset var="fieldValue" />
-			<then>
-				<execute function="Type" locator1="TextInput#FIELD_FILTER_INPUT" value1="${fieldValue}" />
-			</then>
-		</if>
+		if ("${enableRatings}" == "true") {
+			Check.checkHiddenToggleSwitch(
+				locator1 = "ToggleSwitch#ENABLE_RATINGS",
+				value1 = "Enable Ratings"
+			);
+		}
 
-		<execute function="AssertClick" locator1="Button#FIELD_FILTER_APPLY" value1="Apply" />
+		if ("${setAsDefaultPage}" == "true") {
+			Check.checkHiddenToggleSwitch(
+				locator1 = "ToggleSwitch#SET_AS_THE_DEFAULT_ASSET_PUBLISHER_FOR_THIS_PAGE",
+				value1 = "Set as the Default Asset Publisher for This Page"
+			);
+		}
 
-		<execute function="SelectFrame" value1="relative=top" />
+		PortletEntry.save();
+	}
 
-		<execute macro="IFrame#selectDialogFrame" />
+	macro configureManualAssetSelectionPG {
+		Portlet.gotoPortletOptions(
+			portletName = "Asset Publisher",
+			portletOption = "Configuration"
+		);
 
-		<if>
-			<isset var="fieldValue" />
-			<then>
-				<execute function="AssertTextEquals#assertPartialText" locator1="APConfiguration#SOURCE_SCOPE_FIELD_FILTER_AND_VALUE" value1="${fieldFilter}: ${fieldValue}" />
-			</then>
-		</if>
+		IFrame.selectDialogFrame();
 
-		<execute macro="PortletEntry#save" />
+		Click(locator1 = "APConfiguration#ASSET_SELECTION_MANUAL");
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+		if (isSet(assetTitle)) {
+			Panel.expandPanel(panelHeading = "Asset Entries");
 
-		<execute function="AssertSelectedLabel" locator1="APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT" value1="${selectedAsset}" />
-		<execute function="AssertSelectedLabel" locator1="APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT" value1="${assetSubtype}" />
-	</command>
+			Click(
+				locator1 = "APConfiguration#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT_BUTTON"
+			);
 
-	<command name="configureFlagAllDisplaySettingsCheckboxes">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Asset Publisher" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+			AssertClick(
+				locator1 = "AssetRelatedAssets#RELATED_ASSETS_SELECT_MENULIST_ASSET",
+				value1 = "${assetType}",
+				key_assetType = "${assetType}"
+			);
 
-		<execute macro="IFrame#selectDialogFrame" />
+			SelectFrameTop();
 
-		<if>
-			<condition function="IsElementPresent" locator1="Configuration#SETUP_DISPLAY_SETTINGS" />
-			<then>
-				<execute function="AssertClick" locator1="Configuration#SETUP_DISPLAY_SETTINGS" value1="Display Settings" />
-			</then>
-		</if>
+			IFrame.selectDialogFrame();
 
-		<execute function="Check#checkHiddenToggleSwitch" locator1="ToggleSwitch#ENABLE_PRINT" />
-		<execute function="Check#checkHiddenToggleSwitch" locator1="ToggleSwitch#ENABLE_FLAGS" />
-		<execute function="Check#checkHiddenToggleSwitch" locator1="ToggleSwitch#ENABLE_RELATED_ASSETS" />
-		<execute function="Check#checkHiddenToggleSwitch" locator1="ToggleSwitch#ENABLE_RATINGS" />
-		<execute function="Check#checkHiddenToggleSwitch" locator1="ToggleSwitch#ENABLE_COMMENTS" />
-		<execute function="Check#checkHiddenToggleSwitch" locator1="ToggleSwitch#ENABLE_COMMENT_RATINGS" />
-		<execute function="Check#checkHiddenToggleSwitch" locator1="ToggleSwitch#ENABLE_SOCIAL_BOOKMARKS" />
+			AssertClick(
+				locator1 = "APConfiguration#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT_CONTENT_LINK",
+				value1 = "${assetTitle}",
+				key_assetTitle = "${assetTitle}"
+			);
 
-		<execute macro="PortletEntry#save" />
+			SelectFrameTop();
 
-		<execute function="SelectFrameTop" value1="relative=top" />
-	</command>
+			IFrame.selectDialogFrame();
+		}
 
-	<command name="configureFlaggableDisplaySettingsPG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="${portletName}" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+		Alert.viewSuccessMessage();
 
-		<execute macro="IFrame#selectDialogFrame" />
+		SelectFrameTop();
+	}
 
-		<execute macro="Navigator#gotoNavTab">
-			<var name="navTab" value="Display Settings" />
-		</execute>
+	macro configurePaginationPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-		<if>
-			<equals arg1="${enableRatings}" arg2="true" />
-			<then>
-				<execute function="Check#checkHiddenToggleSwitch" locator1="ToggleSwitch#ENABLE_RATINGS" value1="Enable Ratings" />
-			</then>
-		</if>
+		Navigator.gotoNavTab(navTab = "Display Settings");
 
-		<if>
-			<equals arg1="${setAsDefaultPage}" arg2="true" />
-			<then>
-				<execute function="Check#checkHiddenToggleSwitch" locator1="ToggleSwitch#SET_AS_THE_DEFAULT_ASSET_PUBLISHER_FOR_THIS_PAGE" value1="Set as the Default Asset Publisher for This Page" />
-			</then>
-		</if>
+		Type(
+			locator1 = "APConfigurationDisplaysettings#NUMBER_OF_ITEMS_TO_DISPLAY_FIELD",
+			value1 = "${paginationNumber}"
+		);
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		Select(
+			locator1 = "APConfigurationDisplaysettings#PAGINATION_TYPE_SELECT",
+			value1 = "${paginationType}"
+		);
 
-	<command name="configureManualAssetSelectionPG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Asset Publisher" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+		PortletEntry.save();
+	}
 
-		<execute macro="IFrame#selectDialogFrame" />
+	macro configureSelectedPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-		<execute function="Click" locator1="APConfiguration#ASSET_SELECTION_MANUAL" />
+		Panel.expandPanel(panelHeading = "Source");
 
-		<if>
-			<isset var="assetTitle" />
-			<then>
-				<execute macro="Panel#expandPanel">
-					<var name="panelHeading" value="Asset Entries" />
-				</execute>
+		Select(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+			value1 = "${selectedAsset}"
+		);
 
-				<execute function="Click" locator1="APConfiguration#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT_BUTTON" />
+		PortletEntry.save();
+	}
 
-				<var name="key_assetType" value="${assetType}" />
+	macro configureShowMetadataFieldsPG {
+		Portlet.gotoPortletOptions(
+			portletName = "${portletName}",
+			portletOption = "Configuration"
+		);
 
-				<execute function="AssertClick" locator1="APConfiguration#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_ASSET" value1="${assetType}" />
+		IFrame.selectDialogFrame();
 
-				<execute function="SelectFrameTop" />
+		Navigator.gotoNavTab(navTab = "Display Settings");
 
-				<execute macro="IFrame#selectDialogFrame" />
+		Panel.expandPanel(panelHeading = "Show Metadata");
 
-				<var name="key_assetTitle" value="${assetTitle}" />
+		for (var metadataField : list "${metadataFieldList}") {
+			if ("${addMetadata}" == "true") {
+				AddSelection(
+					locator1 = "APConfigurationDisplaysettings#SHOW_METADATA_AVAILABLE_FIELD_SELECT",
+					value1 = "${metadataField}"
+				);
 
-				<execute function="AssertClick" locator1="APConfiguration#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT_CONTENT_LINK" value1="${assetTitle}" />
+				Click(locator1 = "Button#MOVE_AVAILABLE_TO_CURRENT");
 
-				<execute function="SelectFrameTop" />
+				AssertTextEquals(
+					locator1 = "APConfigurationDisplaysettings#SHOW_METADATA_CURRENT_FIELD_SELECT",
+					value1 = "${metadataField}"
+				);
+			}
+		}
 
-				<execute macro="IFrame#selectDialogFrame" />
-			</then>
-		</if>
+		for (var metadataField : list "${metadataFieldList}") {
+			if ("${removeMetadata}" == "true") {
+				AddSelection(
+					locator1 = "APConfigurationDisplaysettings#SHOW_METADATA_CURRENT_FIELD_SELECT",
+					value1 = "${metadataField}"
+				);
 
-		<execute macro="Alert#viewSuccessMessage" />
+				Click(locator1 = "Button#MOVE_CURRENT_TO_AVAILABLE");
 
-		<execute function="SelectFrameTop" />
-	</command>
+				AssertTextEquals(
+					locator1 = "APConfigurationDisplaysettings#SHOW_METADATA_AVAILABLE_FIELD_SELECT",
+					value1 = "${metadataField}"
+				);
+			}
+		}
 
-	<command name="configurePaginationPG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+		PortletEntry.save();
 
-		<execute macro="Navigator#gotoNavTab">
-			<var name="navTab" value="Display Settings" />
-		</execute>
+		SelectFrameTop();
+	}
 
-		<execute function="Type" locator1="APConfigurationDisplaysettings#NUMBER_OF_ITEMS_TO_DISPLAY_FIELD" value1="${paginationNumber}" />
+	macro configureSiteScopePG {
+		var key_siteName = "${siteName}";
 
-		<execute function="Select" locator1="APConfigurationDisplaysettings#PAGINATION_TYPE_SELECT" value1="${paginationType}" />
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		Panel.expandPanel(panelHeading = "Source");
 
-	<command name="configureSelectedPG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+		AssertClick(locator1 = "Configuration#SOURCE_SCOPE_SELECT", value1 = "Select");
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+		if ("${siteName}" == "Global") {
+			MenuItem.click(menuItem = "${siteName}");
+		}
+		else {
+			MenuItem.click(menuItem = "Other Site...");
 
-		<execute function="Select" locator1="APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT" value1="${selectedAsset}" />
+			SelectFrame(value1 = "relative=top");
 
-		<execute macro="PortletEntry#save" />
-	</command>
+			SelectFrame(locator1 = "IFrame#SELECT_SITES");
 
-	<command name="configureShowMetadataFieldsPG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="${portletName}" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+			AssertTextEquals(
+				locator1 = "APConfigurationSites#SITES_TABLE_NAME",
+				value1 = "${siteName}"
+			);
 
-		<execute macro="IFrame#selectDialogFrame" />
+			AssertTextEquals(
+				locator1 = "APConfigurationSites#SITES_TABLE_TYPE",
+				value1 = "${siteScopeType}"
+			);
 
-		<execute macro="Navigator#gotoNavTab">
-			<var name="navTab" value="Display Settings" />
-		</execute>
+			ClickNoError(locator1 = "SitesSelectSite#SITES_TABLE_CHOOSE_SITE_LINK");
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Show Metadata" />
-		</execute>
+			SelectFrame(value1 = "relative=top");
 
-		<for list="${metadataFieldList}" param="metadataField">
-			<if>
-				<equals arg1="${addMetadata}" arg2="true" />
-				<then>
-					<execute function="AddSelection" locator1="APConfigurationDisplaysettings#SHOW_METADATA_AVAILABLE_FIELD_SELECT" value1="${metadataField}" />
+			IFrame.selectDialogFrame();
+		}
 
-					<execute function="Click" locator1="Button#MOVE_AVAILABLE_TO_CURRENT" />
+		Panel.expandPanel(panelHeading = "Source");
 
-					<execute function="AssertTextEquals" locator1="APConfigurationDisplaysettings#SHOW_METADATA_CURRENT_FIELD_SELECT" value1="${metadataField}" />
-				</then>
-			</if>
-		</for>
+		AssertTextEquals.assertPartialText(
+			locator1 = "APConfiguration#SOURCE_SCOPE_NAME",
+			value1 = "${siteName}"
+		);
 
-		<for list="${metadataFieldList}" param="metadataField">
-			<if>
-				<equals arg1="${removeMetadata}" arg2="true" />
-				<then>
-					<execute function="AddSelection" locator1="APConfigurationDisplaysettings#SHOW_METADATA_CURRENT_FIELD_SELECT" value1="${metadataField}" />
+		AssertTextEquals(
+			locator1 = "APConfiguration#SOURCE_SCOPE_TYPE",
+			value1 = "${siteScopeType}"
+		);
 
-					<execute function="Click" locator1="Button#MOVE_CURRENT_TO_AVAILABLE" />
+		PortletEntry.save();
 
-					<execute function="AssertTextEquals" locator1="APConfigurationDisplaysettings#SHOW_METADATA_AVAILABLE_FIELD_SELECT" value1="${metadataField}" />
-				</then>
-			</if>
-		</for>
+		Panel.expandPanel(panelHeading = "Source");
 
-		<execute macro="PortletEntry#save" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "APConfiguration#SOURCE_SCOPE_NAME",
+			value1 = "${siteName}"
+		);
 
-		<execute function="SelectFrameTop" />
-	</command>
+		AssertTextEquals(
+			locator1 = "APConfiguration#SOURCE_SCOPE_TYPE",
+			value1 = "${siteScopeType}"
+		);
 
-	<command name="configureSiteScopePG">
-		<var name="key_siteName" value="${siteName}" />
+		AssertElementPresent(locator1 = "APConfiguration#SOURCE_SCOPE_DELETE");
 
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+		SelectFrameTop();
+	}
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+	macro configureSiteScopeRemoveSitePG {
+		Portlet.gotoPortletOptions(
+			portletName = "Asset Publisher",
+			portletOption = "Configuration"
+		);
 
-		<execute function="AssertClick" locator1="Configuration#SOURCE_SCOPE_SELECT" value1="Select" />
+		IFrame.selectDialogFrame();
 
-		<if>
-			<equals arg1="${siteName}" arg2="Global" />
-			<then>
-				<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="${siteName}">
-					<var name="key_menuItem" value="${siteName}" />
-				</execute>
-			</then>
-			<else>
-				<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Other Site...">
-					<var name="key_menuItem" value="Other Site..." />
-				</execute>
+		Panel.expandPanel(panelHeading = "Source");
 
-				<execute function="SelectFrame" value1="relative=top" />
+		var key_siteName = "${siteName}";
 
-				<execute function="SelectFrame" locator1="IFrame#SELECT_SITES" />
+		Click(locator1 = "APConfiguration#SOURCE_SCOPE_DELETE");
 
-				<execute function="AssertTextEquals" locator1="APConfigurationSites#SITES_TABLE_NAME" value1="${siteName}" />
-				<execute function="AssertTextEquals" locator1="APConfigurationSites#SITES_TABLE_TYPE" value1="${siteScopeType}" />
+		Alert.viewSuccessMessage();
 
-				<execute function="ClickNoError" locator1="SitesSelectSite#SITES_TABLE_CHOOSE_SITE_LINK" />
+		AssertTextNotPresent(
+			locator1 = "APConfiguration#SOURCE_SCOPE_NAME",
+			value1 = "${siteName}"
+		);
 
-				<execute function="SelectFrame" value1="relative=top" />
+		AssertTextNotPresent(
+			locator1 = "APConfiguration#SOURCE_SCOPE_TYPE",
+			value1 = "${siteScopeType}"
+		);
 
-				<execute macro="IFrame#selectDialogFrame" />
-			</else>
-		</if>
+		SelectFrameTop();
+	}
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+	macro configureTagsFilterPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="APConfiguration#SOURCE_SCOPE_NAME" value1="${siteName}" />
-		<execute function="AssertTextEquals" locator1="APConfiguration#SOURCE_SCOPE_TYPE" value1="${siteScopeType}" />
+		Panel.expandPanel(panelHeading = "Filter");
 
-		<execute macro="PortletEntry#save" />
+		if (isSet(queryAndOperator)) {
+			Select(
+				locator1 = "APConfiguration#FILTER_QUERY_AND_OPERATOR",
+				value1 = "${queryAndOperator}"
+			);
+		}
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+		if (isSet(queryContains)) {
+			Select(
+				locator1 = "APConfiguration#FILTER_QUERY_CONTAINS",
+				value1 = "${queryContains}"
+			);
+		}
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="APConfiguration#SOURCE_SCOPE_NAME" value1="${siteName}" />
-		<execute function="AssertTextEquals" locator1="APConfiguration#SOURCE_SCOPE_TYPE" value1="${siteScopeType}" />
-		<execute function="AssertElementPresent" locator1="APConfiguration#SOURCE_SCOPE_DELETE" />
+		Select(
+			locator1 = "APConfiguration#FILTER_CATEGORIZATION_SELECT",
+			value1 = "Tags"
+		);
 
-		<execute function="SelectFrameTop" />
-	</command>
+		AssetCategorization.selectTag(tagNameList = "${tagNameList}");
 
-	<command name="configureSiteScopeRemoveSitePG">
-		<var name="key_siteName" value="${siteName}" />
+		PortletEntry.save();
 
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Asset Publisher" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+		IFrame.selectTopFrame();
+	}
 
-		<execute macro="IFrame#selectDialogFrame" />
+	macro deleteConfigurationTemplatePG {
+		Portlet.gotoPortletOptions(
+			portletName = "Asset Publisher",
+			portletOption = "Configuration Templates"
+		);
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+		IFrame.selectDialogFrame();
 
-		<var name="key_siteName" value="${siteName}" />
+		LexiconEntry.gotoEntryMenuItemNoWaitNoError(
+			menuItem = "Delete",
+			rowEntry = "${configurationName}"
+		);
 
-		<execute function="Click" locator1="APConfiguration#SOURCE_SCOPE_DELETE" />
+		Confirm.waitForConfirmation(
+			value1 = "Are you sure you want to delete this? It will be deleted immediately."
+		);
 
-		<execute macro="Alert#viewSuccessMessage" />
+		Alert.viewSuccessMessage();
 
-		<execute function="AssertTextNotPresent" locator1="APConfiguration#SOURCE_SCOPE_NAME" value1="${siteName}" />
-		<execute function="AssertTextNotPresent" locator1="APConfiguration#SOURCE_SCOPE_TYPE" value1="${siteScopeType}" />
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_INFO",
+			value1 = "There are no configuration templates."
+		);
+	}
 
-		<execute function="SelectFrameTop" />
-	</command>
+	macro editConfigureCategoriesFilterPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-	<command name="configureTagsFilterPG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+		Panel.expandPanel(panelHeading = "Filter");
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Filter" />
-		</execute>
+		if (isSet(queryAndOperator)) {
+			Select(
+				locator1 = "APConfiguration#FILTER_QUERY_AND_OPERATOR",
+				value1 = "${queryAndOperator}"
+			);
+		}
 
-		<execute function="Select" locator1="APConfiguration#FILTER_CATEGORIZATION_SELECT" value1="Tags" />
+		if (isSet(queryContains)) {
+			Select(
+				locator1 = "APConfiguration#FILTER_QUERY_CONTAINS",
+				value1 = "${queryContains}"
+			);
+		}
 
-		<execute macro="AssetCategorization#selectTag">
-			<var name="tagName" value="${tagName}" />
-		</execute>
+		Click(locator1 = "Button#SELECT_CATEGORIES");
 
-		<execute macro="PortletEntry#save" />
+		AssetCategorization.gotoSelectCategory();
 
-		<execute macro="IFrame#selectTopFrame" />
-	</command>
+		for (var categoryName : list "${categoryNames}") {
+			Portlet.selectTreeNode(nodeName = "${categoryName}");
+		}
 
-	<command name="deleteConfigurationTemplatePG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Asset Publisher" />
-			<var name="portletOption" value="Configuration Templates" />
-		</execute>
+		SelectFrame(value1 = "relative=top");
 
-		<execute macro="IFrame#selectDialogFrame" />
+		Click(locator1 = "Icon#CLOSE");
 
-		<execute macro="LexiconEntry#gotoEntryMenuItemNoError">
-			<var name="menuItem" value="Delete" />
-			<var name="rowEntry" value="${configurationName}" />
-		</execute>
+		SelectFrame(locator1 = "IFrame#DIALOG");
 
-		<execute function="Confirm#waitForConfirmation" value1="Are you sure you want to delete this? It will be deleted immediately." />
+		PortletEntry.save();
+	}
 
-		<execute macro="Alert#viewSuccessMessage" />
+	macro enableRSSSubscription {
+		IFrame.selectDialogFrame();
 
-		<execute function="AssertTextEquals" locator1="Message#EMPTY_INFO" value1="There are no configuration templates." />
-	</command>
+		Navigator.gotoNavTab(navTab = "Subscriptions");
 
-	<command name="enableRSSSubscription">
-		<execute macro="IFrame#selectDialogFrame" />
+		AssertTextEquals(
+			locator1 = "APConfiguration#SUBSCRIPTIONS_ENABLE_RSS_SUBSCRIPTION_LABEL",
+			value1 = "Enable RSS Subscription"
+		);
 
-		<execute macro="Navigator#gotoNavTab">
-			<var name="navTab" value="Subscriptions" />
-		</execute>
+		Check.checkToggleSwitch(
+			locator1 = "APConfiguration#SUBSCRIPTIONS_ENABLE_RSS_SUBSCRIPTION"
+		);
+	}
 
-		<execute function="AssertTextEquals" locator1="APConfiguration#SUBSCRIPTIONS_ENABLE_RSS_SUBSCRIPTION_LABEL" value1="Enable RSS Subscription" />
+	macro gotoConfigurationPG {
+		Portlet.gotoPortletOptions(
+			order = "${order}",
+			portletName = "Asset Publisher",
+			portletOption = "Configuration"
+		);
 
-		<execute function="Check#checkToggleSwitch" locator1="APConfiguration#SUBSCRIPTIONS_ENABLE_RSS_SUBSCRIPTION" />
-	</command>
+		IFrame.selectDialogFrame();
+	}
 
-	<command name="gotoConfigurationPG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Asset Publisher" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+	macro gotoEditRelatedAssets {
+		MouseOver(locator1 = "AP#BODY");
 
-		<execute macro="IFrame#selectDialogFrame" />
-	</command>
+		Click.waitForMenuToggleJSClick(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
-	<command name="gotoEditRelatedAssets">
-		<execute function="MouseOver" locator1="AP#BODY" />
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "MenuItem#ANY_MENU_ITEM",
+			value1 = "Edit",
+			key_menuItem = "Edit"
+		);
+	}
 
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
+	macro gotoEditWebContent {
+		MouseOver(locator1 = "AP#BODY");
 
-		<execute function="AssertClick#assertPartialTextClickAt" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit">
-			<var name="key_menuItem" value="Edit" />
-		</execute>
-	</command>
+		Click.waitForMenuToggleJSClick(
+			locator1 = "AP#ASSET_ABSTRACT_VERTICAL_ELLIPSIS",
+			key_assetTitle = "${assetTitle}"
+		);
 
-	<command name="gotoEditWebContent">
-		<execute function="MouseOver" locator1="AP#BODY" />
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "MenuItem#ANY_MENU_ITEM",
+			value1 = "Edit",
+			key_menuItem = "Edit"
+		);
+	}
 
-		<execute function="Click#waitForMenuToggleJSClick" locator1="AP#ASSET_ABSTRACT_VERTICAL_ELLIPSIS">
-			<var name="key_assetTitle" value="${assetTitle}" />
-		</execute>
+	macro gotoViewInContext {
+		AssertClick(locator1 = "Link#VIEW_IN_CONTEXT", value1 = "View in Context »");
+	}
 
-		<execute function="AssertClick#assertPartialTextClickAt" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit">
-			<var name="key_menuItem" value="Edit" />
-		</execute>
-	</command>
+	macro rateAssetPG {
+		Click.clickNoMouseOver(
+			locator1 = "Ratings#YOUR_RATING_STAR_EMPTY",
+			key_emptyStarPosition = "${rating}"
+		);
+	}
 
-	<command name="gotoViewInContext">
-		<execute function="AssertClick" locator1="Link#VIEW_IN_CONTEXT" value1="View in Context »" />
-	</command>
+	macro removeSiteScope {
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-	<command name="rateAssetPG">
-		<execute function="Click#clickNoMouseOver" locator1="Ratings#YOUR_RATING_STAR_EMPTY">
-			<var name="key_emptyStarPosition" value="${rating}" />
-		</execute>
-	</command>
+		Panel.expandPanel(panelHeading = "Source");
 
-	<command name="removeSiteScope">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+		for (var removeSiteScope : list "${removeSiteScopes}") {
+			var key_siteName = "${removeSiteScope}";
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+			Click(locator1 = "APConfiguration#SOURCE_SCOPE_DELETE");
+		}
 
-		<for list="${removeSiteScopes}" param="removeSiteScope">
-			<var name="key_siteName" value="${removeSiteScope}" />
+		Alert.viewSuccessMessage();
 
-			<execute function="Click" locator1="APConfiguration#SOURCE_SCOPE_DELETE" />
-		</for>
+		SelectFrameTop();
+	}
 
-		<execute macro="Alert#viewSuccessMessage" />
+	macro restoreConfigurationTemplatePG {
+		Portlet.gotoPortletOptions(
+			order = "${order}",
+			portletName = "Asset Publisher",
+			portletOption = "Configuration Templates"
+		);
 
-		<execute function="SelectFrameTop" />
-	</command>
+		IFrame.selectDialogFrame();
 
-	<command name="restoreConfigurationTemplatePG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Asset Publisher" />
-			<var name="portletOption" value="Configuration Templates" />
-		</execute>
+		LexiconEntry.gotoEntryMenuItemNoWait(
+			menuItem = "Apply",
+			rowEntry = "${configurationName}"
+		);
 
-		<execute macro="IFrame#selectDialogFrame" />
+		Alert.viewSuccessMessage();
+	}
 
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="Apply" />
-			<var name="rowEntry" value="${configurationName}" />
-		</execute>
+	macro saveConfigurationTemplatePG {
+		Portlet.gotoPortletOptions(
+			portletName = "Asset Publisher",
+			portletOption = "Configuration Templates"
+		);
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		IFrame.selectDialogFrame();
 
-	<command name="saveConfigurationTemplatePG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Asset Publisher" />
-			<var name="portletOption" value="Configuration Templates" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_INFO",
+			value1 = "There are no configuration templates."
+		);
 
-		<execute macro="IFrame#selectDialogFrame" />
+		AssertClick(
+			locator1 = "Configuration#SAVE_CONFIGURATION_TEMPLATE",
+			value1 = "Save Current Configuration as Template"
+		);
 
-		<execute function="AssertTextEquals" locator1="Message#EMPTY_INFO" value1="There are no configuration templates." />
+		PortletEntry.inputName(name = "${configurationName}");
 
-		<execute function="AssertClick" locator1="Configuration#SAVE_CONFIGURATION_TEMPLATE" value1="Save Current Configuration as Template" />
+		Button.clickSave();
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${configurationName}" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "Configuration#CONFIGURATION_TEMPLATE_TABLE_NAME",
+			value1 = "${configurationName}",
+			key_configurationName = "${configurationName}"
+		);
 
-		<execute macro="Button#clickSave" />
+		Alert.viewSuccessMessage();
 
-		<var name="key_configurationName" value="${configurationName}" />
+		SelectFrameTop();
+	}
 
-		<execute function="AssertTextEquals" locator1="Configuration#CONFIGURATION_TEMPLATE_TABLE_NAME" value1="${configurationName}" />
+	macro viewAssetDetailsPG {
+		var key_assetTitle = "${assetTitle}";
 
-		<execute macro="Alert#viewSuccessMessage" />
+		AssertTextEquals(locator1 = "AP#ASSET_ABSTRACT_TITLE", value1 = "${assetTitle}");
 
-		<execute function="SelectFrameTop" />
-	</command>
+		AssertClick(locator1 = "AP#ASSET_ABSTRACT_TITLE", value1 = "${assetTitle}");
 
-	<command name="viewAssetDetailsPG">
-		<var name="key_assetTitle" value="${assetTitle}" />
+		AssertTextEquals(
+			locator1 = "APAsset#ASSET_TITLE_HEADER",
+			value1 = "${assetTitle}"
+		);
 
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${assetTitle}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#ASSET_ABSTRACT_DETAIL_CONTENT",
+			value1 = "${assetContent}"
+		);
+	}
 
-		<execute function="AssertClick" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${assetTitle}" />
+	macro viewAssetMetadataPG {
+		var key_categoryName = "${categoryName}";
+		var key_vocabularyName = "${vocabularyName}";
 
-		<execute function="AssertTextEquals" locator1="APAsset#ASSET_TITLE_HEADER" value1="${assetTitle}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#ASSET_ABSTRACT_DETAIL_CONTENT" value1="${assetContent}" />
-	</command>
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#METADATA_VOCABULARY",
+			value1 = "${vocabularyName}"
+		);
 
-	<command name="viewAssetMetadataPG">
-		<var name="key_categoryName" value="${categoryName}" />
-		<var name="key_vocabularyName" value="${vocabularyName}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#METADATA_CATEGORY",
+			value1 = "${categoryName}"
+		);
+	}
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#METADATA_VOCABULARY" value1="${vocabularyName}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#METADATA_CATEGORY" value1="${categoryName}" />
-	</command>
+	macro viewAssetNotPresentPG {
+		var key_assetTitle = "${assetTitle}";
 
-	<command name="viewAssetNotPresentPG">
-		<var name="key_assetTitle" value="${assetTitle}" />
+		AssertTextNotPresent(
+			locator1 = "AP#ASSET_ABSTRACT_TITLE",
+			value1 = "${assetTitle}"
+		);
 
-		<execute function="AssertTextNotPresent" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${assetTitle}" />
-		<execute function="AssertTextNotPresent" locator1="AP#ASSET_ABSTRACT_DESCRIPTION" value1="${assetContent}" />
-	</command>
+		AssertTextNotPresent(
+			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
+			value1 = "${assetContent}"
+		);
+	}
 
-	<command name="viewAssetPG">
-		<var name="key_assetTitle" value="${assetTitle}" />
+	macro viewAssetPG {
+		var key_assetTitle = "${assetTitle}";
 
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${assetTitle}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#ASSET_ABSTRACT_DESCRIPTION" value1="${assetContent}" />
-	</command>
+		AssertTextEquals(locator1 = "AP#ASSET_ABSTRACT_TITLE", value1 = "${assetTitle}");
 
-	<command name="viewAssetRatingPG">
-		<if>
-			<equals arg1="${rating}" arg2="0" />
-			<then>
-				<execute function="AssertElementNotPresent" locator1="Ratings#YOUR_RATING_STAR">
-					<var name="key_ratingStarPosition" value="1" />
-				</execute>
-			</then>
-			<else>
-				<var name="ratingPosition" value="1" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
+			value1 = "${assetContent}"
+		);
+	}
 
-				<while>
-					<not>
-						<equals arg1="${ratingPosition}" arg2="${rating}" />
-					</not>
-					<then>
-						<execute function="AssertElementPresent" locator1="Ratings#YOUR_RATING_STAR">
-							<var name="key_ratingStarPosition" value="${ratingPosition}" />
-						</execute>
+	macro viewAssetRatingPG {
+		if ("${rating}" == "0") {
+			AssertElementNotPresent(
+				locator1 = "Ratings#YOUR_RATING_STAR",
+				key_ratingStarPosition = "1"
+			);
+		}
+		else {
+			var ratingPosition = "1";
 
-						<var method="MathUtil#sum('${ratingPosition}', '1')" name="ratingPosition" />
-					</then>
-				</while>
+			while (!("${ratingPosition}" == "${rating}")) {
+				AssertElementPresent(
+					locator1 = "Ratings#YOUR_RATING_STAR",
+					key_ratingStarPosition = "${ratingPosition}"
+				);
 
-				<execute function="AssertElementNotPresent" locator1="Ratings#YOUR_RATING_STAR">
-					<var name="key_ratingStarPosition" value="${ratingPosition}" />
-					<var method="MathUtil#sum('${ratingPosition}', '1')" name="key_ratingStarPosition" />
-				</execute>
-			</else>
-		</if>
+				var ratingPosition = MathUtil.sum("${ratingPosition}", "1");
+			}
 
-		<if>
-			<equals arg1="${rating}" arg2="5" />
-			<then>
-				<execute function="AssertElementNotPresent" locator1="Ratings#YOUR_RATING_STAR_EMPTY">
-					<var name="key_emptyStarPosition" value="1" />
-				</execute>
-			</then>
-			<else>
-				<var method="MathUtil#difference('5', '${rating}')" name="emptyRating" />
-				<var name="emptyStarPosition" value="1" />
+			AssertElementNotPresent(
+				locator1 = "Ratings#YOUR_RATING_STAR",
+				key_ratingStarPosition = MathUtil.sum("${ratingPosition}", "1")
+			);
+		}
 
-				<while>
-					<not>
-						<equals arg1="${emptyStarPosition}" arg2="${emptyRating}" />
-					</not>
-					<then>
-						<execute function="AssertElementPresent" locator1="Ratings#YOUR_RATING_STAR_EMPTY">
-							<var name="key_emptyStarPosition" value="${emptyStarPosition}" />
-						</execute>
+		if ("${rating}" == "5") {
+			AssertElementNotPresent(
+				locator1 = "Ratings#YOUR_RATING_STAR_EMPTY",
+				key_emptyStarPosition = "1"
+			);
+		}
+		else {
+			var emptyRating = MathUtil.difference("5", "${rating}");
+			var emptyStarPosition = "1";
 
-						<var method="MathUtil#sum('${emptyStarPosition}', '1')" name="emptyStarPosition" />
-					</then>
-				</while>
+			while (!("${emptyStarPosition}" == "${emptyRating}")) {
+				AssertElementPresent(
+					locator1 = "Ratings#YOUR_RATING_STAR_EMPTY",
+					key_emptyStarPosition = "${emptyStarPosition}"
+				);
 
-				<execute function="AssertElementNotPresent" locator1="Ratings#YOUR_RATING_STAR_EMPTY">
-					<var method="MathUtil#sum('${emptyStarPosition}', '1')" name="key_emptyStarPosition" />
-				</execute>
-			</else>
-		</if>
-	</command>
+				var emptyStarPosition = MathUtil.sum("${emptyStarPosition}", "1");
+			}
 
-	<command name="viewAssetTypeNotAvailable">
-		<execute macro="IFrame#selectConfigurationFrame" />
+			AssertElementNotPresent(
+				locator1 = "Ratings#YOUR_RATING_STAR_EMPTY",
+				key_emptyStarPosition = MathUtil.sum("${emptyStarPosition}", "1")
+			);
+		}
+	}
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+	macro viewAssetTypeNotAvailable {
+		IFrame.selectConfigurationFrame();
 
-		<execute function="AssertTextNotEquals" locator1="APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT" value1="${assetType}" />
+		Panel.expandPanel(panelHeading = "Source");
 
-		<execute function="SelectFrameTop" />
-	</command>
+		AssertTextNotEquals(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+			value1 = "${assetType}"
+		);
 
-	<command name="viewAssetViewCount">
-		<execute function="AssertTextEquals#assertPartialText" locator1="APAsset#ASSET_VIEW_COUNT" value1="${viewCount}">
-			<var name="key_assetTitle" value="${assetTitle}" />
-			<var name="key_viewCount" value="${viewCount}" />
-		</execute>
-	</command>
+		SelectFrameTop();
+	}
 
-	<command name="viewAverageRatingPG">
-		<if>
-			<equals arg1="${averageRating}" arg2="0" />
-			<then>
-				<execute function="AssertElementNotPresent" locator1="Ratings#AVERAGE_STAR">
-					<var name="key_averageRatingStar" value="1" />
-				</execute>
-			</then>
-			<else>
-				<var name="ratingPosition" value="1" />
+	macro viewAssetViewCount {
+		AssertTextEquals.assertPartialText(
+			locator1 = "APAsset#ASSET_VIEW_COUNT",
+			value1 = "${viewCount}",
+			key_assetTitle = "${assetTitle}",
+			key_viewCount = "${viewCount}"
+		);
+	}
 
-				<while>
-					<not>
-						<equals arg1="${ratingPosition}" arg2="${averageRating}" />
-					</not>
-					<then>
-						<execute function="AssertElementPresent" locator1="Ratings#AVERAGE_STAR">
-							<var name="key_averageRatingStar" value="${ratingPosition}" />
-						</execute>
+	macro viewAverageRatingPG {
+		if ("${averageRating}" == "0") {
+			AssertElementNotPresent(
+				locator1 = "Ratings#AVERAGE_STAR",
+				key_averageRatingStar = "1"
+			);
+		}
+		else {
+			var ratingPosition = "1";
 
-						<var method="MathUtil#sum('${ratingPosition}', '1')" name="ratingPosition" />
-					</then>
-				</while>
+			while (!("${ratingPosition}" == "${averageRating}")) {
+				AssertElementPresent(
+					locator1 = "Ratings#AVERAGE_STAR",
+					key_averageRatingStar = "${ratingPosition}"
+				);
 
-				<execute function="AssertElementNotPresent" locator1="Ratings#AVERAGE_STAR">
-					<var method="MathUtil#sum('${ratingPosition}', '1')" name="key_averageRatingStar" />
-				</execute>
-			</else>
-		</if>
+				var ratingPosition = MathUtil.sum("${ratingPosition}", "1");
+			}
 
-		<if>
-			<equals arg1="${averageRating}" arg2="5" />
-			<then>
-				<execute function="AssertElementNotPresent" locator1="Ratings#AVERAGE_STAR_EMPTY">
-					<var name="key_averageEmptyStar" value="1" />
-				</execute>
-			</then>
-			<else>
-				<var method="MathUtil#difference('5', '${averageRating}')" name="emptyRating" />
-				<var name="emptyStarPosition" value="1" />
+			AssertElementNotPresent(
+				locator1 = "Ratings#AVERAGE_STAR",
+				key_averageRatingStar = MathUtil.sum("${ratingPosition}", "1")
+			);
+		}
 
-				<while>
-					<not>
-						<equals arg1="${emptyStarPosition}" arg2="${emptyRating}" />
-					</not>
-					<then>
-						<execute function="AssertElementPresent" locator1="Ratings#AVERAGE_STAR_EMPTY">
-							<var name="key_averageEmptyStar" value="${emptyStarPosition}" />
-						</execute>
+		if ("${averageRating}" == "5") {
+			AssertElementNotPresent(
+				locator1 = "Ratings#AVERAGE_STAR_EMPTY",
+				key_averageEmptyStar = "1"
+			);
+		}
+		else {
+			var emptyRating = MathUtil.difference("5", "${averageRating}");
+			var emptyStarPosition = "1";
 
-						<var method="MathUtil#sum('${emptyStarPosition}', '1')" name="emptyStarPosition" />
-					</then>
-				</while>
+			while (!("${emptyStarPosition}" == "${emptyRating}")) {
+				AssertElementPresent(
+					locator1 = "Ratings#AVERAGE_STAR_EMPTY",
+					key_averageEmptyStar = "${emptyStarPosition}"
+				);
 
-				<execute function="AssertElementNotPresent" locator1="Ratings#AVERAGE_STAR_EMPTY">
-					<var method="MathUtil#sum('${emptyStarPosition}', '1')" name="key_averageEmptyStar" />
-				</execute>
-			</else>
-		</if>
+				var emptyStarPosition = MathUtil.sum("${emptyStarPosition}", "1");
+			}
 
-		<execute function="AssertTextEquals" locator1="Ratings#AVERAGE_LABEL" value1="Average (1 Vote)" />
-	</command>
+			AssertElementNotPresent(
+				locator1 = "Ratings#AVERAGE_STAR_EMPTY",
+				key_averageEmptyStar = MathUtil.sum("${emptyStarPosition}", "1")
+			);
+		}
 
-	<command name="viewConfigureAPDisplayTemplateFullContentBookmarksPG">
-		<var name="key_assetTitle" value="${assetTitle}" />
+		AssertTextEquals(
+			locator1 = "Ratings#AVERAGE_LABEL",
+			value1 = "Average (1 Vote)"
+		);
+	}
 
-		<execute function="Click" locator1="Icon#SHARE" />
+	macro viewConfigureAPDisplayTemplateFullContentBookmarksPG {
+		Click(locator1 = "Icon#SHARE");
 
-		<execute function="AssertElementNotPresent" locator1="Link#READ_MORE" />
-		<execute function="AssertElementPresent" locator1="Icon#TWITTER" />
-		<execute function="AssertElementPresent" locator1="Icon#GOOGLE_PLUS" />
-	</command>
+		AssertElementNotPresent(locator1 = "Link#READ_MORE");
 
-	<command name="viewConfigureAPDisplayTemplateTableBookmarksPG">
-		<var name="key_assetTitle" value="${assetTitle}" />
-		<var name="key_bookmarkName" value="${bookmarkName}" />
+		AssertElementPresent(locator1 = "Icon#TWITTER");
+	}
 
-		<execute function="AssertElementNotPresent" locator1="Link#READ_MORE" />
-		<execute function="AssertTextNotPresent" locator1="AP#ASSET_ABSTRACT_DESCRIPTION" value1="${bookmarkDescription}" />
-		<execute function="AssertElementNotPresent" locator1="AP#ASSET_ABSTRACT_BOOKMARK_TABLE_DISPLAY_TEMPLATE_BOOKMARK_ICON" />
-	</command>
+	macro viewConfigureAPDisplayTemplateTableBookmarksPG {
+		var key_assetTitle = "${assetTitle}";
+		var key_bookmarkName = "${bookmarkName}";
 
-	<command name="viewConfigureAPDisplayTemplateTitleListBookmarksPG">
-		<var name="key_assetTitle" value="${assetTitle}" />
-		<var name="key_bookmarkName" value="${bookmarkName}" />
+		AssertElementNotPresent(locator1 = "Link#READ_MORE");
 
-		<execute function="AssertElementNotPresent" locator1="Link#READ_MORE" />
-		<execute function="AssertTextNotPresent" locator1="AP#ASSET_ABSTRACT_DESCRIPTION" value1="${bookmarkDescription}" />
-	</command>
+		AssertTextNotPresent(
+			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
+			value1 = "${bookmarkDescription}"
+		);
 
-	<command name="viewConfigureAPMoveToAvailablePG">
-		<var name="key_assetTitle" value="${assetTitle}" />
+		AssertElementNotPresent(
+			locator1 = "AP#ASSET_ABSTRACT_BOOKMARK_TABLE_DISPLAY_TEMPLATE_BOOKMARK_ICON"
+		);
+	}
 
-		<execute function="AssertTextNotPresent" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${assetTitle}" />
-	</command>
+	macro viewConfigureAPDisplayTemplateTitleListBookmarksPG {
+		var key_assetTitle = "${assetTitle}";
 
-	<command name="viewConfigureAPMoveToSelectedPG">
-		<var name="key_assetTitle" value="${assetTitle}" />
+		AssertElementNotPresent(locator1 = "Link#READ_MORE");
 
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${assetTitle}" />
-	</command>
+		AssertTextNotPresent(
+			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
+			value1 = "${bookmarkDescription}"
+		);
+	}
+
+	macro viewConfigureAPMoveToAvailablePG {
+		AssertTextNotPresent(
+			locator1 = "AP#ASSET_ABSTRACT_TITLE",
+			value1 = "${assetTitle}",
+			key_assetTitle = "${assetTitle}"
+		);
+	}
+
+	macro viewConfigureAPMoveToSelectedPG {
+		AssertTextEquals(
+			locator1 = "AP#ASSET_ABSTRACT_TITLE",
+			value1 = "${assetTitle}",
+			key_assetTitle = "${assetTitle}"
+		);
+	}
 
-	<command name="viewConfigureFlaggableDisplaySettingsPG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+	macro viewConfigureFlaggableDisplaySettingsPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-		<execute macro="Navigator#gotoNavTab">
-			<var name="navTab" value="Display Settings" />
-		</execute>
+		Navigator.gotoNavTab(navTab = "Display Settings");
 
-		<if>
-			<equals arg1="${enableRatings}" arg2="true" />
-			<then>
-				<execute function="AssertChecked#assertCheckedHiddenToggleSwitch" locator1="ToggleSwitch#ENABLE_RATINGS" value1="Enable Ratings" />
-			</then>
-		</if>
+		if ("${enableRatings}" == "true") {
+			AssertChecked.assertCheckedHiddenToggleSwitch(
+				locator1 = "ToggleSwitch#ENABLE_RATINGS",
+				value1 = "Enable Ratings"
+			);
+		}
 
-		<if>
-			<equals arg1="${setAsDefaultPage}" arg2="true" />
-			<then>
-				<execute function="AssertChecked#assertCheckedHiddenToggleSwitch" locator1="ToggleSwitch#SET_AS_THE_DEFAULT_ASSET_PUBLISHER_FOR_THIS_PAGE" value1="Set as the Default Asset Publisher for This Page" />
-			</then>
-		</if>
+		if ("${setAsDefaultPage}" == "true") {
+			AssertChecked.assertCheckedHiddenToggleSwitch(
+				locator1 = "ToggleSwitch#SET_AS_THE_DEFAULT_ASSET_PUBLISHER_FOR_THIS_PAGE",
+				value1 = "Set as the Default Asset Publisher for This Page"
+			);
+		}
 
-		<execute macro="PortletEntry#save" />
+		PortletEntry.save();
 
-		<execute function="SelectFrameTop" />
-	</command>
+		SelectFrameTop();
+	}
 
-	<command name="viewConfigureSiteScopeContentSharingPG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+	macro viewConfigureSiteScopeContentSharingPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+		Panel.expandPanel(panelHeading = "Source");
 
-		<execute function="AssertClick" locator1="Configuration#SOURCE_SCOPE_SELECT" value1="Select" />
+		AssertClick(locator1 = "Configuration#SOURCE_SCOPE_SELECT", value1 = "Select");
 
-		<if>
-			<equals arg1="${contentSharingAcrossSitesEnabled}" arg2="true" />
-			<then>
-				<execute function="AssertTextEquals" locator1="MenuItem#ANY_MENU_ITEM" value1="Global">
-					<var name="key_menuItem" value="Global" />
-				</execute>
+		if ("${contentSharingAcrossSitesEnabled}" == "true") {
+			AssertTextEquals(
+				locator1 = "MenuItem#ANY_MENU_ITEM",
+				value1 = "Global",
+				key_menuItem = "Global"
+			);
 
-				<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Other Site...">
-					<var name="key_menuItem" value="Other Site..." />
-				</execute>
+			MenuItem.click(menuItem = "Other Site...");
 
-				<execute function="SelectFrame" value1="relative=top" />
+			SelectFrame(value1 = "relative=top");
 
-				<execute function="SelectFrame" locator1="IFrame#SELECT_SITES" />
+			SelectFrame(locator1 = "IFrame#SELECT_SITES");
 
-				<var name="key_siteName" value="${liferaySiteName}" />
+			var key_siteName = "${liferaySiteName}";
 
-				<if>
-					<isset var="currentSite" />
-					<then>
-						<execute function="AssertElementNotPresent" locator1="APConfigurationSites#SITES_TABLE_NAME" />
-						<execute function="AssertElementNotPresent" locator1="APConfigurationSites#SITES_TABLE_TYPE" />
-					</then>
-					<else>
-						<execute function="AssertTextEquals" locator1="APConfigurationSites#SITES_TABLE_NAME" value1="${liferaySiteName}" />
-						<execute function="AssertTextEquals" locator1="APConfigurationSites#SITES_TABLE_TYPE" value1="${liferaySiteType}" />
-						<execute function="AssertElementPresent" locator1="SitesSelectSite#SITES_TABLE_CHOOSE_SITE_LINK" />
-					</else>
-				</if>
-			</then>
-			<elseif>
-				<equals arg1="${contentSharingAcrossSitesEnabled}" arg2="false" />
-				<then>
-					<execute function="AssertTextEquals" locator1="MenuItem#ANY_MENU_ITEM" value1="Global">
-						<var name="key_menuItem" value="Global" />
-					</execute>
+			if (isSet(currentSite)) {
+				AssertElementNotPresent(locator1 = "APConfigurationSites#SITES_TABLE_NAME");
 
-					<if>
-						<equals arg1="${childSite}" arg2="true" />
-						<then>
-							<execute function="AssertTextEquals" locator1="MenuItem#ANY_MENU_ITEM" value1="Other Site...">
-								<var name="key_menuItem" value="Other Site..." />
-							</execute>
-						</then>
-						<else>
-							<execute function="AssertElementNotPresent" locator1="MenuItem#ANY_MENU_ITEM">
-								<var name="key_menuItem" value="OTHER_SITE" />
-							</execute>
-						</else>
-					</if>
-				</then>
-			</elseif>
-		</if>
+				AssertElementNotPresent(locator1 = "APConfigurationSites#SITES_TABLE_TYPE");
+			}
+			else {
+				AssertTextEquals(
+					locator1 = "APConfigurationSites#SITES_TABLE_NAME",
+					value1 = "${liferaySiteName}"
+				);
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+				AssertTextEquals(
+					locator1 = "APConfigurationSites#SITES_TABLE_TYPE",
+					value1 = "${liferaySiteType}"
+				);
 
-	<command name="viewContentSharingPG">
-		<execute macro="AssetPublisherPortlet#addAsset">
-			<var name="assetType" value="Add Content (Select Scope and Type)" />
-		</execute>
+				AssertElementPresent(locator1 = "SitesSelectSite#SITES_TABLE_CHOOSE_SITE_LINK");
+			}
+		}
+		else if ("${contentSharingAcrossSitesEnabled}" == "false") {
+			AssertTextEquals(
+				locator1 = "MenuItem#ANY_MENU_ITEM",
+				value1 = "Global",
+				key_menuItem = "Global"
+			);
 
-		<execute function="Select" locator1="Select#SCOPE" value1="${siteScope1}" />
+			if ("${childSite}" == "true") {
+				AssertTextEquals(
+					locator1 = "MenuItem#ANY_MENU_ITEM",
+					value1 = "Other Site...",
+					key_menuItem = "Other Site..."
+				);
+			}
+			else {
+				MenuItem.viewNotPresent(menuItem = "OTHER_SITE");
+			}
+		}
 
-		<execute function="AssertSelectedLabel" locator1="Select#SCOPE" value1="${siteScope1}" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute function="Select" locator1="Select#SCOPE" value1="${siteScope2}" />
+	macro viewContentSharingPG {
+		AssetPublisherPortlet.addAsset(
+			assetType = "Add Content (Select Scope and Type)"
+		);
 
-		<execute function="AssertSelectedLabel" locator1="Select#SCOPE" value1="${siteScope2}" />
+		Select(locator1 = "Select#SCOPE", value1 = "${siteScope1}");
 
-		<execute function="Refresh" />
+		AssertSelectedLabel(locator1 = "Select#SCOPE", value1 = "${siteScope1}");
 
-		<execute macro="AssetPublisherPortlet#viewPG">
-			<var name="assetContent" value="${assetContent}" />
-			<var name="assetTitle" value="${assetTitle}" />
-		</execute>
+		Select(locator1 = "Select#SCOPE", value1 = "${siteScope2}");
 
-		<execute function="Click" locator1="APAsset#ASSET_BACK_TO_ICON" />
-	</command>
+		AssertSelectedLabel(locator1 = "Select#SCOPE", value1 = "${siteScope2}");
 
-	<command name="viewCustomADTRichSummaryPG">
-		<var name="key_assetTitle" value="${assetTitle}" />
+		Refresh();
 
-		<execute function="AssertTextEquals" locator1="AP#ASSET_RICH_SUMMARY_TITLE" value1="${assetTitle}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#CUSTOM_ASSET_ABSTRACT_DESCRIPTION" value1="${assetDescription}" />
-		<execute function="AssertElementPresent" locator1="Link#READ_MORE" />
-		<execute function="AssertElementPresent" locator1="Icon#PRINT" />
-		<execute function="AssertElementPresent" locator1="Icon#FLAG" />
-		<execute function="AssertElementPresent" locator1="Ratings#YOUR_RATING_LABEL" />
-		<execute function="AssertElementPresent" locator1="Ratings#AVERAGE_LABEL" />
-		<execute function="AssertElementPresent" locator1="Comments#SUBSCRIBE_TO_COMMENTS_LINK" />
-		<execute function="AssertElementPresent" locator1="Icon#CUSTOM_EDIT" />
+		AssetPublisherPortlet.viewPG(
+			assetContent = "${assetContent}",
+			assetTitle = "${assetTitle}"
+		);
 
-		<execute function="Click" locator1="Icon#SHARE" />
+		Click(locator1 = "APAsset#ASSET_BACK_TO_ICON");
+	}
 
-		<execute function="AssertElementPresent" locator1="Icon#TWITTER" />
-		<execute function="AssertElementPresent" locator1="Icon#FACEBOOK" />
-		<execute function="AssertElementPresent" locator1="Icon#GOOGLE_PLUS" />
-	</command>
+	macro viewCustomADTRichSummaryPG {
+		var key_assetTitle = "${assetTitle}";
 
-	<command name="viewDefaultWithAllDisplaySettingsCheckboxesPG">
-		<var name="key_assetTitle" value="${assetTitle}" />
+		AssertTextEquals(
+			locator1 = "AP#ASSET_RICH_SUMMARY_TITLE",
+			value1 = "${assetTitle}"
+		);
 
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${assetTitle}" />
-		<execute function="AssertElementPresent" locator1="AP#ASSET_ABSTRACT_EDIT" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#ASSET_ABSTRACT_DESCRIPTION" value1="${assetDescription}" />
-	</command>
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#CUSTOM_ASSET_ABSTRACT_DESCRIPTION",
+			value1 = "${assetDescription}"
+		);
 
-	<command name="viewDisplayOrderPG">
-		<execute function="AssertTextEquals" locator1="APAsset#ASSET_ROW_ENTRY_TITLE" value1="${assetTitle}">
-			<var name="key_rowNumber" value="${rowNumber}" />
-		</execute>
-	</command>
+		AssertElementPresent(locator1 = "Link#READ_MORE");
 
-	<command name="viewDynamicAssetSelectionConfigurationPG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Asset Publisher" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+		AssertElementPresent(locator1 = "Icon#PRINT");
 
-		<execute macro="IFrame#selectDialogFrame" />
+		AssertElementPresent(locator1 = "Icon#FLAG");
 
-		<execute function="Click" locator1="APConfiguration#ASSET_SELECTION_DYNAMIC" />
+		AssertElementPresent(locator1 = "Ratings#YOUR_RATING_LABEL");
 
-		<for list="Source,Filter,Custom User Attributes,Ordering and Grouping" param="panelHeading">
-			<var name="key_panelHeading" value="${panelHeading}" />
+		AssertElementPresent(locator1 = "Ratings#AVERAGE_LABEL");
 
-			<execute function="AssertElementPresent" locator1="Panel#PANEL_HEADING_COLLAPSED" />
-		</for>
+		AssertElementPresent(locator1 = "Comments#SUBSCRIBE_TO_COMMENTS_LINK");
 
-		<execute function="SelectFrameTop" />
-	</command>
+		AssertElementPresent(locator1 = "Icon#CUSTOM_EDIT");
 
-	<command name="viewEditLinkPG">
-		<var name="key_assetTitle" value="${entryTitle}" />
+		Click(locator1 = "Icon#SHARE");
 
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${entryTitle}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#ASSET_ABSTRACT_DESCRIPTION" value1="${entryContent}" />
-		<execute function="AssertElementPresent" locator1="AP#ASSET_ABSTRACT_EDIT" />
-	</command>
+		AssertElementPresent(locator1 = "Icon#TWITTER");
 
-	<command name="viewFilterAndFieldsPG">
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+		AssertElementPresent(locator1 = "Icon#FACEBOOK");
+	}
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+	macro viewDefaultWithAllDisplaySettingsCheckboxesPG {
+		var key_assetTitle = "${assetTitle}";
 
-		<execute function="Select" locator1="APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT" value1="${selectedAsset}" />
+		AssertTextEquals(locator1 = "AP#ASSET_ABSTRACT_TITLE", value1 = "${assetTitle}");
 
-		<execute function="Select" locator1="APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT" value1="${assetSubtype}" />
+		AssertElementPresent(locator1 = "AP#ASSET_ABSTRACT_EDIT");
 
-		<if>
-			<equals arg1="${noneIndexable}" arg2="true" />
-			<then>
-				<execute function="AssertNotVisible" locator1="APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_CHECKBOX" />
-				<execute function="AssertElementNotPresent" locator1="APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_SELECT_BUTTON" />
-			</then>
-			<else>
-				<execute function="Check#checkToggleSwitch" locator1="APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_CHECKBOX" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
+			value1 = "${assetDescription}"
+		);
+	}
 
-				<execute function="AssertClick" locator1="APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_SELECT_BUTTON" value1="Select" />
+	macro viewDisplayOrderPG {
+		AssertTextEquals(
+			locator1 = "APAsset#ASSET_ROW_ENTRY_TITLE",
+			value1 = "${assetTitle}",
+			key_rowNumber = "${rowNumber}"
+		);
+	}
 
-				<execute function="SelectFrame" />
+	macro viewDynamicAssetSelectionConfigurationPG {
+		Portlet.gotoPortletOptions(
+			portletName = "Asset Publisher",
+			portletOption = "Configuration"
+		);
 
-				<execute function="SelectFrame" locator1="IFrame#SELECT_STRUCTURE_FIELD" />
+		IFrame.selectDialogFrame();
 
-				<for list="${assetSubtypeFields}" param="assetSubtypeField">
-					<var name="key_fieldName" value="${assetSubtypeField}" />
+		Click(locator1 = "APConfiguration#ASSET_SELECTION_DYNAMIC");
 
-					<execute function="AssertTextEquals#assertPartialText" locator1="APConfigurationFilterbyfield#FIELD_FILTER_FIELD_NAME" value1="${assetSubtypeField}" />
-				</for>
-			</else>
-		</if>
+		for (var panelHeading : list "Source,Filter,Custom User Attributes,Ordering and Grouping") {
+			var key_panelHeading = "${panelHeading}";
 
-		<execute function="SelectFrameTop" />
-	</command>
+			AssertElementPresent(locator1 = "Panel#PANEL_HEADING_COLLAPSED");
+		}
 
-	<command name="viewManualAssetSelectionConfigurationPG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Asset Publisher" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+		SelectFrameTop();
+	}
 
-		<execute macro="IFrame#selectDialogFrame" />
+	macro viewEditLinkPG {
+		var key_assetTitle = "${entryTitle}";
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Asset Entries" />
-		</execute>
+		AssertTextEquals(locator1 = "AP#ASSET_ABSTRACT_TITLE", value1 = "${entryTitle}");
 
-		<execute function="Click" locator1="APConfiguration#ASSET_SELECTION_MANUAL" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
+			value1 = "${entryContent}"
+		);
 
-		<execute function="AssertElementNotPresent" locator1="APConfiguration#SOURCE_DROPDOWN" />
-		<execute function="AssertElementNotPresent" locator1="APConfiguration#SOURCE_DROPDOWN_COLLAPSED" />
-		<execute function="AssertElementNotPresent" locator1="APConfiguration#FILTER_DROPDOWN" />
-		<execute function="AssertElementNotPresent" locator1="APConfiguration#FILTER_DROPDOWN_COLLAPSED" />
-		<execute function="AssertElementNotPresent" locator1="APConfiguration#CUSTOM_USER_DROPDOWN" />
-		<execute function="AssertElementNotPresent" locator1="APConfiguration#CUSTOM_USER_DROPDOWN_COLLAPSED" />
-		<execute function="AssertElementNotPresent" locator1="APConfiguration#ORDERING_AND_GROUPING_DROPDOWN" />
-		<execute function="AssertElementNotPresent" locator1="APConfiguration#ORDERING_AND_GROUPING_DROPDOWN_COLLAPSED" />
+		AssertElementPresent(locator1 = "AP#ASSET_ABSTRACT_EDIT");
+	}
 
-		<execute function="SelectFrameTop" />
-	</command>
+	macro viewFilterAndFieldsPG {
+		AssetPublisherPortlet.gotoConfigurationPG();
 
-	<command name="viewManualAssetTypesPG">
-		<execute macro="IFrame#selectDialogFrame" />
+		Panel.expandPanel(panelHeading = "Source");
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Asset Entries" />
-		</execute>
+		Select(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+			value1 = "${selectedAsset}"
+		);
 
-		<execute function="Click" locator1="APConfigurationManual#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT" />
+		Select(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT",
+			value1 = "${assetSubtype}"
+		);
 
-		<for list="${assetEntryTypes}" param="assetEntryType">
-			<var name="key_assetEntryType" value="${assetEntryType}" />
+		if ("${noneIndexable}" == "true") {
+			AssertNotVisible(
+				locator1 = "APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_CHECKBOX"
+			);
 
-			<execute function="AssertTextEquals#assertPartialText" locator1="APConfigurationManual#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_MENULIST_ITEM" value1="${assetEntryType}" />
-		</for>
+			AssertElementNotPresent(
+				locator1 = "APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_SELECT_BUTTON"
+			);
+		}
+		else {
+			Check.checkToggleSwitch(
+				locator1 = "APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_CHECKBOX"
+			);
 
-		<execute macro="IFrame#selectTopFrame" />
-	</command>
+			AssertClick(
+				locator1 = "APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_SELECT_BUTTON",
+				value1 = "Select"
+			);
 
-	<command name="viewManualNoAssetsMessagePG">
-		<execute function="AssertTextEquals" locator1="Message#INFO" value1="There are no results." />
-	</command>
+			SelectFrame();
 
-	<command name="viewMultipleAssetOrderPGViaAP">
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ABSTRACT_GENERIC_TITLE_1" value1="${assetTitle1}" />
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ABSTRACT_GENERIC_TITLE_2" value1="${assetTitle2}" />
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ABSTRACT_GENERIC_TITLE_3" value1="${assetTitle3}" />
-	</command>
+			SelectFrame(locator1 = "IFrame#SELECT_STRUCTURE_FIELD");
 
-	<command name="viewMultipleDDLRecordsViaAP">
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#ASSET_ABSTRACT_DDL_RECORD_1" value1="${ddlRecordFieldData1}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#ASSET_ABSTRACT_DDL_RECORD_2" value1="${ddlRecordFieldData2}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#ASSET_ABSTRACT_DDL_RECORD_3" value1="${ddlRecordFieldData3}" />
-	</command>
+			for (var assetSubtypeField : list "${assetSubtypeFields}") {
+				AssertTextEquals.assertPartialText(
+					locator1 = "APConfigurationFilterbyfield#FIELD_FILTER_FIELD_NAME",
+					value1 = "${assetSubtypeField}",
+					key_fieldName = "${assetSubtypeField}"
+				);
+			}
+		}
 
-	<command name="viewMultipleSiteScopesAddDropdowns">
-		<execute macro="AssetPublisherPortlet#addAsset">
-			<var name="assetType" value="Add Content (Select Scope and Type)" />
-		</execute>
+		SelectFrameTop();
+	}
 
-		<execute function="Select" locator1="Select#SCOPE" value1="${siteName1}" />
+	macro viewManualAssetSelectionConfigurationPG {
+		Portlet.gotoPortletOptions(
+			portletName = "Asset Publisher",
+			portletOption = "Configuration"
+		);
 
-		<execute function="AssertSelectedLabel" locator1="Select#SCOPE" value1="${siteName1}" />
+		IFrame.selectDialogFrame();
 
-		<execute function="Select" locator1="Select#SCOPE" value1="${siteName2}" />
+		Panel.expandPanel(panelHeading = "Asset Entries");
 
-		<execute function="AssertSelectedLabel" locator1="Select#SCOPE" value1="${siteName2}" />
-	</command>
+		Click(locator1 = "APConfiguration#ASSET_SELECTION_MANUAL");
 
-	<command name="viewNoEditLinkPG">
-		<var name="key_assetTitle" value="${entryTitle}" />
+		AssertElementNotPresent(locator1 = "APConfiguration#SOURCE_DROPDOWN");
 
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${entryTitle}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#ASSET_ABSTRACT_DESCRIPTION" value1="${entryContent}" />
+		AssertElementNotPresent(locator1 = "APConfiguration#SOURCE_DROPDOWN_COLLAPSED");
 
-		<execute function="Click" locator1="AP#ASSET_ABSTRACT_EDIT" />
+		AssertElementNotPresent(locator1 = "APConfiguration#FILTER_DROPDOWN");
 
-		<execute function="AssertElementNotPresent" locator1="AP#ASSET_EDIT" />
-	</command>
+		AssertElementNotPresent(locator1 = "APConfiguration#FILTER_DROPDOWN_COLLAPSED");
 
-	<command name="viewOrderedFieldPG">
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ORDER_FIRST" value1="${firstAsset}" />
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ORDER_SECOND" value1="${secondAsset}" />
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ORDER_THIRD" value1="${thirdAsset}" />
-	</command>
+		AssertElementNotPresent(locator1 = "APConfiguration#CUSTOM_USER_DROPDOWN");
 
-	<command name="viewPaginatedAssetsPG">
-		<var name="key_pageMod" value="${pageMod}" />
-		<var name="key_pageNumber" value="${pageNumber}" />
-		<var name="key_paginationNumber" value="${paginationNumber}" />
+		AssertElementNotPresent(
+			locator1 = "APConfiguration#CUSTOM_USER_DROPDOWN_COLLAPSED"
+		);
 
-		<execute function="AssertTextEquals" locator1="Pagination#PARTICULAR_PAGE" value1="Page ${pageNumber}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="Pagination#VARIABLE_ITEMS_PER_PAGE" value1="${paginationNumber} Items per Page" />
-		<execute function="AssertTextEquals" locator1="Pagination#VARIABLE_TOTAL_ITEMS" value1="Showing ${key_pageMod} results." />
+		AssertElementNotPresent(
+			locator1 = "APConfiguration#ORDERING_AND_GROUPING_DROPDOWN"
+		);
 
-		<if>
-			<equals arg1="${nextPageClick}" arg2="true" />
-			<then>
-				<execute function="AssertClick" locator1="Pagination#NEXT_LINK" value1="Next" />
-			</then>
-		</if>
-	</command>
+		AssertElementNotPresent(
+			locator1 = "APConfiguration#ORDERING_AND_GROUPING_DROPDOWN_COLLAPSED"
+		);
 
-	<command name="viewPG">
-		<var name="key_assetContent" value="${assetContent}" />
-		<var name="key_assetTitle" value="${assetTitle}" />
+		SelectFrameTop();
+	}
 
-		<execute function="AssertTextEquals" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${assetTitle}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="AP#ASSET_ABSTRACT_DESCRIPTION" value1="${assetContent}" />
+	macro viewManualAssetTypesPG {
+		IFrame.selectDialogFrame();
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="APAsset#ASSET_CONTENT" value1="${assetContent}" />
+		Panel.expandPanel(panelHeading = "Asset Entries");
 
-		<execute function="AssertClick" locator1="APAsset#ASSET_TITLE" value1="${assetTitle}" />
+		Click(
+			locator1 = "APConfigurationManual#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT"
+		);
 
-		<if>
-			<isset var="relatedAssetTitle" />
-			<then>
-				<execute function="AssertTextEquals" locator1="AssetRelatedAssets#HEADER" value1="Related Assets:" />
-				<execute function="AssertTextEquals" locator1="AssetRelatedAssets#ASSET_TITLE" value1="${relatedAssetTitle}" />
-			</then>
-		</if>
+		for (var assetEntryType : list "${assetEntryTypes}") {
+			AssertTextEquals.assertPartialText(
+				locator1 = "APConfigurationManual#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_MENULIST_ITEM",
+				value1 = "${assetEntryType}",
+				key_assetEntryType = "${assetEntryType}"
+			);
+		}
 
-		<if>
-			<isset var="relatedAssetTitleHidden" />
-			<then>
-				<execute function="AssertTextEquals" locator1="AssetRelatedAssets#HEADER" value1="Related Assets:" />
-				<execute function="AssertTextNotPresent" value1="${relatedAssetTitleHidden}" />
-			</then>
-		</if>
+		IFrame.selectTopFrame();
+	}
 
-		<if>
-			<isset var="tagName" />
-			<then>
-				<execute function="AssertTextEquals" locator1="AP#METADATA_TAGS" value1="${tagName}" />
-			</then>
-		</if>
-	</command>
+	macro viewManualNoAssetsMessagePG {
+		AssertTextEquals(locator1 = "Message#INFO", value1 = "There are no results.");
+	}
 
-	<command name="viewPlusIconNotPresentPG">
-		<execute function="AssertElementNotPresent" locator1="Portlet#ICON_PLUS_SIGN">
-			<var name="key_portletName" value="Asset Publisher" />
-		</execute>
-	</command>
+	macro viewMultipleAssetOrderPGViaAP {
+		AssertTextEquals(
+			locator1 = "AP#ASSET_ABSTRACT_GENERIC_TITLE_1",
+			value1 = "${assetTitle1}"
+		);
 
-	<command name="viewReadMoreLinkNotPresentPG">
-		<execute function="AssertTextNotPresent" locator1="Link#READ_MORE" value1="Read More" />
-	</command>
+		AssertTextEquals(
+			locator1 = "AP#ASSET_ABSTRACT_GENERIC_TITLE_2",
+			value1 = "${assetTitle2}"
+		);
 
-	<command name="viewRestoredSetupPG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Asset Publisher" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "AP#ASSET_ABSTRACT_GENERIC_TITLE_3",
+			value1 = "${assetTitle3}"
+		);
+	}
 
-		<execute macro="IFrame#selectDialogFrame" />
+	macro viewMultipleDDLRecordsViaAP {
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#ASSET_ABSTRACT_DDL_RECORD_1",
+			value1 = "${ddlRecordFieldData1}"
+		);
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Asset Entries" />
-		</execute>
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#ASSET_ABSTRACT_DDL_RECORD_2",
+			value1 = "${ddlRecordFieldData2}"
+		);
 
-		<execute function="AssertTextEquals" locator1="APConfigurationManual#ASSET_SELECTION_MANUAL_NONE" value1="None" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#ASSET_ABSTRACT_DDL_RECORD_3",
+			value1 = "${ddlRecordFieldData3}"
+		);
+	}
 
-		<execute function="SelectFrameTop" />
-	</command>
+	macro viewMultipleSiteScopesAddDropdowns {
+		AssetPublisherPortlet.addAsset(
+			assetType = "Add Content (Select Scope and Type)"
+		);
 
-	<command name="viewSelectedPG">
-		<execute function="Click#clickNoWaitForVisible" locator1="Portlet#ICON_PLUS_SIGN">
-			<var name="key_portletName" value="Asset Publisher" />
-		</execute>
+		Select(locator1 = "Select#SCOPE", value1 = "${siteName1}");
 
-		<execute function="AssertTextEquals" locator1="MenuItem#ANY_MENU_ITEM" value1="${selectedAsset}">
-			<var name="key_menuItem" value="${selectedAsset}" />
-		</execute>
+		AssertSelectedLabel(locator1 = "Select#SCOPE", value1 = "${siteName1}");
 
-		<execute function="Click" locator1="AP#BODY" />
+		Select(locator1 = "Select#SCOPE", value1 = "${siteName2}");
 
-		<execute macro="AssetPublisherPortlet#gotoConfigurationPG" />
+		AssertSelectedLabel(locator1 = "Select#SCOPE", value1 = "${siteName2}");
+	}
 
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Source" />
-		</execute>
+	macro viewNoEditLinkPG {
+		var key_assetTitle = "${entryTitle}";
 
-		<execute function="AssertSelectedLabel" locator1="APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT" value1="${selectedAssetConfiguration}" />
+		AssertTextEquals(locator1 = "AP#ASSET_ABSTRACT_TITLE", value1 = "${entryTitle}");
 
-		<execute function="SelectFrameTop" />
-	</command>
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
+			value1 = "${entryContent}"
+		);
 
-	<command name="viewTagFocusPG">
-		<for list="${assetTitleList}" param="assetTitle">
-			<var name="key_assetTitle" value="${assetTitle}" />
+		Click(locator1 = "AP#ASSET_ABSTRACT_EDIT");
 
-			<execute function="AssertTextEquals" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${assetTitle}" />
-		</for>
+		AssertElementNotPresent(locator1 = "AP#ASSET_EDIT");
+	}
 
-		<if>
-			<isset var="nonTaggedAsset" />
-			<then>
-				<var name="key_assetTitle" value="${nonTaggedAsset}" />
+	macro viewOrderedFieldPG {
+		AssertTextEquals(locator1 = "AP#ASSET_ORDER_FIRST", value1 = "${firstAsset}");
 
-				<execute function="AssertTextNotPresent" locator1="AP#ASSET_ABSTRACT_TITLE" value1="${nonTaggedAsset}" />
-			</then>
-		</if>
-	</command>
-</definition>
+		AssertTextEquals(locator1 = "AP#ASSET_ORDER_SECOND", value1 = "${secondAsset}");
+
+		AssertTextEquals(locator1 = "AP#ASSET_ORDER_THIRD", value1 = "${thirdAsset}");
+	}
+
+	macro viewPaginatedAssetsPG {
+		var key_pageMod = "${pageMod}";
+		var key_pageNumber = "${pageNumber}";
+		var key_paginationNumber = "${paginationNumber}";
+
+		AssertTextEquals(
+			locator1 = "Pagination#PARTICULAR_PAGE",
+			value1 = "Page ${pageNumber}"
+		);
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Pagination#VARIABLE_ITEMS_PER_PAGE",
+			value1 = "${paginationNumber} Items per Page"
+		);
+
+		AssertTextEquals(
+			locator1 = "Pagination#VARIABLE_TOTAL_ITEMS",
+			value1 = "Showing ${key_pageMod} results."
+		);
+
+		if ("${nextPageClick}" == "true") {
+			AssertClick(locator1 = "Pagination#NEXT_LINK", value1 = "Next");
+		}
+	}
+
+	macro viewPG {
+		var key_assetContent = "${assetContent}";
+		var key_assetTitle = "${assetTitle}";
+
+		AssertTextEquals(locator1 = "AP#ASSET_ABSTRACT_TITLE", value1 = "${assetTitle}");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
+			value1 = "${assetContent}"
+		);
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "APAsset#ASSET_CONTENT",
+			value1 = "${assetContent}"
+		);
+
+		AssertClick(locator1 = "AP#ASSET_ABSTRACT_VIEW", value1 = "${assetTitle}");
+
+		if (isSet(relatedAssetTitle)) {
+			AssertTextEquals(
+				locator1 = "AssetRelatedAssets#HEADER",
+				value1 = "Related Assets:"
+			);
+
+			AssertTextEquals(
+				locator1 = "AssetRelatedAssets#ASSET_TITLE",
+				value1 = "${relatedAssetTitle}"
+			);
+		}
+
+		if (isSet(relatedAssetTitleHidden)) {
+			AssertTextEquals(
+				locator1 = "AssetRelatedAssets#HEADER",
+				value1 = "Related Assets:"
+			);
+
+			AssertTextNotPresent(value1 = "${relatedAssetTitleHidden}");
+		}
+
+		if (isSet(tagName)) {
+			AssertTextEquals(locator1 = "AP#METADATA_TAGS", value1 = "${tagName}");
+		}
+	}
+
+	macro viewPlusIconNotPresentPG {
+		AssertElementNotPresent(
+			locator1 = "Portlet#ICON_PLUS_SIGN",
+			key_portletName = "Asset Publisher"
+		);
+	}
+
+	macro viewReadMoreLinkNotPresentPG {
+		AssertTextNotPresent(locator1 = "Link#READ_MORE", value1 = "Read More");
+	}
+
+	macro viewRestoredSetupPG {
+		Portlet.gotoPortletOptions(
+			portletName = "Asset Publisher",
+			portletOption = "Configuration"
+		);
+
+		IFrame.selectDialogFrame();
+
+		Panel.expandPanel(panelHeading = "Asset Entries");
+
+		AssertTextEquals(
+			locator1 = "APConfigurationManual#ASSET_SELECTION_MANUAL_NONE",
+			value1 = "None"
+		);
+
+		SelectFrameTop();
+	}
+
+	macro viewSelectedPG {
+		Click.clickNoWaitForVisible(
+			locator1 = "Portlet#ICON_PLUS_SIGN",
+			key_portletName = "Asset Publisher"
+		);
+
+		MenuItem.viewPresent(menuItem = "${selectedAsset}");
+
+		Click(locator1 = "AP#BODY");
+
+		AssetPublisherPortlet.gotoConfigurationPG();
+
+		Panel.expandPanel(panelHeading = "Source");
+
+		AssertSelectedLabel(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+			value1 = "${selectedAssetConfiguration}"
+		);
+
+		SelectFrameTop();
+	}
+
+	macro viewTagFocusPG {
+		for (var assetTitle : list "${assetTitleList}") {
+			AssertTextEquals(
+				locator1 = "AP#ASSET_ABSTRACT_TITLE",
+				value1 = "${assetTitle}",
+				key_assetTitle = "${assetTitle}"
+			);
+		}
+
+		if (isSet(nonTaggedAsset)) {
+			AssertTextNotPresent(
+				locator1 = "AP#ASSET_ABSTRACT_TITLE",
+				value1 = "${nonTaggedAsset}",
+				key_assetTitle = "${nonTaggedAsset}"
+			);
+		}
+	}
+}

@@ -100,9 +100,7 @@ public class ConfigurationTemporarySwapperTest {
 	}
 
 	@Test(
-		expected =
-			ConfigurationTemporarySwapperException.
-				ServiceMustConsumeConfiguration.class
+		expected = ConfigurationTemporarySwapperException.ServiceMustConsumeConfiguration.class
 	)
 	public void testWillFailIfServiceDoesNotConsumeConfiguration()
 		throws Exception {
@@ -119,8 +117,7 @@ public class ConfigurationTemporarySwapperTest {
 	}
 
 	@Test(
-		expected =
-			ConfigurationTemporarySwapperException.ServiceMustHaveBundle.class
+		expected = ConfigurationTemporarySwapperException.ServiceMustHaveBundle.class
 	)
 	public void testWillFailIfServiceDoesNotHaveABundle() throws Exception {
 		_pid = StringUtil.randomString(20);

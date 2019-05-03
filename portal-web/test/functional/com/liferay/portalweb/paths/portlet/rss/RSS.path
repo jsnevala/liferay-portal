@@ -10,6 +10,11 @@
 <tbody>
 <!--FEED-->
 <tr>
+	<td>FEED_LINK</td>
+	<td>//a[contains(.,'Feed')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FEED_TITLE</td>
 	<td>//*[@id='feedTitleText']</td>
 	<td></td>

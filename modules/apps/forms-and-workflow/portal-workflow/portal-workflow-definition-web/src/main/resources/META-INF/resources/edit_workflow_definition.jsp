@@ -51,8 +51,6 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 
 		<div class="card-horizontal">
 			<div class="card-row card-row-padded">
-				<liferay-ui:error exception="<%= WorkflowDefinitionFileException.class %>" message="please-enter-a-valid-file" />
-
 				<aui:fieldset>
 					<div class="col-xs-6">
 						<aui:field-wrapper label="title">

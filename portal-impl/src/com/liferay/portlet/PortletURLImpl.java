@@ -104,7 +104,7 @@ public class PortletURLImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #PortletURLImpl(HttpServletRequest, Portlet, Layout, String)}
 	 */
 	@Deprecated
@@ -116,7 +116,7 @@ public class PortletURLImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #PortletURLImpl(HttpServletRequest, String, Layout, String)}
 	 */
 	@Deprecated
@@ -137,7 +137,7 @@ public class PortletURLImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #PortletURLImpl(PortletRequest, Portlet, Layout, String)}
 	 */
 	@Deprecated
@@ -151,7 +151,7 @@ public class PortletURLImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #PortletURLImpl(PortletRequest, String, Layout, String)}
 	 */
 	@Deprecated
@@ -306,7 +306,7 @@ public class PortletURLImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #visitReservedParameters(BiConsumer)}
 	 */
 	@Deprecated
@@ -761,7 +761,7 @@ public class PortletURLImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #PortletURLImpl(HttpServletRequest, String, PortletRequest,
 	 *             Layout, String)}
 	 */
@@ -971,7 +971,7 @@ public class PortletURLImpl
 
 		if (_copyCurrentRenderParameters &&
 			!(_lifecycle.equals(PortletRequest.RESOURCE_PHASE) &&
-			 _cacheability.equals(ResourceURL.FULL))) {
+			  _cacheability.equals(ResourceURL.FULL))) {
 
 			renderParams = _mergeWithRenderParameters(renderParams);
 		}
@@ -1144,7 +1144,7 @@ public class PortletURLImpl
 
 		if (_copyCurrentRenderParameters &&
 			!(_lifecycle.equals(PortletRequest.RESOURCE_PHASE) &&
-			 _cacheability.equals(ResourceURL.FULL))) {
+			  _cacheability.equals(ResourceURL.FULL))) {
 
 			renderParams = _mergeWithRenderParameters(renderParams);
 		}
@@ -1237,7 +1237,7 @@ public class PortletURLImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected void mergeRenderParameters() {
@@ -1245,7 +1245,7 @@ public class PortletURLImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected String prependNamespace(String name) {

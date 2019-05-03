@@ -45,14 +45,15 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + CalendarPortletKeys.CALENDAR},
+	property = "javax.portlet.name=" + CalendarPortletKeys.CALENDAR,
 	service = StagedModelDataHandler.class
 )
 public class CalendarNotificationTemplateStagedModelDataHandler
 	extends BaseStagedModelDataHandler<CalendarNotificationTemplate> {
 
-	public static final String[] CLASS_NAMES =
-		{CalendarNotificationTemplate.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		CalendarNotificationTemplate.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(

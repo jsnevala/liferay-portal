@@ -22,7 +22,6 @@ import com.liferay.dynamic.data.mapping.annotations.DDMFormLayoutPage;
 import com.liferay.dynamic.data.mapping.annotations.DDMFormLayoutRow;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidation;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
-import com.liferay.portal.kernel.util.StringPool;
 
 /**
  * @author Marcellus Tavares
@@ -37,8 +36,9 @@ import com.liferay.portal.kernel.util.StringPool;
 					{
 						@DDMFormLayoutColumn(
 							size = 12,
-							value =
-								{"label", "predefinedValue", "required", "tip"}
+							value = {
+								"label", "predefinedValue", "required", "tip"
+							}
 						)
 					}
 				)
@@ -69,12 +69,8 @@ public interface DefaultDDMFormFieldTypeSettings
 	public String fieldNamespace();
 
 	@DDMFormField(
-		label = "%indexable",
-		optionLabels = {
-			"%not-indexable", "%indexable-keyword", "%indexable-text"
-		},
-		optionValues = {StringPool.BLANK, "keyword", "text"}, type = "select",
-		visibilityExpression = "FALSE"
+		label = "%searchable", optionLabels = {"%disable", "%keyword"},
+		optionValues = {"none", "keyword"}, type = "select"
 	)
 	public String indexType();
 
@@ -104,15 +100,13 @@ public interface DefaultDDMFormFieldTypeSettings
 	@DDMFormField(label = "%read-only", visibilityExpression = "FALSE")
 	public boolean readOnly();
 
-	@DDMFormField(label = "%repeatable", properties = {"showAsSwitcher=true"})
+	@DDMFormField(label = "%repeatable", properties = "showAsSwitcher=true")
 	public boolean repeatable();
 
-	@DDMFormField(
-		label = "%required-field", properties = {"showAsSwitcher=true"}
-	)
+	@DDMFormField(label = "%required-field", properties = "showAsSwitcher=true")
 	public boolean required();
 
-	@DDMFormField(label = "%show-label", properties = {"showAsSwitcher=true"})
+	@DDMFormField(label = "%show-label", properties = "showAsSwitcher=true")
 	public boolean showLabel();
 
 	@DDMFormField(
@@ -131,7 +125,7 @@ public interface DefaultDDMFormFieldTypeSettings
 	public DDMFormFieldValidation validation();
 
 	/**
-	 * @deprecated As of 2.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@DDMFormField(
 		label = "%field-visibility-expression",

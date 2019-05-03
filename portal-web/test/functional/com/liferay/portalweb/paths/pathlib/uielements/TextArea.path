@@ -39,23 +39,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>IMAGE_VARIANT</td>
-	<td>//div[contains(.,'Image variants')]//textarea</td>
+	<td>FIELD_INPUT</td>
+	<td>//textarea[contains(@class,'field-input')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>PAGE_TYPE_PANEL_DESCRIPTION</td>
-	<td>//textarea[contains(@id,'descriptionPanel')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>PIWIK</td>
-	<td>//textarea[contains(@id,'_analytics_piwik')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>POLLS_QUESTION</td>
-	<td>//textarea[contains(@id,'pollsweb_description')]</td>
+	<td>SCRIPT</td>
+	<td>//textarea[contains(@class,'lfr-textarea-container')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -66,11 +56,6 @@
 <tr>
 	<td>SEO_META_TAGS_KEYWORDS</td>
 	<td>//textarea[contains(@id,'keywords')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SUMMARY</td>
-	<td>//textarea[contains(@id,'description')]</td>
 	<td></td>
 </tr>
 <tr>

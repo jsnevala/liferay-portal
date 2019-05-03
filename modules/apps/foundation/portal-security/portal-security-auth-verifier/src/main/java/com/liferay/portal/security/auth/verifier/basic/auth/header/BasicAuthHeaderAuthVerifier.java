@@ -14,6 +14,8 @@
 
 package com.liferay.portal.security.auth.verifier.basic.auth.header;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.security.auth.AccessControlContext;
 import com.liferay.portal.kernel.security.auth.AuthException;
@@ -38,7 +40,7 @@ public class BasicAuthHeaderAuthVerifier
 	extends BasicAuthHeaderAutoLogin implements AuthVerifier {
 
 	/**
-	 * @deprecated As of 2.0.0, replaced by {@link
+	 * @deprecated As of 2.1.0, As of Judson (7.1.x), replaced by {@link
 	 *             #BasicAuthHeaderAuthVerifier(ConfigurationProvider, Portal)}
 	 */
 	@Deprecated
@@ -75,40 +77,63 @@ public class BasicAuthHeaderAuthVerifier
 				authVerifierResult.setState(AuthVerifierResult.State.SUCCESS);
 				authVerifierResult.setUserId(Long.valueOf(credentials[0]));
 			}
-			else {
-				boolean forcedBasicAuth = MapUtil.getBoolean(
-					accessControlContext.getSettings(), "basic_auth");
-
-				if (!forcedBasicAuth) {
-					forcedBasicAuth = GetterUtil.getBoolean(
-						properties.getProperty("basic_auth"));
-				}
-
-				if (forcedBasicAuth) {
-					HttpAuthorizationHeader httpAuthorizationHeader =
-						new HttpAuthorizationHeader(
-							HttpAuthorizationHeader.SCHEME_BASIC);
-
-					HttpAuthManagerUtil.generateChallenge(
-						accessControlContext.getRequest(),
-						accessControlContext.getResponse(),
-						httpAuthorizationHeader);
-
-					authVerifierResult.setState(
-						AuthVerifierResult.State.INVALID_CREDENTIALS);
-				}
+			else if (isBasicAuth(accessControlContext, properties)) {
+				return generateChallenge(accessControlContext);
 			}
 
 			return authVerifierResult;
 		}
 		catch (AutoLoginException ale) {
+			if (isBasicAuth(accessControlContext, properties)) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(ale, ale);
+				}
+
+				return generateChallenge(accessControlContext);
+			}
+
 			throw new AuthException(ale);
 		}
+	}
+
+	protected AuthVerifierResult generateChallenge(
+		AccessControlContext accessControlContext) {
+
+		HttpAuthorizationHeader httpAuthorizationHeader =
+			new HttpAuthorizationHeader(HttpAuthorizationHeader.SCHEME_BASIC);
+
+		HttpAuthManagerUtil.generateChallenge(
+			accessControlContext.getRequest(),
+			accessControlContext.getResponse(), httpAuthorizationHeader);
+
+		AuthVerifierResult authVerifierResult = new AuthVerifierResult();
+
+		authVerifierResult.setState(
+			AuthVerifierResult.State.INVALID_CREDENTIALS);
+
+		return authVerifierResult;
+	}
+
+	protected boolean isBasicAuth(
+		AccessControlContext accessControlContext, Properties properties) {
+
+		boolean basicAuth = MapUtil.getBoolean(
+			accessControlContext.getSettings(), "basic_auth");
+
+		if (!basicAuth) {
+			basicAuth = GetterUtil.getBoolean(
+				properties.getProperty("basic_auth"));
+		}
+
+		return basicAuth;
 	}
 
 	@Override
 	protected boolean isEnabled(long companyId) {
 		return true;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BasicAuthHeaderAuthVerifier.class);
 
 }

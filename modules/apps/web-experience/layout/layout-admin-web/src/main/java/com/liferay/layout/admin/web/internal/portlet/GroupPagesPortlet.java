@@ -15,12 +15,22 @@
 package com.liferay.layout.admin.web.internal.portlet;
 
 import com.liferay.layout.admin.web.internal.constants.LayoutAdminPortletKeys;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import java.io.IOException;
+
 import javax.portlet.Portlet;
+import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -51,9 +61,33 @@ import org.osgi.service.component.annotations.Component;
 		"javax.portlet.supported-public-render-parameter=selPlid",
 		"javax.portlet.supports.mime-type=text/html"
 	},
-	service = {Portlet.class}
+	service = Portlet.class
 )
 public class GroupPagesPortlet extends LayoutAdminPortlet {
+
+	@Override
+	protected void doDispatch(
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws IOException, PortletException {
+
+		long groupId = ParamUtil.getLong(renderRequest, "groupId");
+
+		if (groupId > 0) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
+
+			try {
+				GroupPermissionUtil.check(
+					themeDisplay.getPermissionChecker(), groupId,
+					ActionKeys.VIEW);
+			}
+			catch (PortalException pe) {
+				SessionErrors.add(renderRequest, pe.getClass());
+			}
+		}
+
+		super.doDispatch(renderRequest, renderResponse);
+	}
 
 	@Override
 	protected Group getGroup(PortletRequest portletRequest) throws Exception {

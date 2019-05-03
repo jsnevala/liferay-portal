@@ -75,6 +75,7 @@ public class LinkbackProducerUtil {
 				_pingbackQueue.remove(0);
 
 				String sourceUri = (String)tuple.getObject(1);
+
 				String targetUri = (String)tuple.getObject(2);
 
 				String serverUri = _discoverPingbackServer(targetUri);

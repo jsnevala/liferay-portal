@@ -58,6 +58,7 @@ public class VerifyMySQL extends VerifyProcess {
 				}
 
 				String engine = GetterUtil.getString(rs.getString("Engine"));
+
 				String comment = GetterUtil.getString(rs.getString("Comment"));
 
 				if (StringUtil.equalsIgnoreCase(comment, "VIEW")) {

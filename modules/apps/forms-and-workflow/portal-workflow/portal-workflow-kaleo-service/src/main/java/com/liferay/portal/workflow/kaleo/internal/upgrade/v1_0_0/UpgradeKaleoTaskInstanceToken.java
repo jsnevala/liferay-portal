@@ -75,7 +75,7 @@ public class UpgradeKaleoTaskInstanceToken extends UpgradeProcess {
 		sb.append("KaleoInstanceToken.currentKaleoNodeId) where ");
 		sb.append("KaleoInstanceToken.kaleoInstanceTokenId = (select ");
 		sb.append("parentKaleoInstanceTokenId from KaleoInstanceToken where ");
-		sb.append("KaleoInstanceTokenId = ?)");
+		sb.append("kaleoInstanceTokenId = ?)");
 
 		String sql = sb.toString();
 
@@ -114,6 +114,7 @@ public class UpgradeKaleoTaskInstanceToken extends UpgradeProcess {
 			while (rs.next()) {
 				long kaleoTaskInstanceTokenId = rs.getLong(
 					"kaleoTaskInstanceTokenId");
+
 				long oldKaleoInstanceTokenId = rs.getLong(
 					"kaleoInstanceTokenId");
 

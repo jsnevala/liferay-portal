@@ -43,7 +43,7 @@ import org.osgi.service.component.annotations.Component;
 /**
  * @author Alejandro Tardín
  */
-@Component(property = {"upload.response.handler.system.default=true"})
+@Component(property = "upload.response.handler.system.default=true")
 public class DefaultUploadResponseHandler implements UploadResponseHandler {
 
 	@Override
@@ -146,10 +146,8 @@ public class DefaultUploadResponseHandler implements UploadResponseHandler {
 		String[] allowedFileExtensions = PrefsPropsUtil.getStringArray(
 			PropsKeys.DL_FILE_EXTENSIONS, StringPool.COMMA);
 
-		String allowedFileExtensionsString = StringUtil.merge(
+		return StringUtil.merge(
 			allowedFileExtensions, StringPool.COMMA_AND_SPACE);
-
-		return allowedFileExtensionsString;
 	}
 
 }

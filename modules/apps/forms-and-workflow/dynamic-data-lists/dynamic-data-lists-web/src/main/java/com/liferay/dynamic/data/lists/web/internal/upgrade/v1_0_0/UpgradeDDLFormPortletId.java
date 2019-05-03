@@ -64,8 +64,8 @@ public class UpgradeDDLFormPortletId extends BaseUpgradePortletId {
 
 			});
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.
-				PerformActionMethod<ResourcePermission>() {
+			new ActionableDynamicQuery.PerformActionMethod
+				<ResourcePermission>() {
 
 				@Override
 				public void performAction(ResourcePermission resourcePermission)
@@ -90,10 +90,7 @@ public class UpgradeDDLFormPortletId extends BaseUpgradePortletId {
 	@Override
 	protected String[][] getRenamePortletIdsArray() {
 		return new String[][] {
-			new String[] {
-				"1_WAR_ddlformportlet",
-				DDLPortletKeys.DYNAMIC_DATA_LISTS_DISPLAY
-			}
+			{"1_WAR_ddlformportlet", DDLPortletKeys.DYNAMIC_DATA_LISTS_DISPLAY}
 		};
 	}
 
@@ -165,8 +162,8 @@ public class UpgradeDDLFormPortletId extends BaseUpgradePortletId {
 			});
 		actionableDynamicQuery.setParallel(true);
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.
-				PerformActionMethod<PortletPreferences>() {
+			new ActionableDynamicQuery.PerformActionMethod
+				<PortletPreferences>() {
 
 				@Override
 				public void performAction(PortletPreferences portletPreference)

@@ -192,7 +192,9 @@ public class MediaWikiToCreoleTranslator extends BaseTranslator {
 			level = 0;
 			prefixLength = matcher.end(2) - matcher.start(2);
 
-			for (int i = matcher.start(0) + offset; i < sb.length() - 1; i++) {
+			for (int i = matcher.start(0) + offset; i < (sb.length() - 1);
+				 i++) {
+
 				if ((sb.charAt(i) == '[') && (sb.charAt(i + 1) == '[')) {
 					level++;
 				}
@@ -310,24 +312,26 @@ public class MediaWikiToCreoleTranslator extends BaseTranslator {
 		"<var>", "</var>"
 	};
 
-	private final Pattern[] _htmlTagPatterns =
-		{Pattern.compile("<div[^>]*>"), Pattern.compile("<font[^>]*>")};
-	private final Pattern _imagePattern = Pattern.compile(
+	private static final Pattern[] _htmlTagPatterns = {
+		Pattern.compile("<div[^>]*>"), Pattern.compile("<font[^>]*>")
+	};
+	private static final Pattern _imagePattern = Pattern.compile(
 		"(\\[{2})(Image|File)(:)", Pattern.DOTALL);
-	private final Pattern _linkPattern = Pattern.compile(
-		"\\[{2}([^\\]]*)\\]{2}", Pattern.DOTALL);
-	private final Pattern _mediaWikiTablePattern1 = Pattern.compile(
+	private static final Pattern _linkPattern = Pattern.compile(
+		"\\[{2}(?!Image|File|Media:)([^\\]]*)\\]{2}", Pattern.DOTALL);
+	private static final Pattern _mediaWikiTablePattern1 = Pattern.compile(
 		"class=(.*?)[|\n\r]");
-	private final Pattern _mediaWikiTablePattern2 = Pattern.compile(
+	private static final Pattern _mediaWikiTablePattern2 = Pattern.compile(
 		"(\\|\\-)(.*)");
-	private final Pattern _mediaWikiTablePattern3 = Pattern.compile(
+	private static final Pattern _mediaWikiTablePattern3 = Pattern.compile(
 		"\\|\\+(.*)");
-	private final Pattern _mediaWikiTablePattern4 = Pattern.compile(
+	private static final Pattern _mediaWikiTablePattern4 = Pattern.compile(
 		"(?m)^!(.+)");
-	private boolean _strictImportMode;
-	private final Pattern _tablePattern = Pattern.compile(
+	private static final Pattern _tablePattern = Pattern.compile(
 		"\\{\\|(.*?)\\|\\}", Pattern.DOTALL);
-	private final Pattern _titlePattern = Pattern.compile(
+	private static final Pattern _titlePattern = Pattern.compile(
 		"^=([^=]+)=", Pattern.MULTILINE);
+
+	private boolean _strictImportMode;
 
 }

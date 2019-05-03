@@ -16,6 +16,7 @@ package com.liferay.portlet.configuration.css.web.internal.servlet.taglib;
 
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 
@@ -62,8 +63,10 @@ public class PortletConfigurationCSSBottomDynamicInclude
 		unbind = "-"
 	)
 	protected void setServletContext(ServletContext servletContext) {
+		String proxyPath = PortalUtil.getPathProxy();
+
 		_values = Collections.singletonMap(
-			"contextPath", servletContext.getContextPath());
+			"contextPath", proxyPath.concat(servletContext.getContextPath()));
 	}
 
 	private static final String _TMPL_CONTENT = StringUtil.read(

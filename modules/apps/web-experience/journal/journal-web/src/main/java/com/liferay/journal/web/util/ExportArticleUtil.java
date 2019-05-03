@@ -59,7 +59,7 @@ import org.osgi.service.component.annotations.Reference;
 public class ExportArticleUtil {
 
 	/**
-	 * @deprecated As of 1.5.0, replaced by {@link #sendFile(String,
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #sendFile(String,
 	 *             PortletRequest, PortletResponse)}
 	 */
 	@Deprecated
@@ -93,14 +93,14 @@ public class ExportArticleUtil {
 			return;
 		}
 
+		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
 		long groupId = ParamUtil.getLong(portletRequest, "groupId");
 		String articleId = ParamUtil.getString(portletRequest, "articleId");
-
 		String languageId = LanguageUtil.getLanguageId(portletRequest);
 		PortletRequestModel portletRequestModel = new PortletRequestModel(
 			portletRequest, portletResponse);
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
 		HttpServletRequest request = _portal.getHttpServletRequest(
 			portletRequest);
 		HttpServletResponse response = _portal.getHttpServletResponse(
@@ -150,8 +150,11 @@ public class ExportArticleUtil {
 		String title = articleDisplay.getTitle();
 		String sourceExtension = "html";
 
-		String fileName = title.concat(StringPool.PERIOD).concat(
-			sourceExtension);
+		String fileName = title.concat(
+			StringPool.PERIOD
+		).concat(
+			sourceExtension
+		);
 
 		String contentType = ContentTypes.TEXT_HTML;
 
@@ -165,7 +168,11 @@ public class ExportArticleUtil {
 		if (convertedFile != null) {
 			targetExtension = StringUtil.toLowerCase(targetExtension);
 
-			fileName = title.concat(StringPool.PERIOD).concat(targetExtension);
+			fileName = title.concat(
+				StringPool.PERIOD
+			).concat(
+				targetExtension
+			);
 
 			contentType = MimeTypesUtil.getContentType(fileName);
 

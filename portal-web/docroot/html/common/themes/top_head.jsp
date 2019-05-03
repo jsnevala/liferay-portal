@@ -20,7 +20,7 @@
 
 <liferay-util:dynamic-include key="/html/common/themes/top_head.jsp#pre" />
 
-<link data-senna-track="temporary" href="<%= themeDisplay.getPathThemeImages() %>/<%= PropsValues.THEME_SHORTCUT_ICON %>" rel="Shortcut Icon" />
+<link href="<%= BrowserSnifferUtil.isIe(request) ? StringPool.BLANK : themeDisplay.getPathThemeImages() %>/<%= PropsValues.THEME_SHORTCUT_ICON %>" rel="icon" />
 
 <%-- Available Translations --%>
 
@@ -28,7 +28,7 @@
 if (!themeDisplay.isSignedIn() && layout.isPublicLayout()) {
 	String completeURL = PortalUtil.getCurrentCompleteURL(request);
 
-	String canonicalURL = PortalUtil.getCanonicalURL(completeURL, themeDisplay, layout);
+	String canonicalURL = PortalUtil.getCanonicalURL(completeURL, themeDisplay, layout, false, false);
 %>
 
 	<link data-senna-track="temporary" href="<%= HtmlUtil.escapeAttribute(canonicalURL) %>" rel="canonical" />

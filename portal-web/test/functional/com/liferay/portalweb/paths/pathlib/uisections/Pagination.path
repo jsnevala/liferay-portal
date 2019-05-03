@@ -9,8 +9,8 @@
 </thead>
 <tbody>
 <tr>
-	<td>PAGES</td>
-	<td>//div[@class='search-results' and contains(.,'Pages')]</td>
+	<td>CURRENT_PAGE_SELECT</td>
+	<td>//div[contains(@class,'pagination-results')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -19,38 +19,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>PREVIOUS_LINK</td>
-	<td>//ul[contains(@class,'pagination')]/li/a[contains(.,'2')] | //ul[contains(@class,'pagination')]/li/a[contains(.,'Previous')] | //ul[contains(@class,'pagination')]/li/a/span[contains(@class,'icon-caret-left')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NEXT_LINK</td>
-	<td>//ul[contains(@class,'pagination')]/li/a[contains(.,'Next')] | //ul[contains(@class,'pagination')]/li[@class='']/a/span[contains(@class,'icon-caret-right')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>LAST_LINK</td>
-	<td>//ul[contains(@class,'pagination')]/li/a[contains(.,'3')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>PAGE_1</td>
-	<td>//div[@class='search-results']/a[contains(.,'1')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>PAGE_2</td>
-	<td>//div[@class='search-results']/a[contains(.,'2')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>PARTICULAR_PAGE</td>
-	<td>//div[@class='lfr-pagination-page-selector']/div/a[contains(.,'Page ${key_pageNumber}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>CURRENT_PAGE_SELECT</td>
-	<td>//div[contains(@class,'pagination-results')]</td>
+	<td>FIVE_ITEMS_PER_PAGE</td>
+	<td>//a[contains(.,'5')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -59,8 +29,33 @@
 	<td></td>
 </tr>
 <tr>
-	<td>FIVE_ITEMS_PER_PAGE</td>
-	<td>//a[contains(.,'5')]</td>
+	<td>LAST_LINK</td>
+	<td>//ul[contains(@class,'pagination')]/li/a[contains(.,'3')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NEXT_LINK</td>
+	<td>//ul[contains(@class,'pagination')]/li/a[contains(.,'Next')] | //ul[contains(@class,'pagination')]/li[@class='']/a/span[contains(@class,'icon-caret-right')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_2</td>
+	<td>//div[@class='search-results']/a[contains(.,'2')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGES</td>
+	<td>//div[@class='search-results' and contains(.,'Pages')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PARTICULAR_PAGE</td>
+	<td>//div[@class='lfr-pagination-page-selector']/div/a[contains(.,'Page ${key_pageNumber}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PREVIOUS_LINK</td>
+	<td>//ul[contains(@class,'pagination')]/li/a[contains(.,'2')] | //ul[contains(@class,'pagination')]/li/a[contains(.,'Previous')] | //ul[contains(@class,'pagination')]/li/a/span[contains(@class,'icon-caret-left')]</td>
 	<td></td>
 </tr>
 <tr>

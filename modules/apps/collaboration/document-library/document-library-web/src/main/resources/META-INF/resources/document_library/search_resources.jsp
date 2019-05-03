@@ -332,7 +332,7 @@ SearchContainer searchContainer = new SearchContainer(liferayPortletRequest, por
 				value="<%= selectedTab %>"
 			>
 				<liferay-ui:section>
-					<div class="local-search-results" data-repositoryId="<%= scopeGroupId %>" <%= scopeGroupId == searchRepositoryId ? "data-searchProcessed" : "" %> id="<portlet:namespace />searchResultsContainer<%= scopeGroupId %>">
+					<div class="local-search-results" data-repositoryId="<%= scopeGroupId %>" <%= (scopeGroupId == searchRepositoryId) ? "data-searchProcessed" : "" %> id="<portlet:namespace />searchResultsContainer<%= scopeGroupId %>">
 						<c:choose>
 							<c:when test="<%= scopeGroupId == searchRepositoryId %>">
 								<%= searchResults %>
@@ -353,7 +353,7 @@ SearchContainer searchContainer = new SearchContainer(liferayPortletRequest, por
 				%>
 
 					<liferay-ui:section>
-						<div data-repositoryId="<%= mountFolder.getRepositoryId() %>" <%= mountFolder.getRepositoryId() == searchRepositoryId ? "data-searchProcessed" : "" %> id="<portlet:namespace />searchResultsContainer<%= mountFolder.getRepositoryId() %>">
+						<div data-repositoryId="<%= mountFolder.getRepositoryId() %>" <%= (mountFolder.getRepositoryId() == searchRepositoryId) ? "data-searchProcessed" : "" %> id="<portlet:namespace />searchResultsContainer<%= mountFolder.getRepositoryId() %>">
 							<c:choose>
 								<c:when test="<%= mountFolder.getRepositoryId() == searchRepositoryId %>">
 									<%= searchResults %>

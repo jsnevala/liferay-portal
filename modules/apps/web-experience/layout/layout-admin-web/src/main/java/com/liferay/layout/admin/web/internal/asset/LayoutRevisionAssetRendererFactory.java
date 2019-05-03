@@ -41,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + LayoutAdminPortletKeys.LAYOUT_ADMIN},
+	property = "javax.portlet.name=" + LayoutAdminPortletKeys.LAYOUT_ADMIN,
 	service = AssetRendererFactory.class
 )
 public class LayoutRevisionAssetRendererFactory

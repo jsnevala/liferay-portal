@@ -67,13 +67,13 @@ public interface DDMRESTDataProviderSettings {
 		properties = {
 			"placeholder=%enter-a-password",
 			"tooltip=%provide-the-password-for-authenticating-to-the-rest-provider"
-		}
+		},
+		type = "password"
 	)
 	public String password();
 
 	@DDMFormField(
-		label = "%url",
-		properties = {"placeholder=%enter-the-rest-service-url"},
+		label = "%url", properties = "placeholder=%enter-the-rest-service-url",
 		required = true
 	)
 	public String url();

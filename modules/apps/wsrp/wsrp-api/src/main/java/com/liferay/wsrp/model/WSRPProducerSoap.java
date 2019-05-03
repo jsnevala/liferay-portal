@@ -30,6 +30,7 @@ import java.util.List;
  */
 @ProviderType
 public class WSRPProducerSoap implements Serializable {
+
 	public static WSRPProducerSoap toSoapModel(WSRPProducer model) {
 		WSRPProducerSoap soapModel = new WSRPProducerSoap();
 
@@ -75,7 +76,8 @@ public class WSRPProducerSoap implements Serializable {
 	}
 
 	public static WSRPProducerSoap[] toSoapModels(List<WSRPProducer> models) {
-		List<WSRPProducerSoap> soapModels = new ArrayList<WSRPProducerSoap>(models.size());
+		List<WSRPProducerSoap> soapModels = new ArrayList<WSRPProducerSoap>(
+			models.size());
 
 		for (WSRPProducer model : models) {
 			soapModels.add(toSoapModel(model));
@@ -185,4 +187,5 @@ public class WSRPProducerSoap implements Serializable {
 	private String _version;
 	private String _portletIds;
 	private Date _lastPublishDate;
+
 }

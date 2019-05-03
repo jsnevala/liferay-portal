@@ -1,41 +1,40 @@
-<definition>
-	<command name="getModuleID" returns="moduleID">
-		<execute macro="GogoShell#listModuleStatus">
-			<var name="moduleName" value="${moduleName}" />
-		</execute>
+definition {
+	macro getModuleID {
+		GogoShell.listModuleStatus(moduleName = "${moduleName}");
 
-		<var method="selenium#getText(GogoShell#OUTPUT_FIELD)" name="moduleStatusOutput" />
+		AssertElementPresent(locator1 = "GogoShell#OUTPUT_FIELD");
 
-		<var method="StringUtil#stripBetween('${moduleStatusOutput}', 'START', 'Name   ')" name="partialModuleStatusOutput" />
+		var moduleStatusOutput = selenium.getText("GogoShell#OUTPUT_FIELD");
+		var partialModuleStatusOutput = StringUtil.stripBetween("${moduleStatusOutput}", "START", "Name   ");
+		var moduleID = StringUtil.extractFirst("${partialModuleStatusOutput}", "|");
 
-		<var method="StringUtil#extractFirst('${partialModuleStatusOutput}', '|')" name="moduleID" />
+		return "${moduleID}";
+	}
 
-		<return name="moduleID" value="${moduleID}" />
-	</command>
+	macro listModuleStatus {
+		Type(locator1 = "GogoShell#COMMAND_FIELD", value1 = "lb ${moduleName}");
 
-	<command name="listModuleStatus">
-		<execute function="Type" locator1="GogoShell#COMMAND_FIELD" value1="lb ${moduleName}" />
+		AssertClick(locator1 = "GogoShell#EXECUTE_BUTTON", value1 = "Execute");
+	}
 
-		<execute function="AssertClick" locator1="GogoShell#EXECUTE_BUTTON" value1="Execute" />
-	</command>
+	macro startModule {
+		Type(locator1 = "GogoShell#COMMAND_FIELD", value1 = "start ${moduleID}");
 
-	<command name="startModule">
-		<execute function="Type" locator1="GogoShell#COMMAND_FIELD" value1="start ${moduleID}" />
+		AssertClick(locator1 = "GogoShell#EXECUTE_BUTTON", value1 = "Execute");
+	}
 
-		<execute function="AssertClick" locator1="GogoShell#EXECUTE_BUTTON" value1="Execute" />
-	</command>
+	macro stopModule {
+		Type(locator1 = "GogoShell#COMMAND_FIELD", value1 = "stop ${moduleID}");
 
-	<command name="stopModule">
-		<execute function="Type" locator1="GogoShell#COMMAND_FIELD" value1="stop ${moduleID}" />
+		AssertClick(locator1 = "GogoShell#EXECUTE_BUTTON", value1 = "Execute");
+	}
 
-		<execute function="AssertClick" locator1="GogoShell#EXECUTE_BUTTON" value1="Execute" />
-	</command>
+	macro viewModuleStatus {
+		GogoShell.listModuleStatus(moduleName = "${moduleName}");
 
-	<command name="viewModuleStatus">
-		<execute macro="GogoShell#listModuleStatus">
-			<var name="moduleName" value="${moduleName}" />
-		</execute>
-
-		<execute function="AssertTextEquals#assertPartialText" locator1="GogoShell#OUTPUT_FIELD" value1="${moduleStatus}" />
-	</command>
-</definition>
+		AssertTextEquals.assertPartialText(
+			locator1 = "GogoShell#OUTPUT_FIELD",
+			value1 = "${moduleStatus}"
+		);
+	}
+}

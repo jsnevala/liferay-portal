@@ -34,7 +34,7 @@ List<AMImageConfigurationEntry> selectedConfigurationEntries = (List)request.get
 >
 	<liferay-frontend:management-bar-buttons>
 		<liferay-frontend:management-bar-sidenav-toggler-button
-			disabled="<%= (selectedConfigurationEntries.size() <= 0) %>"
+			disabled="<%= selectedConfigurationEntries.size() <= 0 %>"
 			icon="info-circle"
 			label="info"
 		/>
@@ -245,14 +245,6 @@ PortletURL portletURL = renderResponse.createRenderURL();
 </div>
 
 <aui:script>
-	function <portlet:namespace />deleteImageConfigurationEntries() {
-		if (confirm('<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-the-selected-entries") %>')) {
-			var form = AUI.$(document.<portlet:namespace />fm);
-
-			submitForm(form);
-		}
-	}
-
 	function <portlet:namespace />adaptRemaining(uuid, backgroundTaskUrl) {
 		var component = Liferay.component('<portlet:namespace />AdaptRemaining' + uuid);
 

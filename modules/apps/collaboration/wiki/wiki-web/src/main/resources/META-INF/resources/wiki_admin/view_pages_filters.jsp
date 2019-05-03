@@ -24,7 +24,7 @@ String navigation = ParamUtil.getString(request, "navigation", "all-pages");
 String orderByCol = GetterUtil.getString((String)request.getAttribute("view_pages.jsp-orderByCol"));
 String orderByType = GetterUtil.getString((String)request.getAttribute("view_pages.jsp-orderByType"));
 
-PortletURL portletURL = renderResponse.createRenderURL();
+PortletURL portletURL = PortletURLUtil.clone(currentURLObj, liferayPortletResponse);
 
 portletURL.setParameter("mvcRenderCommandName", "/wiki/view_pages");
 portletURL.setParameter("redirect", currentURL);

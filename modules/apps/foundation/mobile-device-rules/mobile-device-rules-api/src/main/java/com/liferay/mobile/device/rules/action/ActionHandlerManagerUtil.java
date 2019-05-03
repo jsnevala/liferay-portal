@@ -31,7 +31,7 @@ import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * @author Edward Han
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class ActionHandlerManagerUtil {
 

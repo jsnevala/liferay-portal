@@ -271,7 +271,8 @@ public class UserImpl extends UserBaseImpl {
 	 * @param      portalURL the portal's URL
 	 * @param      mainPath the main path
 	 * @return     the user's display URL
-	 * @deprecated As of 7.0.0, replaced by {@link #getDisplayURL(ThemeDisplay)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getDisplayURL(ThemeDisplay)}
 	 */
 	@Deprecated
 	@Override
@@ -312,7 +313,8 @@ public class UserImpl extends UserBaseImpl {
 	 *             is available for the user's profile
 	 * @return     the user's display URL
 	 * @throws     PortalException
-	 * @deprecated As of 7.0.0, replaced by {@link #getDisplayURL(ThemeDisplay)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getDisplayURL(ThemeDisplay)}
 	 */
 	@Deprecated
 	@Override
@@ -327,8 +329,11 @@ public class UserImpl extends UserBaseImpl {
 		String profileFriendlyURL = getProfileFriendlyURL();
 
 		if (profileFriendlyURL != null) {
-			return portalURL.concat(PortalUtil.getPathContext()).concat(
-				profileFriendlyURL);
+			return portalURL.concat(
+				PortalUtil.getPathContext()
+			).concat(
+				profileFriendlyURL
+			);
 		}
 
 		return StringPool.BLANK;
@@ -413,7 +418,10 @@ public class UserImpl extends UserBaseImpl {
 			return PortalUtil.addPreservedParameters(
 				themeDisplay,
 				portalURL.concat(
-					PortalUtil.getPathContext()).concat(profileFriendlyURL));
+					PortalUtil.getPathContext()
+				).concat(
+					profileFriendlyURL
+				));
 		}
 
 		Group group = getGroup();

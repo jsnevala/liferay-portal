@@ -39,8 +39,9 @@ import javax.servlet.http.HttpServletRequest;
 @ProviderType
 public interface DDL {
 
-	public static final String[] SELECTED_FIELD_NAMES =
-		{Field.COMPANY_ID, Field.ENTRY_CLASS_PK, Field.UID};
+	public static final String[] SELECTED_FIELD_NAMES = {
+		Field.COMPANY_ID, Field.ENTRY_CLASS_PK, Field.UID
+	};
 
 	/**
 	 * Returns the record's JSON Object representation. The latest approved
@@ -53,7 +54,7 @@ public interface DDL {
 	 * @param      record the record to transform
 	 * @return     the record's JSON Object representation
 	 * @throws     Exception if an unexpected exception occurred
-	 * @deprecated As of 2.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getRecordJSONObject(DDLRecord,boolean,locale)}
 	 */
 	@Deprecated
@@ -102,7 +103,7 @@ public interface DDL {
 	 * @param      recordSet the record set from which to extract records
 	 * @return     the record set's records as a JSON Array
 	 * @throws     Exception if an unexpected exception occurred
-	 * @deprecated As of 2.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getRecordsJSONArray(List,boolean,locale)}
 	 */
 	@Deprecated
@@ -121,7 +122,7 @@ public interface DDL {
 	 * @param      records the records to transform
 	 * @return     the records as a JSON Array
 	 * @throws     Exception if an unexpected exception occurred
-	 * @deprecated As of 2.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getRecordsJSONArray(List,boolean,locale)}
 	 */
 	@Deprecated
@@ -149,7 +150,7 @@ public interface DDL {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 2.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public boolean isEditable(
@@ -157,7 +158,7 @@ public interface DDL {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 2.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public boolean isEditable(
@@ -201,7 +202,7 @@ public interface DDL {
 	 * @param      serviceContext the service context to be applied
 	 * @return     the record
 	 * @throws     Exception if an unexpected exception occurred
-	 * @deprecated As of 2.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #updateRecord(long,long,boolean,boolean,ServiceContext)}
 	 */
 	@Deprecated

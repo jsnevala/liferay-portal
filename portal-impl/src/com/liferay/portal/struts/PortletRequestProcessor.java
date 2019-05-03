@@ -84,11 +84,8 @@ public class PortletRequestProcessor extends TilesRequestProcessor {
 			Constructor<?> constructor = clazz.getConstructor(
 				ActionServlet.class, ModuleConfig.class);
 
-			PortletRequestProcessor portletReqProcessor =
-				(PortletRequestProcessor)constructor.newInstance(
-					servlet, moduleConfig);
-
-			return portletReqProcessor;
+			return (PortletRequestProcessor)constructor.newInstance(
+				servlet, moduleConfig);
 		}
 		catch (Exception e) {
 			_log.error("Unable to get a portlet request processor", e);

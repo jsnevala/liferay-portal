@@ -18,20 +18,27 @@ import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.web.internal.portlet.action.ActionUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.RepositoryLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.repository.registry.RepositoryClassDefinitionCatalogUtil;
 import com.liferay.taglib.security.PermissionsURLTag;
+
+import java.util.Collection;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Roberto Díaz
@@ -86,12 +93,14 @@ public class FileEntryPermissionPortletConfigurationIcon
 
 	@Override
 	public boolean isShow(PortletRequest portletRequest) {
-		FileEntry fileEntry = null;
-
 		try {
-			fileEntry = ActionUtil.getFileEntry(portletRequest);
+			FileEntry fileEntry = ActionUtil.getFileEntry(portletRequest);
 
-			if (fileEntry != null) {
+			if (fileEntry == null) {
+				return false;
+			}
+
+			if (!_isExternalRepository(fileEntry.getRepositoryId())) {
 				return true;
 			}
 		}
@@ -110,5 +119,25 @@ public class FileEntryPermissionPortletConfigurationIcon
 	public boolean isUseDialog() {
 		return true;
 	}
+
+	private boolean _isExternalRepository(long repositoryId)
+		throws PortalException {
+
+		Repository repository = _repositoryLocalService.fetchRepository(
+			repositoryId);
+
+		if (repository == null) {
+			return false;
+		}
+
+		Collection<String> externalRepositoryClassNames =
+			RepositoryClassDefinitionCatalogUtil.
+				getExternalRepositoryClassNames();
+
+		return externalRepositoryClassNames.contains(repository.getClassName());
+	}
+
+	@Reference
+	private RepositoryLocalService _repositoryLocalService;
 
 }

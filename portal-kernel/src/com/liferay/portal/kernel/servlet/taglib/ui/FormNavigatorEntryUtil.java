@@ -210,7 +210,7 @@ public class FormNavigatorEntryUtil {
 
 	private final ServiceTracker
 		<FormNavigatorEntryConfigurationHelper,
-			FormNavigatorEntryConfigurationHelper> _serviceTracker;
+		 FormNavigatorEntryConfigurationHelper> _serviceTracker;
 
 	/**
 	 * @see com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceComparator

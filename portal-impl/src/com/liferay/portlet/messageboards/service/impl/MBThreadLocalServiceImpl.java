@@ -879,7 +879,7 @@ public class MBThreadLocalServiceImpl extends MBThreadLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #restoreDependentsFromTrash(long, long)}
 	 */
 	@Deprecated

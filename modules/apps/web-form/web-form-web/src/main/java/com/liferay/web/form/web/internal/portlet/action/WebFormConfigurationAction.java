@@ -54,7 +54,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + WebFormPortletKeys.WEB_FORM},
+	property = "javax.portlet.name=" + WebFormPortletKeys.WEB_FORM,
 	service = ConfigurationAction.class
 )
 public class WebFormConfigurationAction extends DefaultConfigurationAction {
@@ -141,6 +141,7 @@ public class WebFormConfigurationAction extends DefaultConfigurationAction {
 				Map<Locale, String> fieldParagraphMap =
 					LocalizationUtil.getLocalizationMap(
 						actionRequest, "fieldParagraph" + formFieldsIndex);
+
 				String fieldValidationScript = ParamUtil.getString(
 					actionRequest, "fieldValidationScript" + formFieldsIndex);
 				String fieldValidationErrorMessage = ParamUtil.getString(

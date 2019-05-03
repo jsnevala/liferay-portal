@@ -43,7 +43,7 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 
 /**
- * @author Carlos Sierra Andres
+ * @author Carlos Sierra Andrés
  */
 @Component(immediate = true)
 public class ThemeContributorDynamicInclude implements DynamicInclude {
@@ -112,7 +112,7 @@ public class ThemeContributorDynamicInclude implements DynamicInclude {
 
 	@Reference(
 		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC, unbind = "removeBundleWebResources"
+		policy = ReferencePolicy.DYNAMIC
 	)
 	protected void addBundleWebResources(
 		ServiceReference<BundleWebResources>
@@ -238,7 +238,11 @@ public class ThemeContributorDynamicInclude implements DynamicInclude {
 		for (String resourceURL : resourceURLs) {
 			String staticResourceURL = _portal.getStaticResourceURL(
 				request,
-				portalURL.concat(_portal.getPathProxy()).concat(resourceURL),
+				portalURL.concat(
+					_portal.getPathProxy()
+				).concat(
+					resourceURL
+				),
 				themeLastModified);
 
 			printWriter.write("<link data-senna-track=\"permanent\" href=\"");
@@ -254,7 +258,11 @@ public class ThemeContributorDynamicInclude implements DynamicInclude {
 		for (String resourceURL : resourceURLs) {
 			String staticResourceURL = _portal.getStaticResourceURL(
 				request,
-				portalURL.concat(_portal.getPathProxy()).concat(resourceURL),
+				portalURL.concat(
+					_portal.getPathProxy()
+				).concat(
+					resourceURL
+				),
 				themeLastModified);
 
 			printWriter.write("<script data-senna-track=\"permanent\" src=\"");

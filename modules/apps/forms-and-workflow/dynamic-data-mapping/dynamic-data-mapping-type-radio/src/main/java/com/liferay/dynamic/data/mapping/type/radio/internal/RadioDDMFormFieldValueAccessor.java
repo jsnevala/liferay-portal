@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Locale;
 
@@ -34,27 +35,41 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true, property = "ddm.form.field.type.name=radio",
-	service =
-		{DDMFormFieldValueAccessor.class, RadioDDMFormFieldValueAccessor.class}
+	service = {
+		DDMFormFieldValueAccessor.class, RadioDDMFormFieldValueAccessor.class
+	}
 )
 public class RadioDDMFormFieldValueAccessor
 	implements DDMFormFieldValueAccessor<String> {
 
 	@Override
 	public String getValue(DDMFormFieldValue ddmFormFieldValue, Locale locale) {
-		try {
-			Value value = ddmFormFieldValue.getValue();
+		Value value = ddmFormFieldValue.getValue();
 
+		if (value == null) {
+			return StringPool.BLANK;
+		}
+
+		try {
 			JSONArray jsonArray = jsonFactory.createJSONArray(
 				value.getString(locale));
 
 			return jsonArray.getString(0);
 		}
 		catch (JSONException jsone) {
-			_log.error("Unable to parse JSON array", jsone);
+			if (_log.isDebugEnabled()) {
+				_log.debug("Unable to parse JSON array", jsone);
+			}
 
-			return StringPool.BLANK;
+			return value.getString(locale);
 		}
+	}
+
+	@Override
+	public boolean isEmpty(DDMFormFieldValue ddmFormFieldValue, Locale locale) {
+		String value = getValue(ddmFormFieldValue, locale);
+
+		return Validator.isNull(value);
 	}
 
 	@Reference

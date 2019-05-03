@@ -123,8 +123,8 @@ public class PortletProviderUtil {
 
 	protected static PortletProvider getPortletProvider(
 		String className,
-		ServiceTrackerMap
-			<String, ? extends PortletProvider> serviceTrackerMap) {
+		ServiceTrackerMap<String, ? extends PortletProvider>
+			serviceTrackerMap) {
 
 		PortletProvider portletProvider = serviceTrackerMap.getService(
 			className);

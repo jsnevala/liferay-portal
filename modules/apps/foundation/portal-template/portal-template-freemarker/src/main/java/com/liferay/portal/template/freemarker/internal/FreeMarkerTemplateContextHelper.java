@@ -53,8 +53,9 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 @Component(
 	configurationPid = "com.liferay.portal.template.freemarker.configuration.FreeMarkerEngineConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
-	service =
-		{FreeMarkerTemplateContextHelper.class, TemplateContextHelper.class}
+	service = {
+		FreeMarkerTemplateContextHelper.class, TemplateContextHelper.class
+	}
 )
 public class FreeMarkerTemplateContextHelper extends TemplateContextHelper {
 
@@ -127,11 +128,11 @@ public class FreeMarkerTemplateContextHelper extends TemplateContextHelper {
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
-		_freemarkerEngineConfiguration = ConfigurableUtil.createConfigurable(
+		_freeMarkerEngineConfiguration = ConfigurableUtil.createConfigurable(
 			FreeMarkerEngineConfiguration.class, properties);
 
 		_restrictedVariables = SetUtil.fromArray(
-			_freemarkerEngineConfiguration.restrictedVariables());
+			_freeMarkerEngineConfiguration.restrictedVariables());
 	}
 
 	@Override
@@ -162,8 +163,7 @@ public class FreeMarkerTemplateContextHelper extends TemplateContextHelper {
 		cardinality = ReferenceCardinality.MULTIPLE,
 		policy = ReferencePolicy.DYNAMIC,
 		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(type=" + TemplateContextContributor.TYPE_GLOBAL + ")",
-		unbind = "unregisterTemplateContextContributor"
+		target = "(type=" + TemplateContextContributor.TYPE_GLOBAL + ")"
 	)
 	protected void registerTemplateContextContributor(
 		TemplateContextContributor templateContextContributor) {
@@ -178,7 +178,7 @@ public class FreeMarkerTemplateContextHelper extends TemplateContextHelper {
 	}
 
 	private volatile FreeMarkerEngineConfiguration
-		_freemarkerEngineConfiguration;
+		_freeMarkerEngineConfiguration;
 	private Set<String> _restrictedVariables;
 	private final List<TemplateContextContributor>
 		_templateContextContributors = new CopyOnWriteArrayList<>();

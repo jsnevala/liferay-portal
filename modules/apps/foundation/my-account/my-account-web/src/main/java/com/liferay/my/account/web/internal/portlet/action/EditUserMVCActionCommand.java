@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.security.auth.PasswordModificationThreadLocal;
 import com.liferay.portal.kernel.security.auth.Authenticator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -72,6 +73,8 @@ public class EditUserMVCActionCommand
 			if (Validator.isNull(newPassword)) {
 				throw new UserPasswordException.MustNotBeNull(user.getUserId());
 			}
+
+			PasswordModificationThreadLocal.setPasswordModified(true);
 
 			Company company = PortalUtil.getCompany(actionRequest);
 

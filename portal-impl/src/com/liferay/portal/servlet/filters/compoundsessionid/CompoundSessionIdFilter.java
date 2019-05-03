@@ -75,6 +75,6 @@ public class CompoundSessionIdFilter
 
 	private final ServiceTracker
 		<CompoundSessionIdServletRequestFactory,
-			CompoundSessionIdServletRequestFactory> _serviceTracker;
+		 CompoundSessionIdServletRequestFactory> _serviceTracker;
 
 }

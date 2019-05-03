@@ -17,7 +17,6 @@ package com.liferay.portlet.exportimport.service.http;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.exportimport.kernel.service.StagingServiceUtil;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
@@ -27,10 +26,11 @@ import com.liferay.portal.kernel.util.MethodKey;
 
 /**
  * Provides the HTTP utility for the
- * {@link StagingServiceUtil} service utility. The
+ * <code>StagingServiceUtil</code> service
+ * utility. The
  * static methods of this class calls the same methods of the service utility.
  * However, the signatures are different because it requires an additional
- * {@link HttpPrincipal} parameter.
+ * <code>HttpPrincipal</code> parameter.
  *
  * <p>
  * The benefits of using the HTTP utility is that it is fast and allows for
@@ -49,32 +49,36 @@ import com.liferay.portal.kernel.util.MethodKey;
  *
  * @author Brian Wing Shun Chan
  * @see StagingServiceSoap
- * @see HttpPrincipal
- * @see StagingServiceUtil
  * @generated
  */
 @ProviderType
 public class StagingServiceHttp {
-	public static void cleanUpStagingRequest(HttpPrincipal httpPrincipal,
-		long stagingRequestId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(StagingServiceUtil.class,
-					"cleanUpStagingRequest",
-					_cleanUpStagingRequestParameterTypes0);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					stagingRequestId);
+	public static void cleanUpStagingRequest(
+			HttpPrincipal httpPrincipal, long stagingRequestId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				StagingServiceUtil.class, "cleanUpStagingRequest",
+				_cleanUpStagingRequestParameterTypes0);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, stagingRequestId);
 
 			try {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
@@ -84,15 +88,17 @@ public class StagingServiceHttp {
 		}
 	}
 
-	public static long createStagingRequest(HttpPrincipal httpPrincipal,
-		long groupId, java.lang.String checksum)
+	public static long createStagingRequest(
+			HttpPrincipal httpPrincipal, long groupId, String checksum)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(StagingServiceUtil.class,
-					"createStagingRequest", _createStagingRequestParameterTypes1);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					checksum);
+		try {
+			MethodKey methodKey = new MethodKey(
+				StagingServiceUtil.class, "createStagingRequest",
+				_createStagingRequestParameterTypes1);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, checksum);
 
 			Object returnObj = null;
 
@@ -100,11 +106,15 @@ public class StagingServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return ((Long)returnObj).longValue();
@@ -117,27 +127,31 @@ public class StagingServiceHttp {
 	}
 
 	public static void propagateExportImportLifecycleEvent(
-		HttpPrincipal httpPrincipal, int code, int processFlag,
-		java.lang.String processId,
-		java.util.List<java.io.Serializable> arguments)
+			HttpPrincipal httpPrincipal, int code, int processFlag,
+			String processId, java.util.List<java.io.Serializable> arguments)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(StagingServiceUtil.class,
-					"propagateExportImportLifecycleEvent",
-					_propagateExportImportLifecycleEventParameterTypes2);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, code,
-					processFlag, processId, arguments);
+		try {
+			MethodKey methodKey = new MethodKey(
+				StagingServiceUtil.class, "propagateExportImportLifecycleEvent",
+				_propagateExportImportLifecycleEventParameterTypes2);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, code, processFlag, processId, arguments);
 
 			try {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
@@ -147,18 +161,20 @@ public class StagingServiceHttp {
 		}
 	}
 
-	public static com.liferay.exportimport.kernel.lar.MissingReferences publishStagingRequest(
-		HttpPrincipal httpPrincipal, long stagingRequestId,
-		boolean privateLayout,
-		java.util.Map<java.lang.String, java.lang.String[]> parameterMap)
+	public static com.liferay.exportimport.kernel.lar.MissingReferences
+			publishStagingRequest(
+				HttpPrincipal httpPrincipal, long stagingRequestId,
+				boolean privateLayout,
+				java.util.Map<String, String[]> parameterMap)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(StagingServiceUtil.class,
-					"publishStagingRequest",
-					_publishStagingRequestParameterTypes3);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					stagingRequestId, privateLayout, parameterMap);
+		try {
+			MethodKey methodKey = new MethodKey(
+				StagingServiceUtil.class, "publishStagingRequest",
+				_publishStagingRequestParameterTypes3);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, stagingRequestId, privateLayout, parameterMap);
 
 			Object returnObj = null;
 
@@ -166,14 +182,19 @@ public class StagingServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
-			return (com.liferay.exportimport.kernel.lar.MissingReferences)returnObj;
+			return (com.liferay.exportimport.kernel.lar.MissingReferences)
+				returnObj;
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
 			_log.error(se, se);
@@ -182,17 +203,20 @@ public class StagingServiceHttp {
 		}
 	}
 
-	public static com.liferay.exportimport.kernel.lar.MissingReferences publishStagingRequest(
-		HttpPrincipal httpPrincipal, long stagingRequestId,
-		com.liferay.exportimport.kernel.model.ExportImportConfiguration exportImportConfiguration)
+	public static com.liferay.exportimport.kernel.lar.MissingReferences
+			publishStagingRequest(
+				HttpPrincipal httpPrincipal, long stagingRequestId,
+				com.liferay.exportimport.kernel.model.ExportImportConfiguration
+					exportImportConfiguration)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(StagingServiceUtil.class,
-					"publishStagingRequest",
-					_publishStagingRequestParameterTypes4);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					stagingRequestId, exportImportConfiguration);
+		try {
+			MethodKey methodKey = new MethodKey(
+				StagingServiceUtil.class, "publishStagingRequest",
+				_publishStagingRequestParameterTypes4);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, stagingRequestId, exportImportConfiguration);
 
 			Object returnObj = null;
 
@@ -200,14 +224,19 @@ public class StagingServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
-			return (com.liferay.exportimport.kernel.lar.MissingReferences)returnObj;
+			return (com.liferay.exportimport.kernel.lar.MissingReferences)
+				returnObj;
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
 			_log.error(se, se);
@@ -216,25 +245,32 @@ public class StagingServiceHttp {
 		}
 	}
 
-	public static void updateStagingRequest(HttpPrincipal httpPrincipal,
-		long stagingRequestId, java.lang.String fileName, byte[] bytes)
+	public static void updateStagingRequest(
+			HttpPrincipal httpPrincipal, long stagingRequestId, String fileName,
+			byte[] bytes)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(StagingServiceUtil.class,
-					"updateStagingRequest", _updateStagingRequestParameterTypes5);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					stagingRequestId, fileName, bytes);
+		try {
+			MethodKey methodKey = new MethodKey(
+				StagingServiceUtil.class, "updateStagingRequest",
+				_updateStagingRequestParameterTypes5);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, stagingRequestId, fileName, bytes);
 
 			try {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
@@ -244,18 +280,20 @@ public class StagingServiceHttp {
 		}
 	}
 
-	public static com.liferay.exportimport.kernel.lar.MissingReferences validateStagingRequest(
-		HttpPrincipal httpPrincipal, long stagingRequestId,
-		boolean privateLayout,
-		java.util.Map<java.lang.String, java.lang.String[]> parameterMap)
+	public static com.liferay.exportimport.kernel.lar.MissingReferences
+			validateStagingRequest(
+				HttpPrincipal httpPrincipal, long stagingRequestId,
+				boolean privateLayout,
+				java.util.Map<String, String[]> parameterMap)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(StagingServiceUtil.class,
-					"validateStagingRequest",
-					_validateStagingRequestParameterTypes6);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					stagingRequestId, privateLayout, parameterMap);
+		try {
+			MethodKey methodKey = new MethodKey(
+				StagingServiceUtil.class, "validateStagingRequest",
+				_validateStagingRequestParameterTypes6);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, stagingRequestId, privateLayout, parameterMap);
 
 			Object returnObj = null;
 
@@ -263,14 +301,19 @@ public class StagingServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
-			return (com.liferay.exportimport.kernel.lar.MissingReferences)returnObj;
+			return (com.liferay.exportimport.kernel.lar.MissingReferences)
+				returnObj;
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
 			_log.error(se, se);
@@ -280,27 +323,26 @@ public class StagingServiceHttp {
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(StagingServiceHttp.class);
-	private static final Class<?>[] _cleanUpStagingRequestParameterTypes0 = new Class[] {
-			long.class
+
+	private static final Class<?>[] _cleanUpStagingRequestParameterTypes0 =
+		new Class[] {long.class};
+	private static final Class<?>[] _createStagingRequestParameterTypes1 =
+		new Class[] {long.class, String.class};
+	private static final Class<?>[]
+		_propagateExportImportLifecycleEventParameterTypes2 = new Class[] {
+			int.class, int.class, String.class, java.util.List.class
 		};
-	private static final Class<?>[] _createStagingRequestParameterTypes1 = new Class[] {
-			long.class, java.lang.String.class
-		};
-	private static final Class<?>[] _propagateExportImportLifecycleEventParameterTypes2 =
+	private static final Class<?>[] _publishStagingRequestParameterTypes3 =
+		new Class[] {long.class, boolean.class, java.util.Map.class};
+	private static final Class<?>[] _publishStagingRequestParameterTypes4 =
 		new Class[] {
-			int.class, int.class, java.lang.String.class, java.util.List.class
-		};
-	private static final Class<?>[] _publishStagingRequestParameterTypes3 = new Class[] {
-			long.class, boolean.class, java.util.Map.class
-		};
-	private static final Class<?>[] _publishStagingRequestParameterTypes4 = new Class[] {
 			long.class,
-			com.liferay.exportimport.kernel.model.ExportImportConfiguration.class
+			com.liferay.exportimport.kernel.model.ExportImportConfiguration.
+				class
 		};
-	private static final Class<?>[] _updateStagingRequestParameterTypes5 = new Class[] {
-			long.class, java.lang.String.class, byte[].class
-		};
-	private static final Class<?>[] _validateStagingRequestParameterTypes6 = new Class[] {
-			long.class, boolean.class, java.util.Map.class
-		};
+	private static final Class<?>[] _updateStagingRequestParameterTypes5 =
+		new Class[] {long.class, String.class, byte[].class};
+	private static final Class<?>[] _validateStagingRequestParameterTypes6 =
+		new Class[] {long.class, boolean.class, java.util.Map.class};
+
 }

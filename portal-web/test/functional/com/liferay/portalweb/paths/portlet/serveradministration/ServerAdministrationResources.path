@@ -9,17 +9,6 @@
 </thead>
 <tbody>
 <tr>
-	<td>SOURCE</td>
-	<td>//span[contains(@onmouseover,'ToolTip')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td></td>
-	<td></td>
-	<td></td>
-</tr>
-<!--ACTIONS_TABLE-->
-<tr>
 	<td>ACTIONS_TABLE_DESCRIPTION</td>
 	<td>//div[@id='adminServerAdministrationActionsPanelContainer']//li[contains(.,'${key_actionsDescription}')]</td>
 	<td></td>

@@ -1210,8 +1210,9 @@ public class WabProcessor {
 			PropsUtil.get(
 				"module.framework.web.generator.autodeployed.wars.store"));
 
-	private static final String[] _KNOWN_PROPERTY_KEYS =
-		{"jdbc.driverClassName"};
+	private static final String[] _KNOWN_PROPERTY_KEYS = {
+		"jdbc.driverClassName"
+	};
 
 	private static final String _XPATHS_HBM = StringUtil.merge(
 		new String[] {
@@ -1275,6 +1276,10 @@ public class WabProcessor {
 	private static final Log _log = LogFactoryUtil.getLog(WabProcessor.class);
 
 	private static final Attrs _optionalAttrs = new Attrs();
+	private static final Pattern _tldPackagesPattern = Pattern.compile(
+		"<[^>]+?-class>\\p{Space}*?(.*?)\\p{Space}*?</[^>]+?-class>");
+	private static final Pattern _versionMavenPattern = Pattern.compile(
+		"(\\d{1,9})(\\.(\\d{1,9})(\\.(\\d{1,9})(-([-_\\da-zA-Z]+))?)?)?");
 	private static final Map<String, String> _xsds = new ConcurrentHashMap<>();
 
 	static {
@@ -1319,9 +1324,5 @@ public class WabProcessor {
 	private File _pluginDir;
 	private PluginPackage _pluginPackage;
 	private String _servicePackageName;
-	private final Pattern _tldPackagesPattern = Pattern.compile(
-		"<[^>]+?-class>\\p{Space}*?(.*?)\\p{Space}*?</[^>]+?-class>");
-	private final Pattern _versionMavenPattern = Pattern.compile(
-		"(\\d{1,9})(\\.(\\d{1,9})(\\.(\\d{1,9})(-([-_\\da-zA-Z]+))?)?)?");
 
 }

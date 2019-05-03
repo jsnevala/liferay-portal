@@ -1,59 +1,47 @@
-<definition component-name="portal-upgrades">
-	<property name="ignore.errors" value="Plugin security management is not enabled. Enable a security manager, then restart." />
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Upgrades Collaboration" />
+@component-name = "portal-upgrades"
+definition {
+	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+	property ignore.errors = "Plugin security management is not enabled. Enable a security manager, then restart.";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Upgrades Collaboration";
 
-	<set-up>
-		<execute macro="SignIn#signIn" />
+	setUp {
+		SignIn.signIn();
 
-		<execute macro="Smoke#viewWelcomePage" />
+		Smoke.viewWelcomePage();
 
-		<execute macro="Upgrade#reindexSearches" />
-	</set-up>
+		Upgrade.reindexSearches();
+	}
 
-	<command name="ViewMessageBoardsArchive6012" priority="5">
-		<property name="data.archive.type" value="data-archive-message-boards" />
-		<property name="portal.version" value="6.0.12" />
+	@priority = "5"
+	test ViewMessageBoardsArchive621015 {
+		property data.archive.type = "data-archive-message-boards";
+		property portal.version = "6.2.10.15";
 
-		<execute macro="Upgrade#addMessageBoards" />
+		Upgrade.addMessageBoards();
 
-		<execute macro="Upgrade#viewMessageBoards" />
-	</command>
+		Upgrade.viewMessageBoards();
+	}
 
-	<command name="ViewMessageBoardsArchive6130" priority="5">
-		<property name="data.archive.type" value="data-archive-message-boards" />
-		<property name="portal.version" value="6.1.30" />
+	@priority = "5"
+	test ViewMessageBoardsArchive621021 {
+		property data.archive.type = "data-archive-message-boards";
+		property portal.version = "6.2.10.21";
 
-		<execute macro="Upgrade#addMessageBoards" />
+		Upgrade.addMessageBoards();
 
-		<execute macro="Upgrade#viewMessageBoards" />
-	</command>
+		Upgrade.viewMessageBoards();
+	}
 
-	<command name="ViewMessageBoardsArchive621015" priority="5">
-		<property name="data.archive.type" value="data-archive-message-boards" />
-		<property name="portal.version" value="6.2.10.15" />
+	@priority = "5"
+	test ViewMessageBoardsArchive625 {
+		property data.archive.type = "data-archive-message-boards";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "6.2.5";
 
-		<execute macro="Upgrade#addMessageBoards" />
+		Upgrade.addMessageBoards();
 
-		<execute macro="Upgrade#viewMessageBoards" />
-	</command>
-
-	<command name="ViewMessageBoardsArchive623" priority="5">
-		<property name="data.archive.type" value="data-archive-message-boards" />
-		<property name="portal.version" value="6.2.3" />
-
-		<execute macro="Upgrade#addMessageBoards" />
-
-		<execute macro="Upgrade#viewMessageBoards" />
-	</command>
-
-	<command name="ViewMessageBoardsArchive625" priority="5">
-		<property name="data.archive.type" value="data-archive-message-boards" />
-		<property name="portal.version" value="6.2.5" />
-
-		<execute macro="Upgrade#addMessageBoards" />
-
-		<execute macro="Upgrade#viewMessageBoards" />
-	</command>
-</definition>
+		Upgrade.viewMessageBoards();
+	}
+}

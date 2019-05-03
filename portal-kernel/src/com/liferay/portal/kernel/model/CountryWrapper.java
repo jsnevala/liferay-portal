@@ -17,7 +17,6 @@ package com.liferay.portal.kernel.model;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.portal.kernel.service.ServiceContext;
 
 import java.io.Serializable;
@@ -37,6 +36,7 @@ import java.util.Objects;
  */
 @ProviderType
 public class CountryWrapper implements Country, ModelWrapper<Country> {
+
 	public CountryWrapper(Country country) {
 		_country = country;
 	}
@@ -62,8 +62,8 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 		attributes.put("a3", getA3());
 		attributes.put("number", getNumber());
 		attributes.put("idd", getIdd());
-		attributes.put("zipRequired", getZipRequired());
-		attributes.put("active", getActive());
+		attributes.put("zipRequired", isZipRequired());
+		attributes.put("active", isActive());
 
 		return attributes;
 	}
@@ -126,7 +126,7 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	@Override
-	public java.lang.Object clone() {
+	public Object clone() {
 		return new CountryWrapper((Country)_country.clone());
 	}
 
@@ -136,40 +136,40 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	/**
-	* Returns the a2 of this country.
-	*
-	* @return the a2 of this country
-	*/
+	 * Returns the a2 of this country.
+	 *
+	 * @return the a2 of this country
+	 */
 	@Override
-	public java.lang.String getA2() {
+	public String getA2() {
 		return _country.getA2();
 	}
 
 	/**
-	* Returns the a3 of this country.
-	*
-	* @return the a3 of this country
-	*/
+	 * Returns the a3 of this country.
+	 *
+	 * @return the a3 of this country
+	 */
 	@Override
-	public java.lang.String getA3() {
+	public String getA3() {
 		return _country.getA3();
 	}
 
 	/**
-	* Returns the active of this country.
-	*
-	* @return the active of this country
-	*/
+	 * Returns the active of this country.
+	 *
+	 * @return the active of this country
+	 */
 	@Override
 	public boolean getActive() {
 		return _country.getActive();
 	}
 
 	/**
-	* Returns the country ID of this country.
-	*
-	* @return the country ID of this country
-	*/
+	 * Returns the country ID of this country.
+	 *
+	 * @return the country ID of this country
+	 */
 	@Override
 	public long getCountryId() {
 		return _country.getCountryId();
@@ -181,65 +181,65 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	/**
-	* Returns the idd of this country.
-	*
-	* @return the idd of this country
-	*/
+	 * Returns the idd of this country.
+	 *
+	 * @return the idd of this country
+	 */
 	@Override
-	public java.lang.String getIdd() {
+	public String getIdd() {
 		return _country.getIdd();
 	}
 
 	/**
-	* Returns the mvcc version of this country.
-	*
-	* @return the mvcc version of this country
-	*/
+	 * Returns the mvcc version of this country.
+	 *
+	 * @return the mvcc version of this country
+	 */
 	@Override
 	public long getMvccVersion() {
 		return _country.getMvccVersion();
 	}
 
 	/**
-	* Returns the name of this country.
-	*
-	* @return the name of this country
-	*/
+	 * Returns the name of this country.
+	 *
+	 * @return the name of this country
+	 */
 	@Override
-	public java.lang.String getName() {
+	public String getName() {
 		return _country.getName();
 	}
 
 	@Override
-	public java.lang.String getName(java.util.Locale locale) {
+	public String getName(java.util.Locale locale) {
 		return _country.getName(locale);
 	}
 
 	@Override
-	public java.lang.String getNameCurrentLanguageId() {
+	public String getNameCurrentLanguageId() {
 		return _country.getNameCurrentLanguageId();
 	}
 
 	@Override
-	public java.lang.String getNameCurrentValue() {
+	public String getNameCurrentValue() {
 		return _country.getNameCurrentValue();
 	}
 
 	/**
-	* Returns the number of this country.
-	*
-	* @return the number of this country
-	*/
+	 * Returns the number of this country.
+	 *
+	 * @return the number of this country
+	 */
 	@Override
-	public java.lang.String getNumber() {
+	public String getNumber() {
 		return _country.getNumber();
 	}
 
 	/**
-	* Returns the primary key of this country.
-	*
-	* @return the primary key of this country
-	*/
+	 * Returns the primary key of this country.
+	 *
+	 * @return the primary key of this country
+	 */
 	@Override
 	public long getPrimaryKey() {
 		return _country.getPrimaryKey();
@@ -251,10 +251,10 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	/**
-	* Returns the zip required of this country.
-	*
-	* @return the zip required of this country
-	*/
+	 * Returns the zip required of this country.
+	 *
+	 * @return the zip required of this country
+	 */
 	@Override
 	public boolean getZipRequired() {
 		return _country.getZipRequired();
@@ -266,10 +266,10 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	/**
-	* Returns <code>true</code> if this country is active.
-	*
-	* @return <code>true</code> if this country is active; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this country is active.
+	 *
+	 * @return <code>true</code> if this country is active; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isActive() {
 		return _country.isActive();
@@ -291,40 +291,40 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	/**
-	* Returns <code>true</code> if this country is zip required.
-	*
-	* @return <code>true</code> if this country is zip required; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this country is zip required.
+	 *
+	 * @return <code>true</code> if this country is zip required; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isZipRequired() {
 		return _country.isZipRequired();
 	}
 
 	/**
-	* Sets the a2 of this country.
-	*
-	* @param a2 the a2 of this country
-	*/
+	 * Sets the a2 of this country.
+	 *
+	 * @param a2 the a2 of this country
+	 */
 	@Override
-	public void setA2(java.lang.String a2) {
+	public void setA2(String a2) {
 		_country.setA2(a2);
 	}
 
 	/**
-	* Sets the a3 of this country.
-	*
-	* @param a3 the a3 of this country
-	*/
+	 * Sets the a3 of this country.
+	 *
+	 * @param a3 the a3 of this country
+	 */
 	@Override
-	public void setA3(java.lang.String a3) {
+	public void setA3(String a3) {
 		_country.setA3(a3);
 	}
 
 	/**
-	* Sets whether this country is active.
-	*
-	* @param active the active of this country
-	*/
+	 * Sets whether this country is active.
+	 *
+	 * @param active the active of this country
+	 */
 	@Override
 	public void setActive(boolean active) {
 		_country.setActive(active);
@@ -336,10 +336,10 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	/**
-	* Sets the country ID of this country.
-	*
-	* @param countryId the country ID of this country
-	*/
+	 * Sets the country ID of this country.
+	 *
+	 * @param countryId the country ID of this country
+	 */
 	@Override
 	public void setCountryId(long countryId) {
 		_country.setCountryId(countryId);
@@ -361,37 +361,37 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	/**
-	* Sets the idd of this country.
-	*
-	* @param idd the idd of this country
-	*/
+	 * Sets the idd of this country.
+	 *
+	 * @param idd the idd of this country
+	 */
 	@Override
-	public void setIdd(java.lang.String idd) {
+	public void setIdd(String idd) {
 		_country.setIdd(idd);
 	}
 
 	/**
-	* Sets the mvcc version of this country.
-	*
-	* @param mvccVersion the mvcc version of this country
-	*/
+	 * Sets the mvcc version of this country.
+	 *
+	 * @param mvccVersion the mvcc version of this country
+	 */
 	@Override
 	public void setMvccVersion(long mvccVersion) {
 		_country.setMvccVersion(mvccVersion);
 	}
 
 	/**
-	* Sets the name of this country.
-	*
-	* @param name the name of this country
-	*/
+	 * Sets the name of this country.
+	 *
+	 * @param name the name of this country
+	 */
 	@Override
-	public void setName(java.lang.String name) {
+	public void setName(String name) {
 		_country.setName(name);
 	}
 
 	@Override
-	public void setNameCurrentLanguageId(java.lang.String languageId) {
+	public void setNameCurrentLanguageId(String languageId) {
 		_country.setNameCurrentLanguageId(languageId);
 	}
 
@@ -401,20 +401,20 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	/**
-	* Sets the number of this country.
-	*
-	* @param number the number of this country
-	*/
+	 * Sets the number of this country.
+	 *
+	 * @param number the number of this country
+	 */
 	@Override
-	public void setNumber(java.lang.String number) {
+	public void setNumber(String number) {
 		_country.setNumber(number);
 	}
 
 	/**
-	* Sets the primary key of this country.
-	*
-	* @param primaryKey the primary key of this country
-	*/
+	 * Sets the primary key of this country.
+	 *
+	 * @param primaryKey the primary key of this country
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		_country.setPrimaryKey(primaryKey);
@@ -426,10 +426,10 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	/**
-	* Sets whether this country is zip required.
-	*
-	* @param zipRequired the zip required of this country
-	*/
+	 * Sets whether this country is zip required.
+	 *
+	 * @param zipRequired the zip required of this country
+	 */
 	@Override
 	public void setZipRequired(boolean zipRequired) {
 		_country.setZipRequired(zipRequired);
@@ -446,7 +446,7 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	@Override
-	public java.lang.String toString() {
+	public String toString() {
 		return _country.toString();
 	}
 
@@ -456,7 +456,7 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	@Override
-	public java.lang.String toXmlString() {
+	public String toXmlString() {
 		return _country.toXmlString();
 	}
 
@@ -500,4 +500,5 @@ public class CountryWrapper implements Country, ModelWrapper<Country> {
 	}
 
 	private final Country _country;
+
 }

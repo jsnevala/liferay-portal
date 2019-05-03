@@ -115,8 +115,8 @@ public class VerifyLayout extends VerifyProcess {
 
 				});
 			actionableDynamicQuery.setPerformActionMethod(
-				new ActionableDynamicQuery.
-					PerformActionMethod<LayoutFriendlyURL>() {
+				new ActionableDynamicQuery.PerformActionMethod
+					<LayoutFriendlyURL>() {
 
 					@Override
 					public void performAction(

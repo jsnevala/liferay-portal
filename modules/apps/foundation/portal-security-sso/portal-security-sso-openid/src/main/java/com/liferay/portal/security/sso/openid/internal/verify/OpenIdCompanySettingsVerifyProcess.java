@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"verify.process.name=com.liferay.portal.security.sso.openid"},
+	property = "verify.process.name=com.liferay.portal.security.sso.openid",
 	service = VerifyProcess.class
 )
 public class OpenIdCompanySettingsVerifyProcess
@@ -53,7 +53,7 @@ public class OpenIdCompanySettingsVerifyProcess
 	@Override
 	protected String[][] getRenamePropertyKeysArray() {
 		return new String[][] {
-			new String[] {
+			{
 				LegacyOpenIdPropsKeys.OPENID_AUTH_ENABLED,
 				OpenIdConfigurationKeys.AUTH_ENABLED
 			}
@@ -78,7 +78,7 @@ public class OpenIdCompanySettingsVerifyProcess
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Reference(unbind = "-")

@@ -106,12 +106,12 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 							</h6>
 
 							<h5>
-								<aui:a href="<%= rowURL != null ? rowURL.toString() : null %>">
+								<aui:a href="<%= (rowURL != null) ? rowURL.toString() : null %>">
 									<%= HtmlUtil.escape(curArticle.getTitle(locale)) %>
 								</aui:a>
 							</h5>
 
-							<c:if test="<%= journalDisplayContext.isSearch() %>">
+							<c:if test="<%= journalDisplayContext.isSearch() && ((curArticle.getFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curArticle.getFolder(), ActionKeys.VIEW)) %>">
 								<h5>
 									<%= JournalUtil.getAbsolutePath(liferayPortletRequest, curArticle.getFolderId()) %>
 								</h5>
@@ -149,7 +149,7 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 										resultRow="<%= row %>"
 										rowChecker="<%= articleSearchContainer.getRowChecker() %>"
 										title="<%= curArticle.getTitle(locale) %>"
-										url="<%= rowURL != null ? rowURL.toString() : null %>"
+										url="<%= (rowURL != null) ? rowURL.toString() : null %>"
 									>
 										<%@ include file="/article_vertical_card.jspf" %>
 									</liferay-frontend:vertical-card>
@@ -162,7 +162,7 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 										resultRow="<%= row %>"
 										rowChecker="<%= articleSearchContainer.getRowChecker() %>"
 										title="<%= curArticle.getTitle(locale) %>"
-										url="<%= rowURL != null ? rowURL.toString() : null %>"
+										url="<%= (rowURL != null) ? rowURL.toString() : null %>"
 									>
 										<%@ include file="/article_vertical_card.jspf" %>
 									</liferay-frontend:icon-vertical-card>
@@ -191,7 +191,7 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 							value="<%= HtmlUtil.escape(curArticle.getDescription(locale)) %>"
 						/>
 
-						<c:if test="<%= journalDisplayContext.isSearch() %>">
+						<c:if test="<%= journalDisplayContext.isSearch() && ((curArticle.getFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curArticle.getFolder(), ActionKeys.VIEW)) %>">
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-content"
 								name="path"
@@ -279,7 +279,7 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 							</h6>
 
 							<h5>
-								<aui:a href="<%= rowURL != null ? rowURL.toString() : null %>">
+								<aui:a href="<%= (rowURL != null) ? rowURL.toString() : null %>">
 									<%= HtmlUtil.escape(curFolder.getName()) %>
 								</aui:a>
 							</h5>

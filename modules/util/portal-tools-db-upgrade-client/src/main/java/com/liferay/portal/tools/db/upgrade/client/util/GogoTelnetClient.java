@@ -129,7 +129,7 @@ public class GogoTelnetClient implements AutoCloseable {
 
 			int code = _dataInputStream.read(); // 1 or 0
 
-			_assertCondition(code == 0 || code == 1);
+			_assertCondition((code == 0) || (code == 1));
 
 			bytes.add(code);
 

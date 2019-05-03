@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.servlet.BrowserSniffer;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
@@ -37,10 +36,10 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Ambrin Chaudhary
+ * @author Ambrín Chaudhary
  */
 @Component(
-	property = {"editor.name=tinymce"}, service = EditorConfigContributor.class
+	property = "editor.name=tinymce", service = EditorConfigContributor.class
 )
 public class TinyMCEEditorConfigContributor
 	extends BaseTinyMCEEditorConfigContributor {
@@ -108,8 +107,13 @@ public class TinyMCEEditorConfigContributor
 	protected JSONArray getStyleFormatsJSONArray(Locale locale) {
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(locale);
+		ResourceBundleLoader resourceBundleLoader =
+			ResourceBundleLoaderUtil.
+				getResourceBundleLoaderByBundleSymbolicName(
+					"com.liferay.frontend.editor.lang");
+
+		ResourceBundle resourceBundle = resourceBundleLoader.loadResourceBundle(
+			locale);
 
 		jsonArray.put(
 			getStyleFormatJSONObject(
@@ -305,24 +309,10 @@ public class TinyMCEEditorConfigContributor
 		return jsonArray;
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.frontend.editor.lang)",
-		unbind = "-"
-	)
-	protected void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
-	}
-
 	@Reference
 	private BrowserSniffer _browserSniffer;
 
 	@Reference
 	private ItemSelector _itemSelector;
-
-	private volatile ResourceBundleLoader _resourceBundleLoader;
 
 }

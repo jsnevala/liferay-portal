@@ -152,10 +152,8 @@ public class TrashImpl implements Trash {
 		List<Long> restoreTrashEntryIds = new ArrayList<>();
 		List<String> titles = new ArrayList<>();
 
-		for (int i = 0; i < trashedModels.size(); i++) {
+		for (TrashedModel trashedModel : trashedModels) {
 			try {
-				TrashedModel trashedModel = trashedModels.get(i);
-
 				TrashEntry trashEntry = trashedModel.getTrashEntry();
 
 				TrashHandler trashHandler = trashedModel.getTrashHandler();

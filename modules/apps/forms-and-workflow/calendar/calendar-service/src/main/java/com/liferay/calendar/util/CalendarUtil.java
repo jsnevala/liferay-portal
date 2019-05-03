@@ -203,10 +203,7 @@ public class CalendarUtil {
 			orderByAsc = true;
 		}
 
-		OrderByComparator<Calendar> orderByComparator =
-			new CalendarNameComparator(orderByAsc);
-
-		return orderByComparator;
+		return new CalendarNameComparator(orderByAsc);
 	}
 
 	public static String[] splitKeywords(String keywords) {

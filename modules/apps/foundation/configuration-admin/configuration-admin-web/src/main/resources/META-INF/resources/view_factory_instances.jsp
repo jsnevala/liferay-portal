@@ -56,8 +56,17 @@ renderResponse.setTitle(factoryConfigurationModelName);
 </liferay-frontend:add-menu>
 
 <div class="container-fluid-1280">
+
+	<%
+	PortletURL iteratorURL = renderResponse.createRenderURL();
+
+	iteratorURL.setParameter("mvcRenderCommandName", "/view_factory_instances");
+	iteratorURL.setParameter("factoryPid", factoryConfigurationModel.getID());
+	%>
+
 	<liferay-ui:search-container
 		emptyResultsMessage='<%= LanguageUtil.format(request, "no-entries-for-x-have-been-added-yet", factoryConfigurationModelName) %>'
+		iteratorURL="<%= iteratorURL %>"
 		total="<%= configurationModelIterator.getTotal() %>"
 	>
 		<liferay-ui:search-container-results

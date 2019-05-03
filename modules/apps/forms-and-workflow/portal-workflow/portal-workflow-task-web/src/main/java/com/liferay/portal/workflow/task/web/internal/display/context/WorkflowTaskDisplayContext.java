@@ -747,9 +747,7 @@ public class WorkflowTaskDisplayContext {
 	}
 
 	public Map<String, Object> getWorkflowTaskActionLinkData() {
-		Map<String, Object> data = new HashMap<>();
-
-		return data;
+		return new HashMap<>();
 	}
 
 	public String getWorkflowTaskAssigneeUserName(WorkflowTask workflowTask) {
@@ -1010,7 +1008,9 @@ public class WorkflowTaskDisplayContext {
 			WorkflowTask workflowTask)
 		throws PortalException {
 
-		return getWorkflowInstance(workflowTask).getWorkflowContext();
+		WorkflowInstance workflowInstance = getWorkflowInstance(workflowTask);
+
+		return workflowInstance.getWorkflowContext();
 	}
 
 	protected WorkflowTaskSearch searchTasks(boolean searchByUserRoles)

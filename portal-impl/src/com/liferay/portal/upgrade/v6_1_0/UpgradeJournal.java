@@ -64,6 +64,7 @@ public class UpgradeJournal extends UpgradeProcess {
 
 				while (rs.next()) {
 					long id = rs.getLong("id_");
+
 					String xsd = rs.getString("xsd");
 
 					xsd = StringUtil.replace(

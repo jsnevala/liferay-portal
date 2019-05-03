@@ -229,7 +229,7 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 							</aui:fieldset>
 						</div>
 
-						<div class="<%= ((liveGroup.isStaged() || (stagingType != StagingConstants.TYPE_NOT_STAGED)) ? StringPool.BLANK : "hide") %>" id="<portlet:namespace />stagedPortlets">
+						<div class="<%= (liveGroup.isStaged() || (stagingType != StagingConstants.TYPE_NOT_STAGED)) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />stagedPortlets">
 							<c:if test="<%= !liveGroup.isCompany() && !liveGroupRemoteStaging %>">
 								<aui:fieldset collapsible="<%= true %>" label="page-versioning">
 									<p class="staging-configuration-help-label">

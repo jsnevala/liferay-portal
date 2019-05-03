@@ -29,7 +29,8 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
+import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Map;
@@ -101,9 +102,8 @@ public class DLDisplayContextProvider {
 		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(
-				themeDisplay.getLanguageId());
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			themeDisplay.getLocale(), DLDisplayContextProvider.class);
 
 		DLViewFileEntryHistoryDisplayContext
 			dlViewFileEntryHistoryDisplayContext =
@@ -134,7 +134,10 @@ public class DLDisplayContextProvider {
 			DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext =
 				new DefaultDLViewFileVersionDisplayContext(
 					request, response, fileShortcut, _dlMimeTypeDisplayContext,
-					_resourceBundleLoader, _storageEngine);
+					ResourceBundleLoaderUtil.
+						getResourceBundleLoaderByBundleSymbolicName(
+							"com.liferay.document.library.web"),
+					_storageEngine);
 
 			if (fileShortcut == null) {
 				return dlViewFileVersionDisplayContext;
@@ -163,7 +166,10 @@ public class DLDisplayContextProvider {
 		DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext =
 			new DefaultDLViewFileVersionDisplayContext(
 				request, response, fileVersion, _dlMimeTypeDisplayContext,
-				_resourceBundleLoader, _storageEngine);
+				ResourceBundleLoaderUtil.
+					getResourceBundleLoaderByBundleSymbolicName(
+						"com.liferay.document.library.web"),
+				_storageEngine);
 
 		if (fileVersion == null) {
 			return dlViewFileVersionDisplayContext;
@@ -216,20 +222,9 @@ public class DLDisplayContextProvider {
 		_dlDisplayContextFactories.close();
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.document.library.web)",
-		unbind = "-"
-	)
-	protected void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = resourceBundleLoader;
-	}
-
 	private ServiceTrackerList<DLDisplayContextFactory, DLDisplayContextFactory>
 		_dlDisplayContextFactories;
 	private DLMimeTypeDisplayContext _dlMimeTypeDisplayContext;
-	private ResourceBundleLoader _resourceBundleLoader;
 	private StorageEngine _storageEngine;
 
 }

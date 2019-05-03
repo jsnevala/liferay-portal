@@ -45,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN},
+	property = "javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
 	service = AssetRendererFactory.class
 )
 public class KBArticleAssetRendererFactory
@@ -65,7 +65,7 @@ public class KBArticleAssetRendererFactory
 		KBArticle kbArticle = getKBArticle(
 			classPK, WorkflowConstants.STATUS_ANY);
 
-		return super.getAssetEntry(className, kbArticle.getKbArticleId());
+		return super.getAssetEntry(className, kbArticle.getClassPK());
 	}
 
 	@Override

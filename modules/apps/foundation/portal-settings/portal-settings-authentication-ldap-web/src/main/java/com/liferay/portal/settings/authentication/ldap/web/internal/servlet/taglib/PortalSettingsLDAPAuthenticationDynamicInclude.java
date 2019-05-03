@@ -35,7 +35,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"portal.settings.authentication.tabs.name=ldap"},
+	property = "portal.settings.authentication.tabs.name=ldap",
 	service = DynamicInclude.class
 )
 public class PortalSettingsLDAPAuthenticationDynamicInclude

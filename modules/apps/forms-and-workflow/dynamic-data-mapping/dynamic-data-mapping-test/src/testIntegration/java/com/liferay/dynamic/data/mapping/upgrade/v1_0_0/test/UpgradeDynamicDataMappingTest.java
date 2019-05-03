@@ -1169,7 +1169,7 @@ public class UpgradeDynamicDataMappingTest {
 
 		String sql = sb.toString();
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(sql)) {
 
 			ps.setString(1, PortalUUIDUtil.generate());
@@ -1201,7 +1201,7 @@ public class UpgradeDynamicDataMappingTest {
 
 		String sql = sb.toString();
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(sql)) {
 
 			ps.setString(1, PortalUUIDUtil.generate());
@@ -1240,7 +1240,7 @@ public class UpgradeDynamicDataMappingTest {
 
 		String sql = sb.toString();
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(sql)) {
 
 			ps.setString(1, PortalUUIDUtil.generate());
@@ -1277,7 +1277,7 @@ public class UpgradeDynamicDataMappingTest {
 
 		String sql = sb.toString();
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(sql)) {
 
 			ps.setLong(1, recordVersionId);
@@ -1313,7 +1313,7 @@ public class UpgradeDynamicDataMappingTest {
 
 		String sql = sb.toString();
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(sql)) {
 
 			ps.setLong(1, 0);
@@ -1342,7 +1342,7 @@ public class UpgradeDynamicDataMappingTest {
 
 		String sql = sb.toString();
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(sql)) {
 
 			ps.setLong(1, storageLinkId);
@@ -1371,7 +1371,7 @@ public class UpgradeDynamicDataMappingTest {
 
 		String sql = sb.toString();
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(sql)) {
 
 			ps.setString(1, PortalUUIDUtil.generate());
@@ -1414,7 +1414,7 @@ public class UpgradeDynamicDataMappingTest {
 
 		String sql = sb.toString();
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(sql)) {
 
 			ps.setString(1, PortalUUIDUtil.generate());

@@ -34,11 +34,11 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + ExportImportPortletKeys.EXPORT},
+	property = "javax.portlet.name=" + ExportImportPortletKeys.EXPORT,
 	service = PortletConfigurationIcon.class
 )
 public class ExportTemplatesConfigurationIcon

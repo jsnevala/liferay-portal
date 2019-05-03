@@ -1,180 +1,180 @@
-<definition>
-	<command name="addField">
-		<var name="key_wfPreviousFieldName" value="${wfPreviousFieldName}" />
+definition {
+	macro addField {
+		var key_wfPreviousFieldName = "${wfPreviousFieldName}";
 
-		<execute function="Click" locator1="WebFormConfiguration#SETUP_FORM_FIELDS_ADD_ROW_BUTTON" />
+		Click(locator1 = "WebFormConfiguration#SETUP_FORM_FIELDS_ADD_ROW_BUTTON");
 
-		<execute macro="WebFormPortlet#editField">
-			<var name="optional" value="${optional}" />
-			<var name="optionsList" value="${optionsList}" />
-			<var name="wfFieldName" value="New Item" />
-			<var name="wfFieldType" value="${wfFieldType}" />
-			<var name="wfNewFieldName" value="${wfNewFieldName}" />
-		</execute>
-	</command>
+		WebFormPortlet.editField(
+			optional = "${optional}",
+			optionsList = "${optionsList}",
+			wfFieldName = "New Item",
+			wfFieldType = "${wfFieldType}",
+			wfNewFieldName = "${wfNewFieldName}"
+		);
+	}
 
-	<command name="configureSetupFormFieldsPG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="${portletName}" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+	macro configureSetupFormFieldsPG {
+		Portlet.gotoPortletOptions(
+			portletName = "${portletName}",
+			portletOption = "Configuration"
+		);
 
-		<execute function="SelectFrame" locator1="WebFormConfiguration#CONFIGURATION_IFRAME" />
+		SelectFrame(locator1 = "WebFormConfiguration#CONFIGURATION_IFRAME");
 
-		<if>
-			<isset var="wfInformationTitle" />
-			<then>
-				<execute function="Type" locator1="WebFormConfiguration#SETUP_FORM_INFORMATION_TITLE_FIELD" value1="${wfInformationTitle}" />
-			</then>
-		</if>
+		if (isSet(wfInformationTitle)) {
+			Type(locator1 = "TextInput#TITLE", value1 = "${wfInformationTitle}");
+		}
 
-		<if>
-			<isset var="wfInformationDescription" />
-			<then>
-				<execute function="Type" locator1="WebFormConfiguration#SETUP_FORM_INFORMATION_DESCRIPTION_FIELD" value1="${wfInformationDescription}" />
-			</then>
-		</if>
-	</command>
+		if (isSet(wfInformationDescription)) {
+			Type(locator1 = "TextArea#DESCRIPTION", value1 = "${wfInformationDescription}");
+		}
+	}
 
-	<command name="deleteEditableField">
-		<execute macro="WebFormPortlet#viewEditableField">
-			<var name="wfFieldName" value="${wfFieldName}" />
-		</execute>
+	macro deleteEditableField {
+		WebFormPortlet.viewEditableField(wfFieldName = "${wfFieldName}");
 
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+		var key_wfFieldName = "${wfFieldName}";
 
-		<execute function="DoubleClick" locator1="WebFormConfiguration#SETUP_FORM_FIELDS_DELETE_ROW_BUTTON" />
+		DoubleClick(
+			locator1 = "WebFormConfiguration#SETUP_FORM_FIELDS_DELETE_ROW_BUTTON"
+		);
 
-		<execute macro="WebFormPortlet#viewEditableFieldNotVisibleCmd">
-			<var name="wfFieldName" value="${wfFieldName}" />
-		</execute>
-	</command>
+		WebFormPortlet.viewEditableFieldNotVisibleCmd(wfFieldName = "${wfFieldName}");
+	}
 
-	<command name="editField">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+	macro editField {
+		var key_wfFieldName = "${wfFieldName}";
 
-		<if>
-			<equals arg1="${wfFieldName}" arg2="New Item" />
-			<then>
-				<execute function="Type" locator1="WebFormConfiguration#SETUP_FORM_FIELDS_NAME_FIELD_NEW" value1="${wfNewFieldName}" />
-			</then>
-			<else>
-				<execute function="Type" locator1="WebFormConfiguration#SETUP_FORM_FIELDS_NAME_FIELD" value1="${wfNewFieldName}" />
-			</else>
-		</if>
+		if ("${wfFieldName}" == "New Item") {
+			Type(
+				locator1 = "WebFormConfiguration#SETUP_FORM_FIELDS_NAME_FIELD_NEW",
+				value1 = "${wfNewFieldName}"
+			);
+		}
+		else {
+			Type(
+				locator1 = "WebFormConfiguration#SETUP_FORM_FIELDS_NAME_FIELD",
+				value1 = "${wfNewFieldName}"
+			);
+		}
 
-		<execute function="Click" locator1="WebFormConfiguration#SETUP_FORM_FIELDS" />
+		Click(locator1 = "Button#BROWSE");
 
-		<if>
-			<isset var="wfFieldType" />
-			<then>
-				<var name="key_wfNewFieldName" value="${wfNewFieldName}" />
+		if (isSet(wfFieldType)) {
+			var key_wfNewFieldName = "${wfNewFieldName}";
 
-				<execute function="Select" locator1="WebFormConfiguration#SETUP_FORM_FIELDS_TYPE_SELECT" value1="${wfFieldType}" />
-			</then>
-		</if>
+			Select(
+				locator1 = "WebFormConfiguration#SETUP_FORM_FIELDS_TYPE_SELECT",
+				value1 = "${wfFieldType}"
+			);
+		}
 
-		<if>
-			<and>
-				<or>
-					<equals arg1="${wfFieldType}" arg2="Options" />
-					<equals arg1="${wfFieldType}" arg2="Radio Buttons" />
-				</or>
-				<isset var="optionsList" />
-			</and>
-			<then>
-				<var name="key_wfNewFieldName" value="${wfNewFieldName}" />
+		if ((("${wfFieldType}" == "Options") || ("${wfFieldType}" == "Radio Buttons")) && (isSet(optionsList))) {
+			var key_wfNewFieldName = "${wfNewFieldName}";
 
-				<execute function="Type" locator1="WebFormConfiguration#SETUP_FORM_FIELDS_OPTIONS_FIELD" value1="${optionsList}" />
-			</then>
-		</if>
+			Type(
+				locator1 = "WebFormConfiguration#SETUP_FORM_FIELDS_OPTIONS_FIELD",
+				value1 = "${optionsList}"
+			);
+		}
 
-		<if>
-			<equals arg1="${optional}" arg2="true" />
-			<then>
-				<var name="key_wfNewFieldName" value="${wfNewFieldName}" />
+		if ("${optional}" == "true") {
+			var key_wfNewFieldName = "${wfNewFieldName}";
 
-				<execute function="Check" locator1="WebFormConfiguration#SETUP_FORM_FIELDS_OPTIONAL_CHECKBOX" />
-			</then>
-		</if>
-	</command>
+			Check(locator1 = "WebFormConfiguration#SETUP_FORM_FIELDS_OPTIONAL_CHECKBOX");
+		}
+	}
 
-	<command name="editParagraphField">
-		<var name="key_wfNewFieldName" value="${wfNewFieldName}" />
+	macro editParagraphField {
+		var key_wfNewFieldName = "${wfNewFieldName}";
 
-		<execute function="Type" locator1="WebFormConfiguration#SETUP_FORM_FIELDS_PARAGRAPH_FIELD" value1="${wfParagraphFieldText}" />
-	</command>
+		Type(
+			locator1 = "WebFormConfiguration#SETUP_FORM_FIELDS_PARAGRAPH_FIELD",
+			value1 = "${wfParagraphFieldText}"
+		);
+	}
 
-	<command name="saveConfiguration">
-		<execute function="AssertClick" locator1="Button#SAVE" value1="Save" />
+	macro saveConfiguration {
+		AssertClick(locator1 = "Button#SAVE", value1 = "Save");
 
-		<execute macro="Alert#viewSuccessMessage" />
+		Alert.viewSuccessMessage();
 
-		<execute function="SelectFrameTop" value1="relative=top" />
-	</command>
+		SelectFrameTop(value1 = "relative=top");
+	}
 
-	<command name="viewDeletedFieldNotPresent">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+	macro viewEditableField {
+		var key_wfFieldName = "${wfFieldName}";
 
-		<execute function="AssertElementNotPresent" locator1="WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_TITLE" />
-	</command>
+		AssertElementPresent(
+			locator1 = "WebFormConfiguration#SETUP_FORM_FIELDS_NAME_FIELD"
+		);
+	}
 
-	<command name="viewEditableField">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+	macro viewEditableFieldNotPresent {
+		var key_wfFieldName = "${wfFieldName}";
 
-		<execute function="AssertElementPresent" locator1="WebFormConfiguration#SETUP_FORM_FIELDS_NAME_FIELD" />
-	</command>
+		AssertElementNotPresent(
+			locator1 = "WebFormConfiguration#SETUP_FORM_FIELDS_NAME_EDITABLE_FIELD"
+		);
+	}
 
-	<command name="viewEditableFieldNotPresent">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+	macro viewEditableFieldNotVisibleCmd {
+		var key_wfFieldName = "${wfFieldName}";
 
-		<execute function="AssertElementNotPresent" locator1="WebFormConfiguration#SETUP_FORM_FIELDS_NAME_EDITABLE_FIELD" />
-	</command>
+		AssertNotVisible(locator1 = "WebFormConfiguration#SETUP_FORM_FIELDS_NAME_FIELD");
+	}
 
-	<command name="viewEditableFieldNotVisibleCmd">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+	macro viewSubmittedField {
+		var key_wfFieldName = "${wfFieldName}";
 
-		<execute function="AssertNotVisible" locator1="WebFormConfiguration#SETUP_FORM_FIELDS_NAME_FIELD" />
-	</command>
+		AssertTextEquals(
+			locator1 = "WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_TITLE",
+			value1 = "${wfFieldName}"
+		);
 
-	<command name="viewSubmittedField">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+		AssertTextEquals(
+			locator1 = "WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_NAME",
+			value1 = "${wfFieldName}"
+		);
 
-		<execute function="AssertTextEquals" locator1="WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_TITLE" value1="${wfFieldName}" />
-		<execute function="AssertTextEquals" locator1="WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_NAME" value1="${wfFieldName}" />
+		if ("${wfFieldType}" == "Text Box") {
+			var key_wfFieldType = "textarea";
+			var wfFieldType = "textarea";
 
-		<if>
-			<equals arg1="${wfFieldType}" arg2="Text Box" />
-			<then>
-				<var name="key_wfFieldType" value="textarea" />
-				<var name="wfFieldType" value="textarea" />
+			AssertTextEquals(
+				locator1 = "WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_TYPE",
+				value1 = "${wfFieldType}"
+			);
+		}
+		else {
+			var key_wfFieldType = "${wfFieldType}";
 
-				<execute function="AssertTextEquals" locator1="WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_TYPE" value1="${wfFieldType}" />
-			</then>
-			<else>
-				<var name="key_wfFieldType" value="${wfFieldType}" />
+			AssertTextEquals(
+				locator1 = "WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_TYPE",
+				value1 = "${wfFieldType}"
+			);
+		}
 
-				<execute function="AssertTextEquals" locator1="WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_TYPE" value1="${wfFieldType}" />
-			</else>
-		</if>
+		if ("${optional}" == "true") {
+			AssertTextEquals(
+				locator1 = "WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_OPTIONAL",
+				value1 = "Yes"
+			);
+		}
+		else {
+			AssertTextEquals(
+				locator1 = "WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_OPTIONAL",
+				value1 = "No"
+			);
+		}
 
-		<if>
-			<equals arg1="${optional}" arg2="true" />
-			<then>
-				<execute function="AssertTextEquals" locator1="WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_OPTIONAL" value1="Yes" />
-			</then>
-			<else>
-				<execute function="AssertTextEquals" locator1="WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_OPTIONAL" value1="No" />
-			</else>
-		</if>
+		if (isSet(optionsList)) {
+			var key_optionsList = "${optionsList}";
 
-		<if>
-			<isset var="optionsList" />
-			<then>
-				<var name="key_optionsList" value="${optionsList}" />
-
-				<execute function="AssertTextEquals" locator1="WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_OPTIONS" value1="${optionsList}" />
-			</then>
-		</if>
-	</command>
-</definition>
+			AssertTextEquals(
+				locator1 = "WebFormConfiguration#SETUP_FORM_POPULATED_FIELDS_FIELD_OPTIONS",
+				value1 = "${optionsList}"
+			);
+		}
+	}
+}

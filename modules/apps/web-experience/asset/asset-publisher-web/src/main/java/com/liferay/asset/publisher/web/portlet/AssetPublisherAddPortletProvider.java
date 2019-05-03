@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"model.class.name=com.liferay.asset.kernel.model.AssetEntry"},
+	property = "model.class.name=com.liferay.asset.kernel.model.AssetEntry",
 	service = {AddPortletProvider.class, ViewPortletProvider.class}
 )
 public class AssetPublisherAddPortletProvider
@@ -95,7 +95,7 @@ public class AssetPublisherAddPortletProvider
 	}
 
 	/**
-	 * @deprecated As of 1.2.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override

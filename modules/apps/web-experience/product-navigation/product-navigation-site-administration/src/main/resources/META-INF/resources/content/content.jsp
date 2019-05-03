@@ -98,6 +98,10 @@ PanelCategoryHelper panelCategoryHelper = (PanelCategoryHelper)request.getAttrib
 												portletId = panelCategoryHelper.getFirstPortletId(PanelCategoryKeys.SITE_ADMINISTRATION_CONTENT, permissionChecker, scopeGroup);
 											}
 
+											if (Validator.isNull(portletId)) {
+												continue;
+											}
+
 											portletURL = PortalUtil.getControlPanelPortletURL(request, scopeGroup, portletId, 0, 0, PortletRequest.RENDER_PHASE);
 										%>
 
@@ -112,7 +116,9 @@ PanelCategoryHelper panelCategoryHelper = (PanelCategoryHelper)request.getAttrib
 										%>
 
 									</ul>
-							</div>
+								</div>
+							</span>
+						</div>
 
 						<liferay-application-list:panel-category-body
 							panelCategory="<%= panelCategory %>"

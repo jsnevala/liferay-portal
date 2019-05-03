@@ -58,9 +58,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {
-		"captcha.engine.impl=com.liferay.captcha.recaptcha.ReCaptchaImpl"
-	},
+	property = "captcha.engine.impl=com.liferay.captcha.recaptcha.ReCaptchaImpl",
 	service = Captcha.class
 )
 public class ReCaptchaImpl extends SimpleCaptchaImpl {

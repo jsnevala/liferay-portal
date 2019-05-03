@@ -15,6 +15,7 @@
 package com.liferay.portal.kernel.io.unsync;
 
 import com.liferay.portal.kernel.io.OutputStreamWriter;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringPool;
 
 import java.io.File;
@@ -161,7 +162,7 @@ public class UnsyncPrintWriter extends PrintWriter {
 
 	@Override
 	public PrintWriter format(String format, Object... arguments) {
-		return format(Locale.getDefault(), format, arguments);
+		return format(LocaleUtil.getDefault(), format, arguments);
 	}
 
 	@Override

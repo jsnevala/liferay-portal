@@ -105,7 +105,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.info.keywords=Private Messaging",
 		"javax.portlet.info.short-title=Private Messaging",
 		"javax.portlet.info.title=Private Messaging",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + PrivateMessagingPortletKeys.PRIVATE_MESSAGING,
 		"javax.portlet.resource-bundle=content.Language",
@@ -241,6 +241,7 @@ public class PrivateMessagingPortlet extends MVCPortlet {
 			for (int i = 1; i <= 3; i++) {
 				String fileName = uploadPortletRequest.getFileName(
 					"msgFile" + i);
+
 				InputStream inputStream = uploadPortletRequest.getFileAsStream(
 					"msgFile" + i);
 
@@ -385,7 +386,7 @@ public class PrivateMessagingPortlet extends MVCPortlet {
 			themeDisplay.getUserId(),
 			_privateMessagingConfiguration.autocompleteRecipientType(),
 			keywords, 0,
-			_privateMessagingConfiguration .autocompleteRecipientMax());
+			_privateMessagingConfiguration.autocompleteRecipientMax());
 
 		resultsJSONObject.put("results", jsonObject);
 

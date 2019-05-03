@@ -67,6 +67,10 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 public interface PasswordDDMFormFieldTypeSettings
 	extends DefaultDDMFormFieldTypeSettings {
 
+	@DDMFormField(visibilityExpression = "FALSE")
+	@Override
+	public String indexType();
+
 	@DDMFormField(
 		dataType = "string", label = "%placeholder-text",
 		properties = {

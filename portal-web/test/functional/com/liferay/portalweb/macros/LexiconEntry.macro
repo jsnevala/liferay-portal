@@ -1,57 +1,83 @@
-<definition>
-	<command name="gotoAdd">
-		<execute function="Click" locator1="Button#PLUS" />
-	</command>
+definition {
+	macro gotoAdd {
+		Click(locator1 = "Button#PLUS");
+	}
 
-	<command name="gotoAddMenuItem">
-		<execute macro="LexiconEntry#gotoAdd" />
+	macro gotoAddMenuItem {
+		LexiconEntry.gotoAdd();
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="${menuItem}">
-			<var name="key_menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+		MenuItem.click(menuItem = "${menuItem}");
+	}
 
-	<command name="gotoEntry">
-		<var name="key_rowEntry" value="${rowEntry}" />
+	macro gotoEllipsisMenuItem {
+		Click.waitForMenuToggleJSClick(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
-		<execute function="AssertClick" locator1="ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK" value1="${rowEntry}" />
-	</command>
+		MenuItem.click(menuItem = "${menuItem}");
+	}
 
-	<command name="gotoEntryMenuItem">
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS">
-			<var name="key_rowEntry" value="${rowEntry}" />
-		</execute>
+	macro gotoEllipsisMenuItemNoError {
+		Click.waitForMenuToggleJSClick(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="${menuItem}">
-			<var name="key_menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+		MenuItem.clickNoError(menuItem = "${menuItem}");
+	}
 
-	<command name="gotoEntryMenuItemNoError">
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS">
-			<var name="key_rowEntry" value="${rowEntry}" />
-		</execute>
+	macro gotoEntry {
+		var key_rowEntry = "${rowEntry}";
 
-		<execute function="AssertClickNoError" locator1="MenuItem#ANY_MENU_ITEM" value1="${menuItem}">
-			<var name="key_menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+		AssertClick(
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK",
+			value1 = "${rowEntry}"
+		);
+	}
 
-	<command name="selectEntry">
-		<var name="key_rowEntry" value="${rowEntry}" />
+	macro gotoEntryMenuItem {
+		LexiconEntry.openEntryMenu(rowEntry = "${rowEntry}");
 
-		<execute function="Check" locator1="ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX" />
-	</command>
+		MenuItem.click(menuItem = "${menuItem}");
+	}
 
-	<command name="viewEntryName">
-		<execute function="AssertTextEquals" locator1="ContentRow#ENTRY_CONTENT_ENTRY_NAME" value1="${rowEntry}">
-			<var name="key_rowEntry" value="${rowEntry}" />
-		</execute>
-	</command>
+	macro gotoEntryMenuItemNoError {
+		LexiconEntry.openEntryMenu(rowEntry = "${rowEntry}");
 
-	<command name="viewNoEntry">
-		<execute function="AssertElementNotPresent" locator1="ContentRow#ENTRY_CONTENT_ENTRY_NAME">
-			<var name="key_rowEntry" value="${rowEntry}" />
-		</execute>
-	</command>
-</definition>
+		MenuItem.clickNoError(menuItem = "${menuItem}");
+	}
+
+	macro gotoEntryMenuItemNoWait {
+		Click(locator1 = "Icon#ROW_VERTICAL_ELLIPSIS", key_rowEntry = "${rowEntry}");
+
+		MenuItem.click(menuItem = "${menuItem}");
+	}
+
+	macro gotoEntryMenuItemNoWaitNoError {
+		Click(locator1 = "Icon#ROW_VERTICAL_ELLIPSIS", key_rowEntry = "${rowEntry}");
+
+		MenuItem.clickNoError(menuItem = "${menuItem}");
+	}
+
+	macro gotoHeaderMenuItem {
+		Click(locator1 = "Icon#HEADER_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(menuItem = "${menuItem}");
+	}
+
+	macro gotoHeaderMenuItemNoError {
+		Click(locator1 = "Icon#HEADER_VERTICAL_ELLIPSIS");
+
+		MenuItem.clickNoError(menuItem = "${menuItem}");
+	}
+
+	macro openEntryMenu {
+		Click.waitForMenuToggleJSClick(
+			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS",
+			key_rowEntry = "${rowEntry}"
+		);
+	}
+
+	macro viewEntryName {
+		AssertTextEquals(
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME",
+			value1 = "${rowEntry}",
+			key_rowEntry = "${rowEntry}"
+		);
+	}
+}

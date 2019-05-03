@@ -18,6 +18,7 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoConverterUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
+import com.liferay.portal.kernel.exception.PwdEncryptorException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -46,6 +47,7 @@ import com.liferay.portal.security.ldap.exportimport.Modifications;
 import com.liferay.portal.security.ldap.exportimport.PortalToLDAPConverter;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -58,9 +60,11 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.DirContext;
+import javax.naming.ldap.Rdn;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
@@ -102,7 +106,7 @@ public class DefaultPortalToLDAPConverter implements PortalToLDAPConverter {
 				groupMappings.getProperty(GroupConverterKeys.GROUP_NAME),
 				_DEFAULT_DN));
 		sb.append(StringPool.EQUAL);
-		sb.append(userGroup.getName());
+		sb.append(Rdn.escapeValue(userGroup.getName()));
 		sb.append(StringPool.COMMA);
 		sb.append(
 			_portalLDAP.getGroupsDN(ldapServerId, userGroup.getCompanyId()));
@@ -429,40 +433,49 @@ public class DefaultPortalToLDAPConverter implements PortalToLDAPConverter {
 
 		String algorithm = ldapAuthConfiguration.passwordEncryptionAlgorithm();
 
-		if (Validator.isNull(algorithm)) {
-			return password;
+		if (Validator.isNotNull(algorithm) &&
+			!algorithm.equals(PasswordEncryptorUtil.TYPE_NONE)) {
+
+			try {
+				StringBundler sb = new StringBundler(4);
+
+				if (!hasLegacyPasswordEncryptionAlgorithm()) {
+					sb.append(StringPool.OPEN_CURLY_BRACE);
+					sb.append(algorithm);
+					sb.append(StringPool.CLOSE_CURLY_BRACE);
+				}
+
+				sb.append(
+					_passwordEncryptor.encrypt(algorithm, password, null));
+
+				password = sb.toString();
+			}
+			catch (PwdEncryptorException pee) {
+				throw new SystemException(pee);
+			}
 		}
 
-		try {
-			StringBundler sb = new StringBundler(4);
+		String passwordKey = userMappings.getProperty(
+			UserConverterKeys.PASSWORD);
 
-			if (!algorithm.equals(PasswordEncryptorUtil.TYPE_NONE) &&
-				!hasLegacyPasswordEncryptionAlgorithm()) {
+		if (passwordKey.equals("unicodePwd")) {
+			String quotedPassword = StringPool.QUOTE.concat(
+				password
+			).concat(
+				StringPool.QUOTE
+			);
 
-				sb.append(StringPool.OPEN_CURLY_BRACE);
-				sb.append(algorithm);
-				sb.append(StringPool.CLOSE_CURLY_BRACE);
-			}
-
-			sb.append(_passwordEncryptor.encrypt(algorithm, password, null));
-
-			String passwordKey = userMappings.getProperty(
-				UserConverterKeys.PASSWORD);
-
-			if (passwordKey.equals("unicodePwd")) {
-				String quotedPassword = StringPool.QUOTE.concat(
-					sb.toString()).concat(StringPool.QUOTE);
-
+			try {
 				byte[] unicodePassword = quotedPassword.getBytes("UTF-16LE");
 
 				return new String(unicodePassword);
 			}
+			catch (UnsupportedEncodingException uee) {
+				throw new SystemException(uee);
+			}
+		}
 
-			return sb.toString();
-		}
-		catch (Exception e) {
-			throw new SystemException(e);
-		}
+		return password;
 	}
 
 	protected Modifications getModifications(
@@ -619,11 +632,6 @@ public class DefaultPortalToLDAPConverter implements PortalToLDAPConverter {
 		_passwordEncryptor = passwordEncryptor;
 	}
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY, unbind = "-")
-	protected void setPortalLDAP(PortalLDAP portalLDAP) {
-		_portalLDAP = portalLDAP;
-	}
-
 	private static final String _DEFAULT_DN = "cn";
 
 	private static final String _OBJECT_CLASS = "objectclass";
@@ -638,7 +646,12 @@ public class DefaultPortalToLDAPConverter implements PortalToLDAPConverter {
 		_ldapServerConfigurationProvider;
 	private LDAPSettings _ldapSettings;
 	private PasswordEncryptor _passwordEncryptor;
-	private PortalLDAP _portalLDAP;
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile PortalLDAP _portalLDAP;
 
 	@Reference
 	private Props _props;

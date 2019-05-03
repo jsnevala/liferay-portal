@@ -29,17 +29,18 @@ import java.util.List;
  */
 @ProviderType
 public class StatusSoap implements Serializable {
+
 	public static StatusSoap toSoapModel(Status model) {
 		StatusSoap soapModel = new StatusSoap();
 
 		soapModel.setStatusId(model.getStatusId());
 		soapModel.setUserId(model.getUserId());
 		soapModel.setModifiedDate(model.getModifiedDate());
-		soapModel.setOnline(model.getOnline());
-		soapModel.setAwake(model.getAwake());
+		soapModel.setOnline(model.isOnline());
+		soapModel.setAwake(model.isAwake());
 		soapModel.setActivePanelIds(model.getActivePanelIds());
 		soapModel.setMessage(model.getMessage());
-		soapModel.setPlaySound(model.getPlaySound());
+		soapModel.setPlaySound(model.isPlaySound());
 
 		return soapModel;
 	}
@@ -176,4 +177,5 @@ public class StatusSoap implements Serializable {
 	private String _activePanelIds;
 	private String _message;
 	private boolean _playSound;
+
 }

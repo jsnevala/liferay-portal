@@ -183,9 +183,7 @@ public class PortalPolicy extends Policy {
 				permissionCollection = getPermissions(protectionDomain);
 			}
 
-			if (permissionCollection instanceof
-					PortalPermissionCollection) {
-
+			if (permissionCollection instanceof PortalPermissionCollection) {
 				if (permissionCollection.implies(permission) ||
 					_checkWithPACLPolicyPolicy(
 						protectionDomain, permission, permissionCollection)) {

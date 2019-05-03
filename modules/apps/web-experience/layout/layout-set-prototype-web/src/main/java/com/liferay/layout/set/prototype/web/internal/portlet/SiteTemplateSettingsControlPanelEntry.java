@@ -24,13 +24,11 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + LayoutSetPrototypePortletKeys.SITE_TEMPLATE_SETTINGS
-	},
+	property = "javax.portlet.name=" + LayoutSetPrototypePortletKeys.SITE_TEMPLATE_SETTINGS,
 	service = ControlPanelEntry.class
 )
 public class SiteTemplateSettingsControlPanelEntry

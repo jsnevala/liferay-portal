@@ -361,11 +361,11 @@ public class CalendarBookingFinderImpl
 			}
 
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(title)", StringPool.LIKE, false, titles);
+				sql, "LOWER(title)", StringPool.LIKE, false, titles);
 			sql = CustomSQLUtil.replaceKeywords(
 				sql, "description", StringPool.LIKE, false, descriptions);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(location)", StringPool.LIKE, true, locations);
+				sql, "LOWER(location)", StringPool.LIKE, true, locations);
 			sql = CustomSQLUtil.replaceAndOperator(sql, andOperator);
 
 			SQLQuery q = session.createSynchronizedSQLQuery(sql);
@@ -471,11 +471,11 @@ public class CalendarBookingFinderImpl
 			}
 
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(title)", StringPool.LIKE, false, titles);
+				sql, "LOWER(title)", StringPool.LIKE, false, titles);
 			sql = CustomSQLUtil.replaceKeywords(
 				sql, "description", StringPool.LIKE, false, descriptions);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(location)", StringPool.LIKE, true, locations);
+				sql, "LOWER(location)", StringPool.LIKE, true, locations);
 			sql = CustomSQLUtil.replaceAndOperator(sql, andOperator);
 
 			StringBundler sb = new StringBundler();

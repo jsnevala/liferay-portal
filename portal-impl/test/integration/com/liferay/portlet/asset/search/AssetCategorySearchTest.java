@@ -39,7 +39,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * @author Istvan Andras Dezsi
+ * @author István András Dézsi
  * @author Tibor Lipusz
  */
 @Sync

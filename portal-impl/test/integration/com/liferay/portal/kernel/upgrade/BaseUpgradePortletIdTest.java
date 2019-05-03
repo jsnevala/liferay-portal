@@ -92,7 +92,7 @@ public class BaseUpgradePortletIdTest extends BaseUpgradePortletId {
 
 	@After
 	public void tearDown() throws Exception {
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection()) {
+		try (Connection con = DataAccess.getConnection()) {
 			connection = con;
 
 			String[][] renamePortletIdsArray = getRenamePortletIdsArray();
@@ -280,8 +280,8 @@ public class BaseUpgradePortletIdTest extends BaseUpgradePortletId {
 	protected String[][] getRenamePortletIdsArray() {
 		if (_testInstanceable) {
 			return new String[][] {
-				new String[] {_PORTLET_IDS[0], _PORTLET_IDS[0] + "_test"},
-				new String[] {_PORTLET_IDS[1], _PORTLET_IDS[1] + "_test"}
+				{_PORTLET_IDS[0], _PORTLET_IDS[0] + "_test"},
+				{_PORTLET_IDS[1], _PORTLET_IDS[1] + "_test"}
 			};
 		}
 
@@ -299,8 +299,9 @@ public class BaseUpgradePortletIdTest extends BaseUpgradePortletId {
 
 	private static final String _INSTANCE_ID = "_INSTANCE_LhZwzy867qfr";
 
-	private static final String[] _PORTLET_IDS =
-		{"47", com.liferay.portlet.util.test.PortletKeys.TEST};
+	private static final String[] _PORTLET_IDS = {
+		"47", com.liferay.portlet.util.test.PortletKeys.TEST
+	};
 
 	private static final List<Portlet> _portlets = new ArrayList<>();
 

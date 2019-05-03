@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.poller.PollerResponse;
 import com.liferay.portal.kernel.service.BrowserTrackerLocalServiceUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -53,7 +54,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author Edward Han
  */
 public class PollerRequestHandlerImpl
-	implements PollerRequestHandler, MessageListener {
+	implements MessageListener, PollerRequestHandler {
 
 	@Override
 	public PollerHeader getPollerHeader(String pollerRequestString) {
@@ -91,7 +92,8 @@ public class PollerRequestHandlerImpl
 			return null;
 		}
 
-		boolean receiveRequest = isReceiveRequest(request.getPathInfo());
+		boolean receiveRequest = isReceiveRequest(
+			HttpUtil.normalizePath(request.getPathInfo()));
 
 		String pollerSessionId = getPollerSessionId(pollerHeader);
 

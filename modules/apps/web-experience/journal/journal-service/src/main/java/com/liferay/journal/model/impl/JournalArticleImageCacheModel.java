@@ -17,7 +17,6 @@ package com.liferay.journal.model.impl;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.journal.model.JournalArticleImage;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -31,12 +30,12 @@ import java.io.ObjectOutput;
  * The cache model class for representing JournalArticleImage in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see JournalArticleImage
  * @generated
  */
 @ProviderType
-public class JournalArticleImageCacheModel implements CacheModel<JournalArticleImage>,
-	Externalizable {
+public class JournalArticleImageCacheModel
+	implements CacheModel<JournalArticleImage>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -47,7 +46,8 @@ public class JournalArticleImageCacheModel implements CacheModel<JournalArticleI
 			return false;
 		}
 
-		JournalArticleImageCacheModel journalArticleImageCacheModel = (JournalArticleImageCacheModel)obj;
+		JournalArticleImageCacheModel journalArticleImageCacheModel =
+			(JournalArticleImageCacheModel)obj;
 
 		if (articleImageId == journalArticleImageCacheModel.articleImageId) {
 			return true;
@@ -90,7 +90,8 @@ public class JournalArticleImageCacheModel implements CacheModel<JournalArticleI
 
 	@Override
 	public JournalArticleImage toEntityModel() {
-		JournalArticleImageImpl journalArticleImageImpl = new JournalArticleImageImpl();
+		JournalArticleImageImpl journalArticleImageImpl =
+			new JournalArticleImageImpl();
 
 		journalArticleImageImpl.setArticleImageId(articleImageId);
 		journalArticleImageImpl.setGroupId(groupId);
@@ -151,8 +152,7 @@ public class JournalArticleImageCacheModel implements CacheModel<JournalArticleI
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(articleImageId);
 
 		objectOutput.writeLong(groupId);
@@ -201,4 +201,5 @@ public class JournalArticleImageCacheModel implements CacheModel<JournalArticleI
 	public String elName;
 	public String languageId;
 	public boolean tempImage;
+
 }

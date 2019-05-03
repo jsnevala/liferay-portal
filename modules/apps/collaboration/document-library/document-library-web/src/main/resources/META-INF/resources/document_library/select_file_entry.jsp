@@ -117,7 +117,7 @@ dlSearchContainer.setResults(foldersAndFileEntriesAndFileShortcuts);
 
 								<c:if test="<%= Validator.isNotNull(fileEntry.getDescription()) %>">
 									<br />
-									<%= HtmlUtil.escape(fileEntry.getDescription()) %>
+									<%= HtmlUtil.replaceNewLine(HtmlUtil.escape(fileEntry.getDescription())) %>
 								</c:if>
 							</liferay-ui:search-container-column-text>
 						</c:if>

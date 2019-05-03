@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.layoutsadmin.util;
 
+import com.liferay.layouts.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.layouts.admin.kernel.util.Sitemap;
 import com.liferay.layouts.admin.kernel.util.SitemapURLProvider;
 import com.liferay.layouts.admin.kernel.util.SitemapURLProviderRegistryUtil;
@@ -26,6 +27,7 @@ import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -231,6 +233,10 @@ public class SitemapImpl implements Sitemap {
 			}
 		}
 
+		if (!rootElement.hasContent()) {
+			return StringPool.BLANK;
+		}
+
 		return document.asXML();
 	}
 
@@ -256,24 +262,38 @@ public class SitemapImpl implements Sitemap {
 			}
 
 			List<Layout> layouts = LayoutLocalServiceUtil.getLayouts(
-				layoutSet.getGroupId(), layoutSet.getPrivateLayout(),
+				layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
 				entry.getKey());
 
 			for (Layout layout : layouts) {
+				UnicodeProperties typeSettingsProperties =
+					layout.getTypeSettingsProperties();
+
+				boolean sitemapInclude = GetterUtil.getBoolean(
+					typeSettingsProperties.getProperty(
+						LayoutTypePortletConstants.SITEMAP_INCLUDE),
+					true);
+
+				if (!sitemapInclude) {
+					continue;
+				}
+
 				Element sitemapElement = element.addElement("sitemap");
 
 				Element locationElement = sitemapElement.addElement("loc");
 
-				StringBundler sb = new StringBundler(8);
+				StringBundler sb = new StringBundler(10);
 
 				sb.append(portalURL);
 				sb.append(PortalUtil.getPathContext());
-				sb.append("/sitemap.xml?layoutUuid=");
+				sb.append("/sitemap.xml?p_l_id=");
+				sb.append(layout.getPlid());
+				sb.append("&layoutUuid=");
 				sb.append(layout.getUuid());
 				sb.append("&groupId=");
 				sb.append(layoutSet.getGroupId());
 				sb.append("&privateLayout=");
-				sb.append(layout.getPrivateLayout());
+				sb.append(layout.isPrivateLayout());
 
 				locationElement.addText(sb.toString());
 			}

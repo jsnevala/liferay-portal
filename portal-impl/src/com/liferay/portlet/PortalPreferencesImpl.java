@@ -476,7 +476,11 @@ public class PortalPreferencesImpl
 			return key;
 		}
 		else {
-			return namespace.concat(StringPool.POUND).concat(key);
+			return namespace.concat(
+				StringPool.POUND
+			).concat(
+				key
+			);
 		}
 	}
 

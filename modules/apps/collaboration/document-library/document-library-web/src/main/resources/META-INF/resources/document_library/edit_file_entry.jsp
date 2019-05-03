@@ -118,23 +118,7 @@ else {
 
 String defaultLanguageId = LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault());
 
-Locale[] availableLocales = {LocaleUtil.fromLanguageId(defaultLanguageId)};
-
-if (fileEntryTypeId > 0) {
-	DLFileEntryType fileEntryType = DLFileEntryTypeLocalServiceUtil.getFileEntryType(fileEntryTypeId);
-
-	defaultLanguageId = fileEntryType.getDefaultLanguageId();
-
-	String[] availableLanguageIds = fileEntryType.getAvailableLanguageIds();
-
-	if (availableLanguageIds.length > 0) {
-		availableLocales = new Locale[availableLanguageIds.length];
-
-		for (int i = 0; i < availableLanguageIds.length; i++) {
-			availableLocales[i] = LocaleUtil.fromLanguageId(availableLanguageIds[i]);
-		}
-	}
-}
+Locale[] availableLocales = DLFileEntryTypeUtil.getDLFileEntryTypeAvailableLocales(fileVersion, dlFileEntryType, dlEditFileEntryDisplayContext, defaultLanguageId);
 
 String headerTitle = LanguageUtil.get(request, "new-document");
 
@@ -378,7 +362,7 @@ if (portletTitleBasedNavigation) {
 											if ((curDLFileEntryType.getFileEntryTypeId() == DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT) || (fileEntryTypeId == curDLFileEntryType.getFileEntryTypeId()) || DLFileEntryTypePermission.contains(permissionChecker, curDLFileEntryType, ActionKeys.VIEW)) {
 										%>
 
-											<aui:option label="<%= HtmlUtil.escape(curDLFileEntryType.getName(locale)) %>" selected="<%= (fileEntryTypeId == curDLFileEntryType.getPrimaryKey()) %>" value="<%= curDLFileEntryType.getPrimaryKey() %>" />
+											<aui:option label="<%= HtmlUtil.escape(curDLFileEntryType.getName(locale)) %>" selected="<%= fileEntryTypeId == curDLFileEntryType.getPrimaryKey() %>" value="<%= curDLFileEntryType.getPrimaryKey() %>" />
 
 										<%
 											}

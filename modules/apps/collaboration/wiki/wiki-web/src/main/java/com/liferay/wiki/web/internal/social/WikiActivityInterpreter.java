@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
@@ -51,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Zsolt Berentey
  */
 @Component(
-	property = {"javax.portlet.name=" + WikiPortletKeys.WIKI},
+	property = "javax.portlet.name=" + WikiPortletKeys.WIKI,
 	service = SocialActivityInterpreter.class
 )
 public class WikiActivityInterpreter extends BaseSocialActivityInterpreter {
@@ -128,7 +127,8 @@ public class WikiActivityInterpreter extends BaseSocialActivityInterpreter {
 
 	@Override
 	protected ResourceBundleLoader getResourceBundleLoader() {
-		return _resourceBundleLoader;
+		return ResourceBundleLoaderUtil.
+			getResourceBundleLoaderByBundleSymbolicName("com.liferay.wiki.web");
 	}
 
 	@Override
@@ -276,17 +276,6 @@ public class WikiActivityInterpreter extends BaseSocialActivityInterpreter {
 		return true;
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.wiki.web)", unbind = "-"
-	)
-	protected void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
-	}
-
 	@Reference(unbind = "-")
 	protected void setWikiPageLocalService(
 		WikiPageLocalService wikiPageLocalService) {
@@ -306,7 +295,6 @@ public class WikiActivityInterpreter extends BaseSocialActivityInterpreter {
 	private static final Log _log = LogFactoryUtil.getLog(
 		WikiActivityInterpreter.class);
 
-	private ResourceBundleLoader _resourceBundleLoader;
 	private WikiPageLocalService _wikiPageLocalService;
 	private WikiPageResourceLocalService _wikiPageResourceLocalService;
 

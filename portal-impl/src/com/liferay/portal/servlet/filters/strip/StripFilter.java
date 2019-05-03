@@ -16,7 +16,8 @@ package com.liferay.portal.servlet.filters.strip;
 
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.cache.PortalCache;
-import com.liferay.portal.kernel.cache.SingleVMPoolUtil;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
+import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.cache.key.CacheKeyGenerator;
 import com.liferay.portal.kernel.cache.key.CacheKeyGeneratorUtil;
 import com.liferay.portal.kernel.io.OutputStreamWriter;
@@ -65,8 +66,8 @@ public class StripFilter extends BasePortalFilter {
 
 	public StripFilter() {
 		if (PropsValues.MINIFIER_INLINE_CONTENT_CACHE_ENABLED) {
-			_minifierCache = SingleVMPoolUtil.getPortalCache(
-				StripFilter.class.getName());
+			_minifierCache = PortalCacheHelperUtil.getPortalCache(
+				PortalCacheManagerNames.SINGLE_VM, StripFilter.class.getName());
 		}
 		else {
 			_minifierCache = null;
@@ -126,10 +127,11 @@ public class StripFilter extends BasePortalFilter {
 			return false;
 		}
 
-		if (KMPSearch.search(
-				charBuffer, startPos, length, _MARKER_LANGUAGE,
-				_MARKER_LANGUAGE_NEXTS) == -1) {
+		int searchValue = KMPSearch.search(
+			charBuffer, startPos, length, _MARKER_LANGUAGE,
+			_MARKER_LANGUAGE_NEXTS);
 
+		if (searchValue == -1) {
 			return false;
 		}
 
@@ -435,11 +437,12 @@ public class StripFilter extends BasePortalFilter {
 
 					int length = i - startPos;
 
+					int searchValue = KMPSearch.search(
+						charBuffer, startPos, length, _MARKER_TYPE_JAVASCRIPT,
+						_MARKER_TYPE_JAVASCRIPT_NEXTS);
+
 					if ((length < _MARKER_TYPE_JAVASCRIPT.length()) ||
-						(KMPSearch.search(
-							charBuffer, startPos, length,
-							_MARKER_TYPE_JAVASCRIPT,
-							_MARKER_TYPE_JAVASCRIPT_NEXTS) == -1)) {
+						(searchValue == -1)) {
 
 						// We have just determined that this is an open script
 						// tag that does not have the attribute
@@ -588,6 +591,7 @@ public class StripFilter extends BasePortalFilter {
 			}
 
 			outputOpenTag(oldCharBuffer, writer, _MARKER_TEXTAREA_OPEN);
+
 			return;
 		}
 

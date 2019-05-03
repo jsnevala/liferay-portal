@@ -381,7 +381,7 @@ public class JabberImpl implements Jabber {
 
 		Status status = StatusLocalServiceUtil.getUserStatus(userId);
 
-		if (status.getOnline()) {
+		if (status.isOnline()) {
 			updateStatus(userId, 1, connection);
 		}
 
@@ -433,13 +433,19 @@ public class JabberImpl implements Jabber {
 	protected String getFullJabberId(String screenName) {
 		String jabberId = getJabberId(screenName);
 
-		return jabberId.concat(StringPool.SLASH).concat(
-			_chatGroupServiceConfiguration.jabberResource());
+		return jabberId.concat(
+			StringPool.SLASH
+		).concat(
+			_chatGroupServiceConfiguration.jabberResource()
+		);
 	}
 
 	protected String getJabberId(String screenName) {
-		return screenName.concat(StringPool.AT).concat(
-			_chatGroupServiceConfiguration.jabberResource());
+		return screenName.concat(
+			StringPool.AT
+		).concat(
+			_chatGroupServiceConfiguration.jabberResource()
+		);
 	}
 
 	protected void importUser(long userId, String password) throws Exception {

@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  */
 @Component(
 	enabled = false, immediate = true,
-	property = {"destination.name=" + DestinationNames.MONITORING},
+	property = "destination.name=" + DestinationNames.MONITORING,
 	service = {MessageListener.class, MonitoringControl.class}
 )
 public class MonitoringMessageListener
@@ -102,6 +102,7 @@ public class MonitoringMessageListener
 	public void setLevels(Map<String, String> levels) {
 		for (Map.Entry<String, String> entry : levels.entrySet()) {
 			String namespace = entry.getKey();
+
 			String levelName = entry.getValue();
 
 			Level level = Level.valueOf(levelName);
@@ -125,8 +126,7 @@ public class MonitoringMessageListener
 	@Reference(
 		cardinality = ReferenceCardinality.MULTIPLE,
 		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		unbind = "unregisterDataSampleProcessor"
+		policyOption = ReferencePolicyOption.GREEDY
 	)
 	protected synchronized void registerDataSampleProcessor(
 		DataSampleProcessor<DataSample> dataSampleProcessor,

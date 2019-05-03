@@ -63,12 +63,14 @@ public class LiferayOAuthStoreProvider implements Provider<OAuthStore> {
 
 		OAuthConsumer oAuthConsumer = new OAuthConsumerImpl();
 
-		oAuthConsumer.setConsumerKey(_DEFAULT_CONSUMER_KEY);
 		oAuthConsumer.setServiceName(_DEFAULT_SERVICE_NAME);
+		oAuthConsumer.setConsumerKey(_DEFAULT_CONSUMER_KEY);
 
 		String consumerSecret = null;
 
-		String path = PropsUtil.get(PropsKeys.LIFERAY_HOME).concat(_KEY_DIR);
+		String liferayHome = PropsUtil.get(PropsKeys.LIFERAY_HOME);
+
+		String path = liferayHome.concat(_KEY_DIR);
 
 		path = path.replaceAll(StringPool.QUOTE, StringPool.BLANK);
 

@@ -23,7 +23,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
@@ -40,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + MicroblogsPortletKeys.MICROBLOGS},
+	property = "javax.portlet.name=" + MicroblogsPortletKeys.MICROBLOGS,
 	service = SocialActivityInterpreter.class
 )
 public class MicroblogsActivityInterpreter
@@ -67,6 +66,12 @@ public class MicroblogsActivityInterpreter
 
 	@Override
 	protected ResourceBundleLoader getResourceBundleLoader() {
+		if (_resourceBundleLoader == null) {
+			return ResourceBundleLoaderUtil.
+				getResourceBundleLoaderByBundleSymbolicName(
+					"com.liferay.microblogs.web");
+		}
+
 		return _resourceBundleLoader;
 	}
 
@@ -128,20 +133,15 @@ public class MicroblogsActivityInterpreter
 		_microblogsEntryLocalService = microblogsEntryLocalService;
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.microblogs.web)",
-		unbind = "-"
-	)
 	protected void setResourceBundleLoader(
 		ResourceBundleLoader resourceBundleLoader) {
 
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
+		_resourceBundleLoader = resourceBundleLoader;
 	}
 
-	private static final String[] _CLASS_NAMES =
-		{MicroblogsEntry.class.getName()};
+	private static final String[] _CLASS_NAMES = {
+		MicroblogsEntry.class.getName()
+	};
 
 	private MicroblogsEntryLocalService _microblogsEntryLocalService;
 	private ResourceBundleLoader _resourceBundleLoader;

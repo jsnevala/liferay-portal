@@ -15,7 +15,7 @@
 package com.liferay.dynamic.data.lists.service.permission;
 
 import com.liferay.dynamic.data.lists.constants.DDLActionKeys;
-import com.liferay.dynamic.data.lists.model.DDLRecord;
+import com.liferay.dynamic.data.lists.model.DDLRecordConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
 import com.liferay.dynamic.data.lists.model.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetLocalServiceUtil;
@@ -25,6 +25,9 @@ import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Marcellus Tavares
@@ -56,7 +59,7 @@ public class DDLRecordSetPermission {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static void check(
@@ -74,12 +77,20 @@ public class DDLRecordSetPermission {
 		PermissionChecker permissionChecker, DDLRecordSet recordSet,
 		String actionId) {
 
-		String portletId = PortletProviderUtil.getPortletId(
-			DDLRecord.class.getName(), PortletProvider.Action.EDIT);
+		int recordSetScope = recordSet.getScope();
+
+		List<Integer> recordSetScopes = new ArrayList<>(2);
+
+		recordSetScopes.add(DDLRecordSetConstants.SCOPE_DYNAMIC_DATA_LISTS);
+		recordSetScopes.add(DDLRecordSetConstants.SCOPE_FORMS);
 
 		if (!actionId.equals(DDLActionKeys.ADD_RECORD) &&
-			(recordSet.getScope() ==
-				DDLRecordSetConstants.SCOPE_DYNAMIC_DATA_LISTS)) {
+			recordSetScopes.contains(recordSetScope)) {
+
+			String className = DDLRecordConstants.getClassName(recordSetScope);
+
+			String portletId = PortletProviderUtil.getPortletId(
+				className, PortletProvider.Action.EDIT);
 
 			Boolean hasPermission = StagingPermissionUtil.hasPermission(
 				permissionChecker, recordSet.getGroupId(),
@@ -115,7 +126,7 @@ public class DDLRecordSetPermission {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static boolean contains(

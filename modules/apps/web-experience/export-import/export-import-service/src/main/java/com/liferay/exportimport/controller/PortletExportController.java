@@ -14,12 +14,6 @@
 
 package com.liferay.exportimport.controller;
 
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_FAILED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_STARTED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_SUCCEEDED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.PROCESS_FLAG_PORTLET_EXPORT_IN_PROCESS;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.PROCESS_FLAG_PORTLET_STAGING_IN_PROCESS;
-
 import com.liferay.asset.kernel.model.AssetLink;
 import com.liferay.asset.kernel.model.adapter.StagedAssetLink;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
@@ -41,6 +35,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerStatusMessageSender;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.lar.DeletionSystemEventExporter;
@@ -121,11 +116,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Bruno Farache
  * @author Zsigmond Rab
  * @author Douglas Wong
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
-	property = {"model.class.name=com.liferay.portal.kernel.model.Portlet"},
+	property = "model.class.name=com.liferay.portal.kernel.model.Portlet",
 	service = {ExportImportController.class, PortletExportController.class}
 )
 public class PortletExportController implements ExportController {
@@ -143,7 +138,8 @@ public class PortletExportController implements ExportController {
 				exportImportConfiguration);
 
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_PORTLET_EXPORT_STARTED, getProcessFlag(),
+				ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_STARTED,
+				getProcessFlag(),
 				String.valueOf(
 					exportImportConfiguration.getExportImportConfigurationId()),
 				_portletDataContextFactory.clonePortletDataContext(
@@ -154,7 +150,8 @@ public class PortletExportController implements ExportController {
 			ExportImportThreadLocal.setPortletExportInProcess(false);
 
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_PORTLET_EXPORT_SUCCEEDED, getProcessFlag(),
+				ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_SUCCEEDED,
+				getProcessFlag(),
 				String.valueOf(
 					exportImportConfiguration.getExportImportConfigurationId()),
 				_portletDataContextFactory.clonePortletDataContext(
@@ -165,8 +162,15 @@ public class PortletExportController implements ExportController {
 		catch (Throwable t) {
 			ExportImportThreadLocal.setPortletExportInProcess(false);
 
+			if (portletDataContext != null) {
+				ZipWriter zipWriter = portletDataContext.getZipWriter();
+
+				zipWriter.umount();
+			}
+
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_PORTLET_EXPORT_FAILED, getProcessFlag(),
+				ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_FAILED,
+				getProcessFlag(),
 				String.valueOf(
 					exportImportConfiguration.getExportImportConfigurationId()),
 				_portletDataContextFactory.clonePortletDataContext(
@@ -221,22 +225,8 @@ public class PortletExportController implements ExportController {
 			_log.debug("Exporting data for " + portletId);
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(
-			ExportImportPathUtil.getPortletPath(portletDataContext, portletId));
-		sb.append(StringPool.SLASH);
-
-		if (portlet.isPreferencesUniquePerLayout()) {
-			sb.append(layout.getPlid());
-		}
-		else {
-			sb.append(portletDataContext.getScopeGroupId());
-		}
-
-		sb.append("/portlet-data.xml");
-
-		String path = sb.toString();
+		String path = ExportImportPathUtil.getPortletDataPath(
+			portletDataContext);
 
 		if (portletDataContext.hasPrimaryKey(String.class, path)) {
 			return;
@@ -688,6 +678,17 @@ public class PortletExportController implements ExportController {
 		portletElement.addAttribute(
 			"private-layout", String.valueOf(layout.isPrivateLayout()));
 
+		StringBundler pathSB = new StringBundler(4);
+
+		pathSB.append(ExportImportPathUtil.getPortletPath(portletDataContext));
+		pathSB.append(StringPool.SLASH);
+		pathSB.append(plid);
+		pathSB.append("/portlet.xml");
+
+		String path = pathSB.toString();
+
+		portletElement.addAttribute("self-path", path);
+
 		// Data
 
 		if (exportPortletData) {
@@ -848,15 +849,6 @@ public class PortletExportController implements ExportController {
 		}
 
 		// Zip
-
-		StringBundler pathSB = new StringBundler(4);
-
-		pathSB.append(ExportImportPathUtil.getPortletPath(portletDataContext));
-		pathSB.append(StringPool.SLASH);
-		pathSB.append(plid);
-		pathSB.append("/portlet.xml");
-
-		String path = pathSB.toString();
 
 		Element element = parentElement.addElement("portlet");
 
@@ -1120,7 +1112,7 @@ public class PortletExportController implements ExportController {
 
 		rootElement.addAttribute("owner-id", String.valueOf(ownerId));
 		rootElement.addAttribute("owner-type", String.valueOf(ownerType));
-		rootElement.addAttribute("default-user", String.valueOf(false));
+		rootElement.addAttribute("default-user", Boolean.FALSE.toString());
 		rootElement.addAttribute("service-name", serviceName);
 
 		if (ownerType == PortletKeys.PREFS_OWNER_TYPE_ARCHIVED) {
@@ -1267,10 +1259,12 @@ public class PortletExportController implements ExportController {
 
 	protected int getProcessFlag() {
 		if (ExportImportThreadLocal.isPortletStagingInProcess()) {
-			return PROCESS_FLAG_PORTLET_STAGING_IN_PROCESS;
+			return ExportImportLifecycleConstants.
+				PROCESS_FLAG_PORTLET_STAGING_IN_PROCESS;
 		}
 
-		return PROCESS_FLAG_PORTLET_EXPORT_IN_PROCESS;
+		return ExportImportLifecycleConstants.
+			PROCESS_FLAG_PORTLET_EXPORT_IN_PROCESS;
 	}
 
 	@Reference(unbind = "-")

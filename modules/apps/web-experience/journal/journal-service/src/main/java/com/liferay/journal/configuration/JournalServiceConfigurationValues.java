@@ -17,7 +17,7 @@ package com.liferay.journal.configuration;
 import com.liferay.portal.kernel.util.GetterUtil;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class JournalServiceConfigurationValues {
 
@@ -86,7 +86,7 @@ public class JournalServiceConfigurationValues {
 					JOURNAL_FOLDER_ICON_CHECK_COUNT));
 
 	/**
-	 * @deprecated As of 3.6.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String LAR_CREATION_STRATEGY =

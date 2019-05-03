@@ -49,6 +49,7 @@ CommentSectionDisplayContext commentSectionDisplayContext = CommentDisplayContex
 	<c:if test="<%= commentSectionDisplayContext.isDiscussionVisible() %>">
 		<div class="taglib-discussion" id="<%= namespace %>discussionContainer">
 			<aui:form action="<%= discussionTaglibHelper.getFormAction() %>" method="post" name="<%= discussionTaglibHelper.getFormName() %>">
+				<input name="p_auth" type="hidden" value="<%= AuthTokenUtil.getToken(request) %>" />
 				<input name="namespace" type="hidden" value="<%= namespace %>" />
 
 				<%
@@ -85,12 +86,15 @@ CommentSectionDisplayContext commentSectionDisplayContext = CommentDisplayContex
 						</c:if>
 
 						<%
+						Group siteGroup = themeDisplay.getSiteGroup();
+
+						boolean canSubscribe = themeDisplay.isSignedIn() && discussionPermission.hasSubscribePermission(company.getCompanyId(), siteGroup.getGroupId(), discussionTaglibHelper.getClassName(), discussionTaglibHelper.getClassPK());
 						boolean subscribed = SubscriptionLocalServiceUtil.isSubscribed(company.getCompanyId(), user.getUserId(), discussionTaglibHelper.getClassName(), discussionTaglibHelper.getClassPK());
 
 						String subscriptionURL = "javascript:" + randomNamespace + "subscribeToComments(" + !subscribed + ");";
 						%>
 
-						<c:if test="<%= themeDisplay.isSignedIn() %>">
+						<c:if test="<%= canSubscribe %>">
 							<c:choose>
 								<c:when test="<%= subscribed %>">
 									<liferay-ui:icon
@@ -140,6 +144,10 @@ CommentSectionDisplayContext commentSectionDisplayContext = CommentDisplayContex
 												/>
 
 												<aui:input name="postReplyBody0" type="hidden" />
+
+												<c:if test="<%= canSubscribe && !subscribed %>">
+													<aui:input helpMessage="comments-subscribe-me-help" label="subscribe-me" name="subscribe" type="checkbox" value="<%= PropsValues.DISCUSSION_SUBSCRIBE_BY_DEFAULT %>" />
+												</c:if>
 
 												<aui:button-row>
 													<aui:button cssClass="btn-comment btn-lg btn-primary" disabled="<%= true %>" id='<%= randomNamespace + "postReplyButton0" %>' onClick='<%= randomNamespace + "postReply(0);" %>' value='<%= themeDisplay.isSignedIn() ? "reply" : "reply-as" %>' />

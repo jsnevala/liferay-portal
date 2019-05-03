@@ -187,14 +187,20 @@ public class SearchEngineHelperImpl implements SearchEngineHelper {
 
 	@Override
 	public String getSearchReaderDestinationName(String searchEngineId) {
-		return DestinationNames.SEARCH_READER.concat(StringPool.SLASH).concat(
-			searchEngineId);
+		return DestinationNames.SEARCH_READER.concat(
+			StringPool.SLASH
+		).concat(
+			searchEngineId
+		);
 	}
 
 	@Override
 	public String getSearchWriterDestinationName(String searchEngineId) {
-		return DestinationNames.SEARCH_WRITER.concat(StringPool.SLASH).concat(
-			searchEngineId);
+		return DestinationNames.SEARCH_WRITER.concat(
+			StringPool.SLASH
+		).concat(
+			searchEngineId
+		);
 	}
 
 	@Override
@@ -288,8 +294,7 @@ public class SearchEngineHelperImpl implements SearchEngineHelper {
 	@Reference(
 		cardinality = ReferenceCardinality.MULTIPLE,
 		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		unbind = "removeSearchEngineConfigurator"
+		policyOption = ReferencePolicyOption.GREEDY
 	)
 	protected void addSearchEngineConfigurator(
 		SearchEngineConfigurator searchEngineConfigurator) {

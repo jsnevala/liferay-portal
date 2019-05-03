@@ -145,7 +145,7 @@ if (organization != null) {
 				}
 				%>
 
-				<aui:input disabled="<%= true %>" name="organizationsRedirect" type="hidden" value="<%= backURL %>" />
+				<aui:input disabled="<%= true %>" name="organizationsRedirect" type="hidden" value="<%= currentURL %>" />
 				<aui:input name="deleteOrganizationIds" type="hidden" />
 
 				<c:if test="<%= showOrganizations %>">
@@ -206,12 +206,6 @@ if (organization != null) {
 							if (organization != null) {
 								parentOrganizationId = organization.getOrganizationId();
 							}
-
-							List<Long> excludedOrganizationIds = new ArrayList<Long>();
-
-							excludedOrganizationIds.add(parentOrganizationId);
-
-							organizationParams.put("excludedOrganizationIds", excludedOrganizationIds);
 							%>
 
 							<c:choose>
@@ -231,26 +225,6 @@ if (organization != null) {
 									</liferay-ui:search-container-results>
 								</c:when>
 								<c:otherwise>
-
-									<%
-									if (searchTerms.hasSearchTerms()) {
-										if (filterManageableOrganizations) {
-											organizationParams.put("organizationsTree", organizations);
-										}
-										else if (parentOrganizationId > 0) {
-											List<Organization> organizationsTree = new ArrayList<Organization>();
-
-											Organization parentOrganization = OrganizationLocalServiceUtil.getOrganization(parentOrganizationId);
-
-											organizationsTree.add(parentOrganization);
-
-											organizationParams.put("organizationsTree", organizationsTree);
-										}
-
-										parentOrganizationId = OrganizationConstants.ANY_PARENT_ORGANIZATION_ID;
-									}
-									%>
-
 									<liferay-ui:organization-search-container-results
 										organizationParams="<%= organizationParams %>"
 										parentOrganizationId="<%= parentOrganizationId %>"

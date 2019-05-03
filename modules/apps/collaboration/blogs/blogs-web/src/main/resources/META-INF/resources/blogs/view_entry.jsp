@@ -67,14 +67,16 @@ if (portletTitleBasedNavigation) {
 	<aui:input name="<%= Constants.CMD %>" type="hidden" />
 	<aui:input name="entryId" type="hidden" value="<%= String.valueOf(entryId) %>" />
 
-	<liferay-util:include page="/blogs/view_entry_content.jsp" servletContext="<%= application %>" />
+	<div data-analytics-asset-id="<%= String.valueOf(entryId) %>" data-analytics-asset-title="<%= HtmlUtil.escapeAttribute(entry.getTitle()) %>" data-analytics-asset-type="blog">
+		<liferay-util:include page="/blogs/view_entry_content.jsp" servletContext="<%= application %>" />
+	</div>
 </aui:form>
 
 <div class="container-fluid">
 	<c:if test="<%= PropsValues.BLOGS_ENTRY_PREVIOUS_AND_NEXT_NAVIGATION_ENABLED %>">
 
 		<%
-		BlogsEntry[] prevAndNext = BlogsEntryLocalServiceUtil.getEntriesPrevAndNext(entryId);
+		BlogsEntry[] prevAndNext = BlogsEntryServiceUtil.getEntriesPrevAndNext(entryId);
 
 		BlogsEntry previousEntry = prevAndNext[0];
 		BlogsEntry nextEntry = prevAndNext[2];
@@ -112,6 +114,7 @@ if (portletTitleBasedNavigation) {
 								<div class="entry-info text-muted">
 									<small>
 										<strong><%= HtmlUtil.escape(previousEntry.getUserName()) %></strong>
+
 										<span> - </span>
 										<span class="hide-accessible"><liferay-ui:message key="published-date" /></span>
 										<%= dateFormatDate.format(previousEntry.getDisplayDate()) %>
@@ -156,6 +159,7 @@ if (portletTitleBasedNavigation) {
 								<div class="entry-info text-muted">
 									<small>
 										<strong><%= HtmlUtil.escape(nextEntry.getUserName()) %></strong>
+
 										<span> - </span>
 										<span class="hide-accessible"><liferay-ui:message key="published-date" /></span>
 										<%= dateFormatDate.format(nextEntry.getDisplayDate()) %>

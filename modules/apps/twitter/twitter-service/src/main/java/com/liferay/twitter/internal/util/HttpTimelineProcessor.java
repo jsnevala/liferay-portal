@@ -69,9 +69,7 @@ public class HttpTimelineProcessor implements TimelineProcessor {
 	}
 
 	protected String getUserAgent() {
-		String userAgent = _USER_AGENTS[_random.nextInt(_USER_AGENTS.length)];
-
-		return userAgent;
+		return _USER_AGENTS[_random.nextInt(_USER_AGENTS.length)];
 	}
 
 	protected JSONArray getUserTimelineJSONArray(
@@ -125,14 +123,15 @@ public class HttpTimelineProcessor implements TimelineProcessor {
 	private static final Log _log = LogFactoryUtil.getLog(
 		HttpTimelineProcessor.class);
 
-	private final Format _dateFormat =
-		FastDateFormatFactoryUtil.getSimpleDateFormat(
-			"EEE MMM d hh:mm:ss Z yyyy", LocaleUtil.US);
-	private final Pattern _pattern = Pattern.compile(
+	private static final Pattern _pattern = Pattern.compile(
 		"data-item-id=\"([0-9]+)\".*?data-user-id=\"([0-9]+)\".*?" +
 			"data-time-ms=\"([0-9]+)\".*?<p class=\"TweetTextSize " +
 				"TweetTextSize.*?>(.*?)</p>",
 		Pattern.DOTALL);
+
+	private final Format _dateFormat =
+		FastDateFormatFactoryUtil.getSimpleDateFormat(
+			"EEE MMM d hh:mm:ss Z yyyy", LocaleUtil.US);
 	private final Random _random = new Random();
 
 }

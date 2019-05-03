@@ -18,7 +18,7 @@ import com.liferay.portal.kernel.util.StringPool;
 
 /**
  * @author Daniel Kocsis
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class BackgroundTaskConstants {
 

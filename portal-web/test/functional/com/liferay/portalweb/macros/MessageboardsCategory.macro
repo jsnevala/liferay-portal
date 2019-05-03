@@ -1,503 +1,477 @@
-<definition>
-	<var name="assetType" value="Message Boards Category" />
-
-	<command name="addCP">
-		<execute macro="LexiconEntry#gotoAddMenuItem">
-			<var name="menuItem" value="Category" />
-		</execute>
+definition {
+	var assetType = "Message Boards Category";
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${categoryName}" />
-		</execute>
+	macro addCP {
+		LexiconEntry.gotoAddMenuItem(menuItem = "Category");
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		PortletEntry.inputName(name = "${categoryName}");
 
-	<command name="addNullPG">
-		<execute function="AssertClick" locator1="Button#ADD_CATEGORY" value1="Add Category" />
+		PortletEntry.save();
+	}
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${categoryNullName}" />
-		</execute>
+	macro addPG {
+		AssertClick(locator1 = "Button#ADD_CATEGORY", value1 = "Add Category");
 
-		<execute macro="PortletEntry#inputDescription">
-			<var name="description" value="${categoryDescription}" />
-		</execute>
+		PortletEntry.inputName(name = "${categoryName}");
 
-		<execute function="Click" locator1="Button#SAVE" />
+		if ("${categoryDescriptionEnabled}" == "true") {
+			PortletEntry.inputDescription(description = "${categoryDescription}");
+		}
 
-		<execute function="AssertTextEquals" locator1="TextInput#REQUIRED_ALERT" value1="This field is required." />
-	</command>
+		if ("${displayStyle}" == "Question") {
+			Select(
+				locator1 = "MessageBoardsEditCategory#DISPLAY_STYLE_SELECT",
+				value1 = "Question"
+			);
+		}
+		else if ("${displayStyle" == "Default") {
+			Select(
+				locator1 = "MessageBoardsEditCategory#DISPLAY_STYLE_SELECT",
+				value1 = "Default"
+			);
+		}
 
-	<command name="addPG">
-		<execute function="AssertClick" locator1="Button#ADD_CATEGORY" value1="Add Category" />
+		Click(locator1 = "Button#SAVE");
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${categoryName}" />
-		</execute>
+		Alert.viewSuccessMessage();
+	}
 
-		<if>
-			<equals arg1="${categoryDescriptionEnabled}" arg2="true" />
-			<then>
-				<execute macro="PortletEntry#inputDescription">
-					<var name="description" value="${categoryDescription}" />
-				</execute>
-			</then>
-		</if>
+	macro addSubcategoryCP {
+		var key_categoryName = "${categoryName}";
+		var key_subCategoryName = "${subCategoryName}";
 
-		<if>
-			<equals arg1="${displayStyle}" arg2="Question" />
-			<then>
-				<execute function="Select" locator1="MessageBoardsEditCategory#DISPLAY_STYLE_SELECT" value1="Question" />
-			</then>
-			<elseif>
-				<equals arg1="${displayStyle" arg2="Default" />
-				<then>
-					<execute function="Select" locator1="MessageBoardsEditCategory#DISPLAY_STYLE_SELECT" value1="Default" />
-				</then>
-			</elseif>
-		</if>
+		AssertClick(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-		<execute function="Click" locator1="Button#SAVE" />
+		LexiconEntry.gotoAddMenuItem(menuItem = "Subcategory");
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		PortletEntry.inputName(name = "${subCategoryName}");
 
-	<command name="addSubcategoryCP">
-		<var name="key_categoryName" value="${categoryName}" />
-		<var name="key_subCategoryName" value="${subCategoryName}" />
+		PortletEntry.inputDescription(description = "${subCategoryDescription}");
 
-		<execute function="AssertClick" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
+		PortletEntry.save();
+	}
 
-		<execute macro="LexiconEntry#gotoAddMenuItem">
-			<var name="menuItem" value="Subcategory" />
-		</execute>
+	macro addSubcategoryNullPG {
+		var key_categoryName = "${categoryName}";
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${subCategoryName}" />
-		</execute>
+		AssertClick(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-		<execute macro="PortletEntry#inputDescription">
-			<var name="description" value="${subCategoryDescription}" />
-		</execute>
+		AssertClick(locator1 = "Button#ADD_SUBCATEGORY", value1 = "Add Subcategory");
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		PortletEntry.inputName(name = "${subCategoryNullName}");
 
-	<command name="addSubcategoryNullCP">
-		<var name="key_categoryName" value="${categoryName}" />
+		PortletEntry.inputDescription(description = "${subCategoryDescription}");
 
-		<execute function="AssertClick" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CATEGORY" value1="${categoryName}" />
+		Button.clickSave();
 
-		<execute macro="LexiconEntry#gotoAddMenuItem">
-			<var name="menuItem" value="Subcategory" />
-		</execute>
+		Alert.viewRequiredField();
+	}
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${subCategoryNullName}" />
-		</execute>
+	macro addSubcategoryPG {
+		var key_categoryName = "${categoryName}";
 
-		<execute macro="PortletEntry#inputDescription">
-			<var name="description" value="${subCategoryDescription}" />
-		</execute>
+		AssertClick(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-		<execute function="Click" locator1="Button#SAVE" />
+		AssertClick(locator1 = "Button#ADD_SUBCATEGORY", value1 = "Add Subcategory");
 
-		<execute function="AssertTextEquals" locator1="TextInput#REQUIRED_ALERT" value1="This field is required." />
-	</command>
+		PortletEntry.inputName(name = "${subCategoryName}");
 
-	<command name="addSubcategoryNullPG">
-		<var name="key_categoryName" value="${categoryName}" />
+		PortletEntry.inputDescription(description = "${subCategoryDescription}");
 
-		<execute function="AssertClick" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
+		PortletEntry.save();
+	}
 
-		<execute function="AssertClick" locator1="Button#ADD_SUBCATEGORY" value1="Add Subcategory" />
+	macro addSubcategoryToSubcategoryPG {
+		var key_categoryName = "${categoryName}";
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${subCategoryNullName}" />
-		</execute>
+		AssertClick(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-		<execute macro="PortletEntry#inputDescription">
-			<var name="description" value="${subCategoryDescription}" />
-		</execute>
+		var key_subCategoryName = "${subCategoryName}";
 
-		<execute macro="Button#clickSave" />
+		AssertClick(
+			locator1 = "MessageBoards#CATEGORY_LIST_SUBCATEGORY",
+			value1 = "${subCategoryName}"
+		);
 
-		<execute macro="Alert#viewRequiredField" />
-	</command>
+		AssertClick(locator1 = "Button#ADD_SUBCATEGORY", value1 = "Add Subcategory");
 
-	<command name="addSubcategoryPG">
-		<var name="key_categoryName" value="${categoryName}" />
+		PortletEntry.inputName(name = "${subCategorySubCategoryName}");
 
-		<execute function="AssertClick" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
+		PortletEntry.inputDescription(description = "${subCategoryDescription}");
 
-		<execute function="AssertClick" locator1="Button#ADD_SUBCATEGORY" value1="Add Subcategory" />
+		PortletEntry.save();
+	}
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${subCategoryName}" />
-		</execute>
+	macro deleteCP {
+		if (IsElementPresent(locator1 = "Checkbox#SELECT_ALL")) {
+			Check.checkAll(locator1 = "Checkbox#SELECT_ALL");
 
-		<execute macro="PortletEntry#inputDescription">
-			<var name="description" value="${subCategoryDescription}" />
-		</execute>
+			Click(locator1 = "Button#RECYCLE_BIN");
 
-		<execute macro="PortletEntry#save" />
-	</command>
+			AssertElementPresent(locator1 = "Message#SUCCESS");
+		}
+	}
 
-	<command name="addSubcategoryToSubcategoryPG">
-		<var name="key_categoryName" value="${categoryName}" />
+	macro deletePG {
+		var key_categoryName = "${categoryName}";
 
-		<execute function="AssertClick" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
+		AssertTextEquals(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-		<var name="key_subCategoryName" value="${subCategoryName}" />
+		LexiconEntry.openEntryMenu(rowEntry = "${categoryName}");
 
-		<execute function="AssertClick" locator1="MessageBoards#CATEGORY_LIST_SUBCATEGORY" value1="${subCategoryName}" />
+		PortletEntry.clickMoveToRecycleBin();
 
-		<execute function="AssertClick" locator1="Button#ADD_SUBCATEGORY" value1="Add Subcategory" />
+		AssertElementPresent(locator1 = "Message#SUCCESS");
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${subCategorySubCategoryName}" />
-		</execute>
+		AssertElementNotPresent(locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY");
+	}
 
-		<execute macro="PortletEntry#inputDescription">
-			<var name="description" value="${subCategoryDescription}" />
-		</execute>
+	macro editPG {
+		var key_categoryName = "${categoryName}";
 
-		<execute macro="PortletEntry#save" />
-	</command>
+		AssertTextEquals(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-	<command name="deleteCP">
-		<if>
-			<condition function="IsElementPresent" locator1="Checkbox#SELECT_ALL" />
-			<then>
-				<execute function="Check#checkAll" locator1="Checkbox#SELECT_ALL" />
+		LexiconEntry.openEntryMenu(rowEntry = "${categoryName}");
 
-				<execute function="Click" locator1="Button#RECYCLE_BIN" />
+		MenuItem.click(menuItem = "Edit");
 
-				<execute function="AssertElementPresent" locator1="Message#SUCCESS" />
-			</then>
-		</if>
-	</command>
+		PortletEntry.inputName(name = "${categoryNameEdit}");
 
-	<command name="deletePG">
-		<var name="key_categoryName" value="${categoryName}" />
+		Click(locator1 = "Button#SAVE");
 
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
+		Alert.viewSuccessMessage();
 
-		<execute function="Click" locator1="MessageBoards#CATEGORY_LIST_ACTIONS" />
+		AssertTextEquals(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryNameEdit}"
+		);
+	}
 
-		<execute macro="PortletEntry#clickMoveToRecycleBin" />
+	macro gotoCP {
+		var key_rowEntry = "${categoryName}";
 
-		<execute function="AssertElementPresent" locator1="Message#SUCCESS" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" />
-	</command>
+		AssertTextEquals(
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK",
+			value1 = "${categoryName}"
+		);
 
-	<command name="editPG">
-		<var name="key_categoryName" value="${categoryName}" />
+		LexiconEntry.gotoEntry(rowEntry = "${categoryName}");
 
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
+		AssertTextEquals(locator1 = "Portlet#HEADER", value1 = "${categoryName}");
+	}
 
-		<execute function="Click" locator1="MessageBoards#CATEGORY_LIST_ACTIONS" />
+	macro gotoPG {
+		if ("${categoryDescriptionEnabled}" == "true") {
+			var key_categoryDescription = "${categoryDescription}";
+			var key_categoryName = "${categoryName}";
 
-		<execute function="Click" locator1="MenuItem#ANY_MENU_ITEM">
-			<var name="key_menuItem" value="Edit" />
-		</execute>
+			AssertClick(
+				locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY_DESCRIPTION",
+				value1 = "${categoryDescription}"
+			);
+		}
+		else {
+			var key_categoryName = "${categoryName}";
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${categoryNameEdit}" />
-		</execute>
+			AssertClick(
+				locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+				value1 = "${categoryName}"
+			);
+		}
 
-		<execute function="Click" locator1="Button#SAVE" />
+		if ("${subCategoryEnabled}" == "true") {
+			var key_categoryName = "${subCategoryName}";
 
-		<execute macro="Alert#viewSuccessMessage" />
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryNameEdit}" />
-	</command>
+			Click(locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY");
+		}
+	}
 
-	<command name="gotoCP">
-		<var name="key_rowEntry" value="${categoryName}" />
+	macro subscribePG {
+		var key_categoryName = "${categoryName}";
 
-		<execute function="AssertTextEquals" locator1="ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK" value1="${categoryName}" />
+		AssertTextEquals(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-		<execute function="AssertClick" locator1="ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK" value1="${categoryName}" />
+		LexiconEntry.openEntryMenu(rowEntry = "${categoryName}");
 
-		<execute function="AssertTextEquals" locator1="Portlet#HEADER" value1="${categoryName}" />
-	</command>
+		MenuItem.click(menuItem = "Subscribe");
 
-	<command name="gotoPG">
-		<if>
-			<equals arg1="${categoryDescriptionEnabled}" arg2="true" />
-			<then>
-				<var name="key_categoryDescription" value="${categoryDescription}" />
-				<var name="key_categoryName" value="${categoryName}" />
+		Alert.viewSuccessMessage();
+	}
 
-				<execute function="AssertClick" locator1="MessageBoards#CATEGORY_LIST_CATEGORY_DESCRIPTION" value1="${categoryDescription}" />
-			</then>
-			<else>
-				<var name="key_categoryName" value="${categoryName}" />
+	macro tearDownCP {
+		Navigator.openURL();
 
-				<execute function="AssertClick" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
-			</else>
-		</if>
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Message Boards"
+		);
 
-		<if>
-			<equals arg1="${subCategoryEnabled}" arg2="true" />
-			<then>
-				<var name="key_categoryName" value="${subCategoryName}" />
+		AssertElementPresent(locator1 = "Checkbox#SELECT_ALL");
 
-				<execute function="Click" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" />
-			</then>
-		</if>
-	</command>
+		Check.checkAll(locator1 = "Checkbox#SELECT_ALL");
 
-	<command name="removeViewPermissionsPG">
-		<var name="key_categoryName" value="${categoryName}" />
-		<var method="StringUtil#replace('${roleName}', ' ', '-')" name="key_roleName" />
-		<var method="StringUtil#lowerCase('${key_roleName}')" name="key_roleName" />
+		Click(locator1 = "Icon#MOVE_TO_RECYCLE_BIN");
 
-		<execute function="Click" locator1="MessageBoards#CATEGORY_LIST_ACTIONS" />
+		AssertElementPresent(locator1 = "Message#SUCCESS");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
-			<var name="key_menuItem" value="Permissions" />
-		</execute>
+		RecycleBin.emptyCP();
+	}
 
-		<execute macro="IFrame#selectPermissionsFrame" />
+	macro viewCategoryDefaultPG {
+		var key_categoryName = "${categoryName}";
 
-		<execute function="Uncheck" locator1="Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX" />
+		AssertTextEquals(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-		<execute macro="Button#clickSave" />
+		AssertElementNotPresent(
+			locator1 = "MessageBoards#CATEGORY_TABLE_CATEGORY_SUBCATEGORY_GENERIC"
+		);
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="Permissions#SUCCESS_MESSAGE" value1="Your request completed successfully." />
+		var key_subcategoriesNumber = "${subcategoriesNumber}";
+		var key_threadsNumber = "${threadsNumber}";
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		AssertTextEquals.assertPartialText(
+			locator1 = "MessageBoards#CATEGORY_LIST_SUBCATEGORIES",
+			value1 = "0"
+		);
 
-	<command name="subscribePG">
-		<var name="key_categoryName" value="${categoryName}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "MessageBoards#CATEGORY_LIST_THREADS",
+			value1 = "0"
+		);
 
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "MessageBoards#CATEGORY_LIST_POSTS",
+			value1 = "0"
+		);
 
-		<execute function="Click" locator1="MessageBoards#CATEGORY_LIST_ACTIONS" />
+		Click(locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Subscribe">
-			<var name="key_menuItem" value="Subscribe" />
-		</execute>
+		AssertTextEquals(locator1 = "Portlet#HEADER_TITLE", value1 = "${categoryName}");
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		AssertElementNotPresent(locator1 = "MessageBoards#SUBCATEGORY_TABLE_PANEL");
 
-	<command name="tearDownCP">
-		<execute macro="Navigator#openURL" />
+		AssertElementNotPresent(
+			locator1 = "MessageBoards#SUBCATEGORY_TABLE_CATEGORY_GENERIC"
+		);
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Message Boards" />
-		</execute>
+	macro viewCP {
+		var key_categoryName = "${categoryName}";
 
-		<execute function="AssertElementPresent" locator1="Checkbox#SELECT_ALL" />
+		AssertElementPresent(locator1 = "MessageBoards#CATEGORY_LIST_CHECKBOX");
 
-		<execute function="Check#checkAll" locator1="Checkbox#SELECT_ALL" />
+		AssertTextEquals(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-		<execute function="Click" locator1="Icon#MOVE_TO_RECYCLE_BIN" />
+		var key_subcategoriesNumber = "${subcategoriesNumber}";
 
-		<execute function="AssertElementPresent" locator1="Message#SUCCESS" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "MessageBoards#CATEGORY_LIST_SUBCATEGORIES",
+			value1 = "${subcategoriesNumber}"
+		);
 
-		<execute macro="RecycleBin#emptyCP" />
-	</command>
+		var key_threadsNumber = "${threadsNumber}";
 
-	<command name="viewCategoryDefaultPG">
-		<var name="key_categoryName" value="${categoryName}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "MessageBoards#CATEGORY_LIST_THREADS",
+			value1 = "${threadsNumber}"
+		);
 
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_CATEGORY_SUBCATEGORY_GENERIC" />
+		AssertElementPresent(locator1 = "MessageBoards#CATEGORY_LIST_ACTIONS");
 
-		<var name="key_subcategoriesNumber" value="${subcategoriesNumber}" />
-		<var name="key_threadsNumber" value="${threadsNumber}" />
+		AssertClick(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="MessageBoards#CATEGORY_LIST_SUBCATEGORIES" value1="0" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="MessageBoards#CATEGORY_LIST_THREADS" value1="0" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="MessageBoards#CATEGORY_LIST_POSTS" value1="0" />
+		AssertTextEquals(locator1 = "Portlet#HEADER", value1 = "${categoryName}");
+	}
 
-		<execute function="Click" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" />
+	macro viewDefaultPG {
+		AssertElementNotPresent(locator1 = "MessageBoards#CATEGORY_TABLE_PANEL");
 
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORIES_NAME_HEADER" value1="${categoryName}" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#SUBCATEGORY_TABLE_PANEL" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#SUBCATEGORY_TABLE_CATEGORY_GENERIC" />
-	</command>
+		AssertElementNotPresent(
+			locator1 = "MessageBoards#CATEGORY_TABLE_CATEGORY_GENERIC"
+		);
+	}
 
-	<command name="viewCP">
-		<var name="key_categoryName" value="${categoryName}" />
+	macro viewMySubscriptionsPG {
+		AssertClick(
+			locator1 = "MessageBoards#NAVIGATION_MY_SUBSCRIPTIONS",
+			value1 = "My Subscriptions"
+		);
 
-		<execute function="AssertElementPresent" locator1="MessageBoards#CATEGORY_LIST_CHECKBOX" />
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
+		var parentcategory1 = StringUtil.upperCase("${parentcategory1}");
 
-		<var name="key_subcategoriesNumber" value="${subcategoriesNumber}" />
+		AssertTextEquals(
+			locator1 = "MessageBoardsMySubscriptions#CATEGORY_TABLE_CATEGORY_BREADCRUMB_1",
+			value1 = "${parentcategory1}"
+		);
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="MessageBoards#CATEGORY_LIST_SUBCATEGORIES" value1="${subcategoriesNumber}" />
+		var parentcategory2 = StringUtil.upperCase("${parentcategory2}");
 
-		<var name="key_threadsNumber" value="${threadsNumber}" />
+		AssertTextEquals(
+			locator1 = "MessageBoardsMySubscriptions#CATEGORY_TABLE_CATEGORY_BREADCRUMB_2",
+			value1 = "${parentcategory2}"
+		);
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="MessageBoards#CATEGORY_LIST_THREADS" value1="${threadsNumber}" />
-		<execute function="AssertElementPresent" locator1="MessageBoards#CATEGORY_LIST_ACTIONS" />
+		var subscribedThread = StringUtil.upperCase("${subscribedThread}");
 
-		<execute function="AssertClick" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "MessageBoardsMySubscriptions#CATEGORY_TABLE_CATEGORY_BREADCRUMB_3",
+			value1 = "${subscribedThread}"
+		);
+	}
 
-		<execute function="AssertTextEquals" locator1="Portlet#HEADER" value1="${categoryName}" />
-	</command>
+	macro viewNoPG {
+		var key_categoryName = "${categoryName}";
 
-	<command name="viewDefaultPG">
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_PANEL" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_CATEGORY_GENERIC" />
-	</command>
+		AssertTextNotPresent(value1 = "${categoryName}");
 
-	<command name="viewMySubscriptionsPG">
-		<execute function="AssertClick" locator1="MessageBoards#NAVIGATION_MY_SUBSCRIPTIONS" value1="My Subscriptions" />
+		AssertElementNotPresent(locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY");
 
-		<var method="StringUtil#upperCase('${parentcategory1}')" name="parentcategory1" />
+		AssertElementNotPresent(locator1 = "MessageBoards#CATEGORY_TABLE_CATEGORIES");
 
-		<execute function="AssertTextEquals" locator1="MessageBoardsMySubscriptions#CATEGORY_TABLE_CATEGORY_BREADCRUMB_1" value1="${parentcategory1}" />
+		AssertElementNotPresent(locator1 = "MessageBoards#CATEGORY_TABLE_THREADS");
 
-		<var method="StringUtil#upperCase('${parentcategory2}')" name="parentcategory2" />
+		AssertElementNotPresent(locator1 = "MessageBoards#CATEGORY_TABLE_POSTS");
 
-		<execute function="AssertTextEquals" locator1="MessageBoardsMySubscriptions#CATEGORY_TABLE_CATEGORY_BREADCRUMB_2" value1="${parentcategory2}" />
+		AssertElementNotPresent(locator1 = "MessageBoards#CATEGORY_TABLE_ACTIONS");
+	}
 
-		<var method="StringUtil#upperCase('${subscribedThread}')" name="subscribedThread" />
+	macro viewPG {
+		var key_categoryName = "${categoryName}";
+		var key_threadsNumber = "${threadsNumber}";
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="MessageBoardsMySubscriptions#CATEGORY_TABLE_CATEGORY_BREADCRUMB_3" value1="${subscribedThread}" />
-	</command>
+		AssertTextEquals(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-	<command name="viewNoCP">
-		<var name="key_categoryName" value="${categoryName}" />
+		if (isSet(threadsNumber)) {
+			var key_threadsNumber = "${threadsNumber}";
 
-		<execute function="AssertTextNotPresent" value1="${categoryName}" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CHECKBOX" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CATEGORY" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CATEGORIES" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_THREADS" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_POSTS" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_ACTIONS" />
-	</command>
+			AssertTextEquals(
+				locator1 = "MessageBoards#CATEGORY_LIST_THREADS",
+				value1 = "${threadsNumber} Threads"
+			);
+		}
+		else if ("${threadPostCount}" == "1") {
+			AssertTextEquals(
+				locator1 = "MessageBoards#CATEGORY_LIST_THREADS",
+				value1 = "1 Thread"
+			);
+		}
 
-	<command name="viewNoPG">
-		<var name="key_categoryName" value="${categoryName}" />
+		if ("categoryDescriptionEnabled" == "true") {
+			var key_categoryDescription = "${categoryDescription}";
 
-		<execute function="AssertTextNotPresent" value1="${categoryName}" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_CATEGORIES" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_THREADS" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_POSTS" />
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_ACTIONS" />
-	</command>
+			AssertTextEquals(
+				locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY_DESCRIPTION",
+				value1 = "${categoryDescription}"
+			);
+		}
+		else {
+			AssertClick(
+				locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+				value1 = "${categoryName}"
+			);
+		}
 
-	<command name="viewNoSubcategoryCP">
-		<var name="key_categoryName" value="${categoryName}" />
-		<var name="key_subCategoryName" value="${subCategoryName}" />
+		AssertTextEquals(locator1 = "Portlet#HEADER_TITLE", value1 = "${categoryName}");
+	}
 
-		<execute function="AssertElementPresent" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CHECKBOX" />
+	macro viewSubcategoryFromSubcategoryPG {
+		var key_categoryName = "${categoryName}";
+		var key_subCategoryDescription = "${subCategoryDescription}";
+		var key_subCategoryName = "${subCategoryName}";
 
-		<execute function="AssertClick" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CATEGORY" value1="${categoryName}" />
+		AssertTextEquals(locator1 = "Portlet#HEADER_TITLE", value1 = "${categoryName}");
 
-		<execute function="AssertElementNotPresent" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CATEGORY" />
-	</command>
+		AssertTextEquals(
+			locator1 = "MessageBoards#CATEGORY_LIST_SUBCATEGORY",
+			value1 = "${subCategoryName}"
+		);
 
-	<command name="viewPG">
-		<var name="key_categoryName" value="${categoryName}" />
-		<var name="key_threadsNumber" value="${threadsNumber}" />
+		AssertTextEquals(
+			locator1 = "MessageBoards#CATEGORY_LIST_SUBCATEGORY_DESCRIPTION",
+			value1 = "${subCategoryDescription}"
+		);
 
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
+		Click(locator1 = "MessageBoards#CATEGORY_LIST_SUBCATEGORY");
 
-		<if>
-			<isset var="threadsNumber" />
-			<then>
-				<var name="key_threadsNumber" value="${threadsNumber}" />
+		AssertTextEquals(
+			locator1 = "Portlet#HEADER_TITLE",
+			value1 = "${subCategoryName}"
+		);
+	}
 
-				<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_THREADS" value1="${threadsNumber} Threads" />
-			</then>
-			<elseif>
-				<equals arg1="${threadPostCount}" arg2="1" />
-				<then>
-					<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_THREADS" value1="1 Thread" />
-				</then>
-			</elseif>
-		</if>
+	macro viewSubcategoryPG {
+		var key_categoryName = "${categoryName}";
 
-		<if>
-			<equals arg1="categoryDescriptionEnabled" arg2="true" />
-			<then>
-				<var name="key_categoryDescription" value="${categoryDescription}" />
+		AssertClick(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${categoryName}"
+		);
 
-				<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_CATEGORY_DESCRIPTION" value1="${categoryDescription}" />
-			</then>
-			<else>
-				<execute function="AssertClick" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
-			</else>
-		</if>
+		var key_categoryDescription = "${subCategoryDescription}";
+		var key_categoryName = "${subCategoryName}";
+		var key_threadsNumber = "${threadsNumber}";
 
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORIES_NAME_HEADER" value1="${categoryName}" />
-	</command>
+		AssertTextEquals(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
+			value1 = "${subCategoryName}"
+		);
 
-	<command name="viewStatisticsCategoriesCountPG">
-		<execute function="AssertClick" locator1="MessageBoards#NAVIGATION_STATISTICS" value1="Statistics" />
+		AssertTextEquals(
+			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY_DESCRIPTION",
+			value1 = "${subCategoryDescription}"
+		);
 
-		<if>
-			<condition function="IsElementPresent" locator1="MessageBoardsStatistics#GENERAL_DROPDOWN_COLLAPSED" />
-			<then>
-				<execute function="AssertClick" locator1="MessageBoardsStatistics#GENERAL_DROPDOWN" value1="General" />
-			</then>
-		</if>
+		AssertTextEquals.assertPartialText(
+			locator1 = "MessageBoards#CATEGORY_LIST_THREADS",
+			value1 = "${threadsNumber}"
+		);
 
-		<execute function="AssertTextEquals" locator1="MessageBoardsStatistics#GENERAL_NUMBER_OF_CATEGORIES" value1="${categoriesNumber}" />
-	</command>
+		AssertTextEquals.assertPartialText(
+			locator1 = "MessageBoards#CATEGORY_LIST_POSTS",
+			value1 = "${threadsNumber}"
+		);
 
-	<command name="viewSubcategoryCP">
-		<var name="key_categoryName" value="${categoryName}" />
-		<var name="key_subCategoryName" value="${subCategoryName}" />
+		AssertElementPresent(locator1 = "MessageBoards#CATEGORY_LIST_ACTIONS");
 
-		<execute function="AssertElementPresent" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CHECKBOX" />
-		<execute function="AssertClick" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CATEGORY" value1="${categoryName}" />
+		Click(locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY");
 
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CATEGORY" value1="${subCategoryName} ${subCategoryDescription}" />
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CATEGORIES" value1="0" />
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_THREADS" value1="0" />
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_POSTS" value1="0" />
-		<execute function="AssertElementPresent" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_ACTIONS" />
-
-		<execute function="Click" locator1="MessageBoards#CATEGORY_TABLE_ADMIN_CATEGORY" />
-
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORIES_NAME_HEADER" value1="${subCategoryName}" />
-	</command>
-
-	<command name="viewSubcategoryFromSubcategoryPG">
-		<var name="key_categoryName" value="${categoryName}" />
-		<var name="key_subCategoryDescription" value="${subCategoryDescription}" />
-		<var name="key_subCategoryName" value="${subCategoryName}" />
-
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORIES_NAME_HEADER" value1="${categoryName}" />
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_SUBCATEGORY" value1="${subCategoryName}" />
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_SUBCATEGORY_DESCRIPTION" value1="${subCategoryDescription}" />
-
-		<execute function="Click" locator1="MessageBoards#CATEGORY_LIST_SUBCATEGORY" />
-
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORIES_NAME_HEADER" value1="${subCategoryName}" />
-	</command>
-
-	<command name="viewSubcategoryPG">
-		<var name="key_categoryName" value="${categoryName}" />
-
-		<execute function="AssertClick" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${categoryName}" />
-
-		<var name="key_categoryDescription" value="${subCategoryDescription}" />
-		<var name="key_categoryName" value="${subCategoryName}" />
-		<var name="key_threadsNumber" value="${threadsNumber}" />
-
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" value1="${subCategoryName}" />
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORY_LIST_CATEGORY_DESCRIPTION" value1="${subCategoryDescription}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="MessageBoards#CATEGORY_LIST_THREADS" value1="${threadsNumber}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="MessageBoards#CATEGORY_LIST_POSTS" value1="${threadsNumber}" />
-		<execute function="AssertElementPresent" locator1="MessageBoards#CATEGORY_LIST_ACTIONS" />
-
-		<execute function="Click" locator1="MessageBoards#CATEGORY_LIST_CATEGORY" />
-
-		<execute function="AssertTextEquals" locator1="MessageBoards#CATEGORIES_NAME_HEADER" value1="${subCategoryName}" />
-	</command>
-</definition>
+		AssertTextEquals(
+			locator1 = "Portlet#HEADER_TITLE",
+			value1 = "${subCategoryName}"
+		);
+	}
+}

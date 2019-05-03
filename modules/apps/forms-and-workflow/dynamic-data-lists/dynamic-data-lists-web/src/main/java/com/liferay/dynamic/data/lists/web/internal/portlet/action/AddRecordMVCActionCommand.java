@@ -75,6 +75,7 @@ public class AddRecordMVCActionCommand extends BaseMVCActionCommand {
 		throws PortalException {
 
 		long recordSetId = ParamUtil.getLong(actionRequest, "recordSetId");
+
 		long formDDMTemplateId = ParamUtil.getLong(
 			actionRequest, "formDDMTemplateId");
 

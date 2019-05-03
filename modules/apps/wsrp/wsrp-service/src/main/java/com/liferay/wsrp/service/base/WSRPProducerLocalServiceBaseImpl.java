@@ -21,7 +21,6 @@ import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -47,10 +46,10 @@ import com.liferay.portal.kernel.service.persistence.GroupPersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutPersistence;
 import com.liferay.portal.kernel.service.persistence.PortletPersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
-
 import com.liferay.wsrp.model.WSRPProducer;
 import com.liferay.wsrp.service.WSRPProducerLocalService;
 import com.liferay.wsrp.service.persistence.WSRPConsumerPersistence;
@@ -72,17 +71,17 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.wsrp.service.impl.WSRPProducerLocalServiceImpl
- * @see com.liferay.wsrp.service.WSRPProducerLocalServiceUtil
  * @generated
  */
 @ProviderType
 public abstract class WSRPProducerLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements WSRPProducerLocalService,
-		IdentifiableOSGiService {
+	extends BaseLocalServiceImpl
+	implements WSRPProducerLocalService, IdentifiableOSGiService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.wsrp.service.WSRPProducerLocalServiceUtil} to access the wsrp producer local service.
+	 * Never modify or reference this class directly. Use <code>WSRPProducerLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.wsrp.service.WSRPProducerLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -106,6 +105,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @return the new wsrp producer
 	 */
 	@Override
+	@Transactional(enabled = false)
 	public WSRPProducer createWSRPProducer(long wsrpProducerId) {
 		return wsrpProducerPersistence.create(wsrpProducerId);
 	}
@@ -121,6 +121,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	@Override
 	public WSRPProducer deleteWSRPProducer(long wsrpProducerId)
 		throws PortalException {
+
 		return wsrpProducerPersistence.remove(wsrpProducerId);
 	}
 
@@ -135,6 +136,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	@Override
 	public WSRPProducer deleteWSRPProducer(WSRPProducer wsrpProducer)
 		throws PortalException {
+
 		return wsrpProducerPersistence.remove(wsrpProducer);
 	}
 
@@ -142,8 +144,8 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(WSRPProducer.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			WSRPProducer.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -161,7 +163,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.wsrp.model.impl.WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.wsrp.model.impl.WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -170,17 +172,18 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return wsrpProducerPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return wsrpProducerPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.wsrp.model.impl.WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.wsrp.model.impl.WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -190,10 +193,12 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return wsrpProducerPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return wsrpProducerPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -215,10 +220,11 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return wsrpProducerPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return wsrpProducerPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
@@ -234,8 +240,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @return the matching wsrp producer, or <code>null</code> if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer fetchWSRPProducerByUuidAndGroupId(String uuid,
-		long groupId) {
+	public WSRPProducer fetchWSRPProducerByUuidAndGroupId(
+		String uuid, long groupId) {
+
 		return wsrpProducerPersistence.fetchByUUID_G(uuid, groupId);
 	}
 
@@ -249,12 +256,14 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	@Override
 	public WSRPProducer getWSRPProducer(long wsrpProducerId)
 		throws PortalException {
+
 		return wsrpProducerPersistence.findByPrimaryKey(wsrpProducerId);
 	}
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
 		actionableDynamicQuery.setBaseLocalService(wsrpProducerLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
@@ -266,10 +275,14 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(wsrpProducerLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			wsrpProducerLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(WSRPProducer.class);
 
@@ -281,6 +294,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
+
 		actionableDynamicQuery.setBaseLocalService(wsrpProducerLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(WSRPProducer.class);
@@ -291,49 +305,64 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
-		final ExportActionableDynamicQuery exportActionableDynamicQuery = new ExportActionableDynamicQuery() {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
 				@Override
 				public long performCount() throws PortalException {
-					ManifestSummary manifestSummary = portletDataContext.getManifestSummary();
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
 
 					StagedModelType stagedModelType = getStagedModelType();
 
 					long modelAdditionCount = super.performCount();
 
-					manifestSummary.addModelAdditionCount(stagedModelType,
-						modelAdditionCount);
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
 
-					long modelDeletionCount = ExportImportHelperUtil.getModelDeletionCount(portletDataContext,
-							stagedModelType);
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
 
-					manifestSummary.addModelDeletionCount(stagedModelType,
-						modelDeletionCount);
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
 
 					return modelAdditionCount;
 				}
+
 			};
 
 		initActionableDynamicQuery(exportActionableDynamicQuery);
 
-		exportActionableDynamicQuery.setAddCriteriaMethod(new ActionableDynamicQuery.AddCriteriaMethod() {
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
 				@Override
 				public void addCriteria(DynamicQuery dynamicQuery) {
-					portletDataContext.addDateRangeCriteria(dynamicQuery,
-						"modifiedDate");
+					portletDataContext.addDateRangeCriteria(
+						dynamicQuery, "modifiedDate");
 				}
+
 			});
 
-		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<WSRPProducer>() {
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<WSRPProducer>() {
+
 				@Override
 				public void performAction(WSRPProducer wsrpProducer)
 					throws PortalException {
-					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
-						wsrpProducer);
+
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, wsrpProducer);
 				}
+
 			});
-		exportActionableDynamicQuery.setStagedModelType(new StagedModelType(
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
 				PortalUtil.getClassNameId(WSRPProducer.class.getName())));
 
 		return exportActionableDynamicQuery;
@@ -345,12 +374,15 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
-		return wsrpProducerLocalService.deleteWSRPProducer((WSRPProducer)persistedModel);
+
+		return wsrpProducerLocalService.deleteWSRPProducer(
+			(WSRPProducer)persistedModel);
 	}
 
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return wsrpProducerPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -362,8 +394,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @return the matching wsrp producers, or an empty list if no matches were found
 	 */
 	@Override
-	public List<WSRPProducer> getWSRPProducersByUuidAndCompanyId(String uuid,
-		long companyId) {
+	public List<WSRPProducer> getWSRPProducersByUuidAndCompanyId(
+		String uuid, long companyId) {
+
 		return wsrpProducerPersistence.findByUuid_C(uuid, companyId);
 	}
 
@@ -378,11 +411,12 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @return the range of matching wsrp producers, or an empty list if no matches were found
 	 */
 	@Override
-	public List<WSRPProducer> getWSRPProducersByUuidAndCompanyId(String uuid,
-		long companyId, int start, int end,
+	public List<WSRPProducer> getWSRPProducersByUuidAndCompanyId(
+		String uuid, long companyId, int start, int end,
 		OrderByComparator<WSRPProducer> orderByComparator) {
-		return wsrpProducerPersistence.findByUuid_C(uuid, companyId, start,
-			end, orderByComparator);
+
+		return wsrpProducerPersistence.findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -394,8 +428,10 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @throws PortalException if a matching wsrp producer could not be found
 	 */
 	@Override
-	public WSRPProducer getWSRPProducerByUuidAndGroupId(String uuid,
-		long groupId) throws PortalException {
+	public WSRPProducer getWSRPProducerByUuidAndGroupId(
+			String uuid, long groupId)
+		throws PortalException {
+
 		return wsrpProducerPersistence.findByUUID_G(uuid, groupId);
 	}
 
@@ -403,7 +439,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * Returns a range of all the wsrp producers.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.wsrp.model.impl.WSRPProducerModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.wsrp.model.impl.WSRPProducerModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of wsrp producers
@@ -442,7 +478,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 *
 	 * @return the wsrp consumer local service
 	 */
-	public com.liferay.wsrp.service.WSRPConsumerLocalService getWSRPConsumerLocalService() {
+	public com.liferay.wsrp.service.WSRPConsumerLocalService
+		getWSRPConsumerLocalService() {
+
 		return wsrpConsumerLocalService;
 	}
 
@@ -452,7 +490,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @param wsrpConsumerLocalService the wsrp consumer local service
 	 */
 	public void setWSRPConsumerLocalService(
-		com.liferay.wsrp.service.WSRPConsumerLocalService wsrpConsumerLocalService) {
+		com.liferay.wsrp.service.WSRPConsumerLocalService
+			wsrpConsumerLocalService) {
+
 		this.wsrpConsumerLocalService = wsrpConsumerLocalService;
 	}
 
@@ -472,6 +512,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 */
 	public void setWSRPConsumerPersistence(
 		WSRPConsumerPersistence wsrpConsumerPersistence) {
+
 		this.wsrpConsumerPersistence = wsrpConsumerPersistence;
 	}
 
@@ -480,7 +521,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 *
 	 * @return the wsrp consumer portlet local service
 	 */
-	public com.liferay.wsrp.service.WSRPConsumerPortletLocalService getWSRPConsumerPortletLocalService() {
+	public com.liferay.wsrp.service.WSRPConsumerPortletLocalService
+		getWSRPConsumerPortletLocalService() {
+
 		return wsrpConsumerPortletLocalService;
 	}
 
@@ -490,7 +533,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @param wsrpConsumerPortletLocalService the wsrp consumer portlet local service
 	 */
 	public void setWSRPConsumerPortletLocalService(
-		com.liferay.wsrp.service.WSRPConsumerPortletLocalService wsrpConsumerPortletLocalService) {
+		com.liferay.wsrp.service.WSRPConsumerPortletLocalService
+			wsrpConsumerPortletLocalService) {
+
 		this.wsrpConsumerPortletLocalService = wsrpConsumerPortletLocalService;
 	}
 
@@ -510,6 +555,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 */
 	public void setWSRPConsumerPortletPersistence(
 		WSRPConsumerPortletPersistence wsrpConsumerPortletPersistence) {
+
 		this.wsrpConsumerPortletPersistence = wsrpConsumerPortletPersistence;
 	}
 
@@ -529,6 +575,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 */
 	public void setWSRPProducerLocalService(
 		WSRPProducerLocalService wsrpProducerLocalService) {
+
 		this.wsrpProducerLocalService = wsrpProducerLocalService;
 	}
 
@@ -548,6 +595,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 */
 	public void setWSRPProducerPersistence(
 		WSRPProducerPersistence wsrpProducerPersistence) {
+
 		this.wsrpProducerPersistence = wsrpProducerPersistence;
 	}
 
@@ -556,7 +604,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 *
 	 * @return the counter local service
 	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
+	public com.liferay.counter.kernel.service.CounterLocalService
+		getCounterLocalService() {
+
 		return counterLocalService;
 	}
 
@@ -566,7 +616,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @param counterLocalService the counter local service
 	 */
 	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
+		com.liferay.counter.kernel.service.CounterLocalService
+			counterLocalService) {
+
 		this.counterLocalService = counterLocalService;
 	}
 
@@ -575,7 +627,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 *
 	 * @return the class name local service
 	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService getClassNameLocalService() {
+	public com.liferay.portal.kernel.service.ClassNameLocalService
+		getClassNameLocalService() {
+
 		return classNameLocalService;
 	}
 
@@ -585,7 +639,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @param classNameLocalService the class name local service
 	 */
 	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService) {
+		com.liferay.portal.kernel.service.ClassNameLocalService
+			classNameLocalService) {
+
 		this.classNameLocalService = classNameLocalService;
 	}
 
@@ -605,6 +661,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 */
 	public void setClassNamePersistence(
 		ClassNamePersistence classNamePersistence) {
+
 		this.classNamePersistence = classNamePersistence;
 	}
 
@@ -613,7 +670,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 *
 	 * @return the group local service
 	 */
-	public com.liferay.portal.kernel.service.GroupLocalService getGroupLocalService() {
+	public com.liferay.portal.kernel.service.GroupLocalService
+		getGroupLocalService() {
+
 		return groupLocalService;
 	}
 
@@ -624,6 +683,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 */
 	public void setGroupLocalService(
 		com.liferay.portal.kernel.service.GroupLocalService groupLocalService) {
+
 		this.groupLocalService = groupLocalService;
 	}
 
@@ -650,7 +710,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 *
 	 * @return the layout local service
 	 */
-	public com.liferay.portal.kernel.service.LayoutLocalService getLayoutLocalService() {
+	public com.liferay.portal.kernel.service.LayoutLocalService
+		getLayoutLocalService() {
+
 		return layoutLocalService;
 	}
 
@@ -660,7 +722,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @param layoutLocalService the layout local service
 	 */
 	public void setLayoutLocalService(
-		com.liferay.portal.kernel.service.LayoutLocalService layoutLocalService) {
+		com.liferay.portal.kernel.service.LayoutLocalService
+			layoutLocalService) {
+
 		this.layoutLocalService = layoutLocalService;
 	}
 
@@ -687,7 +751,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 *
 	 * @return the portlet local service
 	 */
-	public com.liferay.portal.kernel.service.PortletLocalService getPortletLocalService() {
+	public com.liferay.portal.kernel.service.PortletLocalService
+		getPortletLocalService() {
+
 		return portletLocalService;
 	}
 
@@ -697,7 +763,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @param portletLocalService the portlet local service
 	 */
 	public void setPortletLocalService(
-		com.liferay.portal.kernel.service.PortletLocalService portletLocalService) {
+		com.liferay.portal.kernel.service.PortletLocalService
+			portletLocalService) {
+
 		this.portletLocalService = portletLocalService;
 	}
 
@@ -724,7 +792,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 *
 	 * @return the resource local service
 	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService getResourceLocalService() {
+	public com.liferay.portal.kernel.service.ResourceLocalService
+		getResourceLocalService() {
+
 		return resourceLocalService;
 	}
 
@@ -734,7 +804,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 * @param resourceLocalService the resource local service
 	 */
 	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService) {
+		com.liferay.portal.kernel.service.ResourceLocalService
+			resourceLocalService) {
+
 		this.resourceLocalService = resourceLocalService;
 	}
 
@@ -743,7 +815,9 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 *
 	 * @return the user local service
 	 */
-	public com.liferay.portal.kernel.service.UserLocalService getUserLocalService() {
+	public com.liferay.portal.kernel.service.UserLocalService
+		getUserLocalService() {
+
 		return userLocalService;
 	}
 
@@ -754,6 +828,7 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	 */
 	public void setUserLocalService(
 		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
+
 		this.userLocalService = userLocalService;
 	}
 
@@ -776,8 +851,8 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 	}
 
 	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.wsrp.model.WSRPProducer",
-			wsrpProducerLocalService);
+		persistedModelLocalServiceRegistry.register(
+			"com.liferay.wsrp.model.WSRPProducer", wsrpProducerLocalService);
 	}
 
 	public void destroy() {
@@ -817,8 +892,8 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
@@ -827,42 +902,89 @@ public abstract class WSRPProducerLocalServiceBaseImpl
 		}
 	}
 
-	@BeanReference(type = com.liferay.wsrp.service.WSRPConsumerLocalService.class)
-	protected com.liferay.wsrp.service.WSRPConsumerLocalService wsrpConsumerLocalService;
+	@BeanReference(
+		type = com.liferay.wsrp.service.WSRPConsumerLocalService.class
+	)
+	protected com.liferay.wsrp.service.WSRPConsumerLocalService
+		wsrpConsumerLocalService;
+
 	@BeanReference(type = WSRPConsumerPersistence.class)
 	protected WSRPConsumerPersistence wsrpConsumerPersistence;
-	@BeanReference(type = com.liferay.wsrp.service.WSRPConsumerPortletLocalService.class)
-	protected com.liferay.wsrp.service.WSRPConsumerPortletLocalService wsrpConsumerPortletLocalService;
+
+	@BeanReference(
+		type = com.liferay.wsrp.service.WSRPConsumerPortletLocalService.class
+	)
+	protected com.liferay.wsrp.service.WSRPConsumerPortletLocalService
+		wsrpConsumerPortletLocalService;
+
 	@BeanReference(type = WSRPConsumerPortletPersistence.class)
 	protected WSRPConsumerPortletPersistence wsrpConsumerPortletPersistence;
+
 	@BeanReference(type = WSRPProducerLocalService.class)
 	protected WSRPProducerLocalService wsrpProducerLocalService;
+
 	@BeanReference(type = WSRPProducerPersistence.class)
 	protected WSRPProducerPersistence wsrpProducerPersistence;
-	@ServiceReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ClassNameLocalService.class)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService;
+
+	@ServiceReference(
+		type = com.liferay.counter.kernel.service.CounterLocalService.class
+	)
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.ClassNameLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ClassNameLocalService
+		classNameLocalService;
+
 	@ServiceReference(type = ClassNamePersistence.class)
 	protected ClassNamePersistence classNamePersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.GroupLocalService.class)
-	protected com.liferay.portal.kernel.service.GroupLocalService groupLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.GroupLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.GroupLocalService
+		groupLocalService;
+
 	@ServiceReference(type = GroupPersistence.class)
 	protected GroupPersistence groupPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.LayoutLocalService.class)
-	protected com.liferay.portal.kernel.service.LayoutLocalService layoutLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.LayoutLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.LayoutLocalService
+		layoutLocalService;
+
 	@ServiceReference(type = LayoutPersistence.class)
 	protected LayoutPersistence layoutPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.PortletLocalService.class)
-	protected com.liferay.portal.kernel.service.PortletLocalService portletLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.PortletLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.PortletLocalService
+		portletLocalService;
+
 	@ServiceReference(type = PortletPersistence.class)
 	protected PortletPersistence portletPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ResourceLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.UserLocalService.class)
-	protected com.liferay.portal.kernel.service.UserLocalService userLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.ResourceLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ResourceLocalService
+		resourceLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.UserLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.UserLocalService
+		userLocalService;
+
 	@ServiceReference(type = UserPersistence.class)
 	protected UserPersistence userPersistence;
+
 	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+	protected PersistedModelLocalServiceRegistry
+		persistedModelLocalServiceRegistry;
+
 }

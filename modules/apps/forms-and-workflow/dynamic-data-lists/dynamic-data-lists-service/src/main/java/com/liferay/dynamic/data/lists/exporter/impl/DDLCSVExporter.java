@@ -35,6 +35,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 
+import java.time.format.DateTimeFormatter;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -80,6 +82,8 @@ public class DDLCSVExporter extends BaseDDLExporter {
 
 		sb.append(LanguageUtil.get(locale, "status"));
 		sb.append(CharPool.COMMA);
+		sb.append(LanguageUtil.get(locale, "modified-date"));
+		sb.append(CharPool.COMMA);
 		sb.append(LanguageUtil.get(locale, "author"));
 		sb.append(StringPool.NEW_LINE);
 
@@ -114,6 +118,13 @@ public class DDLCSVExporter extends BaseDDLExporter {
 			}
 
 			sb.append(getStatusMessage(recordVersion.getStatus()));
+			sb.append(CharPool.COMMA);
+
+			DateTimeFormatter dateTimeFormatter = getDateTimeFormatter();
+
+			sb.append(
+				formatDate(recordVersion.getStatusDate(), dateTimeFormatter));
+
 			sb.append(CharPool.COMMA);
 			sb.append(CSVUtil.encode(recordVersion.getUserName()));
 

@@ -97,15 +97,21 @@ public class InvokerPortletImpl
 
 		String sesResponseId = encodeResponseKey(plid, portletId, languageId);
 
-		getResponses(session).remove(sesResponseId);
+		Map<String, InvokerPortletResponse> responses = getResponses(session);
+
+		responses.remove(sesResponseId);
 	}
 
 	public static void clearResponses(HttpSession session) {
-		getResponses(session).clear();
+		Map<String, InvokerPortletResponse> responses = getResponses(session);
+
+		responses.clear();
 	}
 
 	public static void clearResponses(PortletSession session) {
-		getResponses(session).clear();
+		Map<String, InvokerPortletResponse> responses = getResponses(session);
+
+		responses.clear();
 	}
 
 	public static String encodeResponseKey(
@@ -483,7 +489,7 @@ public class InvokerPortletImpl
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override

@@ -40,9 +40,7 @@ public class MyAccountWebUpgrade implements UpgradeStepRegistrator {
 				@Override
 				protected String[][] getRenamePortletIdsArray() {
 					return new String[][] {
-						new String[] {
-							"2", MyAccountPortletKeys.MY_ACCOUNT
-						}
+						{"2", MyAccountPortletKeys.MY_ACCOUNT}
 					};
 				}
 

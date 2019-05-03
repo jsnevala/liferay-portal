@@ -50,6 +50,7 @@ import com.liferay.portal.kernel.model.Image;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ImageLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -76,11 +77,12 @@ import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Daniel Kocsis
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -228,10 +230,15 @@ public class JournalArticleStagedModelDataHandler
 		groupId = MapUtil.getLong(groupIds, groupId);
 
 		String articleArticleId = referenceElement.attributeValue("article-id");
+
 		boolean preloaded = GetterUtil.getBoolean(
 			referenceElement.attributeValue("preloaded"));
 
-		JournalArticle existingArticle = fetchExistingArticle(
+		if (!preloaded) {
+			return super.validateMissingReference(uuid, groupId);
+		}
+
+		JournalArticle existingArticle = fetchExistingArticleWithParentGroups(
 			uuid, articleResourceUuid, groupId, articleArticleId, null, 0.0,
 			preloaded);
 
@@ -246,8 +253,8 @@ public class JournalArticleStagedModelDataHandler
 	protected boolean countStagedModel(
 		PortletDataContext portletDataContext, JournalArticle article) {
 
-		if (article.getClassNameId() ==
-				_portal.getClassNameId(DDMStructure.class)) {
+		if (article.getClassNameId() == _portal.getClassNameId(
+				DDMStructure.class)) {
 
 			return false;
 		}
@@ -275,7 +282,7 @@ public class JournalArticleStagedModelDataHandler
 		if ((latestArticle != null) &&
 			(latestArticle.getId() == article.getId())) {
 
-			articleElement.addAttribute("latest", String.valueOf(true));
+			articleElement.addAttribute("latest", Boolean.TRUE.toString());
 		}
 
 		if (article.getFolderId() !=
@@ -294,8 +301,8 @@ public class JournalArticleStagedModelDataHandler
 			portletDataContext, article, ddmStructure,
 			PortletDataContext.REFERENCE_TYPE_STRONG);
 
-		if (article.getClassNameId() !=
-				_portal.getClassNameId(DDMStructure.class)) {
+		if (article.getClassNameId() != _portal.getClassNameId(
+				DDMStructure.class)) {
 
 			DDMTemplate ddmTemplate = _ddmTemplateLocalService.getTemplate(
 				article.getGroupId(),
@@ -420,11 +427,16 @@ public class JournalArticleStagedModelDataHandler
 		boolean preloaded = GetterUtil.getBoolean(
 			referenceElement.attributeValue("preloaded"));
 
-		JournalArticle existingArticle = null;
+		JournalArticle existingArticle;
 
-		existingArticle = fetchExistingArticle(
-			uuid, articleResourceUuid, groupId, articleArticleId, null, 0.0,
-			preloaded);
+		if (!preloaded) {
+			existingArticle = fetchMissingReference(uuid, groupId);
+		}
+		else {
+			existingArticle = fetchExistingArticleWithParentGroups(
+				uuid, articleResourceUuid, groupId, articleArticleId, null, 0.0,
+				preloaded);
+		}
 
 		Map<String, String> articleArticleIds =
 			(Map<String, String>)portletDataContext.getNewPrimaryKeysMap(
@@ -440,6 +452,12 @@ public class JournalArticleStagedModelDataHandler
 			referenceElement.attributeValue("class-pk"));
 
 		articleIds.put(articleId, existingArticle.getId());
+
+		Map<String, Long> articleGroupIds =
+			(Map<String, Long>)portletDataContext.getNewPrimaryKeysMap(
+				JournalArticle.class + ".groupId");
+
+		articleGroupIds.put(articleArticleId, existingArticle.getGroupId());
 	}
 
 	@Override
@@ -469,12 +487,18 @@ public class JournalArticleStagedModelDataHandler
 
 		boolean autoArticleId = false;
 
-		if (Validator.isNumber(articleId) ||
-			(_journalArticleLocalService.fetchArticle(
-				portletDataContext.getScopeGroupId(), articleId,
-				JournalArticleConstants.VERSION_DEFAULT) != null)) {
-
+		if (Validator.isNumber(articleId)) {
 			autoArticleId = true;
+		}
+		else {
+			JournalArticle scopeJournalArticle =
+				_journalArticleLocalService.fetchArticle(
+					portletDataContext.getScopeGroupId(), articleId,
+					JournalArticleConstants.VERSION_DEFAULT);
+
+			if (scopeJournalArticle != null) {
+				autoArticleId = true;
+			}
 		}
 
 		Map<String, String> articleIds =
@@ -900,18 +924,18 @@ public class JournalArticleStagedModelDataHandler
 
 		JournalArticle existingArticle = null;
 
+		JournalArticleResource journalArticleResource =
+			_journalArticleResourceLocalService.
+				fetchJournalArticleResourceByUuidAndGroupId(
+					articleResourceUuid, groupId);
+
+		if (journalArticleResource != null) {
+			return _journalArticleLocalService.fetchLatestArticle(
+				journalArticleResource.getResourcePrimKey());
+		}
+
 		if (!preloaded) {
-			JournalArticleResource journalArticleResource =
-				_journalArticleResourceLocalService.
-					fetchJournalArticleResourceByUuidAndGroupId(
-						articleResourceUuid, groupId);
-
-			if (journalArticleResource == null) {
-				return null;
-			}
-
-			return _journalArticleLocalService.fetchArticle(
-				groupId, journalArticleResource.getArticleId());
+			return null;
 		}
 
 		if (Validator.isNotNull(newArticleId)) {
@@ -953,8 +977,55 @@ public class JournalArticleStagedModelDataHandler
 			return existingArticle;
 		}
 
+		if (version == 0.0) {
+			return _journalArticleLocalService.fetchArticle(groupId, articleId);
+		}
+
 		return _journalArticleLocalService.fetchArticle(
 			groupId, articleId, version);
+	}
+
+	protected JournalArticle fetchExistingArticleWithParentGroups(
+		String articleUuid, String articleResourceUuid, long groupId,
+		String articleId, String newArticleId, double version,
+		boolean preloaded) {
+
+		Group group = _groupLocalService.fetchGroup(groupId);
+
+		if (group == null) {
+			return null;
+		}
+
+		long companyId = group.getCompanyId();
+
+		while (group != null) {
+			JournalArticle article = fetchExistingArticle(
+				articleUuid, articleResourceUuid, group.getGroupId(), articleId,
+				newArticleId, version, preloaded);
+
+			if (article != null) {
+				return article;
+			}
+
+			try {
+				group = group.getParentGroup();
+			}
+			catch (PortalException pe) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(pe, pe);
+				}
+			}
+		}
+
+		Group companyGroup = _groupLocalService.fetchCompanyGroup(companyId);
+
+		if (companyGroup == null) {
+			return null;
+		}
+
+		return fetchExistingArticle(
+			articleUuid, articleResourceUuid, companyGroup.getGroupId(),
+			articleId, newArticleId, version, preloaded);
 	}
 
 	protected boolean isExpireAllArticleVersions(long companyId)
@@ -1012,9 +1083,9 @@ public class JournalArticleStagedModelDataHandler
 	}
 
 	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
 		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(model.class.name=com.liferay.journal.model.JournalArticle)",
-		unbind = "-"
+		target = "(model.class.name=com.liferay.journal.model.JournalArticle)"
 	)
 	protected void setExportImportContentProcessor(
 		ExportImportContentProcessor<String> exportImportContentProcessor) {
@@ -1029,8 +1100,9 @@ public class JournalArticleStagedModelDataHandler
 	}
 
 	/**
-	 * @deprecated As of 3.24.0, replaced by {@link
-	 *       #setExportImportContentProcessor(ExportImportContentProcessor)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #setExportImportContentProcessor(
+	 *             ExportImportContentProcessor)}
 	 */
 	@Deprecated
 	@Reference(unbind = "-")
@@ -1073,6 +1145,10 @@ public class JournalArticleStagedModelDataHandler
 		_userLocalService = userLocalService;
 	}
 
+	protected void unsetExportImportContentProcessor(
+		ExportImportContentProcessor<String> exportImportContentProcessor) {
+	}
+
 	protected void updateArticleVersions(JournalArticle article)
 		throws PortalException {
 
@@ -1085,13 +1161,20 @@ public class JournalArticleStagedModelDataHandler
 		for (JournalArticle curArticle : articles) {
 			boolean update = false;
 
-			if (article.isApproved() && (article.getExpirationDate() != null) &&
+			if ((article.isApproved() || article.isExpired()) &&
+				(article.getExpirationDate() != null) &&
 				expireAllArticleVersions &&
 				!Objects.equals(
 					curArticle.getExpirationDate(),
 					article.getExpirationDate())) {
 
-				curArticle.setExpirationDate(article.getExpirationDate());
+				Date expirationDate = article.getExpirationDate();
+
+				curArticle.setExpirationDate(expirationDate);
+
+				if (expirationDate.before(new Date())) {
+					curArticle.setStatus(WorkflowConstants.STATUS_EXPIRED);
+				}
 
 				update = true;
 			}
@@ -1115,6 +1198,10 @@ public class JournalArticleStagedModelDataHandler
 	private ConfigurationProvider _configurationProvider;
 	private DDMStructureLocalService _ddmStructureLocalService;
 	private DDMTemplateLocalService _ddmTemplateLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
 	private ImageLocalService _imageLocalService;
 	private ExportImportContentProcessor<String>
 		_journalArticleExportImportContentProcessor;

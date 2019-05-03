@@ -241,6 +241,7 @@ public class WSRPConsumerManagerImpl implements WSRPConsumerManager {
 		if (eventDescriptions != null) {
 			for (EventDescription eventDescription : eventDescriptions) {
 				QName[] aliases = eventDescription.getAliases();
+
 				QName qName = eventDescription.getName();
 
 				String key = PortletQNameUtil.getKey(

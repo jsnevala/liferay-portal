@@ -16,6 +16,7 @@ package com.liferay.portlet.messageboards.model.impl;
 
 import com.liferay.asset.kernel.service.AssetTagLocalServiceUtil;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.util.comparator.RepositoryModelTitleComparator;
 import com.liferay.message.boards.kernel.constants.MBConstants;
 import com.liferay.message.boards.kernel.model.MBCategory;
 import com.liferay.message.boards.kernel.model.MBCategoryConstants;
@@ -96,7 +97,8 @@ public class MBMessageImpl extends MBMessageBaseImpl {
 		if (attachmentsFolderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 			fileEntries = PortletFileRepositoryUtil.getPortletFileEntries(
 				getGroupId(), attachmentsFolderId,
-				WorkflowConstants.STATUS_APPROVED, start, end, null);
+				WorkflowConstants.STATUS_APPROVED, start, end,
+				new RepositoryModelTitleComparator<>(true));
 		}
 
 		return fileEntries;
@@ -195,7 +197,8 @@ public class MBMessageImpl extends MBMessageBaseImpl {
 		if (attachmentsFolderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 			fileEntries = PortletFileRepositoryUtil.getPortletFileEntries(
 				getGroupId(), attachmentsFolderId,
-				WorkflowConstants.STATUS_IN_TRASH, start, end, null);
+				WorkflowConstants.STATUS_IN_TRASH, start, end,
+				new RepositoryModelTitleComparator<>(true));
 		}
 
 		return fileEntries;

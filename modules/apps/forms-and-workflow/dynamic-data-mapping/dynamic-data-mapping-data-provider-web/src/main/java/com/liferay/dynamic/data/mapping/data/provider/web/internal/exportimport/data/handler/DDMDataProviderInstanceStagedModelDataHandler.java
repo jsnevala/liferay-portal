@@ -43,14 +43,15 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + DDMDataProviderPortletKeys.DYNAMIC_DATA_MAPPING_DATA_PROVIDER},
+	property = "javax.portlet.name=" + DDMDataProviderPortletKeys.DYNAMIC_DATA_MAPPING_DATA_PROVIDER,
 	service = StagedModelDataHandler.class
 )
 public class DDMDataProviderInstanceStagedModelDataHandler
 	extends BaseStagedModelDataHandler<DDMDataProviderInstance> {
 
-	public static final String[] CLASS_NAMES =
-		{DDMDataProviderInstance.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		DDMDataProviderInstance.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(DDMDataProviderInstance dataProviderInstance)

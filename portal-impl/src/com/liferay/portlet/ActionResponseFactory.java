@@ -29,8 +29,9 @@ import javax.servlet.http.HttpServletResponse;
 public class ActionResponseFactory {
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #create(ActionRequestImpl,
-	 *             HttpServletResponse, User, Layout)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #create(ActionRequestImpl, HttpServletResponse, User,
+	 *             Layout)}
 	 */
 	@Deprecated
 	public static ActionResponseImpl create(

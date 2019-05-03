@@ -793,7 +793,7 @@ public class DDMTemplateFinderImpl
 				sql, "[$CLASS_PK$]", getClassPKs(classPKs));
 			sql = StringUtil.replace(sql, "[$STATUS$]", getStatus(status));
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(CAST_TEXT(DDMTemplate.name))", StringPool.LIKE,
+				sql, "LOWER(CAST_TEXT(DDMTemplate.name))", StringPool.LIKE,
 				false, names);
 			sql = CustomSQLUtil.replaceKeywords(
 				sql, "DDMTemplate.description", StringPool.LIKE, false,
@@ -952,7 +952,7 @@ public class DDMTemplateFinderImpl
 				sql, "[$CLASS_PK$]", getClassPKs(classPKs));
 			sql = StringUtil.replace(sql, "[$STATUS$]", getStatus(status));
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(CAST_TEXT(DDMTemplate.name))", StringPool.LIKE,
+				sql, "LOWER(CAST_TEXT(DDMTemplate.name))", StringPool.LIKE,
 				false, names);
 			sql = CustomSQLUtil.replaceKeywords(
 				sql, "DDMTemplate.description", StringPool.LIKE, false,
@@ -1020,7 +1020,7 @@ public class DDMTemplateFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < classNameIds.length - 1; i++) {
+		for (int i = 0; i < (classNameIds.length - 1); i++) {
 			sb.append("classNameId = ? OR ");
 		}
 
@@ -1038,7 +1038,7 @@ public class DDMTemplateFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < classPKs.length - 1; i++) {
+		for (int i = 0; i < (classPKs.length - 1); i++) {
 			sb.append("classPK = ? OR ");
 		}
 
@@ -1056,7 +1056,7 @@ public class DDMTemplateFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < groupIds.length - 1; i++) {
+		for (int i = 0; i < (groupIds.length - 1); i++) {
 			sb.append("groupId = ? OR ");
 		}
 

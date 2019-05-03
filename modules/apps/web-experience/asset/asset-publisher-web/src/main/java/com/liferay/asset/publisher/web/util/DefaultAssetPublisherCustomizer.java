@@ -44,11 +44,9 @@ public class DefaultAssetPublisherCustomizer
 	public Integer getDelta(HttpServletRequest request) {
 		PortletPreferences portletPreferences = getPortletPreferences(request);
 
-		Integer delta = GetterUtil.getInteger(
+		return GetterUtil.getInteger(
 			portletPreferences.getValue("delta", null),
 			SearchContainer.DEFAULT_DELTA);
-
-		return delta;
 	}
 
 	@Override
@@ -70,10 +68,8 @@ public class DefaultAssetPublisherCustomizer
 
 		PortletPreferences portletPreferences = getPortletPreferences(request);
 
-		Boolean enablePermissions = GetterUtil.getBoolean(
+		return GetterUtil.getBoolean(
 			portletPreferences.getValue("enablePermissions", null), true);
-
-		return enablePermissions;
 	}
 
 	@Override

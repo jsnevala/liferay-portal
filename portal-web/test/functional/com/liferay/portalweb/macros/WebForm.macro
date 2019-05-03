@@ -1,117 +1,171 @@
-<definition>
-	<command name="populateFieldCheckBox">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+definition {
+	macro populateFieldCheckBox {
+		var key_wfFieldName = "${wfFieldName}";
 
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_CHECKBOX_FIELD_HEADER" value1="${wfFieldName}" />
-		<execute function="AssertElementPresent" locator1="WebForm#FORM_FIELDS_CHECKBOX_FIELD" />
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_CHECKBOX_FIELD_HEADER",
+			value1 = "${wfFieldName}"
+		);
 
-		<if>
-			<equals arg1="${wfFieldValue}" arg2="true" />
-			<then>
-				<execute function="Check" locator1="WebForm#FORM_FIELDS_CHECKBOX_FIELD" />
-			</then>
-			<elseif>
-				<equals arg1="${wfFieldValue}" arg2="false" />
-				<then>
-					<execute function="Uncheck" locator1="WebForm#FORM_FIELDS_CHECKBOX_FIELD" />
-				</then>
-			</elseif>
-		</if>
-	</command>
+		AssertElementPresent(locator1 = "WebForm#FORM_FIELDS_CHECKBOX_FIELD");
 
-	<command name="populateFieldOptions">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+		if ("${wfFieldValue}" == "true") {
+			Check(locator1 = "WebForm#FORM_FIELDS_CHECKBOX_FIELD");
+		}
+		else if ("${wfFieldValue}" == "false") {
+			Uncheck(locator1 = "WebForm#FORM_FIELDS_CHECKBOX_FIELD");
+		}
+	}
 
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_FIELD_HEADER" value1="${wfFieldName}" />
+	macro populateFieldOptions {
+		var key_wfFieldName = "${wfFieldName}";
 
-		<execute function="Select" locator1="WebForm#FORM_FIELDS_OPTIONS_FIELD" value1="${wfFieldValue}" />
-	</command>
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_FIELD_HEADER",
+			value1 = "${wfFieldName}"
+		);
 
-	<command name="populateFieldRadio">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+		Select(
+			locator1 = "WebForm#FORM_FIELDS_OPTIONS_FIELD",
+			value1 = "${wfFieldValue}"
+		);
+	}
 
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_FIELD_HEADER" value1="${wfFieldName}" />
+	macro populateFieldRadio {
+		var key_wfFieldName = "${wfFieldName}";
 
-		<var name="key_wfRadioFieldOption" value="${wfFieldValue}" />
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_FIELD_HEADER",
+			value1 = "${wfFieldName}"
+		);
 
-		<execute function="Click" locator1="WebForm#FORM_FIELDS_RADIO_FIELD_OPTION" />
-	</command>
+		var key_wfRadioFieldOption = "${wfFieldValue}";
 
-	<command name="populateFieldText">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+		Click(locator1 = "WebForm#FORM_FIELDS_RADIO_FIELD_OPTION");
+	}
 
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_FIELD_HEADER" value1="${wfFieldName}" />
-		<execute function="Type" locator1="WebForm#FORM_FIELDS_TEXT_FIELD" value1="${wfFieldValue}" />
-	</command>
+	macro populateFieldText {
+		var key_wfFieldName = "${wfFieldName}";
 
-	<command name="populateFieldTextBox">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_FIELD_HEADER",
+			value1 = "${wfFieldName}"
+		);
 
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_FIELD_HEADER" value1="${wfFieldName}" />
-		<execute function="Type" locator1="WebForm#FORM_FIELDS_TEXT_BOX_FIELD" value1="${wfFieldValue}" />
-	</command>
+		Type(locator1 = "WebForm#FORM_FIELDS_TEXT_FIELD", value1 = "${wfFieldValue}");
+	}
 
-	<command name="sendBlankPG">
-		<execute function="AssertClick" locator1="Button#SEND" value1="Send" />
+	macro populateFieldTextBox {
+		var key_wfFieldName = "${wfFieldName}";
 
-		<execute function="AssertElementNotPresent" locator1="Message#SUCCESS" />
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_FIELD_MANDATORY_MESSAGE" value1="This field is mandatory." />
-	</command>
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_FIELD_HEADER",
+			value1 = "${wfFieldName}"
+		);
 
-	<command name="sendPG">
-		<execute function="Click" locator1="WebForm#FORM_INFORMATION_TITLE" />
+		Type(
+			locator1 = "WebForm#FORM_FIELDS_TEXT_BOX_FIELD",
+			value1 = "${wfFieldValue}"
+		);
+	}
 
-		<execute function="AssertClick" locator1="Button#SEND" value1="Send" />
+	macro sendBlankPG {
+		AssertClick(locator1 = "Button#SEND", value1 = "Send");
 
-		<execute function="AssertElementPresent" locator1="Message#SUCCESS" />
-	</command>
+		AssertElementNotPresent(locator1 = "Message#SUCCESS");
 
-	<command name="viewFormFieldCheckBox">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_FIELD_MANDATORY_MESSAGE",
+			value1 = "This field is mandatory."
+		);
+	}
 
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_CHECKBOX_FIELD_HEADER" value1="${wfFieldName}" />
-		<execute function="AssertElementPresent" locator1="WebForm#FORM_FIELDS_CHECKBOX_FIELD" />
-	</command>
+	macro sendPG {
+		Click(locator1 = "WebForm#FORM_INFORMATION_TITLE");
 
-	<command name="viewFormFieldOptions">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+		AssertClick(locator1 = "Button#SEND", value1 = "Send");
 
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_FIELD_HEADER" value1="${wfFieldName}" />
-		<execute function="AssertElementPresent" locator1="WebForm#FORM_FIELDS_OPTIONS_FIELD" />
-	</command>
+		AssertElementPresent(locator1 = "Message#SUCCESS");
+	}
 
-	<command name="viewFormFieldParagraph">
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_PARAGRAPH_FIELD" value1="${wfParagraphFieldText}" />
-	</command>
+	macro viewFormFieldCheckBox {
+		var key_wfFieldName = "${wfFieldName}";
 
-	<command name="viewFormFieldRadio">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_CHECKBOX_FIELD_HEADER",
+			value1 = "${wfFieldName}"
+		);
 
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_FIELD_HEADER" value1="${wfFieldName}" />
+		AssertElementPresent(locator1 = "WebForm#FORM_FIELDS_CHECKBOX_FIELD");
+	}
 
-		<for list="${optionsList}" param="wfRadioFieldOption">
-			<var name="key_wfRadioFieldOption" value="${wfRadioFieldOption}" />
+	macro viewFormFieldOptions {
+		var key_wfFieldName = "${wfFieldName}";
 
-			<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_RADIO_FIELD_OPTION_LABEL" value1="${wfRadioFieldOption}" />
-		</for>
-	</command>
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_FIELD_HEADER",
+			value1 = "${wfFieldName}"
+		);
 
-	<command name="viewFormFieldText">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+		AssertElementPresent(locator1 = "WebForm#FORM_FIELDS_OPTIONS_FIELD");
+	}
 
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_FIELD_HEADER" value1="${wfFieldName}" />
-		<execute function="AssertElementPresent" locator1="WebForm#FORM_FIELDS_TEXT_FIELD" />
-	</command>
+	macro viewFormFieldParagraph {
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_PARAGRAPH_FIELD",
+			value1 = "${wfParagraphFieldText}"
+		);
+	}
 
-	<command name="viewFormFieldTextBox">
-		<var name="key_wfFieldName" value="${wfFieldName}" />
+	macro viewFormFieldRadio {
+		var key_wfFieldName = "${wfFieldName}";
 
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_FIELDS_FIELD_HEADER" value1="${wfFieldName}" />
-		<execute function="AssertElementPresent" locator1="WebForm#FORM_FIELDS_TEXT_BOX_FIELD" />
-	</command>
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_FIELD_HEADER",
+			value1 = "${wfFieldName}"
+		);
 
-	<command name="viewPG">
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_INFORMATION_TITLE" value1="${wfInformationTitle}" />
-		<execute function="AssertTextEquals" locator1="WebForm#FORM_INFORMATION_DESCRIPTION" value1="${wfInformationDescription}" />
-	</command>
-</definition>
+		for (var wfRadioFieldOption : list "${optionsList}") {
+			var key_wfRadioFieldOption = "${wfRadioFieldOption}";
+
+			AssertTextEquals(
+				locator1 = "WebForm#FORM_FIELDS_RADIO_FIELD_OPTION_LABEL",
+				value1 = "${wfRadioFieldOption}"
+			);
+		}
+	}
+
+	macro viewFormFieldText {
+		var key_wfFieldName = "${wfFieldName}";
+
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_FIELD_HEADER",
+			value1 = "${wfFieldName}"
+		);
+
+		AssertElementPresent(locator1 = "WebForm#FORM_FIELDS_TEXT_FIELD");
+	}
+
+	macro viewFormFieldTextBox {
+		var key_wfFieldName = "${wfFieldName}";
+
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_FIELDS_FIELD_HEADER",
+			value1 = "${wfFieldName}"
+		);
+
+		AssertElementPresent(locator1 = "WebForm#FORM_FIELDS_TEXT_BOX_FIELD");
+	}
+
+	macro viewPG {
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_INFORMATION_TITLE",
+			value1 = "${wfInformationTitle}"
+		);
+
+		AssertTextEquals(
+			locator1 = "WebForm#FORM_INFORMATION_DESCRIPTION",
+			value1 = "${wfInformationDescription}"
+		);
+	}
+}

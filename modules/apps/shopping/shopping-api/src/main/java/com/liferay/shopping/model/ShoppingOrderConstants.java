@@ -31,7 +31,8 @@ public class ShoppingOrderConstants {
 
 	public static final String STATUS_REFUNDED = "Refunded";
 
-	public static final String[] STATUSES =
-		{"checkout", "completed", "denied", "pending", "refunded"};
+	public static final String[] STATUSES = {
+		"checkout", "completed", "denied", "pending", "refunded"
+	};
 
 }

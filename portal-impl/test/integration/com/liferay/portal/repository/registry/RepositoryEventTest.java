@@ -126,8 +126,8 @@ public class RepositoryEventTest {
 
 	}
 
-	protected static <S extends RepositoryEventType, T>
-		AtomicInteger registerCounterRepositoryEventListener(
+	protected static <S extends RepositoryEventType, T> AtomicInteger
+		registerCounterRepositoryEventListener(
 			RepositoryEventRegistry repositoryEventRegistry,
 			Class<S> eventClass, Class<T> modelClass) {
 
@@ -142,8 +142,8 @@ public class RepositoryEventTest {
 		return count;
 	}
 
-	protected static <S extends RepositoryEventType, T>
-		AtomicInteger registerCounterRepositoryEventListener(
+	protected static <S extends RepositoryEventType, T> AtomicInteger
+		registerCounterRepositoryEventListener(
 			RepositoryEventRegistry repositoryEventRegistry,
 			Class<S> eventClass, Class<T> modelClass, AtomicInteger count) {
 

@@ -14,7 +14,7 @@
 
 package com.liferay.portal.resiliency.spi.agent;
 
-import com.liferay.portal.kernel.io.AutoDeleteFileInputStream;
+import com.liferay.petra.io.AutoDeleteFileInputStream;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.resiliency.spi.SPIUtil;
 import com.liferay.portal.kernel.resiliency.spi.agent.annotation.Direction;
@@ -107,8 +107,8 @@ public class SPIAgentRequest extends SPIAgentSerializable {
 
 	public SPIAgentRequest(HttpServletRequest request) throws IOException {
 		super(
-			((Portlet)request.getAttribute(
-				WebKeys.SPI_AGENT_PORTLET)).getContextName());
+			((Portlet)request.getAttribute(WebKeys.SPI_AGENT_PORTLET)).
+				getContextName());
 
 		Cookie[] cookies = request.getCookies();
 

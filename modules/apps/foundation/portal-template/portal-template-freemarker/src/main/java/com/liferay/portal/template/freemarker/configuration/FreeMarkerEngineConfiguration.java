@@ -41,13 +41,19 @@ public interface FreeMarkerEngineConfiguration {
 	public String[] allowedClasses();
 
 	@Meta.AD(
-		deflt = "java.lang.Class|java.lang.ClassLoader|java.lang.Thread",
+		deflt = "java.lang.Class|java.lang.ClassLoader|java.lang.Compiler|java.lang.Package|java.lang.Process|java.lang.Runtime|java.lang.RuntimePermission|java.lang.SecurityManager|java.lang.System|java.lang.Thread|java.lang.ThreadGroup|java.lang.ThreadLocal",
 		name = "restricted-classes", required = false
 	)
 	public String[] restrictedClasses();
 
 	@Meta.AD(
-		deflt = "serviceLocator|utilLocator|objectUtil|staticFieldGetter|staticUtil",
+		deflt = "com.liferay.portal.model.impl.CompanyImpl#getKey",
+		name = "restricted-methods", required = false
+	)
+	public String[] restrictedMethods();
+
+	@Meta.AD(
+		deflt = "httpUtilUnsafe|objectUtil|serviceLocator|staticFieldGetter|staticUtil|utilLocator",
 		name = "restricted-variables", required = false
 	)
 	public String[] restrictedVariables();

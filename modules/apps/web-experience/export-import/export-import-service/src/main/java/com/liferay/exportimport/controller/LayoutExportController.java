@@ -14,15 +14,6 @@
 
 package com.liferay.exportimport.controller;
 
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_LAYOUT_EXPORT_FAILED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_LAYOUT_EXPORT_STARTED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_LAYOUT_EXPORT_SUCCEEDED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_FAILED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_STARTED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_SUCCEEDED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.PROCESS_FLAG_LAYOUT_EXPORT_IN_PROCESS;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS;
-
 import com.liferay.asset.kernel.model.adapter.StagedAssetLink;
 import com.liferay.exportimport.kernel.controller.ExportController;
 import com.liferay.exportimport.kernel.controller.ExportImportController;
@@ -39,6 +30,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerStatusMessageSender;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
@@ -123,11 +115,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Karthik Sudarshan
  * @author Zsigmond Rab
  * @author Douglas Wong
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
-	property = {"model.class.name=com.liferay.portal.kernel.model.Layout"},
+	property = "model.class.name=com.liferay.portal.kernel.model.Layout",
 	service = {ExportImportController.class, LayoutExportController.class}
 )
 public class LayoutExportController implements ExportController {
@@ -157,8 +149,8 @@ public class LayoutExportController implements ExportController {
 			}
 
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_LAYOUT_EXPORT_STARTED, getProcessFlag(),
-				portletDataContext.getExportImportProcessId(),
+				ExportImportLifecycleConstants.EVENT_LAYOUT_EXPORT_STARTED,
+				getProcessFlag(), portletDataContext.getExportImportProcessId(),
 				_portletDataContextFactory.clonePortletDataContext(
 					portletDataContext));
 
@@ -167,8 +159,8 @@ public class LayoutExportController implements ExportController {
 			ExportImportThreadLocal.setLayoutExportInProcess(false);
 
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_LAYOUT_EXPORT_SUCCEEDED, getProcessFlag(),
-				portletDataContext.getExportImportProcessId(),
+				ExportImportLifecycleConstants.EVENT_LAYOUT_EXPORT_SUCCEEDED,
+				getProcessFlag(), portletDataContext.getExportImportProcessId(),
 				_portletDataContextFactory.clonePortletDataContext(
 					portletDataContext));
 
@@ -177,8 +169,15 @@ public class LayoutExportController implements ExportController {
 		catch (Throwable t) {
 			ExportImportThreadLocal.setLayoutExportInProcess(false);
 
+			if (portletDataContext != null) {
+				ZipWriter zipWriter = portletDataContext.getZipWriter();
+
+				zipWriter.umount();
+			}
+
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_LAYOUT_EXPORT_FAILED, getProcessFlag(),
+				ExportImportLifecycleConstants.EVENT_LAYOUT_EXPORT_FAILED,
+				getProcessFlag(),
 				String.valueOf(
 					exportImportConfiguration.getExportImportConfigurationId()),
 				_portletDataContextFactory.clonePortletDataContext(
@@ -204,6 +203,7 @@ public class LayoutExportController implements ExportController {
 			parameterMap, PortletDataHandlerKeys.LAYOUT_SET_SETTINGS);
 		boolean logo = MapUtil.getBoolean(
 			parameterMap, PortletDataHandlerKeys.LOGO);
+
 		boolean permissions = MapUtil.getBoolean(
 			parameterMap, PortletDataHandlerKeys.PERMISSIONS);
 
@@ -545,8 +545,8 @@ public class LayoutExportController implements ExportController {
 			if (layout == null) {
 				layout = new LayoutImpl();
 
-				layout.setCompanyId(companyId);
 				layout.setGroupId(portletDataContext.getGroupId());
+				layout.setCompanyId(companyId);
 			}
 
 			portletDataContext.setPlid(plid);
@@ -562,7 +562,8 @@ public class LayoutExportController implements ExportController {
 
 			try {
 				_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-					EVENT_PORTLET_EXPORT_STARTED, getProcessFlag(),
+					ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_STARTED,
+					getProcessFlag(),
 					portletDataContext.getExportImportProcessId(),
 					_portletDataContextFactory.clonePortletDataContext(
 						portletDataContext));
@@ -583,14 +584,17 @@ public class LayoutExportController implements ExportController {
 						PortletDataHandlerKeys.PORTLET_SETUP));
 
 				_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-					EVENT_PORTLET_EXPORT_SUCCEEDED, getProcessFlag(),
+					ExportImportLifecycleConstants.
+						EVENT_PORTLET_EXPORT_SUCCEEDED,
+					getProcessFlag(),
 					portletDataContext.getExportImportProcessId(),
 					_portletDataContextFactory.clonePortletDataContext(
 						portletDataContext));
 			}
 			catch (Throwable t) {
 				_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-					EVENT_PORTLET_EXPORT_FAILED, getProcessFlag(),
+					ExportImportLifecycleConstants.EVENT_PORTLET_EXPORT_FAILED,
+					getProcessFlag(),
 					portletDataContext.getExportImportProcessId(),
 					_portletDataContextFactory.clonePortletDataContext(
 						portletDataContext),
@@ -784,10 +788,12 @@ public class LayoutExportController implements ExportController {
 
 	protected int getProcessFlag() {
 		if (ExportImportThreadLocal.isLayoutStagingInProcess()) {
-			return PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS;
+			return ExportImportLifecycleConstants.
+				PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS;
 		}
 
-		return PROCESS_FLAG_LAYOUT_EXPORT_IN_PROCESS;
+		return ExportImportLifecycleConstants.
+			PROCESS_FLAG_LAYOUT_EXPORT_IN_PROCESS;
 	}
 
 	protected boolean prepareLayoutStagingHandler(

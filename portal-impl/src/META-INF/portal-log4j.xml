@@ -268,6 +268,10 @@
 		<priority value="ERROR" />
 	</category>
 
+	<category name="com.liferay.portal.json.jabsorb.serializer.LiferayJSONDeserializationWhitelist">
+		<priority value="WARN" />
+	</category>
+
 	<category name="com.liferay.portal.jsonwebservice.JSONWebServiceActionsManagerImpl">
 		<priority value="WARN" />
 	</category>
@@ -472,10 +476,6 @@
 		<priority value="ERROR" />
 	</category>
 
-	<category name="com.liferay.portal.security.auth.LDAPAuth">
-		<priority value="WARN" />
-	</category>
-
 	<category name="com.liferay.portal.security.auth.PrincipalThreadLocal">
 		<priority value="ERROR" />
 	</category>
@@ -494,14 +494,6 @@
 
 	<category name="com.liferay.portal.security.lang.PortalSecurityManager">
 		<priority value="INFO" />
-	</category>
-
-	<category name="com.liferay.portal.security.ldap">
-		<priority value="ERROR" />
-	</category>
-
-	<category name="com.liferay.portal.security.ldap.PortalLDAPUtil">
-		<priority value="ERROR" />
 	</category>
 
 	<category name="com.liferay.portal.security.pacl.BasePACLPolicy">
@@ -776,6 +768,10 @@
 		<priority value="ERROR" />
 	</category>
 
+	<category name="com.liferay.portal.spring.context.PortalContextLoaderListener">
+		<priority value="INFO" />
+	</category>
+
 	<category name="com.liferay.portal.spring.context.PortletApplicationContext">
 		<priority value="ERROR" />
 	</category>
@@ -858,6 +854,10 @@
 
 	<category name="com.liferay.portal.upgrade.v7_0_0.UpgradePortletSettings">
 		<priority value="INFO" />
+	</category>
+
+	<category name="com.liferay.portal.upload.UploadServletRequestImpl">
+		<priority value="WARN" />
 	</category>
 
 	<category name="com.liferay.portal.util">

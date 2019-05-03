@@ -198,7 +198,7 @@ List addresses = AddressServiceUtil.getAddresses(Contact.class.getName(), contac
 								for (int i = 0; i < months.length; i++) {
 								%>
 
-									<aui:option label="<%= months[i] %>" selected="<%= (i == ccExpMonth) %>" value="<%= i %>" />
+									<aui:option label="<%= months[i] %>" selected="<%= i == ccExpMonth %>" value="<%= i %>" />
 
 								<%
 								}

@@ -38,10 +38,22 @@ body {
 .product-menu {
 	background-color: $product-menu-body-bg;
 
-	.company-details .company-logo {
-		margin-right: 5px;
-		max-height: 32px;
-		max-width: 32px;
+	.company-details {
+		float: left;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		width: calc(100% - 32px);
+
+		@include sm {
+			width: 100%;
+		}
+
+		.company-logo {
+			margin-right: 5px;
+			max-height: 32px;
+			max-width: 32px;
+		}
 	}
 }
 
@@ -148,17 +160,19 @@ body {
 	}
 }
 
-.product-menu {
-	.sidebar-header {
-		background-color: $product-menu-header-bg;
-		border-bottom: 1px solid $product-menu-header-border;
-		color: $product-menu-header-color;
+.sidenav-menu-slider {
+	.product-menu {
+		.sidebar-header {
+			background-color: $product-menu-header-bg;
+			border-bottom: 1px solid $product-menu-header-border;
+			color: $product-menu-header-color;
 
-		a {
-			color: $product-menu-header-link-color;
+			a {
+				color: $product-menu-header-link-color;
 
-			&:focus, &:hover {
-				color: $product-menu-header-link-hover-color;
+				&:focus, &:hover {
+					color: $product-menu-header-link-hover-color;
+				}
 			}
 		}
 	}

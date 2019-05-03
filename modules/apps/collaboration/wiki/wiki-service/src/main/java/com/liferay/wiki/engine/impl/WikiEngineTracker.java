@@ -17,8 +17,6 @@ package com.liferay.wiki.engine.impl;
 import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.wiki.engine.WikiEngine;
 
 import java.util.Collection;
@@ -81,9 +79,6 @@ public class WikiEngineTracker {
 	protected void deactivate() {
 		_serviceTrackerMap.close();
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		WikiEngineTracker.class);
 
 	private BundleContext _bundleContext;
 	private ServiceTrackerMap<String, List<WikiEngine>> _serviceTrackerMap;

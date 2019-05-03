@@ -385,9 +385,8 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 
 	@Override
 	protected StagedModel getStagedModel(String uuid, long groupId) {
-		return
-			JournalArticleLocalServiceUtil.fetchJournalArticleByUuidAndGroupId(
-				uuid, groupId);
+		return JournalArticleLocalServiceUtil.
+			fetchJournalArticleByUuidAndGroupId(uuid, groupId);
 	}
 
 	@Override
@@ -435,7 +434,7 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 			DateUtil.equals(
 				article.getReviewDate(), importedArticle.getReviewDate()));
 		Assert.assertEquals(
-			article.getSmallImage(), importedArticle.getSmallImage());
+			article.isSmallImage(), importedArticle.isSmallImage());
 		Assert.assertEquals(
 			article.getSmallImageURL(), importedArticle.getSmallImageURL());
 		Assert.assertEquals(article.getStatus(), importedArticle.getStatus());

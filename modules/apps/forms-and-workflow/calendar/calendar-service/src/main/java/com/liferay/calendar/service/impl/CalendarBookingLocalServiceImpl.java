@@ -63,6 +63,7 @@ import com.liferay.portal.kernel.service.SystemEventLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -158,8 +159,17 @@ public class CalendarBookingLocalServiceImpl
 		calendarBooking.setCompanyId(user.getCompanyId());
 		calendarBooking.setUserId(user.getUserId());
 		calendarBooking.setUserName(user.getFullName());
-		calendarBooking.setCreateDate(serviceContext.getCreateDate(now));
-		calendarBooking.setModifiedDate(serviceContext.getModifiedDate(now));
+
+		Date createDate = serviceContext.getCreateDate(now);
+
+		calendarBooking.setCreateDate(createDate);
+		serviceContext.setCreateDate(createDate);
+
+		Date modifiedDate = serviceContext.getModifiedDate(now);
+
+		calendarBooking.setModifiedDate(modifiedDate);
+		serviceContext.setModifiedDate(modifiedDate);
+
 		calendarBooking.setCalendarId(calendarId);
 		calendarBooking.setCalendarResourceId(calendar.getCalendarResourceId());
 
@@ -370,8 +380,9 @@ public class CalendarBookingLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 2.4.0, replaced by {@link
-	 * #deleteCalendarBookingInstance(long, CalendarBooking, int, boolean)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #deleteCalendarBookingInstance(long, CalendarBooking, int,
+	 *             boolean)}
 	 */
 	@Deprecated
 	@Override
@@ -386,9 +397,9 @@ public class CalendarBookingLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 2.4.0, replaced by {@link
-	 * #deleteCalendarBookingInstance(long, CalendarBooking, int, boolean,
-	 * boolean)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #deleteCalendarBookingInstance(long, CalendarBooking, int,
+	 *             boolean, boolean)}
 	 */
 	@Deprecated
 	@Override
@@ -403,8 +414,9 @@ public class CalendarBookingLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 2.4.0, replaced by {@link
-	 * #deleteCalendarBookingInstance(long, CalendarBooking, long, boolean)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #deleteCalendarBookingInstance(long, CalendarBooking, long,
+	 *             boolean)}
 	 */
 	@Deprecated
 	@Override
@@ -419,9 +431,9 @@ public class CalendarBookingLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 2.4.0, replaced by {@link
-	 * #deleteCalendarBookingInstance(long, CalendarBooking, long, boolean,
-	 * boolean)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #deleteCalendarBookingInstance(long, CalendarBooking, long,
+	 *             boolean, boolean)}
 	 */
 	@Deprecated
 	@Override
@@ -546,8 +558,8 @@ public class CalendarBookingLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of 2.4.0, replaced by {@link
-	 * #deleteCalendarBookingInstance(long, long, long, boolean)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #deleteCalendarBookingInstance(long, long, long, boolean)}
 	 */
 	@Deprecated
 	@Override
@@ -1220,6 +1232,7 @@ public class CalendarBookingLocalServiceImpl
 		User user = userLocalService.getUser(userId);
 		Date now = new Date();
 
+		Date oldModifiedDate = calendarBooking.getModifiedDate();
 		int oldStatus = calendarBooking.getStatus();
 
 		calendarBooking.setModifiedDate(serviceContext.getModifiedDate(now));
@@ -1232,72 +1245,24 @@ public class CalendarBookingLocalServiceImpl
 
 		// Child calendar bookings
 
-		if (status == CalendarBookingWorkflowConstants.STATUS_IN_TRASH) {
-			List<CalendarBooking> childCalendarBookings =
-				calendarBooking.getChildCalendarBookings();
+		List<CalendarBooking> childCalendarBookings =
+			calendarBooking.getChildCalendarBookings();
 
-			for (CalendarBooking childCalendarBooking : childCalendarBookings) {
-				if (childCalendarBooking.equals(calendarBooking)) {
-					continue;
-				}
-
-				updateStatus(
-					userId, childCalendarBooking,
-					CalendarBookingWorkflowConstants.STATUS_IN_TRASH,
-					serviceContext);
+		for (CalendarBooking childCalendarBooking : childCalendarBookings) {
+			if (childCalendarBooking.equals(calendarBooking)) {
+				continue;
 			}
-		}
-		else if (oldStatus ==
-					CalendarBookingWorkflowConstants.STATUS_IN_TRASH) {
 
-			List<CalendarBooking> childCalendarBookings =
-				calendarBooking.getChildCalendarBookings();
+			int newStatus = getNewChildStatus(
+				status, oldStatus, childCalendarBooking.getStatus(),
+				isStagingCalendarBooking(calendarBooking));
 
-			for (CalendarBooking childCalendarBooking : childCalendarBookings) {
-				if (childCalendarBooking.equals(calendarBooking)) {
-					continue;
-				}
-
-				updateStatus(
-					userId, childCalendarBooking,
-					CalendarBookingWorkflowConstants.STATUS_PENDING,
-					serviceContext);
+			if (newStatus == childCalendarBooking.getStatus()) {
+				continue;
 			}
-		}
-		else if (status == CalendarBookingWorkflowConstants.STATUS_APPROVED) {
-			List<CalendarBooking> childCalendarBookings =
-				calendarBooking.getChildCalendarBookings();
 
-			for (CalendarBooking childCalendarBooking : childCalendarBookings) {
-				if (childCalendarBooking.equals(calendarBooking)) {
-					continue;
-				}
-
-				if (childCalendarBooking.getStatus() ==
-						CalendarBookingWorkflowConstants.
-							STATUS_MASTER_PENDING) {
-
-					updateStatus(
-						userId, childCalendarBooking,
-						CalendarBookingWorkflowConstants.STATUS_PENDING,
-						serviceContext);
-				}
-			}
-		}
-		else {
-			List<CalendarBooking> childCalendarBookings =
-				calendarBooking.getChildCalendarBookings();
-
-			for (CalendarBooking childCalendarBooking : childCalendarBookings) {
-				if (childCalendarBooking.equals(calendarBooking)) {
-					continue;
-				}
-
-				updateStatus(
-					userId, childCalendarBooking,
-					CalendarBookingWorkflowConstants.STATUS_MASTER_PENDING,
-					serviceContext);
-			}
+			updateStatus(
+				userId, childCalendarBooking, newStatus, serviceContext);
 		}
 
 		// Asset
@@ -1338,10 +1303,39 @@ public class CalendarBookingLocalServiceImpl
 					CalendarBookingWorkflowConstants.STATUS_PENDING, null,
 					null);
 			}
+		}
 
-			sendNotification(
-				calendarBooking, NotificationTemplateType.MOVED_TO_TRASH,
-				serviceContext);
+		if (calendarBooking.isMasterBooking()) {
+			Date createDate = calendarBooking.getCreateDate();
+
+			NotificationTemplateType notificationTemplateType =
+				NotificationTemplateType.INVITE;
+
+			if (!DateUtil.equals(createDate, oldModifiedDate)) {
+				notificationTemplateType = NotificationTemplateType.UPDATE;
+			}
+
+			for (CalendarBooking childCalendarBooking : childCalendarBookings) {
+				if (childCalendarBooking.equals(calendarBooking)) {
+					continue;
+				}
+
+				if (calendarBooking.isApproved()) {
+					sendNotification(
+						childCalendarBooking, notificationTemplateType,
+						serviceContext);
+				}
+				else if ((oldStatus == WorkflowConstants.STATUS_APPROVED) &&
+						 (status == WorkflowConstants.STATUS_IN_TRASH)) {
+
+					notificationTemplateType =
+						NotificationTemplateType.MOVED_TO_TRASH;
+
+					sendNotification(
+						childCalendarBooking, notificationTemplateType,
+						serviceContext);
+				}
+			}
 		}
 
 		return calendarBooking;
@@ -1430,7 +1424,7 @@ public class CalendarBookingLocalServiceImpl
 				calendarBooking.getTitleMap(),
 				calendarBooking.getDescriptionMap(),
 				calendarBooking.getLocation(), calendarBooking.getStartTime(),
-				calendarBooking.getEndTime(), calendarBooking.getAllDay(),
+				calendarBooking.getEndTime(), calendarBooking.isAllDay(),
 				calendarBooking.getRecurrence(), firstReminder,
 				firstReminderType, secondReminder, secondReminderType,
 				serviceContext);
@@ -1455,18 +1449,6 @@ public class CalendarBookingLocalServiceImpl
 						oldChildCalendarBooking.getStatus(), serviceContext);
 				}
 			}
-
-			NotificationTemplateType notificationTemplateType =
-				NotificationTemplateType.INVITE;
-
-			if (childCalendarBookingMap.containsKey(
-					childCalendarBooking.getCalendarId())) {
-
-				notificationTemplateType = NotificationTemplateType.UPDATE;
-			}
-
-			sendNotification(
-				childCalendarBooking, notificationTemplateType, serviceContext);
 		}
 	}
 
@@ -1491,6 +1473,41 @@ public class CalendarBookingLocalServiceImpl
 		jsonObject.put("title", calendarBooking.getTitle());
 
 		return jsonObject.toString();
+	}
+
+	protected int getNewChildStatus(
+		int newParentStatus, int oldParentStatus, int oldChildStatus,
+		boolean parentStaged) {
+
+		if (newParentStatus ==
+				CalendarBookingWorkflowConstants.STATUS_IN_TRASH) {
+
+			return CalendarBookingWorkflowConstants.STATUS_IN_TRASH;
+		}
+
+		if (oldParentStatus ==
+				CalendarBookingWorkflowConstants.STATUS_IN_TRASH) {
+
+			return CalendarBookingWorkflowConstants.STATUS_PENDING;
+		}
+
+		if (newParentStatus !=
+				CalendarBookingWorkflowConstants.STATUS_APPROVED) {
+
+			return CalendarBookingWorkflowConstants.STATUS_MASTER_PENDING;
+		}
+
+		if (oldChildStatus !=
+				CalendarBookingWorkflowConstants.STATUS_MASTER_PENDING) {
+
+			return oldChildStatus;
+		}
+
+		if (parentStaged) {
+			return CalendarBookingWorkflowConstants.STATUS_MASTER_STAGING;
+		}
+
+		return CalendarBookingWorkflowConstants.STATUS_PENDING;
 	}
 
 	protected Calendar getNotLiveCalendar(Calendar calendar)
@@ -1564,7 +1581,7 @@ public class CalendarBookingLocalServiceImpl
 
 		if (stagingGroup == null) {
 			return false;
-		};
+		}
 
 		return stagingGroup.isInStagingPortlet(CalendarPortletKeys.CALENDAR);
 	}

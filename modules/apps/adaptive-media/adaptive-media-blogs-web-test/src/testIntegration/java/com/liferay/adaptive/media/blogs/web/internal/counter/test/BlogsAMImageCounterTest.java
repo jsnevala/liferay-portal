@@ -43,6 +43,7 @@ import com.liferay.registry.RegistryUtil;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -183,7 +184,9 @@ public class BlogsAMImageCounterTest {
 
 			Collection<T> services = registry.getServices(clazz, filter);
 
-			return services.iterator().next();
+			Iterator<T> iterator = services.iterator();
+
+			return iterator.next();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);

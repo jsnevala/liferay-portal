@@ -19,11 +19,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>MENU_CORE</td>
-	<td>//ul[@id='menu']/li[@id='cores']/p/a</td>
-	<td></td>
-</tr>
-<tr>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -80,17 +75,6 @@
 <tr>
 	<td></td>
 	<td></td>
-	<td></td>
-</tr>
-<!--CORE_ADMIN_INDEX_DATA-->
-<tr>
-	<td>CORE_ADMIN_INDEX_DATA_OPTIMIZED_ICON</td>
-	<td>//div[@id='index-data']//li[contains(@class,'optimized')]/dl/dd[contains(@class,'ico-1')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>CORE_ADMIN_INDEX_DATA_CURRENT_ICON</td>
-	<td>//div[@id='index-data']//li[contains(@class,'current')]/dl/dd[contains(@class,'ico-1')]</td>
 	<td></td>
 </tr>
 <!--LOGGING_TABLE-->

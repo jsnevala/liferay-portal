@@ -24,19 +24,20 @@ import java.rmi.RemoteException;
 
 /**
  * Provides the SOAP utility for the
- * {@link KaleoDefinitionServiceUtil} service utility. The
- * static methods of this class calls the same methods of the service utility.
- * However, the signatures are different because it is difficult for SOAP to
- * support certain types.
+ * <code>KaleoDefinitionServiceUtil</code> service
+ * utility. The static methods of this class call the same methods of the
+ * service utility. However, the signatures are different because it is
+ * difficult for SOAP to support certain types.
  *
  * <p>
  * ServiceBuilder follows certain rules in translating the methods. For example,
- * if the method in the service utility returns a {@link java.util.List}, that
- * is translated to an array of {@link com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap}.
- * If the method in the service utility returns a
- * {@link com.liferay.portal.workflow.kaleo.model.KaleoDefinition}, that is translated to a
- * {@link com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap}. Methods that SOAP cannot
- * safely wire are skipped.
+ * if the method in the service utility returns a <code>java.util.List</code>,
+ * that is translated to an array of
+ * <code>com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap</code>. If the method in the
+ * service utility returns a
+ * <code>com.liferay.portal.workflow.kaleo.model.KaleoDefinition</code>, that is translated to a
+ * <code>com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap</code>. Methods that SOAP
+ * cannot safely wire are skipped.
  * </p>
  *
  * <p>
@@ -58,19 +59,24 @@ import java.rmi.RemoteException;
  *
  * @author Brian Wing Shun Chan
  * @see KaleoDefinitionServiceHttp
- * @see com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap
- * @see KaleoDefinitionServiceUtil
  * @generated
  */
 @ProviderType
 public class KaleoDefinitionServiceSoap {
-	public static com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap[] getKaleoDefinitions(
-		int start, int end) throws RemoteException {
-		try {
-			java.util.List<com.liferay.portal.workflow.kaleo.model.KaleoDefinition> returnValue =
-				KaleoDefinitionServiceUtil.getKaleoDefinitions(start, end);
 
-			return com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap.toSoapModels(returnValue);
+	public static com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap[]
+			getKaleoDefinitions(int start, int end)
+		throws RemoteException {
+
+		try {
+			java.util.List
+				<com.liferay.portal.workflow.kaleo.model.KaleoDefinition>
+					returnValue =
+						KaleoDefinitionServiceUtil.getKaleoDefinitions(
+							start, end);
+
+			return com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap.
+				toSoapModels(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -79,14 +85,19 @@ public class KaleoDefinitionServiceSoap {
 		}
 	}
 
-	public static com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap[] getKaleoDefinitions(
-		long companyId, int start, int end) throws RemoteException {
-		try {
-			java.util.List<com.liferay.portal.workflow.kaleo.model.KaleoDefinition> returnValue =
-				KaleoDefinitionServiceUtil.getKaleoDefinitions(companyId,
-					start, end);
+	public static com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap[]
+			getKaleoDefinitions(long companyId, int start, int end)
+		throws RemoteException {
 
-			return com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap.toSoapModels(returnValue);
+		try {
+			java.util.List
+				<com.liferay.portal.workflow.kaleo.model.KaleoDefinition>
+					returnValue =
+						KaleoDefinitionServiceUtil.getKaleoDefinitions(
+							companyId, start, end);
+
+			return com.liferay.portal.workflow.kaleo.model.KaleoDefinitionSoap.
+				toSoapModels(returnValue);
 		}
 		catch (Exception e) {
 			_log.error(e, e);
@@ -95,5 +106,7 @@ public class KaleoDefinitionServiceSoap {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(KaleoDefinitionServiceSoap.class);
+	private static Log _log = LogFactoryUtil.getLog(
+		KaleoDefinitionServiceSoap.class);
+
 }

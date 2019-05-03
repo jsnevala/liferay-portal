@@ -20,7 +20,6 @@ import com.liferay.asset.kernel.model.BaseAssetRendererFactory;
 import com.liferay.blogs.constants.BlogsPortletKeys;
 import com.liferay.blogs.kernel.model.BlogsEntry;
 import com.liferay.blogs.kernel.service.BlogsEntryLocalService;
-import com.liferay.blogs.kernel.service.BlogsEntryService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -48,8 +47,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Sergio González
  */
 @Component(
-	immediate = true,
-	property = {"javax.portlet.name=" + BlogsPortletKeys.BLOGS},
+	immediate = true, property = "javax.portlet.name=" + BlogsPortletKeys.BLOGS,
 	service = AssetRendererFactory.class
 )
 public class BlogsEntryAssetRendererFactory
@@ -84,7 +82,7 @@ public class BlogsEntryAssetRendererFactory
 			long groupId, String urlTitle)
 		throws PortalException {
 
-		BlogsEntry entry = _blogsEntryService.getEntry(groupId, urlTitle);
+		BlogsEntry entry = _blogsEntryLocalService.getEntry(groupId, urlTitle);
 
 		return new BlogsEntryAssetRenderer(entry);
 	}
@@ -168,13 +166,7 @@ public class BlogsEntryAssetRendererFactory
 		_blogsEntryLocalService = blogsEntryLocalService;
 	}
 
-	@Reference(unbind = "-")
-	protected void setBlogsEntryService(BlogsEntryService blogsEntryService) {
-		_blogsEntryService = blogsEntryService;
-	}
-
 	private BlogsEntryLocalService _blogsEntryLocalService;
-	private BlogsEntryService _blogsEntryService;
 
 	@Reference
 	private Portal _portal;

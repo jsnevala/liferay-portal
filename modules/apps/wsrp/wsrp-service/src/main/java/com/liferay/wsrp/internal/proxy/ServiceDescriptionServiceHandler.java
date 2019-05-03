@@ -48,9 +48,7 @@ public class ServiceDescriptionServiceHandler implements InvocationHandler {
 			_serviceDescriptionService.getServiceDescription(
 				getServiceDescription);
 
-		Object v2Bean = TypeConvertorUtil.convert(serviceDescription, 1);
-
-		return v2Bean;
+		return TypeConvertorUtil.convert(serviceDescription, 1);
 	}
 
 	@Override

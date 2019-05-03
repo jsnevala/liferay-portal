@@ -61,9 +61,7 @@ public class PACLUtil {
 		try {
 			securityManager.checkPermission(_permission);
 
-			PACLPolicy paclPolicy = PACLPolicyThreadLocal.get();
-
-			return paclPolicy;
+			return PACLPolicyThreadLocal.get();
 		}
 		finally {
 			PACLPolicyThreadLocal.set(null);

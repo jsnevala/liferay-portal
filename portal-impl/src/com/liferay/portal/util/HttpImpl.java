@@ -90,7 +90,11 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.ConnectionConfig;
+import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.cookie.ClientCookie;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -139,7 +143,14 @@ public class HttpImpl implements Http {
 		HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
 		_poolingHttpClientConnectionManager =
-			new PoolingHttpClientConnectionManager();
+			new PoolingHttpClientConnectionManager(
+				RegistryBuilder.<ConnectionSocketFactory>create(
+				).register(
+					Http.HTTP, PlainConnectionSocketFactory.getSocketFactory()
+				).register(
+					Http.HTTPS,
+					SSLConnectionSocketFactory.getSystemSocketFactory()
+				).build());
 
 		_poolingHttpClientConnectionManager.setDefaultMaxPerRoute(
 			_MAX_CONNECTIONS_PER_HOST);
@@ -298,7 +309,8 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #decodeURL(String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #decodeURL(String)}
 	 */
 	@Deprecated
 	@Override
@@ -373,7 +385,8 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link URLCodec#encodeURL(String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             URLCodec#encodeURL(String)}
 	 */
 	@Deprecated
 	@Override
@@ -382,8 +395,8 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link URLCodec#encodeURL(String,
-	 *             boolean)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             URLCodec#encodeURL(String, boolean)}
 	 */
 	@Deprecated
 	@Override
@@ -442,7 +455,7 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public HttpClient getClient(HostConfiguration hostConfiguration) {
@@ -505,19 +518,30 @@ public class HttpImpl implements Http {
 			return url;
 		}
 
-		url = removeProtocol(url);
+		url = url.trim();
 
-		int pos = url.indexOf(CharPool.SLASH);
-
-		if (pos != -1) {
-			return url.substring(0, pos);
+		if (_getProtocolDelimiterIndex(url) < 0) {
+			url = Http.HTTPS_WITH_SLASH + url;
 		}
 
-		return url;
+		try {
+			URI uri = new URI(url);
+
+			String host = uri.getHost();
+
+			if (host == null) {
+				return StringPool.BLANK;
+			}
+
+			return host;
+		}
+		catch (URISyntaxException urise) {
+			return StringPool.BLANK;
+		}
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public HostConfiguration getHostConfiguration(String location)
@@ -632,17 +656,15 @@ public class HttpImpl implements Http {
 
 	@Override
 	public String getProtocol(String url) {
-		if (Validator.isNull(url)) {
-			return url;
+		url = url.trim();
+
+		int index = _getProtocolDelimiterIndex(url);
+
+		if (index > 0) {
+			return url.substring(0, index);
 		}
 
-		int pos = url.indexOf(Http.PROTOCOL_DELIMITER);
-
-		if (pos != -1) {
-			return url.substring(0, pos);
-		}
-
-		return Http.HTTP;
+		return StringPool.BLANK;
 	}
 
 	@Override
@@ -676,13 +698,7 @@ public class HttpImpl implements Http {
 
 	@Override
 	public boolean hasProtocol(String url) {
-		if (Validator.isNull(url)) {
-			return false;
-		}
-
-		int pos = url.indexOf(Http.PROTOCOL_DELIMITER);
-
-		if (pos != -1) {
+		if (_getProtocolDelimiterIndex(url) > 0) {
 			return true;
 		}
 
@@ -960,7 +976,7 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public void proxifyState(
@@ -1090,67 +1106,15 @@ public class HttpImpl implements Http {
 
 	@Override
 	public String removeProtocol(String url) {
-		if (Validator.isNull(url)) {
-			return url;
-		}
-
 		url = url.trim();
 
-		// "/[a-zA-Z0-9]+" is considered as valid relative URL
+		int index = _getProtocolDelimiterIndex(url);
 
-		if ((url.length() >= 2) && (url.charAt(0) == CharPool.SLASH) &&
-			_isLetterOrNumber(url.charAt(1))) {
-
-			return url;
+		if (index > 0) {
+			return url.substring(index + PROTOCOL_DELIMITER.length());
 		}
 
-		int pos = 0;
-
-		protocol:
-		while (true) {
-
-			// Find and skip all valid protocol "[a-zA-Z0-9]+://" headers
-
-			int index = url.indexOf(Http.PROTOCOL_DELIMITER, pos);
-
-			if (index > 0) {
-				boolean hasProtocol = true;
-
-				for (int i = pos; i < index; i++) {
-					if (!_isLetterOrNumber(url.charAt(i))) {
-						hasProtocol = false;
-
-						break;
-					}
-				}
-
-				if (hasProtocol) {
-					pos = index + Http.PROTOCOL_DELIMITER.length();
-
-					continue;
-				}
-			}
-
-			// Ignore all "[\\\\/]+" after valid protocol header
-
-			for (int i = pos; i < url.length(); i++) {
-				char c = url.charAt(i);
-
-				if ((c != CharPool.SLASH) && (c != CharPool.BACK_SLASH)) {
-					if (i != pos) {
-						pos = i;
-
-						continue protocol;
-					}
-
-					break;
-				}
-			}
-
-			// Chop off protocol and return
-
-			return url.substring(pos);
-		}
+		return url;
 	}
 
 	@Override
@@ -1222,11 +1186,13 @@ public class HttpImpl implements Http {
 			return url;
 		}
 
-		return _shortenURL(url, 0);
+		return _shortenURL(
+			url, 0, StringPool.QUESTION, StringPool.AMPERSAND,
+			StringPool.EQUAL);
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #shortenURL(String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #shortenURL(String)}
 	 */
 	@Deprecated
 	@Override
@@ -1298,19 +1264,37 @@ public class HttpImpl implements Http {
 
 	@Override
 	public String URLtoString(Http.Options options) throws IOException {
-		return new String(URLtoByteArray(options));
+		byte[] bytes = URLtoByteArray(options);
+
+		if (bytes == null) {
+			return null;
+		}
+
+		return new String(bytes);
 	}
 
 	@Override
 	public String URLtoString(String location) throws IOException {
-		return new String(URLtoByteArray(location));
+		byte[] bytes = URLtoByteArray(location);
+
+		if (bytes == null) {
+			return null;
+		}
+
+		return new String(bytes);
 	}
 
 	@Override
 	public String URLtoString(String location, boolean post)
 		throws IOException {
 
-		return new String(URLtoByteArray(location, post));
+		byte[] bytes = URLtoByteArray(location, post);
+
+		if (bytes == null) {
+			return null;
+		}
+
+		return new String(bytes);
 	}
 
 	/**
@@ -1355,7 +1339,7 @@ public class HttpImpl implements Http {
 			byte[] bytes = new byte[512];
 
 			for (int i = inputStream.read(bytes, 0, 512); i != -1;
-				i = inputStream.read(bytes, 0, 512)) {
+				 i = inputStream.read(bytes, 0, 512)) {
 
 				unsyncByteArrayOutputStream.write(bytes, 0, i);
 			}
@@ -1452,7 +1436,7 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected boolean hasRequestHeader(HttpMethod httpMethod, String name) {
@@ -1472,7 +1456,7 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected void processPostMethod(
@@ -1483,8 +1467,8 @@ public class HttpImpl implements Http {
 	}
 
 	protected void processPostMethod(
-		RequestBuilder requestBuilder, List<Http.FilePart> fileParts,
-		Map<String, String> parts) {
+		RequestBuilder requestBuilder, Map<String, String> headers,
+		List<Http.FilePart> fileParts, Map<String, String> parts) {
 
 		if ((fileParts == null) || fileParts.isEmpty()) {
 			if (parts != null) {
@@ -1500,6 +1484,17 @@ public class HttpImpl implements Http {
 		else {
 			MultipartEntityBuilder multipartEntityBuilder =
 				MultipartEntityBuilder.create();
+
+			if (headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
+				ContentType contentType = ContentType.parse(
+					headers.get(HttpHeaders.CONTENT_TYPE));
+
+				String boundary = contentType.getParameter("boundary");
+
+				if (boundary != null) {
+					multipartEntityBuilder.setBoundary(boundary);
+				}
+			}
 
 			if (parts != null) {
 				for (Map.Entry<String, String> entry : parts.entrySet()) {
@@ -1530,7 +1525,7 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected org.apache.commons.httpclient.Cookie toCommonsCookie(
@@ -1540,7 +1535,7 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected org.apache.commons.httpclient.Cookie[] toCommonsCookies(
@@ -1550,7 +1545,7 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected org.apache.commons.httpclient.methods.multipart.FilePart
@@ -1574,7 +1569,7 @@ public class HttpImpl implements Http {
 			basicClientCookie.setExpiryDate(expiryDate);
 
 			basicClientCookie.setAttribute(
-				ClientCookie.MAX_AGE_ATTR, Integer.toString(maxAge));
+				ClientCookie.MAX_AGE_ATTR, String.valueOf(maxAge));
 		}
 
 		basicClientCookie.setPath(cookie.getPath());
@@ -1600,7 +1595,7 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected Cookie toServletCookie(
@@ -1662,7 +1657,7 @@ public class HttpImpl implements Http {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected Cookie[] toServletCookies(
@@ -1782,10 +1777,13 @@ public class HttpImpl implements Http {
 
 			RequestBuilder requestBuilder = null;
 
-			if (method.equals(Http.Method.POST) ||
+			if (method.equals(Method.PATCH) || method.equals(Method.POST) ||
 				method.equals(Http.Method.PUT)) {
 
-				if (method.equals(Http.Method.POST)) {
+				if (method.equals(Method.PATCH)) {
+					requestBuilder = RequestBuilder.patch(location);
+				}
+				else if (method.equals(Http.Method.POST)) {
 					requestBuilder = RequestBuilder.post(location);
 				}
 				else {
@@ -1814,7 +1812,8 @@ public class HttpImpl implements Http {
 							targetHttpHost, connectionConfigBuilder.build());
 					}
 
-					processPostMethod(requestBuilder, fileParts, parts);
+					processPostMethod(
+						requestBuilder, headers, fileParts, parts);
 				}
 			}
 			else if (method.equals(Http.Method.DELETE)) {
@@ -1834,7 +1833,8 @@ public class HttpImpl implements Http {
 				}
 			}
 
-			if ((method.equals(Http.Method.POST) ||
+			if ((method.equals(Method.PATCH) ||
+				 method.equals(Http.Method.POST) ||
 				 method.equals(Http.Method.PUT)) &&
 				((body != null) ||
 				 ((fileParts != null) && !fileParts.isEmpty()) ||
@@ -1867,12 +1867,12 @@ public class HttpImpl implements Http {
 			if (auth != null) {
 				requestConfigBuilder.setAuthenticationEnabled(true);
 
-				CredentialsProvider credentialProvider =
+				CredentialsProvider credentialsProvider =
 					new BasicCredentialsProvider();
 
-				httpClientContext.setCredentialsProvider(credentialProvider);
+				httpClientContext.setCredentialsProvider(credentialsProvider);
 
-				credentialProvider.setCredentials(
+				credentialsProvider.setCredentials(
 					new AuthScope(
 						auth.getHost(), auth.getPort(), auth.getRealm()),
 					new UsernamePasswordCredentials(
@@ -2015,48 +2015,74 @@ public class HttpImpl implements Http {
 		}
 	}
 
-	private boolean _isLetterOrNumber(char c) {
-		if (((CharPool.NUMBER_0 <= c) && (c <= CharPool.NUMBER_9)) ||
-			((CharPool.UPPER_CASE_A <= c) && (c <= CharPool.UPPER_CASE_Z)) ||
-			((CharPool.LOWER_CASE_A <= c) && (c <= CharPool.LOWER_CASE_Z))) {
-
-			return true;
+	private int _getProtocolDelimiterIndex(String url) {
+		if (Validator.isNull(url)) {
+			return -1;
 		}
 
-		return false;
+		// Define protocol as "[a-zA-Z][a-zA-Z0-9]*://"
+
+		int pos = url.indexOf(Http.PROTOCOL_DELIMITER);
+
+		if (pos <= 0) {
+			return -1;
+		}
+
+		if (!Validator.isChar(url.charAt(0))) {
+			return -1;
+		}
+
+		for (int i = 1; i < pos; ++i) {
+			if (!Validator.isChar(url.charAt(i)) &&
+				!Validator.isDigit(url.charAt(i))) {
+
+				return -1;
+			}
+		}
+
+		return pos;
 	}
 
-	private String _shortenURL(String url, int currentLength) {
-		int index = url.indexOf(CharPool.QUESTION);
+	private String _shortenURL(
+		String encodedURL, int currentLength, String encodedQuestion,
+		String encodedAmpersand, String encodedEqual) {
+
+		if ((currentLength + encodedURL.length()) <= Http.URL_MAXIMUM_LENGTH) {
+			return encodedURL;
+		}
+
+		int index = encodedURL.indexOf(encodedQuestion);
 
 		if (index == -1) {
-			return url;
+			return encodedURL;
 		}
 
 		StringBundler sb = new StringBundler();
 
-		sb.append(url.substring(0, index));
-		sb.append(StringPool.QUESTION);
+		sb.append(encodedURL.substring(0, index));
+		sb.append(encodedQuestion);
 
-		String queryString = url.substring(index + 1);
+		String queryString = encodedURL.substring(
+			index + encodedQuestion.length());
 
-		String[] params = StringUtil.split(queryString, CharPool.AMPERSAND);
+		String[] params = StringUtil.split(queryString, encodedAmpersand);
 
 		params = ArrayUtil.unique(params);
 
-		List<String> redirectParams = new ArrayList<>();
+		List<String> encodedRedirectParams = new ArrayList<>();
 
 		for (String param : params) {
-			if (param.contains("_backURL=") || param.contains("_redirect=") ||
-				param.contains("_returnToFullPageURL=") ||
+			if (param.contains("_backURL" + encodedEqual) ||
+				param.contains("_redirect" + encodedEqual) ||
+				param.contains("_returnToFullPageURL" + encodedEqual) ||
 				(param.startsWith("redirect") &&
-				 (param.indexOf(CharPool.EQUAL) != -1))) {
+				 (param.indexOf(encodedEqual) != -1))) {
 
-				redirectParams.add(param);
+				encodedRedirectParams.add(param);
 			}
 			else {
 				sb.append(param);
-				sb.append(StringPool.AMPERSAND);
+				sb.append(encodedAmpersand);
 			}
 		}
 
@@ -2066,32 +2092,24 @@ public class HttpImpl implements Http {
 			return sb.toString();
 		}
 
-		for (String redirectParam : redirectParams) {
-			int pos = redirectParam.indexOf(CharPool.EQUAL);
+		for (String encodedRedirectParam : encodedRedirectParams) {
+			int pos = encodedRedirectParam.indexOf(encodedEqual);
 
-			String key = redirectParam.substring(0, pos);
+			String key = encodedRedirectParam.substring(0, pos);
 
-			String redirect = redirectParam.substring(pos + 1);
-
-			try {
-				redirect = URLCodec.decodeURL(redirect, StringPool.UTF8);
-			}
-			catch (IllegalArgumentException iae) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						"Skipping undecodable parameter " + redirectParam, iae);
-				}
-
-				continue;
-			}
+			String redirect = encodedRedirectParam.substring(
+				pos + encodedEqual.length());
 
 			sb.append(key);
-			sb.append(StringPool.EQUAL);
+			sb.append(encodedEqual);
 
 			int newLength = sb.length();
 
-			redirect = URLCodec.encodeURL(
-				_shortenURL(redirect, currentLength + newLength));
+			redirect = _shortenURL(
+				redirect, currentLength + newLength,
+				URLCodec.encodeURL(encodedQuestion),
+				URLCodec.encodeURL(encodedAmpersand),
+				URLCodec.encodeURL(encodedEqual));
 
 			newLength += redirect.length();
 
@@ -2100,7 +2118,7 @@ public class HttpImpl implements Http {
 			}
 			else {
 				sb.append(redirect);
-				sb.append(StringPool.AMPERSAND);
+				sb.append(encodedAmpersand);
 			}
 		}
 

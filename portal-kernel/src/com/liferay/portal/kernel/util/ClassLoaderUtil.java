@@ -14,7 +14,9 @@
 
 package com.liferay.portal.kernel.util;
 
-import com.liferay.petra.lang.ClassLoaderPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.servlet.ServletContextClassLoaderPool;
 
 /**
  * @author Raymond Augé
@@ -73,8 +75,18 @@ public class ClassLoaderUtil {
 			}
 
 			for (int i = 0; i < servletContextNames.length; i++) {
-				classLoaders[offset + i] = ClassLoaderPool.getClassLoader(
-					servletContextNames[i]);
+				ClassLoader classLoader =
+					ServletContextClassLoaderPool.getClassLoader(
+						servletContextNames[i]);
+
+				if (classLoader == null) {
+					_log.error(
+						"Unable to find class loader for servlet context " +
+							servletContextNames[i]);
+				}
+				else {
+					classLoaders[offset + i] = classLoader;
+				}
 			}
 
 			return AggregateClassLoader.getAggregateClassLoader(classLoaders);
@@ -94,7 +106,17 @@ public class ClassLoaderUtil {
 
 		@Override
 		public ClassLoader getPluginClassLoader(String servletContextName) {
-			return ClassLoaderPool.getClassLoader(servletContextName);
+			ClassLoader classLoader =
+				ServletContextClassLoaderPool.getClassLoader(
+					servletContextName);
+
+			if (classLoader == null) {
+				throw new IllegalStateException(
+					"Unable to find the class loader for servlet context " +
+						servletContextName);
+			}
+
+			return classLoader;
 		}
 
 		@Override
@@ -127,6 +149,9 @@ public class ClassLoaderUtil {
 		public void setContextClassLoader(ClassLoader classLoader);
 
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ClassLoaderUtil.class);
 
 	private static final PACL _pacl = new NoPACL();
 

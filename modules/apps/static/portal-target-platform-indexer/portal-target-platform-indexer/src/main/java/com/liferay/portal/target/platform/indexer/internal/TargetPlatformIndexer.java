@@ -29,6 +29,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
+import java.net.URLEncoder;
+
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -160,7 +162,8 @@ public class TargetPlatformIndexer implements Indexer {
 	private void _addBundle(Path tempPath, Path jarPath, Set<File> jarFiles)
 		throws IOException {
 
-		Path tempJarPath = tempPath.resolve(jarPath.getFileName());
+		Path tempJarPath = tempPath.resolve(
+			URLEncoder.encode(String.valueOf(jarPath.getFileName()), "UTF-8"));
 
 		Files.copy(
 			jarPath, tempJarPath, StandardCopyOption.COPY_ATTRIBUTES,
@@ -202,7 +205,11 @@ public class TargetPlatformIndexer implements Indexer {
 
 		String postfix = content.substring(end);
 
-		String newContent = prefix.concat(sha256sum).concat(postfix);
+		String newContent = prefix.concat(
+			sha256sum
+		).concat(
+			postfix
+		);
 
 		index = newContent.indexOf(url);
 
@@ -223,7 +230,11 @@ public class TargetPlatformIndexer implements Indexer {
 		prefix = newContent.substring(0, start);
 		postfix = newContent.substring(end);
 
-		newContent = prefix.concat(String.valueOf(size)).concat(postfix);
+		newContent = prefix.concat(
+			String.valueOf(size)
+		).concat(
+			postfix
+		);
 
 		newContent = newContent.replace("\r\n", "\n");
 

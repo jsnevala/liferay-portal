@@ -734,6 +734,9 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 				Group userOrganizationGroup = organization.getGroup();
 
 				if (SyncUtil.isSyncEnabled(userOrganizationGroup)) {
+					userOrganizationGroup.setName(
+						userOrganizationGroup.getDescriptiveName());
+
 					groups.add(userOrganizationGroup);
 				}
 
@@ -749,6 +752,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 						if (SyncUtil.isSyncEnabled(
 								userAncestorOrganizationGroup)) {
+
+							userAncestorOrganizationGroup.setName(
+								userAncestorOrganizationGroup.
+									getDescriptiveName());
 
 							groups.add(userAncestorOrganizationGroup);
 						}

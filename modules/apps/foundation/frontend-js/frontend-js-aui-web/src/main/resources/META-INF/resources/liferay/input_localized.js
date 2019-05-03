@@ -23,14 +23,12 @@ AUI.add(
 
 		var STR_SUBMIT = '_onSubmit';
 
-		var defaultLanguageId = themeDisplay.getDefaultLanguageId();
+		var defaultLanguageId;
 		var userLanguageId = themeDisplay.getLanguageId();
 
 		var availableLanguages = Liferay.Language.available;
 
-		var availableLanguageIds = AArray.dedupe(
-			[defaultLanguageId, userLanguageId].concat(A.Object.keys(availableLanguages))
-		);
+		var availableLanguageIds;
 
 		var InputLocalized = A.Component.create(
 			{
@@ -132,6 +130,12 @@ AUI.add(
 
 					initializer: function() {
 						var instance = this;
+
+						defaultLanguageId = instance.get("defaultLanguageId");
+
+						availableLanguageIds = AArray.dedupe(
+							[defaultLanguageId, userLanguageId].concat(A.Object.keys(availableLanguages))
+						);
 
 						var inputPlaceholder = instance.get(STR_INPUT_PLACEHOLDER);
 

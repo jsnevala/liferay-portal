@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
@@ -39,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  */
 @Component(
-	property = {"javax.portlet.name=" + SocialNetworkingPortletKeys.MEMBERS},
+	property = "javax.portlet.name=" + SocialNetworkingPortletKeys.MEMBERS,
 	service = SocialActivityInterpreter.class
 )
 public class MembersActivityInterpreter extends BaseSocialActivityInterpreter {
@@ -77,7 +76,9 @@ public class MembersActivityInterpreter extends BaseSocialActivityInterpreter {
 
 	@Override
 	protected ResourceBundleLoader getResourceBundleLoader() {
-		return _resourceBundleLoader;
+		return ResourceBundleLoaderUtil.
+			getResourceBundleLoaderByBundleSymbolicName(
+				"com.liferay.social.networking.web");
 	}
 
 	@Override
@@ -146,18 +147,6 @@ public class MembersActivityInterpreter extends BaseSocialActivityInterpreter {
 		_organizationLocalService = organizationLocalService;
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.social.networking.web)",
-		unbind = "-"
-	)
-	protected void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
-	}
-
 	@Reference(unbind = "-")
 	protected void setUserLocalService(UserLocalService userLocalService) {
 		_userLocalService = userLocalService;
@@ -166,7 +155,6 @@ public class MembersActivityInterpreter extends BaseSocialActivityInterpreter {
 	private static final String[] _CLASS_NAMES = {Organization.class.getName()};
 
 	private OrganizationLocalService _organizationLocalService;
-	private ResourceBundleLoader _resourceBundleLoader;
 	private UserLocalService _userLocalService;
 
 }

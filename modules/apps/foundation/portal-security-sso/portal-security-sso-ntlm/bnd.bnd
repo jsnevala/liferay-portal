@@ -1,9 +1,8 @@
 Bundle-Name: Liferay Portal Security SSO NTLM
 Bundle-SymbolicName: com.liferay.portal.security.sso.ntlm
-Bundle-Version: 4.0.2
+Bundle-Version: 4.0.12
 Import-Package:\
 	!javax.microedition.*,\
 	\
 	*
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Security Frameworks

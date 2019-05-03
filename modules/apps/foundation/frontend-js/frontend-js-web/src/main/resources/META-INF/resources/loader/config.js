@@ -7,7 +7,7 @@
 		basePath: '',
 		combine: combine,
 		reportMismatchedAnonymousModules: 'warn',
-		url: combine ? LiferayAUI.getComboPath() : themeDisplay.getPortalURL()
+		url: combine ? LiferayAUI.getComboPath() : Liferay.ThemeDisplay.getCDNBaseURL()
 	};
 
 	if (!combine) {
@@ -27,4 +27,6 @@
 	__CONFIG__.explainResolutions = Liferay.EXPLAIN_RESOLUTIONS;
 
 	__CONFIG__.exposeGlobal = Liferay.EXPOSE_GLOBAL;
+
+	__CONFIG__.waitTimeout = Liferay.WAIT_TIMEOUT;
 }());

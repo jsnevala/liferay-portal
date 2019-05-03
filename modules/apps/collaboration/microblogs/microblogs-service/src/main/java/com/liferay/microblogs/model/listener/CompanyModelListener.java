@@ -40,8 +40,8 @@ public class CompanyModelListener extends BaseModelListener<Company> {
 
 			actionableDynamicQuery.setCompanyId(company.getCompanyId());
 			actionableDynamicQuery.setPerformActionMethod(
-				new ActionableDynamicQuery.
-					PerformActionMethod<MicroblogsEntry>() {
+				new ActionableDynamicQuery.PerformActionMethod
+					<MicroblogsEntry>() {
 
 					@Override
 					public void performAction(MicroblogsEntry microblogsEntry)

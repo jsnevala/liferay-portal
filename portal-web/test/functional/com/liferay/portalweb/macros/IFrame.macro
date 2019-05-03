@@ -1,49 +1,49 @@
-<definition>
-	<command name="addCP">
-		<execute macro="IFrame#selectConfigurationFrame" />
+definition {
+	macro addCP {
+		IFrame.selectConfigurationFrame();
 
-		<execute function="Type" locator1="TextInput#SOURCE_URL" value1="${sourceURL}" />
+		Type(locator1 = "TextInput#SOURCE_URL", value1 = "${sourceURL}");
 
-		<execute macro="PortletEntry#save" />
+		PortletEntry.save();
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		SelectFrame(value1 = "relative=top");
+	}
 
-	<command name="closeFrame">
-		<execute function="SelectFrame" value1="relative=top" />
+	macro closeFrame {
+		SelectFrame(value1 = "relative=top");
 
-		<execute function="Click" locator1="Icon#CLOSE" />
-	</command>
+		Click(locator1 = "Icon#CLOSE");
+	}
 
-	<command name="selectCategoryFrame">
-		<execute function="SelectFrame" locator1="IFrame#SELECT_CATEGORY" />
-	</command>
+	macro selectCategoryFrame {
+		SelectFrame(locator1 = "IFrame#SELECT_CATEGORY");
+	}
 
-	<command name="selectConfigurationFrame">
-		<execute function="SelectFrame" locator1="IFrame#CONFIGURATION" />
-	</command>
+	macro selectConfigurationFrame {
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
+	}
 
-	<command name="selectDialogFrame">
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-	</command>
+	macro selectDialogFrame {
+		SelectFrame(locator1 = "IFrame#DIALOG");
+	}
 
-	<command name="selectEditAssetFrame">
-		<execute function="SelectFrame" locator1="IFrame#EDIT_ASSET" />
-	</command>
+	macro selectEditAssetFrame {
+		SelectFrame(locator1 = "IFrame#EDIT_ASSET");
+	}
 
-	<command name="selectModalFrame">
-		<execute function="SelectFrame" locator1="IFrame#MODAL_IFRAME" />
-	</command>
+	macro selectModalFrame {
+		SelectFrame(locator1 = "IFrame#MODAL_IFRAME");
+	}
 
-	<command name="selectPermissionsFrame">
-		<var name="key_iframeTitle" value="Permissions" />
+	macro selectPermissionsFrame {
+		var key_iframeTitle = "Permissions";
 
-		<execute function="AssertElementPresent" locator1="IFrame#IFRAME_TITLE" />
+		AssertElementPresent(locator1 = "IFrame#IFRAME_TITLE");
 
-		<execute macro="IFrame#selectDialogFrame" />
-	</command>
+		IFrame.selectDialogFrame();
+	}
 
-	<command name="selectTopFrame">
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
-</definition>
+	macro selectTopFrame {
+		SelectFrame(value1 = "relative=top");
+	}
+}

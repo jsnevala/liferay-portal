@@ -1,147 +1,142 @@
-<definition component-name="portal-permissions">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Permissions" />
+@component-name = "portal-permissions"
+definition {
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Permissions";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
-	</set-up>
+		User.firstLoginPG();
+	}
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="User#firstLoginPG" />
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			User.firstLoginPG();
 
-				<execute macro="PortalSettings#tearDownCP" />
+			PortalSettings.tearDownCP();
 
-				<execute macro="User#tearDownCP" />
+			User.tearDownCP();
 
-				<execute macro="Role#tearDownCP" />
+			Role.tearDownCP();
 
-				<execute macro="Organization#tearDownCP" />
+			Organization.tearDownCP();
 
-				<execute macro="Site#tearDownCP" />
+			Site.tearDownCP();
 
-				<execute macro="Page#tearDownPG" />
-			</else>
-		</if>
-	</tear-down>
+			Page.tearDownPG();
+		}
+	}
 
-	<command name="ViewWikiPortletRegRole" priority="4">
-		<execute macro="Permissions#setUpRegRoleLoginUserCP">
-			<var name="portletName" value="Wiki" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+	@priority = "4"
+	test ViewWikiPortletRegRole {
+		Permissions.setUpRegRoleLoginUserCP(
+			portletName = "Wiki",
+			roleName = "Regrole Name",
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln",
+			userScreenName = "usersn"
+		);
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="SITE_ADMIN_CONTENT_WIKI_GENERAL_PERMISSIONS_ACCESS_IN_SITE_ADMINISTRATION_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Access in Site Administration" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "SITE_ADMIN_CONTENT_WIKI_GENERAL_PERMISSIONS_ACCESS_IN_SITE_ADMINISTRATION_CHECKBOX",
+			permissionDefinitionValue = "Access in Site Administration",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Wiki" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Wiki"
+		);
 
-		<execute macro="WikiPortlet#viewNoPermissionCP" />
+		WikiPortlet.viewNoPermissionCP();
 
-		<execute macro="Permissions#removePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="SITE_ADMIN_PAGES_SITE_PAGES_RESOURCE_PERMISSIONS_SITE_GO_TO_SITE_ADMINISTRATION_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Go to Site Administration" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-		</execute>
+		Permissions.removePermissionLoginUserCP(
+			permissionDefinitionKey = "SITE_ADMIN_PAGES_SITE_PAGES_RESOURCE_PERMISSIONS_SITE_GO_TO_SITE_ADMINISTRATION_CHECKBOX",
+			permissionDefinitionValue = "Go to Site Administration",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test"
+		);
 
-		<execute macro="Permissions#removePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="SITE_ADMIN_CONTENT_WIKI_GENERAL_PERMISSIONS_ACCESS_IN_SITE_ADMINISTRATION_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Access in Site Administration" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
-	</command>
+		Permissions.removePermissionLoginUserCP(
+			permissionDefinitionKey = "SITE_ADMIN_CONTENT_WIKI_GENERAL_PERMISSIONS_ACCESS_IN_SITE_ADMINISTRATION_CHECKBOX",
+			permissionDefinitionValue = "Access in Site Administration",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
+	}
 
-	<command name="ViewWikiPortletSiteRole" priority="4">
-		<execute macro="Permissions#setUpSiteRoleLoginUserCP">
-			<var name="pageName" value="Wiki Page" />
-			<var name="portletName" value="Wiki" />
-			<var name="roleName" value="Roles Siterole Name" />
-			<var name="roleType" value="Site" />
-			<var name="siteName" value="Site Name" />
-			<var name="sitePagePrivacy" value="Public" />
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+	@priority = "4"
+	test ViewWikiPortletSiteRole {
+		Permissions.setUpSiteRoleLoginUserCP(
+			pageName = "Wiki Page",
+			portletName = "Wiki",
+			roleName = "Roles Siterole Name",
+			roleType = "Site",
+			siteName = "Site Name",
+			sitePagePrivacy = "Public",
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln",
+			userScreenName = "usersn"
+		);
 
-		<execute macro="Navigator#gotoSitePage">
-			<var name="pageName" value="Wiki Page" />
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Navigator.gotoSitePage(pageName = "Wiki Page", siteName = "Site Name");
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="SITE_ADMIN_CONTENT_WIKI_GENERAL_PERMISSIONS_ACCESS_IN_SITE_ADMINISTRATION_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Access in Site Administration" />
-			<var name="roleName" value="Roles Siterole Name" />
-			<var name="roleType" value="Site" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "SITE_ADMIN_CONTENT_WIKI_GENERAL_PERMISSIONS_ACCESS_IN_SITE_ADMINISTRATION_CHECKBOX",
+			permissionDefinitionValue = "Access in Site Administration",
+			roleName = "Roles Siterole Name",
+			roleType = "Site",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
 
-		<execute macro="Navigator#openSiteURL">
-			<var name="siteName" value="Site Name" />
-		</execute>
+		Navigator.openSiteURL(siteName = "Site Name");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Wiki" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Wiki"
+		);
 
-		<execute macro="WikiPortlet#viewNoPermissionCP" />
+		WikiPortlet.viewNoPermissionCP();
 
-		<execute macro="Permissions#removePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="SITE_ADMIN_PAGES_SITE_PAGES_RESOURCE_PERMISSIONS_SITE_GO_TO_SITE_ADMINISTRATION_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Go to Site Administration" />
-			<var name="roleName" value="Roles Siterole Name" />
-			<var name="roleType" value="Site" />
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-		</execute>
+		Permissions.removePermissionLoginUserCP(
+			permissionDefinitionKey = "SITE_ADMIN_PAGES_SITE_PAGES_RESOURCE_PERMISSIONS_SITE_GO_TO_SITE_ADMINISTRATION_CHECKBOX",
+			permissionDefinitionValue = "Go to Site Administration",
+			roleName = "Roles Siterole Name",
+			roleType = "Site",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test"
+		);
 
-		<execute macro="Permissions#removePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="SITE_ADMIN_CONTENT_WIKI_GENERAL_PERMISSIONS_ACCESS_IN_SITE_ADMINISTRATION_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Access in Site Administration" />
-			<var name="roleName" value="Roles Siterole Name" />
-			<var name="roleType" value="Site" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
-	</command>
-</definition>
+		Permissions.removePermissionLoginUserCP(
+			permissionDefinitionKey = "SITE_ADMIN_CONTENT_WIKI_GENERAL_PERMISSIONS_ACCESS_IN_SITE_ADMINISTRATION_CHECKBOX",
+			permissionDefinitionValue = "Access in Site Administration",
+			roleName = "Roles Siterole Name",
+			roleType = "Site",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
+	}
+}

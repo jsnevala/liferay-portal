@@ -94,7 +94,9 @@ public class ItemSelectorImpl implements ItemSelector {
 			Class<? extends ItemSelectorCriterion> itemSelectorCriterionClass =
 				itemSelectorCriterionClasses.get(i);
 
-			String json = parameters.get(String.valueOf(i).concat(JSON))[0];
+			String countValue = String.valueOf(i);
+
+			String json = parameters.get(countValue.concat(JSON))[0];
 
 			itemSelectorCriteria.add(
 				_itemSelectionCriterionSerializer.deserialize(
@@ -294,8 +296,10 @@ public class ItemSelectorImpl implements ItemSelector {
 			ItemSelectorCriterion itemSelectorCriterion =
 				itemSelectorCriteria[i];
 
+			String countValue = String.valueOf(i);
+
 			parameters.put(
-				String.valueOf(i).concat(JSON),
+				countValue.concat(JSON),
 				new String[] {
 					_itemSelectionCriterionSerializer.serialize(
 						itemSelectorCriterion)
@@ -382,8 +386,8 @@ public class ItemSelectorImpl implements ItemSelector {
 	}
 
 	protected
-		<T extends ItemSelectorCriterion, S extends ItemSelectorReturnType>
-			void unsetItemSelectionCriterionHandler(
+		<T extends ItemSelectorCriterion, S extends ItemSelectorReturnType> void
+			unsetItemSelectionCriterionHandler(
 				ItemSelectorCriterionHandler<T> itemSelectionCriterionHandler) {
 
 		Class<T> itemSelectorCriterionClass =

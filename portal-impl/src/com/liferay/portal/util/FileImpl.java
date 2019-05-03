@@ -146,20 +146,20 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 		File[] fileArray = source.listFiles();
 
-		for (int i = 0; i < fileArray.length; i++) {
-			if (fileArray[i].isDirectory()) {
+		for (File file : fileArray) {
+			if (file.isDirectory()) {
 				copyDirectory(
-					fileArray[i],
+					file,
 					new File(
 						destination.getPath() + File.separator +
-							fileArray[i].getName()));
+							file.getName()));
 			}
 			else {
 				copyFile(
-					fileArray[i],
+					file,
 					new File(
 						destination.getPath() + File.separator +
-							fileArray[i].getName()));
+							file.getName()));
 			}
 		}
 	}
@@ -339,12 +339,12 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 		if (directory.exists() && directory.isDirectory()) {
 			File[] fileArray = directory.listFiles();
 
-			for (int i = 0; i < fileArray.length; i++) {
-				if (fileArray[i].isDirectory()) {
-					deltree(fileArray[i]);
+			for (File file : fileArray) {
+				if (file.isDirectory()) {
+					deltree(file);
 				}
 				else {
-					fileArray[i].delete();
+					file.delete();
 				}
 			}
 
@@ -434,28 +434,30 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 			else {
 				TikaInputStream tikaInputStream = TikaInputStream.get(is);
 
-				UniversalEncodingDetector universalEncodingDetector =
-					new UniversalEncodingDetector();
+				if (!_isEmptyTikaInputStream(tikaInputStream)) {
+					UniversalEncodingDetector universalEncodingDetector =
+						new UniversalEncodingDetector();
 
-				Metadata metadata = new Metadata();
+					Metadata metadata = new Metadata();
 
-				Charset charset = universalEncodingDetector.detect(
-					tikaInputStream, metadata);
+					Charset charset = universalEncodingDetector.detect(
+						tikaInputStream, metadata);
 
-				String contentEncoding = StringPool.BLANK;
+					String contentEncoding = StringPool.BLANK;
 
-				if (charset != null) {
-					contentEncoding = charset.name();
+					if (charset != null) {
+						contentEncoding = charset.name();
+					}
+
+					if (!contentEncoding.equals(StringPool.BLANK)) {
+						metadata.set("Content-Encoding", contentEncoding);
+						metadata.set(
+							"Content-Type",
+							"text/plain; charset=" + contentEncoding);
+					}
+
+					text = tika.parseToString(tikaInputStream, metadata);
 				}
-
-				if (!contentEncoding.equals(StringPool.BLANK)) {
-					metadata.set("Content-Encoding", contentEncoding);
-					metadata.set(
-						"Content-Type",
-						"text/plain; charset=" + contentEncoding);
-				}
-
-				text = tika.parseToString(tikaInputStream, metadata);
 			}
 		}
 		catch (Throwable t) {
@@ -531,7 +533,10 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 		for (int i = 0; i < includedFiles.length; i++) {
 			includedFiles[i] = directory.concat(
-				StringPool.SLASH).concat(replaceSeparator(includedFiles[i]));
+				StringPool.SLASH
+			).concat(
+				replaceSeparator(includedFiles[i])
+			);
 		}
 
 		return includedFiles;
@@ -635,9 +640,7 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 			return StringPool.SLASH;
 		}
 
-		String shortFileName = fullFileName.substring(0, Math.max(x, y));
-
-		return shortFileName;
+		return fullFileName.substring(0, Math.max(x, y));
 	}
 
 	@Override
@@ -645,9 +648,7 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 		int x = fullFileName.lastIndexOf(CharPool.SLASH);
 		int y = fullFileName.lastIndexOf(CharPool.BACK_SLASH);
 
-		String shortFileName = fullFileName.substring(Math.max(x, y) + 1);
-
-		return shortFileName;
+		return fullFileName.substring(Math.max(x, y) + 1);
 	}
 
 	@Override
@@ -868,12 +869,12 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 		List<File> directoryList = new ArrayList<>();
 		List<File> fileList = new ArrayList<>();
 
-		for (int i = 0; i < files.length; i++) {
-			if (files[i].isDirectory()) {
-				directoryList.add(files[i]);
+		for (File file : files) {
+			if (file.isDirectory()) {
+				directoryList.add(file);
 			}
 			else {
-				fileList.add(files[i]);
+				fileList.add(file);
 			}
 		}
 
@@ -1128,6 +1129,24 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 		}
 	}
 
+	private boolean _isEmptyTikaInputStream(TikaInputStream tikaInputStream)
+		throws IOException {
+
+		if (tikaInputStream.hasLength() && (tikaInputStream.getLength() > 0)) {
+			return false;
+		}
+
+		byte[] bytes = new byte[1];
+
+		int count = tikaInputStream.peek(bytes);
+
+		if (count > 0) {
+			return false;
+		}
+
+		return true;
+	}
+
 	private static final String[] _SAFE_FILE_NAME_1 = {
 		StringPool.AMPERSAND, StringPool.CLOSE_PARENTHESIS,
 		StringPool.OPEN_PARENTHESIS, StringPool.SEMICOLON
@@ -1153,6 +1172,10 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 		@Override
 		public String call() throws ProcessException {
+			if (ArrayUtil.isEmpty(_data)) {
+				return StringPool.BLANK;
+			}
+
 			Tika tika = new Tika(TikaConfigHolder._tikaConfig);
 
 			try {

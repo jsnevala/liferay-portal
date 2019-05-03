@@ -44,11 +44,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>ALLOW_SITE_ADMIN_MODIFY_PAGES</td>
-	<td>//label[contains(.,'Allow site administrators to modify')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>ANONYMOUS</td>
 	<td>//input[contains(@id,'anonymous')]</td>
 	<td></td>
@@ -64,13 +59,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>CHANGEABLE</td>
-	<td>//label[contains(.,'Changeable')]/input[@type='checkbox']</td>
+	<td>CHANGE_REQUIRED</td>
+	<td>//label[contains(.,'Change Required')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>CHANGE_REQUIRED</td>
-	<td>//label[contains(.,'Change Required')]/input[@type='checkbox']</td>
+	<td>CHANGEABLE</td>
+	<td>//label[contains(.,'Changeable')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -94,58 +89,18 @@
 	<td></td>
 </tr>
 <tr>
-	<td>ENABLE_COMMENTS</td>
-	<td>//label[contains(.,'Enable Comments')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>ENABLE_COMMENT_RATINGS</td>
 	<td>//label[contains(.,'Enable Comment Ratings')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>ENABLE_CONVERSION_DOC</td>
-	<td>//label[contains(.,'DOC')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ENABLE_CONVERSION_ODT</td>
-	<td>//label[contains(.,'ODT')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ENABLE_CONVERSION_PDF</td>
-	<td>//label[contains(.,'PDF')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ENABLE_CONVERSION_RTF</td>
-	<td>//label[contains(.,'RTF')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ENABLE_CONVERSION_SXW</td>
-	<td>//label[contains(.,'SXW')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ENABLE_CONVERSION_TXT</td>
-	<td>//label[contains(.,'TXT')]/input[@type='checkbox']</td>
+	<td>ENABLE_COMMENTS</td>
+	<td>//label[contains(.,'Enable Comments')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ENABLE_FLAGS</td>
 	<td>//label[contains(.,'Enable Flags')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ENABLE_FULLSCREEN</td>
-	<td>//input[contains(@id,'enableFullscreen')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ENABLE_GOOGLE_AUTHENTICATION</td>
-	<td>//input[contains(@id,'google-auth')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -156,11 +111,6 @@
 <tr>
 	<td>ENABLE_PAGE_RATINGS</td>
 	<td>//label[contains(.,'Enable Page Ratings')]//input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ENABLE_PRINT</td>
-	<td>//label[contains(.,'Enable Print')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -194,13 +144,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>ENABLE_VIEW_COUNT</td>
-	<td>//label[contains(.,'Enable View Count')]/input[@type='checkbox']</td>
+	<td>ENABLE_SYNTAX_CHECKING</td>
+	<td>//label[contains(.,'Enable Syntax Checking')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>ENABLE_VIEW_COUNT_INCREMENT</td>
-	<td>//label[contains(.,'Enable View Count Increment')]/input[@type='checkbox']</td>
+	<td>ENABLE_VIEW_COUNT</td>
+	<td>//label[contains(.,'Enable View Count')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -219,28 +169,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>GOOGLE_PLUS</td>
-	<td>//input[contains(@id,'plusone')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>EXPIRATION_ENABLED</td>
-	<td>//label[contains(.,'Expiration Enabled')]/input[@type='checkbox']</td>
+	<td>FORCE_AUTHN</td>
+	<td>//label[contains(.,'Force Authn')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>HIDE_FROM_NAVIGATION_MENU</td>
 	<td>//label[contains(.,'Hide from Navigation Menu')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>HISTORY_ENABLED</td>
-	<td>//label[contains(.,'History Enabled')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>LEXICON_SELECT_ALL</td>
-	<td>//div[contains(@class,'collapse on')]//input</td>
 	<td></td>
 </tr>
 <tr>
@@ -259,16 +194,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>MENTIONS</td>
-	<td>//input[contains(@id,'mentionsEnabledCheckbox')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>MENTIONS_CHECKBOX_DISABLED</td>
-	<td>//input[contains(@id,'mentionsEnabled') and contains(@class,'disabled')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>MERGE_WITH_PARENT_FOLDER</td>
 	<td>//label[contains(.,'Merge with Parent Folder')]/input[@type='checkbox']</td>
 	<td></td>
@@ -276,11 +201,6 @@
 <tr>
 	<td>NEVER_EXPIRE</td>
 	<td>//input[contains(@name,'neverExpire') and @type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NEVER_REVIEW</td>
-	<td>//input[contains(@name,'neverReview') and @type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -319,11 +239,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SEARCHABLE</td>
-	<td>//input[contains(@id,'indexable')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>SELECT_ALL</td>
 	<td>//*[@data-qa-id='selectAllCheckbox'] | //div[@class='checkbox']//input[@title='Select All'] | //input[contains(@id,'allRowIds') or contains(@name,'allRowIds') or contains(@class,'select-all-checkboxes')] | //input[contains(@id,'selectAllCheckbox')]</td>
 	<td></td>
@@ -334,28 +249,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SELECT_ALL_NOTIFICATIONS</td>
-	<td>//input[contains(@id,'notifications') and contains(@class,'select-all')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>SHOW_ACTIONS_CHECKBOX</td>
 	<td>//label[contains(@for,'showActions')]//input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SHOW_ADD_CONTENT_BUTTON</td>
-	<td>//label[contains(.,'Show Add Content Button')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SHOW_AVAILABLE_LOCALES</td>
-	<td>//label[contains(.,'Show Available Locales')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SHOW_FOLDER_MENU_CHECKBOX</td>
-	<td>//label[contains(@for,'showFolderMenu')]//input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -364,28 +259,18 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SHOW_NAVIGATION_LINKS_CHECKBOX</td>
-	<td>//label[contains(@for,'showTabs')]//input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SHOW_SEARCH_CHECKBOX</td>
-	<td>//input[contains(@id,'showFoldersSearch')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>SHOW_TOTALS</td>
 	<td>//label[contains(.,'Show Totals')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SITE_ADMINISTRATOR</td>
-	<td>xpath=(//input[contains(@name,'rowIds')])[1]</td>
+	<td>SITE_OWNER</td>
+	<td>//tr[contains(.,'Site Owner')]//input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SITE_OWNER</td>
-	<td>//tr[contains(.,'Site Owner')]//input[@type='checkbox']</td>
+	<td>SITE_TEMPLATE</td>
+	<td>//tr[contains(.,'${key_siteTemplateName}')]//input</td>
 	<td></td>
 </tr>
 <tr>
@@ -399,13 +284,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>STATUS</td>
-	<td>//span[@class='icon-check' and contains(.,'${key_status}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ENABLE_SYNTAX_CHECKING</td>
-	<td>//label[contains(.,'Enable Syntax Checking')]/input[@type='checkbox']</td>
+	<td>TEAM_PERMISSIONS</td>
+	<td>//tr[contains(.,'${key_teamName}')]/td/input[contains(@id,'${key_permissionDefinitionKey}')]</td>
 	<td></td>
 </tr>
 <tr>

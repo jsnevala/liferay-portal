@@ -381,9 +381,10 @@ public class HookHotDeployListener
 			_log.debug(
 				"Portlet locales " + portalProperties.getProperty(LOCALES));
 			_log.debug("Original locales " + PropsUtil.get(LOCALES));
-			_log.debug(
-				"Original locales array length " +
-					PropsUtil.getArray(LOCALES).length);
+
+			String[] locales = PropsUtil.getArray(LOCALES);
+
+			_log.debug("Original locales array length " + locales.length);
 		}
 
 		resetPortalProperties(servletContextName, portalProperties, false);
@@ -1361,9 +1362,10 @@ public class HookHotDeployListener
 			_log.debug(
 				"Portlet locales " + portalProperties.getProperty(LOCALES));
 			_log.debug("Merged locales " + PropsUtil.get(LOCALES));
-			_log.debug(
-				"Merged locales array length " +
-					PropsUtil.getArray(LOCALES).length);
+
+			String[] locales = PropsUtil.getArray(LOCALES);
+
+			_log.debug("Merged locales array length " + locales.length);
 		}
 
 		for (String key : _PROPS_VALUES_OBSOLETE) {
@@ -1827,7 +1829,7 @@ public class HookHotDeployListener
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, as of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), as of 7.0.0, with no direct replacement
 	 */
 	@Deprecated
 	protected void initServices(
@@ -2340,8 +2342,9 @@ public class HookHotDeployListener
 		SERVLET_SERVICE_EVENTS_PRE
 	};
 
-	private static final String[] _PROPS_KEYS_SESSION_EVENTS =
-		{SERVLET_SESSION_CREATE_EVENTS, SERVLET_SESSION_DESTROY_EVENTS};
+	private static final String[] _PROPS_KEYS_SESSION_EVENTS = {
+		SERVLET_SESSION_CREATE_EVENTS, SERVLET_SESSION_DESTROY_EVENTS
+	};
 
 	private static final String[] _PROPS_VALUES_BOOLEAN = {
 		"auth.forward.by.last.path", "captcha.check.portal.create_account",
@@ -2416,8 +2419,9 @@ public class HookHotDeployListener
 		"layout.user.public.layouts.modifiable"
 	};
 
-	private static final String[] _PROPS_VALUES_OVERRIDE_STRING_ARRAY =
-		{"locales.beta"};
+	private static final String[] _PROPS_VALUES_OVERRIDE_STRING_ARRAY = {
+		"locales.beta"
+	};
 
 	private static final String[] _PROPS_VALUES_STRING = {
 		"company.default.locale", "company.default.time.zone",

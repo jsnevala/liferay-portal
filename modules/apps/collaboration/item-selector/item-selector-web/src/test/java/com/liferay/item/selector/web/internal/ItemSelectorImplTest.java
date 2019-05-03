@@ -76,6 +76,7 @@ public class ItemSelectorImplTest extends PowerMockito {
 
 		_itemSelectorImpl.setItemSelectorCriterionSerializer(
 			_stubItemSelectorCriterionSerializer);
+
 		ReflectionTestUtil.setFieldValue(
 			_itemSelectorImpl, "_http", new HttpImpl());
 		ReflectionTestUtil.setFieldValue(
@@ -169,8 +170,8 @@ public class ItemSelectorImplTest extends PowerMockito {
 
 		Assert.assertEquals(
 			"itemSelectedEventName",
-			parameters.get(
-				ItemSelectorImpl.PARAMETER_ITEM_SELECTED_EVENT_NAME)[0]);
+			parameters.get(ItemSelectorImpl.PARAMETER_ITEM_SELECTED_EVENT_NAME)
+				[0]);
 		Assert.assertEquals(
 			MediaItemSelectorCriterion.class.getName() + "," +
 				FlickrItemSelectorCriterion.class.getName(),

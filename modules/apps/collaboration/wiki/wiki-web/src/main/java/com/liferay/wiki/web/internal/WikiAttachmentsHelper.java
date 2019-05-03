@@ -71,6 +71,7 @@ public class WikiAttachmentsHelper {
 				for (int i = 1; i <= numOfFiles; i++) {
 					String fileName = uploadPortletRequest.getFileName(
 						"file" + i);
+
 					InputStream inputStream =
 						uploadPortletRequest.getFileAsStream("file" + i);
 

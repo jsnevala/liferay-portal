@@ -97,8 +97,7 @@ import javax.servlet.http.HttpServletResponse;
  * <code>
  * themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
  * </code>
- * </pre>
- * </p>
+ * </pre></p>
  *
  * @author Brian Wing Shun Chan
  */
@@ -466,7 +465,10 @@ public class ThemeDisplay
 				Group group = layout.getGroup();
 
 				return VirtualLayoutConstants.CANONICAL_URL_SEPARATOR.concat(
-					group.getFriendlyURL()).concat(_getFriendlyURL(layout));
+					group.getFriendlyURL()
+				).concat(
+					_getFriendlyURL(layout)
+				);
 			}
 			catch (PortalException pe) {
 				ReflectionUtil.throwException(pe);
@@ -535,8 +537,7 @@ public class ThemeDisplay
 	 * returns "2" for RESOURCE phase
 	 * returns "3" for EVENT phase
 	 * </code>
-	 * </pre>
-	 * </p>
+	 * </pre></p>
 	 *
 	 * @return the numeric portlet lifecycle indicator
 	 */
@@ -1019,7 +1020,7 @@ public class ThemeDisplay
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String getURLAddContent() {
@@ -1039,7 +1040,7 @@ public class ThemeDisplay
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String getURLLayoutTemplates() {
@@ -1065,7 +1066,7 @@ public class ThemeDisplay
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@JSON(include = false)
@@ -1220,7 +1221,7 @@ public class ThemeDisplay
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public boolean isShowAddContentIcon() {
@@ -1228,7 +1229,7 @@ public class ThemeDisplay
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public boolean isShowAddContentIconPermission() {
@@ -1715,14 +1716,14 @@ public class ThemeDisplay
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public void setShowAddContentIcon(boolean showAddContentIcon) {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public void setShowAddContentIconPermission(
@@ -1851,7 +1852,7 @@ public class ThemeDisplay
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public void setURLAddContent(String urlAddContent) {
@@ -1874,7 +1875,7 @@ public class ThemeDisplay
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public void setURLMyAccount(PortletURL urlMyAccount) {
@@ -1882,7 +1883,7 @@ public class ThemeDisplay
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public void setURLPageSettings(PortletURL urlPageSettings) {
@@ -1906,7 +1907,7 @@ public class ThemeDisplay
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public void setURLUpdateManager(PortletURL urlUpdateManager) {

@@ -62,7 +62,10 @@ public class FreeMarkerPortlet extends MVCPortlet {
 		String servletContextName = portletContext.getPortletContextName();
 
 		String resourcePath = servletContextName.concat(
-			TemplateConstants.SERVLET_SEPARATOR).concat(path);
+			TemplateConstants.SERVLET_SEPARATOR
+		).concat(
+			path
+		);
 
 		boolean resourceExists = false;
 
@@ -98,6 +101,9 @@ public class FreeMarkerPortlet extends MVCPortlet {
 				template.put(
 					"userInfo",
 					portletRequest.getAttribute(PortletRequest.USER_INFO));
+
+				template.prepare(
+					PortalUtil.getHttpServletRequest(portletRequest));
 
 				Writer writer = null;
 

@@ -22,10 +22,9 @@ import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
-
-import java.math.BigInteger;
 
 import java.util.Iterator;
 import java.util.List;
@@ -53,16 +52,18 @@ public class KBArticleFinderImpl
 
 			SQLQuery query = session.createSynchronizedSQLQuery(sql);
 
+			query.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+
 			QueryPos qPos = QueryPos.getInstance(query);
 
 			qPos.add(groupId);
 			qPos.add(kbArticleUrlTitle);
 			qPos.add(kbFolderUrlTitle);
 
-			Iterator<BigInteger> itr = query.iterate();
+			Iterator<Long> itr = query.iterate();
 
 			if (itr.hasNext()) {
-				BigInteger count = itr.next();
+				Long count = itr.next();
 
 				if (count != null) {
 					return count.intValue();

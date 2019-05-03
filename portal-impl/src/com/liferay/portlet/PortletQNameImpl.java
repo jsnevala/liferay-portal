@@ -43,7 +43,11 @@ public class PortletQNameImpl implements PortletQName {
 
 	@Override
 	public String getKey(String uri, String localPart) {
-		return uri.concat(_KEY_SEPARATOR).concat(localPart);
+		return uri.concat(
+			_KEY_SEPARATOR
+		).concat(
+			localPart
+		);
 	}
 
 	@Override

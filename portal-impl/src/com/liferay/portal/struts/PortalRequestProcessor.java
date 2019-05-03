@@ -325,8 +325,11 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 		}
 
 		if ((portlet == null) || !portlet.isActive()) {
-			return layoutFriendlyURL.concat(StringPool.QUESTION).concat(
-				request.getQueryString());
+			return layoutFriendlyURL.concat(
+				StringPool.QUESTION
+			).concat(
+				request.getQueryString()
+			);
 		}
 
 		String namespace = PortalUtil.getPortletNamespace(portletId);
@@ -335,8 +338,11 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 			portlet.getFriendlyURLMapperInstance();
 
 		if (friendlyURLMapper == null) {
-			return layoutFriendlyURL.concat(StringPool.QUESTION).concat(
-				request.getQueryString());
+			return layoutFriendlyURL.concat(
+				StringPool.QUESTION
+			).concat(
+				request.getQueryString()
+			);
 		}
 
 		LiferayPortletURL portletURL = PortletURLFactoryUtil.create(
@@ -360,8 +366,11 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 			return layoutFriendlyURL.concat(portletFriendlyURL);
 		}
 		else {
-			return layoutFriendlyURL.concat(StringPool.QUESTION).concat(
-				request.getQueryString());
+			return layoutFriendlyURL.concat(
+				StringPool.QUESTION
+			).concat(
+				request.getQueryString()
+			);
 		}
 	}
 
@@ -591,8 +600,11 @@ public class PortalRequestProcessor extends TilesRequestProcessor {
 				fullPathWithoutQueryString = path;
 
 				if (Validator.isNotNull(queryString)) {
-					fullPath = path.concat(StringPool.QUESTION).concat(
-						queryString);
+					fullPath = path.concat(
+						StringPool.QUESTION
+					).concat(
+						queryString
+					);
 				}
 				else {
 					fullPath = path;

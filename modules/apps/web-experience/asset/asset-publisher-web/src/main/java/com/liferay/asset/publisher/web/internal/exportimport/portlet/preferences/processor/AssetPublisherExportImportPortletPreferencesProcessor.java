@@ -18,6 +18,7 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
@@ -32,6 +33,7 @@ import com.liferay.dynamic.data.mapping.kernel.DDMStructureManager;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataException;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
@@ -47,10 +49,12 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Portlet;
@@ -100,13 +104,11 @@ import org.osgi.service.component.annotations.Reference;
  * and routines for processing portlet preferences while exporting or importing
  * Asset Publisher instances.
  *
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + AssetPublisherPortletKeys.ASSET_PUBLISHER
-	},
+	property = "javax.portlet.name=" + AssetPublisherPortletKeys.ASSET_PUBLISHER,
 	service = ExportImportPortletPreferencesProcessor.class
 )
 public class AssetPublisherExportImportPortletPreferencesProcessor
@@ -148,7 +150,10 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 				portletPreferences);
 		}
 		catch (Exception e) {
-			return portletPreferences;
+			PortletDataException pde = new PortletDataException(
+				"Unable to update portlet preferences during export", e);
+
+			throw pde;
 		}
 	}
 
@@ -168,7 +173,10 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 				portletDataContext, portletPreferences);
 		}
 		catch (Exception e) {
-			return portletPreferences;
+			PortletDataException pde = new PortletDataException(
+				"Unable to update portlet preferences during import", e);
+
+			throw pde;
 		}
 	}
 
@@ -237,6 +245,18 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 
 			if ((assetRenderer == null) ||
 				!(assetRenderer.getAssetObject() instanceof StagedModel)) {
+
+				continue;
+			}
+
+			AssetRendererFactory assetRendererFactory =
+				assetRenderer.getAssetRendererFactory();
+
+			Group group = _groupLocalService.getGroup(assetEntry.getGroupId());
+
+			if ((assetRendererFactory != null) &&
+				ExportImportThreadLocal.isStagingInProcess() &&
+				!group.isStagedPortlet(assetRendererFactory.getPortletId())) {
 
 				continue;
 			}
@@ -336,9 +356,8 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 				uuid = assetCategory.getUuid();
 				groupId = assetCategory.getGroupId();
 
-				portletDataContext.addReferenceElement(
-					portlet, rootElement, assetCategory,
-					PortletDataContext.REFERENCE_TYPE_DEPENDENCY, true);
+				StagedModelDataHandlerUtil.exportReferenceStagedModel(
+					portletDataContext, portlet.getPortletId(), assetCategory);
 			}
 		}
 		else if (className.equals(AssetVocabulary.class.getName())) {
@@ -350,9 +369,9 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 				uuid = assetVocabulary.getUuid();
 				groupId = assetVocabulary.getGroupId();
 
-				portletDataContext.addReferenceElement(
-					portlet, rootElement, assetVocabulary,
-					PortletDataContext.REFERENCE_TYPE_DEPENDENCY, true);
+				StagedModelDataHandlerUtil.exportReferenceStagedModel(
+					portletDataContext, portlet.getPortletId(),
+					assetVocabulary);
 			}
 		}
 		else if (className.equals(DDMStructure.class.getName())) {
@@ -363,9 +382,8 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 				uuid = ddmStructure.getUuid();
 				groupId = ddmStructure.getGroupId();
 
-				portletDataContext.addReferenceElement(
-					portlet, rootElement, ddmStructure,
-					PortletDataContext.REFERENCE_TYPE_DEPENDENCY, true);
+				StagedModelDataHandlerUtil.exportReferenceStagedModel(
+					portletDataContext, portlet.getPortletId(), ddmStructure);
 			}
 		}
 		else if (className.equals(DLFileEntryType.class.getName())) {
@@ -376,9 +394,9 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 				uuid = dlFileEntryType.getUuid();
 				groupId = dlFileEntryType.getGroupId();
 
-				portletDataContext.addReferenceElement(
-					portlet, rootElement, dlFileEntryType,
-					PortletDataContext.REFERENCE_TYPE_DEPENDENCY, true);
+				StagedModelDataHandlerUtil.exportReferenceStagedModel(
+					portletDataContext, portlet.getPortletId(),
+					dlFileEntryType);
 			}
 		}
 		else if (className.equals(Organization.class.getName())) {
@@ -452,8 +470,8 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 		}
 		else if (className.equals(DDMStructure.class.getName())) {
 			DDMStructure ddmStructure =
-				_ddmStructureLocalService.fetchDDMStructureByUuidAndGroupId(
-					uuid, groupId);
+				_ddmStructureLocalService.fetchStructureByUuidAndGroupId(
+					uuid, groupId, true);
 
 			if (ddmStructure == null) {
 				Map<String, String> structureUuids =
@@ -560,12 +578,12 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 		else {
 			long[] newAnyCategoryIds = new long[0];
 
-			for (int i = 0; i < originalAnyCategoryIds.length; i++) {
+			for (long originalAnyCategoryId : originalAnyCategoryIds) {
 				if (ArrayUtil.contains(
-						vocabularyCategoryIds, originalAnyCategoryIds[i])) {
+						vocabularyCategoryIds, originalAnyCategoryId)) {
 
 					newAnyCategoryIds = ArrayUtil.append(
-						newAnyCategoryIds, originalAnyCategoryIds[i]);
+						newAnyCategoryIds, originalAnyCategoryId);
 				}
 			}
 
@@ -1001,10 +1019,6 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 
 		Layout layout = _layoutLocalService.getLayout(plid);
 
-		String companyGroupScopeId =
-			AssetPublisherUtil.SCOPE_ID_GROUP_PREFIX +
-				portletDataContext.getCompanyGroupId();
-
 		String[] newValues = new String[oldValues.length];
 
 		Element rootElement = portletDataContext.getExportDataRootElement();
@@ -1013,93 +1027,9 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 			"group-id-mappings");
 
 		for (int i = 0; i < oldValues.length; i++) {
-			String oldValue = oldValues[i];
-
-			if (oldValue.startsWith(AssetPublisherUtil.SCOPE_ID_GROUP_PREFIX)) {
-				newValues[i] = StringUtil.replace(
-					oldValue, companyGroupScopeId,
-					"[$COMPANY_GROUP_SCOPE_ID$]");
-
-				if (newValues[i].contains("[$COMPANY_GROUP_SCOPE_ID$]")) {
-					continue;
-				}
-			}
-			else if (oldValue.startsWith(
-						AssetPublisherUtil.SCOPE_ID_LAYOUT_PREFIX)) {
-
-				// Legacy preferences
-
-				String scopeIdSuffix = oldValue.substring(
-					AssetPublisherUtil.SCOPE_ID_LAYOUT_PREFIX.length());
-
-				long scopeIdLayoutId = GetterUtil.getLong(scopeIdSuffix);
-
-				Layout scopeIdLayout = _layoutLocalService.getLayout(
-					layout.getGroupId(), layout.isPrivateLayout(),
-					scopeIdLayoutId);
-
-				if (plid != scopeIdLayout.getPlid()) {
-					StagedModelDataHandlerUtil.exportReferenceStagedModel(
-						portletDataContext, portletDataContext.getPortletId(),
-						scopeIdLayout);
-				}
-
-				newValues[i] =
-					AssetPublisherUtil.SCOPE_ID_LAYOUT_UUID_PREFIX +
-						scopeIdLayout.getUuid();
-			}
-			else if (oldValue.startsWith(
-						AssetPublisherUtil.SCOPE_ID_LAYOUT_UUID_PREFIX)) {
-
-				String scopeLayoutUuid = oldValue.substring(
-					AssetPublisherUtil.SCOPE_ID_LAYOUT_UUID_PREFIX.length());
-
-				Layout scopeUuidLayout =
-					_layoutLocalService.getLayoutByUuidAndGroupId(
-						scopeLayoutUuid, portletDataContext.getGroupId(),
-						portletDataContext.isPrivateLayout());
-
-				if (plid != scopeUuidLayout.getPlid()) {
-					StagedModelDataHandlerUtil.exportReferenceStagedModel(
-						portletDataContext, portletDataContext.getPortletId(),
-						scopeUuidLayout);
-				}
-
-				newValues[i] = oldValue;
-			}
-			else {
-				newValues[i] = oldValue;
-			}
-
-			long groupId = AssetPublisherUtil.getGroupIdFromScopeId(
-				newValues[i], portletDataContext.getGroupId(),
-				portletDataContext.isPrivateLayout());
-
-			Group group = _groupLocalService.fetchGroup(groupId);
-
-			long liveGroupId = 0;
-
-			if (group != null) {
-				liveGroupId = group.getLiveGroupId();
-
-				if (group.isStagedRemotely()) {
-					liveGroupId = group.getRemoteLiveGroupId();
-				}
-			}
-
-			if ((groupId == 0) || (liveGroupId == 0)) {
-				continue;
-			}
-
-			newValues[i] = String.valueOf(groupId);
-
-			Element groupIdMappingElement = groupIdMappingsElement.addElement(
-				"group-id-mapping");
-
-			groupIdMappingElement.addAttribute(
-				"group-id", String.valueOf(groupId));
-			groupIdMappingElement.addAttribute(
-				"live-group-id", String.valueOf(liveGroupId));
+			newValues[i] = _getExportScopeId(
+				portletDataContext, groupIdMappingsElement, layout,
+				oldValues[i]);
 		}
 
 		portletPreferences.setValues(key, newValues);
@@ -1302,36 +1232,37 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 
 		Layout layout = _layoutLocalService.getLayout(plid);
 
-		String companyGroupScopeId =
-			AssetPublisherUtil.SCOPE_ID_GROUP_PREFIX + companyGroupId;
-
 		List<String> newValues = new ArrayList<>(oldValues.length);
 
 		for (String oldValue : oldValues) {
-			String newValue = StringUtil.replace(
-				oldValue, "[$COMPANY_GROUP_SCOPE_ID$]", companyGroupScopeId);
+			String newValue = oldValue;
 
-			if (Validator.isNumber(oldValue) &&
-				groupIds.containsKey(Long.valueOf(oldValue))) {
-
-				Group group = _groupLocalService.fetchGroup(
-					groupIds.get(Long.valueOf(oldValue)));
-
-				if (group != null) {
-					newValue = AssetPublisherUtil.getScopeId(
-						group, portletDataContext.getScopeGroupId());
-				}
+			if ("[$COMPANY_GROUP_SCOPE_ID$]".equals(oldValue)) {
+				oldValue = String.valueOf(companyGroupId);
 			}
 
-			if (Validator.isNumber(newValue)) {
-				if (_log.isInfoEnabled()) {
-					_log.info(
-						StringBundler.concat(
-							"Ignoring group ", newValue, " because it cannot ",
-							"be converted to scope"));
+			if (Validator.isNumber(oldValue)) {
+				long groupId = Long.valueOf(oldValue);
+
+				if (groupIds.containsKey(groupId)) {
+					groupId = groupIds.get(groupId);
 				}
 
-				continue;
+				Group group = _groupLocalService.fetchGroup(groupId);
+
+				if (group == null) {
+					if (_log.isInfoEnabled()) {
+						_log.info(
+							StringBundler.concat(
+								"Ignoring group ", newValue, " because it ",
+								"cannot be converted to scope"));
+					}
+
+					continue;
+				}
+
+				newValue = AssetPublisherUtil.getScopeId(
+					group, portletDataContext.getScopeGroupId());
 			}
 
 			try {
@@ -1380,6 +1311,82 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 
 	@Reference
 	protected Portal portal;
+
+	private String _getExportScopeId(
+			PortletDataContext portletDataContext,
+			Element groupIdMappingsElement, Layout layout, String value)
+		throws PortalException, PortletDataException {
+
+		if (value.startsWith(AssetPublisherUtil.SCOPE_ID_LAYOUT_PREFIX)) {
+
+			// Legacy preferences
+
+			String scopeIdSuffix = value.substring(
+				AssetPublisherUtil.SCOPE_ID_LAYOUT_PREFIX.length());
+
+			long scopeIdLayoutId = GetterUtil.getLong(scopeIdSuffix);
+
+			Layout scopeIdLayout = _layoutLocalService.getLayout(
+				layout.getGroupId(), layout.isPrivateLayout(), scopeIdLayoutId);
+
+			if (layout.getPlid() != scopeIdLayout.getPlid()) {
+				StagedModelDataHandlerUtil.exportReferenceStagedModel(
+					portletDataContext, portletDataContext.getPortletId(),
+					scopeIdLayout);
+			}
+
+			return AssetPublisherUtil.SCOPE_ID_LAYOUT_UUID_PREFIX +
+				scopeIdLayout.getUuid();
+		}
+
+		if (value.startsWith(AssetPublisherUtil.SCOPE_ID_LAYOUT_UUID_PREFIX)) {
+			String scopeLayoutUuid = value.substring(
+				AssetPublisherUtil.SCOPE_ID_LAYOUT_UUID_PREFIX.length());
+
+			Layout scopeUuidLayout =
+				_layoutLocalService.getLayoutByUuidAndGroupId(
+					scopeLayoutUuid, portletDataContext.getGroupId(),
+					portletDataContext.isPrivateLayout());
+
+			if (layout.getPlid() != scopeUuidLayout.getPlid()) {
+				StagedModelDataHandlerUtil.exportReferenceStagedModel(
+					portletDataContext, portletDataContext.getPortletId(),
+					scopeUuidLayout);
+			}
+
+			return value;
+		}
+
+		long groupId = AssetPublisherUtil.getGroupIdFromScopeId(
+			value, portletDataContext.getGroupId(),
+			portletDataContext.isPrivateLayout());
+
+		Group group = _groupLocalService.fetchGroup(groupId);
+
+		if (group == null) {
+			return value;
+		}
+
+		long liveGroupId = group.getLiveGroupId();
+
+		if (group.isStagedRemotely()) {
+			liveGroupId = group.getRemoteLiveGroupId();
+		}
+
+		if (liveGroupId == GroupConstants.DEFAULT_LIVE_GROUP_ID) {
+			liveGroupId = group.getGroupId();
+		}
+
+		Element groupIdMappingElement = groupIdMappingsElement.addElement(
+			"group-id-mapping");
+
+		groupIdMappingElement.addAttribute("group-id", String.valueOf(groupId));
+		groupIdMappingElement.addAttribute(
+			"live-group-id", String.valueOf(liveGroupId));
+		groupIdMappingElement.addAttribute("group-key", group.getGroupKey());
+
+		return String.valueOf(groupId);
+	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetPublisherExportImportPortletPreferencesProcessor.class);

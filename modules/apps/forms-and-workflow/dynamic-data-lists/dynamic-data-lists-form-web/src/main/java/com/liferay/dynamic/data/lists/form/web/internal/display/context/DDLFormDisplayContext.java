@@ -18,9 +18,12 @@ import com.liferay.dynamic.data.lists.model.DDLRecordSet;
 import com.liferay.dynamic.data.lists.model.DDLRecordSetSettings;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetService;
 import com.liferay.dynamic.data.lists.service.permission.DDLRecordSetPermission;
+import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldType;
+import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderer;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
+import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesJSONSerializer;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
@@ -29,6 +32,8 @@ import com.liferay.dynamic.data.mapping.model.DDMFormLayoutPage;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayoutRow;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -58,8 +63,10 @@ public class DDLFormDisplayContext {
 	public DDLFormDisplayContext(
 			RenderRequest renderRequest, RenderResponse renderResponse,
 			DDLRecordSetService ddlRecordSetService,
+			DDMFormFieldTypesJSONSerializer ddmFormFieldTypesJSONSerializer,
+			DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker,
 			DDMFormRenderer ddmFormRenderer,
-			DDMFormValuesFactory ddmFormValuesFactory,
+			DDMFormValuesFactory ddmFormValuesFactory, JSONFactory jsonFactory,
 			WorkflowDefinitionLinkLocalService
 				workflowDefinitionLinkLocalService)
 		throws PortalException {
@@ -67,8 +74,11 @@ public class DDLFormDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_ddlRecordSetService = ddlRecordSetService;
+		_ddmFormFieldTypesJSONSerializer = ddmFormFieldTypesJSONSerializer;
+		_ddmFormFieldTypeServicesTracker = ddmFormFieldTypeServicesTracker;
 		_ddmFormRenderer = ddmFormRenderer;
 		_ddmFormValuesFactory = ddmFormValuesFactory;
+		_jsonFactory = jsonFactory;
 		_workflowDefinitionLinkLocalService =
 			workflowDefinitionLinkLocalService;
 
@@ -82,6 +92,16 @@ public class DDLFormDisplayContext {
 			renderRequest.setAttribute(
 				WebKeys.PORTLET_CONFIGURATOR_VISIBILITY, Boolean.TRUE);
 		}
+	}
+
+	public JSONArray getDDMFormFieldTypesJSONArray() throws PortalException {
+		List<DDMFormFieldType> formFieldTypes =
+			_ddmFormFieldTypeServicesTracker.getDDMFormFieldTypes();
+
+		String serializedFormFieldTypes =
+			_ddmFormFieldTypesJSONSerializer.serialize(formFieldTypes);
+
+		return _jsonFactory.createJSONArray(serializedFormFieldTypes);
 	}
 
 	public String getDDMFormHTML() throws PortalException {
@@ -316,10 +336,7 @@ public class DDLFormDisplayContext {
 	}
 
 	protected ThemeDisplay getThemeDisplay() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		return themeDisplay;
+		return (ThemeDisplay)_renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
 	}
 
 	protected boolean hasViewPermission() throws PortalException {
@@ -402,9 +419,14 @@ public class DDLFormDisplayContext {
 		DDLFormDisplayContext.class);
 
 	private final DDLRecordSetService _ddlRecordSetService;
+	private final DDMFormFieldTypeServicesTracker
+		_ddmFormFieldTypeServicesTracker;
+	private final DDMFormFieldTypesJSONSerializer
+		_ddmFormFieldTypesJSONSerializer;
 	private final DDMFormRenderer _ddmFormRenderer;
 	private final DDMFormValuesFactory _ddmFormValuesFactory;
 	private Boolean _hasViewPermission;
+	private final JSONFactory _jsonFactory;
 	private DDLRecordSet _recordSet;
 	private long _recordSetId;
 	private final RenderRequest _renderRequest;

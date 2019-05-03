@@ -1,65 +1,41 @@
-<definition default="copy">
-	<command name="ckEditorCopy">
-		<execute function="WaitForSPARefresh" />
+@default = "copy"
+definition {
+	function copy {
+		WaitForSPARefresh();
 
-		<execute argument1="//a[contains(@class,'cke_button__unlink') and contains(@class,'cke_button_disabled')]" selenium="waitForVisible" />
+		if (contains("${locator1}", "/input")) {
+			Copy.valueCopy();
+		}
+		else {
+			Copy.textCopy();
+		}
+	}
 
-		<execute argument1="1000" selenium="pause" />
+	function textCopy {
+		WaitForSPARefresh();
 
-		<execute selenium="selectFrame" />
+		selenium.waitForVisible();
 
-		<execute argument1="//html/body" selenium="waitForVisible" />
+		selenium.mouseOver();
 
-		<execute argument1="//html/body" selenium="mouseOver" />
+		selenium.copyText();
 
-		<execute argument1="//html/body" selenium="copyText" />
+		selenium.assertJavaScriptErrors();
 
-		<execute argument1="relative=parent" selenium="selectFrame" />
+		selenium.assertLiferayErrors();
+	}
 
-		<execute selenium="assertJavaScriptErrors" />
+	function valueCopy {
+		WaitForSPARefresh();
 
-		<execute selenium="assertLiferayErrors" />
-	</command>
+		selenium.waitForVisible();
 
-	<command name="copy">
-		<execute function="WaitForSPARefresh" />
+		selenium.mouseOver();
 
-		<if>
-			<contains string="${locator1}" substring="/input" />
-			<then>
-				<execute function="Copy#valueCopy" />
-			</then>
-			<else>
-				<execute function="Copy#textCopy" />
-			</else>
-		</if>
-	</command>
+		selenium.copyValue();
 
-	<command name="textCopy">
-		<execute function="WaitForSPARefresh" />
+		selenium.assertJavaScriptErrors();
 
-		<execute selenium="waitForVisible" />
-
-		<execute selenium="mouseOver" />
-
-		<execute selenium="copyText" />
-
-		<execute selenium="assertJavaScriptErrors" />
-
-		<execute selenium="assertLiferayErrors" />
-	</command>
-
-	<command name="valueCopy">
-		<execute function="WaitForSPARefresh" />
-
-		<execute selenium="waitForVisible" />
-
-		<execute selenium="mouseOver" />
-
-		<execute selenium="copyValue" />
-
-		<execute selenium="assertJavaScriptErrors" />
-
-		<execute selenium="assertLiferayErrors" />
-	</command>
-</definition>
+		selenium.assertLiferayErrors();
+	}
+}

@@ -1,7 +1,5 @@
 Bundle-Name: Liferay Marketplace Service
 Bundle-SymbolicName: com.liferay.marketplace.service
-Bundle-Version: 3.0.3
-Liferay-Releng-Module-Group-Description:
-Liferay-Releng-Module-Group-Title:
+Bundle-Version: 3.0.22
 Liferay-Require-SchemaVersion: 2.0.2
 Liferay-Service: true

@@ -29,23 +29,18 @@
 	<td></td>
 </tr>
 <tr>
-	<td>ENABLE_COMMENTS</td>
-	<td>//label[contains(.,'Enable Comments')]/input[@type='checkbox']/../span[2]/span</td>
-	<td></td>
-</tr>
-<tr>
 	<td>ENABLE_COMMENT_RATINGS</td>
 	<td>//label[contains(.,'Enable Comment Ratings')]/input[@type='checkbox']/../span[2]/span</td>
 	<td></td>
 </tr>
 <tr>
-	<td>ENABLE_FLAGS</td>
-	<td>//label[contains(.,'Enable Flags')]/input[@type='checkbox']/../span[2]/span</td>
+	<td>ENABLE_COMMENTS</td>
+	<td>//label[contains(.,'Enable Comments')]/input[@type='checkbox']/../span[2]/span</td>
 	<td></td>
 </tr>
 <tr>
-	<td>ENABLE_LOCKOUT</td>
-	<td>//label[contains(.,'Enable Lockout')]/input[@type='checkbox']/../span[2]/span</td>
+	<td>ENABLE_FLAGS</td>
+	<td>//label[contains(.,'Enable Flags')]/input[@type='checkbox']/../span[2]/span</td>
 	<td></td>
 </tr>
 <tr>
@@ -74,6 +69,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>INHERIT_MOBILE_DEVICE_RULES_FROM_PAGE</td>
+	<td>//label[contains(.,'mobile device rules')]/input[@type='checkbox']/../span[2]/span</td>
+	<td></td>
+</tr>
+<tr>
 	<td>REQUIRED</td>
 	<td>xpath=(//div[contains(@class,'form-row')])[${key_rowNumber}]//input[@type='checkbox']</td>
 	<td></td>
@@ -81,11 +81,6 @@
 <tr>
 	<td>SET_AS_THE_DEFAULT_ASSET_PUBLISHER_FOR_THIS_PAGE</td>
 	<td>//label[contains(.,'Set as the Default Asset Publisher for This Page')]/input[@type='checkbox']/../span[2]/span</td>
-	<td></td>
-</tr>
-<tr>
-	<td>INHERIT_MOBILE_DEVICE_RULES_FROM_PAGE</td>
-	<td>//label[contains(.,'mobile device rules')]/input[@type='checkbox']/../span[2]/span</td>
 	<td></td>
 </tr>
 <tr>

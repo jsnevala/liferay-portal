@@ -51,7 +51,7 @@ import org.osgi.service.component.annotations.Modified;
 @Component(
 	configurationPid = "com.liferay.push.notifications.sender.apple.internal.configuration.ApplePushNotificationsSenderConfiguration",
 	immediate = true,
-	property = {"platform=" + ApplePushNotificationsSender.PLATFORM}
+	property = "platform=" + ApplePushNotificationsSender.PLATFORM
 )
 public class ApplePushNotificationsSender implements PushNotificationsSender {
 
@@ -134,6 +134,13 @@ public class ApplePushNotificationsSender implements PushNotificationsSender {
 	protected String buildPayload(JSONObject payloadJSONObject) {
 		PayloadBuilder builder = PayloadBuilder.newPayload();
 
+		String title = payloadJSONObject.getString(
+			PushNotificationsConstants.KEY_TITLE);
+
+		if (Validator.isNotNull(title)) {
+			builder.alertTitle(title);
+		}
+
 		if (payloadJSONObject.has(PushNotificationsConstants.KEY_BADGE)) {
 			builder.badge(
 				payloadJSONObject.getInt(PushNotificationsConstants.KEY_BADGE));
@@ -182,6 +189,30 @@ public class ApplePushNotificationsSender implements PushNotificationsSender {
 			builder.sound(sound);
 		}
 
+		JSONArray titleLocalizedArgumentsJSONArray =
+			payloadJSONObject.getJSONArray(
+				PushNotificationsConstants.KEY_TITLE_LOCALIZED_ARGUMENTS);
+
+		if (titleLocalizedArgumentsJSONArray != null) {
+			List<String> localizedArguments = new ArrayList<>();
+
+			for (int i = 0; i < titleLocalizedArgumentsJSONArray.length();
+				 i++) {
+
+				localizedArguments.add(
+					titleLocalizedArgumentsJSONArray.getString(i));
+			}
+
+			builder.localizedTitleArguments(localizedArguments);
+		}
+
+		String titleLocalizedKey = payloadJSONObject.getString(
+			PushNotificationsConstants.KEY_TITLE_LOCALIZED);
+
+		if (Validator.isNotNull(titleLocalizedKey)) {
+			builder.localizedTitleKey(titleLocalizedKey);
+		}
+
 		JSONObject newPayloadJSONObject = JSONFactoryUtil.createJSONObject();
 
 		Iterator<String> iterator = payloadJSONObject.keys();
@@ -195,7 +226,11 @@ public class ApplePushNotificationsSender implements PushNotificationsSender {
 				!key.equals(
 					PushNotificationsConstants.KEY_BODY_LOCALIZED_ARGUMENTS) &&
 				!key.equals(PushNotificationsConstants.KEY_SOUND) &&
-				!key.equals(PushNotificationsConstants.KEY_SILENT)) {
+				!key.equals(PushNotificationsConstants.KEY_SILENT) &&
+				!key.equals(PushNotificationsConstants.KEY_TITLE) &&
+				!key.equals(PushNotificationsConstants.KEY_TITLE_LOCALIZED) &&
+				!key.equals(
+					PushNotificationsConstants.KEY_TITLE_LOCALIZED_ARGUMENTS)) {
 
 				newPayloadJSONObject.put(key, payloadJSONObject.get(key));
 			}

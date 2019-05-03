@@ -291,7 +291,7 @@ public class UpgradeImageGallery extends UpgradeProcess {
 			"delete from ResourcePermission where name = ? and companyId = ? " +
 				"and scope = ? and primKey = ? and roleId = ?";
 
-		try (PreparedStatement ps1 = connection.prepareStatement(selectSQL);) {
+		try (PreparedStatement ps1 = connection.prepareStatement(selectSQL)) {
 			ps1.setString(1, igResourceName);
 
 			try (ResultSet rs = ps1.executeQuery();
@@ -836,8 +836,11 @@ public class UpgradeImageGallery extends UpgradeProcess {
 							custom1ImageId, custom2ImageId);
 					}
 					catch (Exception e) {
-						title = title.concat(StringPool.SPACE).concat(
-							String.valueOf(imageId));
+						title = title.concat(
+							StringPool.SPACE
+						).concat(
+							String.valueOf(imageId)
+						);
 
 						addDLFileEntry(
 							uuid, imageId, groupId, companyId, userId, userName,

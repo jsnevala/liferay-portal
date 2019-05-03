@@ -144,7 +144,7 @@ public abstract class BaseTestCase {
 		finally {
 			Path databaseFilePath = FileUtil.getFilePath(
 				PropsValues.SYNC_CONFIGURATION_DIRECTORY,
-				PropsValues.SYNC_DATABASE_NAME + ".h2.db");
+				PropsValues.SYNC_DATABASE_NAME + ".mv.db");
 
 			Files.deleteIfExists(databaseFilePath);
 		}
@@ -219,14 +219,14 @@ public abstract class BaseTestCase {
 	protected void mockHttpClientBuilder(String fileName) throws Exception {
 		PowerMockito.mockStatic(HttpClientBuilder.class);
 
-		HttpClientBuilder httpClientbuilder = Mockito.mock(
+		HttpClientBuilder httpClientBuilder = Mockito.mock(
 			HttpClientBuilder.class);
 
 		CloseableHttpClient closeableHttpClient = mockCloseableHttpClient(
 			fileName);
 
 		Mockito.when(
-			httpClientbuilder.build()
+			httpClientBuilder.build()
 		).thenReturn(
 			closeableHttpClient
 		);
@@ -234,7 +234,7 @@ public abstract class BaseTestCase {
 		Mockito.when(
 			HttpClientBuilder.create()
 		).thenReturn(
-			httpClientbuilder
+			httpClientBuilder
 		);
 	}
 

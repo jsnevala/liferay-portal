@@ -65,8 +65,11 @@ public class PortalPermissionCollection extends LenientPermissionCollection {
 
 		String className = clazz.getSimpleName();
 
-		return className.concat(StringPool.POUND).concat(
-			_paclPolicy.toString());
+		return className.concat(
+			StringPool.POUND
+		).concat(
+			_paclPolicy.toString()
+		);
 	}
 
 	private final PACLPolicy _paclPolicy;

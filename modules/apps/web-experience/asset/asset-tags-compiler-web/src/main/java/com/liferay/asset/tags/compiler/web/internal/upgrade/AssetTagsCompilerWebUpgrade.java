@@ -40,7 +40,7 @@ public class AssetTagsCompilerWebUpgrade implements UpgradeStepRegistrator {
 				@Override
 				protected String[][] getRenamePortletIdsArray() {
 					return new String[][] {
-						new String[] {
+						{
 							"103",
 							AssetTagsCompilerPortletKeys.ASSET_TAGS_COMPILER
 						}

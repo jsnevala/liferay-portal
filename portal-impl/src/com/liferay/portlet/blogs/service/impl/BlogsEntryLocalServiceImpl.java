@@ -157,8 +157,8 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 				entry.getUserId(), entry.getGroupId(), entryId, imageSelector);
 		}
 
-		entry.setCoverImageURL(coverImageURL);
 		entry.setCoverImageFileEntryId(coverImageFileEntryId);
+		entry.setCoverImageURL(coverImageURL);
 
 		blogsEntryPersistence.update(entry);
 	}
@@ -188,10 +188,10 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #addEntry(long, String,
-	 *             String, String, String, int, int, int, int, int, boolean,
-	 *             boolean, String[], String, ImageSelector, ImageSelector,
-	 *             ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #addEntry(long,
+	 *             String, String, String, String, int, int, int, int, int,
+	 *             boolean, boolean, String[], String, ImageSelector,
+	 *             ImageSelector, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -205,6 +205,7 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 		throws PortalException {
 
 		ImageSelector coverImageImageSelector = null;
+
 		ImageSelector smallImageImageSelector = null;
 
 		if (smallImage) {
@@ -537,6 +538,13 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public BlogsEntry deleteEntry(BlogsEntry entry) throws PortalException {
 
+		// Order is important. See LPS-81826.
+
+		// Ratings
+
+		ratingsStatsLocalService.deleteStats(
+			BlogsEntry.class.getName(), entry.getEntryId());
+
 		// Entry
 
 		blogsEntryPersistence.remove(entry);
@@ -591,11 +599,6 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 		expandoRowLocalService.deleteRows(entry.getEntryId());
 
-		// Ratings
-
-		ratingsStatsLocalService.deleteStats(
-			BlogsEntry.class.getName(), entry.getEntryId());
-
 		// Trash
 
 		trashEntryLocalService.deleteEntry(
@@ -629,12 +632,10 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 				groupId, BlogsConstants.SERVICE_NAME);
 
 		try {
-			Folder folder = PortletFileRepositoryUtil.getPortletFolder(
+			return PortletFileRepositoryUtil.getPortletFolder(
 				repository.getRepositoryId(),
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 				BlogsConstants.SERVICE_NAME);
-
-			return folder;
 		}
 		catch (Exception e) {
 		}
@@ -1017,16 +1018,16 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 		return updateEntry(
 			userId, entryId, title, entry.getSubtitle(), entry.getDescription(),
-			content, entry.getDisplayDate(), entry.getAllowPingbacks(),
-			entry.getAllowTrackbacks(), StringUtil.split(entry.getTrackbacks()),
+			content, entry.getDisplayDate(), entry.isAllowPingbacks(),
+			entry.isAllowTrackbacks(), StringUtil.split(entry.getTrackbacks()),
 			StringPool.BLANK, null, null, serviceContext);
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #updateEntry(long, long,
-	 *             String, String, String, String, int, int, int, int, int,
-	 *             boolean, boolean, String[], String, ImageSelector,
-	 *             ImageSelector, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateEntry(long, long, String, String, String, String, int,
+	 *             int, int, int, int, boolean, boolean, String[], String,
+	 *             ImageSelector, ImageSelector, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -1041,6 +1042,7 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 		throws PortalException {
 
 		ImageSelector coverImageImageSelector = null;
+
 		ImageSelector smallImageImageSelector = null;
 
 		if (smallImage) {
@@ -1177,6 +1179,9 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 			entry.setSmallImage(true);
 		}
+		else {
+			entry.setSmallImage(false);
+		}
 
 		entry.setSmallImageFileEntryId(smallImageFileEntryId);
 		entry.setSmallImageURL(smallImageURL);
@@ -1264,8 +1269,8 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #updateStatus(long, long,
-	 *             int, ServiceContext, Map)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateStatus(long, long, int, ServiceContext, Map)}
 	 */
 	@Deprecated
 	@Override
@@ -1474,7 +1479,7 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected void addDiscussion(BlogsEntry entry, long userId, long groupId)
@@ -1567,12 +1572,10 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 		Repository repository = PortletFileRepositoryUtil.addPortletRepository(
 			groupId, BlogsConstants.SERVICE_NAME, serviceContext);
 
-		Folder folder = PortletFileRepositoryUtil.addPortletFolder(
+		return PortletFileRepositoryUtil.addPortletFolder(
 			userId, repository.getRepositoryId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, folderName,
 			serviceContext);
-
-		return folder;
 	}
 
 	protected String getEntryURL(
@@ -1773,10 +1776,23 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 			"[$BLOGS_ENTRY_CONTENT$]",
 			StringUtil.shorten(HtmlUtil.stripHtml(entry.getContent()), 500),
 			false);
+
+		String description = entry.getDescription();
+
+		if (Validator.isNotNull(description)) {
+			subscriptionSender.setContextAttribute(
+				"[$BLOGS_ENTRY_DESCRIPTION$]", description, false);
+		}
+		else {
+			subscriptionSender.setContextAttribute(
+				"[$BLOGS_ENTRY_DESCRIPTION$]",
+				StringUtil.shorten(HtmlUtil.stripHtml(entry.getContent()), 400),
+				false);
+		}
+
 		subscriptionSender.setContextAttributes(
 			"[$BLOGS_ENTRY_CREATE_DATE$]",
 			Time.getSimpleDate(entry.getCreateDate(), "yyyy/MM/dd"),
-			"[$BLOGS_ENTRY_DESCRIPTION$]", entry.getDescription(),
 			"[$BLOGS_ENTRY_STATUS_BY_USER_NAME$]", entry.getStatusByUserName(),
 			"[$BLOGS_ENTRY_TITLE$]", entryTitle,
 			"[$BLOGS_ENTRY_UPDATE_COMMENT$]",

@@ -100,26 +100,6 @@
 	<td>//input[contains(@id,'AuditPortlet_sessionID')]</td>
 	<td></td>
 </tr>
-<tr>
-	<td>ADVANCED_SEARCH_CLIENT_IP_FIELD</td>
-	<td>//input[contains(@id,'AuditPortlet_clientIP')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ADVANCED_SEARCH_CLIENT_HOST_FIELD</td>
-	<td>//input[contains(@id,'AuditPortlet_clientHost')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ADVANCED_SEARCH_SERVER_NAME_FIELD</td>
-	<td>//input[contains(@id,'AuditPortlet_serverName')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ADVANCED_SEARCH_SERVER_PORT_FIELD</td>
-	<td>//input[contains(@id,'AuditPortlet_serverPort')]</td>
-	<td></td>
-</tr>
 </tbody>
 </table>
 </body>

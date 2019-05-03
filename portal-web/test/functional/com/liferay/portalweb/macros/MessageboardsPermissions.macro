@@ -1,15 +1,15 @@
-<definition>
-	<command name="checkReplyToMessageForGuestPG">
-		<execute function="AssertClick" locator1="Button#PERMISSIONS" value1="Permissions" />
+definition {
+	macro checkReplyToMessageForGuestPG {
+		AssertClick(locator1 = "Button#PERMISSIONS", value1 = "Permissions");
 
-		<execute macro="IFrame#selectDialogFrame" />
+		IFrame.selectDialogFrame();
 
-		<execute function="Check" locator1="AssetPermissions#GUEST_REPLY_TO_MESSAGE_CHECKBOX" />
+		Check(locator1 = "AssetPermissions#GUEST_REPLY_TO_MESSAGE_CHECKBOX");
 
-		<execute macro="PortletEntry#save" />
+		PortletEntry.save();
 
-		<execute function="SelectFrame" value1="relative=top" />
+		SelectFrame(value1 = "relative=top");
 
-		<execute function="Click" locator1="Icon#CLOSE" />
-	</command>
-</definition>
+		Click(locator1 = "Icon#CLOSE");
+	}
+}

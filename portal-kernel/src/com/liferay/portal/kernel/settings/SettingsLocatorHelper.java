@@ -28,7 +28,7 @@ public interface SettingsLocatorHelper {
 	public Settings getConfigurationBeanSettings(String configurationPid);
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #getConfigurationBeanSettings(String)}
 	 */
 	@Deprecated
@@ -42,7 +42,7 @@ public interface SettingsLocatorHelper {
 		long companyId, Settings parentSettings);
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public Settings getPortalPropertiesSettings();

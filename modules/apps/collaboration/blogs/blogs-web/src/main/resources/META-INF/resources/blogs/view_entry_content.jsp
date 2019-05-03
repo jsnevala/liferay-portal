@@ -79,6 +79,7 @@ String socialBookmarksDisplayPosition = blogsPortletInstanceConfiguration.social
 					<c:if test="<%= !viewSingleEntry %>">
 						<small>
 							<strong><%= HtmlUtil.escape(entry.getUserName()) %></strong>
+
 							<span> - </span>
 							<span class="hide-accessible"><liferay-ui:message key="published-date" /></span>
 							<%= dateFormatDate.format(entry.getDisplayDate()) %>
@@ -128,7 +129,7 @@ String socialBookmarksDisplayPosition = blogsPortletInstanceConfiguration.social
 					String subtitle = entry.getSubtitle();
 					%>
 
-					<c:if test="<%= viewSingleEntry && Validator.isNotNull(subtitle) %>">
+					<c:if test="<%= (blogsPortletInstanceConfiguration.displayStyle().equals(BlogsUtil.DISPLAY_STYLE_FULL_CONTENT) || viewSingleEntry) && Validator.isNotNull(subtitle) %>">
 						<div class="entry-subtitle">
 							<h4><%= HtmlUtil.escape(subtitle) %></h4>
 						</div>
@@ -235,7 +236,7 @@ String socialBookmarksDisplayPosition = blogsPortletInstanceConfiguration.social
 							<%= dateFormatDateTime.format(entry.getDisplayDate()) %>
 
 							<c:if test="<%= blogsPortletInstanceConfiguration.enableViewCount() %>">
-								, <liferay-ui:message arguments="<%= assetEntry.getViewCount() %>" key='<%= assetEntry.getViewCount() == 1 ? "x-view" : "x-views" %>' />
+								, <liferay-ui:message arguments="<%= assetEntry.getViewCount() %>" key='<%= (assetEntry.getViewCount() == 1) ? "x-view" : "x-views" %>' />
 							</c:if>
 						</liferay-ui:user-display>
 					</div>
@@ -257,6 +258,7 @@ String socialBookmarksDisplayPosition = blogsPortletInstanceConfiguration.social
 						<div class="comments">
 							<a href="<%= viewEntryCommentsURL %>">
 								<i class="icon-comment icon-monospaced"></i>
+
 								<span><%= String.valueOf(messagesCount) %></span>
 							</a>
 						</div>

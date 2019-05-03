@@ -44,11 +44,10 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Bruno Farache
  * @author Marcellus Tavares
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
-	immediate = true,
-	property = {"javax.portlet.name=" + PollsPortletKeys.POLLS},
+	immediate = true, property = "javax.portlet.name=" + PollsPortletKeys.POLLS,
 	service = PortletDataHandler.class
 )
 public class PollsPortletDataHandler extends BasePortletDataHandler {

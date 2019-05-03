@@ -115,7 +115,7 @@ public class JournalTestUtilTest {
 	}
 
 	@Test
-	public void testAddArticleWithoutFolder()throws Exception {
+	public void testAddArticleWithoutFolder() throws Exception {
 		Assert.assertNotNull(
 			JournalTestUtil.addArticle(
 				_group.getGroupId(), "Test Article",
@@ -290,7 +290,7 @@ public class JournalTestUtilTest {
 
 		Map<Locale, String> contents = new HashMap<>();
 
-		contents.put(Locale.US, "This is an updated test article.");
+		contents.put(LocaleUtil.US, "This is an updated test article.");
 
 		String defaultLanguageId = LanguageUtil.getLanguageId(
 			LocaleUtil.getSiteDefault());

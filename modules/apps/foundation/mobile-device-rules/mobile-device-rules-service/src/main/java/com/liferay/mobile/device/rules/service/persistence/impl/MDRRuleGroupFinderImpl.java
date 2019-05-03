@@ -99,7 +99,7 @@ public class MDRRuleGroupFinderImpl
 
 			sql = StringUtil.replace(sql, "[$GROUP_ID$]", getGroupIds(params));
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(name)", StringPool.LIKE, true, names);
+				sql, "LOWER(name)", StringPool.LIKE, true, names);
 			sql = CustomSQLUtil.replaceAndOperator(sql, true);
 
 			SQLQuery q = session.createSynchronizedSQLQuery(sql);
@@ -211,7 +211,7 @@ public class MDRRuleGroupFinderImpl
 
 			sql = StringUtil.replace(sql, "[$GROUP_ID$]", getGroupIds(params));
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(name)", StringPool.LIKE, true, names);
+				sql, "LOWER(name)", StringPool.LIKE, true, names);
 			sql = CustomSQLUtil.replaceAndOperator(sql, andOperator);
 			sql = CustomSQLUtil.replaceOrderBy(sql, obc);
 

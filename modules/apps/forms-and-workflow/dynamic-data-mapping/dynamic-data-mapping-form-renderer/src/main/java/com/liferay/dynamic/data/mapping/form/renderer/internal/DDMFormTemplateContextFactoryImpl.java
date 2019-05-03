@@ -16,12 +16,10 @@ package com.liferay.dynamic.data.mapping.form.renderer.internal;
 
 import com.liferay.dynamic.data.mapping.form.evaluator.DDMFormEvaluationResult;
 import com.liferay.dynamic.data.mapping.form.evaluator.DDMFormEvaluator;
-import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingException;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormTemplateContextFactory;
-import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesJSONSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormJSONSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutJSONSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesJSONSerializer;
@@ -39,7 +37,7 @@ import com.liferay.portal.kernel.json.JSONSerializer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -142,13 +140,6 @@ public class DDMFormTemplateContextFactoryImpl
 			jsonSerializer.serializeDeep(ddmFormEvaluationResult));
 
 		templateContext.put("evaluatorURL", getDDMFormEvaluatorServletURL());
-
-		List<DDMFormFieldType> ddmFormFieldTypes =
-			_ddmFormFieldTypeServicesTracker.getDDMFormFieldTypes();
-
-		templateContext.put(
-			"fieldTypes",
-			_ddmFormFieldTypesJSONSerializer.serialize(ddmFormFieldTypes));
 
 		templateContext.put(
 			"layout", _ddmFormLayoutJSONSerializer.serialize(ddmFormLayout));
@@ -299,8 +290,7 @@ public class DDMFormTemplateContextFactoryImpl
 	protected ResourceBundle getResourceBundle(Locale locale) {
 		List<ResourceBundle> resourceBundles = new ArrayList<>();
 
-		ResourceBundle portalResourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", locale, PortalClassLoaderUtil.getClassLoader());
+		ResourceBundle portalResourceBundle = _portal.getResourceBundle(locale);
 
 		resourceBundles.add(portalResourceBundle);
 
@@ -313,11 +303,13 @@ public class DDMFormTemplateContextFactoryImpl
 	}
 
 	protected String getServletContextPath(Servlet servlet) {
+		String proxyPath = _portal.getPathProxy();
+
 		ServletConfig servletConfig = servlet.getServletConfig();
 
 		ServletContext servletContext = servletConfig.getServletContext();
 
-		return servletContext.getContextPath();
+		return proxyPath.concat(servletContext.getContextPath());
 	}
 
 	protected String getTemplateNamespace(DDMFormLayout ddmFormLayout) {
@@ -374,9 +366,6 @@ public class DDMFormTemplateContextFactoryImpl
 	private DDMFormFieldTypeServicesTracker _ddmFormFieldTypeServicesTracker;
 
 	@Reference
-	private DDMFormFieldTypesJSONSerializer _ddmFormFieldTypesJSONSerializer;
-
-	@Reference
 	private DDMFormJSONSerializer _ddmFormJSONSerializer;
 
 	@Reference
@@ -387,5 +376,8 @@ public class DDMFormTemplateContextFactoryImpl
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Portal _portal;
 
 }

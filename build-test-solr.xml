@@ -134,13 +134,11 @@ SOLR_SSL_WANT_CLIENT_AUTH=true</echo>
 
 	<macrodef name="create-solr-ssl-keystore">
 		<sequential>
-			<get-ip-address />
-
 			<exec dir="${solr.dir}/server/etc" executable="keytool">
 				<arg value="-genkeypair" />
 				<arg line="-alias solr-ssl" />
 				<arg line="-dname &quot;CN=localhost, OU=Organizational Unit, O=Organization, L=Location, ST=State, C=Country&quot;" />
-				<arg line="-ext SAN=DNS:localhost,IP:${ip.address},IP:127.0.0.1" />
+				<arg line="-ext SAN=DNS:localhost,IP:127.0.0.1" />
 				<arg line="-keyalg RSA" />
 				<arg line="-keypass secret" />
 				<arg line="-keysize 2048" />
@@ -148,17 +146,6 @@ SOLR_SSL_WANT_CLIENT_AUTH=true</echo>
 				<arg line="-storepass secret" />
 				<arg line="-validity 9999" />
 			</exec>
-		</sequential>
-	</macrodef>
-
-	<macrodef name="delete-elasticseach-osgi-bundle">
-		<sequential>
-			<delete failonerror="false">
-				<fileset
-					dir="${liferay.home}/osgi/portal"
-					includes="com.liferay.portal.search.elasticsearch*.jar"
-				/>
-			</delete>
 		</sequential>
 	</macrodef>
 
@@ -307,16 +294,18 @@ schema=schema.xml</echo>
 		</sequential>
 	</macrodef>
 
-	<target name="start-solr">
-		<unzip-solr />
-
-		<prepare-solr-configurations/>
-
-		<delete-elasticseach-osgi-bundle />
-
+	<target name="deploy-solr">
 		<gradle-execute dir="modules/apps/portal-search-solr/portal-search-solr" task="deploy">
 			<arg value="clean" />
 		</gradle-execute>
+
+		<echo file="${liferay.home}/osgi/configs/com.liferay.portal.bundle.blacklist.internal.BundleBlacklistConfiguration.config">blacklistBundleSymbolicNames=&quot;com.liferay.portal.mobile.device.detection.fiftyonedegrees.api,com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise,com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise.test.data,com.liferay.portal.mobile.device.detection.fiftyonedegrees,com.liferay.portal.search.elasticsearch,com.liferay.portal.search.elasticsearch.shield,com.liferay.portal.search.elasticsearch.shield.fragment,com.liferay.portal.search.elasticsearch.marvel.web&quot;</echo>
+	</target>
+
+	<target name="start-solr">
+		<unzip-solr />
+
+		<prepare-solr-configurations />
 
 		<configure-liferay-solr-adapter-osgi-configs />
 
@@ -404,7 +393,7 @@ schema=schema.xml</echo>
 	</target>
 
 	<target name="stop-solr-core">
-		<get-testcase-property property.name="solr.solrcloud.enabled" />
+		<print-file file.name="${solr.dir}/server/logs/solr.log" />
 
 		<if>
 			<os family="unix" />

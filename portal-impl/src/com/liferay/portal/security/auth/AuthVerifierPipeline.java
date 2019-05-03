@@ -58,8 +58,11 @@ public class AuthVerifierPipeline {
 		String simpleClassName = StringUtil.extractLast(
 			className, StringPool.PERIOD);
 
-		return PropsKeys.AUTH_VERIFIER.concat(simpleClassName).concat(
-			StringPool.PERIOD);
+		return PropsKeys.AUTH_VERIFIER.concat(
+			simpleClassName
+		).concat(
+			StringPool.PERIOD
+		);
 	}
 
 	public static AuthVerifierResult verifyRequest(
@@ -305,8 +308,8 @@ public class AuthVerifierPipeline {
 		_serviceTracker;
 
 	private class AuthVerifierTrackerCustomizer
-		implements
-			ServiceTrackerCustomizer<AuthVerifier, AuthVerifierConfiguration> {
+		implements ServiceTrackerCustomizer
+			<AuthVerifier, AuthVerifierConfiguration> {
 
 		@Override
 		public AuthVerifierConfiguration addingService(

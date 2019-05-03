@@ -208,6 +208,7 @@ public class AppViewEntryTag extends IncludeTag {
 		_latestApprovedVersion = null;
 		_latestApprovedVersionAuthor = null;
 		_locked = false;
+		_markupView = null;
 		_modifiedDate = null;
 		_reviewDate = null;
 		_rowCheckerId = null;
@@ -222,7 +223,6 @@ public class AppViewEntryTag extends IncludeTag {
 		_title = null;
 		_url = null;
 		_version = null;
-		_markupView = null;
 	}
 
 	protected ServletContext getActionJspServletContext() {

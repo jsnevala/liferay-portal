@@ -103,7 +103,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.portal.search.elasticsearch.configuration.ElasticsearchConfiguration",
-	immediate = true, property = {"search.engine.impl=Elasticsearch"},
+	immediate = true, property = "search.engine.impl=Elasticsearch",
 	service = IndexSearcher.class
 )
 public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
@@ -356,7 +356,11 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		Object[] array = highlightField.fragments();
 
 		document.addText(
-			Field.SNIPPET.concat(StringPool.UNDERLINE).concat(snippetFieldName),
+			Field.SNIPPET.concat(
+				StringPool.UNDERLINE
+			).concat(
+				snippetFieldName
+			),
 			StringUtil.merge(array, StringPool.TRIPLE_PERIOD));
 	}
 
@@ -467,7 +471,7 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 
 		Client client = elasticsearchConnectionManager.getClient();
 
-		QueryConfig queryConfig = query.getQueryConfig();
+		QueryConfig queryConfig = searchContext.getQueryConfig();
 
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(
 			getSelectedIndexNames(queryConfig, searchContext));

@@ -14,18 +14,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SWITCH_TO_SIMPLE_PUBLICATION</td>
-	<td>//a[contains(.,'Switch to Simple Publication')]/span</td>
-	<td></td>
-</tr>
-<tr>
 	<td>ADD_EVENT_BUTTON</td>
 	<td>//button[contains(@id,'addButton')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>CUSTOM_BUTTON</td>
-	<td>//a[@title='Custom']</td>
 	<td></td>
 </tr>
 <tr>
@@ -39,11 +29,6 @@
 	<td></td>
 </tr>
 <!--DATE-->
-<tr>
-	<td>DATE_NOW_RADIO</td>
-	<td>//input[contains(@id,'publishingEventNow')]</td>
-	<td></td>
-</tr>
 <tr>
 	<td>DATE_SCHEDULE_RADIO</td>
 	<td>//input[contains(@id,'publishingEventSchedule')]</td>
@@ -128,11 +113,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>CONTENT_CHOOSE_CONTENT_SUB_SUBCONTENT_CHECKBOX</td>
-	<td>//div[contains(@class,'widget-content-expanded') and contains(.,'${key_contentName}')]//div[contains(@class,'modal-body')]//ul/li[@class='handler-control' and contains(.,'${key_subContent}')]//input[contains(@data-name,'${key_subSubContent}')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -146,17 +126,6 @@
 <tr>
 	<td>SCHEDULED_TABLE_END_DATE</td>
 	<td>//tr[contains(.,'${key_scheduleTitleName}')]/td[4]</td>
-	<td></td>
-</tr>
-<tr>
-	<td></td>
-	<td></td>
-	<td></td>
-</tr>
-<!--PUBLISH_TEMPLATES-->
-<tr>
-	<td>PUBLISH_TEMPLATES_NAME_FIELD</td>
-	<td>//input[contains(@id,'name')]</td>
 	<td></td>
 </tr>
 <tr>

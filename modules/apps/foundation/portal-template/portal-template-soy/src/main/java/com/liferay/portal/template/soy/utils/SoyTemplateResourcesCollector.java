@@ -48,7 +48,7 @@ public class SoyTemplateResourcesCollector {
 	}
 
 	/**
-	 * @deprecated As of 2.4.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public List<TemplateResource> getAllTemplateResources()
@@ -136,7 +136,7 @@ public class SoyTemplateResourcesCollector {
 	}
 
 	/**
-	 * @deprecated As of 2.2.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected String getCapabilityPrefix(BundleCapability bundleCapability) {
@@ -170,17 +170,25 @@ public class SoyTemplateResourcesCollector {
 	}
 
 	protected String getTemplateId(long bundleId, URL url) {
-		return String.valueOf(bundleId).concat(
-			TemplateConstants.BUNDLE_SEPARATOR).concat(url.getPath());
+		return String.valueOf(
+			bundleId
+		).concat(
+			TemplateConstants.BUNDLE_SEPARATOR
+		).concat(
+			url.getPath()
+		);
 	}
 
 	/**
-	 * @deprecated As of 2.2.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected String getTemplateId(String capabilityPrefix, URL url) {
 		return capabilityPrefix.concat(
-			TemplateConstants.BUNDLE_SEPARATOR).concat(url.getPath());
+			TemplateConstants.BUNDLE_SEPARATOR
+		).concat(
+			url.getPath()
+		);
 	}
 
 	private TemplateResource _getTemplateResource(String templateId, URL url)

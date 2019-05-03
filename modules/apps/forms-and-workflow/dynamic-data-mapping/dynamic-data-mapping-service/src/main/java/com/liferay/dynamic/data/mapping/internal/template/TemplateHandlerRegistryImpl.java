@@ -106,8 +106,7 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 	@Reference(
 		cardinality = ReferenceCardinality.MULTIPLE,
 		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		unbind = "removeTemplateHandler"
+		policyOption = ReferencePolicyOption.GREEDY
 	)
 	protected synchronized void addTemplateHandler(
 		TemplateHandler templateHandler) {
@@ -232,6 +231,8 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 				_templateHandler.getClassName());
 
 			ServiceContext serviceContext = new ServiceContext();
+
+			serviceContext.setAddGuestPermissions(true);
 
 			Group group = _groupLocalService.getCompanyGroup(
 				company.getCompanyId());

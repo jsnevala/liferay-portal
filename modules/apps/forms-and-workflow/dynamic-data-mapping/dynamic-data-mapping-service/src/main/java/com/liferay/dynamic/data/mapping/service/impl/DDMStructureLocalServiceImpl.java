@@ -43,6 +43,7 @@ import com.liferay.dynamic.data.mapping.util.DDMXML;
 import com.liferay.dynamic.data.mapping.util.impl.DDMFormTemplateSynchonizer;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValidator;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.LocaleException;
@@ -215,9 +216,9 @@ public class DDMStructureLocalServiceImpl
 	 *             UUID, creation date, modification date, guest permissions,
 	 *             and group permissions for the structure.
 	 * @return     the structure
-	 * @deprecated As of 2.1.0, replaced by {@link #addStructure(long, long,
-	 *             long, long, String, Map, Map, DDMForm, DDMFormLayout, String,
-	 *             int, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #addStructure(long, long, long, long, String, Map, Map,
+	 *             DDMForm, DDMFormLayout, String, int, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -271,8 +272,9 @@ public class DDMStructureLocalServiceImpl
 	 *             UUID, creation date, modification date, guest permissions,
 	 *             and group permissions for the structure.
 	 * @return     the structure
-	 * @deprecated As of 2.1.0, replaced by {@link #addStructure(long, long,
-	 *             long, Map, Map, DDMForm, DDMFormLayout, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #addStructure(long, long, long, Map, Map, DDMForm,
+	 *             DDMFormLayout, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -338,9 +340,9 @@ public class DDMStructureLocalServiceImpl
 	 *             UUID, creation date, modification date, guest permissions and
 	 *             group permissions for the structure.
 	 * @return     the structure
-	 * @deprecated As of 2.1.0, replaced by {@link #addStructure(long, long,
-	 *             String, long, String, Map, Map, DDMForm, DDMFormLayout,
-	 *             String, int, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #addStructure(long, long, String, long, String, Map, Map,
+	 *             DDMForm, DDMFormLayout, String, int, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -693,6 +695,36 @@ public class DDMStructureLocalServiceImpl
 
 			structure = ddmStructurePersistence.fetchByG_C_S(
 				ancestorSiteGroupId, classNameId, structureKey);
+
+			if (structure != null) {
+				return structure;
+			}
+		}
+
+		return null;
+	}
+
+	@Override
+	public DDMStructure fetchStructureByUuidAndGroupId(
+			String uuid, long groupId, boolean includeAncestorStructures)
+		throws PortalException {
+
+		DDMStructure structure = ddmStructurePersistence.fetchByUUID_G(
+			uuid, groupId);
+
+		if (structure != null) {
+			return structure;
+		}
+
+		if (!includeAncestorStructures) {
+			return null;
+		}
+
+		for (long ancestorSiteGroupId :
+				PortalUtil.getAncestorSiteGroupIds(groupId)) {
+
+			structure = ddmStructurePersistence.fetchByUUID_G(
+				uuid, ancestorSiteGroupId);
 
 			if (structure != null) {
 				return structure;
@@ -1336,9 +1368,9 @@ public class DDMStructureLocalServiceImpl
 	 * @param      serviceContext the service context to be applied. Can set the
 	 *             structure's modification date.
 	 * @return     the updated structure
-	 * @deprecated As of 2.1.0, replaced by {@link #updateStructure(long, long,
-	 *             long, long, String, Map, Map, DDMForm, DDMFormLayout,
-	 *             ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateStructure(long, long, long, long, String, Map, Map,
+	 *             DDMForm, DDMFormLayout, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -1381,8 +1413,9 @@ public class DDMStructureLocalServiceImpl
 	 * @param      serviceContext the service context to be applied. Can set the
 	 *             structure's modification date.
 	 * @return     the updated structure
-	 * @deprecated As of 2.1.0, replaced by {@link #updateStructure(long, long,
-	 *             long, Map, Map, DDMForm, DDMFormLayout, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateStructure(long, long, long, Map, Map, DDMForm,
+	 *             DDMFormLayout, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -1418,8 +1451,9 @@ public class DDMStructureLocalServiceImpl
 	 * @param      serviceContext the service context to be applied. Can set the
 	 *             structure's modification date.
 	 * @return     the updated structure
-	 * @deprecated As of 2.1.0, replaced by {@link #updateStructure(long,
-	 *             DDMForm, DDMFormLayout, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateStructure(long, DDMForm, DDMFormLayout,
+	 *             ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -1802,7 +1836,9 @@ public class DDMStructureLocalServiceImpl
 		throws PortalException {
 
 		try {
-			validate(nameMap, ddmForm.getDefaultLocale());
+			if (!ExportImportThreadLocal.isImportInProcess()) {
+				validate(nameMap, ddmForm.getDefaultLocale());
+			}
 
 			validate(ddmForm);
 

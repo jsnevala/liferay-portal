@@ -70,7 +70,7 @@ public class PortletResourceBundle extends ResourceBundle {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             PortletResourceBundle(ResourceBundle, Map)}
 	 */
 	@Deprecated
@@ -86,7 +86,7 @@ public class PortletResourceBundle extends ResourceBundle {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             PortletResourceBundle(ResourceBundle, Map)}
 	 */
 	@Deprecated
@@ -94,6 +94,23 @@ public class PortletResourceBundle extends ResourceBundle {
 		ResourceBundle parentResourceBundle, PortletInfo portletInfo) {
 
 		this(parentResourceBundle, getPortletInfos(portletInfo));
+	}
+
+	@Override
+	public boolean containsKey(String key) {
+		if (key == null) {
+			throw new NullPointerException();
+		}
+
+		if (_portletInfos.containsKey(key)) {
+			return true;
+		}
+
+		if (parent != null) {
+			return parent.containsKey(key);
+		}
+
+		return false;
 	}
 
 	@Override

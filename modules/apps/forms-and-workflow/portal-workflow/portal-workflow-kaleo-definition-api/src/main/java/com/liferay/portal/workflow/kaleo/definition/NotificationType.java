@@ -14,6 +14,8 @@
 
 package com.liferay.portal.workflow.kaleo.definition;
 
+import java.util.Objects;
+
 /**
  * @author Michael C. Han
  */
@@ -23,16 +25,16 @@ public enum NotificationType {
 	USER_NOTIFICATION("user-notification");
 
 	public static NotificationType parse(String value) {
-		if (EMAIL.getValue().equals(value)) {
+		if (Objects.equals(EMAIL.getValue(), value)) {
 			return EMAIL;
 		}
-		else if (IM.getValue().equals(value)) {
+		else if (Objects.equals(IM.getValue(), value)) {
 			return IM;
 		}
-		else if (PRIVATE_MESSAGE.getValue().equals(value)) {
+		else if (Objects.equals(PRIVATE_MESSAGE.getValue(), value)) {
 			return PRIVATE_MESSAGE;
 		}
-		else if (USER_NOTIFICATION.getValue().equals(value)) {
+		else if (Objects.equals(USER_NOTIFICATION.getValue(), value)) {
 			return USER_NOTIFICATION;
 		}
 

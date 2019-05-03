@@ -71,8 +71,9 @@ public abstract class BaseWorkflowHandler<T> implements WorkflowHandler<T> {
 
 	@Override
 	public AssetRendererFactory<T> getAssetRendererFactory() {
-		return (AssetRendererFactory<T>)AssetRendererFactoryRegistryUtil.
-			getAssetRendererFactoryByClassName(getClassName());
+		return (AssetRendererFactory<T>)
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+				getClassName());
 	}
 
 	@Override
@@ -88,7 +89,7 @@ public abstract class BaseWorkflowHandler<T> implements WorkflowHandler<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -97,8 +98,8 @@ public abstract class BaseWorkflowHandler<T> implements WorkflowHandler<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getSummary(long,
-	 *             PortletRequest, PortletResponse)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getSummary(long, PortletRequest, PortletResponse)}
 	 */
 	@Deprecated
 	@Override

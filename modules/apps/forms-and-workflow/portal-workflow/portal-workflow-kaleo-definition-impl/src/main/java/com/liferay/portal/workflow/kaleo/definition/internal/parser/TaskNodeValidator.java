@@ -29,8 +29,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Marcellus Tavares
  */
 @Component(
-	immediate = true, property = {"node.type=TASK"},
-	service = NodeValidator.class
+	immediate = true, property = "node.type=TASK", service = NodeValidator.class
 )
 public class TaskNodeValidator extends BaseNodeValidator<Task> {
 

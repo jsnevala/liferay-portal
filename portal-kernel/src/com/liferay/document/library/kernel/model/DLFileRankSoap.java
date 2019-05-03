@@ -30,6 +30,7 @@ import java.util.List;
  */
 @ProviderType
 public class DLFileRankSoap implements Serializable {
+
 	public static DLFileRankSoap toSoapModel(DLFileRank model) {
 		DLFileRankSoap soapModel = new DLFileRankSoap();
 
@@ -39,7 +40,7 @@ public class DLFileRankSoap implements Serializable {
 		soapModel.setUserId(model.getUserId());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setFileEntryId(model.getFileEntryId());
-		soapModel.setActive(model.getActive());
+		soapModel.setActive(model.isActive());
 
 		return soapModel;
 	}
@@ -72,7 +73,8 @@ public class DLFileRankSoap implements Serializable {
 	}
 
 	public static DLFileRankSoap[] toSoapModels(List<DLFileRank> models) {
-		List<DLFileRankSoap> soapModels = new ArrayList<DLFileRankSoap>(models.size());
+		List<DLFileRankSoap> soapModels = new ArrayList<DLFileRankSoap>(
+			models.size());
 
 		for (DLFileRank model : models) {
 			soapModels.add(toSoapModel(model));
@@ -159,4 +161,5 @@ public class DLFileRankSoap implements Serializable {
 	private Date _createDate;
 	private long _fileEntryId;
 	private boolean _active;
+
 }

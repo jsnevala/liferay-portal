@@ -29,16 +29,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>NETID_FIELD</td>
-	<td>//input[@id='username']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>PASSWORD_FIELD</td>
-	<td>//input[@id='password']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>LOGIN_BUTTON</td>
 	<td>//input[@value='LOGIN']</td>
 	<td></td>

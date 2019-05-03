@@ -32,12 +32,13 @@ import com.liferay.wsrp.service.WSRPProducerLocalServiceUtil;
  * @generated
  */
 @ProviderType
-public abstract class WSRPProducerBaseImpl extends WSRPProducerModelImpl
-	implements WSRPProducer {
+public abstract class WSRPProducerBaseImpl
+	extends WSRPProducerModelImpl implements WSRPProducer {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a wsrp producer model instance should use the {@link WSRPProducer} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a wsrp producer model instance should use the <code>WSRPProducer</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +49,5 @@ public abstract class WSRPProducerBaseImpl extends WSRPProducerModelImpl
 			WSRPProducerLocalServiceUtil.updateWSRPProducer(this);
 		}
 	}
+
 }

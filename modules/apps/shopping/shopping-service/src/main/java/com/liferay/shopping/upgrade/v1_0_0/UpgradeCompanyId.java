@@ -14,8 +14,6 @@
 
 package com.liferay.shopping.upgrade.v1_0_0;
 
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.upgrade.BaseUpgradeCompanyId;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -66,8 +64,5 @@ public class UpgradeCompanyId extends BaseUpgradeCompanyId {
 			runSQL(sb.toString());
 		}
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		UpgradeCompanyId.class);
 
 }

@@ -41,8 +41,9 @@ import org.osgi.service.component.annotations.Reference;
 public class LayoutFriendlyURLStagedModelDataHandler
 	extends BaseStagedModelDataHandler<LayoutFriendlyURL> {
 
-	public static final String[] CLASS_NAMES =
-		{LayoutFriendlyURL.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		LayoutFriendlyURL.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(LayoutFriendlyURL layoutFriendlyURL) {
@@ -177,11 +178,16 @@ public class LayoutFriendlyURLStagedModelDataHandler
 
 		String friendlyURL = layoutFriendlyURL.getFriendlyURL();
 
+		boolean privateLayout = layoutFriendlyURL.isPrivateLayout();
+
+		if (existingLayoutFriendlyURL != null) {
+			privateLayout = existingLayoutFriendlyURL.isPrivateLayout();
+		}
+
 		for (int i = 1;; i++) {
 			LayoutFriendlyURL duplicateLayoutFriendlyURL =
 				_layoutFriendlyURLLocalService.fetchLayoutFriendlyURL(
-					portletDataContext.getScopeGroupId(),
-					layoutFriendlyURL.isPrivateLayout(),
+					portletDataContext.getScopeGroupId(), privateLayout,
 					layoutFriendlyURL.getFriendlyURL(),
 					layoutFriendlyURL.getLanguageId());
 

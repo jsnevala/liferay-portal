@@ -39,9 +39,7 @@ public class UserThreadServiceImpl extends UserThreadServiceBaseImpl {
 		List<MBMessage> mbMessages = getThreadMessages(
 			mbThreadId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, false);
 
-		MBMessage lastMBMessage = mbMessages.get(0);
-
-		return lastMBMessage;
+		return mbMessages.get(0);
 	}
 
 	@Override

@@ -14,11 +14,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>EDIT_EVENT_IFRAME</td>
-	<td>//iframe[contains(@class,'dialog-iframe-node')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>FORM_CONTENT</td>
 	<td>//div[@id='Content']</td>
 	<td></td>
@@ -112,23 +107,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>REPEAT_REPEAT_ON_DAY_OF_THE_MONTH_RADIO</td>
-	<td>//label[@class='radio-inline' and contains(.,'Day of the Month')]/input</td>
-	<td></td>
-</tr>
-<tr>
 	<td>REPEAT_REPEAT_ON_DAY_OF_THE_WEEK_RADIO</td>
 	<td>//label[@class='radio-inline' and contains(.,'Day of the Week')]/input</td>
-	<td></td>
-</tr>
-<tr>
-	<td>REPEAT_REPEAT_ON_DAY_OF_THE_WEEK_POSITION_DROPDOWN</td>
-	<td>//div[contains(@id,'CalendarPortlet_viewPositionalWeekday')]//select[@title='Position']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>REPEAT_REPEAT_ON_DAY_OF_THE_WEEK_WEEKDAY_DROPDOWN</td>
-	<td>//div[contains(@id,'CalendarPortlet_viewPositionalWeekday')]//select[@title='Weekday']</td>
 	<td></td>
 </tr>
 <tr>
@@ -167,18 +147,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>REPEAT_MONTHLY_CURRENT_DAY</td>
-	<td>//td[contains(@class,'calendar-recurrence-month-radio')]//input[contains(@id,'CalendarPortlet_weekday') and @type='hidden']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>REPEAT_MONTHLY_CURRENT_MONTH_POSITION</td>
 	<td>//td[contains(@class,'calendar-recurrence-month-radio')]//input[contains(@id,'CalendarPortlet_position') and @type='hidden']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>REPEAT_WEEKLY_CURRENT_DAY</td>
-	<td>//td[contains(@class,'calendar-recurrence-weekday-checkbox')]//input[@disabled='']</td>
 	<td></td>
 </tr>
 <tr>
@@ -210,32 +180,6 @@
 <tr>
 	<td>DETAILS_CALENDAR_SELECT_OPTION</td>
 	<td>//select[contains(@id,'calendarId')]/option[contains(.,'${key_calendarName}')] | //select[contains(@name,'calendarId')]/option[contains(.,'${key_calendarName}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td></td>
-	<td></td>
-	<td></td>
-</tr>
-<!--DETAILS_PERMISSIONS-->
-<tr>
-	<td>DETAILS_PERMISSIONS_VIEWABLE_BY_SELECT</td>
-	<td>//select[contains(@id,'inputPermissionsViewRole')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>DETAILS_PERMISSIONS_MORE_OPTIONS_LINK</td>
-	<td>//span[contains(@id,'inputPermissionsShowOptions')]/a[contains(.,'More Options')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>DETAILS_PERMISSIONS_HIDE_OPTIONS_LINK</td>
-	<td>//a[contains(@id,'inputPermissionsHideOptions') and contains (.,'Hide Options')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>DETAILS_PERMISSIONS_CHECKBOX</td>
-	<td>//tr[contains(.,'${key_roleName}')]//input[@value='${key_permissionDefinitionKey}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -301,88 +245,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>RESOURCES_AVAILABILITY_TODAY_BUTTON</td>
-	<td>//div[@class='calendar-portlet-availability']//button[contains(@class,'today btn')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_PREV_BUTTON</td>
-	<td>//div[@class='calendar-portlet-availability']//button[contains(@class,'icon-prev btn')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_NEXT_BUTTON</td>
-	<td>//div[@class='calendar-portlet-availability']//button[contains(@class,'icon-next btn')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_DAY_BUTTON</td>
-	<td>//div[@class='calendar-portlet-availability']//button[contains(@class,'view-day btn')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_DAY_BUTTON_ACTIVE</td>
-	<td>//div[@class='calendar-portlet-availability']//button[contains(@class,'view-day btn active')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_WEEK_BUTTON</td>
-	<td>//div[@class='calendar-portlet-availability']//button[contains(@class,'view-week btn')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_WEEK_BUTTON_ACTIVE</td>
-	<td>//div[@class='calendar-portlet-availability']//button[contains(@class,'view-week btn active')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>RESOURCES_AVAILABILITY_SCHEDULER_EVENT_GENERIC</td>
 	<td>//div[@class='calendar-portlet-availability']//div[contains(@class,'calendar-portlet-event')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>RESOURCES_AVAILABILITY_SCHEDULER_EVENT_ALL_DAY_TITLE</td>
-	<td>//div[@class='calendar-portlet-availability']//div[contains(@class,'scheduler-event-all-day calendar-portlet-event') and contains(@data-startdate,'${key_startDate}') and contains(@data-startdate,'12:00 AM') and contains(@data-enddate,'${key_endDate}') and contains(@data-enddate,'11:59 PM')]/div[@class='scheduler-event-content']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_SCHEDULER_EVENT_SPECIFIC</td>
-	<td>//div[@class='calendar-portlet-availability']//div[contains(@class,'calendar-portlet-event')]//div[contains(.,'${key_eventTitle}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_SCHEDULER_EVENT_SPECIFIC_BACKGROUND_COLOR</td>
-	<td>//div[@class='calendar-portlet-availability']//div[contains(@class,'calendar-portlet-event') and contains(@style,'${key_backgroundColor}')]/div[contains(.,'${key_eventTitle}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_SCHEDULER_EVENT_SPECIFIC_BACKGROUND_COLOR_DEFAULT</td>
-	<td>//div[@class='calendar-portlet-availability']//div[contains(@class,'calendar-portlet-event') and contains(@style,'rgb(240, 208, 208)')]/div[contains(.,'${key_eventTitle}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_SCHEDULER_EVENT_SPECIFIC_FONT_COLOR</td>
-	<td>//div[@class='calendar-portlet-availability']//div[contains(@class,'calendar-portlet-event') and contains(@style,'${key_fontColor}')]/div[contains(.,'${key_eventTitle}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_SCHEDULER_EVENT_SPECIFIC_FONT_COLOR_DEFAULT</td>
-	<td>//div[@class='calendar-portlet-availability']//div[contains(@class,'calendar-portlet-event') and contains(@style,'rgb(217, 104, 104)')]/div[contains(.,'${key_eventTitle}')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>RESOURCES_AVAILABILITY_SCHEDULER_EVENT_REGULAR</td>
 	<td>//div[@class='calendar-portlet-availability']//div[contains(@class,'calendar-portlet-event') and contains(@data-startdate,'${key_startDate}') and contains(@data-starttime,'${key_startDateTime}') and contains(@data-enddate,'${key_endDate}') and contains(@data-endtime,'${key_endDateTime}')]/div[@class='scheduler-event-content']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_SCHEDULER_EVENT_REPEAT</td>
-	<td>//div[@class='calendar-portlet-availability']//div[contains(@class,'scheduler-event-repeated calendar-portlet-event') and contains(@data-starttime,'${key_startDateTime}') and contains(@data-enddate,'${key_endDate}') and contains(@data-endtime,'${key_endDateTime}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>RESOURCES_AVAILABILITY_SCHEDULER_EVENT_REPEAT_TITLE</td>
-	<td>//div[@class='calendar-portlet-availability']//div[contains(@class,'scheduler-event-repeated calendar-portlet-event') and contains(@data-starttime,'${key_startDateTime}') and contains(@data-enddate,'${key_endDate}') and contains(@data-endtime,'${key_endDateTime}')]/div[@class='scheduler-event-content']</td>
 	<td></td>
 </tr>
 <tr>
@@ -509,23 +378,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>CATEGORIZATION_SELECT_BUTTON</td>
-	<td>//button[contains(@type,'button') and contains(@title,'Select Tags')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>CATEGORIZATION_SUGGESTIONS_BUTTON</td>
-	<td>//button[contains(@type,'button') and contains(@title,'Suggestions')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>CATEGORIZATION_TAG_SPECIFIC</td>
 	<td>//li[contains(@class,'textboxlistentry')]//span[contains(@class,'textboxlistentry-text') and contains(.,'${key_tagText}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>CATEGORIZATION_REMOVE_TAG_BUTTON_SPECIFIC</td>
-	<td>//li[contains(@class,'textboxlistentry')]//span[contains(@class,'textboxlistentry-text') and contains(.,'${key_tagText}')]/..//i[@class='icon icon-remove']</td>
 	<td></td>
 </tr>
 <tr>
@@ -547,8 +401,8 @@
 <tr>
 	<td></td>
 	<td></td>
-	<td></td>
-</tr>
+ 	<td></td>
+ </tr>
 <!--ARE_YOU_SURE_DIALOG_BOX-->
 <tr>
 	<td>ARE_YOU_SURE_DIALOG_BOX_HEADER</td>
@@ -582,11 +436,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>RECURRING_EVENT_DIALOG_BOX_BODY</td>
-	<td>//div[contains(@class,'modal-body')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>SINGLE_EVENT_BUTTON</td>
 	<td>//button[@role='button' and contains(.,'Single Event')]</td>
 	<td></td>
@@ -601,9 +450,15 @@
 	<td>//button[@role='button' and contains(.,'Entire Series')]</td>
 	<td></td>
 </tr>
+<!--ACTIVITIES-->
 <tr>
-	<td>CANCEL_THIS_CHANGE_BUTTON</td>
-	<td>//button[@type='button' and contains(.,'Cancel This Change')]</td>
+	<td>ACTIVITIES_PANEL_COLLAPSED</td>
+	<td>//div[contains(@class,'toggler-header-collapsed')]/div[contains(.,'Activities')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ACTIVITIES_PANEL_EXPANDED</td>
+	<td>//div[contains(@class,'toggler-header-expanded')]/div[contains(.,'Activities')]</td>
 	<td></td>
 </tr>
 </tbody>

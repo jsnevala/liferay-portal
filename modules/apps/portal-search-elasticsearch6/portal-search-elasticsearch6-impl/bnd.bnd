@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Search Elasticsearch 6 Implementation
 Bundle-SymbolicName: com.liferay.portal.search.elasticsearch6.GSEARCH-PATCHED-IMPL-70-DXP-FP60
-Bundle-Version: 1.0.19
+Bundle-Version: 1.0.26
 Import-Package:\
 	!com.barchart.udt.*,\
 	\
@@ -95,6 +95,8 @@ Import-Package:\
 	\
 	!org.junit.*,\
 	\
+	!org.locationtech.jts.geom.*,\
+	\
 	!org.noggit.*,\
 	\
 	!org.owasp.html.*,\
@@ -106,6 +108,6 @@ Import-Package:\
 	com.liferay.portal.search.analysis,\
 	\
 	*
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Elasticsearch
 -dsannotations-options: inherit
+-fixupmessages: Classes found in the wrong directory: ...;is:=ignore

@@ -129,7 +129,7 @@ public class JSONWebServiceInvokerAction implements JSONWebServiceAction {
 
 		Object result = null;
 
-		if (batchMode == false) {
+		if (!batchMode) {
 			result = list.get(0);
 		}
 		else {
@@ -171,10 +171,7 @@ public class JSONWebServiceInvokerAction implements JSONWebServiceAction {
 		}
 
 		protected JSONSerializer createJSONSerializer() {
-			JSONSerializer jsonSerializer =
-				JSONFactoryUtil.createJSONSerializer();
-
-			return jsonSerializer;
+			return JSONFactoryUtil.createJSONSerializer();
 		}
 
 		private Object _result;

@@ -27,6 +27,7 @@ import com.liferay.portal.security.ldap.internal.UserImportTransactionThreadLoca
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
@@ -70,8 +71,7 @@ public class UserGroupModelListener extends BaseModelListener<UserGroup> {
 		catch (Exception e) {
 			_log.error(
 				"Unable to export user group with user ID " +
-					associationClassPK +
-						" to LDAP on after remove association",
+					associationClassPK + " to LDAP on after remove association",
 				e);
 		}
 	}
@@ -100,7 +100,10 @@ public class UserGroupModelListener extends BaseModelListener<UserGroup> {
 	private static final Log _log = LogFactoryUtil.getLog(
 		UserGroupModelListener.class);
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY)
-	private UserExporter _userExporter;
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile UserExporter _userExporter;
 
 }

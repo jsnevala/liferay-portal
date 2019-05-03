@@ -79,8 +79,11 @@ public class WrapPortletTag
 				servletContext, request, response, wrapPage, theme, false);
 		}
 
-		return _CONTENT_WRAPPER_PRE.concat(content).concat(
-			_CONTENT_WRAPPER_POST);
+		return _CONTENT_WRAPPER_PRE.concat(
+			content
+		).concat(
+			_CONTENT_WRAPPER_POST
+		);
 	}
 
 	@Override
@@ -90,6 +93,7 @@ public class WrapPortletTag
 				WebKeys.THEME_DISPLAY);
 
 			Theme theme = themeDisplay.getTheme();
+
 			PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
 			// Portlet content

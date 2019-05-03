@@ -79,7 +79,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=Custom Fields",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + ExpandoPortletKeys.EXPANDO,
 		"javax.portlet.portlet-mode=text/html",
@@ -153,6 +153,7 @@ public class ExpandoPortlet extends MVCPortlet {
 			actionRequest, "resourcePrimKey");
 
 		String name = ParamUtil.getString(actionRequest, "name");
+
 		int type = ParamUtil.getInteger(actionRequest, "type");
 
 		Serializable defaultValue = getValue(

@@ -19,6 +19,9 @@ import com.liferay.dynamic.data.mapping.expression.DDMExpressionException;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.dynamic.data.mapping.form.evaluator.DDMFormEvaluationResult;
 import com.liferay.dynamic.data.mapping.form.evaluator.DDMFormFieldEvaluationResult;
+import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
+import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueAccessor;
+import com.liferay.dynamic.data.mapping.form.field.type.DefaultDDMFormFieldValueAccessor;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidation;
@@ -44,7 +47,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -54,7 +56,11 @@ import java.util.Set;
 public class DDMFormEvaluatorHelper {
 
 	public DDMFormEvaluatorHelper(
-		DDMForm ddmForm, DDMFormValues ddmFormValues, Locale locale) {
+		DDMForm ddmForm, DDMFormValues ddmFormValues,
+		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker,
+		Locale locale) {
+
+		_ddmFormFieldTypeServicesTracker = ddmFormFieldTypeServicesTracker;
 
 		_ddmFormFieldsMap = ddmForm.getDDMFormFieldsMap(true);
 
@@ -192,19 +198,35 @@ public class DDMFormEvaluatorHelper {
 				ddmFormFieldEvaluationResult.setValid(valid);
 
 				if (!valid) {
-					ddmFormFieldEvaluationResult.setErrorMessage(
-						ddmFormFieldValidation.getErrorMessage());
+					String errorMessage =
+						ddmFormFieldValidation.getErrorMessage();
+
+					if (Validator.isNull(errorMessage)) {
+						errorMessage = LanguageUtil.get(
+							getResourceBundle(_locale),
+							"this-field-is-invalid");
+					}
+
+					ddmFormFieldEvaluationResult.setErrorMessage(errorMessage);
 				}
 			}
 			catch (NumberFormatException nfe) {
-				ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-					"content.Language", _locale, getClass());
+				String errorMessage = ddmFormFieldValidation.getErrorMessage();
 
-				ddmFormFieldEvaluationResult.setErrorMessage(
-					LanguageUtil.get(
-						resourceBundle,
-						"the-text-is-not-a-number-or-exceeds-the-maximum-" +
-							"value"));
+				if (!errorMessage.equals("")) {
+					ddmFormFieldEvaluationResult.setErrorMessage(errorMessage);
+				}
+				else {
+					ResourceBundle resourceBundle =
+						ResourceBundleUtil.getBundle(
+							"content.Language", _locale, getClass());
+
+					ddmFormFieldEvaluationResult.setErrorMessage(
+						LanguageUtil.get(
+							resourceBundle,
+							"the-text-is-not-a-number-or-exceeds-the-maximum-" +
+								"value"));
+				}
 
 				ddmFormFieldEvaluationResult.setValid(false);
 			}
@@ -240,6 +262,36 @@ public class DDMFormEvaluatorHelper {
 		return ddmFormFieldEvaluationResults;
 	}
 
+	protected DDMFormFieldValueAccessor<?> getDDMFormFieldValueAccessor(
+		String type) {
+
+		DDMFormFieldValueAccessor<?> ddmFormFieldValueAccessor =
+			_ddmFormFieldTypeServicesTracker.getDDMFormFieldValueAccessor(type);
+
+		if (ddmFormFieldValueAccessor != null) {
+			return ddmFormFieldValueAccessor;
+		}
+
+		return _defaultDDMFormFieldValueAccessor;
+	}
+
+	protected double getDoubleValue(String variableValue) {
+		if (Validator.isNull(variableValue)) {
+			return 0.0;
+		}
+
+		try {
+			if (variableValue.matches(_FLOAT_REGEXP)) {
+				return Double.parseDouble(variableValue);
+			}
+
+			throw new NumberFormatException();
+		}
+		catch (NumberFormatException nfe) {
+			throw nfe;
+		}
+	}
+
 	protected String getJSONArrayValueString(String valueString) {
 		try {
 			JSONArray jsonArray = _jsonFactory.createJSONArray(valueString);
@@ -258,6 +310,21 @@ public class DDMFormEvaluatorHelper {
 		}
 	}
 
+	protected long getLongValue(String variableValue) {
+		if (Validator.isNull(variableValue)) {
+			return 0L;
+		}
+
+		return GetterUtil.getLongStrict(variableValue);
+	}
+
+	protected ResourceBundle getResourceBundle(Locale locale) {
+		Class<?> clazz = getClass();
+
+		return ResourceBundleUtil.getBundle(
+			"content.Language", locale, clazz.getClassLoader());
+	}
+
 	protected String getValidationExpression(
 		DDMFormFieldValidation ddmFormFieldValidation) {
 
@@ -268,15 +335,27 @@ public class DDMFormEvaluatorHelper {
 		return ddmFormFieldValidation.getExpression();
 	}
 
-	protected String getValueString(Value value, String type) {
+	protected String getValueString(
+		DDMFormFieldValue ddmFormFieldValue, String type) {
+
+		if (ddmFormFieldValue == null) {
+			return null;
+		}
+
+		DDMFormFieldValueAccessor<?> ddmFormFieldValueAccessor =
+			getDDMFormFieldValueAccessor(type);
+
+		Object value = ddmFormFieldValueAccessor.getValue(
+			ddmFormFieldValue, _locale);
+
 		if (value == null) {
 			return null;
 		}
 
-		String valueString = value.getString(_locale);
+		String valueString = value.toString();
 
-		if (type.equals("select") || type.equals("radio")) {
-			valueString = getJSONArrayValueString(valueString);
+		if (value instanceof JSONArray) {
+			return getJSONArrayValueString(valueString);
 		}
 
 		return valueString;
@@ -293,29 +372,12 @@ public class DDMFormEvaluatorHelper {
 	protected boolean isDDMFormFieldValueEmpty(
 		DDMFormFieldValue ddmFormFieldValue) {
 
-		Value value = ddmFormFieldValue.getValue();
-
-		if (value == null) {
-			return true;
-		}
-
-		String valueString = GetterUtil.getString(value.getString(_locale));
-
-		if (valueString.isEmpty()) {
-			return true;
-		}
-
 		DDMFormField ddmFormField = ddmFormFieldValue.getDDMFormField();
 
-		String dataType = ddmFormField.getDataType();
+		DDMFormFieldValueAccessor<?> ddmFormFieldValueAccessor =
+			getDDMFormFieldValueAccessor(ddmFormField.getType());
 
-		if (Objects.equals(dataType, "boolean") &&
-			Objects.equals(valueString, "false")) {
-
-			return true;
-		}
-
-		return false;
+		return ddmFormFieldValueAccessor.isEmpty(ddmFormFieldValue, _locale);
 	}
 
 	protected void setDDMExpressionFactory(
@@ -341,10 +403,14 @@ public class DDMFormEvaluatorHelper {
 				continue;
 			}
 
-			String valueString = getValueString(
-				ddmFormFieldValue.getValue(), ddmFormField.getType());
+			if (ddmFormField.isTransient()) {
+				continue;
+			}
 
-			if (valueString != null) {
+			String valueString = getValueString(
+				ddmFormFieldValue, ddmFormField.getType());
+
+			if ((valueString != null) && ddmExpression.hasVariable(name)) {
 				setExpressionVariableValue(
 					ddmExpression, name,
 					getVariableType(ddmFormField.getDataType(), valueString),
@@ -368,11 +434,11 @@ public class DDMFormEvaluatorHelper {
 		}
 		else if (variableType.equals("double")) {
 			ddmExpression.setDoubleVariableValue(
-				variableName, Double.parseDouble(variableValue));
+				variableName, getDoubleValue(variableValue));
 		}
 		else if (variableType.equals("integer")) {
 			ddmExpression.setLongVariableValue(
-				variableName, GetterUtil.getLongStrict(variableValue));
+				variableName, getLongValue(variableValue));
 		}
 		else if (variableType.equals("string")) {
 			ddmExpression.setStringVariableValue(variableName, variableValue);
@@ -383,11 +449,18 @@ public class DDMFormEvaluatorHelper {
 		_jsonFactory = jsonFactory;
 	}
 
+	private static final String _FLOAT_REGEXP = "^([+-]?\\d*\\.?\\d*)$";
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormEvaluatorHelper.class);
 
 	private DDMExpressionFactory _ddmExpressionFactory;
 	private final Map<String, DDMFormField> _ddmFormFieldsMap;
+	private final DDMFormFieldTypeServicesTracker
+		_ddmFormFieldTypeServicesTracker;
+	private final DDMFormFieldValueAccessor<String>
+		_defaultDDMFormFieldValueAccessor =
+			new DefaultDDMFormFieldValueAccessor();
 	private JSONFactory _jsonFactory;
 	private final Locale _locale;
 	private final List<DDMFormFieldValue> _rootDDMFormFieldValues;

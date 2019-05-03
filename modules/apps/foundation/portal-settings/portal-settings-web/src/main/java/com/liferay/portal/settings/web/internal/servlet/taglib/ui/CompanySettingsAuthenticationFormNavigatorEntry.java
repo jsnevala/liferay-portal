@@ -43,7 +43,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  * @author Tomas Polesovsky
  */
 @Component(
-	immediate = true, property = {"form.navigator.entry.order:Integer=70"},
+	immediate = true, property = "form.navigator.entry.order:Integer=70",
 	service = FormNavigatorEntry.class
 )
 public class CompanySettingsAuthenticationFormNavigatorEntry
@@ -51,8 +51,8 @@ public class CompanySettingsAuthenticationFormNavigatorEntry
 
 	@Override
 	public String getCategoryKey() {
-		return
-			FormNavigatorConstants.CATEGORY_KEY_COMPANY_SETTINGS_CONFIGURATION;
+		return FormNavigatorConstants.
+			CATEGORY_KEY_COMPANY_SETTINGS_CONFIGURATION;
 	}
 
 	@Override

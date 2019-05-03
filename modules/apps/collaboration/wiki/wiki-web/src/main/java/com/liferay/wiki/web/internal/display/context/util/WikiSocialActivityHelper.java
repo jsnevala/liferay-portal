@@ -222,7 +222,7 @@ public class WikiSocialActivityHelper {
 		int type = socialActivity.getType();
 
 		if (type == SocialActivityConstants.TYPE_ADD_ATTACHMENT) {
-			return "icon-paperclip";
+			return "icon-paper-clip";
 		}
 		else if (type ==
 					SocialActivityConstants.TYPE_MOVE_ATTACHMENT_TO_TRASH) {

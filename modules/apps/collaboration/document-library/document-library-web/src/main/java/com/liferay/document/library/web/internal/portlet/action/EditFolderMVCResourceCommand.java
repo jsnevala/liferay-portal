@@ -19,14 +19,12 @@ import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.nio.charset.CharsetEncoderUtil;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -37,8 +35,6 @@ import com.liferay.portal.kernel.zip.ZipWriterFactoryUtil;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-
-import java.nio.charset.CharsetEncoder;
 
 import java.util.List;
 
@@ -144,34 +140,23 @@ public class EditFolderMVCResourceCommand implements MVCResourceCommand {
 			if (entry instanceof Folder) {
 				Folder folder = (Folder)entry;
 
-				String folderName = _sanitizeName(folder.getName());
-
 				zipFolder(
 					folder.getRepositoryId(), folder.getFolderId(),
-					path.concat(StringPool.SLASH).concat(folderName),
+					path.concat(
+						StringPool.SLASH
+					).concat(
+						folder.getName()
+					),
 					zipWriter);
 			}
 			else if (entry instanceof FileEntry) {
 				FileEntry fileEntry = (FileEntry)entry;
 
-				String fileName = _sanitizeName(fileEntry.getFileName());
-
 				zipWriter.addEntry(
-					path + StringPool.SLASH + fileName,
+					path + StringPool.SLASH + fileEntry.getFileName(),
 					fileEntry.getContentStream());
 			}
 		}
-	}
-
-	private String _sanitizeName(String name) {
-		CharsetEncoder charsetEncoder = CharsetEncoderUtil.getCharsetEncoder(
-			"US-ASCII");
-
-		if (!charsetEncoder.canEncode(name)) {
-			name = HtmlUtil.escapeURL(name);
-		}
-
-		return name;
 	}
 
 	private DLAppService _dlAppService;

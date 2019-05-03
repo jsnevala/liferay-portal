@@ -1,142 +1,125 @@
-<definition>
-	<command name="gotoAddPage">
-		<execute macro="ProductMenuHelper#expandPanel">
-			<var name="panel" value="Site Administration" />
-		</execute>
+definition {
+	macro gotoAddPage {
+		ProductMenuHelper.expandPanel(panel = "Site Administration");
 
-		<execute macro="ProductMenuHelper#expandCategory">
-			<var name="category" value="Navigation" />
-		</execute>
+		ProductMenuHelper.expandCategory(category = "Navigation");
 
-		<execute macro="ProductMenuHelper#expandPageTree" />
+		ProductMenuHelper.expandPageTree();
 
-		<if>
-			<and>
-				<condition function="IsElementNotPresent" locator1="ProductMenu#PUBLIC_PAGES" />
-				<condition function="IsElementNotPresent" locator1="ProductMenu#PRIVATE_PAGES" />
-			</and>
-			<then>
-				<execute macro="ProductMenuHelper#addFirstPage">
-					<var name="sitePagePrivacy" value="${sitePagePrivacy}" />
-				</execute>
-			</then>
-			<else>
-				<if>
-					<equals arg1="${sitePagePrivacy}" arg2="Private" />
-					<then>
-						<if>
-							<condition function="IsElementNotPresent" locator1="ProductMenu#PRIVATE_PAGES" />
-							<then>
-								<execute function="Click" locator1="SitePages#PUBLIC_PAGE_ELLIPSIS" />
+		if ((IsElementNotPresent(locator1 = "ProductMenu#PUBLIC_PAGES")) && (IsElementNotPresent(locator1 = "ProductMenu#PRIVATE_PAGES"))) {
+			ProductMenuHelper.addFirstPage(sitePagePrivacy = "${sitePagePrivacy}");
+		}
+		else {
+			if ("${sitePagePrivacy}" == "Private") {
+				if (IsElementNotPresent(locator1 = "ProductMenu#PRIVATE_PAGES")) {
+					Click(locator1 = "SitePages#PUBLIC_PAGE_ELLIPSIS");
 
-								<execute function="AssertClick#assertPartialTextClickAt" locator1="MenuItem#ANY_MENU_ITEM" value1="Add Private Page">
-									<var name="key_menuItem" value="Add Private Page" />
-								</execute>
-							</then>
-							<else>
-								<execute macro="ProductMenu#gotoPrivatePages" />
+					AssertClick.assertPartialTextClickAt(
+						locator1 = "MenuItem#ANY_MENU_ITEM",
+						value1 = "Add Private Page",
+						key_menuItem = "Add Private Page"
+					);
+				}
+				else if (IsElementNotPresent(locator1 = "ProductMenu#PUBLIC_PAGES")) {
+					Click(locator1 = "SitePages#PRIVATE_PAGE_ELLIPSIS");
 
-								<execute function="Click" locator1="SitePages#PRIVATE_PAGE_ELLIPSIS" />
+					AssertClick.assertPartialTextClickAt(
+						locator1 = "MenuItem#ANY_MENU_ITEM",
+						value1 = "Add Private Page",
+						key_menuItem = "Add Private Page"
+					);
+				}
+				else {
+					ProductMenu.gotoPrivatePages();
 
-								<execute function="AssertClick#assertPartialTextClickAt" locator1="MenuItem#ANY_MENU_ITEM" value1="Add Page">
-									<var name="key_menuItem" value="Add Page" />
-								</execute>
-							</else>
-						</if>
-					</then>
-					<else>
-						<execute macro="ProductMenu#gotoPublicPages" />
+					Click(locator1 = "SitePages#PRIVATE_PAGE_ELLIPSIS");
 
-						<execute function="Click" locator1="SitePages#PUBLIC_PAGE_ELLIPSIS" />
+					AssertClick.assertPartialTextClickAt(
+						locator1 = "MenuItem#ANY_MENU_ITEM",
+						value1 = "Add Page",
+						key_menuItem = "Add Page"
+					);
+				}
+			}
+			else {
+				ProductMenu.gotoPublicPages();
 
-						<if>
-							<condition function="IsElementPresent" locator1="ProductMenu#PRIVATE_PAGES" />
-							<then>
-								<execute function="AssertClick#assertPartialTextClickAt" locator1="MenuItem#ANY_MENU_ITEM" value1="Add Page">
-									<var name="key_menuItem" value="Add Page" />
-								</execute>
-							</then>
-							<else>
-								<execute function="AssertClick#assertPartialTextClickAt" locator1="MenuItem#ANY_MENU_ITEM" value1="Add Public Page">
-									<var name="key_menuItem" value="Add Public Page" />
-								</execute>
-							</else>
-						</if>
-					</else>
-				</if>
-			</else>
-		</if>
-	</command>
+				Click(locator1 = "SitePages#PUBLIC_PAGE_ELLIPSIS");
 
-	<command name="gotoEditPage" summary="Navigate to Product Menu > Sites > Navigation > Public Pages > ${page}">
-		<execute macro="ProductMenuHelper#openProductMenu" />
+				if (IsElementPresent(locator1 = "ProductMenu#PRIVATE_PAGES")) {
+					AssertClick.assertPartialTextClickAt(
+						locator1 = "MenuItem#ANY_MENU_ITEM",
+						value1 = "Add Page",
+						key_menuItem = "Add Page"
+					);
+				}
+				else {
+					AssertClick.assertPartialTextClickAt(
+						locator1 = "MenuItem#ANY_MENU_ITEM",
+						value1 = "Add Public Page",
+						key_menuItem = "Add Public Page"
+					);
+				}
+			}
+		}
+	}
 
-		<execute macro="ProductMenuHelper#expandPanel">
-			<var name="panel" value="Site Administration" />
-		</execute>
+	@summary = "Navigate to Product Menu > Sites > Navigation > Public Pages > ${page}"
+	macro gotoEditPage {
+		ProductMenuHelper.openProductMenu();
 
-		<execute macro="ProductMenuHelper#expandCategory">
-			<var name="category" value="Navigation" />
-		</execute>
+		ProductMenuHelper.expandPanel(panel = "Site Administration");
 
-		<execute macro="ProductMenuHelper#expandPageTree" />
+		ProductMenuHelper.expandCategory(category = "Navigation");
 
-		<if>
-			<equals arg1="${sitePagePrivacy}" arg2="Private Pages" />
-			<then>
-				<execute function="Click" locator1="ProductMenu#PRIVATE_PAGES" />
-			</then>
-		</if>
+		ProductMenuHelper.expandPageTree();
 
-		<var name="key_page" value="${page}" />
+		if ("${sitePagePrivacy}" == "Private Pages") {
+			Click(locator1 = "ProductMenu#PRIVATE_PAGES");
+		}
 
-		<if>
-			<equals arg1="${page}" arg2="Public Pages" />
-			<then>
-				<execute function="Click" locator1="SitePages#PUBLIC_PAGE_ELLIPSIS" />
+		var key_page = "${page}";
 
-				<execute function="AssertClick#assertPartialTextClickAt" locator1="MenuItem#ANY_MENU_ITEM" value1="Configure">
-					<var name="key_menuItem" value="Configure" />
-				</execute>
-			</then>
-			<elseif>
-				<equals arg1="${page}" arg2="Private Pages" />
-				<then>
-					<execute function="Click" locator1="SitePages#PRIVATE_PAGE_ELLIPSIS" />
+		if ("${page}" == "Public Pages") {
+			Click(locator1 = "SitePages#PUBLIC_PAGE_ELLIPSIS");
 
-					<execute function="AssertClick#assertPartialTextClickAt" locator1="MenuItem#ANY_MENU_ITEM" value1="Configure">
-						<var name="key_menuItem" value="Configure" />
-					</execute>
-				</then>
-			</elseif>
-			<else>
-				<execute function="Click#mouseOverClick" locator1="SitePages#SPECIFIC_PAGE_ELLIPSIS" />
+			AssertClick.assertPartialTextClickAt(
+				locator1 = "MenuItem#ANY_MENU_ITEM",
+				value1 = "Configure",
+				key_menuItem = "Configure"
+			);
+		}
+		else if ("${page}" == "Private Pages") {
+			Click(locator1 = "SitePages#PRIVATE_PAGE_ELLIPSIS");
 
-				<execute function="AssertClick#assertPartialTextClickAt" locator1="MenuItem#ANY_MENU_ITEM" value1="Configure Page">
-					<var name="key_menuItem" value="Configure Page" />
-				</execute>
-			</else>
-		</if>
-	</command>
+			AssertClick.assertPartialTextClickAt(
+				locator1 = "MenuItem#ANY_MENU_ITEM",
+				value1 = "Configure",
+				key_menuItem = "Configure"
+			);
+		}
+		else {
+			Click.mouseOverClick(locator1 = "SitePages#SPECIFIC_PAGE_ELLIPSIS");
 
-	<command name="gotoPages">
-		<execute macro="ProductMenuHelper#openProductMenu" />
+			AssertClick.assertPartialTextClickAt(
+				locator1 = "MenuItem#ANY_MENU_ITEM",
+				value1 = "Configure Page",
+				key_menuItem = "Configure Page"
+			);
+		}
+	}
 
-		<execute macro="ProductMenuHelper#expandPanel">
-			<var name="panel" value="Site Administration" />
-		</execute>
+	macro gotoPages {
+		ProductMenuHelper.openProductMenu();
 
-		<execute macro="ProductMenuHelper#expandCategory">
-			<var name="category" value="Navigation" />
-		</execute>
+		ProductMenuHelper.expandPanel(panel = "Site Administration");
 
-		<execute macro="ProductMenuHelper#expandPageTree" />
+		ProductMenuHelper.expandCategory(category = "Navigation");
 
-		<if>
-			<equals arg1="${page}" arg2="Private Pages" />
-			<then>
-				<execute function="Click" locator1="ProductMenu#PRIVATE_PAGES" />
-			</then>
-		</if>
-	</command>
-</definition>
+		ProductMenuHelper.expandPageTree();
+
+		if ("${page}" == "Private Pages") {
+			Click(locator1 = "ProductMenu#PRIVATE_PAGES");
+		}
+	}
+}

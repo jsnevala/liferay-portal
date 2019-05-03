@@ -66,6 +66,7 @@ public class WorkflowLockingAdvice {
 		}
 
 		long userId = (Long)arguments[1];
+
 		String name = (String)arguments[2];
 		Integer version = (Integer)arguments[3];
 
@@ -92,8 +93,11 @@ public class WorkflowLockingAdvice {
 	}
 
 	private String _encodeKey(String name, int version) {
-		return name.concat(StringPool.POUND).concat(
-			StringUtil.toHexString(version));
+		return name.concat(
+			StringPool.POUND
+		).concat(
+			StringUtil.toHexString(version)
+		);
 	}
 
 	private static final String _START_WORKFLOW_INSTANCE_METHOD_NAME =

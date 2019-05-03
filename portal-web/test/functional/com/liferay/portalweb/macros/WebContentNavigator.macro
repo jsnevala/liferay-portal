@@ -1,229 +1,186 @@
-<definition>
-	<command name="_openDescriptiveMenulistCP">
-		<if>
-			<isset var="webContentTitleEscapeCharacter" />
-			<then>
-				<var name="key_webContentTitle" value="${webContentTitleEscapeCharacter}" />
-			</then>
-			<else>
-				<var name="key_webContentTitle" value="${webContentTitle}" />
-			</else>
-		</if>
+definition {
+	macro _openDescriptiveMenulistCP {
+		if (isSet(webContentTitleEscapeCharacter)) {
+			var key_webContentTitle = "${webContentTitleEscapeCharacter}";
+		}
+		else {
+			var key_webContentTitle = "${webContentTitle}";
+		}
 
-		<execute macro="Portlet#changeDisplayStyle">
-			<var name="displayStyle" value="Descriptive" />
-		</execute>
+		Portlet.changeDisplayStyle(displayStyle = "Descriptive");
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="WC#ENTRY_DESCRIPTIVE_TITLE" value1="${webContentTitle}" />
+		AssertTextEquals.assertPartialText(
+			locator1 = "WC#ENTRY_DESCRIPTIVE_TITLE",
+			value1 = "${webContentTitle}"
+		);
 
-		<execute function="Click" locator1="WC#ENTRY_DESCRIPTIVE_MENULIST_ICON" />
-	</command>
+		Click(locator1 = "WC#ENTRY_DESCRIPTIVE_MENULIST_ICON");
+	}
 
-	<command name="gotoAddCP">
-		<execute function="AssertVisible" locator1="Button#PLUS" />
+	macro gotoAddCP {
+		AssertVisible(locator1 = "Button#PLUS");
 
-		<execute function="Pause" locator1="3000" />
+		Pause(locator1 = "3000");
 
-		<execute macro="LexiconEntry#gotoAddMenuItem">
-			<var name="menuItem" value="Basic Web Content" />
-		</execute>
+		LexiconEntry.gotoAddMenuItem(menuItem = "Basic Web Content");
 
-		<execute function="AssertVisible" locator1="TextInput#TITLE" />
-	</command>
+		AssertVisible(locator1 = "TextInput#TITLE");
+	}
 
-	<command name="gotoAddFeed">
-		<execute macro="WebContentNavigator#gotoFeeds" />
+	macro gotoAddFeed {
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Feeds");
 
-		<execute macro="LexiconEntry#gotoAdd" />
-	</command>
+		LexiconEntry.gotoAdd();
+	}
 
-	<command name="gotoAddPGViaWCD">
-		<execute function="Click#clickNoWaitForVisible" locator1="WCD#ADD_WEB_CONTENT" />
+	macro gotoAddPGViaWCD {
+		Click.clickNoWaitForVisible(locator1 = "WCD#ADD_WEB_CONTENT");
 
-		<if>
-			<not>
-				<contains string="${structureName}" substring="{structureName}" />
-			</not>
-			<then>
-				<var name="structureName" value="${structureName}" />
-			</then>
-			<else>
-				<var name="structureName" value="Basic Web Content" />
-			</else>
-		</if>
+		if (!(contains("${structureName}", "{structureName}"))) {
+			var structureName = "${structureName}";
+		}
+		else {
+			var structureName = "Basic Web Content";
+		}
 
-		<var name="key_structureName" value="${structureName}" />
+		var key_structureName = "${structureName}";
 
-		<execute function="AssertVisible" locator1="WCD#ADD_STRUCTURED_WEB_CONTENT" value1="${structureName}" />
+		AssertVisible(
+			locator1 = "WCD#ADD_STRUCTURED_WEB_CONTENT",
+			value1 = "${structureName}"
+		);
 
-		<execute function="AssertClick" locator1="WCD#ADD_STRUCTURED_WEB_CONTENT" value1="${structureName}" />
+		AssertClick(
+			locator1 = "WCD#ADD_STRUCTURED_WEB_CONTENT",
+			value1 = "${structureName}"
+		);
 
-		<execute function="SelectFrame" locator1="IFrame#MODAL_IFRAME" />
+		SelectFrame(locator1 = "IFrame#MODAL_IFRAME");
 
-		<execute function="AssertVisible" locator1="TextInput#TITLE" />
-	</command>
+		AssertVisible(locator1 = "TextInput#TITLE");
+	}
 
-	<command name="gotoAddWithStructureCP">
-		<var name="key_structureName" value="${structureName}" />
+	macro gotoAddWithStructureCP {
+		var key_structureName = "${structureName}";
 
-		<execute macro="LexiconEntry#gotoAdd" />
+		LexiconEntry.gotoAdd();
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="${structureName}">
-			<var name="key_menuItem" value="${structureName}" />
-		</execute>
-	</command>
+		MenuItem.click(menuItem = "${structureName}");
+	}
 
-	<command name="gotoEditCP">
-		<execute macro="WebContentNavigator#_openDescriptiveMenulistCP">
-			<var name="webContentTitle" value="${webContentTitle}" />
-			<var name="webContentTitleEscapeCharacter" value="${webContentTitleEscapeCharacter}" />
-		</execute>
+	macro gotoEditCP {
+		WebContentNavigator._openDescriptiveMenulistCP(
+			webContentTitle = "${webContentTitle}",
+			webContentTitleEscapeCharacter = "${webContentTitleEscapeCharacter}"
+		);
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit">
-			<var name="key_menuItem" value="Edit" />
-		</execute>
+		MenuItem.click(menuItem = "Edit");
 
-		<execute function="AssertElementPresent" locator1="Icon#BACK" />
-	</command>
+		AssertElementPresent(locator1 = "Icon#BACK");
+	}
 
-	<command name="gotoEditFeed">
-		<execute macro="WebContentNavigator#gotoFeeds" />
+	macro gotoEditFeed {
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Feeds");
 
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="Edit" />
-			<var name="rowEntry" value="${feedName}" />
-		</execute>
-	</command>
+		LexiconEntry.gotoEntryMenuItem(menuItem = "Edit", rowEntry = "${feedName}");
 
-	<command name="gotoEditPGViaWCD">
-		<execute function="MouseOver" locator1="WC#BODY" />
+		AssertElementPresent(locator1 = "Icon#BACK");
+	}
 
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
+	macro gotoEditPGViaWCD {
+		MouseOver(locator1 = "WC#BODY");
 
-		<execute function="AssertClick#assertPartialTextClickAt" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit Web Content">
-			<var name="key_menuItem" value="Edit Web Content" />
-		</execute>
+		Portlet.gotoPortletOptions(
+			portletName = "Web Content Display",
+			portletOption = "Edit Web Content"
+		);
 
-		<execute function="SelectFrame" locator1="IFrame#MODAL_IFRAME" />
+		SelectFrame(locator1 = "IFrame#MODAL_IFRAME");
 
-		<execute function="AssertVisible" locator1="TextInput#TITLE" />
-	</command>
+		AssertVisible(locator1 = "TextInput#TITLE");
+	}
 
-	<command name="gotoEditStructure">
-		<var name="key_ddlDataDefinitionName" value="${structureName}" />
+	macro gotoEditStructure {
+		var key_ddlDataDefinitionName = "${structureName}";
 
-		<execute function="AssertClick" locator1="DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK" value1="${structureName}" />
+		AssertClick(
+			locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK",
+			value1 = "${structureName}"
+		);
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		SelectFrame(value1 = "relative=top");
+	}
 
-	<command name="gotoEditTemplate">
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="Edit" />
-			<var name="rowEntry" value="${templateName}" />
-		</execute>
-	</command>
+	macro gotoLocalizedEditPGViaWCD {
+		MouseOver(locator1 = "WC#BODY");
 
-	<command name="gotoFeeds">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+		Portlet.gotoPortletOptions(portletOption = "${localizedPortletOption}");
+	}
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Feeds">
-			<var name="key_menuItem" value="Feeds" />
-		</execute>
-	</command>
+	macro gotoManageStructures {
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Structures");
 
-	<command name="gotoLocalizedEditPGViaWCD">
-		<execute function="MouseOver" locator1="WC#BODY" />
+		SiteAdmin.viewPortletTitle(portletTitle = "Structures");
+	}
 
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
+	macro gotoManageTemplates {
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Templates");
 
-		<execute function="AssertClick#assertPartialTextClickAt" locator1="MenuItem#ANY_MENU_ITEM" value1="${localizedPortletOption}">
-			<var name="key_menuItem" value="${localizedPortletOption}" />
-		</execute>
-	</command>
+		SiteAdmin.viewPortletTitle(portletTitle = "Templates");
+	}
 
-	<command name="gotoManageStructures">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+	macro gotoManageTemplatesViaStructures {
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Manage Templates",
+			rowEntry = "${structureName}"
+		);
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Structures">
-			<var name="key_menuItem" value="Structures" />
-		</execute>
+		SiteAdmin.viewPortletTitle(
+			portletTitle = "Templates for Structure: ${structureName}"
+		);
+	}
 
-		<execute macro="SiteAdmin#viewPortletTitle">
-			<var name="portletTitle" value="Structures" />
-		</execute>
-	</command>
+	macro gotoPreviewEntryCP {
+		WebContentNavigator._openDescriptiveMenulistCP(
+			webContentTitle = "${webContentTitle}",
+			webContentTitleEscapeCharacter = "${webContentTitleEscapeCharacter}"
+		);
 
-	<command name="gotoManageTemplates">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+		MenuItem.click(menuItem = "Preview");
+	}
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Templates">
-			<var name="key_menuItem" value="Templates" />
-		</execute>
+	macro gotoPreviewViaHeaderCP {
+		SiteAdmin.viewPortletTitle(portletTitle = "${webContentTitle}");
 
-		<execute macro="SiteAdmin#viewPortletTitle">
-			<var name="portletTitle" value="Templates" />
-		</execute>
-	</command>
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Preview");
+	}
 
-	<command name="gotoManageTemplatesViaStructures">
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="Manage Templates" />
-			<var name="rowEntry" value="${structureName}" />
-		</execute>
+	macro gotoViewStatus {
+		var key_webContentTitle = "${webContentTitle}";
 
-		<execute macro="SiteAdmin#viewPortletTitle">
-			<var name="portletTitle" value="Templates for Structure: ${structureName}" />
-		</execute>
-	</command>
+		Portlet.changeDisplayStyle(displayStyle = "Descriptive");
 
-	<command name="gotoPreviewEntryCP">
-		<execute macro="WebContentNavigator#_openDescriptiveMenulistCP">
-			<var name="webContentTitle" value="${webContentTitle}" />
-			<var name="webContentTitleEscapeCharacter" value="${webContentTitleEscapeCharacter}" />
-		</execute>
+		AssertElementPresent.pauseAssertVisible(
+			locator1 = "WC#ENTRY_DESCRIPTIVE_THUMBNAIL"
+		);
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Preview">
-			<var name="key_menuItem" value="Preview" />
-		</execute>
-	</command>
+		AssertTextEquals(
+			locator1 = "WC#ENTRY_DESCRIPTIVE_WORKFLOW_STATUS",
+			value1 = "${webContentStatus}"
+		);
 
-	<command name="gotoPreviewViaHeaderCP">
-		<execute macro="SiteAdmin#viewPortletTitle">
-			<var name="portletTitle" value="${webContentTitle}" />
-		</execute>
+		AssertClick(
+			locator1 = "WC#ENTRY_DESCRIPTIVE_TITLE",
+			value1 = "${webContentTitle}"
+		);
+	}
 
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+	macro gotoViewTemplate {
+		var key_ddlTemplateName = "${templateName}";
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Preview">
-			<var name="key_menuItem" value="Preview" />
-		</execute>
-	</command>
-
-	<command name="gotoViewSource">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
-
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="View Source">
-			<var name="key_menuItem" value="View Source" />
-		</execute>
-	</command>
-
-	<command name="gotoViewStatus">
-		<var name="key_webContentTitle" value="${webContentTitle}" />
-
-		<execute macro="Portlet#changeDisplayStyle">
-			<var name="displayStyle" value="Descriptive" />
-		</execute>
-
-		<execute function="AssertElementPresent#pauseAssertVisible" locator1="WC#ENTRY_DESCRIPTIVE_THUMBNAIL" />
-		<execute function="AssertTextEquals" locator1="WC#ENTRY_DESCRIPTIVE_WORKFLOW_STATUS" value1="${webContentStatus}" />
-
-		<execute function="AssertClick" locator1="WC#ENTRY_DESCRIPTIVE_TITLE" value1="${webContentTitle}" />
-	</command>
-
-	<command name="gotoViewTemplate">
-		<var name="key_ddlTemplateName" value="${templateName}" />
-
-		<execute function="AssertClick" locator1="DDMSelectTemplate#TEMPLATE_TABLE_NAME_LINK" value1="${templateName}" />
-	</command>
-</definition>
+		AssertClick(
+			locator1 = "DDMSelectTemplate#TEMPLATE_TABLE_NAME_LINK",
+			value1 = "${templateName}"
+		);
+	}
+}

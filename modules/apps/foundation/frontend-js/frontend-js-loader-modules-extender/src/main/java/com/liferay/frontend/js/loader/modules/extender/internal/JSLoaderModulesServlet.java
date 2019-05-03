@@ -20,12 +20,16 @@ import com.liferay.frontend.js.loader.modules.extender.npm.JSPackage;
 import com.liferay.frontend.js.loader.modules.extender.npm.JSPackageDependency;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMRegistry;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -39,8 +43,6 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.felix.utils.log.Logger;
 
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -80,8 +82,6 @@ public class JSLoaderModulesServlet extends HttpServlet {
 		_details = ConfigurableUtil.createConfigurable(
 			Details.class, properties);
 
-		_logger = new Logger(componentContext.getBundleContext());
-
 		_componentContext = componentContext;
 	}
 
@@ -94,11 +94,19 @@ public class JSLoaderModulesServlet extends HttpServlet {
 			HttpServletRequest request, HttpServletResponse response)
 		throws IOException {
 
-		response.setContentType(Details.CONTENT_TYPE);
+		if (!_isLastServedContentStale()) {
+			_writeResponse(response, _lastServedContent.getValue());
 
-		ServletOutputStream servletOutputStream = response.getOutputStream();
+			return;
+		}
 
-		PrintWriter printWriter = new PrintWriter(servletOutputStream, true);
+		if (_log.isDebugEnabled()) {
+			_log.debug("Generating js_loader_modules");
+		}
+
+		StringWriter stringWriter = new StringWriter();
+
+		PrintWriter printWriter = new PrintWriter(stringWriter);
 
 		printWriter.println("(function() {");
 		printWriter.println("Liferay.PATHS = {");
@@ -348,9 +356,21 @@ public class JSLoaderModulesServlet extends HttpServlet {
 		printWriter.println(
 			"Liferay.EXPOSE_GLOBAL = " + _details.exposeGlobal() + ";\n");
 
+		printWriter.println(
+			"Liferay.WAIT_TIMEOUT = " + (_details.waitTimeout() * 1000) +
+				";\n");
+
 		printWriter.println("}());");
 
 		printWriter.close();
+
+		String content = _minifier.minify(
+			"/o/js_loader_modules", stringWriter.toString());
+
+		_lastServedContent = new ObjectValuePair<>(
+			_jsLoaderModulesTracker.getLastModified(), content);
+
+		_writeResponse(response, content);
 	}
 
 	protected void setDetails(Details details) {
@@ -369,10 +389,42 @@ public class JSLoaderModulesServlet extends HttpServlet {
 		_npmRegistry = npmRegistry;
 	}
 
+	private boolean _isLastServedContentStale() {
+		if (_jsLoaderModulesTracker.getLastModified() >
+				_lastServedContent.getKey()) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private void _writeResponse(HttpServletResponse response, String content)
+		throws IOException {
+
+		response.setContentType(Details.CONTENT_TYPE);
+
+		ServletOutputStream servletOutputStream = response.getOutputStream();
+
+		PrintWriter printWriter = new PrintWriter(servletOutputStream, true);
+
+		printWriter.write(content);
+
+		printWriter.close();
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		JSLoaderModulesServlet.class);
+
 	private ComponentContext _componentContext;
 	private volatile Details _details;
 	private JSLoaderModulesTracker _jsLoaderModulesTracker;
-	private Logger _logger;
+	private volatile ObjectValuePair<Long, String> _lastServedContent =
+		new ObjectValuePair<>(0L, null);
+
+	@Reference
+	private Minifier _minifier;
+
 	private NPMRegistry _npmRegistry;
 
 	@Reference

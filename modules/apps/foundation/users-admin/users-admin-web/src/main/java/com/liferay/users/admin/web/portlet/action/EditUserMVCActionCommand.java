@@ -268,8 +268,11 @@ public class EditUserMVCActionCommand extends BaseMVCActionCommand {
 					status = WorkflowConstants.STATUS_INACTIVE;
 				}
 
-				_userService.updateStatus(
-					deleteUserId, status, new ServiceContext());
+				ServiceContext serviceContext =
+					ServiceContextFactory.getInstance(
+						User.class.getName(), actionRequest);
+
+				_userService.updateStatus(deleteUserId, status, serviceContext);
 			}
 			else {
 				_userService.deleteUser(deleteUserId);
@@ -497,10 +500,11 @@ public class EditUserMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, User user)
 		throws Exception {
 
-		if (actionRequest.getParameter(
-				"announcementsType" + AnnouncementsEntryConstants.TYPES[0] +
-					"Email") == null) {
+		String parameter = actionRequest.getParameter(
+			"announcementsType" + AnnouncementsEntryConstants.TYPES[0] +
+				"Email");
 
+		if (parameter == null) {
 			return _announcementsDeliveryLocalService.getUserDeliveries(
 				user.getUserId());
 		}
@@ -719,6 +723,7 @@ public class EditUserMVCActionCommand extends BaseMVCActionCommand {
 				portal.getHttpServletRequest(actionRequest));
 			HttpServletResponse response = portal.getHttpServletResponse(
 				actionResponse);
+
 			HttpSession session = request.getSession();
 
 			session.removeAttribute(Globals.LOCALE_KEY);

@@ -36,7 +36,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + JournalPortletKeys.JOURNAL},
+	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = TransformerListener.class
 )
 public class TokensTransformerListener extends BaseTransformerListener {
@@ -107,13 +107,22 @@ public class TokensTransformerListener extends BaseTransformerListener {
 				}
 
 				String actualKey = StringPool.AT.concat(
-					key).concat(StringPool.AT);
+					key
+				).concat(
+					StringPool.AT
+				);
 
 				String escapedKey = StringPool.AT.concat(
-					actualKey).concat(StringPool.AT);
+					actualKey
+				).concat(
+					StringPool.AT
+				);
 
-				String tempEscapedKey = TEMP_ESCAPED_AT_OPEN.concat(key).concat(
-					TEMP_ESCAPED_AT_CLOSE);
+				String tempEscapedKey = TEMP_ESCAPED_AT_OPEN.concat(
+					key
+				).concat(
+					TEMP_ESCAPED_AT_CLOSE
+				);
 
 				escapedKeysList.add(escapedKey);
 				escapedValuesList.add(tempEscapedKey);

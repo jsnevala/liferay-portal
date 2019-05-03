@@ -23,7 +23,7 @@ import com.liferay.asset.kernel.service.persistence.AssetEntryPersistence;
 import com.liferay.asset.kernel.service.persistence.AssetLinkPersistence;
 import com.liferay.asset.kernel.service.persistence.AssetTagFinder;
 import com.liferay.asset.kernel.service.persistence.AssetTagPersistence;
-
+import com.liferay.counter.kernel.service.persistence.CounterPersistence;
 import com.liferay.document.library.kernel.service.DLAppHelperLocalService;
 import com.liferay.document.library.kernel.service.persistence.DLFileEntryFinder;
 import com.liferay.document.library.kernel.service.persistence.DLFileEntryPersistence;
@@ -36,9 +36,7 @@ import com.liferay.document.library.kernel.service.persistence.DLFileVersionPers
 import com.liferay.document.library.kernel.service.persistence.DLFolderFinder;
 import com.liferay.document.library.kernel.service.persistence.DLFolderPersistence;
 import com.liferay.document.library.kernel.service.persistence.DLSyncEventPersistence;
-
 import com.liferay.expando.kernel.service.persistence.ExpandoValuePersistence;
-
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -61,12 +59,10 @@ import com.liferay.portal.kernel.service.persistence.WebDAVPropsPersistence;
 import com.liferay.portal.kernel.service.persistence.WorkflowInstanceLinkPersistence;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-
 import com.liferay.ratings.kernel.service.persistence.RatingsEntryFinder;
 import com.liferay.ratings.kernel.service.persistence.RatingsEntryPersistence;
 import com.liferay.ratings.kernel.service.persistence.RatingsStatsFinder;
 import com.liferay.ratings.kernel.service.persistence.RatingsStatsPersistence;
-
 import com.liferay.trash.kernel.service.persistence.TrashEntryPersistence;
 import com.liferay.trash.kernel.service.persistence.TrashVersionPersistence;
 
@@ -81,17 +77,17 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.portlet.documentlibrary.service.impl.DLAppHelperLocalServiceImpl
- * @see com.liferay.document.library.kernel.service.DLAppHelperLocalServiceUtil
  * @generated
  */
 @ProviderType
 public abstract class DLAppHelperLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements DLAppHelperLocalService,
-		IdentifiableOSGiService {
+	extends BaseLocalServiceImpl
+	implements DLAppHelperLocalService, IdentifiableOSGiService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.document.library.kernel.service.DLAppHelperLocalServiceUtil} to access the dl app helper local service.
+	 * Never modify or reference this class directly. Use <code>DLAppHelperLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.document.library.kernel.service.DLAppHelperLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -110,6 +106,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setDLAppHelperLocalService(
 		DLAppHelperLocalService dlAppHelperLocalService) {
+
 		this.dlAppHelperLocalService = dlAppHelperLocalService;
 	}
 
@@ -118,7 +115,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the counter local service
 	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
+	public com.liferay.counter.kernel.service.CounterLocalService
+		getCounterLocalService() {
+
 		return counterLocalService;
 	}
 
@@ -128,8 +127,28 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param counterLocalService the counter local service
 	 */
 	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
+		com.liferay.counter.kernel.service.CounterLocalService
+			counterLocalService) {
+
 		this.counterLocalService = counterLocalService;
+	}
+
+	/**
+	 * Returns the counter persistence.
+	 *
+	 * @return the counter persistence
+	 */
+	public CounterPersistence getCounterPersistence() {
+		return counterPersistence;
+	}
+
+	/**
+	 * Sets the counter persistence.
+	 *
+	 * @param counterPersistence the counter persistence
+	 */
+	public void setCounterPersistence(CounterPersistence counterPersistence) {
+		this.counterPersistence = counterPersistence;
 	}
 
 	/**
@@ -137,7 +156,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the class name local service
 	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService getClassNameLocalService() {
+	public com.liferay.portal.kernel.service.ClassNameLocalService
+		getClassNameLocalService() {
+
 		return classNameLocalService;
 	}
 
@@ -147,7 +168,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param classNameLocalService the class name local service
 	 */
 	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService) {
+		com.liferay.portal.kernel.service.ClassNameLocalService
+			classNameLocalService) {
+
 		this.classNameLocalService = classNameLocalService;
 	}
 
@@ -167,6 +190,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setClassNamePersistence(
 		ClassNamePersistence classNamePersistence) {
+
 		this.classNamePersistence = classNamePersistence;
 	}
 
@@ -175,7 +199,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the group local service
 	 */
-	public com.liferay.portal.kernel.service.GroupLocalService getGroupLocalService() {
+	public com.liferay.portal.kernel.service.GroupLocalService
+		getGroupLocalService() {
+
 		return groupLocalService;
 	}
 
@@ -186,6 +212,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setGroupLocalService(
 		com.liferay.portal.kernel.service.GroupLocalService groupLocalService) {
+
 		this.groupLocalService = groupLocalService;
 	}
 
@@ -230,7 +257,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the image local service
 	 */
-	public com.liferay.portal.kernel.service.ImageLocalService getImageLocalService() {
+	public com.liferay.portal.kernel.service.ImageLocalService
+		getImageLocalService() {
+
 		return imageLocalService;
 	}
 
@@ -241,6 +270,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setImageLocalService(
 		com.liferay.portal.kernel.service.ImageLocalService imageLocalService) {
+
 		this.imageLocalService = imageLocalService;
 	}
 
@@ -267,7 +297,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the layout local service
 	 */
-	public com.liferay.portal.kernel.service.LayoutLocalService getLayoutLocalService() {
+	public com.liferay.portal.kernel.service.LayoutLocalService
+		getLayoutLocalService() {
+
 		return layoutLocalService;
 	}
 
@@ -277,7 +309,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param layoutLocalService the layout local service
 	 */
 	public void setLayoutLocalService(
-		com.liferay.portal.kernel.service.LayoutLocalService layoutLocalService) {
+		com.liferay.portal.kernel.service.LayoutLocalService
+			layoutLocalService) {
+
 		this.layoutLocalService = layoutLocalService;
 	}
 
@@ -322,7 +356,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the portlet preferences local service
 	 */
-	public com.liferay.portal.kernel.service.PortletPreferencesLocalService getPortletPreferencesLocalService() {
+	public com.liferay.portal.kernel.service.PortletPreferencesLocalService
+		getPortletPreferencesLocalService() {
+
 		return portletPreferencesLocalService;
 	}
 
@@ -332,7 +368,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param portletPreferencesLocalService the portlet preferences local service
 	 */
 	public void setPortletPreferencesLocalService(
-		com.liferay.portal.kernel.service.PortletPreferencesLocalService portletPreferencesLocalService) {
+		com.liferay.portal.kernel.service.PortletPreferencesLocalService
+			portletPreferencesLocalService) {
+
 		this.portletPreferencesLocalService = portletPreferencesLocalService;
 	}
 
@@ -352,6 +390,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setPortletPreferencesPersistence(
 		PortletPreferencesPersistence portletPreferencesPersistence) {
+
 		this.portletPreferencesPersistence = portletPreferencesPersistence;
 	}
 
@@ -371,6 +410,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setPortletPreferencesFinder(
 		PortletPreferencesFinder portletPreferencesFinder) {
+
 		this.portletPreferencesFinder = portletPreferencesFinder;
 	}
 
@@ -379,7 +419,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the repository local service
 	 */
-	public com.liferay.portal.kernel.service.RepositoryLocalService getRepositoryLocalService() {
+	public com.liferay.portal.kernel.service.RepositoryLocalService
+		getRepositoryLocalService() {
+
 		return repositoryLocalService;
 	}
 
@@ -389,7 +431,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param repositoryLocalService the repository local service
 	 */
 	public void setRepositoryLocalService(
-		com.liferay.portal.kernel.service.RepositoryLocalService repositoryLocalService) {
+		com.liferay.portal.kernel.service.RepositoryLocalService
+			repositoryLocalService) {
+
 		this.repositoryLocalService = repositoryLocalService;
 	}
 
@@ -409,6 +453,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setRepositoryPersistence(
 		RepositoryPersistence repositoryPersistence) {
+
 		this.repositoryPersistence = repositoryPersistence;
 	}
 
@@ -417,7 +462,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the subscription local service
 	 */
-	public com.liferay.portal.kernel.service.SubscriptionLocalService getSubscriptionLocalService() {
+	public com.liferay.portal.kernel.service.SubscriptionLocalService
+		getSubscriptionLocalService() {
+
 		return subscriptionLocalService;
 	}
 
@@ -427,7 +474,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param subscriptionLocalService the subscription local service
 	 */
 	public void setSubscriptionLocalService(
-		com.liferay.portal.kernel.service.SubscriptionLocalService subscriptionLocalService) {
+		com.liferay.portal.kernel.service.SubscriptionLocalService
+			subscriptionLocalService) {
+
 		this.subscriptionLocalService = subscriptionLocalService;
 	}
 
@@ -447,6 +496,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setSubscriptionPersistence(
 		SubscriptionPersistence subscriptionPersistence) {
+
 		this.subscriptionPersistence = subscriptionPersistence;
 	}
 
@@ -455,7 +505,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the web dav props local service
 	 */
-	public com.liferay.portal.kernel.service.WebDAVPropsLocalService getWebDAVPropsLocalService() {
+	public com.liferay.portal.kernel.service.WebDAVPropsLocalService
+		getWebDAVPropsLocalService() {
+
 		return webDAVPropsLocalService;
 	}
 
@@ -465,7 +517,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param webDAVPropsLocalService the web dav props local service
 	 */
 	public void setWebDAVPropsLocalService(
-		com.liferay.portal.kernel.service.WebDAVPropsLocalService webDAVPropsLocalService) {
+		com.liferay.portal.kernel.service.WebDAVPropsLocalService
+			webDAVPropsLocalService) {
+
 		this.webDAVPropsLocalService = webDAVPropsLocalService;
 	}
 
@@ -485,6 +539,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setWebDAVPropsPersistence(
 		WebDAVPropsPersistence webDAVPropsPersistence) {
+
 		this.webDAVPropsPersistence = webDAVPropsPersistence;
 	}
 
@@ -493,7 +548,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the workflow instance link local service
 	 */
-	public com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService getWorkflowInstanceLinkLocalService() {
+	public com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
+		getWorkflowInstanceLinkLocalService() {
+
 		return workflowInstanceLinkLocalService;
 	}
 
@@ -503,8 +560,11 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param workflowInstanceLinkLocalService the workflow instance link local service
 	 */
 	public void setWorkflowInstanceLinkLocalService(
-		com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService workflowInstanceLinkLocalService) {
-		this.workflowInstanceLinkLocalService = workflowInstanceLinkLocalService;
+		com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
+			workflowInstanceLinkLocalService) {
+
+		this.workflowInstanceLinkLocalService =
+			workflowInstanceLinkLocalService;
 	}
 
 	/**
@@ -512,7 +572,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the workflow instance link persistence
 	 */
-	public WorkflowInstanceLinkPersistence getWorkflowInstanceLinkPersistence() {
+	public WorkflowInstanceLinkPersistence
+		getWorkflowInstanceLinkPersistence() {
+
 		return workflowInstanceLinkPersistence;
 	}
 
@@ -523,6 +585,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setWorkflowInstanceLinkPersistence(
 		WorkflowInstanceLinkPersistence workflowInstanceLinkPersistence) {
+
 		this.workflowInstanceLinkPersistence = workflowInstanceLinkPersistence;
 	}
 
@@ -531,7 +594,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the asset category local service
 	 */
-	public com.liferay.asset.kernel.service.AssetCategoryLocalService getAssetCategoryLocalService() {
+	public com.liferay.asset.kernel.service.AssetCategoryLocalService
+		getAssetCategoryLocalService() {
+
 		return assetCategoryLocalService;
 	}
 
@@ -541,7 +606,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param assetCategoryLocalService the asset category local service
 	 */
 	public void setAssetCategoryLocalService(
-		com.liferay.asset.kernel.service.AssetCategoryLocalService assetCategoryLocalService) {
+		com.liferay.asset.kernel.service.AssetCategoryLocalService
+			assetCategoryLocalService) {
+
 		this.assetCategoryLocalService = assetCategoryLocalService;
 	}
 
@@ -561,6 +628,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setAssetCategoryPersistence(
 		AssetCategoryPersistence assetCategoryPersistence) {
+
 		this.assetCategoryPersistence = assetCategoryPersistence;
 	}
 
@@ -578,7 +646,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @param assetCategoryFinder the asset category finder
 	 */
-	public void setAssetCategoryFinder(AssetCategoryFinder assetCategoryFinder) {
+	public void setAssetCategoryFinder(
+		AssetCategoryFinder assetCategoryFinder) {
+
 		this.assetCategoryFinder = assetCategoryFinder;
 	}
 
@@ -587,7 +657,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the asset entry local service
 	 */
-	public com.liferay.asset.kernel.service.AssetEntryLocalService getAssetEntryLocalService() {
+	public com.liferay.asset.kernel.service.AssetEntryLocalService
+		getAssetEntryLocalService() {
+
 		return assetEntryLocalService;
 	}
 
@@ -597,7 +669,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param assetEntryLocalService the asset entry local service
 	 */
 	public void setAssetEntryLocalService(
-		com.liferay.asset.kernel.service.AssetEntryLocalService assetEntryLocalService) {
+		com.liferay.asset.kernel.service.AssetEntryLocalService
+			assetEntryLocalService) {
+
 		this.assetEntryLocalService = assetEntryLocalService;
 	}
 
@@ -617,6 +691,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setAssetEntryPersistence(
 		AssetEntryPersistence assetEntryPersistence) {
+
 		this.assetEntryPersistence = assetEntryPersistence;
 	}
 
@@ -643,7 +718,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the asset link local service
 	 */
-	public com.liferay.asset.kernel.service.AssetLinkLocalService getAssetLinkLocalService() {
+	public com.liferay.asset.kernel.service.AssetLinkLocalService
+		getAssetLinkLocalService() {
+
 		return assetLinkLocalService;
 	}
 
@@ -653,7 +730,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param assetLinkLocalService the asset link local service
 	 */
 	public void setAssetLinkLocalService(
-		com.liferay.asset.kernel.service.AssetLinkLocalService assetLinkLocalService) {
+		com.liferay.asset.kernel.service.AssetLinkLocalService
+			assetLinkLocalService) {
+
 		this.assetLinkLocalService = assetLinkLocalService;
 	}
 
@@ -673,6 +752,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setAssetLinkPersistence(
 		AssetLinkPersistence assetLinkPersistence) {
+
 		this.assetLinkPersistence = assetLinkPersistence;
 	}
 
@@ -681,7 +761,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the asset tag local service
 	 */
-	public com.liferay.asset.kernel.service.AssetTagLocalService getAssetTagLocalService() {
+	public com.liferay.asset.kernel.service.AssetTagLocalService
+		getAssetTagLocalService() {
+
 		return assetTagLocalService;
 	}
 
@@ -691,7 +773,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param assetTagLocalService the asset tag local service
 	 */
 	public void setAssetTagLocalService(
-		com.liferay.asset.kernel.service.AssetTagLocalService assetTagLocalService) {
+		com.liferay.asset.kernel.service.AssetTagLocalService
+			assetTagLocalService) {
+
 		this.assetTagLocalService = assetTagLocalService;
 	}
 
@@ -709,7 +793,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @param assetTagPersistence the asset tag persistence
 	 */
-	public void setAssetTagPersistence(AssetTagPersistence assetTagPersistence) {
+	public void setAssetTagPersistence(
+		AssetTagPersistence assetTagPersistence) {
+
 		this.assetTagPersistence = assetTagPersistence;
 	}
 
@@ -736,7 +822,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the dl app local service
 	 */
-	public com.liferay.document.library.kernel.service.DLAppLocalService getDLAppLocalService() {
+	public com.liferay.document.library.kernel.service.DLAppLocalService
+		getDLAppLocalService() {
+
 		return dlAppLocalService;
 	}
 
@@ -746,7 +834,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param dlAppLocalService the dl app local service
 	 */
 	public void setDLAppLocalService(
-		com.liferay.document.library.kernel.service.DLAppLocalService dlAppLocalService) {
+		com.liferay.document.library.kernel.service.DLAppLocalService
+			dlAppLocalService) {
+
 		this.dlAppLocalService = dlAppLocalService;
 	}
 
@@ -755,7 +845,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the expando value local service
 	 */
-	public com.liferay.expando.kernel.service.ExpandoValueLocalService getExpandoValueLocalService() {
+	public com.liferay.expando.kernel.service.ExpandoValueLocalService
+		getExpandoValueLocalService() {
+
 		return expandoValueLocalService;
 	}
 
@@ -765,7 +857,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param expandoValueLocalService the expando value local service
 	 */
 	public void setExpandoValueLocalService(
-		com.liferay.expando.kernel.service.ExpandoValueLocalService expandoValueLocalService) {
+		com.liferay.expando.kernel.service.ExpandoValueLocalService
+			expandoValueLocalService) {
+
 		this.expandoValueLocalService = expandoValueLocalService;
 	}
 
@@ -785,6 +879,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setExpandoValuePersistence(
 		ExpandoValuePersistence expandoValuePersistence) {
+
 		this.expandoValuePersistence = expandoValuePersistence;
 	}
 
@@ -793,7 +888,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the ratings entry local service
 	 */
-	public com.liferay.ratings.kernel.service.RatingsEntryLocalService getRatingsEntryLocalService() {
+	public com.liferay.ratings.kernel.service.RatingsEntryLocalService
+		getRatingsEntryLocalService() {
+
 		return ratingsEntryLocalService;
 	}
 
@@ -803,7 +900,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param ratingsEntryLocalService the ratings entry local service
 	 */
 	public void setRatingsEntryLocalService(
-		com.liferay.ratings.kernel.service.RatingsEntryLocalService ratingsEntryLocalService) {
+		com.liferay.ratings.kernel.service.RatingsEntryLocalService
+			ratingsEntryLocalService) {
+
 		this.ratingsEntryLocalService = ratingsEntryLocalService;
 	}
 
@@ -823,6 +922,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setRatingsEntryPersistence(
 		RatingsEntryPersistence ratingsEntryPersistence) {
+
 		this.ratingsEntryPersistence = ratingsEntryPersistence;
 	}
 
@@ -849,7 +949,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the ratings stats local service
 	 */
-	public com.liferay.ratings.kernel.service.RatingsStatsLocalService getRatingsStatsLocalService() {
+	public com.liferay.ratings.kernel.service.RatingsStatsLocalService
+		getRatingsStatsLocalService() {
+
 		return ratingsStatsLocalService;
 	}
 
@@ -859,7 +961,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param ratingsStatsLocalService the ratings stats local service
 	 */
 	public void setRatingsStatsLocalService(
-		com.liferay.ratings.kernel.service.RatingsStatsLocalService ratingsStatsLocalService) {
+		com.liferay.ratings.kernel.service.RatingsStatsLocalService
+			ratingsStatsLocalService) {
+
 		this.ratingsStatsLocalService = ratingsStatsLocalService;
 	}
 
@@ -879,6 +983,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setRatingsStatsPersistence(
 		RatingsStatsPersistence ratingsStatsPersistence) {
+
 		this.ratingsStatsPersistence = ratingsStatsPersistence;
 	}
 
@@ -905,7 +1010,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the trash entry local service
 	 */
-	public com.liferay.trash.kernel.service.TrashEntryLocalService getTrashEntryLocalService() {
+	public com.liferay.trash.kernel.service.TrashEntryLocalService
+		getTrashEntryLocalService() {
+
 		return trashEntryLocalService;
 	}
 
@@ -915,7 +1022,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param trashEntryLocalService the trash entry local service
 	 */
 	public void setTrashEntryLocalService(
-		com.liferay.trash.kernel.service.TrashEntryLocalService trashEntryLocalService) {
+		com.liferay.trash.kernel.service.TrashEntryLocalService
+			trashEntryLocalService) {
+
 		this.trashEntryLocalService = trashEntryLocalService;
 	}
 
@@ -935,6 +1044,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setTrashEntryPersistence(
 		TrashEntryPersistence trashEntryPersistence) {
+
 		this.trashEntryPersistence = trashEntryPersistence;
 	}
 
@@ -943,7 +1053,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the trash version local service
 	 */
-	public com.liferay.trash.kernel.service.TrashVersionLocalService getTrashVersionLocalService() {
+	public com.liferay.trash.kernel.service.TrashVersionLocalService
+		getTrashVersionLocalService() {
+
 		return trashVersionLocalService;
 	}
 
@@ -953,7 +1065,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param trashVersionLocalService the trash version local service
 	 */
 	public void setTrashVersionLocalService(
-		com.liferay.trash.kernel.service.TrashVersionLocalService trashVersionLocalService) {
+		com.liferay.trash.kernel.service.TrashVersionLocalService
+			trashVersionLocalService) {
+
 		this.trashVersionLocalService = trashVersionLocalService;
 	}
 
@@ -973,6 +1087,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setTrashVersionPersistence(
 		TrashVersionPersistence trashVersionPersistence) {
+
 		this.trashVersionPersistence = trashVersionPersistence;
 	}
 
@@ -981,7 +1096,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the document library file entry local service
 	 */
-	public com.liferay.document.library.kernel.service.DLFileEntryLocalService getDLFileEntryLocalService() {
+	public com.liferay.document.library.kernel.service.DLFileEntryLocalService
+		getDLFileEntryLocalService() {
+
 		return dlFileEntryLocalService;
 	}
 
@@ -991,7 +1108,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param dlFileEntryLocalService the document library file entry local service
 	 */
 	public void setDLFileEntryLocalService(
-		com.liferay.document.library.kernel.service.DLFileEntryLocalService dlFileEntryLocalService) {
+		com.liferay.document.library.kernel.service.DLFileEntryLocalService
+			dlFileEntryLocalService) {
+
 		this.dlFileEntryLocalService = dlFileEntryLocalService;
 	}
 
@@ -1011,6 +1130,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setDLFileEntryPersistence(
 		DLFileEntryPersistence dlFileEntryPersistence) {
+
 		this.dlFileEntryPersistence = dlFileEntryPersistence;
 	}
 
@@ -1037,7 +1157,10 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the document library file entry type local service
 	 */
-	public com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService getDLFileEntryTypeLocalService() {
+	public
+		com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService
+			getDLFileEntryTypeLocalService() {
+
 		return dlFileEntryTypeLocalService;
 	}
 
@@ -1047,7 +1170,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param dlFileEntryTypeLocalService the document library file entry type local service
 	 */
 	public void setDLFileEntryTypeLocalService(
-		com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService dlFileEntryTypeLocalService) {
+		com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService
+			dlFileEntryTypeLocalService) {
+
 		this.dlFileEntryTypeLocalService = dlFileEntryTypeLocalService;
 	}
 
@@ -1067,6 +1192,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setDLFileEntryTypePersistence(
 		DLFileEntryTypePersistence dlFileEntryTypePersistence) {
+
 		this.dlFileEntryTypePersistence = dlFileEntryTypePersistence;
 	}
 
@@ -1086,6 +1212,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setDLFileEntryTypeFinder(
 		DLFileEntryTypeFinder dlFileEntryTypeFinder) {
+
 		this.dlFileEntryTypeFinder = dlFileEntryTypeFinder;
 	}
 
@@ -1094,7 +1221,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the document library file rank local service
 	 */
-	public com.liferay.document.library.kernel.service.DLFileRankLocalService getDLFileRankLocalService() {
+	public com.liferay.document.library.kernel.service.DLFileRankLocalService
+		getDLFileRankLocalService() {
+
 		return dlFileRankLocalService;
 	}
 
@@ -1104,7 +1233,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param dlFileRankLocalService the document library file rank local service
 	 */
 	public void setDLFileRankLocalService(
-		com.liferay.document.library.kernel.service.DLFileRankLocalService dlFileRankLocalService) {
+		com.liferay.document.library.kernel.service.DLFileRankLocalService
+			dlFileRankLocalService) {
+
 		this.dlFileRankLocalService = dlFileRankLocalService;
 	}
 
@@ -1124,6 +1255,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setDLFileRankPersistence(
 		DLFileRankPersistence dlFileRankPersistence) {
+
 		this.dlFileRankPersistence = dlFileRankPersistence;
 	}
 
@@ -1150,7 +1282,10 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the document library file shortcut local service
 	 */
-	public com.liferay.document.library.kernel.service.DLFileShortcutLocalService getDLFileShortcutLocalService() {
+	public
+		com.liferay.document.library.kernel.service.DLFileShortcutLocalService
+			getDLFileShortcutLocalService() {
+
 		return dlFileShortcutLocalService;
 	}
 
@@ -1160,7 +1295,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param dlFileShortcutLocalService the document library file shortcut local service
 	 */
 	public void setDLFileShortcutLocalService(
-		com.liferay.document.library.kernel.service.DLFileShortcutLocalService dlFileShortcutLocalService) {
+		com.liferay.document.library.kernel.service.DLFileShortcutLocalService
+			dlFileShortcutLocalService) {
+
 		this.dlFileShortcutLocalService = dlFileShortcutLocalService;
 	}
 
@@ -1180,6 +1317,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setDLFileShortcutPersistence(
 		DLFileShortcutPersistence dlFileShortcutPersistence) {
+
 		this.dlFileShortcutPersistence = dlFileShortcutPersistence;
 	}
 
@@ -1188,7 +1326,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the document library file version local service
 	 */
-	public com.liferay.document.library.kernel.service.DLFileVersionLocalService getDLFileVersionLocalService() {
+	public com.liferay.document.library.kernel.service.DLFileVersionLocalService
+		getDLFileVersionLocalService() {
+
 		return dlFileVersionLocalService;
 	}
 
@@ -1198,7 +1338,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param dlFileVersionLocalService the document library file version local service
 	 */
 	public void setDLFileVersionLocalService(
-		com.liferay.document.library.kernel.service.DLFileVersionLocalService dlFileVersionLocalService) {
+		com.liferay.document.library.kernel.service.DLFileVersionLocalService
+			dlFileVersionLocalService) {
+
 		this.dlFileVersionLocalService = dlFileVersionLocalService;
 	}
 
@@ -1218,6 +1360,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setDLFileVersionPersistence(
 		DLFileVersionPersistence dlFileVersionPersistence) {
+
 		this.dlFileVersionPersistence = dlFileVersionPersistence;
 	}
 
@@ -1226,7 +1369,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the document library folder local service
 	 */
-	public com.liferay.document.library.kernel.service.DLFolderLocalService getDLFolderLocalService() {
+	public com.liferay.document.library.kernel.service.DLFolderLocalService
+		getDLFolderLocalService() {
+
 		return dlFolderLocalService;
 	}
 
@@ -1236,7 +1381,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param dlFolderLocalService the document library folder local service
 	 */
 	public void setDLFolderLocalService(
-		com.liferay.document.library.kernel.service.DLFolderLocalService dlFolderLocalService) {
+		com.liferay.document.library.kernel.service.DLFolderLocalService
+			dlFolderLocalService) {
+
 		this.dlFolderLocalService = dlFolderLocalService;
 	}
 
@@ -1254,7 +1401,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @param dlFolderPersistence the document library folder persistence
 	 */
-	public void setDLFolderPersistence(DLFolderPersistence dlFolderPersistence) {
+	public void setDLFolderPersistence(
+		DLFolderPersistence dlFolderPersistence) {
+
 		this.dlFolderPersistence = dlFolderPersistence;
 	}
 
@@ -1281,7 +1430,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 *
 	 * @return the dl sync event local service
 	 */
-	public com.liferay.document.library.kernel.service.DLSyncEventLocalService getDLSyncEventLocalService() {
+	public com.liferay.document.library.kernel.service.DLSyncEventLocalService
+		getDLSyncEventLocalService() {
+
 		return dlSyncEventLocalService;
 	}
 
@@ -1291,7 +1442,9 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 * @param dlSyncEventLocalService the dl sync event local service
 	 */
 	public void setDLSyncEventLocalService(
-		com.liferay.document.library.kernel.service.DLSyncEventLocalService dlSyncEventLocalService) {
+		com.liferay.document.library.kernel.service.DLSyncEventLocalService
+			dlSyncEventLocalService) {
+
 		this.dlSyncEventLocalService = dlSyncEventLocalService;
 	}
 
@@ -1311,6 +1464,7 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 	 */
 	public void setDLSyncEventPersistence(
 		DLSyncEventPersistence dlSyncEventPersistence) {
+
 		this.dlSyncEventPersistence = dlSyncEventPersistence;
 	}
 
@@ -1344,8 +1498,8 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
@@ -1356,132 +1510,286 @@ public abstract class DLAppHelperLocalServiceBaseImpl
 
 	@BeanReference(type = DLAppHelperLocalService.class)
 	protected DLAppHelperLocalService dlAppHelperLocalService;
-	@BeanReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@BeanReference(type = com.liferay.portal.kernel.service.ClassNameLocalService.class)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService;
+
+	@BeanReference(
+		type = com.liferay.counter.kernel.service.CounterLocalService.class
+	)
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@BeanReference(type = CounterPersistence.class)
+	protected CounterPersistence counterPersistence;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ClassNameLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ClassNameLocalService
+		classNameLocalService;
+
 	@BeanReference(type = ClassNamePersistence.class)
 	protected ClassNamePersistence classNamePersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.GroupLocalService.class)
-	protected com.liferay.portal.kernel.service.GroupLocalService groupLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.GroupLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.GroupLocalService
+		groupLocalService;
+
 	@BeanReference(type = GroupPersistence.class)
 	protected GroupPersistence groupPersistence;
+
 	@BeanReference(type = GroupFinder.class)
 	protected GroupFinder groupFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.ImageLocalService.class)
-	protected com.liferay.portal.kernel.service.ImageLocalService imageLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ImageLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ImageLocalService
+		imageLocalService;
+
 	@BeanReference(type = ImagePersistence.class)
 	protected ImagePersistence imagePersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.LayoutLocalService.class)
-	protected com.liferay.portal.kernel.service.LayoutLocalService layoutLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.LayoutLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.LayoutLocalService
+		layoutLocalService;
+
 	@BeanReference(type = LayoutPersistence.class)
 	protected LayoutPersistence layoutPersistence;
+
 	@BeanReference(type = LayoutFinder.class)
 	protected LayoutFinder layoutFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.PortletPreferencesLocalService.class)
-	protected com.liferay.portal.kernel.service.PortletPreferencesLocalService portletPreferencesLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.PortletPreferencesLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.PortletPreferencesLocalService
+		portletPreferencesLocalService;
+
 	@BeanReference(type = PortletPreferencesPersistence.class)
 	protected PortletPreferencesPersistence portletPreferencesPersistence;
+
 	@BeanReference(type = PortletPreferencesFinder.class)
 	protected PortletPreferencesFinder portletPreferencesFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.RepositoryLocalService.class)
-	protected com.liferay.portal.kernel.service.RepositoryLocalService repositoryLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.RepositoryLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.RepositoryLocalService
+		repositoryLocalService;
+
 	@BeanReference(type = RepositoryPersistence.class)
 	protected RepositoryPersistence repositoryPersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.SubscriptionLocalService.class)
-	protected com.liferay.portal.kernel.service.SubscriptionLocalService subscriptionLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.SubscriptionLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.SubscriptionLocalService
+		subscriptionLocalService;
+
 	@BeanReference(type = SubscriptionPersistence.class)
 	protected SubscriptionPersistence subscriptionPersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.WebDAVPropsLocalService.class)
-	protected com.liferay.portal.kernel.service.WebDAVPropsLocalService webDAVPropsLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.WebDAVPropsLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.WebDAVPropsLocalService
+		webDAVPropsLocalService;
+
 	@BeanReference(type = WebDAVPropsPersistence.class)
 	protected WebDAVPropsPersistence webDAVPropsPersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService.class)
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService workflowInstanceLinkLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
+		workflowInstanceLinkLocalService;
+
 	@BeanReference(type = WorkflowInstanceLinkPersistence.class)
 	protected WorkflowInstanceLinkPersistence workflowInstanceLinkPersistence;
-	@BeanReference(type = com.liferay.asset.kernel.service.AssetCategoryLocalService.class)
-	protected com.liferay.asset.kernel.service.AssetCategoryLocalService assetCategoryLocalService;
+
+	@BeanReference(
+		type = com.liferay.asset.kernel.service.AssetCategoryLocalService.class
+	)
+	protected com.liferay.asset.kernel.service.AssetCategoryLocalService
+		assetCategoryLocalService;
+
 	@BeanReference(type = AssetCategoryPersistence.class)
 	protected AssetCategoryPersistence assetCategoryPersistence;
+
 	@BeanReference(type = AssetCategoryFinder.class)
 	protected AssetCategoryFinder assetCategoryFinder;
-	@BeanReference(type = com.liferay.asset.kernel.service.AssetEntryLocalService.class)
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService assetEntryLocalService;
+
+	@BeanReference(
+		type = com.liferay.asset.kernel.service.AssetEntryLocalService.class
+	)
+	protected com.liferay.asset.kernel.service.AssetEntryLocalService
+		assetEntryLocalService;
+
 	@BeanReference(type = AssetEntryPersistence.class)
 	protected AssetEntryPersistence assetEntryPersistence;
+
 	@BeanReference(type = AssetEntryFinder.class)
 	protected AssetEntryFinder assetEntryFinder;
-	@BeanReference(type = com.liferay.asset.kernel.service.AssetLinkLocalService.class)
-	protected com.liferay.asset.kernel.service.AssetLinkLocalService assetLinkLocalService;
+
+	@BeanReference(
+		type = com.liferay.asset.kernel.service.AssetLinkLocalService.class
+	)
+	protected com.liferay.asset.kernel.service.AssetLinkLocalService
+		assetLinkLocalService;
+
 	@BeanReference(type = AssetLinkPersistence.class)
 	protected AssetLinkPersistence assetLinkPersistence;
-	@BeanReference(type = com.liferay.asset.kernel.service.AssetTagLocalService.class)
-	protected com.liferay.asset.kernel.service.AssetTagLocalService assetTagLocalService;
+
+	@BeanReference(
+		type = com.liferay.asset.kernel.service.AssetTagLocalService.class
+	)
+	protected com.liferay.asset.kernel.service.AssetTagLocalService
+		assetTagLocalService;
+
 	@BeanReference(type = AssetTagPersistence.class)
 	protected AssetTagPersistence assetTagPersistence;
+
 	@BeanReference(type = AssetTagFinder.class)
 	protected AssetTagFinder assetTagFinder;
-	@BeanReference(type = com.liferay.document.library.kernel.service.DLAppLocalService.class)
-	protected com.liferay.document.library.kernel.service.DLAppLocalService dlAppLocalService;
-	@BeanReference(type = com.liferay.expando.kernel.service.ExpandoValueLocalService.class)
-	protected com.liferay.expando.kernel.service.ExpandoValueLocalService expandoValueLocalService;
+
+	@BeanReference(
+		type = com.liferay.document.library.kernel.service.DLAppLocalService.class
+	)
+	protected com.liferay.document.library.kernel.service.DLAppLocalService
+		dlAppLocalService;
+
+	@BeanReference(
+		type = com.liferay.expando.kernel.service.ExpandoValueLocalService.class
+	)
+	protected com.liferay.expando.kernel.service.ExpandoValueLocalService
+		expandoValueLocalService;
+
 	@BeanReference(type = ExpandoValuePersistence.class)
 	protected ExpandoValuePersistence expandoValuePersistence;
-	@BeanReference(type = com.liferay.ratings.kernel.service.RatingsEntryLocalService.class)
-	protected com.liferay.ratings.kernel.service.RatingsEntryLocalService ratingsEntryLocalService;
+
+	@BeanReference(
+		type = com.liferay.ratings.kernel.service.RatingsEntryLocalService.class
+	)
+	protected com.liferay.ratings.kernel.service.RatingsEntryLocalService
+		ratingsEntryLocalService;
+
 	@BeanReference(type = RatingsEntryPersistence.class)
 	protected RatingsEntryPersistence ratingsEntryPersistence;
+
 	@BeanReference(type = RatingsEntryFinder.class)
 	protected RatingsEntryFinder ratingsEntryFinder;
-	@BeanReference(type = com.liferay.ratings.kernel.service.RatingsStatsLocalService.class)
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService ratingsStatsLocalService;
+
+	@BeanReference(
+		type = com.liferay.ratings.kernel.service.RatingsStatsLocalService.class
+	)
+	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
+		ratingsStatsLocalService;
+
 	@BeanReference(type = RatingsStatsPersistence.class)
 	protected RatingsStatsPersistence ratingsStatsPersistence;
+
 	@BeanReference(type = RatingsStatsFinder.class)
 	protected RatingsStatsFinder ratingsStatsFinder;
-	@BeanReference(type = com.liferay.trash.kernel.service.TrashEntryLocalService.class)
-	protected com.liferay.trash.kernel.service.TrashEntryLocalService trashEntryLocalService;
+
+	@BeanReference(
+		type = com.liferay.trash.kernel.service.TrashEntryLocalService.class
+	)
+	protected com.liferay.trash.kernel.service.TrashEntryLocalService
+		trashEntryLocalService;
+
 	@BeanReference(type = TrashEntryPersistence.class)
 	protected TrashEntryPersistence trashEntryPersistence;
-	@BeanReference(type = com.liferay.trash.kernel.service.TrashVersionLocalService.class)
-	protected com.liferay.trash.kernel.service.TrashVersionLocalService trashVersionLocalService;
+
+	@BeanReference(
+		type = com.liferay.trash.kernel.service.TrashVersionLocalService.class
+	)
+	protected com.liferay.trash.kernel.service.TrashVersionLocalService
+		trashVersionLocalService;
+
 	@BeanReference(type = TrashVersionPersistence.class)
 	protected TrashVersionPersistence trashVersionPersistence;
-	@BeanReference(type = com.liferay.document.library.kernel.service.DLFileEntryLocalService.class)
-	protected com.liferay.document.library.kernel.service.DLFileEntryLocalService dlFileEntryLocalService;
+
+	@BeanReference(
+		type = com.liferay.document.library.kernel.service.DLFileEntryLocalService.class
+	)
+	protected
+		com.liferay.document.library.kernel.service.DLFileEntryLocalService
+			dlFileEntryLocalService;
+
 	@BeanReference(type = DLFileEntryPersistence.class)
 	protected DLFileEntryPersistence dlFileEntryPersistence;
+
 	@BeanReference(type = DLFileEntryFinder.class)
 	protected DLFileEntryFinder dlFileEntryFinder;
-	@BeanReference(type = com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService.class)
-	protected com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService dlFileEntryTypeLocalService;
+
+	@BeanReference(
+		type = com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService.class
+	)
+	protected
+		com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService
+			dlFileEntryTypeLocalService;
+
 	@BeanReference(type = DLFileEntryTypePersistence.class)
 	protected DLFileEntryTypePersistence dlFileEntryTypePersistence;
+
 	@BeanReference(type = DLFileEntryTypeFinder.class)
 	protected DLFileEntryTypeFinder dlFileEntryTypeFinder;
-	@BeanReference(type = com.liferay.document.library.kernel.service.DLFileRankLocalService.class)
-	protected com.liferay.document.library.kernel.service.DLFileRankLocalService dlFileRankLocalService;
+
+	@BeanReference(
+		type = com.liferay.document.library.kernel.service.DLFileRankLocalService.class
+	)
+	protected com.liferay.document.library.kernel.service.DLFileRankLocalService
+		dlFileRankLocalService;
+
 	@BeanReference(type = DLFileRankPersistence.class)
 	protected DLFileRankPersistence dlFileRankPersistence;
+
 	@BeanReference(type = DLFileRankFinder.class)
 	protected DLFileRankFinder dlFileRankFinder;
-	@BeanReference(type = com.liferay.document.library.kernel.service.DLFileShortcutLocalService.class)
-	protected com.liferay.document.library.kernel.service.DLFileShortcutLocalService dlFileShortcutLocalService;
+
+	@BeanReference(
+		type = com.liferay.document.library.kernel.service.DLFileShortcutLocalService.class
+	)
+	protected
+		com.liferay.document.library.kernel.service.DLFileShortcutLocalService
+			dlFileShortcutLocalService;
+
 	@BeanReference(type = DLFileShortcutPersistence.class)
 	protected DLFileShortcutPersistence dlFileShortcutPersistence;
-	@BeanReference(type = com.liferay.document.library.kernel.service.DLFileVersionLocalService.class)
-	protected com.liferay.document.library.kernel.service.DLFileVersionLocalService dlFileVersionLocalService;
+
+	@BeanReference(
+		type = com.liferay.document.library.kernel.service.DLFileVersionLocalService.class
+	)
+	protected
+		com.liferay.document.library.kernel.service.DLFileVersionLocalService
+			dlFileVersionLocalService;
+
 	@BeanReference(type = DLFileVersionPersistence.class)
 	protected DLFileVersionPersistence dlFileVersionPersistence;
-	@BeanReference(type = com.liferay.document.library.kernel.service.DLFolderLocalService.class)
-	protected com.liferay.document.library.kernel.service.DLFolderLocalService dlFolderLocalService;
+
+	@BeanReference(
+		type = com.liferay.document.library.kernel.service.DLFolderLocalService.class
+	)
+	protected com.liferay.document.library.kernel.service.DLFolderLocalService
+		dlFolderLocalService;
+
 	@BeanReference(type = DLFolderPersistence.class)
 	protected DLFolderPersistence dlFolderPersistence;
+
 	@BeanReference(type = DLFolderFinder.class)
 	protected DLFolderFinder dlFolderFinder;
-	@BeanReference(type = com.liferay.document.library.kernel.service.DLSyncEventLocalService.class)
-	protected com.liferay.document.library.kernel.service.DLSyncEventLocalService dlSyncEventLocalService;
+
+	@BeanReference(
+		type = com.liferay.document.library.kernel.service.DLSyncEventLocalService.class
+	)
+	protected
+		com.liferay.document.library.kernel.service.DLSyncEventLocalService
+			dlSyncEventLocalService;
+
 	@BeanReference(type = DLSyncEventPersistence.class)
 	protected DLSyncEventPersistence dlSyncEventPersistence;
+
 }

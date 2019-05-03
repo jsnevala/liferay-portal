@@ -15,7 +15,7 @@ AUI.add(
 			{
 				ATTRS: {
 					sortableList: {
-						valueFn: '_valueSortableList'
+						valueFn: '_sortableListValueFn'
 					},
 
 					strings: {
@@ -446,21 +446,7 @@ AUI.add(
 						field.set('key', contextValue.value);
 					},
 
-					_syncFieldUI: function(field) {
-						var instance = this;
-
-						var addLastFieldClass = instance.getLastField() === field;
-
-						var container = field.get('container');
-
-						container.toggleClass('last-option', addLastFieldClass);
-
-						var sortableList = instance.get('sortableList');
-
-						sortableList.add(container);
-					},
-
-					_valueSortableList: function() {
+					_sortableListValueFn: function() {
 						var instance = this;
 
 						return new A.SortableList(
@@ -473,6 +459,20 @@ AUI.add(
 								sortCondition: A.bind('_canSortNode', instance)
 							}
 						);
+					},
+
+					_syncFieldUI: function(field) {
+						var instance = this;
+
+						var addLastFieldClass = instance.getLastField() === field;
+
+						var container = field.get('container');
+
+						container.toggleClass('last-option', addLastFieldClass);
+
+						var sortableList = instance.get('sortableList');
+
+						sortableList.add(container);
 					}
 				}
 			}

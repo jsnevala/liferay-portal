@@ -17,13 +17,16 @@ package com.liferay.portal.release.versions;
 import aQute.bnd.osgi.Constants;
 import aQute.bnd.version.Version;
 
+import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -41,6 +44,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -56,6 +60,8 @@ public class ReleaseVersionsTest {
 
 	@Test
 	public void testReleaseVersions() throws IOException {
+		Assume.assumeTrue(Validator.isNull(System.getenv("JENKINS_HOME")));
+
 		String otherDirName = System.getProperty(
 			"release.versions.test.other.dir");
 
@@ -86,6 +92,32 @@ public class ReleaseVersionsTest {
 		final Set<Path> ignorePaths = new HashSet<>(
 			Arrays.asList(_portalPath.resolve("modules/third-party")));
 
+		Path workingDirPropertiesPath = _portalPath.resolve(
+			"working.dir.properties");
+
+		if (Files.exists(workingDirPropertiesPath)) {
+			Properties properties = _loadProperties(workingDirPropertiesPath);
+
+			for (String name : properties.stringPropertyNames()) {
+				if (!name.startsWith("working.dir.checkout.private.apps.") ||
+					!name.endsWith(".dirs")) {
+
+					continue;
+				}
+
+				String[] dirNames = StringUtil.split(
+					properties.getProperty(name));
+
+				for (String dirName : dirNames) {
+					Path dirPath = _portalPath.resolve(dirName);
+
+					if (Files.exists(dirPath)) {
+						ignorePaths.add(dirPath);
+					}
+				}
+			}
+		}
+
 		Files.walkFileTree(
 			_portalPath,
 			new SimpleFileVisitor<Path>() {
@@ -102,6 +134,27 @@ public class ReleaseVersionsTest {
 					Path bndBndPath = dirPath.resolve("bnd.bnd");
 
 					if (Files.notExists(bndBndPath)) {
+						return FileVisitResult.CONTINUE;
+					}
+
+					Path lfrbuildRelengIgnorePath = dirPath.resolve(
+						".lfrbuild-releng-ignore");
+
+					if (Files.exists(lfrbuildRelengIgnorePath)) {
+						return FileVisitResult.CONTINUE;
+					}
+
+					String dirName = String.valueOf(dirPath.getFileName());
+
+					if (dirName.endsWith("-test") ||
+						dirName.endsWith("-test-api") ||
+						dirName.endsWith("-test-impl") ||
+						dirName.endsWith("-test-service")) {
+
+						return FileVisitResult.CONTINUE;
+					}
+
+					if (_isInGitRepoReadOnly(dirPath)) {
 						return FileVisitResult.CONTINUE;
 					}
 
@@ -150,6 +203,7 @@ public class ReleaseVersionsTest {
 
 		ObjectValuePair<Version, Path> versionPathPair = _getVersion(
 			bndBndPath, bndProperties);
+
 		ObjectValuePair<Version, Path> otherVersionPathPair = _getVersion(
 			otherBndBndPath, otherBndProperties);
 
@@ -203,8 +257,8 @@ public class ReleaseVersionsTest {
 
 			sb.append(") branches is not allowed. Please ");
 
-			Path updateVersionPath;
-			String updateVersionSeparator;
+			Path updateVersionPath = null;
+			String updateVersionSeparator = null;
 
 			Path gitRepoPath = _getParentFile(dirPath, ".gitrepo");
 
@@ -248,6 +302,39 @@ public class ReleaseVersionsTest {
 
 			Assert.fail(sb.toString());
 		}
+	}
+
+	private boolean _contains(Path path, String... strings) throws IOException {
+		try (FileReader fileReader = new FileReader(path.toFile());
+			UnsyncBufferedReader unsyncBufferedReader =
+				new UnsyncBufferedReader(fileReader)) {
+
+			String line = null;
+
+			while ((line = unsyncBufferedReader.readLine()) != null) {
+				for (String s : strings) {
+					if (line.contains(s)) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private Path _getGitRepoPath(Path dirPath) {
+		while (dirPath != null) {
+			Path gitRepoPath = dirPath.resolve(_GIT_REPO_FILE_NAME);
+
+			if (Files.exists(gitRepoPath)) {
+				return gitRepoPath;
+			}
+
+			dirPath = dirPath.getParent();
+		}
+
+		return null;
 	}
 
 	private Path _getParentFile(Path dirPath, String fileName) {
@@ -297,6 +384,20 @@ public class ReleaseVersionsTest {
 			".properties";
 	}
 
+	private boolean _isInGitRepoReadOnly(Path dirPath) throws IOException {
+		Path gitRepoPath = _getGitRepoPath(dirPath);
+
+		if (gitRepoPath == null) {
+			return false;
+		}
+
+		if (_contains(gitRepoPath, "mode = pull")) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean _isRelease(Path path) {
 		if (Files.exists(path.resolve("modules/.releng"))) {
 			return true;
@@ -318,6 +419,8 @@ public class ReleaseVersionsTest {
 	private String _read(Path path) throws IOException {
 		return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
 	}
+
+	private static final String _GIT_REPO_FILE_NAME = ".gitrepo";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ReleaseVersionsTest.class);

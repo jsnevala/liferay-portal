@@ -123,10 +123,7 @@ public class V1MarkupServiceImpl
 		oasis.names.tc.wsrp.v2.types.MarkupResponse v2MarkupResponse =
 			_v2MarkupService.getMarkup(v2GetMarkup);
 
-		MarkupResponse v1MarkupResponse =
-			(MarkupResponse)TypeConvertorUtil.convert(v2MarkupResponse, 2);
-
-		return v1MarkupResponse;
+		return (MarkupResponse)TypeConvertorUtil.convert(v2MarkupResponse, 2);
 	}
 
 	protected Extension[] doInitCookie(InitCookie v1InitCookie)
@@ -139,10 +136,7 @@ public class V1MarkupServiceImpl
 		oasis.names.tc.wsrp.v2.types.Extension[] v2Extensions =
 			_v2MarkupService.initCookie(v2InitCookie);
 
-		Extension[] v1Extensions = (Extension[])TypeConvertorUtil.convert(
-			v2Extensions, 2);
-
-		return v1Extensions;
+		return (Extension[])TypeConvertorUtil.convert(v2Extensions, 2);
 	}
 
 	protected BlockingInteractionResponse doPerformBlockingInteraction(
@@ -159,11 +153,8 @@ public class V1MarkupServiceImpl
 				_v2MarkupService.performBlockingInteraction(
 					v2PerformBlockingInteraction);
 
-		BlockingInteractionResponse v1BlockingInteractionResponse =
-			(BlockingInteractionResponse)TypeConvertorUtil.convert(
-				v2BlockingInteractionResponse, 2);
-
-		return v1BlockingInteractionResponse;
+		return (BlockingInteractionResponse)TypeConvertorUtil.convert(
+			v2BlockingInteractionResponse, 2);
 	}
 
 	protected Extension[] doReleaseSessions(ReleaseSessions v1ReleaseSessions)
@@ -176,10 +167,7 @@ public class V1MarkupServiceImpl
 		oasis.names.tc.wsrp.v2.types.Extension[] v2Extensions =
 			_v2MarkupService.releaseSessions(v2ReleaseSessions);
 
-		Extension[] v1Extensions = (Extension[])TypeConvertorUtil.convert(
-			v2Extensions, 2);
-
-		return v1Extensions;
+		return (Extension[])TypeConvertorUtil.convert(v2Extensions, 2);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

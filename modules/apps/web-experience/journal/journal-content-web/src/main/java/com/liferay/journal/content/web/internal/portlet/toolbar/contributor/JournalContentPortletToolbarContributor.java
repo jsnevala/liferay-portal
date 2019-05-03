@@ -17,6 +17,7 @@ package com.liferay.journal.content.web.internal.portlet.toolbar.contributor;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.journal.constants.JournalPortletKeys;
+import com.liferay.journal.content.web.configuration.JournalContentPortletInstanceConfiguration;
 import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalFolderService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.portlet.PortletRequest;
@@ -53,7 +55,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	immediate = true,
@@ -100,6 +102,25 @@ public class JournalContentPortletToolbarContributor
 				_portal.getCurrentAndAncestorSiteGroupIds(scopeGroupId),
 				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 				JournalFolderConstants.RESTRICTION_TYPE_INHERIT);
+
+		JournalContentPortletInstanceConfiguration
+			journalContentPortletInstanceConfiguration =
+				portletDisplay.getPortletInstanceConfiguration(
+					JournalContentPortletInstanceConfiguration.class);
+
+		if (journalContentPortletInstanceConfiguration.
+				sortStructuresByByName()) {
+
+			Locale locale = themeDisplay.getLocale();
+
+			ddmStructures.sort(
+				(ddmStructure1, ddmStructure2) -> {
+					String name1 = ddmStructure1.getName(locale);
+					String name2 = ddmStructure2.getName(locale);
+
+					return name1.compareTo(name2);
+				});
+		}
 
 		for (DDMStructure ddmStructure : ddmStructures) {
 			portletURL.setParameter(
@@ -165,20 +186,6 @@ public class JournalContentPortletToolbarContributor
 		return menuItems;
 	}
 
-	@Reference(unbind = "-")
-	protected void setJournalFolderService(
-		JournalFolderService journalFolderService) {
-
-		_journalFolderService = journalFolderService;
-	}
-
-	@Reference(target = "(resource.name=com.liferay.journal)", unbind = "-")
-	protected void setResourcePermissionChecker(
-		ResourcePermissionChecker resourcePermissionChecker) {
-
-		_resourcePermissionChecker = resourcePermissionChecker;
-	}
-
 	private String _getAddJournalArticleRedirectURL(
 			ThemeDisplay themeDisplay, PortletRequest portletRequest)
 		throws Exception {
@@ -235,11 +242,13 @@ public class JournalContentPortletToolbarContributor
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalContentPortletToolbarContributor.class);
 
+	@Reference
 	private JournalFolderService _journalFolderService;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference(target = "(resource.name=com.liferay.journal)", unbind = "-")
 	private ResourcePermissionChecker _resourcePermissionChecker;
 
 }

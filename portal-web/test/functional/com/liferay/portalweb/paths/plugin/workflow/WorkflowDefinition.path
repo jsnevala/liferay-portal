@@ -8,27 +8,6 @@
 <tr><td rowspan="1" colspan="3">WorkflowDefinition</td></tr>
 </thead>
 <tbody>
-<!--TOOLBAR-->
-<tr>
-	<td>TOOLBAR_VIEW_ALL</td>
-	<td>//ul[contains(@class,'nav')]//a/span[contains(.,'View All')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>TOOLBAR_ADD_NEW_DEFINITION</td>
-	<td>//ul[contains(@class,'nav')]//a/span[contains(.,'Add New Definition')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>TOOLBAR_UPLOAD_DEFINITION</td>
-	<td>//ul[contains(@class,'nav')]//a/span[contains(.,'Upload Definition')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td></td>
-	<td></td>
-	<td></td>
-</tr>
 <!--DEFINITION_TABLE-->
 <tr>
 	<td>DEFINITION_TABLE_NAME</td>
@@ -38,11 +17,6 @@
 <tr>
 	<td>DEFINITION_TABLE_TITLE</td>
 	<td>//div[contains(@id,'WorkflowDefinitionPortlet_workflowDefinitionsSearchContainer')]//tr[contains(.,'${key_workflowDefinitionName}')]/td[2]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>DEFINITION_TABLE_VERSION</td>
-	<td>//div[contains(@id,'WorkflowDefinitionPortlet_workflowDefinitionsSearchContainer')]//tr[contains(.,'${key_workflowDefinitionName}')]/td[3]</td>
 	<td></td>
 </tr>
 <tr>

@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Asset Publisher Web
 Bundle-SymbolicName: com.liferay.asset.publisher.web
-Bundle-Version: 1.8.11
+Bundle-Version: 1.8.46
 Export-Package:\
 	com.liferay.asset.publisher.web,\
 	com.liferay.asset.publisher.web.constants,\
@@ -13,7 +13,6 @@ Import-Package:\
 	com.liferay.portal.kernel.portlet;version="[7.3.0,8)",\
 	\
 	*
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Asset
 Web-ContextPath: /asset-publisher-web
 -dsannotations-options: inherit

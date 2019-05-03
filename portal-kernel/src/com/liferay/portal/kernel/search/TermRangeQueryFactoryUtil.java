@@ -17,7 +17,7 @@ package com.liferay.portal.kernel.search;
 /**
  * @author     Raymond Augé
  * @author     Michael C. Han
- * @deprecated As of 7.0.0, , replaced by {@link
+ * @deprecated As of Wilberforce (7.0.x), , replaced by {@link
  *             com.liferay.portal.kernel.search.generic.TermRangeQueryImpl}
  */
 @Deprecated
@@ -27,7 +27,10 @@ public class TermRangeQueryFactoryUtil {
 		SearchContext searchContext, String field, String lowerTerm,
 		String upperTerm, boolean includesLower, boolean includesUpper) {
 
-		return getTermRangeQueryFactory(searchContext).create(
+		TermRangeQueryFactory termRangeQueryFactory = getTermRangeQueryFactory(
+			searchContext);
+
+		return termRangeQueryFactory.create(
 			field, lowerTerm, upperTerm, includesLower, includesUpper);
 	}
 

@@ -30,6 +30,7 @@ import java.util.List;
  */
 @ProviderType
 public class WSRPConsumerSoap implements Serializable {
+
 	public static WSRPConsumerSoap toSoapModel(WSRPConsumer model) {
 		WSRPConsumerSoap soapModel = new WSRPConsumerSoap();
 
@@ -41,8 +42,10 @@ public class WSRPConsumerSoap implements Serializable {
 		soapModel.setName(model.getName());
 		soapModel.setUrl(model.getUrl());
 		soapModel.setWsdl(model.getWsdl());
-		soapModel.setRegistrationContextString(model.getRegistrationContextString());
-		soapModel.setRegistrationPropertiesString(model.getRegistrationPropertiesString());
+		soapModel.setRegistrationContextString(
+			model.getRegistrationContextString());
+		soapModel.setRegistrationPropertiesString(
+			model.getRegistrationPropertiesString());
 		soapModel.setForwardCookies(model.getForwardCookies());
 		soapModel.setForwardHeaders(model.getForwardHeaders());
 		soapModel.setMarkupCharacterSets(model.getMarkupCharacterSets());
@@ -79,7 +82,8 @@ public class WSRPConsumerSoap implements Serializable {
 	}
 
 	public static WSRPConsumerSoap[] toSoapModels(List<WSRPConsumer> models) {
-		List<WSRPConsumerSoap> soapModels = new ArrayList<WSRPConsumerSoap>(models.size());
+		List<WSRPConsumerSoap> soapModels = new ArrayList<WSRPConsumerSoap>(
+			models.size());
 
 		for (WSRPConsumer model : models) {
 			soapModels.add(toSoapModel(model));
@@ -177,6 +181,7 @@ public class WSRPConsumerSoap implements Serializable {
 
 	public void setRegistrationPropertiesString(
 		String registrationPropertiesString) {
+
 		_registrationPropertiesString = registrationPropertiesString;
 	}
 
@@ -226,4 +231,5 @@ public class WSRPConsumerSoap implements Serializable {
 	private String _forwardHeaders;
 	private String _markupCharacterSets;
 	private Date _lastPublishDate;
+
 }

@@ -87,7 +87,7 @@ Format timeFormat = FastDateFormatFactoryUtil.getSimpleDateFormat("HH:mm", local
 						%>
 
 							<td>
-								<%= curOpen != -1 ? timeFormat.format(cal.getTime()) : "" %>
+								<%= (curOpen != -1) ? timeFormat.format(cal.getTime()) : "" %>
 							</td>
 
 						<%
@@ -111,7 +111,7 @@ Format timeFormat = FastDateFormatFactoryUtil.getSimpleDateFormat("HH:mm", local
 						%>
 
 							<td>
-								<%= curClose != -1 ? timeFormat.format(cal.getTime()) : "" %>
+								<%= (curClose != -1) ? timeFormat.format(cal.getTime()) : "" %>
 							</td>
 
 						<%

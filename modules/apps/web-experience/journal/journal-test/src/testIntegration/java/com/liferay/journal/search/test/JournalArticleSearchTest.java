@@ -450,8 +450,8 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 
 	@Override
 	protected boolean isCheckBaseModelPermission() {
-		return
-			_journalServiceConfiguration.articleViewPermissionsCheckEnabled();
+		return _journalServiceConfiguration.
+			articleViewPermissionsCheckEnabled();
 	}
 
 	@Override
@@ -556,7 +556,7 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 			for (String fieldValue : fieldValues) {
 				Map<Locale, String> map = new HashMap<>();
 
-				map.put(Locale.US, fieldValue);
+				map.put(LocaleUtil.US, fieldValue);
 
 				contents.add(map);
 			}

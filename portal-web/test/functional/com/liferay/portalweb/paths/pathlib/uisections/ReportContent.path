@@ -9,8 +9,13 @@
 </thead>
 <tbody>
 <tr>
-	<td>HEADER</td>
-	<td>//h3[contains(.,'Report')]</td>
+	<td>REASON_SELECT</td>
+	<td>//div[contains(.,'Reason for the Report')]/select[contains(@id,'FlagsPortlet')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SUCCESS_MESSAGE</td>
+	<td>//div[contains(.,'Thank you for your report')]/p[2]</td>
 	<td></td>
 </tr>
 <tr>
@@ -21,16 +26,6 @@
 <tr>
 	<td>WARNING_TERMS_OF_USE_LINK</td>
 	<td>//a[@href='/c/portal/terms_of_use']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>REASON_SELECT</td>
-	<td>//div[contains(.,'Reason for the Report')]/select[contains(@id,'FlagsPortlet')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SUCCESS_MESSAGE</td>
-	<td>//div[contains(.,'Thank you for your report')]/p[2]</td>
 	<td></td>
 </tr>
 </tbody>

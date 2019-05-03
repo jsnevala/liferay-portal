@@ -94,9 +94,11 @@ public class LocalProcessLauncher {
 			String processCallableName =
 				(String)bootstrapObjectInputStream.readObject();
 
-			String logPrefixString =
-				StringPool.OPEN_BRACKET.concat(processCallableName).concat(
-					StringPool.CLOSE_BRACKET);
+			String logPrefixString = StringPool.OPEN_BRACKET.concat(
+				processCallableName
+			).concat(
+				StringPool.CLOSE_BRACKET
+			);
 
 			byte[] logPrefix = logPrefixString.getBytes(StringPool.UTF8);
 
@@ -189,8 +191,8 @@ public class LocalProcessLauncher {
 		}
 
 		/**
-		 * @deprecated As of 7.0.0, replaced by {@link #writeProcessCallable(
-		 *             ProcessCallable) }
+		 * @deprecated As of Judson (7.1.x), replaced by {@link
+		 *             #writeProcessCallable(ProcessCallable) }
 		 */
 		@Deprecated
 		public static com.liferay.portal.kernel.process.log.ProcessOutputStream

@@ -1,19 +1,19 @@
-<definition>
-	<command name="gotoPortletConfiguration">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+definition {
+	macro gotoPortletConfiguration {
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Configuration");
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Configuration">
-			<var name="key_menuItem" value="Configuration" />
-		</execute>
+		IFrame.selectConfigurationFrame();
+	}
 
-		<execute macro="IFrame#selectConfigurationFrame" />
-	</command>
+	@summary = "Assert that the Site Admin portlet title displays the text '${portletTitle}'"
+	macro viewPortletTitle {
+		var key_portletTitle = "${portletTitle}";
 
-	<command name="viewPortletTitle" summary="Assert that the Site Admin portlet title displays the text '${portletTitle}'">
-		<var name="key_portletTitle" value="${portletTitle}" />
+		AssertElementPresent(locator1 = "Home#SITE_ADMINISTRATION_PORTLET_TITLE");
 
-		<execute function="AssertElementPresent" locator1="Home#SITE_ADMINISTRATION_PORTLET_TITLE" />
-
-		<execute function="AssertTextEquals" locator1="Home#SITE_ADMINISTRATION_PORTLET_TITLE" value1="${portletTitle}" />
-	</command>
-</definition>
+		AssertTextEquals(
+			locator1 = "Home#SITE_ADMINISTRATION_PORTLET_TITLE",
+			value1 = "${portletTitle}"
+		);
+	}
+}

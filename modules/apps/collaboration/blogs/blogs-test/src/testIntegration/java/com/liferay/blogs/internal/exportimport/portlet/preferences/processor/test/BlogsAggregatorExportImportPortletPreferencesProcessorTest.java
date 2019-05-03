@@ -68,7 +68,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @RunWith(Arquillian.class)
 public class BlogsAggregatorExportImportPortletPreferencesProcessorTest {
@@ -216,7 +216,7 @@ public class BlogsAggregatorExportImportPortletPreferencesProcessorTest {
 
 	private static ServiceTracker
 		<ExportImportPortletPreferencesProcessor,
-			ExportImportPortletPreferencesProcessor> _serviceTracker;
+		 ExportImportPortletPreferencesProcessor> _serviceTracker;
 
 	@DeleteAfterTestRun
 	private Group _group;
@@ -306,6 +306,10 @@ public class BlogsAggregatorExportImportPortletPreferencesProcessorTest {
 		@Override
 		public String getPath() {
 			return StringPool.BLANK;
+		}
+
+		@Override
+		public void umount() {
 		}
 
 		private final Map<String, String> _entries = new HashMap<>();

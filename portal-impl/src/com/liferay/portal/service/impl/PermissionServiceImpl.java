@@ -251,9 +251,8 @@ public class PermissionServiceImpl extends PermissionServiceBaseImpl {
 			_serviceTracker;
 
 	private class BaseModelPermissionCheckerServiceTrackerCustomizer
-		implements
-			ServiceTrackerCustomizer
-				<BaseModelPermissionChecker, BaseModelPermissionChecker> {
+		implements ServiceTrackerCustomizer
+			<BaseModelPermissionChecker, BaseModelPermissionChecker> {
 
 		@Override
 		public BaseModelPermissionChecker addingService(

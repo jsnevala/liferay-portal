@@ -54,9 +54,9 @@ public class KaleoDefinitionLocalServiceImpl
 		catch (NoSuchDefinitionException nsde) {
 		}
 
-		kaleoDefinition.setStartKaleoNodeId(startKaleoNodeId);
 		kaleoDefinition.setModifiedDate(new Date());
 		kaleoDefinition.setActive(true);
+		kaleoDefinition.setStartKaleoNodeId(startKaleoNodeId);
 
 		kaleoDefinitionPersistence.update(kaleoDefinition);
 	}

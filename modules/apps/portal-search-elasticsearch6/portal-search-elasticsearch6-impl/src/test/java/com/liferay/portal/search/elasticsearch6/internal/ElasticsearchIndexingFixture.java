@@ -30,6 +30,7 @@ import com.liferay.portal.search.elasticsearch6.internal.document.ElasticsearchU
 import com.liferay.portal.search.elasticsearch6.internal.facet.DefaultFacetProcessor;
 import com.liferay.portal.search.elasticsearch6.internal.facet.FacetProcessor;
 import com.liferay.portal.search.elasticsearch6.internal.filter.BooleanFilterTranslatorImpl;
+import com.liferay.portal.search.elasticsearch6.internal.filter.DateRangeFilterTranslatorImpl;
 import com.liferay.portal.search.elasticsearch6.internal.filter.DateRangeTermFilterTranslatorImpl;
 import com.liferay.portal.search.elasticsearch6.internal.filter.ElasticsearchFilterTranslator;
 import com.liferay.portal.search.elasticsearch6.internal.filter.ExistsFilterTranslatorImpl;
@@ -43,6 +44,7 @@ import com.liferay.portal.search.elasticsearch6.internal.filter.QueryFilterTrans
 import com.liferay.portal.search.elasticsearch6.internal.filter.RangeTermFilterTranslatorImpl;
 import com.liferay.portal.search.elasticsearch6.internal.filter.TermFilterTranslatorImpl;
 import com.liferay.portal.search.elasticsearch6.internal.filter.TermsFilterTranslatorImpl;
+import com.liferay.portal.search.elasticsearch6.internal.filter.TermsSetFilterTranslatorImpl;
 import com.liferay.portal.search.elasticsearch6.internal.groupby.DefaultGroupByTranslator;
 import com.liferay.portal.search.elasticsearch6.internal.index.IndexNameBuilder;
 import com.liferay.portal.search.elasticsearch6.internal.query.BooleanQueryTranslatorImpl;
@@ -143,6 +145,7 @@ public class ElasticsearchIndexingFixture implements IndexingFixture {
 		return new ElasticsearchFilterTranslator() {
 			{
 				booleanFilterTranslator = new BooleanFilterTranslatorImpl();
+				dateRangeFilterTranslator = new DateRangeFilterTranslatorImpl();
 				dateRangeTermFilterTranslator =
 					new DateRangeTermFilterTranslatorImpl();
 				existsFilterTranslator = new ExistsFilterTranslatorImpl();
@@ -160,6 +163,7 @@ public class ElasticsearchIndexingFixture implements IndexingFixture {
 				rangeTermFilterTranslator = new RangeTermFilterTranslatorImpl();
 				termFilterTranslator = new TermFilterTranslatorImpl();
 				termsFilterTranslator = new TermsFilterTranslatorImpl();
+				termsSetFilterTranslator = new TermsSetFilterTranslatorImpl();
 			}
 		};
 	}

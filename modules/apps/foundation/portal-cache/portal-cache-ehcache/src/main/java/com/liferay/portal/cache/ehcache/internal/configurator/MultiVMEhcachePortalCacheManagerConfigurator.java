@@ -63,9 +63,7 @@ public class MultiVMEhcachePortalCacheManagerConfigurator
 		_defaultReplicatorPropertiesString = getPortalPropertiesString(
 			PropsKeys.EHCACHE_REPLICATOR_PROPERTIES_DEFAULT);
 		_replicatorProperties = props.getProperties(
-			PropsKeys.EHCACHE_REPLICATOR_PROPERTIES +
-				StringPool.PERIOD,
-			true);
+			PropsKeys.EHCACHE_REPLICATOR_PROPERTIES + StringPool.PERIOD, true);
 	}
 
 	protected String getPortalPropertiesString(String portalPropertyKey) {
@@ -81,8 +79,8 @@ public class MultiVMEhcachePortalCacheManagerConfigurator
 
 		StringBundler sb = new StringBundler(array.length * 2);
 
-		for (int i = 0; i < array.length; i++) {
-			sb.append(array[i]);
+		for (String value : array) {
+			sb.append(value);
 			sb.append(StringPool.COMMA);
 		}
 

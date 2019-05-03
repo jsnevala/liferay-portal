@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.RemoteOptionsException;
 import com.liferay.portal.kernel.exception.RequiredGroupException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -79,6 +80,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -88,6 +90,7 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.liveusers.LiveUsers;
 import com.liferay.site.admin.web.internal.constants.SiteAdminPortletKeys;
@@ -136,7 +139,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=Sites Admin",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + SiteAdminPortletKeys.SITE_ADMIN,
 		"javax.portlet.resource-bundle=content.Language",
@@ -684,9 +687,9 @@ public class SiteAdminPortlet extends MVCPortlet {
 			friendlyURL = ParamUtil.getString(
 				actionRequest, "friendlyURL", liveGroup.getFriendlyURL());
 			inheritContent = ParamUtil.getBoolean(
-				actionRequest, "inheritContent", liveGroup.getInheritContent());
+				actionRequest, "inheritContent", liveGroup.isInheritContent());
 			active = ParamUtil.getBoolean(
-				actionRequest, "active", liveGroup.getActive());
+				actionRequest, "active", liveGroup.isActive());
 
 			liveGroup = groupService.updateGroup(
 				liveGroupId, parentGroupId, nameMap, descriptionMap, type,
@@ -804,6 +807,31 @@ public class SiteAdminPortlet extends MVCPortlet {
 		UnicodeProperties formTypeSettingsProperties =
 			PropertiesParamUtil.getProperties(
 				actionRequest, "TypeSettingsProperties--");
+
+		boolean inheritLocales = GetterUtil.getBoolean(
+			typeSettingsProperties.getProperty("inheritLocales"));
+
+		if (formTypeSettingsProperties.containsKey("inheritLocales")) {
+			inheritLocales = GetterUtil.getBoolean(
+				formTypeSettingsProperties.getProperty("inheritLocales"));
+		}
+
+		if (inheritLocales) {
+			formTypeSettingsProperties.setProperty(
+				PropsKeys.LOCALES,
+				StringUtil.merge(
+					LocaleUtil.toLanguageIds(
+						LanguageUtil.getAvailableLocales())));
+		}
+
+		if (formTypeSettingsProperties.containsKey(PropsKeys.LOCALES) &&
+			Validator.isNull(
+				formTypeSettingsProperties.getProperty(PropsKeys.LOCALES))) {
+
+			throw new LocaleException(
+				LocaleException.TYPE_DEFAULT,
+				"Must have at least one valid locale for site " + liveGroupId);
+		}
 
 		typeSettingsProperties.putAll(formTypeSettingsProperties);
 

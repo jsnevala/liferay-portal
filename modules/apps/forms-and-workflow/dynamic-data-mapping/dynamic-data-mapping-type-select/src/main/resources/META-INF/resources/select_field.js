@@ -23,7 +23,9 @@ AUI.add(
 					ddmDataProviderInstanceId: {
 						value: 0
 					},
-
+					defaultLocale: {
+							value: "en_US"
+					},
 					multiple: {
 						value: false
 					},
@@ -72,13 +74,27 @@ AUI.add(
 							options = instance.get('dataSourceOptions');
 						}
 
+						if (instance.get('readOnly')) {
+							var option = instance.getSelectedOption(options);
+
+							if (option.length == 0) {
+								option.push({
+									label: instance.getContextValue(),
+									status: 'selected',
+									value: instance.getContextValue()
+								});
+							}
+
+							return option;
+						}
+
 						return A.map(
 							options,
 							function(item) {
 								var label = item.label;
 
 								if (Lang.isObject(label)) {
-									label = label[instance.get('locale')];
+									label = label[instance.get('locale')] || label[instance.get('defaultLocale')];
 								}
 
 								return {
@@ -88,6 +104,34 @@ AUI.add(
 								};
 							}
 						);
+					},
+
+					getSelectedOption: function(options) {
+						var instance = this;
+
+						var option = [];
+
+						for (var i = 0; i < options.length; i++) {
+
+							if (instance.getContextValue() == options[i].value) {
+
+								var label = options[i].label;
+
+								if (Lang.isObject(label)) {
+									label = label[instance.get('locale')];
+								}
+
+								option.push({
+									label: label,
+									status: 'selected',
+									value: options[i].value
+								});
+
+								break;
+							}
+						}
+
+						return option;
 					},
 
 					getTemplateContext: function() {

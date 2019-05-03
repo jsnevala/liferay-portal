@@ -15,8 +15,9 @@
 package com.liferay.portal.language;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.portal.kernel.cache.MultiVMPoolUtil;
 import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
+import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.cache.PortalCacheMapSynchronizeUtil;
 import com.liferay.portal.kernel.cache.PortalCacheMapSynchronizeUtil.Synchronizer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -65,6 +66,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -107,15 +110,16 @@ import javax.servlet.http.HttpServletResponse;
 public class LanguageImpl implements Language, Serializable {
 
 	public void afterPropertiesSet() {
-		_companyLocalesPortalCache = MultiVMPoolUtil.getPortalCache(
+		_companyLocalesPortalCache = PortalCacheHelperUtil.getPortalCache(
+			PortalCacheManagerNames.MULTI_VM,
 			_COMPANY_LOCALES_PORTAL_CACHE_NAME);
 
 		PortalCacheMapSynchronizeUtil.synchronize(
 			_companyLocalesPortalCache, _companyLocalesBags,
 			_removeSynchronizer);
 
-		_groupLocalesPortalCache = MultiVMPoolUtil.getPortalCache(
-			_GROUP_LOCALES_PORTAL_CACHE_NAME);
+		_groupLocalesPortalCache = PortalCacheHelperUtil.getPortalCache(
+			PortalCacheManagerNames.MULTI_VM, _GROUP_LOCALES_PORTAL_CACHE_NAME);
 
 		PortalCacheMapSynchronizeUtil.synchronize(
 			_groupLocalesPortalCache, _groupLanguageCodeLocalesMapMap,
@@ -979,7 +983,7 @@ public class LanguageImpl implements Language, Serializable {
 		Map<String, Locale> groupLanguageIdLocalesMap =
 			_getGroupLanguageIdLocalesMap(groupId);
 
-		return new HashSet<>(groupLanguageIdLocalesMap.values());
+		return new LinkedHashSet<>(groupLanguageIdLocalesMap.values());
 	}
 
 	@Override
@@ -999,6 +1003,13 @@ public class LanguageImpl implements Language, Serializable {
 		Locale locale = PortalUtil.getLocale(portletRequest);
 
 		return getBCP47LanguageId(locale);
+	}
+
+	@Override
+	public Set<Locale> getCompanyAvailableLocales(long companyId) {
+		CompanyLocalesBag companyLocalesBag = _getCompanyLocalesBag(companyId);
+
+		return companyLocalesBag.getAvailableLocales();
 	}
 
 	/**
@@ -1058,8 +1069,31 @@ public class LanguageImpl implements Language, Serializable {
 		return getLanguageId(request);
 	}
 
+	/**
+	 * Returns the last time in milliseconds when there was any change in the
+	 * languages list company or group
+	 *
+	 * @return the last moodified time in milliseconds
+	 * @review
+	 */
+	@Override
+	public long getLastModified() {
+		return _lastModified;
+	}
+
 	@Override
 	public Locale getLocale(long groupId, String languageCode) {
+		try {
+			if (isInheritLocales(groupId)) {
+				return getLocale(languageCode);
+			}
+		}
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("Unable to check if group inherits locales");
+			}
+		}
+
 		Map<String, Locale> groupLanguageCodeLocalesMap =
 			_getGroupLanguageCodeLocalesMap(groupId);
 
@@ -1181,14 +1215,15 @@ public class LanguageImpl implements Language, Serializable {
 		String value = null;
 
 		try {
-			int pos = description.indexOf(CharPool.SPACE);
+			String[] parts = description.split(StringPool.SPACE, 2);
 
-			String x = description.substring(0, pos);
+			String unit = StringUtil.toLowerCase(parts[1]);
 
-			value = x.concat(StringPool.SPACE).concat(
-				get(
-					request,
-					StringUtil.toLowerCase(description.substring(pos + 1))));
+			if (unit.equals("second")) {
+				unit += "[time]";
+			}
+
+			value = format(request, "x-" + unit, parts[0]);
 		}
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
@@ -1322,14 +1357,15 @@ public class LanguageImpl implements Language, Serializable {
 		String value = null;
 
 		try {
-			int pos = description.indexOf(CharPool.SPACE);
+			String[] parts = description.split(StringPool.SPACE, 2);
 
-			String x = description.substring(0, pos);
+			String unit = StringUtil.toLowerCase(parts[1]);
 
-			value = x.concat(StringPool.SPACE).concat(
-				get(
-					locale,
-					StringUtil.toLowerCase(description.substring(pos + 1))));
+			if (unit.equals("second")) {
+				unit += "[time]";
+			}
+
+			value = format(locale, "x-" + unit, parts[0]);
 		}
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
@@ -1517,6 +1553,18 @@ public class LanguageImpl implements Language, Serializable {
 	}
 
 	@Override
+	public boolean isSameLanguage(Locale locale1, Locale locale2) {
+		if ((locale1 == null) || (locale2 == null)) {
+			return false;
+		}
+
+		String language1 = locale1.getLanguage();
+		String language2 = locale2.getLanguage();
+
+		return language1.equals(language2);
+	}
+
+	@Override
 	public String process(
 		ResourceBundle resourceBundle, Locale locale, String content) {
 
@@ -1599,25 +1647,41 @@ public class LanguageImpl implements Language, Serializable {
 		return companyLocalesBag;
 	}
 
+	private static void _updateLastModified() {
+		_lastModified = System.currentTimeMillis();
+	}
+
 	private ObjectValuePair<HashMap<String, Locale>, HashMap<String, Locale>>
 		_createGroupLocales(long groupId) {
 
 		String[] languageIds = PropsValues.LOCALES_ENABLED;
 
+		Locale defaultLocale = LocaleUtil.getDefault();
+
 		try {
 			Group group = GroupLocalServiceUtil.getGroup(groupId);
+
+			defaultLocale = PortalUtil.getSiteDefaultLocale(group);
 
 			UnicodeProperties typeSettingsProperties =
 				group.getTypeSettingsProperties();
 
-			languageIds = StringUtil.split(
-				typeSettingsProperties.getProperty(PropsKeys.LOCALES));
+			String groupLanguageIds = typeSettingsProperties.getProperty(
+				PropsKeys.LOCALES);
+
+			if (groupLanguageIds != null) {
+				languageIds = StringUtil.split(groupLanguageIds);
+			}
 		}
 		catch (Exception e) {
 		}
 
 		HashMap<String, Locale> groupLanguageCodeLocalesMap = new HashMap<>();
-		HashMap<String, Locale> groupLanguageIdLocalesMap = new HashMap<>();
+		HashMap<String, Locale> groupLanguageIdLocalesMap =
+			new LinkedHashMap<>();
+
+		groupLanguageCodeLocalesMap.put(
+			defaultLocale.getLanguage(), defaultLocale);
 
 		for (String languageId : languageIds) {
 			Locale locale = LocaleUtil.fromLanguageId(languageId, false);
@@ -1640,6 +1704,8 @@ public class LanguageImpl implements Language, Serializable {
 		_groupLanguageCodeLocalesMapMap.put(
 			groupId, groupLanguageCodeLocalesMap);
 		_groupLanguageIdLocalesMap.put(groupId, groupLanguageIdLocalesMap);
+
+		_updateLastModified();
 
 		return new ObjectValuePair<>(
 			groupLanguageCodeLocalesMap, groupLanguageIdLocalesMap);
@@ -1828,10 +1894,14 @@ public class LanguageImpl implements Language, Serializable {
 
 	private void _resetAvailableGroupLocales(long groupId) {
 		_groupLocalesPortalCache.remove(groupId);
+
+		_updateLastModified();
 	}
 
 	private void _resetAvailableLocales(long companyId) {
 		_companyLocalesPortalCache.remove(companyId);
+
+		_updateLastModified();
 	}
 
 	private static final String _COMPANY_LOCALES_PORTAL_CACHE_NAME =
@@ -1846,6 +1916,7 @@ public class LanguageImpl implements Language, Serializable {
 		new ConcurrentHashMap<>();
 	private static PortalCache<Long, Serializable> _companyLocalesPortalCache;
 	private static PortalCache<Long, Serializable> _groupLocalesPortalCache;
+	private static volatile long _lastModified = System.currentTimeMillis();
 	private static final Pattern _pattern = Pattern.compile(
 		"Liferay\\.Language\\.get\\([\"']([^)]+)[\"']\\)");
 
@@ -1914,6 +1985,17 @@ public class LanguageImpl implements Language, Serializable {
 				}
 			}
 
+			Locale defaultLocale = LocaleUtil.getDefault();
+
+			String defaultLanguageId = LocaleUtil.toLanguageId(defaultLocale);
+
+			_languageCodeLocalesMap.put(
+				defaultLocale.getLanguage(), defaultLocale);
+
+			_languageIdLocalesMap.put(defaultLanguageId, defaultLocale);
+
+			languageIds = ArrayUtil.remove(languageIds, defaultLanguageId);
+
 			Set<String> duplicateLanguageCodes = new HashSet<>();
 
 			for (String languageId : languageIds) {
@@ -1950,7 +2032,7 @@ public class LanguageImpl implements Language, Serializable {
 			}
 
 			_availableLocales = Collections.unmodifiableSet(
-				new HashSet<>(_languageIdLocalesMap.values()));
+				new LinkedHashSet<>(_languageIdLocalesMap.values()));
 
 			Set<Locale> supportedLocalesSet = new HashSet<>(
 				_languageIdLocalesMap.values());
@@ -1966,7 +2048,7 @@ public class LanguageImpl implements Language, Serializable {
 		private final Map<String, Locale> _languageCodeLocalesMap =
 			new HashMap<>();
 		private final Map<String, Locale> _languageIdLocalesMap =
-			new HashMap<>();
+			new LinkedHashMap<>();
 		private final Set<Locale> _localesBetaSet = new HashSet<>();
 		private final Set<Locale> _supportedLocalesSet;
 

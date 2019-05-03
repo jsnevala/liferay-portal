@@ -125,7 +125,7 @@ if (portletTitleBasedNavigation) {
 
 		<liferay-ui:header
 			backURL="<%= redirect %>"
-			localizeTitle="<%= (message == null) %>"
+			localizeTitle="<%= message == null %>"
 			title="<%= headerTitle %>"
 		/>
 	</c:if>
@@ -219,7 +219,7 @@ if (portletTitleBasedNavigation) {
 
 				<aui:model-context bean="<%= message %>" model="<%= MBMessage.class %>" />
 
-				<aui:input autoFocus="<%= (windowState.equals(WindowState.MAXIMIZED) && !themeDisplay.isFacebook()) %>" name="subject" value="<%= subject %>" />
+				<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) && !themeDisplay.isFacebook() %>" name="subject" value="<%= subject %>" />
 
 				<aui:field-wrapper label="body">
 					<c:choose>
@@ -407,7 +407,7 @@ if (portletTitleBasedNavigation) {
 								if (priorityValue > 0) {
 						%>
 
-									<aui:option label="<%= HtmlUtil.escape(priorityName) %>" selected="<%= (threadPriority == priorityValue) %>" value="<%= priorityValue %>" />
+									<aui:option label="<%= HtmlUtil.escape(priorityName) %>" selected="<%= threadPriority == priorityValue %>" value="<%= priorityValue %>" />
 
 						<%
 								}

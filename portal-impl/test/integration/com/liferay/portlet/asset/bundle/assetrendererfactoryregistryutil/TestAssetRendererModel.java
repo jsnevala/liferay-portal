@@ -15,7 +15,7 @@
 package com.liferay.portlet.asset.bundle.assetrendererfactoryregistryutil;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class TestAssetRendererModel {
 }

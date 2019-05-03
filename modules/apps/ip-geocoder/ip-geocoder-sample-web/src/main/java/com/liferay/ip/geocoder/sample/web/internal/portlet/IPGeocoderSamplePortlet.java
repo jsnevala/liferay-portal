@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.display-category=category.tools",
 		"javax.portlet.display-name=IP Geocoder Sample",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + IPGeocoderSamplePortletKeys.IP_GEOCODER_SAMPLE,
 		"javax.portlet.portlet-info.keywords=IP Geocoder Sample",

@@ -18,9 +18,7 @@ import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.asset.kernel.service.persistence.AssetEntryPersistence;
 import com.liferay.asset.kernel.service.persistence.AssetLinkPersistence;
-
 import com.liferay.expando.kernel.service.persistence.ExpandoRowPersistence;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -28,7 +26,6 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleLocalService;
 import com.liferay.knowledge.base.service.persistence.KBArticleFinder;
@@ -37,7 +34,6 @@ import com.liferay.knowledge.base.service.persistence.KBCommentPersistence;
 import com.liferay.knowledge.base.service.persistence.KBFolderFinder;
 import com.liferay.knowledge.base.service.persistence.KBFolderPersistence;
 import com.liferay.knowledge.base.service.persistence.KBTemplatePersistence;
-
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -74,13 +70,12 @@ import com.liferay.portal.kernel.service.persistence.SubscriptionPersistence;
 import com.liferay.portal.kernel.service.persistence.TicketPersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.service.persistence.WorkflowInstanceLinkPersistence;
+import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.spring.extender.service.ServiceReference;
-
 import com.liferay.ratings.kernel.service.persistence.RatingsStatsPersistence;
-
 import com.liferay.social.kernel.service.persistence.SocialActivityPersistence;
 
 import java.io.Serializable;
@@ -98,16 +93,17 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.knowledge.base.service.impl.KBArticleLocalServiceImpl
- * @see com.liferay.knowledge.base.service.KBArticleLocalServiceUtil
  * @generated
  */
 @ProviderType
-public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
+public abstract class KBArticleLocalServiceBaseImpl
+	extends BaseLocalServiceImpl
 	implements KBArticleLocalService, IdentifiableOSGiService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.knowledge.base.service.KBArticleLocalServiceUtil} to access the kb article local service.
+	 * Never modify or reference this class directly. Use <code>KBArticleLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.knowledge.base.service.KBArticleLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -131,6 +127,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the new kb article
 	 */
 	@Override
+	@Transactional(enabled = false)
 	public KBArticle createKBArticle(long kbArticleId) {
 		return kbArticlePersistence.create(kbArticleId);
 	}
@@ -144,8 +141,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	@Override
-	public KBArticle deleteKBArticle(long kbArticleId)
-		throws PortalException {
+	public KBArticle deleteKBArticle(long kbArticleId) throws PortalException {
 		return kbArticlePersistence.remove(kbArticleId);
 	}
 
@@ -160,6 +156,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public KBArticle deleteKBArticle(KBArticle kbArticle)
 		throws PortalException {
+
 		return kbArticlePersistence.remove(kbArticle);
 	}
 
@@ -167,8 +164,8 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(KBArticle.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			KBArticle.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -186,7 +183,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.knowledge.base.model.impl.KBArticleModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.knowledge.base.model.impl.KBArticleModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -195,17 +192,18 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return kbArticlePersistence.findWithDynamicQuery(dynamicQuery, start,
-			end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return kbArticlePersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.knowledge.base.model.impl.KBArticleModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.knowledge.base.model.impl.KBArticleModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -215,10 +213,12 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return kbArticlePersistence.findWithDynamicQuery(dynamicQuery, start,
-			end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return kbArticlePersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -240,10 +240,11 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return kbArticlePersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return kbArticlePersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
@@ -277,7 +278,8 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
 		actionableDynamicQuery.setBaseLocalService(kbArticleLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
@@ -289,20 +291,26 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(kbArticleLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			kbArticleLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(KBArticle.class);
 
-		indexableActionableDynamicQuery.setPrimaryKeyPropertyName("kbArticleId");
+		indexableActionableDynamicQuery.setPrimaryKeyPropertyName(
+			"kbArticleId");
 
 		return indexableActionableDynamicQuery;
 	}
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
+
 		actionableDynamicQuery.setBaseLocalService(kbArticleLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(KBArticle.class);
@@ -313,23 +321,28 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
-		final ExportActionableDynamicQuery exportActionableDynamicQuery = new ExportActionableDynamicQuery() {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
 				@Override
 				public long performCount() throws PortalException {
-					ManifestSummary manifestSummary = portletDataContext.getManifestSummary();
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
 
 					StagedModelType stagedModelType = getStagedModelType();
 
 					long modelAdditionCount = super.performCount();
 
-					manifestSummary.addModelAdditionCount(stagedModelType,
-						modelAdditionCount);
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
 
-					long modelDeletionCount = ExportImportHelperUtil.getModelDeletionCount(portletDataContext,
-							stagedModelType);
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
 
-					manifestSummary.addModelDeletionCount(stagedModelType,
-						modelDeletionCount);
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
 
 					return modelAdditionCount;
 				}
@@ -339,28 +352,34 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 					return ProjectionFactoryUtil.countDistinct(
 						"resourcePrimKey");
 				}
+
 			};
 
 		initActionableDynamicQuery(exportActionableDynamicQuery);
 
-		exportActionableDynamicQuery.setAddCriteriaMethod(new ActionableDynamicQuery.AddCriteriaMethod() {
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
 				@Override
 				public void addCriteria(DynamicQuery dynamicQuery) {
-					Criterion modifiedDateCriterion = portletDataContext.getDateRangeCriteria(
-							"modifiedDate");
+					Criterion modifiedDateCriterion =
+						portletDataContext.getDateRangeCriteria("modifiedDate");
 
 					if (modifiedDateCriterion != null) {
-						Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
+						Conjunction conjunction =
+							RestrictionsFactoryUtil.conjunction();
 
 						conjunction.add(modifiedDateCriterion);
 
-						Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+						Disjunction disjunction =
+							RestrictionsFactoryUtil.disjunction();
 
-						disjunction.add(RestrictionsFactoryUtil.gtProperty(
+						disjunction.add(
+							RestrictionsFactoryUtil.gtProperty(
 								"modifiedDate", "lastPublishDate"));
 
-						Property lastPublishDateProperty = PropertyFactoryUtil.forName(
-								"lastPublishDate");
+						Property lastPublishDateProperty =
+							PropertyFactoryUtil.forName("lastPublishDate");
 
 						disjunction.add(lastPublishDateProperty.isNull());
 
@@ -369,12 +388,14 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 						modifiedDateCriterion = conjunction;
 					}
 
-					Criterion statusDateCriterion = portletDataContext.getDateRangeCriteria(
-							"statusDate");
+					Criterion statusDateCriterion =
+						portletDataContext.getDateRangeCriteria("statusDate");
 
 					if ((modifiedDateCriterion != null) &&
-							(statusDateCriterion != null)) {
-						Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+						(statusDateCriterion != null)) {
+
+						Disjunction disjunction =
+							RestrictionsFactoryUtil.disjunction();
 
 						disjunction.add(modifiedDateCriterion);
 						disjunction.add(statusDateCriterion);
@@ -382,35 +403,49 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 						dynamicQuery.add(disjunction);
 					}
 
-					Property workflowStatusProperty = PropertyFactoryUtil.forName(
-							"status");
+					Property workflowStatusProperty =
+						PropertyFactoryUtil.forName("status");
 
 					if (portletDataContext.isInitialPublication()) {
-						dynamicQuery.add(workflowStatusProperty.ne(
+						dynamicQuery.add(
+							workflowStatusProperty.ne(
 								WorkflowConstants.STATUS_IN_TRASH));
 					}
 					else {
-						StagedModelDataHandler<?> stagedModelDataHandler = StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(KBArticle.class.getName());
+						StagedModelDataHandler<?> stagedModelDataHandler =
+							StagedModelDataHandlerRegistryUtil.
+								getStagedModelDataHandler(
+									KBArticle.class.getName());
 
-						dynamicQuery.add(workflowStatusProperty.in(
-								stagedModelDataHandler.getExportableStatuses()));
+						dynamicQuery.add(
+							workflowStatusProperty.in(
+								stagedModelDataHandler.
+									getExportableStatuses()));
 					}
 				}
+
 			});
 
-		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setGroupId(portletDataContext.getScopeGroupId());
+		exportActionableDynamicQuery.setGroupId(
+			portletDataContext.getScopeGroupId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<KBArticle>() {
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<KBArticle>() {
+
 				@Override
 				public void performAction(KBArticle kbArticle)
 					throws PortalException {
-					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
-						kbArticle);
+
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, kbArticle);
 				}
+
 			});
-		exportActionableDynamicQuery.setStagedModelType(new StagedModelType(
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
 				PortalUtil.getClassNameId(KBArticle.class.getName())));
 
 		return exportActionableDynamicQuery;
@@ -422,18 +457,22 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
+
 		return kbArticleLocalService.deleteKBArticle((KBArticle)persistedModel);
 	}
 
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return kbArticlePersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
 	@Override
-	public List<?extends PersistedModel> getPersistedModel(long resourcePrimKey)
+	public List<? extends PersistedModel> getPersistedModel(
+			long resourcePrimKey)
 		throws PortalException {
+
 		return kbArticlePersistence.findByResourcePrimKey(resourcePrimKey);
 	}
 
@@ -445,8 +484,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the matching kb articles, or an empty list if no matches were found
 	 */
 	@Override
-	public List<KBArticle> getKBArticlesByUuidAndCompanyId(String uuid,
-		long companyId) {
+	public List<KBArticle> getKBArticlesByUuidAndCompanyId(
+		String uuid, long companyId) {
+
 		return kbArticlePersistence.findByUuid_C(uuid, companyId);
 	}
 
@@ -461,11 +501,12 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the range of matching kb articles, or an empty list if no matches were found
 	 */
 	@Override
-	public List<KBArticle> getKBArticlesByUuidAndCompanyId(String uuid,
-		long companyId, int start, int end,
+	public List<KBArticle> getKBArticlesByUuidAndCompanyId(
+		String uuid, long companyId, int start, int end,
 		OrderByComparator<KBArticle> orderByComparator) {
-		return kbArticlePersistence.findByUuid_C(uuid, companyId, start, end,
-			orderByComparator);
+
+		return kbArticlePersistence.findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -479,6 +520,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public KBArticle getKBArticleByUuidAndGroupId(String uuid, long groupId)
 		throws PortalException {
+
 		return kbArticlePersistence.findByUUID_G(uuid, groupId);
 	}
 
@@ -486,7 +528,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Returns a range of all the kb articles.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.knowledge.base.model.impl.KBArticleModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>com.liferay.knowledge.base.model.impl.KBArticleModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of kb articles
@@ -536,6 +578,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setKBArticleLocalService(
 		KBArticleLocalService kbArticleLocalService) {
+
 		this.kbArticleLocalService = kbArticleLocalService;
 	}
 
@@ -555,6 +598,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setKBArticlePersistence(
 		KBArticlePersistence kbArticlePersistence) {
+
 		this.kbArticlePersistence = kbArticlePersistence;
 	}
 
@@ -581,7 +625,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the kb comment local service
 	 */
-	public com.liferay.knowledge.base.service.KBCommentLocalService getKBCommentLocalService() {
+	public com.liferay.knowledge.base.service.KBCommentLocalService
+		getKBCommentLocalService() {
+
 		return kbCommentLocalService;
 	}
 
@@ -591,7 +637,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param kbCommentLocalService the kb comment local service
 	 */
 	public void setKBCommentLocalService(
-		com.liferay.knowledge.base.service.KBCommentLocalService kbCommentLocalService) {
+		com.liferay.knowledge.base.service.KBCommentLocalService
+			kbCommentLocalService) {
+
 		this.kbCommentLocalService = kbCommentLocalService;
 	}
 
@@ -611,6 +659,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setKBCommentPersistence(
 		KBCommentPersistence kbCommentPersistence) {
+
 		this.kbCommentPersistence = kbCommentPersistence;
 	}
 
@@ -619,7 +668,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the kb folder local service
 	 */
-	public com.liferay.knowledge.base.service.KBFolderLocalService getKBFolderLocalService() {
+	public com.liferay.knowledge.base.service.KBFolderLocalService
+		getKBFolderLocalService() {
+
 		return kbFolderLocalService;
 	}
 
@@ -629,7 +680,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param kbFolderLocalService the kb folder local service
 	 */
 	public void setKBFolderLocalService(
-		com.liferay.knowledge.base.service.KBFolderLocalService kbFolderLocalService) {
+		com.liferay.knowledge.base.service.KBFolderLocalService
+			kbFolderLocalService) {
+
 		this.kbFolderLocalService = kbFolderLocalService;
 	}
 
@@ -647,7 +700,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @param kbFolderPersistence the kb folder persistence
 	 */
-	public void setKBFolderPersistence(KBFolderPersistence kbFolderPersistence) {
+	public void setKBFolderPersistence(
+		KBFolderPersistence kbFolderPersistence) {
+
 		this.kbFolderPersistence = kbFolderPersistence;
 	}
 
@@ -674,7 +729,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the kb template local service
 	 */
-	public com.liferay.knowledge.base.service.KBTemplateLocalService getKBTemplateLocalService() {
+	public com.liferay.knowledge.base.service.KBTemplateLocalService
+		getKBTemplateLocalService() {
+
 		return kbTemplateLocalService;
 	}
 
@@ -684,7 +741,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param kbTemplateLocalService the kb template local service
 	 */
 	public void setKBTemplateLocalService(
-		com.liferay.knowledge.base.service.KBTemplateLocalService kbTemplateLocalService) {
+		com.liferay.knowledge.base.service.KBTemplateLocalService
+			kbTemplateLocalService) {
+
 		this.kbTemplateLocalService = kbTemplateLocalService;
 	}
 
@@ -704,6 +763,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setKBTemplatePersistence(
 		KBTemplatePersistence kbTemplatePersistence) {
+
 		this.kbTemplatePersistence = kbTemplatePersistence;
 	}
 
@@ -712,7 +772,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the counter local service
 	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
+	public com.liferay.counter.kernel.service.CounterLocalService
+		getCounterLocalService() {
+
 		return counterLocalService;
 	}
 
@@ -722,7 +784,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param counterLocalService the counter local service
 	 */
 	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
+		com.liferay.counter.kernel.service.CounterLocalService
+			counterLocalService) {
+
 		this.counterLocalService = counterLocalService;
 	}
 
@@ -731,7 +795,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the class name local service
 	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService getClassNameLocalService() {
+	public com.liferay.portal.kernel.service.ClassNameLocalService
+		getClassNameLocalService() {
+
 		return classNameLocalService;
 	}
 
@@ -741,7 +807,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param classNameLocalService the class name local service
 	 */
 	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService) {
+		com.liferay.portal.kernel.service.ClassNameLocalService
+			classNameLocalService) {
+
 		this.classNameLocalService = classNameLocalService;
 	}
 
@@ -761,6 +829,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setClassNamePersistence(
 		ClassNamePersistence classNamePersistence) {
+
 		this.classNamePersistence = classNamePersistence;
 	}
 
@@ -769,7 +838,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the company local service
 	 */
-	public com.liferay.portal.kernel.service.CompanyLocalService getCompanyLocalService() {
+	public com.liferay.portal.kernel.service.CompanyLocalService
+		getCompanyLocalService() {
+
 		return companyLocalService;
 	}
 
@@ -779,7 +850,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param companyLocalService the company local service
 	 */
 	public void setCompanyLocalService(
-		com.liferay.portal.kernel.service.CompanyLocalService companyLocalService) {
+		com.liferay.portal.kernel.service.CompanyLocalService
+			companyLocalService) {
+
 		this.companyLocalService = companyLocalService;
 	}
 
@@ -806,7 +879,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the group local service
 	 */
-	public com.liferay.portal.kernel.service.GroupLocalService getGroupLocalService() {
+	public com.liferay.portal.kernel.service.GroupLocalService
+		getGroupLocalService() {
+
 		return groupLocalService;
 	}
 
@@ -817,6 +892,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setGroupLocalService(
 		com.liferay.portal.kernel.service.GroupLocalService groupLocalService) {
+
 		this.groupLocalService = groupLocalService;
 	}
 
@@ -843,7 +919,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the layout local service
 	 */
-	public com.liferay.portal.kernel.service.LayoutLocalService getLayoutLocalService() {
+	public com.liferay.portal.kernel.service.LayoutLocalService
+		getLayoutLocalService() {
+
 		return layoutLocalService;
 	}
 
@@ -853,7 +931,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param layoutLocalService the layout local service
 	 */
 	public void setLayoutLocalService(
-		com.liferay.portal.kernel.service.LayoutLocalService layoutLocalService) {
+		com.liferay.portal.kernel.service.LayoutLocalService
+			layoutLocalService) {
+
 		this.layoutLocalService = layoutLocalService;
 	}
 
@@ -880,7 +960,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the portlet preferences local service
 	 */
-	public com.liferay.portal.kernel.service.PortletPreferencesLocalService getPortletPreferencesLocalService() {
+	public com.liferay.portal.kernel.service.PortletPreferencesLocalService
+		getPortletPreferencesLocalService() {
+
 		return portletPreferencesLocalService;
 	}
 
@@ -890,7 +972,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param portletPreferencesLocalService the portlet preferences local service
 	 */
 	public void setPortletPreferencesLocalService(
-		com.liferay.portal.kernel.service.PortletPreferencesLocalService portletPreferencesLocalService) {
+		com.liferay.portal.kernel.service.PortletPreferencesLocalService
+			portletPreferencesLocalService) {
+
 		this.portletPreferencesLocalService = portletPreferencesLocalService;
 	}
 
@@ -910,6 +994,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setPortletPreferencesPersistence(
 		PortletPreferencesPersistence portletPreferencesPersistence) {
+
 		this.portletPreferencesPersistence = portletPreferencesPersistence;
 	}
 
@@ -918,7 +1003,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the resource local service
 	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService getResourceLocalService() {
+	public com.liferay.portal.kernel.service.ResourceLocalService
+		getResourceLocalService() {
+
 		return resourceLocalService;
 	}
 
@@ -928,7 +1015,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param resourceLocalService the resource local service
 	 */
 	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService) {
+		com.liferay.portal.kernel.service.ResourceLocalService
+			resourceLocalService) {
+
 		this.resourceLocalService = resourceLocalService;
 	}
 
@@ -937,7 +1026,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the subscription local service
 	 */
-	public com.liferay.portal.kernel.service.SubscriptionLocalService getSubscriptionLocalService() {
+	public com.liferay.portal.kernel.service.SubscriptionLocalService
+		getSubscriptionLocalService() {
+
 		return subscriptionLocalService;
 	}
 
@@ -947,7 +1038,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param subscriptionLocalService the subscription local service
 	 */
 	public void setSubscriptionLocalService(
-		com.liferay.portal.kernel.service.SubscriptionLocalService subscriptionLocalService) {
+		com.liferay.portal.kernel.service.SubscriptionLocalService
+			subscriptionLocalService) {
+
 		this.subscriptionLocalService = subscriptionLocalService;
 	}
 
@@ -967,6 +1060,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setSubscriptionPersistence(
 		SubscriptionPersistence subscriptionPersistence) {
+
 		this.subscriptionPersistence = subscriptionPersistence;
 	}
 
@@ -975,7 +1069,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the ticket local service
 	 */
-	public com.liferay.portal.kernel.service.TicketLocalService getTicketLocalService() {
+	public com.liferay.portal.kernel.service.TicketLocalService
+		getTicketLocalService() {
+
 		return ticketLocalService;
 	}
 
@@ -985,7 +1081,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param ticketLocalService the ticket local service
 	 */
 	public void setTicketLocalService(
-		com.liferay.portal.kernel.service.TicketLocalService ticketLocalService) {
+		com.liferay.portal.kernel.service.TicketLocalService
+			ticketLocalService) {
+
 		this.ticketLocalService = ticketLocalService;
 	}
 
@@ -1012,7 +1110,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the user local service
 	 */
-	public com.liferay.portal.kernel.service.UserLocalService getUserLocalService() {
+	public com.liferay.portal.kernel.service.UserLocalService
+		getUserLocalService() {
+
 		return userLocalService;
 	}
 
@@ -1023,6 +1123,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setUserLocalService(
 		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
+
 		this.userLocalService = userLocalService;
 	}
 
@@ -1049,7 +1150,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the workflow instance link local service
 	 */
-	public com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService getWorkflowInstanceLinkLocalService() {
+	public com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
+		getWorkflowInstanceLinkLocalService() {
+
 		return workflowInstanceLinkLocalService;
 	}
 
@@ -1059,8 +1162,11 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param workflowInstanceLinkLocalService the workflow instance link local service
 	 */
 	public void setWorkflowInstanceLinkLocalService(
-		com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService workflowInstanceLinkLocalService) {
-		this.workflowInstanceLinkLocalService = workflowInstanceLinkLocalService;
+		com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
+			workflowInstanceLinkLocalService) {
+
+		this.workflowInstanceLinkLocalService =
+			workflowInstanceLinkLocalService;
 	}
 
 	/**
@@ -1068,7 +1174,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the workflow instance link persistence
 	 */
-	public WorkflowInstanceLinkPersistence getWorkflowInstanceLinkPersistence() {
+	public WorkflowInstanceLinkPersistence
+		getWorkflowInstanceLinkPersistence() {
+
 		return workflowInstanceLinkPersistence;
 	}
 
@@ -1079,6 +1187,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setWorkflowInstanceLinkPersistence(
 		WorkflowInstanceLinkPersistence workflowInstanceLinkPersistence) {
+
 		this.workflowInstanceLinkPersistence = workflowInstanceLinkPersistence;
 	}
 
@@ -1087,7 +1196,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the asset entry local service
 	 */
-	public com.liferay.asset.kernel.service.AssetEntryLocalService getAssetEntryLocalService() {
+	public com.liferay.asset.kernel.service.AssetEntryLocalService
+		getAssetEntryLocalService() {
+
 		return assetEntryLocalService;
 	}
 
@@ -1097,7 +1208,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param assetEntryLocalService the asset entry local service
 	 */
 	public void setAssetEntryLocalService(
-		com.liferay.asset.kernel.service.AssetEntryLocalService assetEntryLocalService) {
+		com.liferay.asset.kernel.service.AssetEntryLocalService
+			assetEntryLocalService) {
+
 		this.assetEntryLocalService = assetEntryLocalService;
 	}
 
@@ -1117,6 +1230,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setAssetEntryPersistence(
 		AssetEntryPersistence assetEntryPersistence) {
+
 		this.assetEntryPersistence = assetEntryPersistence;
 	}
 
@@ -1125,7 +1239,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the asset link local service
 	 */
-	public com.liferay.asset.kernel.service.AssetLinkLocalService getAssetLinkLocalService() {
+	public com.liferay.asset.kernel.service.AssetLinkLocalService
+		getAssetLinkLocalService() {
+
 		return assetLinkLocalService;
 	}
 
@@ -1135,7 +1251,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param assetLinkLocalService the asset link local service
 	 */
 	public void setAssetLinkLocalService(
-		com.liferay.asset.kernel.service.AssetLinkLocalService assetLinkLocalService) {
+		com.liferay.asset.kernel.service.AssetLinkLocalService
+			assetLinkLocalService) {
+
 		this.assetLinkLocalService = assetLinkLocalService;
 	}
 
@@ -1155,6 +1273,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setAssetLinkPersistence(
 		AssetLinkPersistence assetLinkPersistence) {
+
 		this.assetLinkPersistence = assetLinkPersistence;
 	}
 
@@ -1163,7 +1282,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the expando row local service
 	 */
-	public com.liferay.expando.kernel.service.ExpandoRowLocalService getExpandoRowLocalService() {
+	public com.liferay.expando.kernel.service.ExpandoRowLocalService
+		getExpandoRowLocalService() {
+
 		return expandoRowLocalService;
 	}
 
@@ -1173,7 +1294,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param expandoRowLocalService the expando row local service
 	 */
 	public void setExpandoRowLocalService(
-		com.liferay.expando.kernel.service.ExpandoRowLocalService expandoRowLocalService) {
+		com.liferay.expando.kernel.service.ExpandoRowLocalService
+			expandoRowLocalService) {
+
 		this.expandoRowLocalService = expandoRowLocalService;
 	}
 
@@ -1193,6 +1316,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setExpandoRowPersistence(
 		ExpandoRowPersistence expandoRowPersistence) {
+
 		this.expandoRowPersistence = expandoRowPersistence;
 	}
 
@@ -1201,7 +1325,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the ratings stats local service
 	 */
-	public com.liferay.ratings.kernel.service.RatingsStatsLocalService getRatingsStatsLocalService() {
+	public com.liferay.ratings.kernel.service.RatingsStatsLocalService
+		getRatingsStatsLocalService() {
+
 		return ratingsStatsLocalService;
 	}
 
@@ -1211,7 +1337,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param ratingsStatsLocalService the ratings stats local service
 	 */
 	public void setRatingsStatsLocalService(
-		com.liferay.ratings.kernel.service.RatingsStatsLocalService ratingsStatsLocalService) {
+		com.liferay.ratings.kernel.service.RatingsStatsLocalService
+			ratingsStatsLocalService) {
+
 		this.ratingsStatsLocalService = ratingsStatsLocalService;
 	}
 
@@ -1231,6 +1359,7 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setRatingsStatsPersistence(
 		RatingsStatsPersistence ratingsStatsPersistence) {
+
 		this.ratingsStatsPersistence = ratingsStatsPersistence;
 	}
 
@@ -1239,7 +1368,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the social activity local service
 	 */
-	public com.liferay.social.kernel.service.SocialActivityLocalService getSocialActivityLocalService() {
+	public com.liferay.social.kernel.service.SocialActivityLocalService
+		getSocialActivityLocalService() {
+
 		return socialActivityLocalService;
 	}
 
@@ -1249,7 +1380,9 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param socialActivityLocalService the social activity local service
 	 */
 	public void setSocialActivityLocalService(
-		com.liferay.social.kernel.service.SocialActivityLocalService socialActivityLocalService) {
+		com.liferay.social.kernel.service.SocialActivityLocalService
+			socialActivityLocalService) {
+
 		this.socialActivityLocalService = socialActivityLocalService;
 	}
 
@@ -1269,11 +1402,13 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setSocialActivityPersistence(
 		SocialActivityPersistence socialActivityPersistence) {
+
 		this.socialActivityPersistence = socialActivityPersistence;
 	}
 
 	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.knowledge.base.model.KBArticle",
+		persistedModelLocalServiceRegistry.register(
+			"com.liferay.knowledge.base.model.KBArticle",
 			kbArticleLocalService);
 	}
 
@@ -1314,8 +1449,8 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
@@ -1326,84 +1461,183 @@ public abstract class KBArticleLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 	@BeanReference(type = KBArticleLocalService.class)
 	protected KBArticleLocalService kbArticleLocalService;
+
 	@BeanReference(type = KBArticlePersistence.class)
 	protected KBArticlePersistence kbArticlePersistence;
+
 	@BeanReference(type = KBArticleFinder.class)
 	protected KBArticleFinder kbArticleFinder;
-	@BeanReference(type = com.liferay.knowledge.base.service.KBCommentLocalService.class)
-	protected com.liferay.knowledge.base.service.KBCommentLocalService kbCommentLocalService;
+
+	@BeanReference(
+		type = com.liferay.knowledge.base.service.KBCommentLocalService.class
+	)
+	protected com.liferay.knowledge.base.service.KBCommentLocalService
+		kbCommentLocalService;
+
 	@BeanReference(type = KBCommentPersistence.class)
 	protected KBCommentPersistence kbCommentPersistence;
-	@BeanReference(type = com.liferay.knowledge.base.service.KBFolderLocalService.class)
-	protected com.liferay.knowledge.base.service.KBFolderLocalService kbFolderLocalService;
+
+	@BeanReference(
+		type = com.liferay.knowledge.base.service.KBFolderLocalService.class
+	)
+	protected com.liferay.knowledge.base.service.KBFolderLocalService
+		kbFolderLocalService;
+
 	@BeanReference(type = KBFolderPersistence.class)
 	protected KBFolderPersistence kbFolderPersistence;
+
 	@BeanReference(type = KBFolderFinder.class)
 	protected KBFolderFinder kbFolderFinder;
-	@BeanReference(type = com.liferay.knowledge.base.service.KBTemplateLocalService.class)
-	protected com.liferay.knowledge.base.service.KBTemplateLocalService kbTemplateLocalService;
+
+	@BeanReference(
+		type = com.liferay.knowledge.base.service.KBTemplateLocalService.class
+	)
+	protected com.liferay.knowledge.base.service.KBTemplateLocalService
+		kbTemplateLocalService;
+
 	@BeanReference(type = KBTemplatePersistence.class)
 	protected KBTemplatePersistence kbTemplatePersistence;
-	@ServiceReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ClassNameLocalService.class)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService;
+
+	@ServiceReference(
+		type = com.liferay.counter.kernel.service.CounterLocalService.class
+	)
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.ClassNameLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ClassNameLocalService
+		classNameLocalService;
+
 	@ServiceReference(type = ClassNamePersistence.class)
 	protected ClassNamePersistence classNamePersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.CompanyLocalService.class)
-	protected com.liferay.portal.kernel.service.CompanyLocalService companyLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.CompanyLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.CompanyLocalService
+		companyLocalService;
+
 	@ServiceReference(type = CompanyPersistence.class)
 	protected CompanyPersistence companyPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.GroupLocalService.class)
-	protected com.liferay.portal.kernel.service.GroupLocalService groupLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.GroupLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.GroupLocalService
+		groupLocalService;
+
 	@ServiceReference(type = GroupPersistence.class)
 	protected GroupPersistence groupPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.LayoutLocalService.class)
-	protected com.liferay.portal.kernel.service.LayoutLocalService layoutLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.LayoutLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.LayoutLocalService
+		layoutLocalService;
+
 	@ServiceReference(type = LayoutPersistence.class)
 	protected LayoutPersistence layoutPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.PortletPreferencesLocalService.class)
-	protected com.liferay.portal.kernel.service.PortletPreferencesLocalService portletPreferencesLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.PortletPreferencesLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.PortletPreferencesLocalService
+		portletPreferencesLocalService;
+
 	@ServiceReference(type = PortletPreferencesPersistence.class)
 	protected PortletPreferencesPersistence portletPreferencesPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ResourceLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.SubscriptionLocalService.class)
-	protected com.liferay.portal.kernel.service.SubscriptionLocalService subscriptionLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.ResourceLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ResourceLocalService
+		resourceLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.SubscriptionLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.SubscriptionLocalService
+		subscriptionLocalService;
+
 	@ServiceReference(type = SubscriptionPersistence.class)
 	protected SubscriptionPersistence subscriptionPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.TicketLocalService.class)
-	protected com.liferay.portal.kernel.service.TicketLocalService ticketLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.TicketLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.TicketLocalService
+		ticketLocalService;
+
 	@ServiceReference(type = TicketPersistence.class)
 	protected TicketPersistence ticketPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.UserLocalService.class)
-	protected com.liferay.portal.kernel.service.UserLocalService userLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.UserLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.UserLocalService
+		userLocalService;
+
 	@ServiceReference(type = UserPersistence.class)
 	protected UserPersistence userPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService.class)
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService workflowInstanceLinkLocalService;
+
+	@ServiceReference(
+		type = com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
+		workflowInstanceLinkLocalService;
+
 	@ServiceReference(type = WorkflowInstanceLinkPersistence.class)
 	protected WorkflowInstanceLinkPersistence workflowInstanceLinkPersistence;
-	@ServiceReference(type = com.liferay.asset.kernel.service.AssetEntryLocalService.class)
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService assetEntryLocalService;
+
+	@ServiceReference(
+		type = com.liferay.asset.kernel.service.AssetEntryLocalService.class
+	)
+	protected com.liferay.asset.kernel.service.AssetEntryLocalService
+		assetEntryLocalService;
+
 	@ServiceReference(type = AssetEntryPersistence.class)
 	protected AssetEntryPersistence assetEntryPersistence;
-	@ServiceReference(type = com.liferay.asset.kernel.service.AssetLinkLocalService.class)
-	protected com.liferay.asset.kernel.service.AssetLinkLocalService assetLinkLocalService;
+
+	@ServiceReference(
+		type = com.liferay.asset.kernel.service.AssetLinkLocalService.class
+	)
+	protected com.liferay.asset.kernel.service.AssetLinkLocalService
+		assetLinkLocalService;
+
 	@ServiceReference(type = AssetLinkPersistence.class)
 	protected AssetLinkPersistence assetLinkPersistence;
-	@ServiceReference(type = com.liferay.expando.kernel.service.ExpandoRowLocalService.class)
-	protected com.liferay.expando.kernel.service.ExpandoRowLocalService expandoRowLocalService;
+
+	@ServiceReference(
+		type = com.liferay.expando.kernel.service.ExpandoRowLocalService.class
+	)
+	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
+		expandoRowLocalService;
+
 	@ServiceReference(type = ExpandoRowPersistence.class)
 	protected ExpandoRowPersistence expandoRowPersistence;
-	@ServiceReference(type = com.liferay.ratings.kernel.service.RatingsStatsLocalService.class)
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService ratingsStatsLocalService;
+
+	@ServiceReference(
+		type = com.liferay.ratings.kernel.service.RatingsStatsLocalService.class
+	)
+	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
+		ratingsStatsLocalService;
+
 	@ServiceReference(type = RatingsStatsPersistence.class)
 	protected RatingsStatsPersistence ratingsStatsPersistence;
-	@ServiceReference(type = com.liferay.social.kernel.service.SocialActivityLocalService.class)
-	protected com.liferay.social.kernel.service.SocialActivityLocalService socialActivityLocalService;
+
+	@ServiceReference(
+		type = com.liferay.social.kernel.service.SocialActivityLocalService.class
+	)
+	protected com.liferay.social.kernel.service.SocialActivityLocalService
+		socialActivityLocalService;
+
 	@ServiceReference(type = SocialActivityPersistence.class)
 	protected SocialActivityPersistence socialActivityPersistence;
+
 	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+	protected PersistedModelLocalServiceRegistry
+		persistedModelLocalServiceRegistry;
+
 }

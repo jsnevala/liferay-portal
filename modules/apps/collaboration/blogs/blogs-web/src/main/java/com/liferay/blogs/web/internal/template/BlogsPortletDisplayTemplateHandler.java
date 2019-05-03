@@ -42,8 +42,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.blogs.configuration.BlogsConfiguration",
-	immediate = true,
-	property = {"javax.portlet.name=" + BlogsPortletKeys.BLOGS},
+	immediate = true, property = "javax.portlet.name=" + BlogsPortletKeys.BLOGS,
 	service = TemplateHandler.class
 )
 public class BlogsPortletDisplayTemplateHandler
@@ -59,8 +58,11 @@ public class BlogsPortletDisplayTemplateHandler
 		String portletTitle = _portal.getPortletTitle(
 			BlogsPortletKeys.BLOGS, locale);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override

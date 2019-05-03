@@ -42,7 +42,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @RunWith(Arquillian.class)
 public class PortletDataContextZipWriterTest {
@@ -221,6 +221,10 @@ public class PortletDataContextZipWriterTest {
 		@Override
 		public String getPath() {
 			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void umount() {
 		}
 
 		private final List<MethodHandler> _methodHandlers = new ArrayList<>();

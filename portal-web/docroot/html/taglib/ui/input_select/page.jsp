@@ -26,6 +26,6 @@ boolean value = ParamUtil.getBoolean(request, param, defaultValue.booleanValue()
 %>
 
 <select class="form-control <%= cssClass %>" <%= disabled ? "disabled=\"disabled\"" : "" %> name="<%= namespace %><%= param %>">
-	<option <%= (value) ? "selected" : "" %> value="1"><liferay-ui:message key="yes" /></option>
-	<option <%= (!value) ? "selected" : "" %> value="0"><liferay-ui:message key="no" /></option>
+	<option <%= value ? "selected" : "" %> value="1"><liferay-ui:message key="yes" /></option>
+	<option <%= !value ? "selected" : "" %> value="0"><liferay-ui:message key="no" /></option>
 </select>

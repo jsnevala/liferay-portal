@@ -34,11 +34,11 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + LayoutAdminPortletKeys.LAYOUT_ADMIN},
+	property = "javax.portlet.name=" + LayoutAdminPortletKeys.LAYOUT_ADMIN,
 	service = AssetRendererFactory.class
 )
 public class LayoutAssetRendererFactory

@@ -134,7 +134,7 @@ AUI.add(
 									top: '0px'
 								},
 								closeText: false,
-								content: message + '<button type="button" class="close">&times;</button>',
+								content: message + '<button aria-label="' + Liferay.Language.get("close") + '" type="button" class="close">&times;</button>',
 								noticeClass: 'hide',
 								timeout: 10000,
 								toggleText: false,
@@ -756,7 +756,7 @@ AUI.add(
 											new Liferay.Notice(
 												{
 													closeText: false,
-													content: Liferay.Language.get('your-request-failed-to-complete') + '<button type="button" class="close">&times;</button>',
+													content: Liferay.Language.get('your-request-failed-to-complete') + '<button aria-label="' + Liferay.Language.get("close") + '" type="button" class="close">&times;</button>',
 													noticeClass: 'hide',
 													timeout: FAILURE_TIMEOUT,
 													toggleText: false,

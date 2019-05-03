@@ -55,7 +55,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Zsolt Berentey
  */
 @Component(
-	property = {"model.class.name=com.liferay.message.boards.kernel.model.MBThread"},
+	property = "model.class.name=com.liferay.message.boards.kernel.model.MBThread",
 	service = TrashHandler.class
 )
 public class MBThreadTrashHandler extends BaseTrashHandler {

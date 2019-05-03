@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + CommentPortletKeys.COMMENT},
+	property = "javax.portlet.name=" + CommentPortletKeys.COMMENT,
 	service = UserNotificationHandler.class
 )
 public class CommentUserNotificationHandler
@@ -82,7 +82,8 @@ public class CommentUserNotificationHandler
 
 	@Override
 	protected String getBodyContent(JSONObject jsonObject) {
-		return HtmlUtil.stripHtml(super.getBodyContent(jsonObject));
+		return HtmlUtil.unescape(
+			HtmlUtil.stripHtml(super.getBodyContent(jsonObject)));
 	}
 
 	@Override

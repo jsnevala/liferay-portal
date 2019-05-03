@@ -116,6 +116,8 @@ iteratorURL.setParameter("resourcePrimKey", resourcePrimKey);
 iteratorURL.setParameter("roleTypes", roleTypesParam);
 iteratorURL.setWindowState(LiferayWindowState.POP_UP);
 
+String actionURL = iteratorURL.toString();
+
 SearchContainer<Role> roleSearchContainer = new RoleSearch(renderRequest, iteratorURL);
 
 RoleSearchTerms searchTerms = (RoleSearchTerms)roleSearchContainer.getSearchTerms();
@@ -129,7 +131,7 @@ RoleSearchTerms searchTerms = (RoleSearchTerms)roleSearchContainer.getSearchTerm
 			</aui:nav>
 
 			<aui:nav-bar-search>
-				<aui:form action="<%= iteratorURL.toString() %>" name="searchFm">
+				<aui:form action="<%= actionURL %>" name="searchFm">
 					<liferay-ui:input-search
 						markupView="lexicon"
 					/>
@@ -311,21 +313,36 @@ RoleSearchTerms searchTerms = (RoleSearchTerms)roleSearchContainer.getSearchTerm
 				>
 
 					<%
-					String definePermissionsHREF = null;
-
 					String name = role.getName();
-
-					if (!name.equals(RoleConstants.ADMINISTRATOR) && !name.equals(RoleConstants.ORGANIZATION_ADMINISTRATOR) && !name.equals(RoleConstants.ORGANIZATION_OWNER) && !name.equals(RoleConstants.OWNER) && !name.equals(RoleConstants.SITE_ADMINISTRATOR) && !name.equals(RoleConstants.SITE_OWNER) && !role.isTeam() && RolePermissionUtil.contains(permissionChecker, role.getRoleId(), ActionKeys.DEFINE_PERMISSIONS)) {
-						definePermissionsURL.setParameter("roleId", String.valueOf(role.getRoleId()));
-
-						definePermissionsHREF = definePermissionsURL.toString();
-					}
 					%>
 
 					<liferay-ui:search-container-column-text
-						href="<%= definePermissionsHREF %>"
 						name="role"
 					>
+
+						<%
+						String icon = "user";
+						String message = "regular-role";
+
+						int roleType = role.getType();
+
+						if (roleType == RoleConstants.TYPE_SITE) {
+							icon = "sites";
+							message = "site-role";
+						}
+						else if (roleType == RoleConstants.TYPE_ORGANIZATION) {
+							icon = "organizations";
+							message = "organization-role";
+						}
+						%>
+
+						<liferay-ui:icon
+							icon="<%= icon %>"
+							label="<%= false %>"
+							markupView="lexicon"
+							message="<%= LanguageUtil.get(request, message) %>"
+						/>
+
 						<%= role.getTitle(locale) %>
 
 						<c:if test="<%= layout.isPrivateLayout() && name.equals(RoleConstants.GUEST) %>">

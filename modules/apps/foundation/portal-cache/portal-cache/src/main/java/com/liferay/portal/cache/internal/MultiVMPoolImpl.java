@@ -51,30 +51,32 @@ public class MultiVMPoolImpl implements MultiVMPool {
 	}
 
 	/**
-	 * @deprecated As of 2.1.0, replaced by {@link #getPortalCache(String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getPortalCache(String)}
 	 */
 	@Deprecated
 	@Override
-	public PortalCache<? extends Serializable, ? extends Serializable>
-		getCache(String portalCacheName) {
+	public PortalCache<? extends Serializable, ? extends Serializable> getCache(
+		String portalCacheName) {
 
 		return getPortalCache(portalCacheName);
 	}
 
 	/**
-	 * @deprecated As of 2.1.0, replaced by {@link #getPortalCache(String,
-	 *             boolean)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getPortalCache(String, boolean)}
 	 */
 	@Deprecated
 	@Override
-	public PortalCache<? extends Serializable, ? extends Serializable>
-		getCache(String portalCacheName, boolean blocking) {
+	public PortalCache<? extends Serializable, ? extends Serializable> getCache(
+		String portalCacheName, boolean blocking) {
 
 		return getPortalCache(portalCacheName, blocking);
 	}
 
 	/**
-	 * @deprecated As of 2.1.0, replaced by {@link #getPortalCacheManager()}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getPortalCacheManager()}
 	 */
 	@Deprecated
 	@Override
@@ -114,7 +116,8 @@ public class MultiVMPoolImpl implements MultiVMPool {
 	}
 
 	/**
-	 * @deprecated As of 2.1.0, replaced by {@link #removePortalCache(String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #removePortalCache(String)}
 	 */
 	@Deprecated
 	@Override
@@ -139,8 +142,6 @@ public class MultiVMPoolImpl implements MultiVMPool {
 
 	@Deactivate
 	protected void deactivate() {
-		_portalCacheManager.destroy();
-
 		_serviceTracker.close();
 
 		_serviceTracker = null;
@@ -191,7 +192,7 @@ public class MultiVMPoolImpl implements MultiVMPool {
 	private class SPIPortalCacheManagerConfiguratorServiceTrackerCustomizer
 		implements ServiceTrackerCustomizer
 			<SPIPortalCacheManagerConfigurator,
-				SPIPortalCacheManagerConfigurator> {
+			 SPIPortalCacheManagerConfigurator> {
 
 		@Override
 		public SPIPortalCacheManagerConfigurator addingService(

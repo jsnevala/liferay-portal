@@ -1,273 +1,263 @@
-<definition component-name="portal-permissions">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Permissions" />
+@component-name = "portal-permissions"
+definition {
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Permissions";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
-	</set-up>
+		User.firstLoginPG();
+	}
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="User#logoutAndLoginPG">
-					<var name="userLoginEmailAddress" value="test@liferay.com" />
-					<var name="userLoginFullName" value="Test Test" />
-				</execute>
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test"
+			);
 
-				<execute macro="User#tearDownCP" />
+			User.tearDownCP();
 
-				<execute macro="Role#tearDownCP" />
+			Role.tearDownCP();
 
-				<execute macro="PortalSettings#tearDownCP" />
-			</else>
-		</if>
-	</tear-down>
+			PortalSettings.tearDownCP();
+		}
+	}
 
-	<command name="AddOrganizationRoleRegRole" priority="4">
-		<execute macro="Permissions#setUpRegRoleLoginUserCP">
-			<var name="roleName" value="Regrole Name" />
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+	@priority = "4"
+	test AddOrganizationRoleRegRole {
+		Permissions.setUpRegRoleLoginUserCP(
+			roleName = "Regrole Name",
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test",
+			userScreenName = "usersn"
+		);
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_USERS_ROLES_GENERAL_PERMISSIONS_ACCESS_IN_CONTROL_PANEL_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Access in Control Panel" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_USERS_ROLES_GENERAL_PERMISSIONS_ACCESS_IN_CONTROL_PANEL_CHECKBOX",
+			permissionDefinitionValue = "Access in Control Panel",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles"
+		);
 
-		<execute function="AssertElementNotPresent" locator1="NavBar#ADD" />
+		AssertElementNotPresent(locator1 = "NavBar#ADD");
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Add Role" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX",
+			permissionDefinitionValue = "Add Role",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test"
+		);
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="View" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX",
+			permissionDefinitionValue = "View",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles"
+		);
 
-		<execute macro="Role#addCP">
-			<var name="roleName" value="Orgrole1 Name" />
-			<var name="roleType" value="Organization" />
-		</execute>
+		Role.addCP(roleName = "Orgrole1 Name", roleType = "Organization");
 
-		<execute macro="Permissions#removePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Add Role" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-		</execute>
+		Permissions.removePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX",
+			permissionDefinitionValue = "Add Role",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test"
+		);
 
-		<execute macro="Permissions#removePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="View" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		Permissions.removePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX",
+			permissionDefinitionValue = "View",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles"
+		);
 
-		<execute function="AssertElementNotPresent" locator1="NavBar#ADD" />
-	</command>
+		AssertElementNotPresent(locator1 = "NavBar#ADD");
+	}
 
-	<command name="AddRegularRoleRegRole" priority="4">
-		<execute macro="Permissions#setUpRegRoleLoginUserCP">
-			<var name="roleName" value="Regrole Name" />
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+	@priority = "4"
+	test AddRegularRoleRegRole {
+		Permissions.setUpRegRoleLoginUserCP(
+			roleName = "Regrole Name",
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test",
+			userScreenName = "usersn"
+		);
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_USERS_ROLES_GENERAL_PERMISSIONS_ACCESS_IN_CONTROL_PANEL_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Access in Control Panel" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_USERS_ROLES_GENERAL_PERMISSIONS_ACCESS_IN_CONTROL_PANEL_CHECKBOX",
+			permissionDefinitionValue = "Access in Control Panel",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles"
+		);
 
-		<execute function="AssertElementNotPresent" locator1="NavBar#ADD" />
+		AssertElementNotPresent(locator1 = "NavBar#ADD");
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Add Role" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX",
+			permissionDefinitionValue = "Add Role",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test"
+		);
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="View" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX",
+			permissionDefinitionValue = "View",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles"
+		);
 
-		<execute macro="Role#addCP">
-			<var name="roleName" value="Regrole1 Name" />
-		</execute>
+		Role.addCP(roleName = "Regrole1 Name");
 
-		<execute macro="Permissions#removePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Add Role" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-		</execute>
+		Permissions.removePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX",
+			permissionDefinitionValue = "Add Role",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test"
+		);
 
-		<execute macro="Permissions#removePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="View" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		Permissions.removePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX",
+			permissionDefinitionValue = "View",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles"
+		);
 
-		<execute function="AssertElementNotPresent" locator1="NavBar#ADD" />
-	</command>
+		AssertElementNotPresent(locator1 = "NavBar#ADD");
+	}
 
-	<command name="AddSiteRoleRegRole" priority="4">
-		<execute macro="Permissions#setUpRegRoleLoginUserCP">
-			<var name="roleName" value="Regrole Name" />
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+	@priority = "4"
+	test AddSiteRoleRegRole {
+		Permissions.setUpRegRoleLoginUserCP(
+			roleName = "Regrole Name",
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test",
+			userScreenName = "usersn"
+		);
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_USERS_ROLES_GENERAL_PERMISSIONS_ACCESS_IN_CONTROL_PANEL_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Access in Control Panel" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_USERS_ROLES_GENERAL_PERMISSIONS_ACCESS_IN_CONTROL_PANEL_CHECKBOX",
+			permissionDefinitionValue = "Access in Control Panel",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles"
+		);
 
-		<execute function="AssertElementNotPresent" locator1="NavBar#ADD" />
+		AssertElementNotPresent(locator1 = "NavBar#ADD");
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Add Role" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX",
+			permissionDefinitionValue = "Add Role",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test"
+		);
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="View" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX",
+			permissionDefinitionValue = "View",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles"
+		);
 
-		<execute macro="Role#addCP">
-			<var name="roleName" value="Siterole Name" />
-			<var name="roleType" value="Site" />
-		</execute>
+		Role.addCP(roleName = "Siterole Name", roleType = "Site");
 
-		<execute macro="Permissions#removePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="Add Role" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="test@liferay.com" />
-			<var name="userLoginFullName" value="Test Test" />
-		</execute>
+		Permissions.removePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_GENERAL_PERMISSIONS_ADD_ROLE_CHECKBOX",
+			permissionDefinitionValue = "Add Role",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test"
+		);
 
-		<execute macro="Permissions#definePermissionLoginUserCP">
-			<var name="permissionDefinitionKey" value="CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX" />
-			<var name="permissionDefinitionValue" value="View" />
-			<var name="roleName" value="Regrole Name" />
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		Permissions.definePermissionLoginUserCP(
+			permissionDefinitionKey = "CONTROL_PANEL_USERS_ROLES_RESOURCE_PERMISSIONS_ROLE_VIEW_CHECKBOX",
+			permissionDefinitionValue = "View",
+			roleName = "Regrole Name",
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles"
+		);
 
-		<execute function="AssertElementNotPresent" locator1="NavBar#ADD" />
-	</command>
-</definition>
+		AssertElementNotPresent(locator1 = "NavBar#ADD");
+	}
+}

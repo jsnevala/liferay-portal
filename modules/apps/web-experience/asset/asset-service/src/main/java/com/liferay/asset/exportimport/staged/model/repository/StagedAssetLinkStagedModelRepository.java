@@ -58,9 +58,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"model.class.name=com.liferay.asset.kernel.model.adapter.StagedAssetLink"
-	},
+	property = "model.class.name=com.liferay.asset.kernel.model.adapter.StagedAssetLink",
 	service = {
 		StagedAssetLinkStagedModelRepository.class, StagedModelRepository.class
 	}
@@ -425,7 +423,7 @@ public class StagedAssetLinkStagedModelRepository
 	}
 
 	/**
-	 * @deprecated As of 1.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected void setAssetEntryLocalService(
@@ -433,7 +431,7 @@ public class StagedAssetLinkStagedModelRepository
 	}
 
 	/**
-	 * @deprecated As of 1.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected void setAssetLinkLocalService(

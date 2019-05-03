@@ -24,20 +24,28 @@ import com.liferay.message.boards.kernel.model.MBMessageDisplay;
 import com.liferay.message.boards.kernel.model.MBThread;
 import com.liferay.message.boards.kernel.service.MBDiscussionLocalServiceUtil;
 import com.liferay.message.boards.kernel.service.MBMessageLocalServiceUtil;
+import com.liferay.portal.kernel.comment.CommentManager;
+import com.liferay.portal.kernel.comment.DiscussionPermission;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.mail.MailServiceTestUtil;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
 import com.liferay.portlet.messageboards.util.test.MBTestUtil;
@@ -69,6 +77,57 @@ public class CommentsSubscriptionTest {
 			_group, RoleConstants.SITE_MEMBER);
 
 		_user = UserTestUtil.addGroupUser(_group, RoleConstants.SITE_MEMBER);
+	}
+
+	@Test
+	public void testCannotSubscribeToCommentsWithoutViewPermissions()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), _creatorUser.getUserId());
+
+		BlogsEntry blogsEntry = BlogsEntryLocalServiceUtil.addEntry(
+			_creatorUser.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), serviceContext);
+
+		RoleTestUtil.removeResourcePermission(
+			RoleConstants.GUEST, BlogsEntry.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(blogsEntry.getEntryId()), ActionKeys.VIEW);
+
+		DiscussionPermission discussionPermission =
+			_commentManager.getDiscussionPermission(
+				PermissionCheckerFactoryUtil.create(
+					UserLocalServiceUtil.getDefaultUser(
+						_group.getCompanyId())));
+
+		Assert.assertFalse(
+			discussionPermission.hasSubscribePermission(
+				TestPropsValues.getCompanyId(), _group.getGroupId(),
+				BlogsEntry.class.getName(), blogsEntry.getEntryId()));
+	}
+
+	@Test
+	public void testCanSubscribeToCommentsWithViewPermissions()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), _creatorUser.getUserId());
+
+		BlogsEntry blogsEntry = BlogsEntryLocalServiceUtil.addEntry(
+			_creatorUser.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), serviceContext);
+
+		DiscussionPermission discussionPermission =
+			_commentManager.getDiscussionPermission(
+				PermissionCheckerFactoryUtil.create(_user));
+
+		Assert.assertTrue(
+			discussionPermission.hasSubscribePermission(
+				_group.getCompanyId(), _group.getGroupId(),
+				BlogsEntry.class.getName(), blogsEntry.getEntryId()));
 	}
 
 	@Test
@@ -211,6 +270,9 @@ public class CommentsSubscriptionTest {
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			serviceContext);
 	}
+
+	@Inject
+	private CommentManager _commentManager;
 
 	@DeleteAfterTestRun
 	private User _creatorUser;

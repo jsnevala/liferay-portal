@@ -29,6 +29,7 @@ import com.liferay.exportimport.kernel.exception.MissingReferenceException;
 import com.liferay.exportimport.kernel.exception.RemoteExportException;
 import com.liferay.exportimport.kernel.lar.ExportImportDateUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportHelper;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.MissingReference;
 import com.liferay.exportimport.kernel.lar.MissingReferences;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -108,6 +109,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -128,6 +130,7 @@ import com.liferay.portlet.exportimport.staging.ProxiedLayoutsThreadLocal;
 
 import java.io.Serializable;
 
+import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -141,6 +144,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.Set;
 
 import javax.portlet.PortletPreferences;
@@ -208,8 +212,8 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link #getRemoteSiteURL(Group,
-	 *             boolean)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getRemoteSiteURL(Group, boolean)}
 	 */
 	@Deprecated
 	@Override
@@ -237,7 +241,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             _stagingLocalService#checkDefaultLayoutSetBranches(long,
 	 *             Group, boolean, boolean, boolean, ServiceContext)}
 	 */
@@ -336,8 +340,8 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link #publishPortlet(long, long,
-	 *             long, long, long, String, Map)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #publishPortlet(long, long, long, long, long, String, Map)}
 	 */
 	@Deprecated
 	@Override
@@ -367,18 +371,12 @@ public class StagingImpl implements Staging {
 		Map<String, Serializable> settingsMap =
 			exportImportConfiguration.getSettingsMap();
 
-		long targetGroupId = MapUtil.getLong(settingsMap, "targetGroupId");
 		String remoteAddress = MapUtil.getString(settingsMap, "remoteAddress");
 		int remotePort = MapUtil.getInteger(settingsMap, "remotePort");
 		String remotePathContext = MapUtil.getString(
 			settingsMap, "remotePathContext");
 		boolean secureConnection = MapUtil.getBoolean(
 			settingsMap, "secureConnection");
-
-		validateRemoteGroup(
-			exportImportConfiguration.getGroupId(), targetGroupId,
-			remoteAddress, remotePort, remotePathContext, secureConnection);
-
 		boolean remotePrivateLayout = MapUtil.getBoolean(
 			settingsMap, "remotePrivateLayout");
 
@@ -414,9 +412,9 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link #copyRemoteLayouts(long,
-	 *             boolean, Map, Map, String, int, String, boolean, long,
-	 *             boolean)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #copyRemoteLayouts(long, boolean, Map, Map, String, int,
+	 *             String, boolean, long, boolean)}
 	 */
 	@Deprecated
 	@Override
@@ -442,10 +440,6 @@ public class StagingImpl implements Staging {
 			int remotePort, String remotePathContext, boolean secureConnection,
 			long remoteGroupId, boolean remotePrivateLayout)
 		throws PortalException {
-
-		validateRemoteGroup(
-			sourceGroupId, remoteGroupId, remoteAddress, remotePort,
-			remotePathContext, secureConnection);
 
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
@@ -514,7 +508,7 @@ public class StagingImpl implements Staging {
 			}
 
 			_layoutLocalService.updateLayout(
-				layout.getGroupId(), layout.getPrivateLayout(),
+				layout.getGroupId(), layout.isPrivateLayout(),
 				layout.getLayoutId(), typeSettingsProperties.toString());
 		}
 	}
@@ -543,7 +537,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #deleteRecentLayoutRevisionId(long, long, long)}
 	 */
 	@Deprecated
@@ -642,7 +636,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getErrorMessagesJSONArray(Locale, Map<String,
 	 *             MissingReference>)}
 	 */
@@ -668,7 +662,28 @@ public class StagingImpl implements Staging {
 		int errorType = 0;
 		JSONArray warningMessagesJSONArray = null;
 
-		if (e instanceof DuplicateFileEntryException) {
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			"content.Language", locale, getClass());
+
+		if (e.getCause() instanceof ConnectException) {
+			Map settingsMap = exportImportConfiguration.getSettingsMap();
+
+			String remoteAddress = MapUtil.getString(
+				settingsMap, "remoteAddress");
+			String remotePort = MapUtil.getString(settingsMap, "remotePort");
+
+			String argument = remoteAddress + ":" + remotePort;
+
+			errorMessage = LanguageUtil.format(
+				resourceBundle,
+				"could-not-connect-to-address-x.-please-verify-that-the-" +
+					"specified-port-is-correct-and-that-the-remote-server-is-" +
+						"configured-to-accept-requests-from-this-server",
+				argument);
+
+			errorType = ServletResponseConstants.SC_FILE_CUSTOM_EXCEPTION;
+		}
+		else if (e instanceof DuplicateFileEntryException) {
 			errorMessage = LanguageUtil.get(
 				locale, "please-enter-a-unique-document-name");
 			errorType = ServletResponseConstants.SC_DUPLICATE_FILE_EXCEPTION;
@@ -706,11 +721,12 @@ public class StagingImpl implements Staging {
 				((exportImportConfiguration.getType() ==
 					ExportImportConfigurationConstants.
 						TYPE_PUBLISH_LAYOUT_LOCAL) ||
-				(exportImportConfiguration.getType() ==
-					ExportImportConfigurationConstants.
-						TYPE_PUBLISH_LAYOUT_REMOTE) ||
-				(exportImportConfiguration.getType() ==
-					ExportImportConfigurationConstants.TYPE_PUBLISH_PORTLET))) {
+				 (exportImportConfiguration.getType() ==
+					 ExportImportConfigurationConstants.
+						 TYPE_PUBLISH_LAYOUT_REMOTE) ||
+				 (exportImportConfiguration.getType() ==
+					 ExportImportConfigurationConstants.
+						 TYPE_PUBLISH_PORTLET))) {
 
 				errorMessage = LanguageUtil.get(
 					locale,
@@ -753,7 +769,7 @@ public class StagingImpl implements Staging {
 			sb.append("not-be-found.-please-import-the-following-templates-");
 			sb.append("manually");
 
-			errorMessage = LanguageUtil.get(locale, sb.toString());
+			errorMessage = LanguageUtil.get(resourceBundle, sb.toString());
 
 			errorMessagesJSONArray = JSONFactoryUtil.createJSONArray();
 
@@ -813,11 +829,12 @@ public class StagingImpl implements Staging {
 				((exportImportConfiguration.getType() ==
 					ExportImportConfigurationConstants.
 						TYPE_PUBLISH_LAYOUT_LOCAL) ||
-				(exportImportConfiguration.getType() ==
-					ExportImportConfigurationConstants.
-						TYPE_PUBLISH_LAYOUT_REMOTE) ||
-				(exportImportConfiguration.getType() ==
-					ExportImportConfigurationConstants.TYPE_PUBLISH_PORTLET))) {
+				 (exportImportConfiguration.getType() ==
+					 ExportImportConfigurationConstants.
+						 TYPE_PUBLISH_LAYOUT_REMOTE) ||
+				 (exportImportConfiguration.getType() ==
+					 ExportImportConfigurationConstants.
+						 TYPE_PUBLISH_PORTLET))) {
 
 				errorMessage = LanguageUtil.get(
 					locale,
@@ -933,7 +950,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getExceptionMessagesJSONObject(Locale, Exception,
 	 *             ExportImportConfiguration)}
 	 */
@@ -989,7 +1006,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, moved to {@link
+	 * @deprecated As of Wilberforce (7.0.x), moved to {@link
 	 *             ExportImportHelperUtil#getMissingParentLayouts(Layout, long)}
 	 */
 	@Deprecated
@@ -1104,7 +1121,7 @@ public class StagingImpl implements Staging {
 
 		HttpPrincipal httpPrincipal = new HttpPrincipal(
 			buildRemoteURL(typeSettingsProperties), user.getLogin(),
-			user.getPassword(), user.getPasswordEncrypted());
+			user.getPassword(), user.isPasswordEncrypted());
 
 		long remoteGroupId = GetterUtil.getLong(
 			typeSettingsProperties.getProperty("remoteGroupId"));
@@ -1133,8 +1150,11 @@ public class StagingImpl implements Staging {
 
 	@Override
 	public String getSchedulerGroupName(String destinationName, long groupId) {
-		return destinationName.concat(StringPool.SLASH).concat(
-			String.valueOf(groupId));
+		return destinationName.concat(
+			StringPool.SLASH
+		).concat(
+			String.valueOf(groupId)
+		);
 	}
 
 	@Override
@@ -1191,7 +1211,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             ExportImportConfigurationParameterMapFactory#buildParameterMap(
 	 *             )}
 	 */
@@ -1202,7 +1222,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             ExportImportConfigurationParameterMapFactory#buildParameterMap(
 	 *             PortletRequest)}
 	 */
@@ -1255,7 +1275,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getWarningMessagesJSONArray(Locale, Map<String,
 	 *             MissingReference>)}
 	 */
@@ -1373,7 +1393,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, see {@link
+	 * @deprecated As of Wilberforce (7.0.x), see {@link
 	 *             com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor#getIsolationLevel(
 	 *             )}
 	 */
@@ -1486,8 +1506,8 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link #publishLayouts(long, long,
-	 *             long, boolean, long[], Map)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #publishLayouts(long, long, long, boolean, long[], Map)}
 	 */
 	@Deprecated
 	@Override
@@ -1546,8 +1566,8 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link #publishLayouts(long, long,
-	 *             long, boolean, long[], Map)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #publishLayouts(long, long, long, boolean, long[], Map)}
 	 */
 	@Deprecated
 	@Override
@@ -1578,8 +1598,8 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link #publishLayouts(long, long,
-	 *             long, boolean, Map)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #publishLayouts(long, long, long, boolean, Map)}
 	 */
 	@Deprecated
 	@Override
@@ -1825,13 +1845,15 @@ public class StagingImpl implements Staging {
 					publishLayoutRemoteSettingsMap, "remotePathContext");
 				secureConnection = MapUtil.getBoolean(
 					publishLayoutRemoteSettingsMap, "secureConnection");
+				remoteGroupId = MapUtil.getLong(
+					publishLayoutRemoteSettingsMap, "targetGroupId");
 				remotePrivateLayout = MapUtil.getBoolean(
 					publishLayoutRemoteSettingsMap, "remotePrivateLayout");
 
 				if (!Validator.isBlank(name)) {
 					Map<String, String[]> parameterMap =
-						(Map<String, String[]>)publishLayoutRemoteSettingsMap.
-							get("parameterMap");
+						(Map<String, String[]>)
+							publishLayoutRemoteSettingsMap.get("parameterMap");
 
 					parameterMap.put("name", new String[] {name});
 				}
@@ -1981,7 +2003,12 @@ public class StagingImpl implements Staging {
 
 		ScheduleInformation scheduleInformation = getScheduleInformation(
 			portletRequest, targetGroupId, false);
+
 		String name = ParamUtil.getString(portletRequest, "name");
+
+		if (!Validator.isBlank(name)) {
+			parameterMap.put("name", new String[] {name});
+		}
 
 		_layoutService.schedulePublishToLive(
 			sourceGroupId, targetGroupId, privateLayout, layoutIds,
@@ -2009,6 +2036,10 @@ public class StagingImpl implements Staging {
 		int remotePort = 0;
 		String remotePathContext = null;
 		boolean secureConnection = false;
+		long remoteGroupId = ParamUtil.getLong(
+			portletRequest, "remoteGroupId",
+			GetterUtil.getLong(
+				groupTypeSettingsProperties.getProperty("remoteGroupId")));
 		boolean remotePrivateLayout = false;
 
 		long exportImportConfigurationId = ParamUtil.getLong(
@@ -2035,6 +2066,7 @@ public class StagingImpl implements Staging {
 					settingsMap, "remotePathContext");
 				secureConnection = MapUtil.getBoolean(
 					settingsMap, "secureConnection");
+				remoteGroupId = MapUtil.getLong(settingsMap, "targetGroupId");
 				remotePrivateLayout = MapUtil.getBoolean(
 					settingsMap, "remotePrivateLayout");
 			}
@@ -2066,10 +2098,6 @@ public class StagingImpl implements Staging {
 		}
 
 		remoteAddress = stripProtocolFromRemoteAddress(remoteAddress);
-		long remoteGroupId = ParamUtil.getLong(
-			portletRequest, "remoteGroupId",
-			GetterUtil.getLong(
-				groupTypeSettingsProperties.getProperty("remoteGroupId")));
 
 		validateRemote(
 			groupId, remoteAddress, remotePort, remotePathContext,
@@ -2077,7 +2105,12 @@ public class StagingImpl implements Staging {
 
 		ScheduleInformation scheduleInformation = getScheduleInformation(
 			portletRequest, groupId, true);
+
 		String name = ParamUtil.getString(portletRequest, "name");
+
+		if (!Validator.isBlank(name)) {
+			parameterMap.put("name", new String[] {name});
+		}
 
 		_layoutService.schedulePublishToRemote(
 			groupId, privateLayout, layoutIdMap, parameterMap, remoteAddress,
@@ -2162,7 +2195,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, see {@link
+	 * @deprecated As of Wilberforce (7.0.x), see {@link
 	 *             com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor#getIsolationLevel(
 	 *             )}
 	 */
@@ -2288,7 +2321,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             ExportImportDateUtil#updateLastPublishDate(long, boolean,
 	 *             DateRange, Date)}
 	 */
@@ -2303,7 +2336,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             ExportImportDateUtil#updateLastPublishDate(String,
 	 *             PortletPreferences, DateRange, Date)}
 	 */
@@ -2318,7 +2351,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.11.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             com.liferay.staging.configuration.web.internal.portlet.StagingConfigurationPortlet#editStagingConfiguration(
 	 *             javax.portlet.ActionRequest, javax.portlet.ActionResponse)}
 	 */
@@ -2435,8 +2468,8 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link #validateRemote(long, String,
-	 *             int, String, boolean, long)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #validateRemote(long, String, int, String, boolean, long)}
 	 */
 	@Deprecated
 	@Override
@@ -2476,7 +2509,7 @@ public class StagingImpl implements Staging {
 
 		HttpPrincipal httpPrincipal = new HttpPrincipal(
 			remoteURL, user.getLogin(), user.getPassword(),
-			user.getPasswordEncrypted());
+			user.isPasswordEncrypted());
 
 		taskContextMap.put("httpPrincipal", httpPrincipal);
 
@@ -2564,6 +2597,18 @@ public class StagingImpl implements Staging {
 	protected long getRecentLayoutRevisionId(
 			long userId, long layoutSetBranchId, long plid)
 		throws PortalException {
+
+		if (ExportImportThreadLocal.isLayoutStagingInProcess()) {
+			LayoutRevision layoutRevision =
+				_layoutRevisionLocalService.fetchLastLayoutRevision(plid, true);
+
+			if (layoutRevision != null) {
+				return layoutRevision.getLayoutRevisionId();
+			}
+			else {
+				return 0;
+			}
+		}
 
 		RecentLayoutRevision recentLayoutRevision =
 			_recentLayoutRevisionLocalService.fetchRecentLayoutRevision(
@@ -2704,7 +2749,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	protected long publishLayouts(
@@ -2771,7 +2816,7 @@ public class StagingImpl implements Staging {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	protected long publishToRemote(
@@ -2932,7 +2977,7 @@ public class StagingImpl implements Staging {
 			userId, layoutSetBranchId, plid, layoutBranchId);
 	}
 
-	@Reference (unbind = "-")
+	@Reference(unbind = "-")
 	protected void setRecentLayoutRevisionLocalService(
 		RecentLayoutRevisionLocalService recentLayoutRevisionLocalService) {
 
@@ -3031,7 +3076,7 @@ public class StagingImpl implements Staging {
 
 		HttpPrincipal httpPrincipal = new HttpPrincipal(
 			remoteURL, user.getLogin(), user.getPassword(),
-			user.getPasswordEncrypted());
+			user.isPasswordEncrypted());
 
 		try {
 			currentThread.setContextClassLoader(

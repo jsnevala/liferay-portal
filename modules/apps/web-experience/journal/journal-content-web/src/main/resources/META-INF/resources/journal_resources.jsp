@@ -22,7 +22,7 @@ String refererPortletName = ParamUtil.getString(request, "refererPortletName");
 JournalArticle article = journalContentDisplayContext.getArticle();
 %>
 
-<aui:input id='<%= refererPortletName + "ddmTemplateKey" %>' name='<%= refererPortletName + "preferences--ddmTemplateKey--" %>' type="hidden" useNamespace="<%= false %>" value="<%= journalContentDisplayContext.getDDMTemplateKey() %>" />
+<aui:input id='<%= refererPortletName + "ddmTemplateKey" %>' name='<%= refererPortletName + "preferences--ddmTemplateKey--" %>' type="hidden" useNamespace="<%= false %>" value="<%= journalContentDisplayContext.isDefaultTemplate() ? StringPool.BLANK : journalContentDisplayContext.getDDMTemplateKey() %>" />
 
 <div class="article-preview row">
 	<div class="col-md-3 col-sm-6 col-xs-12">
@@ -42,9 +42,7 @@ JournalArticle article = journalContentDisplayContext.getArticle();
 
 <c:if test="<%= article != null %>">
 	<div class="row template-preview">
-		<div class="col-md-3 col-sm-6 col-xs-12">
-			<liferay-util:include page="/journal_template.jsp" servletContext="<%= application %>" />
-		</div>
+		<liferay-util:include page="/journal_template.jsp" servletContext="<%= application %>" />
 	</div>
 
 	<div class="configuration-options-container row">
@@ -70,7 +68,7 @@ JournalArticle article = journalContentDisplayContext.getArticle();
 					/>
 				</aui:field-wrapper>
 
-				<aui:input name="preferences--enableViewCountIncrement--" type="toggle-switch" value="<%= journalContentDisplayContext.isEnableViewCountIncrement() %>" />
+				<aui:input label="view-count-increment" name="preferences--enableViewCountIncrement--" type="toggle-switch" value="<%= journalContentDisplayContext.isEnableViewCountIncrement() %>" />
 			</aui:fieldset>
 		</div>
 	</div>

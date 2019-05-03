@@ -235,7 +235,7 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #getAllDescendantKBArticles(long, long, int,
 	 *             OrderByComparator)}
 	 */
@@ -339,7 +339,7 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #getKBArticleAndAllDescendantKBArticles(long, int,
 	 *             OrderByComparator)}
 	 */
@@ -678,8 +678,8 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link #getKBArticles(long, long,
-	 *             int, int, int, OrderByComparator)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #getKBArticles(long,
+	 *             long, int, int, int, OrderByComparator)}
 	 */
 	@Deprecated
 	@Override
@@ -693,8 +693,8 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link #getKBArticlesCount(long,
-	 *             long, int)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #getKBArticlesCount(long, long, int)}
 	 */
 	@Deprecated
 	@Override
@@ -966,7 +966,7 @@ public class KBArticleServiceImpl extends KBArticleServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #getAllDescendantKBArticles(long, long, int,
 	 *             OrderByComparator, boolean)}
 	 */

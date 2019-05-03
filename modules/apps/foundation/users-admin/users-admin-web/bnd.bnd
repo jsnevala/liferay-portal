@@ -1,9 +1,10 @@
 Bundle-Name: Liferay Users Admin Web
 Bundle-SymbolicName: com.liferay.users.admin.web
-Bundle-Version: 2.4.9
+Bundle-Version: 2.5.10
 Export-Package:\
 	com.liferay.users.admin.web.application.list,\
 	com.liferay.users.admin.web.custom.attributes,\
+	com.liferay.users.admin.web.display.context,\
 	com.liferay.users.admin.web.portlet,\
 	com.liferay.users.admin.web.portlet.action,\
 	com.liferay.users.admin.web.portlet.configuration.icon,\
@@ -14,6 +15,4 @@ Import-Package:\
 	javax.net.ssl,\
 	\
 	*
-Liferay-Releng-Module-Group-Description:
-Liferay-Releng-Module-Group-Title:
 Web-ContextPath: /users-admin-web

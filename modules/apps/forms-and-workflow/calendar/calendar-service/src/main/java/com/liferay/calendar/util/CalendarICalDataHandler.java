@@ -210,12 +210,12 @@ public class CalendarICalDataHandler implements CalendarDataHandler {
 
 		// Recurrence
 
-		RRule rrule = (RRule)vEvent.getProperty(Property.RRULE);
+		RRule rRule = (RRule)vEvent.getProperty(Property.RRULE);
 
 		String recurrence = StringPool.BLANK;
 
-		if (rrule != null) {
-			recurrence = StringUtil.trim(rrule.toString());
+		if (rRule != null) {
+			recurrence = StringUtil.trim(rRule.toString());
 
 			PropertyList propertyList = vEvent.getProperties(Property.EXDATE);
 
@@ -278,7 +278,7 @@ public class CalendarICalDataHandler implements CalendarDataHandler {
 		int i = 0;
 
 		for (Iterator<VAlarm> iterator = componentList.iterator();
-			iterator.hasNext();) {
+			 iterator.hasNext();) {
 
 			VAlarm vAlarm = iterator.next();
 
@@ -350,7 +350,7 @@ public class CalendarICalDataHandler implements CalendarDataHandler {
 		List<Long> childCalendarIds = new ArrayList<>();
 
 		for (Iterator<Attendee> iterator = propertyList.iterator();
-			iterator.hasNext();) {
+			 iterator.hasNext();) {
 
 			Attendee attendee = iterator.next();
 
@@ -768,9 +768,7 @@ public class CalendarICalDataHandler implements CalendarDataHandler {
 			dateList.add(dateTime);
 		}
 
-		ExDate exDate = new ExDate(dateList);
-
-		return exDate;
+		return new ExDate(dateList);
 	}
 
 	protected String toString(net.fortuna.ical4j.model.Calendar iCalCalendar)

@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.util.GetterUtil;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -37,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Adolfo Pérez
  * @author Alejandro Tardín
  */
-@Component(property = {"adaptive.media.format=html"})
+@Component(property = "adaptive.media.format=html")
 public class AMImageHTMLExportImportContentProcessor
 	implements ExportImportContentProcessor<String> {
 
@@ -166,6 +167,8 @@ public class AMImageHTMLExportImportContentProcessor
 				Element imgElement = imgElements.first();
 
 				imgElement.removeAttr(_ATTRIBUTE_NAME_EXPORT_IMPORT_PATH);
+				imgElement.attr(
+					"data-fileEntryId", String.valueOf(fileEntryId));
 
 				Element picture = _parseNode(
 					_amImageHTMLTagFactory.create(
@@ -187,7 +190,12 @@ public class AMImageHTMLExportImportContentProcessor
 		Document document = _parseDocument(content);
 
 		for (Element element : document.select("[data-fileEntryId]")) {
-			long fileEntryId = Long.valueOf(element.attr("data-fileEntryId"));
+			long fileEntryId = GetterUtil.getLong(
+				element.attr("data-fileEntryId"));
+
+			if (fileEntryId == 0) {
+				continue;
+			}
 
 			FileEntry fileEntry = _dlAppLocalService.getFileEntry(fileEntryId);
 

@@ -22,15 +22,15 @@ import com.liferay.portal.kernel.security.auth.HttpPrincipal;
 import com.liferay.portal.kernel.service.http.TunnelUtil;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.MethodKey;
-
 import com.liferay.social.privatemessaging.service.UserThreadServiceUtil;
 
 /**
  * Provides the HTTP utility for the
- * {@link UserThreadServiceUtil} service utility. The
+ * <code>UserThreadServiceUtil</code> service
+ * utility. The
  * static methods of this class calls the same methods of the service utility.
  * However, the signatures are different because it requires an additional
- * {@link HttpPrincipal} parameter.
+ * <code>HttpPrincipal</code> parameter.
  *
  * <p>
  * The benefits of using the HTTP utility is that it is fast and allows for
@@ -49,21 +49,22 @@ import com.liferay.social.privatemessaging.service.UserThreadServiceUtil;
  *
  * @author Brian Wing Shun Chan
  * @see UserThreadServiceSoap
- * @see HttpPrincipal
- * @see UserThreadServiceUtil
  * @generated
  */
 @ProviderType
 public class UserThreadServiceHttp {
-	public static com.liferay.message.boards.kernel.model.MBMessage getLastThreadMessage(
-		HttpPrincipal httpPrincipal, long mbThreadId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(UserThreadServiceUtil.class,
-					"getLastThreadMessage", _getLastThreadMessageParameterTypes0);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					mbThreadId);
+	public static com.liferay.message.boards.kernel.model.MBMessage
+			getLastThreadMessage(HttpPrincipal httpPrincipal, long mbThreadId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				UserThreadServiceUtil.class, "getLastThreadMessage",
+				_getLastThreadMessageParameterTypes0);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, mbThreadId);
 
 			Object returnObj = null;
 
@@ -71,11 +72,15 @@ public class UserThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.message.boards.kernel.model.MBMessage)returnObj;
@@ -87,16 +92,19 @@ public class UserThreadServiceHttp {
 		}
 	}
 
-	public static java.util.List<com.liferay.message.boards.kernel.model.MBMessage> getThreadMessages(
-		HttpPrincipal httpPrincipal, long mbThreadId, int start, int end,
-		boolean ascending)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(UserThreadServiceUtil.class,
-					"getThreadMessages", _getThreadMessagesParameterTypes1);
+	public static java.util.List
+		<com.liferay.message.boards.kernel.model.MBMessage> getThreadMessages(
+				HttpPrincipal httpPrincipal, long mbThreadId, int start,
+				int end, boolean ascending)
+			throws com.liferay.portal.kernel.exception.PortalException {
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					mbThreadId, start, end, ascending);
+		try {
+			MethodKey methodKey = new MethodKey(
+				UserThreadServiceUtil.class, "getThreadMessages",
+				_getThreadMessagesParameterTypes1);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, mbThreadId, start, end, ascending);
 
 			Object returnObj = null;
 
@@ -104,14 +112,19 @@ public class UserThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
-			return (java.util.List<com.liferay.message.boards.kernel.model.MBMessage>)returnObj;
+			return (java.util.List
+				<com.liferay.message.boards.kernel.model.MBMessage>)returnObj;
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
 			_log.error(se, se);
@@ -120,16 +133,17 @@ public class UserThreadServiceHttp {
 		}
 	}
 
-	public static int getThreadMessagesCount(HttpPrincipal httpPrincipal,
-		long mbThreadId)
+	public static int getThreadMessagesCount(
+			HttpPrincipal httpPrincipal, long mbThreadId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(UserThreadServiceUtil.class,
-					"getThreadMessagesCount",
-					_getThreadMessagesCountParameterTypes2);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					mbThreadId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				UserThreadServiceUtil.class, "getThreadMessagesCount",
+				_getThreadMessagesCountParameterTypes2);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, mbThreadId);
 
 			Object returnObj = null;
 
@@ -137,11 +151,15 @@ public class UserThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return ((Integer)returnObj).intValue();
@@ -153,12 +171,15 @@ public class UserThreadServiceHttp {
 		}
 	}
 
-	public static java.util.List<com.liferay.social.privatemessaging.model.UserThread> getUserUserThreads(
-		HttpPrincipal httpPrincipal, boolean deleted)
-		throws com.liferay.portal.kernel.security.auth.PrincipalException {
+	public static java.util.List
+		<com.liferay.social.privatemessaging.model.UserThread>
+				getUserUserThreads(HttpPrincipal httpPrincipal, boolean deleted)
+			throws com.liferay.portal.kernel.security.auth.PrincipalException {
+
 		try {
-			MethodKey methodKey = new MethodKey(UserThreadServiceUtil.class,
-					"getUserUserThreads", _getUserUserThreadsParameterTypes3);
+			MethodKey methodKey = new MethodKey(
+				UserThreadServiceUtil.class, "getUserUserThreads",
+				_getUserUserThreadsParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(methodKey, deleted);
 
@@ -168,14 +189,21 @@ public class UserThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.security.auth.PrincipalException) {
-					throw (com.liferay.portal.kernel.security.auth.PrincipalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.security.auth.
+							PrincipalException) {
+
+					throw (com.liferay.portal.kernel.security.auth.
+						PrincipalException)e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
-			return (java.util.List<com.liferay.social.privatemessaging.model.UserThread>)returnObj;
+			return (java.util.List
+				<com.liferay.social.privatemessaging.model.UserThread>)
+					returnObj;
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
 			_log.error(se, se);
@@ -184,17 +212,16 @@ public class UserThreadServiceHttp {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(UserThreadServiceHttp.class);
-	private static final Class<?>[] _getLastThreadMessageParameterTypes0 = new Class[] {
-			long.class
-		};
-	private static final Class<?>[] _getThreadMessagesParameterTypes1 = new Class[] {
-			long.class, int.class, int.class, boolean.class
-		};
-	private static final Class<?>[] _getThreadMessagesCountParameterTypes2 = new Class[] {
-			long.class
-		};
-	private static final Class<?>[] _getUserUserThreadsParameterTypes3 = new Class[] {
-			boolean.class
-		};
+	private static Log _log = LogFactoryUtil.getLog(
+		UserThreadServiceHttp.class);
+
+	private static final Class<?>[] _getLastThreadMessageParameterTypes0 =
+		new Class[] {long.class};
+	private static final Class<?>[] _getThreadMessagesParameterTypes1 =
+		new Class[] {long.class, int.class, int.class, boolean.class};
+	private static final Class<?>[] _getThreadMessagesCountParameterTypes2 =
+		new Class[] {long.class};
+	private static final Class<?>[] _getUserUserThreadsParameterTypes3 =
+		new Class[] {boolean.class};
+
 }

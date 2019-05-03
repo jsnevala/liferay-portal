@@ -29,7 +29,7 @@ import org.jdom.IllegalDataException;
 
 /**
  * @author Brian Wing Shun Chan
- * @author Eduardo Garcia
+ * @author Eduardo García
  * @see    com.liferay.util.RSSUtil
  */
 public class RSSUtil extends com.liferay.portal.kernel.util.RSSUtil {

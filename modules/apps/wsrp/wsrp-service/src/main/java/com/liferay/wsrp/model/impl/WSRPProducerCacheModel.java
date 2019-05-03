@@ -19,7 +19,6 @@ import aQute.bnd.annotation.ProviderType;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-
 import com.liferay.wsrp.model.WSRPProducer;
 
 import java.io.Externalizable;
@@ -33,12 +32,12 @@ import java.util.Date;
  * The cache model class for representing WSRPProducer in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see WSRPProducer
  * @generated
  */
 @ProviderType
-public class WSRPProducerCacheModel implements CacheModel<WSRPProducer>,
-	Externalizable {
+public class WSRPProducerCacheModel
+	implements CacheModel<WSRPProducer>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -49,7 +48,8 @@ public class WSRPProducerCacheModel implements CacheModel<WSRPProducer>,
 			return false;
 		}
 
-		WSRPProducerCacheModel wsrpProducerCacheModel = (WSRPProducerCacheModel)obj;
+		WSRPProducerCacheModel wsrpProducerCacheModel =
+			(WSRPProducerCacheModel)obj;
 
 		if (wsrpProducerId == wsrpProducerCacheModel.wsrpProducerId) {
 			return true;
@@ -172,8 +172,7 @@ public class WSRPProducerCacheModel implements CacheModel<WSRPProducer>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -223,4 +222,5 @@ public class WSRPProducerCacheModel implements CacheModel<WSRPProducer>,
 	public String version;
 	public String portletIds;
 	public long lastPublishDate;
+
 }

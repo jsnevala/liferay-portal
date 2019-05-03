@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Journal Service
 Bundle-SymbolicName: com.liferay.journal.service
-Bundle-Version: 3.24.7
+Bundle-Version: 3.30.9
 Export-Package:\
 	com.liferay.journal.atom,\
 	com.liferay.journal.configuration,\
@@ -18,7 +18,6 @@ Export-Package:\
 	com.liferay.journal.util.impl,\
 	com.liferay.journal.verify,\
 	com.liferay.journal.workflow
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Web Content
 Liferay-Require-SchemaVersion: 1.0.2
 Liferay-Service: true

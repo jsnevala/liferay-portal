@@ -94,6 +94,7 @@ public class MDRRuleGroupLocalServiceImpl
 
 		for (Map.Entry<Locale, String> entry : nameMap.entrySet()) {
 			Locale locale = entry.getKey();
+
 			String name = entry.getValue();
 
 			if (Validator.isNull(name)) {
@@ -104,7 +105,13 @@ public class MDRRuleGroupLocalServiceImpl
 				locale,
 				PropsValues.MOBILE_DEVICE_RULES_RULE_GROUP_COPY_POSTFIX);
 
-			nameMap.put(locale, name.concat(StringPool.SPACE).concat(postfix));
+			nameMap.put(
+				locale,
+				name.concat(
+					StringPool.SPACE
+				).concat(
+					postfix
+				));
 		}
 
 		MDRRuleGroup newRuleGroup = addRuleGroup(

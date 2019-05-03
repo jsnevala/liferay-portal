@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  * @author Shuyang Zhou
  */
 @DoPrivileged
-@OSGiBeanProperties(property = {"service.ranking:Integer=100"})
+@OSGiBeanProperties(property = "service.ranking:Integer=100")
 public class FriendlyURLNormalizerImpl implements FriendlyURLNormalizer {
 
 	@Override
@@ -46,7 +46,7 @@ public class FriendlyURLNormalizerImpl implements FriendlyURLNormalizer {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -149,7 +149,7 @@ public class FriendlyURLNormalizerImpl implements FriendlyURLNormalizer {
 				}
 
 				if (Character.isHighSurrogate(c) &&
-					(i + 1) < friendlyURL.length()) {
+					((i + 1) < friendlyURL.length())) {
 
 					c = friendlyURL.charAt(i + 1);
 

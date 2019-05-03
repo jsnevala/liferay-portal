@@ -19,7 +19,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
@@ -41,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + TwitterPortletKeys.TWITTER},
+	property = "javax.portlet.name=" + TwitterPortletKeys.TWITTER,
 	service = SocialActivityInterpreter.class
 )
 public class TwitterActivityInterpreter extends BaseSocialActivityInterpreter {
@@ -51,15 +50,10 @@ public class TwitterActivityInterpreter extends BaseSocialActivityInterpreter {
 		return _CLASS_NAMES;
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.twitter.web)", unbind = "-"
-	)
 	public void setResourceBundleLoader(
 		ResourceBundleLoader resourceBundleLoader) {
 
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
+		_resourceBundleLoader = resourceBundleLoader;
 	}
 
 	@Override
@@ -94,6 +88,12 @@ public class TwitterActivityInterpreter extends BaseSocialActivityInterpreter {
 
 	@Override
 	protected ResourceBundleLoader getResourceBundleLoader() {
+		if (_resourceBundleLoader == null) {
+			return ResourceBundleLoaderUtil.
+				getResourceBundleLoaderByBundleSymbolicName(
+					"com.liferay.twitter.web");
+		}
+
 		return _resourceBundleLoader;
 	}
 

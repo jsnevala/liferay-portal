@@ -16,7 +16,7 @@ package com.liferay.portal.kernel.util;
 
 /**
  * @author Brian Wing Shun Chan
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class RSSUtil {
 

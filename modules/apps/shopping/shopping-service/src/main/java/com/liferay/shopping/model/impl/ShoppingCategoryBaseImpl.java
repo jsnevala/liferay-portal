@@ -32,12 +32,13 @@ import com.liferay.shopping.service.ShoppingCategoryLocalServiceUtil;
  * @generated
  */
 @ProviderType
-public abstract class ShoppingCategoryBaseImpl extends ShoppingCategoryModelImpl
-	implements ShoppingCategory {
+public abstract class ShoppingCategoryBaseImpl
+	extends ShoppingCategoryModelImpl implements ShoppingCategory {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a shopping category model instance should use the {@link ShoppingCategory} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a shopping category model instance should use the <code>ShoppingCategory</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +49,5 @@ public abstract class ShoppingCategoryBaseImpl extends ShoppingCategoryModelImpl
 			ShoppingCategoryLocalServiceUtil.updateShoppingCategory(this);
 		}
 	}
+
 }

@@ -50,9 +50,7 @@ public class RegistrationServiceHandler implements InvocationHandler {
 		RegistrationContext registrationContext =
 			_registrationDescriptionService.register(registrationData);
 
-		Object v2Bean = TypeConvertorUtil.convert(registrationContext, 1);
-
-		return v2Bean;
+		return TypeConvertorUtil.convert(registrationContext, 1);
 	}
 
 	@Override

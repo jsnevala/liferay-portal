@@ -105,7 +105,6 @@ name = HtmlUtil.escapeJS(name);
 			if (typeof value != 'string') {
 				value = '';
 			}
-
 			window['<%= name %>'].setHTML(value);
 		},
 
@@ -116,6 +115,8 @@ name = HtmlUtil.escapeJS(name);
 				var editorContainer = A.one('#<%= name %>Container');
 
 				editorContainer.appendChild(editorNode);
+
+				window['<%= name %>']._dataReady = false;
 
 				window['<%= name %>'].initEditor();
 			}
@@ -256,6 +257,7 @@ name = HtmlUtil.escapeJS(name);
 			else {
 				document.getElementById('<%= name %>').innerHTML = value;
 			}
+			window['<%= name %>']._dataReady = true;
 		}
 	};
 

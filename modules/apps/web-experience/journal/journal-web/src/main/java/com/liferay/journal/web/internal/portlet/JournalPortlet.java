@@ -147,7 +147,7 @@ import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	configurationPid = "com.liferay.journal.web.configuration.JournalWebConfiguration",
@@ -170,7 +170,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.display-name=Web Content",
 		"javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.mvc-action-command-package-prefix=com.liferay.journal.web.portlet.action",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 		"javax.portlet.resource-bundle=content.Language",
@@ -644,6 +644,7 @@ public class JournalPortlet extends MVCPortlet {
 
 		String ddmTemplateKey = ParamUtil.getString(
 			uploadPortletRequest, "ddmTemplateKey");
+
 		String layoutUuid = ParamUtil.getString(
 			uploadPortletRequest, "layoutUuid");
 
@@ -682,8 +683,9 @@ public class JournalPortlet extends MVCPortlet {
 			uploadPortletRequest, "expirationDateMinute");
 		int expirationDateAmPm = ParamUtil.getInteger(
 			uploadPortletRequest, "expirationDateAmPm");
+
 		boolean neverExpire = ParamUtil.getBoolean(
-			uploadPortletRequest, "neverExpire");
+			uploadPortletRequest, "neverExpire", displayDateYear == 0);
 
 		if (!PropsValues.SCHEDULER_ENABLED) {
 			neverExpire = true;
@@ -707,7 +709,7 @@ public class JournalPortlet extends MVCPortlet {
 			uploadPortletRequest, "reviewDateAmPm");
 
 		boolean neverReview = ParamUtil.getBoolean(
-			uploadPortletRequest, "neverReview");
+			uploadPortletRequest, "neverReview", displayDateYear == 0);
 
 		if (!PropsValues.SCHEDULER_ENABLED) {
 			neverReview = true;
@@ -855,6 +857,7 @@ public class JournalPortlet extends MVCPortlet {
 			actionRequest, "targetPortletId");
 		String contentField = ParamUtil.getString(
 			actionRequest, "contentField");
+
 		String feedType = ParamUtil.getString(
 			actionRequest, "feedType", RSSUtil.FEED_TYPE_DEFAULT);
 
@@ -1085,6 +1088,24 @@ public class JournalPortlet extends MVCPortlet {
 	protected void doDispatch(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
+
+		try {
+			String path = getPath(renderRequest, renderResponse);
+
+			if (Objects.equals(path, "/edit_article.jsp") ||
+				Objects.equals(path, "/view_article_history.jsp")) {
+
+				ActionUtil.getArticle(renderRequest);
+			}
+			else {
+				ActionUtil.getFolder(renderRequest);
+			}
+		}
+		catch (Exception e) {
+			_log.error(e.getMessage());
+
+			SessionErrors.add(renderRequest, e.getClass());
+		}
 
 		if (SessionErrors.contains(
 				renderRequest, NoSuchArticleException.class.getName()) ||

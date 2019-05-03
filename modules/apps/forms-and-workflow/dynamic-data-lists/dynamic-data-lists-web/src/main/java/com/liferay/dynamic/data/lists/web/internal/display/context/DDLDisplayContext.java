@@ -128,6 +128,10 @@ public class DDLDisplayContext {
 			HtmlUtil.escape(structureName), false);
 	}
 
+	public String getCSVExport() {
+		return _ddlWebConfiguration.csvExport();
+	}
+
 	public String getDDLRecordSetDisplayStyle() {
 		if (_ddlRecordDisplayStyle == null) {
 			PortalPreferences portalPreferences =
@@ -235,18 +239,14 @@ public class DDLDisplayContext {
 	}
 
 	public String getOrderByCol() {
-		String orderByCol = ParamUtil.getString(
+		return ParamUtil.getString(
 			_ddlRequestHelper.getRenderRequest(), "orderByCol",
 			"modified-date");
-
-		return orderByCol;
 	}
 
 	public String getOrderByType() {
-		String orderByType = ParamUtil.getString(
+		return ParamUtil.getString(
 			_ddlRequestHelper.getRenderRequest(), "orderByType", "asc");
-
-		return orderByType;
 	}
 
 	public DDLRecordSet getRecordSet() {

@@ -84,7 +84,7 @@ public abstract class BaseBuildAutoUpgradeTestCase {
 
 	@Before
 	public void setUp() throws Exception {
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(
 				"drop table BuildAutoUpgradeTestEntity")) {
 
@@ -108,7 +108,7 @@ public abstract class BaseBuildAutoUpgradeTestCase {
 			_bundle.uninstall();
 		}
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(
 				"drop table BuildAutoUpgradeTestEntity")) {
 
@@ -149,7 +149,7 @@ public abstract class BaseBuildAutoUpgradeTestCase {
 
 		_bundle.start();
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(
 				"insert into BuildAutoUpgradeTestEntity values (1, 'data')")) {
 
@@ -168,7 +168,7 @@ public abstract class BaseBuildAutoUpgradeTestCase {
 		DBAssertionUtil.assertColumns(
 			"BuildAutoUpgradeTestEntity", "id_", "data_", "data2");
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(
 				"select id_, data_, data2 from BuildAutoUpgradeTestEntity");
 			ResultSet rs = ps.executeQuery()) {
@@ -185,7 +185,7 @@ public abstract class BaseBuildAutoUpgradeTestCase {
 			Assert.assertFalse(rs.next());
 		}
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(
 				"update BuildAutoUpgradeTestEntity set data2 = 'data2' where " +
 					"id_ = 1")) {
@@ -200,7 +200,7 @@ public abstract class BaseBuildAutoUpgradeTestCase {
 		DBAssertionUtil.assertColumns(
 			"BuildAutoUpgradeTestEntity", "id_", "data2");
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(
 				"select id_, data2 from BuildAutoUpgradeTestEntity");
 			ResultSet rs = ps.executeQuery()) {
@@ -220,7 +220,7 @@ public abstract class BaseBuildAutoUpgradeTestCase {
 		DBAssertionUtil.assertColumns(
 			"BuildAutoUpgradeTestEntity", "id_", "data_");
 
-		try (Connection con = DataAccess.getUpgradeOptimizedConnection();
+		try (Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(
 				"select id_, data_ from BuildAutoUpgradeTestEntity");
 			ResultSet rs = ps.executeQuery()) {
@@ -255,42 +255,42 @@ public abstract class BaseBuildAutoUpgradeTestCase {
 			ClassWriter classWriter = new ClassWriter(
 				classReader, ClassWriter.COMPUTE_MAXS);
 
-			ClassVisitor classVisitor =
-				new ClassVisitor(Opcodes.ASM5, classWriter) {
+			ClassVisitor classVisitor = new ClassVisitor(
+				Opcodes.ASM5, classWriter) {
 
-					@Override
-					public FieldVisitor visitField(
-						int access, String name, String desc, String signature,
-						Object value) {
+				@Override
+				public FieldVisitor visitField(
+					int access, String name, String desc, String signature,
+					Object value) {
 
-						if ((createSQL != null) &&
-							name.equals("TABLE_SQL_CREATE")) {
+					if ((createSQL != null) &&
+						name.equals("TABLE_SQL_CREATE")) {
 
-							value = createSQL;
-						}
-
-						return super.visitField(
-							access, name, desc, signature, value);
+						value = createSQL;
 					}
 
-					@Override
-					public MethodVisitor visitMethod(
-						int access, String name, String desc, String signature,
-						String[] exceptions) {
+					return super.visitField(
+						access, name, desc, signature, value);
+				}
 
-						MethodVisitor methodVisitor = super.visitMethod(
-							access, name, desc, signature, exceptions);
+				@Override
+				public MethodVisitor visitMethod(
+					int access, String name, String desc, String signature,
+					String[] exceptions) {
 
-						if (name.equals("<clinit>")) {
-							_initTableColumns(methodVisitor, tableColumns);
+					MethodVisitor methodVisitor = super.visitMethod(
+						access, name, desc, signature, exceptions);
 
-							return null;
-						}
+					if (name.equals("<clinit>")) {
+						_initTableColumns(methodVisitor, tableColumns);
 
-						return methodVisitor;
+						return null;
 					}
 
-				};
+					return methodVisitor;
+				}
+
+			};
 
 			classReader.accept(classVisitor, 0);
 

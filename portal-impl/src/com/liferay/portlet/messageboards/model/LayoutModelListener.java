@@ -20,7 +20,7 @@ import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.Layout;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class LayoutModelListener extends BaseModelListener<Layout> {
 

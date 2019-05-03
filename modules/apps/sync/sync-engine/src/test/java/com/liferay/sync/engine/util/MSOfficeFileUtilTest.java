@@ -26,8 +26,9 @@ public class MSOfficeFileUtilTest {
 
 	@Test
 	public void testIsTempCreatedFile() throws Exception {
-		String[] fileNames =
-			{"B1F94A3.tmp", "ppt5039.tmp", "~$st.doc", "~WRF0000.tmp"};
+		String[] fileNames = {
+			"B1F94A3.tmp", "ppt5039.tmp", "~$st.doc", "~WRF0000.tmp"
+		};
 
 		for (String fileName : fileNames) {
 			Assert.assertTrue(

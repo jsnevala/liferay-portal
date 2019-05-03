@@ -80,7 +80,7 @@ import org.springframework.context.ApplicationContext;
  */
 @Component(
 	immediate = true,
-	property = {"verify.process.name=com.liferay.document.library.service"},
+	property = "verify.process.name=com.liferay.document.library.service",
 	service = VerifyProcess.class
 )
 public class DLServiceVerifyProcess extends VerifyProcess {
@@ -570,8 +570,8 @@ public class DLServiceVerifyProcess extends VerifyProcess {
 
 		DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
 
-		dlFileVersion.setTitle(newTitle);
 		dlFileVersion.setFileName(fileName);
+		dlFileVersion.setTitle(newTitle);
 
 		_dlFileVersionLocalService.updateDLFileVersion(dlFileVersion);
 
@@ -666,7 +666,7 @@ public class DLServiceVerifyProcess extends VerifyProcess {
 	}
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.document.library.service)(release.schema.version=1.0.0))",
+		target = "(&(release.bundle.symbolic.name=com.liferay.document.library.service)(&(release.schema.version>=1.0.0)(!(release.schema.version>=1.1.0))))",
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {

@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class XStreamAliasRegistryUtil {
 

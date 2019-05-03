@@ -47,8 +47,6 @@ import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -553,6 +551,10 @@ public class JournalDisplayContext {
 			return _orderByType;
 		}
 
+		if (isNavigationRecent()) {
+			return "desc";
+		}
+
 		_orderByType = ParamUtil.getString(_request, "orderByType");
 
 		if (Validator.isNull(_orderByType)) {
@@ -721,7 +723,7 @@ public class JournalDisplayContext {
 			}
 
 			if (isNavigationRecent()) {
-				articleSearchContainer.setOrderByCol("create-date");
+				articleSearchContainer.setOrderByCol("modified-date");
 				articleSearchContainer.setOrderByType(getOrderByType());
 			}
 
@@ -1245,9 +1247,6 @@ public class JournalDisplayContext {
 			active, WorkflowConstants.getStatusLabel(status),
 			portletURL.toString());
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		JournalDisplayContext.class);
 
 	private JournalArticle _article;
 	private JournalArticleDisplay _articleDisplay;

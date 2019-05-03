@@ -201,6 +201,7 @@ public class RouteImpl implements Route {
 				generatedParameters.entrySet()) {
 
 			String name = entry.getKey();
+
 			StringParser stringParser = entry.getValue();
 
 			String value = stringParser.build(parameters);

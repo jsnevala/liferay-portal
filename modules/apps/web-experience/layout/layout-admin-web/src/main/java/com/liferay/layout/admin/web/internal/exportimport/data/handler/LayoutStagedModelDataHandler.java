@@ -93,7 +93,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = StagedModelDataHandler.class)
 public class LayoutStagedModelDataHandler
@@ -102,7 +102,7 @@ public class LayoutStagedModelDataHandler
 	public static final String[] CLASS_NAMES = {Layout.class.getName()};
 
 	@Override
-	public void deleteStagedModel(Layout layout) {
+	public void deleteStagedModel(Layout layout) throws PortalException {
 		_layoutLocalService.deleteLayout(layout);
 	}
 
@@ -310,9 +310,16 @@ public class LayoutStagedModelDataHandler
 		boolean privateLayout = GetterUtil.getBoolean(
 			referenceElement.attributeValue("private-layout"));
 
-		Layout existingLayout = null;
+		Layout existingLayout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
+			uuid, groupId, privateLayout);
 
-		existingLayout = fetchMissingReference(uuid, groupId, privateLayout);
+		if ((existingLayout == null) ||
+			(existingLayout.getGroupId() != portletDataContext.getGroupId()) ||
+			(existingLayout.isPrivateLayout() !=
+				portletDataContext.isPrivateLayout())) {
+
+			return;
+		}
 
 		Map<Long, Layout> layouts =
 			(Map<Long, Layout>)portletDataContext.getNewPrimaryKeysMap(
@@ -1025,11 +1032,21 @@ public class LayoutStagedModelDataHandler
 			return;
 		}
 
+		long scopeGroupId = portletDataContext.getScopeGroupId();
+		boolean privateLayout = portletDataContext.isPrivateLayout();
+
+		Layout existingLayout = _layoutLocalService.fetchLayout(
+			linkedToLayoutUuid, scopeGroupId, privateLayout);
+
+		if (existingLayout != null) {
+			typeSettingsProperties.setProperty(
+				"linkToLayoutId", String.valueOf(existingLayout.getLayoutId()));
+		}
+
 		_exportImportProcessCallbackRegistry.registerCallback(
 			portletDataContext.getExportImportProcessId(),
 			new ImportLinkedLayoutCallable(
-				portletDataContext.getScopeGroupId(),
-				portletDataContext.isPrivateLayout(), importedLayout.getUuid(),
+				scopeGroupId, privateLayout, importedLayout.getUuid(),
 				linkedToLayoutUuid));
 	}
 
@@ -1052,14 +1069,9 @@ public class LayoutStagedModelDataHandler
 		}
 
 		if (importThemeSettings) {
+			importedLayout.setThemeId(layout.getThemeId());
 			importedLayout.setColorSchemeId(layout.getColorSchemeId());
 			importedLayout.setCss(layout.getCss());
-			importedLayout.setThemeId(layout.getThemeId());
-		}
-		else {
-			importedLayout.setColorSchemeId(StringPool.BLANK);
-			importedLayout.setCss(StringPool.BLANK);
-			importedLayout.setThemeId(StringPool.BLANK);
 		}
 	}
 

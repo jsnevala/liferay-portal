@@ -66,7 +66,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Peter Fellwock
  */
 @Component(
-	immediate = true, property = {"destination.name=" + DestinationNames.FLAGS},
+	immediate = true, property = "destination.name=" + DestinationNames.FLAGS,
 	service = MessageListener.class
 )
 public class FlagsRequestMessageListener extends BaseMessageListener {

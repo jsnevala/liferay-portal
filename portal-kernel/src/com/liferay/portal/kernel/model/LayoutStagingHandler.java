@@ -64,16 +64,25 @@ public class LayoutStagingHandler implements InvocationHandler, Serializable {
 		throws Throwable {
 
 		try {
+			String methodName = method.getName();
+
+			if (methodName.equals("getWrappedModel")) {
+				return _layout;
+			}
+
 			if (_layoutRevision == null) {
 				return method.invoke(_layout, arguments);
 			}
 
-			String methodName = method.getName();
+			if (methodName.equals("clone")) {
+				return _clone();
+			}
 
 			if (methodName.equals("getLayoutType")) {
 				return _getLayoutType();
 			}
-			else if (methodName.equals("getRegularURL")) {
+
+			if (methodName.equals("getRegularURL")) {
 				Class<?> layoutRevisionClass = _layoutRevision.getClass();
 
 				method = layoutRevisionClass.getMethod(
@@ -81,16 +90,13 @@ public class LayoutStagingHandler implements InvocationHandler, Serializable {
 
 				return method.invoke(_layoutRevision, arguments);
 			}
-			else if (methodName.equals("toEscapedModel")) {
+
+			if (methodName.equals("toEscapedModel")) {
 				if (_layout.isEscapedModel()) {
 					return this;
 				}
 
 				return _toEscapedModel();
-			}
-
-			if (methodName.equals("clone")) {
-				return _clone();
 			}
 
 			Object bean = _layout;
@@ -137,7 +143,9 @@ public class LayoutStagingHandler implements InvocationHandler, Serializable {
 		return ProxyUtil.newProxyInstance(
 			PortalClassLoaderUtil.getClassLoader(),
 			new Class<?>[] {Layout.class},
-			new LayoutStagingHandler(_layout, _layoutRevision));
+			new LayoutStagingHandler(
+				(Layout)_layout.clone(),
+				(LayoutRevision)_layoutRevision.clone()));
 	}
 
 	private LayoutRevision _getLayoutRevision(
@@ -303,6 +311,7 @@ public class LayoutStagingHandler implements InvocationHandler, Serializable {
 		_layoutRevisionMethodNames.add("getIconImageId");
 		_layoutRevisionMethodNames.add("getKeywords");
 		_layoutRevisionMethodNames.add("getLayoutSet");
+		_layoutRevisionMethodNames.add("getModifiedDate");
 		_layoutRevisionMethodNames.add("getName");
 		_layoutRevisionMethodNames.add("getRobots");
 		_layoutRevisionMethodNames.add("getTheme");
@@ -326,6 +335,7 @@ public class LayoutStagingHandler implements InvocationHandler, Serializable {
 		_layoutRevisionMethodNames.add("setIconImageId");
 		_layoutRevisionMethodNames.add("setKeywords");
 		_layoutRevisionMethodNames.add("setKeywordsMap");
+		_layoutRevisionMethodNames.add("setModifiedDate");
 		_layoutRevisionMethodNames.add("setName");
 		_layoutRevisionMethodNames.add("setNameMap");
 		_layoutRevisionMethodNames.add("setRobots");

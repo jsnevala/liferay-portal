@@ -95,12 +95,12 @@ import org.osgi.service.component.annotations.Reference;
  * @author Hugo Huijser
  * @author Daniel Kocsis
  * @author László Csontos
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @see    com.liferay.journal.internal.exportimport.creation.strategy.JournalCreationStrategy
  * @see    PortletDataHandler
  */
 @Component(
-	property = {"javax.portlet.name=" + JournalPortletKeys.JOURNAL},
+	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = PortletDataHandler.class
 )
 public class JournalPortletDataHandler extends BasePortletDataHandler {
@@ -152,8 +152,9 @@ public class JournalPortletDataHandler extends BasePortletDataHandler {
 			new StagedModelType(JournalFeed.class),
 			new StagedModelType(JournalFolder.class));
 
-		String[] referencedContentBehaviorOptions =
-			{"include-always", "include-if-modified"};
+		String[] referencedContentBehaviorOptions = {
+			"include-always", "include-if-modified"
+		};
 
 		setExportControls(
 			new PortletDataHandlerBoolean(

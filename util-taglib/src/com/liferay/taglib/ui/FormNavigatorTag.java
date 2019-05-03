@@ -40,7 +40,7 @@ public class FormNavigatorTag extends IncludeTag {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	public void setCategoryNames(String[] categoryNames) {
@@ -48,7 +48,7 @@ public class FormNavigatorTag extends IncludeTag {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	public void setCategorySections(String[][] categorySections) {
@@ -80,7 +80,7 @@ public class FormNavigatorTag extends IncludeTag {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	public void setJspPath(String jspPath) {
@@ -196,8 +196,8 @@ public class FormNavigatorTag extends IncludeTag {
 	@Override
 	protected String getPage() {
 		if (Validator.isNotNull(_markupView)) {
-			return
-				"/html/taglib/ui/form_navigator/" + _markupView + "/page.jsp";
+			return "/html/taglib/ui/form_navigator/" + _markupView +
+				"/page.jsp";
 		}
 
 		return "/html/taglib/ui/form_navigator/page.jsp";

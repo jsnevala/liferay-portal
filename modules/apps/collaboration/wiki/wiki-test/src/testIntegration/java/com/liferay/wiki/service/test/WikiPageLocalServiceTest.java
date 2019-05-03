@@ -32,6 +32,7 @@ import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoValue;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -43,6 +44,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -60,6 +62,8 @@ import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.WikiPageLocalServiceUtil;
 import com.liferay.wiki.util.test.WikiTestUtil;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Assert;
@@ -310,6 +314,7 @@ public class WikiPageLocalServiceTest {
 			_group.getGroupId(), _node.getNodeId(), true);
 
 		WikiPage parentPage = pages[0];
+
 		WikiPage childPage = pages[1];
 
 		WikiPageLocalServiceUtil.restorePageFromTrash(
@@ -340,6 +345,7 @@ public class WikiPageLocalServiceTest {
 			_group.getGroupId(), _node.getNodeId(), true);
 
 		WikiPage page = pages[0];
+
 		WikiPage redirectPage = pages[1];
 
 		WikiPageLocalServiceUtil.restorePageFromTrash(
@@ -411,8 +417,7 @@ public class WikiPageLocalServiceTest {
 
 	@Test
 	public void testGetNoAssetPages() throws Exception {
-		List<WikiPage> initialPages =
-			WikiPageLocalServiceUtil.getNoAssetPages();
+		List<WikiPage> initialPages = _getGroupNoAssetPages();
 
 		WikiTestUtil.addPage(_group.getGroupId(), _node.getNodeId(), true);
 
@@ -426,7 +431,7 @@ public class WikiPageLocalServiceTest {
 
 		AssetEntryLocalServiceUtil.deleteAssetEntry(assetEntry);
 
-		List<WikiPage> pages = WikiPageLocalServiceUtil.getNoAssetPages();
+		List<WikiPage> pages = _getGroupNoAssetPages();
 
 		Assert.assertEquals(
 			pages.toString(), initialPages.size() + 1, pages.size());
@@ -441,7 +446,124 @@ public class WikiPageLocalServiceTest {
 		WikiPage retrievedPage = WikiPageLocalServiceUtil.getPage(
 			page.getResourcePrimKey());
 
-		Assert.assertEquals(retrievedPage.getPageId(), page.getPageId());
+		Assert.assertEquals(retrievedPage, page);
+	}
+
+	@Test
+	public void testGetRecentChangesWithANonRecentCreatedPage()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		WikiPage page = WikiTestUtil.addPage(
+			TestPropsValues.getUserId(), _node.getNodeId(), "Page1",
+			RandomTestUtil.randomString(), true, serviceContext);
+
+		Calendar cal = CalendarFactoryUtil.getCalendar();
+
+		cal.add(Calendar.WEEK_OF_YEAR, -2);
+
+		Date date = cal.getTime();
+
+		serviceContext.setCreateDate(date);
+		serviceContext.setModifiedDate(date);
+
+		WikiTestUtil.addPage(
+			TestPropsValues.getUserId(), _node.getNodeId(), "Page2",
+			RandomTestUtil.randomString(), true, serviceContext);
+
+		List<WikiPage> recentPages = WikiPageLocalServiceUtil.getRecentChanges(
+			_group.getGroupId(), _node.getNodeId(), QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
+
+		Assert.assertEquals(recentPages.toString(), 1, recentPages.size());
+
+		Assert.assertEquals(page, recentPages.get(0));
+	}
+
+	@Test
+	public void testGetRecentChangesWithAnUpdatedNonRecentCreatedPage()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		WikiPage page1 = WikiTestUtil.addPage(
+			TestPropsValues.getUserId(), _node.getNodeId(), "Page1",
+			RandomTestUtil.randomString(), true, serviceContext);
+
+		Calendar cal = CalendarFactoryUtil.getCalendar();
+
+		cal.add(Calendar.WEEK_OF_YEAR, -2);
+
+		Date date = cal.getTime();
+
+		serviceContext.setCreateDate(date);
+		serviceContext.setModifiedDate(date);
+
+		WikiPage page2 = WikiTestUtil.addPage(
+			TestPropsValues.getUserId(), _node.getNodeId(), "Page2",
+			RandomTestUtil.randomString(), true, serviceContext);
+
+		WikiPage updatedPage2 = WikiTestUtil.updatePage(page2);
+
+		List<WikiPage> recentPages = WikiPageLocalServiceUtil.getRecentChanges(
+			_group.getGroupId(), _node.getNodeId(), QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
+
+		Assert.assertEquals(recentPages.toString(), 2, recentPages.size());
+
+		Assert.assertEquals(updatedPage2, recentPages.get(0));
+		Assert.assertEquals(page1, recentPages.get(1));
+	}
+
+	@Test
+	public void testOrderByModifiedDate() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		WikiPage page1 = WikiTestUtil.addPage(
+			TestPropsValues.getUserId(), _node.getNodeId(), "Page1",
+			RandomTestUtil.randomString(), true, serviceContext);
+
+		WikiPage page2 = WikiTestUtil.addPage(
+			TestPropsValues.getUserId(), _node.getNodeId(), "Page2",
+			RandomTestUtil.randomString(), true, serviceContext);
+
+		List<WikiPage> recentPages = WikiPageLocalServiceUtil.getRecentChanges(
+			_group.getGroupId(), _node.getNodeId(), QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
+
+		Assert.assertEquals(recentPages.toString(), 2, recentPages.size());
+
+		Assert.assertEquals(page2, recentPages.get(0));
+		Assert.assertEquals(page1, recentPages.get(1));
+	}
+
+	@Test
+	public void testOrderByModifiedDateWithModifiedPages() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		WikiPage page1 = WikiTestUtil.addPage(
+			TestPropsValues.getUserId(), _node.getNodeId(), "Page1",
+			RandomTestUtil.randomString(), true, serviceContext);
+
+		WikiPage page2 = WikiTestUtil.addPage(
+			TestPropsValues.getUserId(), _node.getNodeId(), "Page2",
+			RandomTestUtil.randomString(), true, serviceContext);
+
+		WikiPage updatedPage1 = WikiTestUtil.updatePage(page1);
+
+		List<WikiPage> recentPages = WikiPageLocalServiceUtil.getRecentChanges(
+			_group.getGroupId(), _node.getNodeId(), QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
+
+		Assert.assertEquals(recentPages.toString(), 2, recentPages.size());
+
+		Assert.assertEquals(updatedPage1, recentPages.get(0));
+		Assert.assertEquals(page2, recentPages.get(1));
 	}
 
 	@Test
@@ -956,6 +1078,12 @@ public class WikiPageLocalServiceTest {
 
 		checkPopulatedServiceContext(
 			serviceContext, revertedPage, hasExpandoValues);
+	}
+
+	private List<WikiPage> _getGroupNoAssetPages() {
+		return ListUtil.filter(
+			WikiPageLocalServiceUtil.getNoAssetPages(),
+			page -> page.getGroupId() == _group.getGroupId());
 	}
 
 	@DeleteAfterTestRun

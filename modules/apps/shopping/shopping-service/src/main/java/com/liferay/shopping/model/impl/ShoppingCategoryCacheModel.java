@@ -19,7 +19,6 @@ import aQute.bnd.annotation.ProviderType;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-
 import com.liferay.shopping.model.ShoppingCategory;
 
 import java.io.Externalizable;
@@ -33,12 +32,12 @@ import java.util.Date;
  * The cache model class for representing ShoppingCategory in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see ShoppingCategory
  * @generated
  */
 @ProviderType
-public class ShoppingCategoryCacheModel implements CacheModel<ShoppingCategory>,
-	Externalizable {
+public class ShoppingCategoryCacheModel
+	implements CacheModel<ShoppingCategory>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -49,7 +48,8 @@ public class ShoppingCategoryCacheModel implements CacheModel<ShoppingCategory>,
 			return false;
 		}
 
-		ShoppingCategoryCacheModel shoppingCategoryCacheModel = (ShoppingCategoryCacheModel)obj;
+		ShoppingCategoryCacheModel shoppingCategoryCacheModel =
+			(ShoppingCategoryCacheModel)obj;
 
 		if (categoryId == shoppingCategoryCacheModel.categoryId) {
 			return true;
@@ -162,8 +162,7 @@ public class ShoppingCategoryCacheModel implements CacheModel<ShoppingCategory>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(categoryId);
 
 		objectOutput.writeLong(groupId);
@@ -209,4 +208,5 @@ public class ShoppingCategoryCacheModel implements CacheModel<ShoppingCategory>,
 	public long parentCategoryId;
 	public String name;
 	public String description;
+
 }

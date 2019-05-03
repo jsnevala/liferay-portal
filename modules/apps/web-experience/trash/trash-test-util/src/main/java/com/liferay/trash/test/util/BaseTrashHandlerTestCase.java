@@ -3357,10 +3357,7 @@ public abstract class BaseTrashHandlerTestCase {
 		try {
 			WorkflowThreadLocal.setEnabled(true);
 
-			BaseModel<?> baseModel = addBaseModelWithWorkflow(
-				parentBaseModel, serviceContext);
-
-			return baseModel;
+			return addBaseModelWithWorkflow(parentBaseModel, serviceContext);
 		}
 		finally {
 			WorkflowThreadLocal.setEnabled(workflowEnabled);
@@ -3394,11 +3391,8 @@ public abstract class BaseTrashHandlerTestCase {
 
 			WhenHasDraftStatus whenHasDraftStatus = (WhenHasDraftStatus)this;
 
-			BaseModel<?> baseModel =
-				whenHasDraftStatus.addDraftBaseModelWithWorkflow(
-					parentBaseModel, serviceContext);
-
-			return baseModel;
+			return whenHasDraftStatus.addDraftBaseModelWithWorkflow(
+				parentBaseModel, serviceContext);
 		}
 		finally {
 			WorkflowThreadLocal.setEnabled(workflowEnabled);

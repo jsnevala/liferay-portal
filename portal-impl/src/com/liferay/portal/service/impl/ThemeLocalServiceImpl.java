@@ -275,7 +275,7 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getPageThemes}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #getPageThemes}
 	 */
 	@Deprecated
 	@Override
@@ -915,8 +915,11 @@ public class ThemeLocalServiceImpl extends ThemeLocalServiceBaseImpl {
 
 		String contextPath = servletContext.getContextPath();
 
-		spriteFileName = contextPath.concat(SpriteProcessor.PATH).concat(
-			spriteFileName);
+		spriteFileName = contextPath.concat(
+			SpriteProcessor.PATH
+		).concat(
+			spriteFileName
+		);
 
 		theme.setSpriteImages(spriteFileName, spriteProperties);
 	}

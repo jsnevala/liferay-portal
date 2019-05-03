@@ -81,7 +81,7 @@ public class SearchContainer<R> {
 		PortletURL iteratorURL, List<String> headerNames,
 		String emptyResultsMessage) {
 
-		this (
+		this(
 			portletRequest, displayTerms, searchTerms, curParam, cur, delta,
 			iteratorURL, headerNames, emptyResultsMessage, StringPool.BLANK);
 	}
@@ -156,7 +156,7 @@ public class SearchContainer<R> {
 		PortletURL iteratorURL, List<String> headerNames,
 		String emptyResultsMessage) {
 
-		this (
+		this(
 			portletRequest, displayTerms, searchTerms, curParam, 0, delta,
 			iteratorURL, headerNames, emptyResultsMessage);
 	}
@@ -328,6 +328,10 @@ public class SearchContainer<R> {
 		return _start;
 	}
 
+	public String getSummary() {
+		return _summary;
+	}
+
 	public int getTotal() {
 		return _total;
 	}
@@ -482,6 +486,10 @@ public class SearchContainer<R> {
 		_search = search;
 	}
 
+	public void setSummary(String summary) {
+		_summary = summary;
+	}
+
 	public void setTotal(int total) {
 		_total = total;
 
@@ -578,6 +586,7 @@ public class SearchContainer<R> {
 	private boolean _search;
 	private final DisplayTerms _searchTerms;
 	private int _start;
+	private String _summary;
 	private int _total;
 	private String _totalVar;
 	private boolean _uniqueId;

@@ -16,8 +16,6 @@ package com.liferay.site.navigation.menu.web.internal.portlet.template;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portletdisplaytemplate.BasePortletDisplayTemplateHandler;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateVariableGroup;
@@ -48,7 +46,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	configurationPid = "com.liferay.site.navigation.menu.web.configuration.SiteNavigationMenuWebTemplateConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
-	property = {"javax.portlet.name=" + SiteNavigationMenuPortletKeys.SITE_NAVIGATION_MENU},
+	property = "javax.portlet.name=" + SiteNavigationMenuPortletKeys.SITE_NAVIGATION_MENU,
 	service = TemplateHandler.class
 )
 public class SiteNavigationMenuPortletDisplayTemplateHandler
@@ -82,8 +80,11 @@ public class SiteNavigationMenuPortletDisplayTemplateHandler
 		String portletTitle = _portal.getPortletTitle(
 			SiteNavigationMenuPortletKeys.SITE_NAVIGATION_MENU, resourceBundle);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override
@@ -147,9 +148,6 @@ public class SiteNavigationMenuPortletDisplayTemplateHandler
 
 		return templateVariableGroup;
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		SiteNavigationMenuPortletDisplayTemplateHandler.class);
 
 	@Reference
 	private Portal _portal;

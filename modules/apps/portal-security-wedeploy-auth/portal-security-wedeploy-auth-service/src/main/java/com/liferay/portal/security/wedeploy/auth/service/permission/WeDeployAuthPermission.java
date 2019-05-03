@@ -29,7 +29,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Supritha Sundaram
  */
 @Component(
-	property = {"resource.name=" + WeDeployAuthPermission.RESOURCE_NAME},
+	property = "resource.name=" + WeDeployAuthPermission.RESOURCE_NAME,
 	service = ResourcePermissionChecker.class
 )
 public class WeDeployAuthPermission extends BaseResourcePermissionChecker {

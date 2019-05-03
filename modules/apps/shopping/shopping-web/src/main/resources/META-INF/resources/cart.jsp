@@ -138,7 +138,7 @@ boolean minQuantityMultiple = PrefsPropsUtil.getBoolean(company.getCompanyId(), 
 			ShoppingItem item = ShoppingItemServiceUtil.getItem(badItemIds[i]);
 		%>
 
-			<strong><%= HtmlUtil.escape(item.getSku()) %></strong><c:if test="<%= i + 1 < badItemIds.length %>">,</c:if>
+			<strong><%= HtmlUtil.escape(item.getSku()) %></strong><c:if test="<%= (i + 1) < badItemIds.length %>">,</c:if>
 
 		<%
 		}

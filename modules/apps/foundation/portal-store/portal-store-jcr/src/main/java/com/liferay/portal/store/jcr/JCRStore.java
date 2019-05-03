@@ -67,7 +67,7 @@ import org.osgi.service.component.annotations.Modified;
  * @author     Brian Wing Shun Chan
  * @author     Edward Han
  * @author     Manuel de la Peña
- * @deprecated As of 2.0.0, with no direct replacement
+ * @deprecated As of Judson (7.1.x), with no direct replacement
  */
 @Component(
 	configurationPid = "com.liferay.portal.store.jcr.configuration.JCRStoreConfiguration",
@@ -236,7 +236,8 @@ public class JCRStore extends BaseStore {
 			logFailedDeletion(companyId, repositoryId, dirName, pnfe);
 		}
 		catch (RepositoryException re) {
-			String message = GetterUtil.getString(re.getMessage());
+			String message = StringUtil.toLowerCase(
+				GetterUtil.getString(re.getMessage()));
 
 			if (message.contains("failed to resolve path")) {
 				logFailedDeletion(companyId, repositoryId, dirName, re);
@@ -693,8 +694,12 @@ public class JCRStore extends BaseStore {
 			Node newFileNode = newRepositoryNode.addNode(
 				fileName, JCRConstants.NT_FILE);
 
-			String newContentNodePath = newFileNode.getPath().concat(
-				StringPool.SLASH).concat(JCRConstants.JCR_CONTENT);
+			String newContentNodePath = newFileNode.getPath(
+			).concat(
+				StringPool.SLASH
+			).concat(
+				JCRConstants.JCR_CONTENT
+			);
 
 			session.move(contentNodePath, newContentNodePath);
 
@@ -757,8 +762,12 @@ public class JCRStore extends BaseStore {
 			Node newFileNode = repositoryNode.addNode(
 				newFileName, JCRConstants.NT_FILE);
 
-			String newContentNodePath = newFileNode.getPath().concat(
-				StringPool.SLASH).concat(JCRConstants.JCR_CONTENT);
+			String newContentNodePath = newFileNode.getPath(
+			).concat(
+				StringPool.SLASH
+			).concat(
+				JCRConstants.JCR_CONTENT
+			);
 
 			session.move(contentNodePath, newContentNodePath);
 

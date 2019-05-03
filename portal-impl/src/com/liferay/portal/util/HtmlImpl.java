@@ -443,8 +443,8 @@ public class HtmlImpl implements Html {
 
 			boolean hasToken = false;
 
-			for (int j = 0; j < _XPATH_TOKENS.length; j++) {
-				if (c == _XPATH_TOKENS[j]) {
+			for (char xPathToken : _XPATH_TOKENS) {
+				if (c == xPathToken) {
 					hasToken = true;
 
 					break;
@@ -471,15 +471,25 @@ public class HtmlImpl implements Html {
 			String[] parts = xPathAttribute.split(StringPool.APOSTROPHE);
 
 			return "concat('".concat(
-				StringUtil.merge(parts, "', \"'\", '")).concat("')");
+				StringUtil.merge(parts, "', \"'\", '")
+			).concat(
+				"')"
+			);
 		}
 
 		if (hasQuote) {
-			return StringPool.APOSTROPHE.concat(xPathAttribute).concat(
-				StringPool.APOSTROPHE);
+			return StringPool.APOSTROPHE.concat(
+				xPathAttribute
+			).concat(
+				StringPool.APOSTROPHE
+			);
 		}
 
-		return StringPool.QUOTE.concat(xPathAttribute).concat(StringPool.QUOTE);
+		return StringPool.QUOTE.concat(
+			xPathAttribute
+		).concat(
+			StringPool.QUOTE
+		);
 	}
 
 	/**
@@ -601,7 +611,7 @@ public class HtmlImpl implements Html {
 	 * @param      text the text
 	 * @return     the converted text, or <code>null</code> if the text is
 	 *             <code>null</code>
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -818,10 +828,10 @@ public class HtmlImpl implements Html {
 		if ((pos + tag.length + 1) <= text.length()) {
 			char item = '\0';
 
-			for (int i = 0; i < tag.length; i++) {
+			for (char c : tag) {
 				item = text.charAt(pos++);
 
-				if (Character.toLowerCase(item) != tag[i]) {
+				if (Character.toLowerCase(item) != c) {
 					return false;
 				}
 			}
@@ -930,11 +940,13 @@ public class HtmlImpl implements Html {
 		'e', 'f'
 	};
 
-	private static final String[] _MS_WORD_HTML =
-		{"&reg;", StringPool.APOSTROPHE, StringPool.QUOTE, StringPool.QUOTE};
+	private static final String[] _MS_WORD_HTML = {
+		"&reg;", StringPool.APOSTROPHE, StringPool.QUOTE, StringPool.QUOTE
+	};
 
-	private static final String[] _MS_WORD_UNICODE =
-		{"\u00ae", "\u2019", "\u201c", "\u201d"};
+	private static final String[] _MS_WORD_UNICODE = {
+		"\u00ae", "\u2019", "\u201c", "\u201d"
+	};
 
 	private static final char[] _TAG_SCRIPT = {'s', 'c', 'r', 'i', 'p', 't'};
 
@@ -949,6 +961,7 @@ public class HtmlImpl implements Html {
 		'<', '>', '*', '$', '"', '"', ' ', 9, 10, 13, 133, 8232
 	};
 
+	private static final Pattern _pattern = Pattern.compile("([\\s<&]|$)");
 	private static final Map<String, String> _unescapeMap = new HashMap<>();
 
 	static {
@@ -977,7 +990,5 @@ public class HtmlImpl implements Html {
 		_VALID_CHARS['-'] = true;
 		_VALID_CHARS['_'] = true;
 	}
-
-	private final Pattern _pattern = Pattern.compile("([\\s<&]|$)");
 
 }

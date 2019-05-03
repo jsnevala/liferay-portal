@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.util.Validator;
 import javax.portlet.PortletPreferences;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  * @author Jorge Ferrer
  */
 public class UpgradeAssetPublisher extends BaseUpgradePortletPreferences {

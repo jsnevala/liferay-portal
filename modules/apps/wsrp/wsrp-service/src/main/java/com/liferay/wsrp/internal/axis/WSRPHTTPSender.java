@@ -125,7 +125,11 @@ public class WSRPHTTPSender extends HTTPSender {
 
 			cookiesMap.put(
 				forwardCookie,
-				forwardCookie.concat(StringPool.EQUAL).concat(value));
+				forwardCookie.concat(
+					StringPool.EQUAL
+				).concat(
+					value
+				));
 		}
 
 		Collection<String> cookiesCollection = cookiesMap.values();

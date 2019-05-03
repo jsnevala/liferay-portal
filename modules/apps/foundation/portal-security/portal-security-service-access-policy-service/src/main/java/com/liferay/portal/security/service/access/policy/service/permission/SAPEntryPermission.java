@@ -28,9 +28,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Mika Koivisto
  */
 @Component(
-	property = {
-		"model.class.name=com.liferay.portal.security.service.access.policy.model.SAPEntry"
-	}
+	property = "model.class.name=com.liferay.portal.security.service.access.policy.model.SAPEntry"
 )
 public class SAPEntryPermission implements BaseModelPermissionChecker {
 

@@ -242,19 +242,19 @@ public class KaleoTaskInstanceTokenFinderImpl
 					kaleoTaskInstanceTokenQuery,
 					ArrayUtil.isEmpty(
 						kaleoTaskInstanceTokenQuery.getAssetPrimaryKeys()) &&
-					 ArrayUtil.isEmpty(
-						 kaleoTaskInstanceTokenQuery.getAssetTypes()) &&
-					 (kaleoTaskInstanceTokenQuery.getDueDateGT() == null)));
+					ArrayUtil.isEmpty(
+						kaleoTaskInstanceTokenQuery.getAssetTypes()) &&
+					(kaleoTaskInstanceTokenQuery.getDueDateGT() == null)));
 			sql = CustomSQLUtil.appendCriteria(
 				sql,
 				getTaskName(
 					kaleoTaskInstanceTokenQuery,
 					ArrayUtil.isEmpty(
 						kaleoTaskInstanceTokenQuery.getAssetPrimaryKeys()) &&
-					 ArrayUtil.isEmpty(
-						 kaleoTaskInstanceTokenQuery.getAssetTypes()) &&
-					 (kaleoTaskInstanceTokenQuery.getDueDateGT() == null) &&
-					 (kaleoTaskInstanceTokenQuery.getDueDateLT() == null)));
+					ArrayUtil.isEmpty(
+						kaleoTaskInstanceTokenQuery.getAssetTypes()) &&
+					(kaleoTaskInstanceTokenQuery.getDueDateGT() == null) &&
+					(kaleoTaskInstanceTokenQuery.getDueDateLT() == null)));
 			sql = CustomSQLUtil.appendCriteria(
 				sql,
 				getAssetTitle(
@@ -348,7 +348,7 @@ public class KaleoTaskInstanceTokenFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < assetPrimaryKeys.length - 1; i++) {
+		for (int i = 0; i < (assetPrimaryKeys.length - 1); i++) {
 			sb.append("(KaleoTaskInstanceToken.classPK = ?) OR ");
 		}
 
@@ -383,7 +383,7 @@ public class KaleoTaskInstanceTokenFinderImpl
 		}
 
 		for (int i = 0; i < assetTitles.length; i++) {
-			sb.append("(lower(AssetEntry.title) LIKE lower(?)) ");
+			sb.append("(LOWER(AssetEntry.title) LIKE LOWER(?)) ");
 			sb.append("OR ");
 		}
 
@@ -420,11 +420,11 @@ public class KaleoTaskInstanceTokenFinderImpl
 			sb.append(StringPool.OPEN_PARENTHESIS);
 		}
 
-		for (int i = 0; i < assetTypes.length - 1; i++) {
-			sb.append("(lower(KaleoTaskInstanceToken.className) LIKE ?) OR ");
+		for (int i = 0; i < (assetTypes.length - 1); i++) {
+			sb.append("(LOWER(KaleoTaskInstanceToken.className) LIKE ?) OR ");
 		}
 
-		sb.append("(lower(KaleoTaskInstanceToken.className) LIKE ?))");
+		sb.append("(LOWER(KaleoTaskInstanceToken.className) LIKE ?))");
 
 		return sb.toString();
 	}
@@ -738,7 +738,7 @@ public class KaleoTaskInstanceTokenFinderImpl
 
 		for (int i = 0; i < taskNames.length; i++) {
 			sb.append(
-				"(lower(KaleoTaskInstanceToken.kaleoTaskName) LIKE lower(?))");
+				"(LOWER(KaleoTaskInstanceToken.kaleoTaskName) LIKE LOWER(?))");
 			sb.append(" OR ");
 		}
 

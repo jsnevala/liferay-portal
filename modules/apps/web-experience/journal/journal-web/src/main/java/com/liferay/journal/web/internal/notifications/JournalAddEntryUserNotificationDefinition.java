@@ -22,11 +22,11 @@ import com.liferay.portal.kernel.notifications.UserNotificationDeliveryType;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + JournalPortletKeys.JOURNAL},
+	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = UserNotificationDefinition.class
 )
 public class JournalAddEntryUserNotificationDefinition

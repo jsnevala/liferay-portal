@@ -159,9 +159,9 @@ public class EntryFinderImpl
 			String sql = CustomSQLUtil.get(getClass(), COUNT_BY_U_FN_EA);
 
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(fullName)", StringPool.LIKE, false, fullNames);
+				sql, "LOWER(fullName)", StringPool.LIKE, false, fullNames);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(emailAddress)", StringPool.LIKE, true,
+				sql, "LOWER(emailAddress)", StringPool.LIKE, true,
 				emailAddresses);
 			sql = CustomSQLUtil.replaceAndOperator(sql, false);
 
@@ -210,9 +210,9 @@ public class EntryFinderImpl
 			String sql = CustomSQLUtil.get(getClass(), FIND_BY_U_FN_EA);
 
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(fullName)", StringPool.LIKE, false, fullNames);
+				sql, "LOWER(fullName)", StringPool.LIKE, false, fullNames);
 			sql = CustomSQLUtil.replaceKeywords(
-				sql, "lower(emailAddress)", StringPool.LIKE, true,
+				sql, "LOWER(emailAddress)", StringPool.LIKE, true,
 				emailAddresses);
 			sql = CustomSQLUtil.replaceAndOperator(sql, false);
 

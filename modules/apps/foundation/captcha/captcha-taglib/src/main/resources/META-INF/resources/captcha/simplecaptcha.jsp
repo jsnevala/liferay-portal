@@ -22,7 +22,7 @@ String url = (String)request.getAttribute("liferay-captcha:captcha:url");
 
 <c:if test="<%= captchaEnabled %>">
 	<div class="taglib-captcha">
-		<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="text-to-identify" />" class="captcha" id="<portlet:namespace />captcha" src="<%= HttpUtil.addParameter(url, "t", String.valueOf(System.currentTimeMillis())) %>" />
+		<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="text-to-identify" />" class="captcha" id="<portlet:namespace />captcha" src="<%= HtmlUtil.escapeAttribute(HttpUtil.addParameter(url, "t", String.valueOf(System.currentTimeMillis()))) %>" />
 
 		<liferay-ui:icon
 			cssClass="refresh"
@@ -43,7 +43,7 @@ String url = (String)request.getAttribute("liferay-captcha:captcha:url");
 		$('#<portlet:namespace />refreshCaptcha').on(
 			'click',
 			function() {
-				var url = Liferay.Util.addParams('t=' + $.now(), '<%= url %>');
+				var url = Liferay.Util.addParams('t=' + $.now(), '<%= HtmlUtil.escapeJS(url) %>');
 
 				$('#<portlet:namespace />captcha').attr('src', url);
 			}

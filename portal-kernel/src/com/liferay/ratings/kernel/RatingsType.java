@@ -14,6 +14,8 @@
 
 package com.liferay.ratings.kernel;
 
+import java.util.Objects;
+
 /**
  * @author Sergio Gonzalez
  * @author Roberto Díaz
@@ -23,13 +25,13 @@ public enum RatingsType {
 	LIKE("like"), STARS("stars"), THUMBS("thumbs");
 
 	public static RatingsType parse(String value) {
-		if (LIKE.getValue().equals(value)) {
+		if (Objects.equals(LIKE.getValue(), value)) {
 			return LIKE;
 		}
-		else if (STARS.getValue().equals(value)) {
+		else if (Objects.equals(STARS.getValue(), value)) {
 			return STARS;
 		}
-		else if (THUMBS.getValue().equals(value)) {
+		else if (Objects.equals(THUMBS.getValue(), value)) {
 			return THUMBS;
 		}
 

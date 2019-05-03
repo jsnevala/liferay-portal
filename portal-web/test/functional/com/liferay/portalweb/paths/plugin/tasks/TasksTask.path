@@ -9,11 +9,6 @@
 </thead>
 <tbody>
 <tr>
-	<td>TASK_DESCRIPTION</td>
-	<td>//h3[@class='header-title']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>TASK_ASSIGNEE</td>
 	<td>//div[@class='task-data'][contains(.,'Assigned to')]</td>
 	<td></td>

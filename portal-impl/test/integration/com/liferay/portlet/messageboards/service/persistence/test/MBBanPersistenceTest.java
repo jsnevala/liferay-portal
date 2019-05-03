@@ -19,7 +19,6 @@ import com.liferay.message.boards.kernel.model.MBBan;
 import com.liferay.message.boards.kernel.service.MBBanLocalServiceUtil;
 import com.liferay.message.boards.kernel.service.persistence.MBBanPersistence;
 import com.liferay.message.boards.kernel.service.persistence.MBBanUtil;
-
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
@@ -38,13 +37,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -55,14 +47,23 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+
 /**
  * @generated
  */
 public class MBBanPersistenceTest {
+
 	@ClassRule
 	@Rule
-	public static final AggregateTestRule aggregateTestRule = new AggregateTestRule(new LiferayIntegrationTestRule(),
-			PersistenceTestRule.INSTANCE,
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), PersistenceTestRule.INSTANCE,
 			new TransactionalTestRule(Propagation.REQUIRED));
 
 	@Before
@@ -102,7 +103,8 @@ public class MBBanPersistenceTest {
 
 		_persistence.remove(newMBBan);
 
-		MBBan existingMBBan = _persistence.fetchByPrimaryKey(newMBBan.getPrimaryKey());
+		MBBan existingMBBan = _persistence.fetchByPrimaryKey(
+			newMBBan.getPrimaryKey());
 
 		Assert.assertNull(existingMBBan);
 	}
@@ -138,25 +140,27 @@ public class MBBanPersistenceTest {
 
 		_mbBans.add(_persistence.update(newMBBan));
 
-		MBBan existingMBBan = _persistence.findByPrimaryKey(newMBBan.getPrimaryKey());
+		MBBan existingMBBan = _persistence.findByPrimaryKey(
+			newMBBan.getPrimaryKey());
 
 		Assert.assertEquals(existingMBBan.getUuid(), newMBBan.getUuid());
 		Assert.assertEquals(existingMBBan.getBanId(), newMBBan.getBanId());
 		Assert.assertEquals(existingMBBan.getGroupId(), newMBBan.getGroupId());
-		Assert.assertEquals(existingMBBan.getCompanyId(),
-			newMBBan.getCompanyId());
+		Assert.assertEquals(
+			existingMBBan.getCompanyId(), newMBBan.getCompanyId());
 		Assert.assertEquals(existingMBBan.getUserId(), newMBBan.getUserId());
-		Assert.assertEquals(existingMBBan.getUserName(), newMBBan.getUserName());
-		Assert.assertEquals(Time.getShortTimestamp(
-				existingMBBan.getCreateDate()),
+		Assert.assertEquals(
+			existingMBBan.getUserName(), newMBBan.getUserName());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingMBBan.getCreateDate()),
 			Time.getShortTimestamp(newMBBan.getCreateDate()));
-		Assert.assertEquals(Time.getShortTimestamp(
-				existingMBBan.getModifiedDate()),
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingMBBan.getModifiedDate()),
 			Time.getShortTimestamp(newMBBan.getModifiedDate()));
-		Assert.assertEquals(existingMBBan.getBanUserId(),
-			newMBBan.getBanUserId());
-		Assert.assertEquals(Time.getShortTimestamp(
-				existingMBBan.getLastPublishDate()),
+		Assert.assertEquals(
+			existingMBBan.getBanUserId(), newMBBan.getBanUserId());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingMBBan.getLastPublishDate()),
 			Time.getShortTimestamp(newMBBan.getLastPublishDate()));
 	}
 
@@ -210,8 +214,8 @@ public class MBBanPersistenceTest {
 
 	@Test
 	public void testCountByG_B() throws Exception {
-		_persistence.countByG_B(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong());
+		_persistence.countByG_B(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
 
 		_persistence.countByG_B(0L, 0L);
 	}
@@ -220,7 +224,8 @@ public class MBBanPersistenceTest {
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		MBBan newMBBan = addMBBan();
 
-		MBBan existingMBBan = _persistence.findByPrimaryKey(newMBBan.getPrimaryKey());
+		MBBan existingMBBan = _persistence.findByPrimaryKey(
+			newMBBan.getPrimaryKey());
 
 		Assert.assertEquals(existingMBBan, newMBBan);
 	}
@@ -234,22 +239,23 @@ public class MBBanPersistenceTest {
 
 	@Test
 	public void testFindAll() throws Exception {
-		_persistence.findAll(QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			getOrderByComparator());
+		_persistence.findAll(
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, getOrderByComparator());
 	}
 
 	protected OrderByComparator<MBBan> getOrderByComparator() {
-		return OrderByComparatorFactoryUtil.create("MBBan", "uuid", true,
-			"banId", true, "groupId", true, "companyId", true, "userId", true,
-			"userName", true, "createDate", true, "modifiedDate", true,
-			"banUserId", true, "lastPublishDate", true);
+		return OrderByComparatorFactoryUtil.create(
+			"MBBan", "uuid", true, "banId", true, "groupId", true, "companyId",
+			true, "userId", true, "userName", true, "createDate", true,
+			"modifiedDate", true, "banUserId", true, "lastPublishDate", true);
 	}
 
 	@Test
 	public void testFetchByPrimaryKeyExisting() throws Exception {
 		MBBan newMBBan = addMBBan();
 
-		MBBan existingMBBan = _persistence.fetchByPrimaryKey(newMBBan.getPrimaryKey());
+		MBBan existingMBBan = _persistence.fetchByPrimaryKey(
+			newMBBan.getPrimaryKey());
 
 		Assert.assertEquals(existingMBBan, newMBBan);
 	}
@@ -266,6 +272,7 @@ public class MBBanPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereAllPrimaryKeysExist()
 		throws Exception {
+
 		MBBan newMBBan1 = addMBBan();
 		MBBan newMBBan2 = addMBBan();
 
@@ -274,7 +281,8 @@ public class MBBanPersistenceTest {
 		primaryKeys.add(newMBBan1.getPrimaryKey());
 		primaryKeys.add(newMBBan2.getPrimaryKey());
 
-		Map<Serializable, MBBan> mbBans = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, MBBan> mbBans = _persistence.fetchByPrimaryKeys(
+			primaryKeys);
 
 		Assert.assertEquals(2, mbBans.size());
 		Assert.assertEquals(newMBBan1, mbBans.get(newMBBan1.getPrimaryKey()));
@@ -284,6 +292,7 @@ public class MBBanPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereNoPrimaryKeysExist()
 		throws Exception {
+
 		long pk1 = RandomTestUtil.nextLong();
 
 		long pk2 = RandomTestUtil.nextLong();
@@ -293,7 +302,8 @@ public class MBBanPersistenceTest {
 		primaryKeys.add(pk1);
 		primaryKeys.add(pk2);
 
-		Map<Serializable, MBBan> mbBans = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, MBBan> mbBans = _persistence.fetchByPrimaryKeys(
+			primaryKeys);
 
 		Assert.assertTrue(mbBans.isEmpty());
 	}
@@ -301,6 +311,7 @@ public class MBBanPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereSomePrimaryKeysExist()
 		throws Exception {
+
 		MBBan newMBBan = addMBBan();
 
 		long pk = RandomTestUtil.nextLong();
@@ -310,32 +321,33 @@ public class MBBanPersistenceTest {
 		primaryKeys.add(newMBBan.getPrimaryKey());
 		primaryKeys.add(pk);
 
-		Map<Serializable, MBBan> mbBans = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, MBBan> mbBans = _persistence.fetchByPrimaryKeys(
+			primaryKeys);
 
 		Assert.assertEquals(1, mbBans.size());
 		Assert.assertEquals(newMBBan, mbBans.get(newMBBan.getPrimaryKey()));
 	}
 
 	@Test
-	public void testFetchByPrimaryKeysWithNoPrimaryKeys()
-		throws Exception {
+	public void testFetchByPrimaryKeysWithNoPrimaryKeys() throws Exception {
 		Set<Serializable> primaryKeys = new HashSet<Serializable>();
 
-		Map<Serializable, MBBan> mbBans = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, MBBan> mbBans = _persistence.fetchByPrimaryKeys(
+			primaryKeys);
 
 		Assert.assertTrue(mbBans.isEmpty());
 	}
 
 	@Test
-	public void testFetchByPrimaryKeysWithOnePrimaryKey()
-		throws Exception {
+	public void testFetchByPrimaryKeysWithOnePrimaryKey() throws Exception {
 		MBBan newMBBan = addMBBan();
 
 		Set<Serializable> primaryKeys = new HashSet<Serializable>();
 
 		primaryKeys.add(newMBBan.getPrimaryKey());
 
-		Map<Serializable, MBBan> mbBans = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, MBBan> mbBans = _persistence.fetchByPrimaryKeys(
+			primaryKeys);
 
 		Assert.assertEquals(1, mbBans.size());
 		Assert.assertEquals(newMBBan, mbBans.get(newMBBan.getPrimaryKey()));
@@ -345,15 +357,19 @@ public class MBBanPersistenceTest {
 	public void testActionableDynamicQuery() throws Exception {
 		final IntegerWrapper count = new IntegerWrapper();
 
-		ActionableDynamicQuery actionableDynamicQuery = MBBanLocalServiceUtil.getActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			MBBanLocalServiceUtil.getActionableDynamicQuery();
 
-		actionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<MBBan>() {
+		actionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<MBBan>() {
+
 				@Override
 				public void performAction(MBBan mbBan) {
 					Assert.assertNotNull(mbBan);
 
 					count.increment();
 				}
+
 			});
 
 		actionableDynamicQuery.performActions();
@@ -362,14 +378,14 @@ public class MBBanPersistenceTest {
 	}
 
 	@Test
-	public void testDynamicQueryByPrimaryKeyExisting()
-		throws Exception {
+	public void testDynamicQueryByPrimaryKeyExisting() throws Exception {
 		MBBan newMBBan = addMBBan();
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(MBBan.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			MBBan.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.add(RestrictionsFactoryUtil.eq("banId", newMBBan.getBanId()));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq("banId", newMBBan.getBanId()));
 
 		List<MBBan> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -382,11 +398,11 @@ public class MBBanPersistenceTest {
 
 	@Test
 	public void testDynamicQueryByPrimaryKeyMissing() throws Exception {
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(MBBan.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			MBBan.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.add(RestrictionsFactoryUtil.eq("banId",
-				RandomTestUtil.nextLong()));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq("banId", RandomTestUtil.nextLong()));
 
 		List<MBBan> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -394,19 +410,18 @@ public class MBBanPersistenceTest {
 	}
 
 	@Test
-	public void testDynamicQueryByProjectionExisting()
-		throws Exception {
+	public void testDynamicQueryByProjectionExisting() throws Exception {
 		MBBan newMBBan = addMBBan();
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(MBBan.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			MBBan.class, _dynamicQueryClassLoader);
 
 		dynamicQuery.setProjection(ProjectionFactoryUtil.property("banId"));
 
 		Object newBanId = newMBBan.getBanId();
 
-		dynamicQuery.add(RestrictionsFactoryUtil.in("banId",
-				new Object[] { newBanId }));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.in("banId", new Object[] {newBanId}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -419,13 +434,14 @@ public class MBBanPersistenceTest {
 
 	@Test
 	public void testDynamicQueryByProjectionMissing() throws Exception {
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(MBBan.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			MBBan.class, _dynamicQueryClassLoader);
 
 		dynamicQuery.setProjection(ProjectionFactoryUtil.property("banId"));
 
-		dynamicQuery.add(RestrictionsFactoryUtil.in("banId",
-				new Object[] { RandomTestUtil.nextLong() }));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.in(
+				"banId", new Object[] {RandomTestUtil.nextLong()}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -438,21 +454,27 @@ public class MBBanPersistenceTest {
 
 		_persistence.clearCache();
 
-		MBBan existingMBBan = _persistence.findByPrimaryKey(newMBBan.getPrimaryKey());
+		MBBan existingMBBan = _persistence.findByPrimaryKey(
+			newMBBan.getPrimaryKey());
 
-		Assert.assertTrue(Objects.equals(existingMBBan.getUuid(),
-				ReflectionTestUtil.invoke(existingMBBan, "getOriginalUuid",
-					new Class<?>[0])));
-		Assert.assertEquals(Long.valueOf(existingMBBan.getGroupId()),
-			ReflectionTestUtil.<Long>invoke(existingMBBan,
-				"getOriginalGroupId", new Class<?>[0]));
+		Assert.assertTrue(
+			Objects.equals(
+				existingMBBan.getUuid(),
+				ReflectionTestUtil.invoke(
+					existingMBBan, "getOriginalUuid", new Class<?>[0])));
+		Assert.assertEquals(
+			Long.valueOf(existingMBBan.getGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingMBBan, "getOriginalGroupId", new Class<?>[0]));
 
-		Assert.assertEquals(Long.valueOf(existingMBBan.getGroupId()),
-			ReflectionTestUtil.<Long>invoke(existingMBBan,
-				"getOriginalGroupId", new Class<?>[0]));
-		Assert.assertEquals(Long.valueOf(existingMBBan.getBanUserId()),
-			ReflectionTestUtil.<Long>invoke(existingMBBan,
-				"getOriginalBanUserId", new Class<?>[0]));
+		Assert.assertEquals(
+			Long.valueOf(existingMBBan.getGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingMBBan, "getOriginalGroupId", new Class<?>[0]));
+		Assert.assertEquals(
+			Long.valueOf(existingMBBan.getBanUserId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingMBBan, "getOriginalBanUserId", new Class<?>[0]));
 	}
 
 	protected MBBan addMBBan() throws Exception {
@@ -486,4 +508,5 @@ public class MBBanPersistenceTest {
 	private List<MBBan> _mbBans = new ArrayList<MBBan>();
 	private MBBanPersistence _persistence;
 	private ClassLoader _dynamicQueryClassLoader;
+
 }

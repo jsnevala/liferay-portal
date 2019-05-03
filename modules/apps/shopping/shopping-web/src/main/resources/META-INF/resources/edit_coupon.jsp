@@ -66,7 +66,7 @@ renderResponse.setTitle(((coupon == null) ? LanguageUtil.get(request, "coupon") 
 
 	<aui:fieldset-group markupView="lexicon">
 		<aui:fieldset>
-			<aui:input autoFocus="<%= (windowState.equals(WindowState.MAXIMIZED) && (coupon != null)) %>" name="name" />
+			<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) && (coupon != null) %>" name="name" />
 
 			<aui:input name="description" />
 

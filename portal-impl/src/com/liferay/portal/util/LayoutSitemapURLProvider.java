@@ -14,6 +14,7 @@
 
 package com.liferay.portal.util;
 
+import com.liferay.layouts.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.layouts.admin.kernel.util.SitemapURLProvider;
 import com.liferay.layouts.admin.kernel.util.SitemapUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -33,7 +34,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @OSGiBeanProperties
 public class LayoutSitemapURLProvider implements SitemapURLProvider {
@@ -50,7 +51,7 @@ public class LayoutSitemapURLProvider implements SitemapURLProvider {
 		throws PortalException {
 
 		Layout layout = LayoutLocalServiceUtil.getLayoutByUuidAndGroupId(
-			layoutUuid, layoutSet.getGroupId(), layoutSet.getPrivateLayout());
+			layoutUuid, layoutSet.getGroupId(), layoutSet.isPrivateLayout());
 
 		visitLayout(element, layout, themeDisplay);
 	}
@@ -77,7 +78,7 @@ public class LayoutSitemapURLProvider implements SitemapURLProvider {
 			}
 
 			List<Layout> layouts = LayoutLocalServiceUtil.getLayouts(
-				layoutSet.getGroupId(), layoutSet.getPrivateLayout(),
+				layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
 				entry.getKey());
 
 			for (Layout layout : layouts) {
@@ -94,7 +95,9 @@ public class LayoutSitemapURLProvider implements SitemapURLProvider {
 			layout.getTypeSettingsProperties();
 
 		if (!GetterUtil.getBoolean(
-				typeSettingsProperties.getProperty("sitemap-include"), true)) {
+				typeSettingsProperties.getProperty(
+					LayoutTypePortletConstants.SITEMAP_INCLUDE),
+				true)) {
 
 			return;
 		}

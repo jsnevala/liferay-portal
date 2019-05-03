@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -48,6 +48,7 @@ import javax.portlet.RenderResponse;
 
 import org.apache.felix.service.command.CommandProcessor;
 import org.apache.felix.service.command.CommandSession;
+import org.apache.felix.service.command.Converter;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -65,7 +66,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.render-weight=50",
 		"javax.portlet.display-name=Gogo Shell",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + GogoShellPortletKeys.GOGO_SHELL,
 		"javax.portlet.resource-bundle=content.Language",
@@ -128,10 +129,15 @@ public class GogoShellPortlet extends MVCPortlet {
 
 			checkCommand(command, themeDisplay);
 
-			commandSession.execute(command);
+			Object result = commandSession.execute(command);
 
-			outputPrintStream.flush();
+			if (result != null) {
+				outputPrintStream.print(
+					commandSession.format(result, Converter.INSPECT));
+			}
+
 			errorPrintStream.flush();
+			outputPrintStream.flush();
 
 			SessionMessages.add(
 				actionRequest, "commandOutput",
@@ -168,9 +174,8 @@ public class GogoShellPortlet extends MVCPortlet {
 		throws Exception {
 
 		if (StringUtil.startsWith(command, "exit")) {
-			ResourceBundle resourceBundle =
-				_resourceBundleLoader.loadResourceBundle(
-					themeDisplay.getLocale());
+			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+				themeDisplay.getLocale(), GogoShellPortlet.class);
 
 			throw new Exception(
 				LanguageUtil.format(
@@ -251,8 +256,5 @@ public class GogoShellPortlet extends MVCPortlet {
 
 	@Reference
 	private Portal _portal;
-
-	@Reference(target = "(bundle.symbolic.name=com.liferay.gogo.shell.web)")
-	private ResourceBundleLoader _resourceBundleLoader;
 
 }

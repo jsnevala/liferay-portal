@@ -23,11 +23,11 @@ import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.template.soy.utils.SoyHTMLContextValue;
 import com.liferay.portal.util.HtmlImpl;
 
-import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -62,7 +62,7 @@ public class DDLFormEmailNotificationSenderTest {
 
 		Map<String, Object> fieldLabelValueMap =
 			_ddlFormEmailNotificationSender.getField(
-				ddmFormValues.getDDMFormFieldValues(), Locale.US);
+				ddmFormValues.getDDMFormFieldValues(), LocaleUtil.US);
 
 		Assert.assertEquals(
 			fieldLabelValueMap.toString(), 2, fieldLabelValueMap.size());
@@ -83,7 +83,7 @@ public class DDLFormEmailNotificationSenderTest {
 
 		Map<String, Object> fieldLabelValueMap =
 			_ddlFormEmailNotificationSender.getField(
-				ddmFormValues.getDDMFormFieldValues(), Locale.US);
+				ddmFormValues.getDDMFormFieldValues(), LocaleUtil.US);
 
 		Assert.assertEquals(
 			fieldLabelValueMap.toString(), 2, fieldLabelValueMap.size());
@@ -115,7 +115,7 @@ public class DDLFormEmailNotificationSenderTest {
 		DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
 
 		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
-		ddmFormValues.setDefaultLocale(Locale.US);
+		ddmFormValues.setDefaultLocale(LocaleUtil.US);
 
 		return ddmFormValues;
 	}

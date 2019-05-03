@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -57,9 +58,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT
-	},
+	property = "javax.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT,
 	service = PortletLayoutListener.class
 )
 public class JournalContentPortletLayoutListener
@@ -78,11 +77,7 @@ public class JournalContentPortletLayoutListener
 		try {
 			Layout layout = _layoutLocalService.getLayout(plid);
 
-			PortletPreferences portletPreferences =
-				PortletPreferencesFactoryUtil.getPortletSetup(
-					layout, portletId, StringPool.BLANK);
-
-			String articleId = portletPreferences.getValue("articleId", null);
+			String articleId = _getArticleId(layout, portletId);
 
 			if (Validator.isNull(articleId)) {
 				return;
@@ -122,11 +117,7 @@ public class JournalContentPortletLayoutListener
 		try {
 			Layout layout = _layoutLocalService.getLayout(plid);
 
-			PortletPreferences portletPreferences =
-				PortletPreferencesFactoryUtil.getPortletSetup(
-					layout, portletId, StringPool.BLANK);
-
-			String articleId = portletPreferences.getValue("articleId", null);
+			String articleId = _getArticleId(layout, portletId);
 
 			if (Validator.isNull(articleId)) {
 				return;
@@ -163,11 +154,7 @@ public class JournalContentPortletLayoutListener
 		try {
 			Layout layout = _layoutLocalService.getLayout(plid);
 
-			PortletPreferences portletPreferences =
-				PortletPreferencesFactoryUtil.getPortletSetup(
-					layout, portletId, StringPool.BLANK);
-
-			String articleId = portletPreferences.getValue("articleId", null);
+			String articleId = _getArticleId(layout, portletId);
 
 			if (Validator.isNull(articleId)) {
 				_journalContentSearchLocalService.deleteArticleContentSearch(
@@ -281,58 +268,50 @@ public class JournalContentPortletLayoutListener
 		return portletIds;
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMTemplateLocalService(
-		DDMTemplateLocalService ddmTemplateLocalService) {
+	private String _getArticleId(Layout layout, String portletId) {
+		PortletPreferences portletPreferences = null;
 
-		_ddmTemplateLocalService = ddmTemplateLocalService;
-	}
+		if (layout.isPortletEmbedded(portletId, layout.getGroupId())) {
+			portletPreferences =
+				PortletPreferencesFactoryUtil.getLayoutPortletSetup(
+					layout.getCompanyId(), layout.getGroupId(),
+					PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
+					PortletKeys.PREFS_PLID_SHARED, portletId, null);
+		}
+		else {
+			portletPreferences = PortletPreferencesFactoryUtil.getPortletSetup(
+				layout, portletId, StringPool.BLANK);
+		}
 
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
+		if (portletPreferences != null) {
+			return portletPreferences.getValue("articleId", null);
+		}
 
-	@Reference(unbind = "-")
-	protected void setJournalArticleLocalService(
-		JournalArticleLocalService journalArticleLocalService) {
-
-		_journalArticleLocalService = journalArticleLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setJournalContentSearchLocalService(
-		JournalContentSearchLocalService journalContentSearchLocalService) {
-
-		_journalContentSearchLocalService = journalContentSearchLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutLocalService(
-		LayoutLocalService layoutLocalService) {
-
-		_layoutLocalService = layoutLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortletLocalService(
-		PortletLocalService portletLocalService) {
-
-		_portletLocalService = portletLocalService;
+		return null;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalContentPortletLayoutListener.class);
 
+	@Reference
 	private DDMTemplateLocalService _ddmTemplateLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Reference
 	private JournalContentSearchLocalService _journalContentSearchLocalService;
+
+	@Reference
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private PortletLocalService _portletLocalService;
 
 }

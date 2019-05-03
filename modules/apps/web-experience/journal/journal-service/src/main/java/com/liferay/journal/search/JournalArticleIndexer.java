@@ -68,24 +68,33 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.batch.BatchIndexingHelper;
+import com.liferay.portal.search.filter.DateRangeFilterBuilder;
+import com.liferay.portal.search.filter.FilterBuilders;
 import com.liferay.portal.search.index.IndexStatusManager;
 import com.liferay.trash.kernel.util.TrashUtil;
 
 import java.io.Serializable;
 
+import java.text.Format;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -226,6 +235,33 @@ public class JournalArticleIndexer
 		else if (!relatedClassName && showNonindexable) {
 			contextBooleanFilter.addRequiredTerm("headListable", Boolean.TRUE);
 		}
+
+		boolean filterExpired = GetterUtil.getBoolean(
+			searchContext.getAttribute("filterExpired"));
+
+		if (!filterExpired) {
+			return;
+		}
+
+		DateRangeFilterBuilder dateRangeFilterBuilder =
+			_filterBuilders.dateRangeFilterBuilder();
+
+		dateRangeFilterBuilder.setFieldName(Field.EXPIRATION_DATE);
+
+		String formatPattern = PropsUtil.get(
+			PropsKeys.INDEX_DATE_FORMAT_PATTERN);
+
+		dateRangeFilterBuilder.setFormat(formatPattern);
+
+		Format dateFormat = FastDateFormatFactoryUtil.getSimpleDateFormat(
+			formatPattern);
+
+		dateRangeFilterBuilder.setFrom(dateFormat.format(new Date()));
+
+		dateRangeFilterBuilder.setIncludeLower(false);
+		dateRangeFilterBuilder.setIncludeUpper(false);
+
+		contextBooleanFilter.add(dateRangeFilterBuilder.build());
 	}
 
 	@Override
@@ -336,8 +372,8 @@ public class JournalArticleIndexer
 
 				});
 			actionableDynamicQuery.setPerformActionMethod(
-				new ActionableDynamicQuery.
-					PerformActionMethod<JournalArticleResource>() {
+				new ActionableDynamicQuery.PerformActionMethod
+					<JournalArticleResource>() {
 
 					@Override
 					public void performAction(JournalArticleResource article)
@@ -453,10 +489,10 @@ public class JournalArticleIndexer
 		long classPK = journalArticle.getId();
 
 		if (!isIndexAllArticleVersions()) {
-			if (_journalArticleLocalService.getArticlesCount(
-					journalArticle.getGroupId(),
-					journalArticle.getArticleId()) > 0) {
+			int count = _journalArticleLocalService.getArticlesCount(
+				journalArticle.getGroupId(), journalArticle.getArticleId());
 
+			if (count > 0) {
 				doReindex(journalArticle);
 
 				return;
@@ -793,7 +829,17 @@ public class JournalArticleIndexer
 				LocaleUtil.toLanguageId(snippetLocale), 1, portletRequestModel,
 				themeDisplay);
 
-			content = HtmlUtil.stripHtml(articleDisplay.getDescription());
+			String description = document.get(
+				snippetLocale,
+				Field.SNIPPET + StringPool.UNDERLINE + Field.DESCRIPTION,
+				Field.DESCRIPTION);
+
+			if (Validator.isNull(description)) {
+				content = HtmlUtil.stripHtml(articleDisplay.getDescription());
+			}
+			else {
+				content = _stripAndHighlight(description);
+			}
 
 			content = HtmlUtil.replaceNewLine(content);
 
@@ -849,9 +895,12 @@ public class JournalArticleIndexer
 				_journalArticleLocalService.
 					getIndexableActionableDynamicQuery();
 
+			indexableActionableDynamicQuery.setInterval(
+				_batchIndexingHelper.getBulkSize(
+					JournalArticle.class.getName()));
 			indexableActionableDynamicQuery.setPerformActionMethod(
-				new ActionableDynamicQuery.
-					PerformActionMethod<JournalArticle>() {
+				new ActionableDynamicQuery.PerformActionMethod
+					<JournalArticle>() {
 
 					@Override
 					public void performAction(JournalArticle article) {
@@ -878,9 +927,13 @@ public class JournalArticleIndexer
 				_journalArticleResourceLocalService.
 					getIndexableActionableDynamicQuery();
 
+			indexableActionableDynamicQuery.setInterval(
+				_batchIndexingHelper.getBulkSize(
+					JournalArticleResource.class.getName()));
+
 			indexableActionableDynamicQuery.setPerformActionMethod(
-				new ActionableDynamicQuery.
-					PerformActionMethod<JournalArticleResource>() {
+				new ActionableDynamicQuery.PerformActionMethod
+					<JournalArticleResource>() {
 
 					@Override
 					public void performAction(
@@ -979,13 +1032,39 @@ public class JournalArticleIndexer
 		_journalConverter = journalConverter;
 	}
 
+	private String _stripAndHighlight(String text) {
+		text = StringUtil.replace(
+			text, _HIGHLIGHT_TAGS, _ESCAPE_SAFE_HIGHLIGHTS);
+
+		text = HtmlUtil.stripHtml(text);
+
+		text = StringUtil.replace(
+			text, _ESCAPE_SAFE_HIGHLIGHTS, _HIGHLIGHT_TAGS);
+
+		return text;
+	}
+
+	private static final String[] _ESCAPE_SAFE_HIGHLIGHTS = {
+		"[@HIGHLIGHT1@]", "[@HIGHLIGHT2@]"
+	};
+
+	private static final String[] _HIGHLIGHT_TAGS = {
+		HighlightUtil.HIGHLIGHT_TAG_OPEN, HighlightUtil.HIGHLIGHT_TAG_CLOSE
+	};
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalArticleIndexer.class);
+
+	@Reference
+	private BatchIndexingHelper _batchIndexingHelper;
 
 	private ConfigurationProvider _configurationProvider;
 	private DDMIndexer _ddmIndexer;
 	private DDMStructureLocalService _ddmStructureLocalService;
 	private FieldsToDDMFormValuesConverter _fieldsToDDMFormValuesConverter;
+
+	@Reference
+	private FilterBuilders _filterBuilders;
 
 	@Reference
 	private IndexerRegistry _indexerRegistry;

@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Zsolt Berentey
  */
 @Component(
-	property = {"javax.portlet.name=" + JournalPortletKeys.JOURNAL},
+	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = SocialActivityInterpreter.class
 )
 public class JournalFolderActivityInterpreter
@@ -106,7 +106,8 @@ public class JournalFolderActivityInterpreter
 			actionId);
 	}
 
-	private static final String[] _CLASS_NAMES =
-		{JournalFolder.class.getName()};
+	private static final String[] _CLASS_NAMES = {
+		JournalFolder.class.getName()
+	};
 
 }

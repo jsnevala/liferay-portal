@@ -1,9 +1,11 @@
 (function() {
 	var Lang = AUI().Lang;
 
-	var STR_ADAPTIVE_MEDIA_URL_RETURN_TYPE = 'com.liferay.adaptive.media.image.item.selector.AMImageURLItemSelectorReturnType';
+	var IE9AndLater = AUI.Env.UA.ie >= 9;
 
 	var STR_ADAPTIVE_MEDIA_FILE_ENTRY_RETURN_TYPE = 'com.liferay.adaptive.media.image.item.selector.AMImageFileEntryItemSelectorReturnType';
+
+	var STR_ADAPTIVE_MEDIA_URL_RETURN_TYPE = 'com.liferay.adaptive.media.image.item.selector.AMImageURLItemSelectorReturnType';
 
 	var TPL_PICTURE_TAG = '<picture data-fileEntryId="{fileEntryId}">{sources}<img src="{defaultSrc}"></picture>';
 
@@ -41,6 +43,22 @@
 						}
 					}
 				);
+			},
+
+			_getImgElement: function(imageSrc, selectedItem) {
+				var imgEl = CKEDITOR.dom.element.createFromHtml('<img>');
+
+				if (selectedItem.returnType === STR_ADAPTIVE_MEDIA_FILE_ENTRY_RETURN_TYPE) {
+					var itemValue = JSON.parse(selectedItem.value);
+
+					imgEl.setAttribute('src', itemValue.url);
+					imgEl.setAttribute('data-fileEntryId', itemValue.fileEntryId);
+				}
+				else {
+					imgEl.setAttribute('src', imageSrc);
+				}
+
+				return imgEl;
 			},
 
 			_getPictureElement: function(selectedItem) {
@@ -91,25 +109,18 @@
 				return pictureEl;
 			},
 
-			_getImgElement: function(imageSrc, selectedItem) {
-				var imgEl = CKEDITOR.dom.element.createFromHtml('<img>');
+			_isEmptySelection: function(editor) {
+				var selection = editor.getSelection();
 
-				if (selectedItem.returnType === STR_ADAPTIVE_MEDIA_FILE_ENTRY_RETURN_TYPE) {
-					var itemValue = JSON.parse(selectedItem.value);
+				var ranges = selection.getRanges();
 
-					imgEl.setAttribute('src', itemValue.url);
-					imgEl.setAttribute('data-fileEntryId', itemValue.fileEntryId);
-				}
-				else {
-					imgEl.setAttribute('src', imageSrc);
-				}
-
-				return imgEl;
+				return selection.getType() === CKEDITOR.SELECTION_NONE || (ranges.length === 1 && (ranges[0].collapsed || IE9AndLater));
 			},
 
 			_onSelectedImageChange: function(editor, imageSrc, selectedItem) {
-				var el;
 				var instance = this;
+
+				var el;
 
 				if (selectedItem.returnType === STR_ADAPTIVE_MEDIA_URL_RETURN_TYPE) {
 					el = instance._getPictureElement(selectedItem);
@@ -118,9 +129,26 @@
 					el = instance._getImgElement(imageSrc, selectedItem);
 				}
 
-				editor.insertElement(el);
+				var elementOuterHtml = el.getOuterHtml();
 
-				editor.setData(editor.getData());
+				editor.insertHtml(elementOuterHtml);
+
+				if (instance._isEmptySelection(editor)) {
+					if (IE9AndLater) {
+						var emptySelectionMarkup = '<br />';
+
+						var usingAlloyEditor = typeof AlloyEditor == 'undefined';
+
+						if (!usingAlloyEditor) {
+							emptySelectionMarkup = elementOuterHtml + emptySelectionMarkup;
+						}
+
+						editor.insertHtml(emptySelectionMarkup);
+					}
+					else {
+						editor.execCommand('enter');
+					}
+				}
 			}
 		}
 	);

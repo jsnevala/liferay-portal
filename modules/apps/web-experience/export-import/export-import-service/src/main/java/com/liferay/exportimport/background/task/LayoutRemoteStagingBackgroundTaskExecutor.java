@@ -14,14 +14,10 @@
 
 package com.liferay.exportimport.background.task;
 
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PUBLICATION_LAYOUT_REMOTE_FAILED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PUBLICATION_LAYOUT_REMOTE_STARTED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PUBLICATION_LAYOUT_REMOTE_SUCCEEDED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.MissingReferences;
+import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManagerUtil;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportLocalServiceUtil;
@@ -34,6 +30,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.util.ClassLoaderUtil;
@@ -52,9 +49,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class LayoutRemoteStagingBackgroundTaskExecutor
 	extends BaseStagingBackgroundTaskExecutor {
@@ -102,8 +100,10 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 			ExportImportThreadLocal.setLayoutStagingInProcess(true);
 
 			ExportImportLifecycleManagerUtil.fireExportImportLifecycleEvent(
-				EVENT_PUBLICATION_LAYOUT_REMOTE_STARTED,
-				PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS,
+				ExportImportLifecycleConstants.
+					EVENT_PUBLICATION_LAYOUT_REMOTE_STARTED,
+				ExportImportLifecycleConstants.
+					PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS,
 				String.valueOf(
 					exportImportConfiguration.getExportImportConfigurationId()),
 				exportImportConfiguration);
@@ -146,8 +146,10 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 			ExportImportThreadLocal.setLayoutStagingInProcess(false);
 
 			ExportImportLifecycleManagerUtil.fireExportImportLifecycleEvent(
-				EVENT_PUBLICATION_LAYOUT_REMOTE_SUCCEEDED,
-				PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS,
+				ExportImportLifecycleConstants.
+					EVENT_PUBLICATION_LAYOUT_REMOTE_SUCCEEDED,
+				ExportImportLifecycleConstants.
+					PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS,
 				String.valueOf(
 					exportImportConfiguration.getExportImportConfigurationId()),
 				exportImportConfiguration);
@@ -156,8 +158,10 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 			ExportImportThreadLocal.setLayoutStagingInProcess(false);
 
 			ExportImportLifecycleManagerUtil.fireExportImportLifecycleEvent(
-				EVENT_PUBLICATION_LAYOUT_REMOTE_FAILED,
-				PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS,
+				ExportImportLifecycleConstants.
+					EVENT_PUBLICATION_LAYOUT_REMOTE_FAILED,
+				ExportImportLifecycleConstants.
+					PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS,
 				String.valueOf(
 					exportImportConfiguration.getExportImportConfigurationId()),
 				exportImportConfiguration);
@@ -202,14 +206,38 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 		List<Layout> layouts = new ArrayList<>();
 
 		if (layoutIdMap != null) {
-			for (Map.Entry<Long, Boolean> entry : layoutIdMap.entrySet()) {
+			Set<Map.Entry<Long, Boolean>> entrySet = layoutIdMap.entrySet();
+
+			for (Map.Entry<Long, Boolean> entry : entrySet) {
 				long plid = GetterUtil.getLong(String.valueOf(entry.getKey()));
 				boolean includeChildren = entry.getValue();
 
-				Layout layout = LayoutLocalServiceUtil.getLayout(plid);
+				Layout layout = null;
+
+				try {
+					layout =
+						ExportImportHelperUtil.getLayoutOrCreateDummyRootLayout(
+							plid);
+				}
+				catch (NoSuchLayoutException nsle) {
+
+					// See LPS-36174
+
+					if (_log.isDebugEnabled()) {
+						_log.debug(nsle, nsle);
+					}
+
+					entrySet.remove(plid);
+
+					continue;
+				}
 
 				if (!layouts.contains(layout)) {
 					layouts.add(layout);
+				}
+
+				if (layout.getPlid() == LayoutConstants.DEFAULT_PLID) {
+					continue;
 				}
 
 				List<Layout> parentLayouts = getMissingRemoteParentLayouts(
@@ -263,7 +291,7 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 			try {
 				LayoutServiceHttp.getLayoutByUuidAndGroupId(
 					httpPrincipal, parentLayout.getUuid(), remoteGroupId,
-					parentLayout.getPrivateLayout());
+					parentLayout.isPrivateLayout());
 
 				// If one parent is found, all others are assumed to exist
 

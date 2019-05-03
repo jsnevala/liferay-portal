@@ -74,7 +74,7 @@ import org.osgi.service.component.annotations.Reference;
 		"osgi.command.function=show", "osgi.command.function=showReports",
 		"osgi.command.scope=verify"
 	},
-	service = {VerifyProcessTrackerOSGiCommands.class}
+	service = VerifyProcessTrackerOSGiCommands.class
 )
 public class VerifyProcessTrackerOSGiCommands {
 
@@ -228,10 +228,8 @@ public class VerifyProcessTrackerOSGiCommands {
 	protected void deactivate() {
 		_verifyProcesses.close();
 
-		for (Map.Entry
-				<String, ServiceRegistration<Object>>
-					serviceRegistrationEntry :
-						_serviceRegistrations.entrySet()) {
+		for (Map.Entry<String, ServiceRegistration<Object>>
+				serviceRegistrationEntry : _serviceRegistrations.entrySet()) {
 
 			ServiceRegistration<Object> serviceRegistration =
 				serviceRegistrationEntry.getValue();
@@ -300,8 +298,8 @@ public class VerifyProcessTrackerOSGiCommands {
 			}
 
 			if (verifyException == null) {
-				release.setState(ReleaseConstants.STATE_GOOD);
 				release.setVerified(true);
+				release.setState(ReleaseConstants.STATE_GOOD);
 
 				releaseLocalService.updateRelease(release);
 

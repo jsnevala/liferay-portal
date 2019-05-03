@@ -72,12 +72,9 @@ public class UpgradePermission extends UpgradeProcess {
 		String permissionsHash =
 			resourceBlockPermissionsContainer.getPermissionsHash();
 
-		ResourceBlock resourceBlock =
-			ResourceBlockLocalServiceUtil.updateResourceBlockId(
-				companyId, groupId, name, permissionedModel, permissionsHash,
-				resourceBlockPermissionsContainer);
-
-		return resourceBlock;
+		return ResourceBlockLocalServiceUtil.updateResourceBlockId(
+			companyId, groupId, name, permissionedModel, permissionsHash,
+			resourceBlockPermissionsContainer);
 	}
 
 	protected void convertResourcePermissions(
@@ -186,7 +183,7 @@ public class UpgradePermission extends UpgradeProcess {
 		getResourceBlockPermissionsContainer(
 			long companyId, long groupId, String name, long primKey) {
 
-		ResourceBlockPermissionsContainer resourceBlockPermissionContainer =
+		ResourceBlockPermissionsContainer resourceBlockPermissionsContainer =
 			new ResourceBlockPermissionsContainer();
 
 		List<ResourcePermission> resourcePermissions =
@@ -194,12 +191,12 @@ public class UpgradePermission extends UpgradeProcess {
 				companyId, groupId, name, String.valueOf(primKey));
 
 		for (ResourcePermission resourcePermission : resourcePermissions) {
-			resourceBlockPermissionContainer.addPermission(
+			resourceBlockPermissionsContainer.addPermission(
 				resourcePermission.getRoleId(),
 				resourcePermission.getActionIds());
 		}
 
-		return resourceBlockPermissionContainer;
+		return resourceBlockPermissionsContainer;
 	}
 
 	protected void updatePermissions(

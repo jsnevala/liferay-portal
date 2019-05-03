@@ -1,37 +1,34 @@
-<definition component-name="portal-plugins-osgi">
-	<property name="osgi.app.includes" value="my-subscriptions" />
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="plugins.deployment.type" value="osgi" />
-	<property name="testray.main.component.name" value="My Subscriptions" />
+@component-name = "portal-plugins-osgi"
+definition {
+	property osgi.app.includes = "my-subscriptions";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property plugins.deployment.type = "osgi";
+	property testray.main.component.name = "My Subscriptions";
 
-	<set-up>
-		<execute macro="User#firstLoginPG" />
+	setUp {
+		User.firstLoginPG();
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Test Page" />
-		</execute>
-	</set-up>
+		Page.add(pageName = "Test Page");
+	}
 
-	<tear-down>
-		<execute macro="Page#tearDownPG" />
-	</tear-down>
+	tearDown {
+		Page.tearDownPG();
+	}
 
-	<command name="MySubscriptionsPortletSmoke" priority="4">
-		<var name="appName" value="My Subscriptions" />
+	@priority = "4"
+	test MySubscriptionsPortletSmoke {
+		var appName = "My Subscriptions";
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Test Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Test Page");
 
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="My Subscriptions" />
-		</execute>
+		Portlet.addPG(portletName = "My Subscriptions");
 
-		<execute macro="Page#gotoMyAccount">
-			<var name="portletName" value="My Subscriptions" />
-		</execute>
+		Page.gotoMyAccount(portletName = "My Subscriptions");
 
-		<execute function="AntCommand#antCommand" locator1="build-test.xml" value1="remove-plugin -Dplugin.name=my-subscriptions-portlet" />
-	</command>
-</definition>
+		AntCommand.antCommand(
+			locator1 = "build-test.xml",
+			value1 = "remove-plugin -Dplugin.name=my-subscriptions-portlet"
+		);
+	}
+}

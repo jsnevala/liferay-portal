@@ -20,7 +20,6 @@ import com.liferay.blogs.kernel.service.BlogsEntryLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
@@ -37,6 +36,8 @@ import java.text.Format;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Brian Wing Shun Chan
@@ -44,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Zsolt Berentey
  */
 @Component(
-	property = {"javax.portlet.name=" + BlogsPortletKeys.BLOGS},
+	property = "javax.portlet.name=" + BlogsPortletKeys.BLOGS,
 	service = SocialActivityInterpreter.class
 )
 public class BlogsActivityInterpreter extends BaseSocialActivityInterpreter {
@@ -63,7 +64,9 @@ public class BlogsActivityInterpreter extends BaseSocialActivityInterpreter {
 
 	@Override
 	protected ResourceBundleLoader getResourceBundleLoader() {
-		return _resourceBundleLoader;
+		return ResourceBundleLoaderUtil.
+			getResourceBundleLoaderByBundleSymbolicName(
+				"com.liferay.blogs.web");
 	}
 
 	@Override
@@ -185,20 +188,21 @@ public class BlogsActivityInterpreter extends BaseSocialActivityInterpreter {
 		_blogsEntryLocalService = blogsEntryLocalService;
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.blogs.web)", unbind = "-"
-	)
 	protected void setResourceBundleLoader(
 		ResourceBundleLoader resourceBundleLoader) {
 
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
+		_resourceBundleLoader = resourceBundleLoader;
 	}
 
 	private static final String[] _CLASS_NAMES = {BlogsEntry.class.getName()};
 
 	private BlogsEntryLocalService _blogsEntryLocalService;
-	private ResourceBundleLoader _resourceBundleLoader;
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY,
+		target = "(bundle.symbolic.name=com.liferay.blogs.web)"
+	)
+	private volatile ResourceBundleLoader _resourceBundleLoader;
 
 }

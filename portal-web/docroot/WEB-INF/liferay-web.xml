@@ -114,7 +114,7 @@
 		<filter-class>com.liferay.portal.servlet.filters.etag.ETagFilter</filter-class>
 		<init-param>
 			<param-name>url-regex-pattern</param-name>
-			<param-value>.+/(barebone|css|everything|main)\.jsp</param-value>
+			<param-value>.+/(available_languages|barebone|css|everything|main)\.jsp</param-value>
 		</init-param>
 	</filter>
 	<filter>
@@ -166,7 +166,7 @@
 		<filter-class>com.liferay.portal.servlet.filters.header.HeaderFilter</filter-class>
 		<init-param>
 			<param-name>url-regex-pattern</param-name>
-			<param-value>.+/(barebone|css|everything|main)\.jsp</param-value>
+			<param-value>.+/(available_languages|barebone|css|everything|main)\.jsp</param-value>
 		</init-param>
 		<init-param>
 			<param-name>Cache-Control</param-name>
@@ -527,6 +527,12 @@
 	</filter-mapping>
 	<filter-mapping>
 		<filter-name>Auto Login Filter</filter-name>
+		<url-pattern>/c/portal/saml/auth_redirect</url-pattern>
+		<dispatcher>FORWARD</dispatcher>
+		<dispatcher>REQUEST</dispatcher>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>Auto Login Filter</filter-name>
 		<url-pattern>/c/portal/update_password</url-pattern>
 		<dispatcher>FORWARD</dispatcher>
 		<dispatcher>REQUEST</dispatcher>
@@ -578,6 +584,14 @@
 	<filter-mapping>
 		<filter-name>Header Filter</filter-name>
 		<url-pattern>/language/*</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>Header Filter</filter-name>
+		<url-pattern>/o/js_bundle_config</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>Header Filter</filter-name>
+		<url-pattern>/o/js_loader_modules</url-pattern>
 	</filter-mapping>
 	<filter-mapping>
 		<filter-name>Header Filter</filter-name>
@@ -652,6 +666,14 @@
 	<filter-mapping>
 		<filter-name>ETag Filter</filter-name>
 		<url-pattern>/language/*</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>ETag Filter</filter-name>
+		<url-pattern>/o/js_bundle_config</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>ETag Filter</filter-name>
+		<url-pattern>/o/js_loader_modules</url-pattern>
 	</filter-mapping>
 	<filter-mapping>
 		<filter-name>ETag Filter</filter-name>
@@ -803,6 +825,16 @@
 		<filter-name>GZip Filter</filter-name>
 		<url-pattern>/language/*</url-pattern>
 		<dispatcher>FORWARD</dispatcher>
+		<dispatcher>REQUEST</dispatcher>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>GZip Filter</filter-name>
+		<url-pattern>/o/js_bundle_config</url-pattern>
+		<dispatcher>REQUEST</dispatcher>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>GZip Filter</filter-name>
+		<url-pattern>/o/js_loader_modules</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
 	<filter-mapping>

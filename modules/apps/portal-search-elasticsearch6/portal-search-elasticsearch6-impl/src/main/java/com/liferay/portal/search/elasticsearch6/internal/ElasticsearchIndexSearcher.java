@@ -109,7 +109,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  */
 @Component(
 	configurationPid = "com.liferay.portal.search.elasticsearch6.configuration.ElasticsearchConfiguration",
-	immediate = true, property = {"search.engine.impl=Elasticsearch"},
+	immediate = true, property = "search.engine.impl=Elasticsearch",
 	service = IndexSearcher.class
 )
 public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
@@ -119,7 +119,8 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		QueryBuilder queryBuilder = queryTranslator.translate(
 			query, searchContext);
 		
-		return queryBuilder.toString();
+		return StringUtil.replace(
+			queryBuilder.toString(), ZERO_TERMS_QUERY_STRING, StringPool.BLANK);
 	}
 
 	@Override
@@ -513,7 +514,7 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 
 		Client client = elasticsearchConnectionManager.getClient();
 
-		QueryConfig queryConfig = query.getQueryConfig();
+		QueryConfig queryConfig = searchContext.getQueryConfig();
 
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(
 			getSelectedIndexNames(queryConfig, searchContext));
@@ -791,6 +792,9 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 			hits.addStatsResults(statsResults);
 		}
 	}
+
+	protected static final String ZERO_TERMS_QUERY_STRING =
+		"\"zero_terms_query\" : \"NONE\",";
 
 	@Reference
 	protected ElasticsearchConnectionManager elasticsearchConnectionManager;

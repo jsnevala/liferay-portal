@@ -20,6 +20,7 @@ import com.liferay.exportimport.kernel.xstream.XStreamType;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetStagingHandler;
 import com.liferay.portal.kernel.model.LayoutStagingHandler;
+import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.model.impl.LayoutBranchImpl;
 import com.liferay.portal.model.impl.LayoutImpl;
@@ -34,7 +35,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = XStreamConfigurator.class)
 public class LayoutXStreamConfigurator implements XStreamConfigurator {
@@ -56,8 +57,9 @@ public class LayoutXStreamConfigurator implements XStreamConfigurator {
 
 	@Activate
 	protected void activate() {
-		_xStreamAliases =
-			new XStreamAlias[] {new XStreamAlias(LayoutImpl.class, "Layout")};
+		_xStreamAliases = new XStreamAlias[] {
+			new XStreamAlias(LayoutImpl.class, "Layout")
+		};
 
 		_xStreamTypes = new XStreamType[] {
 			new XStreamType(LayoutBranchImpl.class),
@@ -66,7 +68,8 @@ public class LayoutXStreamConfigurator implements XStreamConfigurator {
 			new XStreamType(LayoutSetBranchImpl.class),
 			new XStreamType(LayoutSetImpl.class),
 			new XStreamType(LayoutSetStagingHandler.class),
-			new XStreamType(LayoutStagingHandler.class)
+			new XStreamType(LayoutStagingHandler.class),
+			new XStreamType(ModelWrapper.class)
 		};
 	}
 

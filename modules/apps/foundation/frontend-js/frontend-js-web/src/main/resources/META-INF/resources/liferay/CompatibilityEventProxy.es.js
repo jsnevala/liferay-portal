@@ -9,10 +9,13 @@ import {core} from 'metal';
  * to bubble events to them.
  *
  */
+
 class CompatibilityEventProxy extends State {
+
 	/**
 	 * @inheritDoc
 	 */
+
 	constructor(config, element) {
 		super(config, element);
 
@@ -29,6 +32,7 @@ class CompatibilityEventProxy extends State {
 	 * @param  {!Object} target YUI component where events will be emited to
 	 * @private
 	 */
+
 	addTarget(target) {
 		this.eventTargets_.push(target);
 	}
@@ -41,6 +45,7 @@ class CompatibilityEventProxy extends State {
 	 * @private
 	 * @return {String}
 	 */
+
 	checkAttributeEvent_(eventName) {
 		return eventName.replace(
 			this.adaptedEvents.match,
@@ -55,18 +60,20 @@ class CompatibilityEventProxy extends State {
 	 * @param  {!Event} event
 	 * @private
 	 */
+
 	emitCompatibleEvents_(eventName, event) {
 		this.eventTargets_.forEach(target => {
 			if (target.fire) {
-				let prefixedEventName = this.namespace
-					? this.namespace + ':' + eventName
-					: eventName;
+				let prefixedEventName = this.namespace ?
+					this.namespace + ':' + eventName :
+					eventName;
 				let yuiEvent = target._yuievt.events[prefixedEventName];
 
 				if (core.isObject(event)) {
 					try {
 						event.target = this.host;
-					} catch (err) {}
+					}
+					catch (err) {}
 				}
 
 				let emitFacadeReference;
@@ -91,6 +98,7 @@ class CompatibilityEventProxy extends State {
 	 *
 	 * @private
 	 */
+
 	startCompatibility_() {
 		this.host.on('*', (event, eventFacade) => {
 			if (!eventFacade) {
@@ -102,7 +110,8 @@ class CompatibilityEventProxy extends State {
 			if (compatibleEvent !== eventFacade.type) {
 				eventFacade.type = compatibleEvent;
 				this.host.emit(compatibleEvent, event, eventFacade);
-			} else if (this.eventTargets_.length > 0 && event.key) {
+			}
+			else if (this.eventTargets_.length > 0 && event.key) {
 				this.emitCompatibleEvents_(compatibleEvent, event);
 			}
 		});
@@ -115,25 +124,29 @@ class CompatibilityEventProxy extends State {
  * @type {!Object}
  * @static
  */
+
 CompatibilityEventProxy.STATE = {
+
 	/**
 	 * Regex for replace event names to YUI adapted names.
 	 * @type {Object}
 	 */
+
 	adaptedEvents: {
 		value: {
 			match: /(.*)(Changed)$/,
-			replace: '$1Change',
-		},
+			replace: '$1Change'
+		}
 	},
 
 	/**
 	 * Indicates if event facade should be emited to the target
 	 * @type {String}
 	 */
+
 	emitFacade: {
-		value: false,
-	},
+		value: false
+	}
 };
 
 export default CompatibilityEventProxy;

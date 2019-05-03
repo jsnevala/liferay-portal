@@ -141,6 +141,7 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		// KB article
 
 		User user = userLocalService.getUser(userId);
+
 		long groupId = serviceContext.getScopeGroupId();
 		urlTitle = normalizeUrlTitle(urlTitle);
 		double priority = getPriority(groupId, parentResourcePrimKey);
@@ -190,8 +191,8 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		kbArticle.setViewCount(0);
 		kbArticle.setLatest(true);
 		kbArticle.setMain(false);
-		kbArticle.setStatus(WorkflowConstants.STATUS_DRAFT);
 		kbArticle.setSourceURL(sourceURL);
+		kbArticle.setStatus(WorkflowConstants.STATUS_DRAFT);
 		kbArticle.setExpandoBridgeAttributes(serviceContext);
 
 		kbArticlePersistence.update(kbArticle);
@@ -635,7 +636,7 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #getKBArticleAndAllDescendantKBArticles(long, int,
 	 *             OrderByComparator)}
 	 */
@@ -903,8 +904,8 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link #getKBArticles(long, long,
-	 *             int, int, int, OrderByComparator)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link #getKBArticles(long,
+	 *             long, int, int, int, OrderByComparator)}
 	 */
 	@Deprecated
 	@Override
@@ -918,8 +919,8 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 1.1.0, replaced by {@link #getKBArticlesCount(long,
-	 *             long, int)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #getKBArticlesCount(long, long, int)}
 	 */
 	@Deprecated
 	@Override
@@ -1153,11 +1154,11 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		kbArticle.setTitle(title);
 		kbArticle.setContent(content);
 		kbArticle.setDescription(description);
-		kbArticle.setSourceURL(sourceURL);
 		kbArticle.setSections(
 			StringUtil.merge(AdminUtil.escapeSections(sections)));
 		kbArticle.setLatest(true);
 		kbArticle.setMain(false);
+		kbArticle.setSourceURL(sourceURL);
 		kbArticle.setExpandoBridgeAttributes(serviceContext);
 
 		kbArticlePersistence.update(kbArticle);
@@ -1386,6 +1387,7 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		KBArticle kbArticle = getLatestKBArticle(
 			resourcePrimKey, WorkflowConstants.STATUS_ANY);
 
+		kbArticle.setModifiedDate(kbArticle.getModifiedDate());
 		kbArticle.setViewCount(viewCount);
 
 		kbArticlePersistence.update(kbArticle);
@@ -1397,6 +1399,7 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		kbArticle = getLatestKBArticle(
 			resourcePrimKey, WorkflowConstants.STATUS_APPROVED);
 
+		kbArticle.setModifiedDate(kbArticle.getModifiedDate());
 		kbArticle.setViewCount(viewCount);
 
 		kbArticlePersistence.update(kbArticle);
@@ -2043,7 +2046,7 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 		int urlTitleMaxSize = ModelHintsUtil.getMaxLength(
 			KBArticle.class.getName(), "urlTitle");
 
-		if (urlTitle.length() > urlTitleMaxSize) {
+		if (urlTitle.length() > (urlTitleMaxSize + 1)) {
 			throw new KBArticleUrlTitleException.MustNotExceedMaximumSize(
 				urlTitle, urlTitleMaxSize);
 		}
@@ -2074,8 +2077,9 @@ public class KBArticleLocalServiceImpl extends KBArticleLocalServiceBaseImpl {
 	@BeanReference(type = PortletFileRepository.class)
 	protected PortletFileRepository portletFileRepository;
 
-	private static final int[] _STATUSES =
-		{WorkflowConstants.STATUS_APPROVED, WorkflowConstants.STATUS_PENDING};
+	private static final int[] _STATUSES = {
+		WorkflowConstants.STATUS_APPROVED, WorkflowConstants.STATUS_PENDING
+	};
 
 	private static final long _TICKET_EXPIRATION = Time.HOUR;
 

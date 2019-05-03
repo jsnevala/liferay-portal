@@ -114,7 +114,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 				String[] imageExtensions = ddmDisplayContext.smallImageExtensions();
 				%>
 
-				<liferay-ui:message key="image-names-must-end-with-one-of-the-following-extensions" /> <%= StringUtil.merge(imageExtensions, StringPool.COMMA) %>.
+				<liferay-ui:message key="image-names-must-end-with-one-of-the-following-extensions" /> <%= HtmlUtil.escape(StringUtil.merge(imageExtensions, StringPool.COMMA)) %>.
 			</liferay-ui:error>
 
 			<liferay-ui:error exception="<%= TemplateSmallImageSizeException.class %>">
@@ -144,7 +144,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 
 						<%
 						portletDisplay.setShowBackIcon(true);
-						portletDisplay.setURLBack(ddmDisplay.getEditTemplateBackURL(liferayPortletRequest, liferayPortletResponse, classNameId, classPK, resourceClassNameId, portletResource));
+						portletDisplay.setURLBack(PortalUtil.escapeRedirect(ddmDisplay.getEditTemplateBackURL(liferayPortletRequest, liferayPortletResponse, classNameId, classPK, resourceClassNameId, portletResource)));
 
 						renderResponse.setTitle(title);
 						%>
@@ -200,6 +200,14 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 
 			<aui:fieldset-group markupView="lexicon">
 				<aui:fieldset>
+					<c:if test="<%= (template != null) && (groupId != PortalUtil.getScopeGroupId(request, refererPortletName)) %>">
+						<aui:field-wrapper>
+							<div class="alert alert-warning">
+								<liferay-ui:message key="this-template-does-not-belong-to-this-site.-you-may-affect-other-sites-if-you-edit-this-template" />
+							</div>
+						</aui:field-wrapper>
+					</c:if>
+
 					<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) || windowState.equals(LiferayWindowState.POP_UP) %>" name="name" />
 
 					<liferay-ui:panel-container
@@ -394,7 +402,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 				}
 			);
 
-			selectSmallImageType('<%= (template != null) && Validator.isNotNull(template.getSmallImageURL()) ? 0 : 1 %>');
+			selectSmallImageType('<%= ((template != null) && Validator.isNotNull(template.getSmallImageURL())) ? 0 : 1 %>');
 		</aui:script>
 	</c:if>
 

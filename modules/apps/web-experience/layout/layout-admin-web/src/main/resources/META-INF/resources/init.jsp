@@ -37,6 +37,7 @@ page import="com.liferay.layout.admin.web.internal.display.context.LayoutsProtot
 page import="com.liferay.layout.admin.web.internal.display.context.LayoutsTreeDisplayContext" %><%@
 page import="com.liferay.layout.admin.web.internal.display.context.OrphanPortletsDisplayContext" %><%@
 page import="com.liferay.layout.admin.web.internal.util.comparator.ThemeNameComparator" %><%@
+page import="com.liferay.layouts.admin.kernel.model.LayoutTypePortletConstants" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
 page import="com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker" %><%@
 page import="com.liferay.portal.kernel.dao.search.ResultRow" %><%@

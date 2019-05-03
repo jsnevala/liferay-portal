@@ -12,6 +12,10 @@ deploy {
 }
 
 importFiles {
+	ext {
+		autoClean = false
+	}
+
 	from processResources
 
 	into {
@@ -21,4 +25,6 @@ importFiles {
 
 transformImportedFiles {
 	enabled = false
+
+	setDependsOn([])
 }

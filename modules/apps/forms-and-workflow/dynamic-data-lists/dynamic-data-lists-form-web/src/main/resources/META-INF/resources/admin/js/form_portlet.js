@@ -11,7 +11,7 @@ AUI.add(
 				ATTRS: {
 					availableLanguageIds: {
 						value: [
-							themeDisplay.getDefaultLanguageId()
+							"en_US"
 						]
 					},
 
@@ -19,7 +19,7 @@ AUI.add(
 					},
 
 					defaultLanguageId: {
-						value: themeDisplay.getDefaultLanguageId()
+						value: "en_US"
 					},
 
 					definition: {

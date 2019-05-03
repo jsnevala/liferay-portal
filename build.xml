@@ -3,6 +3,93 @@
 <project basedir="." default="compile" name="portal" xmlns:antelope="antlib:ise.antelope.tasks" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 	<import file="build-common.xml" />
 
+	<macrodef name="clean-liferay-home">
+		<sequential>
+			<parallel failonany="true" threadcount="${parallel.thread.count}">
+				<delete failonerror="false" includeemptydirs="true">
+					<fileset
+						dir="${app.server.bin.dir}"
+						includes="*.log*"
+					/>
+					<fileset
+						dir="${app.server.classes.portal.dir}"
+						includes="portal-*.properties,system-*.properties"
+					/>
+					<fileset
+						dir="${app.server.deploy.dir}"
+						includes="*-ext/**,*-ext.war/**,*-hook/**,*-hook.war/**,*-layouttpl/**,*-layouttpl.war/**,*-portlet/**,*-portlet.war/**,*-theme/**,*-theme.war/**,*-web/**,*-web.war/**"
+					/>
+					<fileset
+						dir="${app.server.lib.global.dir}"
+						excludes="${jdbc.drivers}"
+					/>
+					<fileset
+						dir="${liferay.home}"
+						includes=".liferay-home"
+					/>
+					<fileset
+						dir="${liferay.home}/data/elasticsearch"
+					/>
+					<fileset
+						dir="${liferay.home}/data/hypersonic"
+						includes="${database.name}.*"
+					/>
+					<fileset
+						dir="${liferay.home}/deploy"
+					/>
+					<fileset
+						dir="${liferay.home}/osgi"
+					/>
+					<fileset
+						dir="${liferay.home}/work"
+					/>
+				</delete>
+
+				<if>
+					<equals arg1="${clean.log.dir}" arg2="true" />
+					<then>
+						<delete dir="${app.server.log.dir}" />
+					</then>
+				</if>
+
+				<if>
+					<not>
+						<and>
+							<equals arg1="${app.server.type}" arg2="tomcat" />
+							<antelope:endswith string="${app.server.portal.dir}" with="/portal-web/docroot" />
+						</and>
+					</not>
+					<then>
+						<delete dir="${app.server.portal.dir}" failonerror="false" />
+						<delete failonerror="false" file="${app.server.portal.dir}" />
+					</then>
+					<else>
+						<delete failonerror="false">
+							<fileset
+								dir="${app.server.lib.portal.dir}"
+								excludes="${jdbc.drivers}"
+							/>
+						</delete>
+					</else>
+				</if>
+
+				<if>
+					<equals arg1="${clean.temp.dir}" arg2="true" />
+					<then>
+						<delete dir="${app.server.temp.dir}" />
+					</then>
+				</if>
+
+				<if>
+					<equals arg1="${clean.work.dir}" arg2="true" />
+					<then>
+						<delete dir="${app.server.work.dir}" />
+					</then>
+				</if>
+			</parallel>
+		</sequential>
+	</macrodef>
+
 	<target name="all">
 		<if>
 			<not>
@@ -135,42 +222,6 @@ message.
 				<fileset
 					dir="${doc.dir}"
 				/>
-				<fileset
-					dir="${app.server.bin.dir}"
-					includes="*.log*"
-				/>
-				<fileset
-					dir="${app.server.classes.portal.dir}"
-					includes="portal-*.properties,system-*.properties"
-				/>
-				<fileset
-					dir="${app.server.deploy.dir}"
-					includes="*-ext/**,*-ext.war/**,*-hook/**,*-hook.war/**,*-layouttpl/**,*-layouttpl.war/**,*-portlet/**,*-portlet.war/**,*-theme/**,*-theme.war/**,*-web/**,*-web.war/**"
-				/>
-				<fileset
-					dir="${app.server.lib.global.dir}"
-					excludes="${jdbc.drivers}"
-				/>
-				<fileset
-					dir="${liferay.home}"
-					includes=".liferay-home"
-				/>
-				<fileset
-					dir="${liferay.home}/data/elasticsearch"
-				/>
-				<fileset
-					dir="${liferay.home}/data/hypersonic"
-					includes="${database.name}.*"
-				/>
-				<fileset
-					dir="${liferay.home}/deploy"
-				/>
-				<fileset
-					dir="${liferay.home}/osgi"
-				/>
-				<fileset
-					dir="${liferay.home}/work"
-				/>
 			</delete>
 
 			<if>
@@ -179,49 +230,9 @@ message.
 					<ant dir="support-${app.server.type}" inheritAll="false" target="clean" />
 				</then>
 			</if>
-
-			<if>
-				<equals arg1="${clean.log.dir}" arg2="true" />
-				<then>
-					<delete dir="${app.server.log.dir}" />
-				</then>
-			</if>
-
-			<if>
-				<not>
-					<and>
-						<equals arg1="${app.server.type}" arg2="tomcat" />
-						<antelope:endswith string="${app.server.portal.dir}" with="/portal-web/docroot" />
-					</and>
-				</not>
-				<then>
-					<delete dir="${app.server.portal.dir}" failonerror="false" />
-					<delete failonerror="false" file="${app.server.portal.dir}" />
-				</then>
-				<else>
-					<delete failonerror="false">
-						<fileset
-							dir="${app.server.lib.portal.dir}"
-							excludes="${jdbc.drivers}"
-						/>
-					</delete>
-				</else>
-			</if>
-
-			<if>
-				<equals arg1="${clean.temp.dir}" arg2="true" />
-				<then>
-					<delete dir="${app.server.temp.dir}" />
-				</then>
-			</if>
-
-			<if>
-				<equals arg1="${clean.work.dir}" arg2="true" />
-				<then>
-					<delete dir="${app.server.work.dir}" />
-				</then>
-			</if>
 		</parallel>
+
+		<clean-liferay-home />
 
 		<ant dir="portal-web" inheritAll="false" target="clean" />
 
@@ -401,6 +412,26 @@ message.
 					<arg value="-Dbuild.profile=${build.profile}" />
 					<env key="WAS_HOME" value="${app.server.websphere.dir}" />
 				</gradle-execute>
+
+				<if>
+					<equals arg1="${marker.files.lfrbuild.ci.enabled}" arg2="true" />
+					<then>
+						<if>
+							<resourcecount count="0" when="gt">
+								<fileset
+									dir="${project.dir}/modules"
+									includes="**/.lfrbuild-ci"
+								/>
+							</resourcecount>
+							<then>
+								<gradle-execute dir="${project.dir}/modules" task="deploy">
+									<arg value="--parallel" />
+									<arg value="-Ddeploy.only.profile=ci" />
+								</gradle-execute>
+							</then>
+						</if>
+					</then>
+				</if>
 			</then>
 			<else>
 				<gradle-execute dir="${project.dir}/modules/core" task="deploy">
@@ -466,31 +497,11 @@ message.
 					</else>
 				</if>
 
-				<gradle-execute dir="${project.dir}/modules" task="copyCompiledJSP">
+				<gradle-execute checktask="true" dir="${project.dir}/modules" task="copyCompiledJSP">
 					<arg value="-Dbuild.exclude.dirs=${build.exclude.dirs}" />
 					<arg value="-Dbuild.include.dirs=${build.include.dirs}" />
 					<arg value="-Dbuild.profile=${build.profile}" />
 				</gradle-execute>
-			</then>
-		</if>
-
-		<if>
-			<isset property="env.JENKINS_HOME" />
-			<then>
-				<if>
-					<resourcecount count="0" when="gt">
-						<fileset
-							dir="${project.dir}/modules"
-							includes="**/.lfrbuild-ci"
-						/>
-					</resourcecount>
-					<then>
-						<gradle-execute dir="${project.dir}/modules" task="deploy">
-							<arg value="--parallel" />
-							<arg value="-Dbuild.profile=ci" />
-						</gradle-execute>
-					</then>
-				</if>
 			</then>
 		</if>
 
@@ -878,6 +889,16 @@ message.
 		</javadoc>
 	</target>
 
+	<target name="nightly">
+		<fail>
+.
+
+This target has been renamed to "snapshot-bundle". Please call "snapshot-bundle" instead.
+		</fail>
+
+		<antcall target="snapshot-bundle" />
+	</target>
+
 	<target name="prepare-generated-files">
 		<ant antfile="build-dist.xml" inheritAll="false" target="prepare-generated-files" />
 	</target>
@@ -1024,6 +1045,92 @@ message.
 
 	<target name="setup-sdk">
 		<setup-sdk />
+	</target>
+
+	<target name="snapshot-bundle">
+		<antelope:stringutil property="snapshot.bundle.file.beginindex" string="${snapshot.bundle.url}">
+			<antelope:lastindexof string="/" />
+		</antelope:stringutil>
+
+		<antelope:math
+			datatype="int"
+			operand1="${snapshot.bundle.file.beginindex}"
+			operand2="1"
+			operation="+"
+			result="snapshot.bundle.file.beginindex"
+		/>
+
+		<antelope:stringutil property="snapshot.bundle.file" string="${snapshot.bundle.url}">
+			<antelope:substring beginindex="${snapshot.bundle.file.beginindex}" />
+		</antelope:stringutil>
+
+		<property name="snapshot.bundle.sha256.original" value="${project.dir}/tmp/${snapshot.bundle.file}.snapshot.bundle.sha256.original" />
+		<property name="snapshot.bundle.sha256.new" value="${project.dir}/tmp/${snapshot.bundle.file}.snapshot.bundle.sha256.new" />
+
+		<mirrors-get
+			dest="${snapshot.bundle.sha256.original}"
+			force="false"
+			skipChecksum="true"
+			src="${snapshot.bundle.url}.sha256"
+		/>
+
+		<mirrors-get
+			dest="${snapshot.bundle.sha256.new}"
+			force="true"
+			skipChecksum="true"
+			src="${snapshot.bundle.url}.sha256"
+		/>
+
+		<condition else="true" property="snapshot.bundle.force" value="false">
+			<filesmatch file1="${snapshot.bundle.sha256.original}" file2="${snapshot.bundle.sha256.new}" />
+		</condition>
+
+		<mirrors-get
+			dest="${project.dir}/tmp/${snapshot.bundle.file}"
+			force="${snapshot.bundle.force}"
+			skipChecksum="true"
+			src="${snapshot.bundle.url}"
+		/>
+
+		<clean-liferay-home />
+
+		<unzip
+			dest="${liferay.home}"
+			src="${project.dir}/tmp/${snapshot.bundle.file}"
+		>
+			<mapper>
+				<globmapper
+					from="liferay-portal-${git.working.branch.name}/*"
+					to="*"
+				/>
+			</mapper>
+			<patternset
+				excludes="${snapshot.bundle.excludes}"
+			/>
+		</unzip>
+
+		<deploy-properties />
+
+		<if>
+			<os family="unix" />
+			<then>
+				<chmod
+					file="${app.server.tomcat.bin.dir}/*.sh"
+					perm="a+x"
+				/>
+			</then>
+		</if>
+
+		<if>
+			<available file="${liferay.home}/work" />
+			<then>
+				<touch>
+					<fileset
+						dir="${liferay.home}/work"
+					/>
+				</touch>
+			</then>
+		</if>
 	</target>
 
 	<target name="start">
@@ -1210,23 +1317,35 @@ print AdminControl.invoke(appManager, 'startApplication', 'liferay-portal')
 
 		<delete dir="${basedir}/.gradle" />
 
-		<setup-sdk />
+		<setup-sdk setupbinariescache="false" />
 
-		<gradle-execute dir="modules" forcedcacheenabled="false" task="clean">
-			<arg value="-Dmaven.local.ignore=true" />
+		<gradle-execute dir="modules" forcedcacheenabled="false" setupbinariescache="false" task="clean">
+			<arg value="--continue" />
+			<arg value="--parallel" />
 		</gradle-execute>
 
-		<gradle-execute dir="modules" forcedcacheenabled="false" task="classes">
-			<arg value="-Dmaven.local.ignore=true" />
+		<gradle-execute dir="modules" forcedcacheenabled="false" setupbinariescache="false" task="classes">
+			<arg value="--continue" />
+			<arg value="--parallel" />
 			<arg value="testClasses" />
 			<arg value="testIntegrationClasses" />
 		</gradle-execute>
 
-		<gradle-execute dir="modules/sdk/gradle-util" failonerror="false" forcedcacheenabled="false" task="findbugsMain">
-			<arg value="-Dmaven.local.ignore=true" />
-		</gradle-execute>
-
 		<ant dir="portal-web" inheritAll="false" target="update-gradle-cache" />
+
+		<echo append="true" file="${basedir}/.gitignore">
+!/.gradle
+/.gradle/*
+!/.gradle/caches
+/.gradle/caches/*
+!/.gradle/caches/modules-2
+/.gradle/caches/modules-2/*
+!/.gradle/caches/modules-2/files-2.1</echo>
+
+		<execute>
+			git add --all
+			git checkout HEAD -- .gitignore
+		</execute>
 	</target>
 
 	<target name="validate-xml">

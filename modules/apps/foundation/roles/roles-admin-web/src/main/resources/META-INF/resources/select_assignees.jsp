@@ -52,7 +52,7 @@ request.setAttribute("edit_role_assignments.jsp-role", role);
 
 request.setAttribute("edit_role_assignments.jsp-displayStyle", displayStyle);
 
-request.setAttribute("edit_role_assignments.jsp-portletURL", portletURL);
+request.setAttribute("edit_role_assignments.jsp-portletURL", PortletURLUtil.clone(portletURL, liferayPortletResponse));
 %>
 
 <aui:nav-bar cssClass="collapse-basic-search" markupView="lexicon">

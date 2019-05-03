@@ -35,7 +35,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {"server.manager.executor.path=/server/debug-port"},
+	property = "server.manager.executor.path=/server/debug-port",
 	service = Executor.class
 )
 public class DebugPortExecutor extends BaseExecutor {
@@ -81,6 +81,6 @@ public class DebugPortExecutor extends BaseExecutor {
 		return null;
 	}
 
-	private final Pattern _pattern = Pattern.compile("address=(\\d+)");
+	private static final Pattern _pattern = Pattern.compile("address=(\\d+)");
 
 }

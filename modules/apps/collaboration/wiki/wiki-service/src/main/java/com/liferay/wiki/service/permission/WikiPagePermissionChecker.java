@@ -36,7 +36,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"model.class.name=com.liferay.wiki.model.WikiPage"}
+	property = "model.class.name=com.liferay.wiki.model.WikiPage"
 )
 public class WikiPagePermissionChecker implements BaseModelPermissionChecker {
 
@@ -55,7 +55,7 @@ public class WikiPagePermissionChecker implements BaseModelPermissionChecker {
 	}
 
 	/**
-	 * @deprecated As of 1.6.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static void check(
@@ -70,7 +70,7 @@ public class WikiPagePermissionChecker implements BaseModelPermissionChecker {
 	}
 
 	/**
-	 * @deprecated As of 1.6.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static void check(
@@ -109,7 +109,7 @@ public class WikiPagePermissionChecker implements BaseModelPermissionChecker {
 	}
 
 	/**
-	 * @deprecated As of 1.6.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static boolean contains(
@@ -130,7 +130,7 @@ public class WikiPagePermissionChecker implements BaseModelPermissionChecker {
 	}
 
 	/**
-	 * @deprecated As of 1.6.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static boolean contains(

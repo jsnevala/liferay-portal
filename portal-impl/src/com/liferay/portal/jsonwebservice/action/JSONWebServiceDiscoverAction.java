@@ -237,32 +237,16 @@ public class JSONWebServiceDiscoverAction implements JSONWebServiceAction {
 	}
 
 	private List<Map<String, Object>> _buildTypes() {
+		_completeTypes();
+
 		List<Map<String, Object>> types = new ArrayList<>();
 
-		for (int i = 0; i < _types.size(); i++) {
-			Class<?> type = _types.get(i);
-
+		for (Class<?> type : _types) {
 			Map<String, Object> map = new LinkedHashMap<>();
 
 			types.add(map);
 
-			Class<?> modelType = type;
-
-			if (type.isInterface()) {
-				try {
-					Class<?> clazz = getClass();
-
-					ClassLoader classLoader = clazz.getClassLoader();
-
-					String modelImplClassName =
-						_jsonWebServiceNaming.convertModelClassToImplClassName(
-							type);
-
-					modelType = classLoader.loadClass(modelImplClassName);
-				}
-				catch (ClassNotFoundException cnfe) {
-				}
-			}
+			Class<?> modelType = _getInterfaceType(type);
 
 			if (modelType.isInterface() ||
 				Modifier.isAbstract(modelType.getModifiers())) {
@@ -281,6 +265,22 @@ public class JSONWebServiceDiscoverAction implements JSONWebServiceAction {
 		}
 
 		return types;
+	}
+
+	private void _completeTypes() {
+		while (true) {
+			int typesSize = _types.size();
+
+			for (Class<?> type : new ArrayList<>(_types)) {
+				Class<?> modelType = _getInterfaceType(type);
+
+				_buildPropertiesList(modelType);
+			}
+
+			if (typesSize == _types.size()) {
+				break;
+			}
+		}
 	}
 
 	private String _formatType(
@@ -412,6 +412,28 @@ public class JSONWebServiceDiscoverAction implements JSONWebServiceAction {
 		return genericReturnTypes;
 	}
 
+	private Class<?> _getInterfaceType(Class<?> type) {
+		Class<?> modelType = type;
+
+		if (type.isInterface()) {
+			try {
+				Class<?> clazz = getClass();
+
+				ClassLoader classLoader = clazz.getClassLoader();
+
+				String modelImplClassName =
+					_jsonWebServiceNaming.convertModelClassToImplClassName(
+						type);
+
+				modelType = classLoader.loadClass(modelImplClassName);
+			}
+			catch (ClassNotFoundException cnfe) {
+			}
+		}
+
+		return modelType;
+	}
+
 	private String _getName(
 		JSONWebServiceActionMapping jsonWebServiceActionMapping) {
 
@@ -422,7 +444,11 @@ public class JSONWebServiceDiscoverAction implements JSONWebServiceAction {
 
 		Method method = jsonWebServiceActionMapping.getRealActionMethod();
 
-		return className.concat(StringPool.POUND).concat(method.getName());
+		return className.concat(
+			StringPool.POUND
+		).concat(
+			method.getName()
+		);
 	}
 
 	private final String _basePath;

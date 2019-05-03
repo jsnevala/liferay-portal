@@ -44,7 +44,7 @@ zipsString = StringUtil.merge(zips, StringPool.NEW_LINE);
 			String zip = enu.nextElement();
 		%>
 
-			<strong><%= HtmlUtil.escape(zip) %></strong><%= (enu.hasMoreElements()) ? ", " : "." %>
+			<strong><%= HtmlUtil.escape(zip) %></strong><%= enu.hasMoreElements() ? ", " : "." %>
 
 		<%
 		}

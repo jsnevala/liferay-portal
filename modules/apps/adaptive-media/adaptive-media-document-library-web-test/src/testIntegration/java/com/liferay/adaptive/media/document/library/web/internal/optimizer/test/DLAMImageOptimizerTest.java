@@ -46,6 +46,7 @@ import com.liferay.registry.RegistryUtil;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.junit.After;
@@ -424,7 +425,9 @@ public class DLAMImageOptimizerTest {
 
 			Collection<T> services = registry.getServices(clazz, filter);
 
-			return services.iterator().next();
+			Iterator<T> iterator = services.iterator();
+
+			return iterator.next();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);

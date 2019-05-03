@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -34,13 +33,12 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Sergio González
  */
 @Component(
-	property = {"editor.name=alloyeditor_creole"},
+	property = "editor.name=alloyeditor_creole",
 	service = EditorConfigContributor.class
 )
 public class AlloyEditorCreoleConfigContributor
@@ -105,7 +103,12 @@ public class AlloyEditorCreoleConfigContributor
 		sb.append("smiley,stylescombo,templates,video");
 
 		jsonObject.put(
-			"removePlugins", removePlugins.concat(",").concat(sb.toString()));
+			"removePlugins",
+			removePlugins.concat(
+				","
+			).concat(
+				sb.toString()
+			));
 
 		jsonObject.put(
 			"toolbars", getToolbarsJSONObject(themeDisplay.getLocale()));
@@ -134,7 +137,12 @@ public class AlloyEditorCreoleConfigContributor
 		ResourceBundle resourceBundle = null;
 
 		try {
-			resourceBundle = _resourceBundleLoader.loadResourceBundle(locale);
+			ResourceBundleLoader resourceBundleLoader =
+				ResourceBundleLoaderUtil.
+					getResourceBundleLoaderByBundleSymbolicName(
+						"com.liferay.frontend.editor.lang");
+
+			resourceBundle = resourceBundleLoader.loadResourceBundle(locale);
 		}
 		catch (MissingResourceException mre) {
 			resourceBundle = ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE;
@@ -328,22 +336,6 @@ public class AlloyEditorCreoleConfigContributor
 		return jsonObject;
 	}
 
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.frontend.editor.lang)",
-		unbind = "-"
-	)
-	protected void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
-	}
-
 	private static final int _CKEDITOR_STYLE_BLOCK = 1;
-
-	private static final int _CKEDITOR_STYLE_INLINE = 2;
-
-	private volatile ResourceBundleLoader _resourceBundleLoader;
 
 }

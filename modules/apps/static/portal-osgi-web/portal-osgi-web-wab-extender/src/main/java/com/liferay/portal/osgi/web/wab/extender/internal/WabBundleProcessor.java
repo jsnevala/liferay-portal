@@ -15,6 +15,7 @@
 package com.liferay.portal.osgi.web.wab.extender.internal;
 
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.ReflectionUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -51,7 +52,7 @@ import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -200,12 +201,14 @@ public class WabBundleProcessor {
 
 			scanTLDsForListeners(webXMLDefinition, servletContext);
 
-			initListeners(
-				webXMLDefinition.getListenerDefinitions(), servletContext);
+			Set<ListenerDefinition> listenerDefinitions = new LinkedHashSet<>();
 
-			initListeners(
-				modifiableServletContext.getListenerDefinitions(),
-				servletContext);
+			listenerDefinitions.addAll(
+				modifiableServletContext.getListenerDefinitions());
+			listenerDefinitions.addAll(
+				webXMLDefinition.getListenerDefinitions());
+
+			initListeners(listenerDefinitions, servletContext);
 
 			modifiableServletContext.registerFilters();
 
@@ -472,7 +475,7 @@ public class WabBundleProcessor {
 
 			FilterDefinition filterDefinition = entry.getValue();
 
-			Dictionary<String, Object> properties = new Hashtable<>();
+			Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 			properties.put(
 				HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
@@ -530,12 +533,12 @@ public class WabBundleProcessor {
 	}
 
 	protected void initListeners(
-			List<ListenerDefinition> listenerDefinitions,
+			Collection<ListenerDefinition> listenerDefinitions,
 			ServletContext servletContext)
 		throws Exception {
 
 		for (ListenerDefinition listenerDefinition : listenerDefinitions) {
-			Dictionary<String, Object> properties = new Hashtable<>();
+			Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 			properties.put(
 				HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,
@@ -643,7 +646,7 @@ public class WabBundleProcessor {
 
 			ServletDefinition servletDefinition = entry.getValue();
 
-			Dictionary<String, Object> properties = new Hashtable<>();
+			Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 			properties.put(
 				HttpWhiteboardConstants.HTTP_WHITEBOARD_CONTEXT_SELECT,

@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Igor Spasic
  */
 @Component(
-	property = {"model.class.name=com.liferay.portal.kernel.repository.model.Folder"},
+	property = "model.class.name=com.liferay.portal.kernel.repository.model.Folder",
 	service = AtomCollectionAdapter.class
 )
 public class FolderAtomCollectionAdapter
@@ -177,10 +177,8 @@ public class FolderAtomCollectionAdapter
 
 		ServiceContext serviceContext = new ServiceContext();
 
-		Folder folder = _dlAppService.addFolder(
+		return _dlAppService.addFolder(
 			repositoryId, parentFolderId, title, summary, serviceContext);
-
-		return folder;
 	}
 
 	@Override

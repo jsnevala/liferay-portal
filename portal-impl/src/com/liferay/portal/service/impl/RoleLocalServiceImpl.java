@@ -65,6 +65,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.permission.PermissionCacheUtil;
@@ -1088,6 +1089,13 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		Role role = rolePersistence.fetchByC_N(companyId, name);
 
 		if (role == null) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					StringBundler.concat(
+						"Role ", name, " with company ID ",
+						String.valueOf(companyId), " does not exist"));
+			}
+
 			return false;
 		}
 
@@ -1115,8 +1123,9 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 				ThreadLocalCacheManager.getThreadLocalCache(
 					Lifecycle.REQUEST, RoleLocalServiceImpl.class.getName());
 
-			String key = String.valueOf(role.getRoleId()).concat(
-				String.valueOf(userId));
+			String roleId = String.valueOf(role.getRoleId());
+
+			String key = roleId.concat(String.valueOf(userId));
 
 			Boolean value = threadLocalCache.get(key);
 

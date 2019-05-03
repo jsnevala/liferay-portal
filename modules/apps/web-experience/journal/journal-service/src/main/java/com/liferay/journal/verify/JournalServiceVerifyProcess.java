@@ -100,7 +100,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"verify.process.name=com.liferay.journal.service"},
+	property = "verify.process.name=com.liferay.journal.service",
 	service = {JournalServiceVerifyProcess.class, VerifyProcess.class}
 )
 public class JournalServiceVerifyProcess extends VerifyLayout {
@@ -141,7 +141,7 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 	}
 
 	/**
-	 * @deprecated As of 3.10.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Reference(unbind = "-")
@@ -152,7 +152,7 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 	}
 
 	/**
-	 * @deprecated As of 3.10.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Reference(unbind = "-")
@@ -197,7 +197,7 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 	}
 
 	/**
-	 * @deprecated As of 3.10.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Reference(unbind = "-")
@@ -267,6 +267,10 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 		}
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	protected void updateCreateAndModifiedDates() throws Exception {
 		ActionableDynamicQuery actionableDynamicQuery =
 			_journalArticleResourceLocalService.getActionableDynamicQuery();
@@ -280,8 +284,8 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 		}
 
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.
-				PerformActionMethod<JournalArticleResource>() {
+			new ActionableDynamicQuery.PerformActionMethod
+				<JournalArticleResource>() {
 
 				@Override
 				public void performAction(
@@ -300,6 +304,10 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 		}
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	protected void updateCreateDate(JournalArticleResource articleResource) {
 		List<JournalArticle> articles = _journalArticleLocalService.getArticles(
 			articleResource.getGroupId(), articleResource.getArticleId(),
@@ -360,7 +368,7 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 	}
 
 	/**
-	 * @deprecated As of 3.10.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected void updateDynamicElements(JournalArticle article)
@@ -424,7 +432,7 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 	}
 
 	/**
-	 * @deprecated As of 3.14.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected void updateExpirationDate(
@@ -469,24 +477,27 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 
 		String elName = element.attributeValue("name");
 
-		Element dynamicContentElement = element.element("dynamic-content");
+		List<Element> dynamicContentElements = element.elements(
+			"dynamic-content");
 
-		long articleImageId = GetterUtil.getLong(
-			dynamicContentElement.attributeValue("id"));
+		for (Element dynamicContentElement : dynamicContentElements) {
+			long articleImageId = GetterUtil.getLong(
+				dynamicContentElement.attributeValue("id"));
 
-		JournalArticleImage articleImage =
-			_journalArticleImageLocalService.fetchJournalArticleImage(
-				articleImageId);
+			JournalArticleImage articleImage =
+				_journalArticleImageLocalService.fetchJournalArticleImage(
+					articleImageId);
 
-		if (articleImage == null) {
-			return;
-		}
+			if (articleImage == null) {
+				continue;
+			}
 
-		if (!elName.equals(articleImage.getElName())) {
-			articleImage.setElName(elName);
+			if (!elName.equals(articleImage.getElName())) {
+				articleImage.setElName(elName);
 
-			_journalArticleImageLocalService.updateJournalArticleImage(
-				articleImage);
+				_journalArticleImageLocalService.updateJournalArticleImage(
+					articleImage);
+			}
 		}
 	}
 
@@ -504,6 +515,10 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 		}
 	}
 
+	/**
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
+	 */
+	@Deprecated
 	protected void updateModifiedDate(JournalArticleResource articleResource) {
 		JournalArticle article = _journalArticleLocalService.fetchLatestArticle(
 			articleResource.getResourcePrimKey(),
@@ -637,8 +652,8 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 			}
 
 			actionableDynamicQuery.setPerformActionMethod(
-				new ActionableDynamicQuery.
-					PerformActionMethod<JournalArticle>() {
+				new ActionableDynamicQuery.PerformActionMethod
+					<JournalArticle>() {
 
 					@Override
 					public void performAction(JournalArticle article)
@@ -665,7 +680,6 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 				_log.debug("Assets verified for articles");
 			}
 
-			updateCreateAndModifiedDates();
 			updateResourcePrimKey();
 		}
 	}
@@ -813,8 +827,8 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 			}
 
 			actionableDynamicQuery.setPerformActionMethod(
-				new ActionableDynamicQuery.
-					PerformActionMethod<JournalArticle>() {
+				new ActionableDynamicQuery.PerformActionMethod
+					<JournalArticle>() {
 
 					@Override
 					public void performAction(JournalArticle article) {
@@ -926,8 +940,8 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 					articles = _journalArticleLocalService.getArticles(
 						DEFAULT_GROUP_ID);
 
-					for (int j = 0; j < articles.size(); j++) {
-						article = articles.get(j);
+					for (JournalArticle curArticle : articles) {
+						article = curArticle;
 
 						_journalArticleLocalService.checkNewLine(
 							article.getGroupId(), article.getArticleId(),
@@ -980,7 +994,7 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 	}
 
 	/**
-	 * @deprecated As of 3.24.4
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected void verifyTree() throws Exception {
@@ -994,7 +1008,7 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 	}
 
 	/**
-	 * @deprecated As of 3.24.5
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	protected void verifyURLTitle() throws Exception {
@@ -1013,6 +1027,7 @@ public class JournalServiceVerifyProcess extends VerifyLayout {
 				while (rs.next()) {
 					long groupId = rs.getLong("groupId");
 					String articleId = rs.getString("articleId");
+
 					String urlTitle = GetterUtil.getString(
 						rs.getString("urlTitle"));
 

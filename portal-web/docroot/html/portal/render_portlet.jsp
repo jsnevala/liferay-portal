@@ -316,16 +316,12 @@ if (layoutTypeController.isFullPageDisplayable()) {
 	showCloseIcon = false;
 }
 
-long previousScopeGroupId = themeDisplay.getScopeGroupId();
-
 if (Validator.isNotNull(portletResource)) {
 	themeDisplay.setScopeGroupId(PortalUtil.getScopeGroupId(request, portletResourcePortlet.getPortletId()));
 }
 else {
 	themeDisplay.setScopeGroupId(PortalUtil.getScopeGroupId(request, portletId));
 }
-
-long previousSiteGroupId = themeDisplay.getSiteGroupId();
 
 Group siteGroup = themeDisplay.getSiteGroup();
 
@@ -1147,7 +1143,7 @@ if (themeDisplay.isStatePopUp()) {
 		<aui:script position="inline" use="aui-base">
 			if (window.parent) {
 				var data = {
-					portletAjaxable: <%= !((portletResourcePortlet != null && !portletResourcePortlet.isAjaxable()) || SessionMessages.contains(renderRequestImpl, portletId + SessionMessages.KEY_SUFFIX_PORTLET_NOT_AJAXABLE)) %>
+					portletAjaxable: <%= !(((portletResourcePortlet != null) && !portletResourcePortlet.isAjaxable()) || SessionMessages.contains(renderRequestImpl, portletId + SessionMessages.KEY_SUFFIX_PORTLET_NOT_AJAXABLE)) %>
 
 					<c:if test="<%= (refreshPortletData != null) && !refreshPortletData.isEmpty() %>">
 
@@ -1236,7 +1232,7 @@ if (themeDisplay.isStatePopUp()) {
 
 						if (window.parent) {
 							var data = {
-								portletAjaxable: <%= !((portletResourcePortlet != null && !portletResourcePortlet.isAjaxable()) || SessionMessages.contains(renderRequestImpl, portletId + SessionMessages.KEY_SUFFIX_PORTLET_NOT_AJAXABLE)) %>
+								portletAjaxable: <%= !(((portletResourcePortlet != null) && !portletResourcePortlet.isAjaxable()) || SessionMessages.contains(renderRequestImpl, portletId + SessionMessages.KEY_SUFFIX_PORTLET_NOT_AJAXABLE)) %>
 
 								<c:if test="<%= (refreshPortletData != null) && !refreshPortletData.isEmpty() %>">
 
@@ -1267,9 +1263,6 @@ if (themeDisplay.isStatePopUp()) {
 <%
 	}
 }
-
-themeDisplay.setScopeGroupId(previousScopeGroupId);
-themeDisplay.setSiteGroupId(previousSiteGroupId);
 
 if (showPortletCssIcon) {
 	themeDisplay.setIncludePortletCssJs(true);

@@ -102,7 +102,7 @@ public class SoyPortletHelperTest {
 	}
 
 	protected Bundle getBundleWithPackageFile() {
-		Bundle bundle = (Bundle)ProxyUtil.newProxyInstance(
+		return (Bundle)ProxyUtil.newProxyInstance(
 			Bundle.class.getClassLoader(), new Class<?>[] {Bundle.class},
 			new InvocationHandler() {
 
@@ -122,8 +122,6 @@ public class SoyPortletHelperTest {
 				}
 
 			});
-
-		return bundle;
 	}
 
 	protected String getPortletJavaScript(Bundle bundle, String path)
@@ -133,11 +131,9 @@ public class SoyPortletHelperTest {
 
 		Template template = new MockTemplate();
 
-		String portletJavaScript = soyPortletHelper.getPortletJavaScript(
+		return soyPortletHelper.getPortletJavaScript(
 			template, path, StringUtil.randomString(),
 			Collections.<String>emptySet());
-
-		return portletJavaScript;
 	}
 
 	protected void setUpHtmlUtil() {

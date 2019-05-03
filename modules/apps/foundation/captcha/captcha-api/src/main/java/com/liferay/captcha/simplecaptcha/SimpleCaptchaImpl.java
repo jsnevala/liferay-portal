@@ -57,9 +57,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {
-		"captcha.engine.impl=com.liferay.captcha.simplecaptcha.SimpleCaptchaImpl"
-	},
+	property = "captcha.engine.impl=com.liferay.captcha.simplecaptcha.SimpleCaptchaImpl",
 	service = Captcha.class
 )
 public class SimpleCaptchaImpl implements Captcha {
@@ -292,8 +290,8 @@ public class SimpleCaptchaImpl implements Captcha {
 		String[] backgroundProducerClassNames =
 			PropsValues.CAPTCHA_ENGINE_SIMPLECAPTCHA_BACKGROUND_PRODUCERS;
 
-		_backgroundProducers = new BackgroundProducer[
-			backgroundProducerClassNames.length];
+		_backgroundProducers =
+			new BackgroundProducer[backgroundProducerClassNames.length];
 
 		for (int i = 0; i < backgroundProducerClassNames.length; i++) {
 			String backgroundProducerClassName =

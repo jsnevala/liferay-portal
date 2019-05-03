@@ -345,6 +345,15 @@ public class WebServerServlet extends HttpServlet {
 		FileEntry fileEntry = PortletFileRepositoryUtil.getPortletFileEntry(
 			uuid, groupId);
 
+		User user = _getUser(request);
+
+		if (!fileEntry.containsPermission(
+				PermissionCheckerFactoryUtil.create(user), ActionKeys.VIEW)) {
+
+			throw new PrincipalException.MustHavePermission(
+				user.getUserId(), ActionKeys.VIEW);
+		}
+
 		int status = ParamUtil.getInteger(
 			request, "status", WorkflowConstants.STATUS_APPROVED);
 
@@ -438,6 +447,7 @@ public class WebServerServlet extends HttpServlet {
 		else if (pathArray.length == 3) {
 			long groupId = GetterUtil.getLong(pathArray[0]);
 			long folderId = GetterUtil.getLong(pathArray[1]);
+
 			String fileName = HttpUtil.decodeURL(pathArray[2]);
 
 			if (fileName.contains(StringPool.QUESTION)) {
@@ -787,13 +797,13 @@ public class WebServerServlet extends HttpServlet {
 			if (imageId == thumbnailCapability.getSmallImageId(fileEntry)) {
 				queryString = "&imageThumbnail=1";
 			}
-			else if (imageId ==
-						thumbnailCapability.getCustom1ImageId(fileEntry)) {
+			else if (imageId == thumbnailCapability.getCustom1ImageId(
+						fileEntry)) {
 
 				queryString = "&imageThumbnail=2";
 			}
-			else if (imageId ==
-						thumbnailCapability.getCustom2ImageId(fileEntry)) {
+			else if (imageId == thumbnailCapability.getCustom2ImageId(
+						fileEntry)) {
 
 				queryString = "&imageThumbnail=3";
 			}
@@ -1032,9 +1042,13 @@ public class WebServerServlet extends HttpServlet {
 		long contentLength = 0;
 
 		if ((imageThumbnail > 0) && (imageThumbnail <= 3)) {
-			fileName = FileUtil.stripExtension(fileName).concat(
-				StringPool.PERIOD).concat(
-					ImageProcessorUtil.getThumbnailType(fileVersion));
+			fileName = FileUtil.stripExtension(
+				fileName
+			).concat(
+				StringPool.PERIOD
+			).concat(
+				ImageProcessorUtil.getThumbnailType(fileVersion)
+			);
 
 			int thumbnailIndex = imageThumbnail - 1;
 
@@ -1046,8 +1060,13 @@ public class WebServerServlet extends HttpServlet {
 			converted = true;
 		}
 		else if ((documentThumbnail > 0) && (documentThumbnail <= 3)) {
-			fileName = FileUtil.stripExtension(fileName).concat(
-				StringPool.PERIOD).concat(PDFProcessor.THUMBNAIL_TYPE);
+			fileName = FileUtil.stripExtension(
+				fileName
+			).concat(
+				StringPool.PERIOD
+			).concat(
+				PDFProcessor.THUMBNAIL_TYPE
+			);
 
 			int thumbnailIndex = documentThumbnail - 1;
 
@@ -1059,8 +1078,13 @@ public class WebServerServlet extends HttpServlet {
 			converted = true;
 		}
 		else if (previewFileIndex > 0) {
-			fileName = FileUtil.stripExtension(fileName).concat(
-				StringPool.PERIOD).concat(PDFProcessor.PREVIEW_TYPE);
+			fileName = FileUtil.stripExtension(
+				fileName
+			).concat(
+				StringPool.PERIOD
+			).concat(
+				PDFProcessor.PREVIEW_TYPE
+			);
 			inputStream = PDFProcessorUtil.getPreviewAsStream(
 				fileVersion, previewFileIndex);
 			contentLength = PDFProcessorUtil.getPreviewFileSize(
@@ -1071,8 +1095,13 @@ public class WebServerServlet extends HttpServlet {
 		else if (audioPreview || videoPreview) {
 			String type = ParamUtil.getString(request, "type");
 
-			fileName = FileUtil.stripExtension(fileName).concat(
-				StringPool.PERIOD).concat(type);
+			fileName = FileUtil.stripExtension(
+				fileName
+			).concat(
+				StringPool.PERIOD
+			).concat(
+				type
+			);
 
 			if (audioPreview) {
 				inputStream = AudioProcessorUtil.getPreviewAsStream(
@@ -1092,8 +1121,13 @@ public class WebServerServlet extends HttpServlet {
 		else if (imagePreview) {
 			String type = ImageProcessorUtil.getPreviewType(fileVersion);
 
-			fileName = FileUtil.stripExtension(fileName).concat(
-				StringPool.PERIOD).concat(type);
+			fileName = FileUtil.stripExtension(
+				fileName
+			).concat(
+				StringPool.PERIOD
+			).concat(
+				type
+			);
 
 			inputStream = ImageProcessorUtil.getPreviewAsStream(fileVersion);
 
@@ -1102,8 +1136,13 @@ public class WebServerServlet extends HttpServlet {
 			converted = true;
 		}
 		else if ((videoThumbnail > 0) && (videoThumbnail <= 3)) {
-			fileName = FileUtil.stripExtension(fileName).concat(
-				StringPool.PERIOD).concat(VideoProcessor.THUMBNAIL_TYPE);
+			fileName = FileUtil.stripExtension(
+				fileName
+			).concat(
+				StringPool.PERIOD
+			).concat(
+				VideoProcessor.THUMBNAIL_TYPE
+			);
 
 			int thumbnailIndex = videoThumbnail - 1;
 
@@ -1124,8 +1163,13 @@ public class WebServerServlet extends HttpServlet {
 					targetExtension);
 
 				if (convertedFile != null) {
-					fileName = FileUtil.stripExtension(fileName).concat(
-						StringPool.PERIOD).concat(targetExtension);
+					fileName = FileUtil.stripExtension(
+						fileName
+					).concat(
+						StringPool.PERIOD
+					).concat(
+						targetExtension
+					);
 					inputStream = new FileInputStream(convertedFile);
 					contentLength = convertedFile.length();
 
@@ -1193,13 +1237,10 @@ public class WebServerServlet extends HttpServlet {
 		FileEntry fileEntry = DLAppServiceUtil.getFileEntry(
 			groupId, folderId, title);
 
-		String contentType = fileEntry.getMimeType();
-
-		response.setContentType(contentType);
-
-		InputStream inputStream = fileEntry.getContentStream();
-
-		ServletResponseUtil.write(response, inputStream, fileEntry.getSize());
+		ServletResponseUtil.sendFile(
+			null, response, title, fileEntry.getContentStream(),
+			fileEntry.getSize(), fileEntry.getMimeType(),
+			HttpHeaders.CONTENT_DISPOSITION_ATTACHMENT);
 	}
 
 	protected void sendGroups(

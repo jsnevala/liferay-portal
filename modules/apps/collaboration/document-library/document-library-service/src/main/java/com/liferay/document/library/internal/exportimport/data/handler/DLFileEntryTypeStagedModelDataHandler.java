@@ -29,8 +29,11 @@ import com.liferay.exportimport.kernel.lar.StagedModelModifiedDateComparator;
 import com.liferay.exportimport.lar.BaseStagedModelDataHandler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.UserConstants;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -45,14 +48,15 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = StagedModelDataHandler.class)
 public class DLFileEntryTypeStagedModelDataHandler
 	extends BaseStagedModelDataHandler<DLFileEntryType> {
 
-	public static final String[] CLASS_NAMES =
-		{DLFileEntryType.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		DLFileEntryType.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(DLFileEntryType fileEntryType)
@@ -148,11 +152,17 @@ public class DLFileEntryTypeStagedModelDataHandler
 
 		String fileEntryTypeKey = referenceElement.attributeValue(
 			"file-entry-type-key");
+
 		boolean preloaded = GetterUtil.getBoolean(
 			referenceElement.attributeValue("preloaded"));
 
-		DLFileEntryType existingFileEntryType = fetchExistingFileEntryType(
-			uuid, groupId, fileEntryTypeKey, preloaded);
+		if (!preloaded) {
+			return super.validateMissingReference(uuid, groupId);
+		}
+
+		DLFileEntryType existingFileEntryType =
+			fetchExistingFileEntryTypeWithParentGroups(
+				uuid, groupId, fileEntryTypeKey, preloaded);
 
 		if (existingFileEntryType == null) {
 			return false;
@@ -221,10 +231,15 @@ public class DLFileEntryTypeStagedModelDataHandler
 		boolean preloaded = GetterUtil.getBoolean(
 			referenceElement.attributeValue("preloaded"));
 
-		DLFileEntryType existingFileEntryType = null;
+		DLFileEntryType existingFileEntryType;
 
-		existingFileEntryType = fetchExistingFileEntryType(
-			uuid, groupId, fileEntryTypeKey, preloaded);
+		if (!preloaded) {
+			existingFileEntryType = fetchMissingReference(uuid, groupId);
+		}
+		else {
+			existingFileEntryType = fetchExistingFileEntryTypeWithParentGroups(
+				uuid, groupId, fileEntryTypeKey, preloaded);
+		}
 
 		Map<Long, Long> fileEntryTypeIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
@@ -373,6 +388,47 @@ public class DLFileEntryTypeStagedModelDataHandler
 		return existingDLFileEntryType;
 	}
 
+	protected DLFileEntryType fetchExistingFileEntryTypeWithParentGroups(
+		String uuid, long groupId, String fileEntryTypeKey, boolean preloaded) {
+
+		Group group = _groupLocalService.fetchGroup(groupId);
+
+		if (group == null) {
+			return fetchExistingFileEntryType(
+				uuid, groupId, fileEntryTypeKey, preloaded);
+		}
+
+		long companyId = group.getCompanyId();
+
+		while (group != null) {
+			DLFileEntryType existingDLFileEntryType =
+				fetchExistingFileEntryType(
+					uuid, group.getGroupId(), fileEntryTypeKey, preloaded);
+
+			if (existingDLFileEntryType != null) {
+				return existingDLFileEntryType;
+			}
+
+			try {
+				group = group.getParentGroup();
+			}
+			catch (PortalException pe) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(pe, pe);
+				}
+			}
+		}
+
+		Group companyGroup = _groupLocalService.fetchCompanyGroup(companyId);
+
+		if (companyGroup == null) {
+			return null;
+		}
+
+		return fetchExistingFileEntryType(
+			uuid, companyGroup.getGroupId(), fileEntryTypeKey, preloaded);
+	}
+
 	@Reference(unbind = "-")
 	protected void setDDMStructureLocalService(
 		DDMStructureLocalService ddmStructureLocalService) {
@@ -399,8 +455,15 @@ public class DLFileEntryTypeStagedModelDataHandler
 	protected void setVerifyProcessCompletionMarker(Object object) {
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		DLFileEntryTypeStagedModelDataHandler.class);
+
 	private DDMStructureLocalService _ddmStructureLocalService;
 	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
 	private UserLocalService _userLocalService;
 
 }

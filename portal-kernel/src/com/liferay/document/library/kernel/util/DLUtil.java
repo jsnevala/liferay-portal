@@ -164,6 +164,17 @@ public class DLUtil {
 	}
 
 	public static String getImagePreviewURL(
+			FileEntry fileEntry, FileVersion fileVersion,
+			ThemeDisplay themeDisplay, String queryString,
+			boolean appendVersion, boolean absoluteURL)
+		throws PortalException {
+
+		return getDL().getImagePreviewURL(
+			fileEntry, fileVersion, themeDisplay, queryString, appendVersion,
+			absoluteURL);
+	}
+
+	public static String getImagePreviewURL(
 			FileEntry fileEntry, ThemeDisplay themeDisplay)
 		throws Exception {
 
@@ -216,8 +227,8 @@ public class DLUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getThumbnailSrc(FileEntry,
-	 *             ThemeDisplay)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getThumbnailSrc(FileEntry, ThemeDisplay)}
 	 */
 	@Deprecated
 	public static String getThumbnailSrc(
@@ -229,8 +240,8 @@ public class DLUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getThumbnailSrc(FileEntry,
-	 *             FileVersion, ThemeDisplay)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getThumbnailSrc(FileEntry, FileVersion, ThemeDisplay)}
 	 */
 	@Deprecated
 	public static String getThumbnailSrc(

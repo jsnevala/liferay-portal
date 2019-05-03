@@ -32,12 +32,13 @@ import com.liferay.shopping.service.ShoppingCouponLocalServiceUtil;
  * @generated
  */
 @ProviderType
-public abstract class ShoppingCouponBaseImpl extends ShoppingCouponModelImpl
-	implements ShoppingCoupon {
+public abstract class ShoppingCouponBaseImpl
+	extends ShoppingCouponModelImpl implements ShoppingCoupon {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a shopping coupon model instance should use the {@link ShoppingCoupon} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a shopping coupon model instance should use the <code>ShoppingCoupon</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +49,5 @@ public abstract class ShoppingCouponBaseImpl extends ShoppingCouponModelImpl
 			ShoppingCouponLocalServiceUtil.updateShoppingCoupon(this);
 		}
 	}
+
 }

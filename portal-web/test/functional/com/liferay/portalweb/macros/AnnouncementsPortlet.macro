@@ -1,29 +1,29 @@
-<definition>
-	<command name="configureDisplayCountPG">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Announcements" />
-			<var name="portletName" value="${portletName}" />
-			<var name="portletOption" value="Configuration" />
-		</execute>
+definition {
+	macro configureDisplayCountPG {
+		Portlet.gotoPortletOptions(
+			portletName = "Announcements",
+			portletOption = "Configuration"
+		);
 
-		<execute macro="IFrame#selectDialogFrame" />
+		IFrame.selectDialogFrame();
 
-		<execute function="Select" locator1="Configuration#MAXIMUM_ITEMS_TO_DISPLAY_SELECT" value1="5" />
+		Select(locator1 = "Select#MAXIMUM_ITEMS_TO_DISPLAY", value1 = "5");
 
-		<execute macro="PortletEntry#save" />
+		PortletEntry.save();
 
-		<execute function="SelectFrameTop" />
-	</command>
+		SelectFrameTop();
+	}
 
-	<command name="configurePaginationManageEntriesPG">
-		<execute function="Select" locator1="AnnouncementsManageEntries#DISTRIBUTION_SCOPE_SELECT" value1="${distributionScope}" />
+	macro configurePaginationManageEntriesPG {
+		Select(
+			locator1 = "AnnouncementsManageEntries#DISTRIBUTION_SCOPE_SELECT",
+			value1 = "${distributionScope}"
+		);
 
-		<execute function="Click" locator1="Button#ITEMS_PER_PAGE" />
+		Click(locator1 = "Button#ITEMS_PER_PAGE");
 
-		<var name="key_itemsPerPage" value="${itemsPerPage}" />
+		var key_itemsPerPage = "${itemsPerPage}";
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="${itemsPerPage}">
-			<var name="key_menuItem" value="${itemsPerPage}" />
-		</execute>
-	</command>
-</definition>
+		MenuItem.click(menuItem = "${itemsPerPage}");
+	}
+}

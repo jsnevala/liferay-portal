@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.service.base.TicketLocalServiceBaseImpl;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author Mika Koivisto
@@ -74,6 +75,13 @@ public class TicketLocalServiceImpl extends TicketLocalServiceBaseImpl {
 	@Override
 	public Ticket getTicket(String key) throws PortalException {
 		return ticketPersistence.findByKey(key);
+	}
+
+	@Override
+	public List<Ticket> getTickets(String className, long classPK, int type) {
+		long classNameId = classNameLocalService.getClassNameId(className);
+
+		return ticketPersistence.findByC_C_T(classNameId, classPK, type);
 	}
 
 }

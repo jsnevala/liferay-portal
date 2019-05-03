@@ -97,14 +97,21 @@ public class IconDeleteTag extends IconTag {
 			url.startsWith(Http.HTTPS_WITH_SLASH)) {
 
 			url = "submitForm(document.hrefFm, '".concat(
-				HtmlUtil.escapeJS(url)).concat("');");
+				HtmlUtil.escapeJS(url)
+			).concat(
+				"');"
+			);
 		}
 
 		if (url.startsWith("wsrp_rewrite?")) {
 			url = StringUtil.replace(
 				url, "/wsrp_rewrite",
 				"&wsrp-extensions=encodeURL/wsrp_rewrite");
-			url = "submitForm(document.hrefFm, '".concat(url).concat("');");
+			url = "submitForm(document.hrefFm, '".concat(
+				url
+			).concat(
+				"');"
+			);
 		}
 
 		if (!_trash) {

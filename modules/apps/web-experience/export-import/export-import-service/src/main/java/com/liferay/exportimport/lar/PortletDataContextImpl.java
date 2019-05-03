@@ -21,6 +21,7 @@ import com.liferay.asset.kernel.model.AssetLink;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetLinkLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetTagLocalServiceUtil;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalServiceUtil;
@@ -32,6 +33,7 @@ import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataContextListener;
+import com.liferay.exportimport.kernel.lar.PortletDataException;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerControl;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
@@ -73,13 +75,19 @@ import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.model.Team;
+import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
 import com.liferay.portal.kernel.model.WorkflowedModel;
+import com.liferay.portal.kernel.model.adapter.ModelAdapterUtil;
+import com.liferay.portal.kernel.model.adapter.StagedGroupedWorkflowDefinitionLink;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.TeamLocalServiceUtil;
+import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateRange;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -94,6 +102,9 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowDefinition;
+import com.liferay.portal.kernel.workflow.WorkflowDefinitionManagerUtil;
+import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.xml.Attribute;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.Node;
@@ -139,7 +150,7 @@ import jodd.bean.BeanUtil;
  * @author Raymond Augé
  * @author Bruno Farache
  * @author Alexander Chow
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @ProviderType
 public class PortletDataContextImpl implements PortletDataContext {
@@ -161,7 +172,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             om.liferay.exportimport.kernel.lar.BaseStagedModelDataHandler#exportAssetCategories(
 	 *             PortletDataContext, StagedModel)}
 	 */
@@ -195,7 +206,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             BaseStagedModelDataHandler#exportAssetTags(
 	 *             PortletDataContext, StagedModel)}
 	 */
@@ -257,11 +268,19 @@ public class PortletDataContextImpl implements PortletDataContext {
 			_references.add(getReferenceKey(classedModel));
 		}
 
+		if (classedModel instanceof AuditedModel) {
+			AuditedModel auditedModel = (AuditedModel)classedModel;
+
+			_addUserUuid(element, auditedModel.getUserUuid());
+		}
+
+		_addWorkflowDefinitionLink(classedModel);
+
 		addZipEntry(path, classedModel);
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             om.liferay.exportimport.kernel.lar.BaseStagedModelDataHandler#exportComments(
 	 *             PortletDataContext, StagedModel)}
 	 */
@@ -271,7 +290,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             om.liferay.exportimport.kernel.lar.BaseStagedModelDataHandler#exportComments(
 	 *             PortletDataContext, StagedModel)}
 	 */
@@ -431,7 +450,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             om.liferay.exportimport.kernel.lar.BaseStagedModelDataHandler#exportRatings(
 	 *             PortletDataContext, StagedModel)}
 	 */
@@ -441,7 +460,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             om.liferay.exportimport.kernel.lar.BaseStagedModelDataHandler#exportRatings(
 	 *             PortletDataContext, StagedModel)}
 	 */
@@ -452,7 +471,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -612,7 +631,14 @@ public class PortletDataContextImpl implements PortletDataContext {
 			Element missingReferenceElement = getMissingReferenceElement(
 				classedModel);
 
-			_missingReferencesElement.remove(missingReferenceElement);
+			if (classedModel instanceof Layout) {
+				missingReferenceElement.addAttribute(
+					"element-path", "/manifest.xml");
+			}
+			else {
+				missingReferenceElement.addAttribute(
+					"element-path", _getPortletXmlPath());
+			}
 		}
 	}
 
@@ -682,7 +708,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -691,7 +717,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -705,7 +731,8 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link #getAssetLinkIds()}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getAssetLinkIds()}
 	 */
 	@Deprecated
 	@Override
@@ -760,7 +787,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -833,7 +860,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getExportDataElement(ClassedModel, String)}
 	 */
 	@Deprecated
@@ -960,12 +987,29 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	@Override
+	public Element getMissingReferenceElement(ClassedModel classedModel) {
+		StringBundler sb = new StringBundler(5);
+
+		sb.append("missing-reference[@class-name='");
+		sb.append(ExportImportClassedModelUtil.getClassName(classedModel));
+		sb.append("' and @class-pk='");
+		sb.append(String.valueOf(classedModel.getPrimaryKeyObj()));
+		sb.append("']");
+
+		XPath xPath = SAXReaderUtil.createXPath(sb.toString());
+
+		Node node = xPath.selectSingleNode(_missingReferencesElement);
+
+		return (Element)node;
+	}
+
+	@Override
 	public Element getMissingReferencesElement() {
 		return _missingReferencesElement;
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getNewPrimaryKeysMap(String)}
 	 */
 	@Deprecated
@@ -998,7 +1042,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1032,7 +1076,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1096,7 +1140,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1202,7 +1246,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1266,7 +1310,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1324,7 +1368,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1406,8 +1450,8 @@ public class PortletDataContextImpl implements PortletDataContext {
 
 		newPrimaryKeysMap.put(classPK, newClassPK);
 
-		if (classedModel instanceof StagedGroupedModel &&
-			newClassedModel instanceof StagedGroupedModel) {
+		if ((classedModel instanceof StagedGroupedModel) &&
+			(newClassedModel instanceof StagedGroupedModel)) {
 
 			Map<Long, Long> groupIds = (Map<Long, Long>)getNewPrimaryKeysMap(
 				Group.class);
@@ -1425,12 +1469,14 @@ public class PortletDataContextImpl implements PortletDataContext {
 			}
 		}
 
+		_importWorkflowDefinitionLink(newClassedModel);
+
 		importLocks(clazz, String.valueOf(classPK), String.valueOf(newClassPK));
 		importPermissions(clazz, classPK, newClassPK);
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             om.liferay.exportimport.kernel.lar.BaseStagedModelDataHandler#importComments(
 	 *             PortletDataContext, StagedModel)}
 	 */
@@ -1572,7 +1618,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             om.liferay.exportimport.kernel.lar.BaseStagedModelDataHandler#importRatings(
 	 *             PortletDataContext, StagedModel)}
 	 */
@@ -1655,6 +1701,13 @@ public class PortletDataContextImpl implements PortletDataContext {
 				_missingReferencesElement.elements();
 
 			for (Element missingReferenceElement : missingReferenceElements) {
+				if (Validator.isNotNull(
+						missingReferenceElement.attributeValue(
+							"element-path"))) {
+
+					continue;
+				}
+
 				String missingReferenceClassName =
 					missingReferenceElement.attributeValue("class-name");
 				String missingReferenceClassPK =
@@ -1678,7 +1731,10 @@ public class PortletDataContextImpl implements PortletDataContext {
 	@Override
 	public boolean isModelCounted(String className, long classPK) {
 		String modelCountedPrimaryKey = className.concat(
-			StringPool.POUND).concat(String.valueOf(classPK));
+			StringPool.POUND
+		).concat(
+			String.valueOf(classPK)
+		);
 
 		return addPrimaryKey(String.class, modelCountedPrimaryKey);
 	}
@@ -1689,7 +1745,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1828,7 +1884,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1996,8 +2052,13 @@ public class PortletDataContextImpl implements PortletDataContext {
 
 		// Permissions
 
+		String xml = getZipEntryAsString(
+			ExportImportPathUtil.getSourceRootPath(this) +
+				"/portlet-data-permissions.xml");
+
 		if (!MapUtil.getBoolean(
-				_parameterMap, PortletDataHandlerKeys.PERMISSIONS)) {
+				_parameterMap, PortletDataHandlerKeys.PERMISSIONS) ||
+			Validator.isNull(xml)) {
 
 			serviceContext.setAddGroupPermissions(true);
 			serviceContext.setAddGuestPermissions(true);
@@ -2142,6 +2203,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 					liveGroupId = group.getGroupId();
 				}
 
+				referenceElement.addAttribute("group-key", group.getGroupKey());
 				referenceElement.addAttribute(
 					"live-group-id", String.valueOf(liveGroupId));
 
@@ -2279,29 +2341,14 @@ public class PortletDataContextImpl implements PortletDataContext {
 			return SAXReaderUtil.createElement("EMPTY-ELEMENT");
 		}
 
-		Element groupElement = _importDataRootElement.element(name);
+		Element groupElement = (Element)_importDataRootElement.selectSingleNode(
+			".//" + name);
 
 		if (groupElement == null) {
 			return SAXReaderUtil.createElement("EMPTY-ELEMENT");
 		}
 
 		return groupElement;
-	}
-
-	protected Element getMissingReferenceElement(ClassedModel classedModel) {
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("missing-reference[@class-name='");
-		sb.append(ExportImportClassedModelUtil.getClassName(classedModel));
-		sb.append("' and @class-pk='");
-		sb.append(String.valueOf(classedModel.getPrimaryKeyObj()));
-		sb.append("']");
-
-		XPath xPath = SAXReaderUtil.createXPath(sb.toString());
-
-		Node node = xPath.selectSingleNode(_missingReferencesElement);
-
-		return (Element)node;
 	}
 
 	protected String getPrimaryKeyString(Class<?> clazz, long classPK) {
@@ -2317,7 +2364,11 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	protected String getPrimaryKeyString(String className, String primaryKey) {
-		return className.concat(StringPool.POUND).concat(primaryKey);
+		return className.concat(
+			StringPool.POUND
+		).concat(
+			primaryKey
+		);
 	}
 
 	protected List<Element> getReferenceDataElements(
@@ -2437,7 +2488,11 @@ public class PortletDataContextImpl implements PortletDataContext {
 	}
 
 	protected String getReferenceKey(String className, String classPK) {
-		return className.concat(StringPool.POUND).concat(classPK);
+		return className.concat(
+			StringPool.POUND
+		).concat(
+			classPK
+		);
 	}
 
 	protected long getUserId(AuditedModel auditedModel) {
@@ -2585,6 +2640,183 @@ public class PortletDataContextImpl implements PortletDataContext {
 
 		if (Validator.isNotNull(attachedClassName)) {
 			element.addAttribute("attached-class-name", attachedClassName);
+		}
+	}
+
+	private void _addUserUuid(Element element, String userUuid) {
+		element.addAttribute("user-uuid", userUuid);
+	}
+
+	private void _addWorkflowDefinitionLink(ClassedModel classedModel)
+		throws PortletDataException {
+
+		if (classedModel instanceof StagedGroupedModel ||
+			classedModel instanceof WorkflowedModel) {
+
+			StagedGroupedModel stagedGroupedModel =
+				(StagedGroupedModel)classedModel;
+
+			String className = ExportImportClassedModelUtil.getClassName(
+				stagedGroupedModel);
+			long classPK = ExportImportClassedModelUtil.getClassPK(
+				stagedGroupedModel);
+
+			List<WorkflowDefinitionLink> workflowDefinitionLinks =
+				WorkflowDefinitionLinkLocalServiceUtil.
+					fetchWorkflowDefinitionLinks(
+						stagedGroupedModel.getCompanyId(),
+						stagedGroupedModel.getGroupId(), className, classPK);
+
+			for (WorkflowDefinitionLink workflowDefinitionLink :
+					workflowDefinitionLinks) {
+
+				StagedGroupedWorkflowDefinitionLink
+					stagedGroupedWorkflowDefinitionLink =
+						ModelAdapterUtil.adapt(
+							workflowDefinitionLink,
+							WorkflowDefinitionLink.class,
+							StagedGroupedWorkflowDefinitionLink.class);
+
+				StagedModelDataHandlerUtil.exportStagedModel(
+					this, stagedGroupedWorkflowDefinitionLink);
+			}
+		}
+	}
+
+	private long _getOldPrimaryKey(Map<Long, Long> map, long value) {
+		for (Map.Entry<Long, Long> entry : map.entrySet()) {
+			if (entry.getValue() == value) {
+				return entry.getKey();
+			}
+		}
+
+		return 0;
+	}
+
+	private String _getPortletXmlPath() {
+		if (_exportDataRootElement == null) {
+			return StringPool.BLANK;
+		}
+
+		Element element = _exportDataRootElement.getParent();
+
+		Element parentElement = null;
+
+		while (element != null) {
+			parentElement = element;
+
+			element = element.getParent();
+		}
+
+		if (parentElement == null) {
+			return StringPool.BLANK;
+		}
+
+		return parentElement.attributeValue("self-path");
+	}
+
+	private void _importWorkflowDefinitionLink(ClassedModel classedModel)
+		throws PortletDataException {
+
+		Element stagedGroupedWorkflowDefinitionLinkElements =
+			getImportDataGroupElement(
+				StagedGroupedWorkflowDefinitionLink.class);
+
+		Map<Long, Long> primaryKeys = (Map<Long, Long>)getNewPrimaryKeysMap(
+			classedModel.getModelClass());
+
+		for (Element stagedGroupedWorkflowDefinitionLinkElement :
+				stagedGroupedWorkflowDefinitionLinkElements.elements()) {
+
+			String referrerClassName = GetterUtil.getString(
+				stagedGroupedWorkflowDefinitionLinkElement.attributeValue(
+					"referrer-class-name"));
+			long referrerClassPK = GetterUtil.getLong(
+				stagedGroupedWorkflowDefinitionLinkElement.attributeValue(
+					"referrer-class-pk"));
+
+			String className = classedModel.getModelClassName();
+
+			long newPrimaryKey = GetterUtil.getLong(
+				classedModel.getPrimaryKeyObj());
+
+			long oldPrimaryKey = _getOldPrimaryKey(primaryKeys, newPrimaryKey);
+
+			if (!referrerClassName.equals(className) ||
+				(referrerClassPK != oldPrimaryKey)) {
+
+				continue;
+			}
+
+			String displayName =
+				stagedGroupedWorkflowDefinitionLinkElement.attributeValue(
+					"display-name");
+
+			if (Validator.isNull(displayName)) {
+				continue;
+			}
+
+			WorkflowDefinition workflowDefinition = null;
+
+			try {
+				workflowDefinition =
+					WorkflowDefinitionManagerUtil.getLatestKaleoDefinition(
+						getCompanyId(), displayName);
+			}
+			catch (WorkflowException we) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Unable to get workflow definition with name " +
+							displayName,
+						we);
+				}
+
+				return;
+			}
+
+			if ((workflowDefinition != null) &&
+				!WorkflowDefinitionLinkLocalServiceUtil.
+					hasWorkflowDefinitionLink(
+						getCompanyId(), getScopeGroupId(), className,
+						newPrimaryKey)) {
+
+				try {
+					long importedClassPK = GetterUtil.getLong(
+						classedModel.getPrimaryKeyObj());
+
+					String referrerUuid =
+						stagedGroupedWorkflowDefinitionLinkElement.
+							attributeValue("uuid");
+
+					WorkflowDefinitionLink referrerWorkflowDefinitionLink =
+						WorkflowDefinitionLinkLocalServiceUtil.
+							getWorkflowDefinitionLink(
+								Long.valueOf(referrerUuid));
+
+					long typePK = referrerWorkflowDefinitionLink.getTypePK();
+
+					if (typePK != -1) {
+						Map<Long, Long> ddmPrimaryKeys =
+							(Map<Long, Long>)getNewPrimaryKeysMap(
+								DDMStructure.class.getName());
+
+						typePK = ddmPrimaryKeys.getOrDefault(typePK, typePK);
+					}
+
+					PermissionChecker permissionChecker =
+						PermissionThreadLocal.getPermissionChecker();
+
+					WorkflowDefinitionLinkLocalServiceUtil.
+						addWorkflowDefinitionLink(
+							permissionChecker.getUserId(), getCompanyId(),
+							getScopeGroupId(), className, importedClassPK,
+							typePK, workflowDefinition.getName(),
+							workflowDefinition.getVersion());
+				}
+				catch (PortalException pe) {
+					throw new PortletDataException(pe.getMessage(), pe);
+				}
+			}
 		}
 	}
 

@@ -23,6 +23,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerBoolean;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
@@ -52,7 +53,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Gergely Mathe
  */
 @Component(
-	property = {"javax.portlet.name=" + PageRatingsPortletKeys.PAGE_RATINGS},
+	property = "javax.portlet.name=" + PageRatingsPortletKeys.PAGE_RATINGS,
 	service = PortletDataHandler.class
 )
 public class PageRatingsPortletDataHandler extends BasePortletDataHandler {
@@ -89,7 +90,8 @@ public class PageRatingsPortletDataHandler extends BasePortletDataHandler {
 		Element rootElement = addExportDataRootElement(portletDataContext);
 
 		if (!portletDataContext.getBooleanParameter(
-				NAMESPACE, "ratings-entries")) {
+				NAMESPACE, "ratings-entries") ||
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
 
 			return getExportDataRootElementString(rootElement);
 		}

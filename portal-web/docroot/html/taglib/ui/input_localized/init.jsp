@@ -82,13 +82,15 @@ if (Validator.isNotNull(fieldPrefix)) {
 
 String fieldSuffix = StringPool.BLANK;
 
-if (!Validator.isNull(languageId)) {
+if (Validator.isNotNull(languageId)) {
 	fieldSuffix = StringPool.UNDERLINE + mainLanguageId;
 }
 
 List<String> languageIds = new ArrayList<String>();
 
 String fieldName = HtmlUtil.getAUICompatibleId(name) + fieldSuffix;
+
+String inputEditorName = fieldName + "Editor";
 
 Exception exception = (Exception)request.getAttribute("liferay-ui:error:exception");
 String focusField = (String)request.getAttribute("liferay-ui:error:focusField");

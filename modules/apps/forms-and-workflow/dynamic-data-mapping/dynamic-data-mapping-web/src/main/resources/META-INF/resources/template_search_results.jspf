@@ -19,7 +19,16 @@ TemplateSearchTerms searchTerms = (TemplateSearchTerms)searchContainer.getSearch
 
 long[] groupIds = ddmDisplay.getTemplateGroupIds(themeDisplay, showAncestorScopes);
 long[] classNameIds = ddmDisplay.getTemplateClassNameIds(classNameId);
-long[] classPKs = ddmDisplay.getTemplateClassPKs(company.getCompanyId(), classNameId, classPK);
+
+long[] classPKs;
+long searchClassPK = ParamUtil.getLong(request, "classPK");
+
+if (searchClassPK > 0) {
+	classPKs = new long[] {searchClassPK};
+}
+else {
+	classPKs = null;
+}
 
 String templateMode = ParamUtil.getString(request, "mode", ddmDisplay.getTemplateMode());
 

@@ -29,7 +29,7 @@ Portlet portlet = PortletLocalServiceUtil.getPortletById(company.getCompanyId(),
 </liferay-util:html-top>
 
 <div class="portlet-blogs">
-	<div class="entry-body">
+	<div class="entry-body" data-analytics-asset-id="<%= String.valueOf(entry.getEntryId()) %>" data-analytics-asset-title="<%= HtmlUtil.escapeAttribute(entry.getTitle()) %>" data-analytics-asset-type="blog">
 
 		<%
 		String coverImageURL = entry.getCoverImageURL(themeDisplay);

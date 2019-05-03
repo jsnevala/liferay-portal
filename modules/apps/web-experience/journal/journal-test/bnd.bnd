@@ -7,6 +7,5 @@ Import-Package:\
 	!org.junit.experimental.theories,\
 	\
 	*
-Liferay-Releng-Module-Group-Description:
 Liferay-Releng-Module-Group-Title: Web Content
 -includeresource: test-classes/integration

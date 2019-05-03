@@ -99,6 +99,7 @@ public class AssetVocabularyLocalServiceImpl
 		// Vocabulary
 
 		User user = userPersistence.findByPrimaryKey(userId);
+
 		String name = titleMap.get(LocaleUtil.getSiteDefault());
 
 		validate(groupId, name);

@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Michael C. Han
  */
 @Component(
-	property = {"model.class.name=com.liferay.mobile.device.rules.model.MDRRuleGroupInstance"},
+	property = "model.class.name=com.liferay.mobile.device.rules.model.MDRRuleGroupInstance",
 	service = BaseModelPermissionChecker.class
 )
 public class MDRRuleGroupInstancePermission

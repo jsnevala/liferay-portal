@@ -24,33 +24,41 @@ String value = (String)request.getAttribute("liferay-frontend:management-bar-fil
 %>
 
 <c:if test="<%= managementBarFilterItems.size() > 0 %>">
-	<li class="dropdown <%= disabled ? "disabled" : StringPool.BLANK %>">
-		<a aria-expanded="true" class="dropdown-toggle" data-qa-id="filter<%= Validator.isNotNull(label) ? label : StringPool.BLANK %>" data-toggle="<%= disabled ? StringPool.BLANK : "dropdown" %>" href="javascript:;">
-			<span class="management-bar-item-title">
-				<c:if test="<%= Validator.isNotNull(label) %>">
-					<liferay-ui:message key="<%= label %>" />:
-				</c:if>
+	<c:choose>
+		<c:when test='<%= Validator.isNotNull(label) && label.equals("order-by") %>'>
+			<li class="dropdown <%= disabled ? "disabled" : StringPool.BLANK %> management-bar-item-xs-inline-block">
+		</c:when>
+		<c:otherwise>
+			<li class="dropdown <%= disabled ? "disabled" : StringPool.BLANK %>">
+		</c:otherwise>
+	</c:choose>
 
-				<liferay-ui:message key="<%= HtmlUtil.escape(value) %>" />
-			</span>
+	<a aria-expanded="true" class="dropdown-toggle" data-qa-id="filter<%= Validator.isNotNull(label) ? label : StringPool.BLANK %>" data-toggle="<%= disabled ? StringPool.BLANK : "dropdown" %>" href="javascript:;">
+		<span class="management-bar-item-title">
+			<c:if test="<%= Validator.isNotNull(label) %>">
+				<liferay-ui:message key="<%= label %>" />:
+			</c:if>
 
-			<aui:icon image="caret-double-l" markupView="lexicon" />
-		</a>
+			<liferay-ui:message key="<%= HtmlUtil.escape(value) %>" />
+		</span>
 
-		<ul class="dropdown-menu" data-qa-id="filter<%= Validator.isNotNull(label) ? label : StringPool.BLANK %>Values">
+		<aui:icon image="caret-double-l" markupView="lexicon" />
+	</a>
 
-			<%
-			for (ManagementBarFilterItem managementBarFilterItem : managementBarFilterItems) {
-			%>
+	<ul class="dropdown-menu" data-qa-id="filter<%= Validator.isNotNull(label) ? label : StringPool.BLANK %>Values">
 
-				<li class="<%= managementBarFilterItem.isActive() ? "active" : StringPool.BLANK %>">
-					<aui:a href="<%= managementBarFilterItem.getUrl() %>" id="<%= Validator.isNotNull(managementBarFilterItem.getId()) ? managementBarFilterItem.getId() : StringPool.BLANK %>" label="<%= managementBarFilterItem.getLabel() %>" />
-				</li>
+		<%
+		for (ManagementBarFilterItem managementBarFilterItem : managementBarFilterItems) {
+		%>
 
-			<%
-			}
-			%>
+			<li class="<%= managementBarFilterItem.isActive() ? "active" : StringPool.BLANK %>">
+				<aui:a href="<%= managementBarFilterItem.getUrl() %>" id="<%= Validator.isNotNull(managementBarFilterItem.getId()) ? managementBarFilterItem.getId() : StringPool.BLANK %>" label="<%= managementBarFilterItem.getLabel() %>" />
+			</li>
 
-		</ul>
+		<%
+		}
+		%>
+
+	</ul>
 	</li>
 </c:if>

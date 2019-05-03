@@ -25,12 +25,12 @@ import org.osgi.service.component.annotations.Component;
 
 /**
  * @author     Brian Wing Shun Chan
- * @deprecated As of 3.6.0, replaced by {@link
+ * @deprecated As of Judson (7.1.x), replaced by {@link
  *             #com.liferay.journal.properties.trasnformer.listener.JournalPropertiesTransformerListener
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + JournalPortletKeys.JOURNAL},
+	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = TransformerListener.class
 )
 @Deprecated

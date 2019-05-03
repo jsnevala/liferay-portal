@@ -25,8 +25,6 @@ import com.liferay.portal.kernel.util.StringPool;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -57,9 +55,7 @@ public class AMImageHTMLTagFactoryImpl implements AMImageHTMLTagFactory {
 
 		sourceElements.forEach(sb::append);
 
-		Matcher matcher = _pattern.matcher(originalImgTag);
-
-		sb.append(matcher.replaceAll(""));
+		sb.append(originalImgTag);
 
 		sb.append("</picture>");
 
@@ -112,7 +108,6 @@ public class AMImageHTMLTagFactoryImpl implements AMImageHTMLTagFactory {
 				sb.append("\" srcset=\"");
 				sb.append(mediaQuery.getSrc());
 				sb.append("\" />");
-
 			});
 
 		return sb.toString();
@@ -132,9 +127,6 @@ public class AMImageHTMLTagFactoryImpl implements AMImageHTMLTagFactory {
 			Collectors.toList()
 		);
 	}
-
-	private static final Pattern _pattern = Pattern.compile(
-		"\\s*data-fileEntryId=\"(\\d+)\"", Pattern.CASE_INSENSITIVE);
 
 	private MediaQueryProvider _mediaQueryProvider;
 

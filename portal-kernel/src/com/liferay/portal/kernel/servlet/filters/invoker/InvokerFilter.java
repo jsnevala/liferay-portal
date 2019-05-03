@@ -15,7 +15,8 @@
 package com.liferay.portal.kernel.servlet.filters.invoker;
 
 import com.liferay.portal.kernel.cache.PortalCache;
-import com.liferay.portal.kernel.cache.SingleVMPoolUtil;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
+import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.HttpOnlyCookieServletResponse;
@@ -154,8 +155,9 @@ public class InvokerFilter extends BasePortalLifecycle implements Filter {
 	@Override
 	protected void doPortalInit() throws Exception {
 		if (_INVOKER_FILTER_CHAIN_ENABLED) {
-			_filterChains = SingleVMPoolUtil.getPortalCache(
-				InvokerFilter.class.getName());
+			_filterChains = PortalCacheHelperUtil.getPortalCache(
+				PortalCacheManagerNames.SINGLE_VM,
+				_filterConfig.getFilterName());
 		}
 
 		ServletContext servletContext = _filterConfig.getServletContext();
@@ -184,20 +186,30 @@ public class InvokerFilter extends BasePortalLifecycle implements Filter {
 	protected InvokerFilterChain getInvokerFilterChain(
 		HttpServletRequest request, String uri, FilterChain filterChain) {
 
-		if ((_filterChains == null) ||
-			Validator.isNotNull(request.getQueryString())) {
-
+		if (_filterChains == null) {
 			return _invokerFilterHelper.createInvokerFilterChain(
 				request, _dispatcher, uri, filterChain);
 		}
 
-		InvokerFilterChain invokerFilterChain = _filterChains.get(uri);
+		String key = uri;
+
+		String queryString = request.getQueryString();
+
+		if (Validator.isNotNull(queryString)) {
+			key = key.concat(
+				StringPool.QUESTION
+			).concat(
+				queryString
+			);
+		}
+
+		InvokerFilterChain invokerFilterChain = _filterChains.get(key);
 
 		if (invokerFilterChain == null) {
 			invokerFilterChain = _invokerFilterHelper.createInvokerFilterChain(
 				request, _dispatcher, uri, filterChain);
 
-			_filterChains.put(uri, invokerFilterChain);
+			_filterChains.put(key, invokerFilterChain);
 		}
 
 		return invokerFilterChain.clone(filterChain);
@@ -222,8 +234,8 @@ public class InvokerFilter extends BasePortalLifecycle implements Filter {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getURI(HttpServletRequest,
-	 *             String)}
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
+	 *             #getURI(HttpServletRequest, String)}
 	 */
 	@Deprecated
 	protected String getURI(HttpServletRequest request) {
@@ -242,7 +254,7 @@ public class InvokerFilter extends BasePortalLifecycle implements Filter {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected String getURL(HttpServletRequest request) {

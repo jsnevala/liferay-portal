@@ -93,9 +93,12 @@ public class LocalProcessExecutorTest {
 			@Override
 			public void appendAssertClasses(List<Class<?>> assertClasses) {
 				assertClasses.add(ProcessConfig.class);
+
 				Collections.addAll(
 					assertClasses, ProcessConfig.class.getDeclaredClasses());
+
 				assertClasses.add(LocalProcessLauncher.class);
+
 				Collections.addAll(
 					assertClasses,
 					LocalProcessLauncher.class.getDeclaredClasses());
@@ -1166,10 +1169,13 @@ public class LocalProcessExecutorTest {
 
 		long startTime = System.currentTimeMillis();
 
-		while (timeUnit.convert(
-					System.currentTimeMillis() - startTime,
-					TimeUnit.MILLISECONDS) <
-						time) {
+		while (true) {
+			long value = timeUnit.convert(
+				System.currentTimeMillis() - startTime, TimeUnit.MILLISECONDS);
+
+			if (value >= time) {
+				break;
+			}
 
 			if (!supplier.get()) {
 				return;
@@ -1335,8 +1341,8 @@ public class LocalProcessExecutorTest {
 				return sb.toString();
 			};
 
-		public static final ProcessCallable<Boolean> IS_ATTACHED = () ->
-			ProcessContext.isAttached();
+		public static final ProcessCallable<Boolean> IS_ATTACHED =
+			() -> ProcessContext.isAttached();
 
 		public static final ProcessCallable<String> LEADING_LOG = () -> {
 			try {

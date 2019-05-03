@@ -233,7 +233,7 @@ public class CentralizedThreadLocalTest {
 	}
 
 	@Test
-	public void testTheadLocalManagement() {
+	public void testThreadLocalManagement() {
 
 		// Initial clean up
 
@@ -445,10 +445,7 @@ public class CentralizedThreadLocalTest {
 		CentralizedThreadLocal<String> centralizedThreadLocal =
 			new CentralizedThreadLocal<>(false);
 
-		FutureTask<?> poisonFutureTask = new FutureTask<>(
-			() -> {
-				return null;
-			});
+		FutureTask<?> poisonFutureTask = new FutureTask<>(() -> null);
 
 		BlockingQueue<FutureTask<?>> blockingQueue = new SynchronousQueue<>();
 
@@ -456,8 +453,8 @@ public class CentralizedThreadLocalTest {
 			() -> {
 				FutureTask<?> futureTask = null;
 
-				while ((futureTask =
-							blockingQueue.take()) != poisonFutureTask) {
+				while ((futureTask = blockingQueue.take()) !=
+							poisonFutureTask) {
 
 					futureTask.run();
 				}

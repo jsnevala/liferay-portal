@@ -51,10 +51,7 @@ public class LayoutItemSelectorViewDisplayContext {
 	}
 
 	public String getCkEditorFuncNum() {
-		String ckEditorFuncNum = ParamUtil.getString(
-			_request, "CKEditorFuncNum");
-
-		return ckEditorFuncNum;
+		return ParamUtil.getString(_request, "CKEditorFuncNum");
 	}
 
 	public PortletURL getEditLayoutURL() throws PortalException {
@@ -109,17 +106,12 @@ public class LayoutItemSelectorViewDisplayContext {
 	}
 
 	public String getSelectedLayoutIds() {
-		String selectedLayoutIds = ParamUtil.getString(
-			_request, "selectedLayoutIds");
-
-		return selectedLayoutIds;
+		return ParamUtil.getString(_request, "selectedLayoutIds");
 	}
 
 	public long getSelPlid() {
-		long selPlid = ParamUtil.getLong(
+		return ParamUtil.getLong(
 			_request, "selPlid", LayoutConstants.DEFAULT_PLID);
-
-		return selPlid;
 	}
 
 	public boolean isPrivateLayout() {

@@ -183,6 +183,7 @@ public class VerifyGroup extends VerifyProcess {
 
 				while (rs.next()) {
 					long groupId = rs.getLong("groupId");
+
 					String name = rs.getString("name");
 
 					if (name.endsWith(

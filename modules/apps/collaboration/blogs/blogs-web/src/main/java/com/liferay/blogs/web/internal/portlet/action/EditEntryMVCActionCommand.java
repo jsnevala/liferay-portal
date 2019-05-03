@@ -89,6 +89,7 @@ import javax.portlet.WindowState;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
@@ -261,7 +262,6 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 				jsonObject.put(
 					"coverImageFileEntryId", entry.getCoverImageFileEntryId());
 				jsonObject.put("entryId", entry.getEntryId());
-				jsonObject.put("redirect", redirect);
 				jsonObject.put("updateRedirect", updateRedirect);
 
 				JSONPortletResponseUtil.writeJSON(
@@ -378,7 +378,10 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY, unbind = "-")
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
 	protected void setBlogsEntryAttachmentContentUpdater(
 		BlogsEntryAttachmentContentUpdater blogsEntryAttachmentContentUpdater) {
 
@@ -408,6 +411,10 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 			WebKeys.THEME_DISPLAY);
 
 		_blogsEntryService.subscribe(themeDisplay.getScopeGroupId());
+	}
+
+	protected void unsetBlogsEntryAttachmentContentUpdater(
+		BlogsEntryAttachmentContentUpdater blogsEntryAttachmentContentUpdater) {
 	}
 
 	protected void unsubscribe(ActionRequest actionRequest) throws Exception {
@@ -479,7 +486,7 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 
 		long oldCoverImageId = 0;
 		String oldCoverImageURL = StringPool.BLANK;
-		long oldSmallImageId = 0;
+		long oldSmallImageFileEntryId = 0;
 		String oldSmallImageURL = StringPool.BLANK;
 
 		if (entryId != 0) {
@@ -487,7 +494,7 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 
 			oldCoverImageId = entry.getCoverImageFileEntryId();
 			oldCoverImageURL = entry.getCoverImageURL();
-			oldSmallImageId = entry.getSmallImageId();
+			oldSmallImageFileEntryId = entry.getSmallImageFileEntryId();
 			oldSmallImageURL = entry.getSmallImageURL();
 		}
 
@@ -506,8 +513,8 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 
 		BlogsEntryImageSelectorHelper blogsEntrySmallImageSelectorHelper =
 			new BlogsEntryImageSelectorHelper(
-				smallImageFileEntryId, oldSmallImageId, StringPool.BLANK,
-				smallImageURL, oldSmallImageURL);
+				smallImageFileEntryId, oldSmallImageFileEntryId,
+				StringPool.BLANK, smallImageURL, oldSmallImageURL);
 
 		ImageSelector smallImageImageSelector =
 			blogsEntrySmallImageSelectorHelper.getImageSelector();

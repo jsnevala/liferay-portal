@@ -19,7 +19,6 @@ import com.liferay.document.library.kernel.model.DLContent;
 import com.liferay.document.library.kernel.service.DLContentLocalServiceUtil;
 import com.liferay.document.library.kernel.service.persistence.DLContentPersistence;
 import com.liferay.document.library.kernel.service.persistence.DLContentUtil;
-
 import com.liferay.portal.kernel.dao.jdbc.OutputBlob;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -38,13 +37,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 
@@ -59,14 +51,23 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+
 /**
  * @generated
  */
 public class DLContentPersistenceTest {
+
 	@ClassRule
 	@Rule
-	public static final AggregateTestRule aggregateTestRule = new AggregateTestRule(new LiferayIntegrationTestRule(),
-			PersistenceTestRule.INSTANCE,
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), PersistenceTestRule.INSTANCE,
 			new TransactionalTestRule(Propagation.REQUIRED));
 
 	@Before
@@ -106,7 +107,8 @@ public class DLContentPersistenceTest {
 
 		_persistence.remove(newDLContent);
 
-		DLContent existingDLContent = _persistence.fetchByPrimaryKey(newDLContent.getPrimaryKey());
+		DLContent existingDLContent = _persistence.fetchByPrimaryKey(
+			newDLContent.getPrimaryKey());
 
 		Assert.assertNull(existingDLContent);
 	}
@@ -131,13 +133,12 @@ public class DLContentPersistenceTest {
 		newDLContent.setPath(RandomTestUtil.randomString());
 
 		newDLContent.setVersion(RandomTestUtil.randomString());
-
 		String newDataString = RandomTestUtil.randomString();
 
 		byte[] newDataBytes = newDataString.getBytes("UTF-8");
 
-		Blob newDataBlob = new OutputBlob(new ByteArrayInputStream(newDataBytes),
-				newDataBytes.length);
+		Blob newDataBlob = new OutputBlob(
+			new ByteArrayInputStream(newDataBytes), newDataBytes.length);
 
 		newDLContent.setData(newDataBlob);
 
@@ -145,39 +146,44 @@ public class DLContentPersistenceTest {
 
 		_dlContents.add(_persistence.update(newDLContent));
 
-		DLContent existingDLContent = _persistence.findByPrimaryKey(newDLContent.getPrimaryKey());
+		DLContent existingDLContent = _persistence.findByPrimaryKey(
+			newDLContent.getPrimaryKey());
 
-		Assert.assertEquals(existingDLContent.getContentId(),
-			newDLContent.getContentId());
-		Assert.assertEquals(existingDLContent.getGroupId(),
-			newDLContent.getGroupId());
-		Assert.assertEquals(existingDLContent.getCompanyId(),
-			newDLContent.getCompanyId());
-		Assert.assertEquals(existingDLContent.getRepositoryId(),
+		Assert.assertEquals(
+			existingDLContent.getContentId(), newDLContent.getContentId());
+		Assert.assertEquals(
+			existingDLContent.getGroupId(), newDLContent.getGroupId());
+		Assert.assertEquals(
+			existingDLContent.getCompanyId(), newDLContent.getCompanyId());
+		Assert.assertEquals(
+			existingDLContent.getRepositoryId(),
 			newDLContent.getRepositoryId());
-		Assert.assertEquals(existingDLContent.getPath(), newDLContent.getPath());
-		Assert.assertEquals(existingDLContent.getVersion(),
-			newDLContent.getVersion());
-
+		Assert.assertEquals(
+			existingDLContent.getPath(), newDLContent.getPath());
+		Assert.assertEquals(
+			existingDLContent.getVersion(), newDLContent.getVersion());
 		Blob existingData = existingDLContent.getData();
 
-		Assert.assertTrue(Arrays.equals(existingData.getBytes(1,
-					(int)existingData.length()), newDataBytes));
-		Assert.assertEquals(existingDLContent.getSize(), newDLContent.getSize());
+		Assert.assertTrue(
+			Arrays.equals(
+				existingData.getBytes(1, (int)existingData.length()),
+				newDataBytes));
+		Assert.assertEquals(
+			existingDLContent.getSize(), newDLContent.getSize());
 	}
 
 	@Test
 	public void testCountByC_R() throws Exception {
-		_persistence.countByC_R(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong());
+		_persistence.countByC_R(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
 
 		_persistence.countByC_R(0L, 0L);
 	}
 
 	@Test
 	public void testCountByC_R_P() throws Exception {
-		_persistence.countByC_R_P(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong(), "");
+		_persistence.countByC_R_P(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "");
 
 		_persistence.countByC_R_P(0L, 0L, "null");
 
@@ -186,8 +192,8 @@ public class DLContentPersistenceTest {
 
 	@Test
 	public void testCountByC_R_LikeP() throws Exception {
-		_persistence.countByC_R_LikeP(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong(), "");
+		_persistence.countByC_R_LikeP(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "");
 
 		_persistence.countByC_R_LikeP(0L, 0L, "null");
 
@@ -196,8 +202,8 @@ public class DLContentPersistenceTest {
 
 	@Test
 	public void testCountByC_R_P_V() throws Exception {
-		_persistence.countByC_R_P_V(RandomTestUtil.nextLong(),
-			RandomTestUtil.nextLong(), "", "");
+		_persistence.countByC_R_P_V(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "", "");
 
 		_persistence.countByC_R_P_V(0L, 0L, "null", "null");
 
@@ -208,7 +214,8 @@ public class DLContentPersistenceTest {
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		DLContent newDLContent = addDLContent();
 
-		DLContent existingDLContent = _persistence.findByPrimaryKey(newDLContent.getPrimaryKey());
+		DLContent existingDLContent = _persistence.findByPrimaryKey(
+			newDLContent.getPrimaryKey());
 
 		Assert.assertEquals(existingDLContent, newDLContent);
 	}
@@ -222,21 +229,22 @@ public class DLContentPersistenceTest {
 
 	@Test
 	public void testFindAll() throws Exception {
-		_persistence.findAll(QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			getOrderByComparator());
+		_persistence.findAll(
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, getOrderByComparator());
 	}
 
 	protected OrderByComparator<DLContent> getOrderByComparator() {
-		return OrderByComparatorFactoryUtil.create("DLContent", "contentId",
-			true, "groupId", true, "companyId", true, "repositoryId", true,
-			"path", true, "version", true, "size", true);
+		return OrderByComparatorFactoryUtil.create(
+			"DLContent", "contentId", true, "groupId", true, "companyId", true,
+			"repositoryId", true, "path", true, "version", true, "size", true);
 	}
 
 	@Test
 	public void testFetchByPrimaryKeyExisting() throws Exception {
 		DLContent newDLContent = addDLContent();
 
-		DLContent existingDLContent = _persistence.fetchByPrimaryKey(newDLContent.getPrimaryKey());
+		DLContent existingDLContent = _persistence.fetchByPrimaryKey(
+			newDLContent.getPrimaryKey());
 
 		Assert.assertEquals(existingDLContent, newDLContent);
 	}
@@ -253,6 +261,7 @@ public class DLContentPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereAllPrimaryKeysExist()
 		throws Exception {
+
 		DLContent newDLContent1 = addDLContent();
 		DLContent newDLContent2 = addDLContent();
 
@@ -261,18 +270,20 @@ public class DLContentPersistenceTest {
 		primaryKeys.add(newDLContent1.getPrimaryKey());
 		primaryKeys.add(newDLContent2.getPrimaryKey());
 
-		Map<Serializable, DLContent> dlContents = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, DLContent> dlContents =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertEquals(2, dlContents.size());
-		Assert.assertEquals(newDLContent1,
-			dlContents.get(newDLContent1.getPrimaryKey()));
-		Assert.assertEquals(newDLContent2,
-			dlContents.get(newDLContent2.getPrimaryKey()));
+		Assert.assertEquals(
+			newDLContent1, dlContents.get(newDLContent1.getPrimaryKey()));
+		Assert.assertEquals(
+			newDLContent2, dlContents.get(newDLContent2.getPrimaryKey()));
 	}
 
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereNoPrimaryKeysExist()
 		throws Exception {
+
 		long pk1 = RandomTestUtil.nextLong();
 
 		long pk2 = RandomTestUtil.nextLong();
@@ -282,7 +293,8 @@ public class DLContentPersistenceTest {
 		primaryKeys.add(pk1);
 		primaryKeys.add(pk2);
 
-		Map<Serializable, DLContent> dlContents = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, DLContent> dlContents =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertTrue(dlContents.isEmpty());
 	}
@@ -290,6 +302,7 @@ public class DLContentPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereSomePrimaryKeysExist()
 		throws Exception {
+
 		DLContent newDLContent = addDLContent();
 
 		long pk = RandomTestUtil.nextLong();
@@ -299,52 +312,57 @@ public class DLContentPersistenceTest {
 		primaryKeys.add(newDLContent.getPrimaryKey());
 		primaryKeys.add(pk);
 
-		Map<Serializable, DLContent> dlContents = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, DLContent> dlContents =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertEquals(1, dlContents.size());
-		Assert.assertEquals(newDLContent,
-			dlContents.get(newDLContent.getPrimaryKey()));
+		Assert.assertEquals(
+			newDLContent, dlContents.get(newDLContent.getPrimaryKey()));
 	}
 
 	@Test
-	public void testFetchByPrimaryKeysWithNoPrimaryKeys()
-		throws Exception {
+	public void testFetchByPrimaryKeysWithNoPrimaryKeys() throws Exception {
 		Set<Serializable> primaryKeys = new HashSet<Serializable>();
 
-		Map<Serializable, DLContent> dlContents = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, DLContent> dlContents =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertTrue(dlContents.isEmpty());
 	}
 
 	@Test
-	public void testFetchByPrimaryKeysWithOnePrimaryKey()
-		throws Exception {
+	public void testFetchByPrimaryKeysWithOnePrimaryKey() throws Exception {
 		DLContent newDLContent = addDLContent();
 
 		Set<Serializable> primaryKeys = new HashSet<Serializable>();
 
 		primaryKeys.add(newDLContent.getPrimaryKey());
 
-		Map<Serializable, DLContent> dlContents = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, DLContent> dlContents =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertEquals(1, dlContents.size());
-		Assert.assertEquals(newDLContent,
-			dlContents.get(newDLContent.getPrimaryKey()));
+		Assert.assertEquals(
+			newDLContent, dlContents.get(newDLContent.getPrimaryKey()));
 	}
 
 	@Test
 	public void testActionableDynamicQuery() throws Exception {
 		final IntegerWrapper count = new IntegerWrapper();
 
-		ActionableDynamicQuery actionableDynamicQuery = DLContentLocalServiceUtil.getActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			DLContentLocalServiceUtil.getActionableDynamicQuery();
 
-		actionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<DLContent>() {
+		actionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<DLContent>() {
+
 				@Override
 				public void performAction(DLContent dlContent) {
 					Assert.assertNotNull(dlContent);
 
 					count.increment();
 				}
+
 			});
 
 		actionableDynamicQuery.performActions();
@@ -353,17 +371,18 @@ public class DLContentPersistenceTest {
 	}
 
 	@Test
-	public void testDynamicQueryByPrimaryKeyExisting()
-		throws Exception {
+	public void testDynamicQueryByPrimaryKeyExisting() throws Exception {
 		DLContent newDLContent = addDLContent();
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(DLContent.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			DLContent.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.add(RestrictionsFactoryUtil.eq("contentId",
-				newDLContent.getContentId()));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"contentId", newDLContent.getContentId()));
 
-		List<DLContent> result = _persistence.findWithDynamicQuery(dynamicQuery);
+		List<DLContent> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
 
 		Assert.assertEquals(1, result.size());
 
@@ -374,31 +393,32 @@ public class DLContentPersistenceTest {
 
 	@Test
 	public void testDynamicQueryByPrimaryKeyMissing() throws Exception {
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(DLContent.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			DLContent.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.add(RestrictionsFactoryUtil.eq("contentId",
-				RandomTestUtil.nextLong()));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq("contentId", RandomTestUtil.nextLong()));
 
-		List<DLContent> result = _persistence.findWithDynamicQuery(dynamicQuery);
+		List<DLContent> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
 
 		Assert.assertEquals(0, result.size());
 	}
 
 	@Test
-	public void testDynamicQueryByProjectionExisting()
-		throws Exception {
+	public void testDynamicQueryByProjectionExisting() throws Exception {
 		DLContent newDLContent = addDLContent();
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(DLContent.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			DLContent.class, _dynamicQueryClassLoader);
 
 		dynamicQuery.setProjection(ProjectionFactoryUtil.property("contentId"));
 
 		Object newContentId = newDLContent.getContentId();
 
-		dynamicQuery.add(RestrictionsFactoryUtil.in("contentId",
-				new Object[] { newContentId }));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.in(
+				"contentId", new Object[] {newContentId}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -411,13 +431,14 @@ public class DLContentPersistenceTest {
 
 	@Test
 	public void testDynamicQueryByProjectionMissing() throws Exception {
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(DLContent.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			DLContent.class, _dynamicQueryClassLoader);
 
 		dynamicQuery.setProjection(ProjectionFactoryUtil.property("contentId"));
 
-		dynamicQuery.add(RestrictionsFactoryUtil.in("contentId",
-				new Object[] { RandomTestUtil.nextLong() }));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.in(
+				"contentId", new Object[] {RandomTestUtil.nextLong()}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -430,20 +451,27 @@ public class DLContentPersistenceTest {
 
 		_persistence.clearCache();
 
-		DLContent existingDLContent = _persistence.findByPrimaryKey(newDLContent.getPrimaryKey());
+		DLContent existingDLContent = _persistence.findByPrimaryKey(
+			newDLContent.getPrimaryKey());
 
-		Assert.assertEquals(Long.valueOf(existingDLContent.getCompanyId()),
-			ReflectionTestUtil.<Long>invoke(existingDLContent,
-				"getOriginalCompanyId", new Class<?>[0]));
-		Assert.assertEquals(Long.valueOf(existingDLContent.getRepositoryId()),
-			ReflectionTestUtil.<Long>invoke(existingDLContent,
-				"getOriginalRepositoryId", new Class<?>[0]));
-		Assert.assertTrue(Objects.equals(existingDLContent.getPath(),
-				ReflectionTestUtil.invoke(existingDLContent, "getOriginalPath",
-					new Class<?>[0])));
-		Assert.assertTrue(Objects.equals(existingDLContent.getVersion(),
-				ReflectionTestUtil.invoke(existingDLContent,
-					"getOriginalVersion", new Class<?>[0])));
+		Assert.assertEquals(
+			Long.valueOf(existingDLContent.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingDLContent, "getOriginalCompanyId", new Class<?>[0]));
+		Assert.assertEquals(
+			Long.valueOf(existingDLContent.getRepositoryId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingDLContent, "getOriginalRepositoryId", new Class<?>[0]));
+		Assert.assertTrue(
+			Objects.equals(
+				existingDLContent.getPath(),
+				ReflectionTestUtil.invoke(
+					existingDLContent, "getOriginalPath", new Class<?>[0])));
+		Assert.assertTrue(
+			Objects.equals(
+				existingDLContent.getVersion(),
+				ReflectionTestUtil.invoke(
+					existingDLContent, "getOriginalVersion", new Class<?>[0])));
 	}
 
 	protected DLContent addDLContent() throws Exception {
@@ -460,13 +488,12 @@ public class DLContentPersistenceTest {
 		dlContent.setPath(RandomTestUtil.randomString());
 
 		dlContent.setVersion(RandomTestUtil.randomString());
-
 		String dataString = RandomTestUtil.randomString();
 
 		byte[] dataBytes = dataString.getBytes("UTF-8");
 
-		Blob dataBlob = new OutputBlob(new ByteArrayInputStream(dataBytes),
-				dataBytes.length);
+		Blob dataBlob = new OutputBlob(
+			new ByteArrayInputStream(dataBytes), dataBytes.length);
 
 		dlContent.setData(dataBlob);
 
@@ -480,4 +507,5 @@ public class DLContentPersistenceTest {
 	private List<DLContent> _dlContents = new ArrayList<DLContent>();
 	private DLContentPersistence _persistence;
 	private ClassLoader _dynamicQueryClassLoader;
+
 }

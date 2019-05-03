@@ -683,7 +683,7 @@ public class ImageToolImpl implements ImageTool {
 		affineTransform.translate(
 			rotatedImageWidth / 2, rotatedImageHeight / 2);
 		affineTransform.rotate(radians);
-		affineTransform.translate(imageWidth / (-2), imageHeight / (-2));
+		affineTransform.translate(imageWidth / -2, imageHeight / -2);
 
 		Graphics2D graphics2D = rotatedBufferedImage.createGraphics();
 
@@ -701,6 +701,7 @@ public class ImageToolImpl implements ImageTool {
 		}
 
 		int imageHeight = renderedImage.getHeight();
+
 		int imageWidth = renderedImage.getWidth();
 
 		double factor = (double)width / imageWidth;
@@ -783,6 +784,16 @@ public class ImageToolImpl implements ImageTool {
 			((scaledWidth * 2) >= originalWidth)) {
 
 			Graphics2D scaledGraphics2D = scaledBufferedImage.createGraphics();
+
+			scaledGraphics2D.setRenderingHint(
+				RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+			scaledGraphics2D.setRenderingHint(
+				RenderingHints.KEY_INTERPOLATION,
+				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			scaledGraphics2D.setRenderingHint(
+				RenderingHints.KEY_RENDERING,
+				RenderingHints.VALUE_RENDER_QUALITY);
 
 			scaledGraphics2D.drawImage(
 				originalBufferedImage, 0, 0, scaledWidth, scaledHeight, null);

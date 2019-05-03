@@ -35,8 +35,10 @@ public class MeetupsRegistrationTable {
 
 	public static final String TABLE_NAME = "SN_MeetupsRegistration";
 
-	public static final String TABLE_SQL_CREATE = "create table SN_MeetupsRegistration (meetupsRegistrationId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,meetupsEntryId LONG,status INTEGER,comments STRING null)";
+	public static final String TABLE_SQL_CREATE =
+		"create table SN_MeetupsRegistration (meetupsRegistrationId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,meetupsEntryId LONG,status INTEGER,comments STRING null)";
 
-	public static final String TABLE_SQL_DROP = "drop table SN_MeetupsRegistration";
+	public static final String TABLE_SQL_DROP =
+		"drop table SN_MeetupsRegistration";
 
 }

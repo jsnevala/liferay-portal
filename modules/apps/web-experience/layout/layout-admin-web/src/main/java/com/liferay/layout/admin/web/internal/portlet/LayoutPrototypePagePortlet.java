@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Component;
 		"javax.portlet.supported-public-render-parameter=selPlid",
 		"javax.portlet.supports.mime-type=text/html"
 	},
-	service = {Portlet.class}
+	service = Portlet.class
 )
 public class LayoutPrototypePagePortlet extends GroupPagesPortlet {
 }

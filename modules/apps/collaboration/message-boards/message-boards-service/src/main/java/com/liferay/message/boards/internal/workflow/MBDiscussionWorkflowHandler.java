@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Jorge Ferrer
  */
 @Component(
-	property = {"model.class.name=com.liferay.message.boards.kernel.model.MBDiscussion"},
+	property = "model.class.name=com.liferay.message.boards.kernel.model.MBDiscussion",
 	service = WorkflowHandler.class
 )
 public class MBDiscussionWorkflowHandler extends MBMessageWorkflowHandler {

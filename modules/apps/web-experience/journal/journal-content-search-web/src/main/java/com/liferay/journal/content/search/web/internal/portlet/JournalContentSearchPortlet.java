@@ -52,7 +52,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=Journal Content Search",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.template-path=/",
+		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + JournalContentSearchPortletKeys.JOURNAL_CONTENT_SEARCH,
 		"javax.portlet.resource-bundle=content.Language",
@@ -95,7 +95,7 @@ public class JournalContentSearchPortlet extends MVCPortlet {
 		super.doDispatch(renderRequest, renderResponse);
 	}
 
-	@Reference
+	@Reference(unbind = "-")
 	protected void setJournalArticleService(
 		JournalArticleService journalArticleService) {
 	}

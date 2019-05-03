@@ -103,6 +103,7 @@ import com.liferay.portlet.messageboards.model.impl.MBMessageDisplayImpl;
 import com.liferay.portlet.messageboards.service.base.MBMessageLocalServiceBaseImpl;
 import com.liferay.portlet.messageboards.service.permission.MBPermission;
 import com.liferay.portlet.messageboards.social.MBActivityKeys;
+import com.liferay.portlet.messageboards.util.MBDiscussionSubcriptionSender;
 import com.liferay.portlet.messageboards.util.MBSubscriptionSender;
 import com.liferay.portlet.messageboards.util.MBUtil;
 import com.liferay.portlet.messageboards.util.MailingListThreadLocal;
@@ -383,8 +384,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		// Resources
 
-		if ((parentMessageId !=
-				MBMessageConstants.DEFAULT_PARENT_MESSAGE_ID) &&
+		if ((parentMessageId != MBMessageConstants.DEFAULT_PARENT_MESSAGE_ID) &&
 			GetterUtil.getBoolean(
 				serviceContext.getAttribute("propagatePermissions"))) {
 
@@ -494,8 +494,9 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #addMessage(long, String,
-	 *             long, long, String, String, ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #addMessage(long, String, long, long, String, String,
+	 *             ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -1005,6 +1006,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 			try {
 				String subject = String.valueOf(classPK);
+
 				//String body = subject;
 
 				message = addDiscussionMessage(
@@ -1035,7 +1037,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getDiscussionMessageDisplay(long, long, String, long, int)}
 	 */
 	@Deprecated
@@ -1185,8 +1187,8 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getMessageDisplay(long,
-	 *             long, int)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getMessageDisplay(long, long, int)}
 	 */
 	@Deprecated
 	@Override
@@ -1257,8 +1259,8 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getMessageDisplay(long,
-	 *             MBMessage, int)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getMessageDisplay(long, MBMessage, int)}
 	 */
 	@Deprecated
 	@Override
@@ -1273,8 +1275,8 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getMessageDisplay(long,
-	 *             MBMessage, int, Comparator)} (
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getMessageDisplay(long, MBMessage, int, Comparator)} (
 	 */
 	@Deprecated
 	@Override
@@ -1788,7 +1790,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1805,8 +1807,8 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #updateStatus(long, long,
-	 *             int, ServiceContext, Map)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateStatus(long, long, int, ServiceContext, Map)}
 	 */
 	@Deprecated
 	@Override
@@ -1834,6 +1836,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		int oldStatus = message.getStatus();
 
 		User user = userPersistence.findByPrimaryKey(userId);
+
 		Date now = new Date();
 
 		Date modifiedDate = serviceContext.getModifiedDate(now);
@@ -2194,13 +2197,6 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 			long userId, MBMessage message, ServiceContext serviceContext)
 		throws PortalException {
 
-		if (!PrefsPropsUtil.getBoolean(
-				message.getCompanyId(),
-				PropsKeys.DISCUSSION_EMAIL_COMMENTS_ADDED_ENABLED)) {
-
-			return;
-		}
-
 		MBDiscussion mbDiscussion =
 			mbDiscussionLocalService.getThreadDiscussion(message.getThreadId());
 
@@ -2230,7 +2226,8 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		String body = PrefsPropsUtil.getContent(
 			message.getCompanyId(), PropsKeys.DISCUSSION_EMAIL_BODY);
 
-		SubscriptionSender subscriptionSender = new SubscriptionSender();
+		SubscriptionSender subscriptionSender =
+			new MBDiscussionSubcriptionSender();
 
 		subscriptionSender.setBody(body);
 		subscriptionSender.setCompanyId(message.getCompanyId());

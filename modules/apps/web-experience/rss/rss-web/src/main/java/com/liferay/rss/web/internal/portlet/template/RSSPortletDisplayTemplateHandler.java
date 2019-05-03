@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Eudaldo Alonso
  */
 @Component(
-	immediate = true, property = {"javax.portlet.name=" + RSSPortletKeys.RSS},
+	immediate = true, property = "javax.portlet.name=" + RSSPortletKeys.RSS,
 	service = TemplateHandler.class
 )
 public class RSSPortletDisplayTemplateHandler
@@ -58,8 +58,11 @@ public class RSSPortletDisplayTemplateHandler
 		String portletTitle = _portal.getPortletTitle(
 			RSSPortletKeys.RSS, resourceBundle);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override

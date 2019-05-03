@@ -46,7 +46,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Eudaldo Alonso
  */
 @Component(
-	property = {"model.class.name=com.liferay.journal.model.JournalFolder"},
+	property = "model.class.name=com.liferay.journal.model.JournalFolder",
 	service = TrashHandler.class
 )
 public class JournalFolderTrashHandler extends JournalBaseTrashHandler {
@@ -298,9 +298,7 @@ public class JournalFolderTrashHandler extends JournalBaseTrashHandler {
 	protected JournalFolder getJournalFolder(long classPK)
 		throws PortalException {
 
-		JournalFolder folder = _journalFolderLocalService.getFolder(classPK);
-
-		return folder;
+		return _journalFolderLocalService.getFolder(classPK);
 	}
 
 	@Override

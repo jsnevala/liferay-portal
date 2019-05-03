@@ -27,7 +27,7 @@ import java.util.Calendar;
 
 /**
  * @author     Brian Wing Shun Chan
- * @deprecated As of 7.0.0, replaced by {@link
+ * @deprecated As of Judson (7.1.x), replaced by {@link
  *             com.liferay.shopping.util.CreditCard)}
  */
 @Deprecated
@@ -47,7 +47,7 @@ public class CreditCard {
 		if (numberLen > 4) {
 			StringBundler sb = new StringBundler(numberLen - 3);
 
-			for (int i = 0; i < numberLen - 4; i++) {
+			for (int i = 0; i < (numberLen - 4); i++) {
 				sb.append(x);
 			}
 

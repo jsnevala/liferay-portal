@@ -44,12 +44,12 @@ import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	configurationPid = "com.liferay.document.library.configuration.DLConfiguration",
 	immediate = true,
-	property = {"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY},
+	property = "javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
 	service = TemplateHandler.class
 )
 public class DocumentLibraryPortletDisplayTemplateHandler
@@ -79,8 +79,11 @@ public class DocumentLibraryPortletDisplayTemplateHandler
 		String portletTitle = _portal.getPortletTitle(
 			DLPortletKeys.MEDIA_GALLERY_DISPLAY, locale);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override

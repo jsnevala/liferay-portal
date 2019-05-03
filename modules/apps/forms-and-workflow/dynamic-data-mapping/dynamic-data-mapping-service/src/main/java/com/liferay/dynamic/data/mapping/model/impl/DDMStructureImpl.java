@@ -469,10 +469,8 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 			return null;
 		}
 
-		DDMStructure parentStructure =
-			DDMStructureLocalServiceUtil.getStructure(getParentStructureId());
-
-		return parentStructure;
+		return DDMStructureLocalServiceUtil.getStructure(
+			getParentStructureId());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

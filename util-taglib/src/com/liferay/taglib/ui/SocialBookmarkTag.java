@@ -71,6 +71,8 @@ public class SocialBookmarkTag extends IncludeTag {
 		super.cleanUp();
 
 		_contentId = null;
+		_displayStyle = null;
+		_icon = null;
 		_target = null;
 		_title = null;
 		_type = null;

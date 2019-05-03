@@ -43,8 +43,8 @@ public class IMAPConnection {
 	public IMAPConnection(Account account, String password) {
 		this(
 			account.getIncomingHostName(), account.getIncomingPort(),
-			account.getIncomingSecure(), account.getOutgoingHostName(),
-			account.getOutgoingPort(), account.getOutgoingSecure(),
+			account.isIncomingSecure(), account.getOutgoingHostName(),
+			account.getOutgoingPort(), account.isOutgoingSecure(),
 			account.getLogin(), password);
 	}
 
@@ -102,7 +102,10 @@ public class IMAPConnection {
 
 		try {
 			String storeKey = _incomingHostName.concat(
-				_outgoingHostName).concat(_login);
+				_outgoingHostName
+			).concat(
+				_login
+			);
 
 			if (useOldStores) {
 				store = _allStores.get(storeKey);
@@ -273,8 +276,6 @@ public class IMAPConnection {
 			}
 		}
 	}
-
-	private static final String _TRANSPORT = "_TRANSPORT_";
 
 	private static final Log _log = LogFactoryUtil.getLog(IMAPConnection.class);
 

@@ -32,10 +32,6 @@
 		padding-bottom: 30px;
 	}
 
-	.alert-danger, .alert-success {
-		margin: 15px auto 5px;
-	}
-
 	.version-info {
 		font-size: 16px;
 		font-weight: bold;

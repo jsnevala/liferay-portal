@@ -195,6 +195,8 @@ public abstract class BasePortletDataHandlerTestCase {
 
 		portletDataContext.setMissingReferencesElement(
 			missingReferencesElement);
+
+		portletDataContext.setPortletId(portletId);
 	}
 
 	protected Element missingReferencesElement;

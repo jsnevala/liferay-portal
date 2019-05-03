@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"verify.process.name=com.liferay.portal.security.sso.google"},
+	property = "verify.process.name=com.liferay.portal.security.sso.google",
 	service = VerifyProcess.class
 )
 public class GoogleLoginCompanySettingsVerifyProcess
@@ -53,15 +53,15 @@ public class GoogleLoginCompanySettingsVerifyProcess
 	@Override
 	protected String[][] getRenamePropertyKeysArray() {
 		return new String[][] {
-			new String[] {
+			{
 				LegacyGoogleLoginPropsKeys.AUTH_ENABLED,
 				GoogleAuthorizationConfigurationKeys.AUTH_ENABLED
 			},
-			new String[] {
+			{
 				LegacyGoogleLoginPropsKeys.CLIENT_ID,
 				GoogleAuthorizationConfigurationKeys.CLIENT_ID
 			},
-			new String[] {
+			{
 				LegacyGoogleLoginPropsKeys.CLIENT_SECRET,
 				GoogleAuthorizationConfigurationKeys.CLIENT_SECRET
 			}
@@ -82,7 +82,7 @@ public class GoogleLoginCompanySettingsVerifyProcess
 	private CompanyLocalService _companyLocalService;
 
 	/**
-	 * @deprecated As of 2.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Reference

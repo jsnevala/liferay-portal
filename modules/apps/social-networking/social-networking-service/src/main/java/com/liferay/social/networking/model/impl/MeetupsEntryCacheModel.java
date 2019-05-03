@@ -19,7 +19,6 @@ import aQute.bnd.annotation.ProviderType;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringBundler;
-
 import com.liferay.social.networking.model.MeetupsEntry;
 
 import java.io.Externalizable;
@@ -33,12 +32,12 @@ import java.util.Date;
  * The cache model class for representing MeetupsEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see MeetupsEntry
  * @generated
  */
 @ProviderType
-public class MeetupsEntryCacheModel implements CacheModel<MeetupsEntry>,
-	Externalizable {
+public class MeetupsEntryCacheModel
+	implements CacheModel<MeetupsEntry>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -49,7 +48,8 @@ public class MeetupsEntryCacheModel implements CacheModel<MeetupsEntry>,
 			return false;
 		}
 
-		MeetupsEntryCacheModel meetupsEntryCacheModel = (MeetupsEntryCacheModel)obj;
+		MeetupsEntryCacheModel meetupsEntryCacheModel =
+			(MeetupsEntryCacheModel)obj;
 
 		if (meetupsEntryId == meetupsEntryCacheModel.meetupsEntryId) {
 			return true;
@@ -192,8 +192,7 @@ public class MeetupsEntryCacheModel implements CacheModel<MeetupsEntry>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(meetupsEntryId);
 
 		objectOutput.writeLong(companyId);
@@ -250,4 +249,5 @@ public class MeetupsEntryCacheModel implements CacheModel<MeetupsEntry>,
 	public int maxAttendees;
 	public double price;
 	public long thumbnailId;
+
 }

@@ -134,7 +134,7 @@ AUI.add(
 									top: '0px'
 								},
 								closeText: false,
-								content: message + '<button type="button" class="close">&times;</button>',
+								content: message + '<button aria-label="' + Liferay.Language.get("close") + '" type="button" class="close">&times;</button>',
 								noticeClass: 'hide',
 								timeout: 10000,
 								toggleText: false,
@@ -837,13 +837,21 @@ AUI.add(
 						}
 
 						if (cmdNode) {
+							var form = instance.get('form');
+
+							var portletURL = Liferay.PortletURL.createURL(form.get('action'));
+
+							instance._setDisabledCheckboxParameters(portletURL);
+
+							form.set('action', portletURL.toString());
+
 							var currentURL = instance.byId('currentURL');
 
 							redirectNode.val(currentURL);
 
 							cmdNode.val(STR_EMPTY);
 
-							submitForm(instance.get('form'));
+							submitForm(form);
 						}
 					},
 
@@ -870,7 +878,7 @@ AUI.add(
 											new Liferay.Notice(
 												{
 													closeText: false,
-													content: Liferay.Language.get('your-request-failed-to-complete') + '<button type="button" class="close">&times;</button>',
+													content: Liferay.Language.get('your-request-failed-to-complete') + '<button aria-label="' + Liferay.Language.get("close") + '" type="button" class="close">&times;</button>',
 													noticeClass: 'hide',
 													timeout: FAILURE_TIMEOUT,
 													toggleText: false,
@@ -984,6 +992,40 @@ AUI.add(
 						}
 
 						instance._setLabels('contentOptionsLink', 'selectedContentOptions', selectedContentOptions.join(', '));
+					},
+
+					_setDisabledCheckboxParameters: function(portletURL) {
+						var instance = this;
+
+						$('[id^=' + instance.ns('PORTLET_DATA') + ']').each(
+							function() {
+								var input = $(this);
+
+								if (input.is(':checkbox')) {
+									var id = input.prop('id');
+
+									var controlCheckboxes = $('[data-root-control-id=' + id + ']');
+
+									if (controlCheckboxes.length == 0) {
+										return;
+									}
+
+									controlCheckboxes.each(
+										function() {
+											var controlCheckbox = $(this);
+
+											if (controlCheckbox.is(':disabled') && controlCheckbox.is(':checked')) {
+												var controlCheckboxName = controlCheckbox.prop('name');
+
+												controlCheckboxName = controlCheckboxName.replace(instance.NS, '');
+
+												portletURL.setParameter(controlCheckboxName, 'true');
+											}
+										}
+									);
+								}
+							}
+						);
 					},
 
 					_setGlobalConfigurationLabels: function() {

@@ -350,7 +350,7 @@ String signature = ParamUtil.getString(request, "signature");
 
 					<%
 					}
-					else if (methodParameterTypeClass.isArray() ||methodParameterTypeClass.isPrimitive() ||methodParameterTypeClass.equals(Byte.class) ||methodParameterTypeClass.equals(Character.class) ||methodParameterTypeClass.equals(Date.class) ||methodParameterTypeClass.equals(Double.class) ||methodParameterTypeClass.equals(Float.class) ||methodParameterTypeClass.equals(Integer.class) ||methodParameterTypeClass.equals(List.class) ||methodParameterTypeClass.equals(Long.class) ||methodParameterTypeClass.equals(Map.class) ||methodParameterTypeClass.equals(Short.class) ||methodParameterTypeClass.equals(String.class) ||methodParameterTypeClass.equals(Void.class)) {
+					else if (methodParameterTypeClass.isArray() || methodParameterTypeClass.isPrimitive() || methodParameterTypeClass.equals(Byte.class) || methodParameterTypeClass.equals(Character.class) || methodParameterTypeClass.equals(Date.class) || methodParameterTypeClass.equals(Double.class) || methodParameterTypeClass.equals(Float.class) || methodParameterTypeClass.equals(Integer.class) || methodParameterTypeClass.equals(List.class) || methodParameterTypeClass.equals(Locale.class) || methodParameterTypeClass.equals(Long.class) || methodParameterTypeClass.equals(Map.class) || methodParameterTypeClass.equals(Short.class) || methodParameterTypeClass.equals(String.class) || methodParameterTypeClass.equals(Void.class)) {
 						int size = 10;
 
 						if (methodParameterTypeClass.equals(String.class)) {
@@ -358,7 +358,7 @@ String signature = ParamUtil.getString(request, "signature");
 						}
 					%>
 
-						<aui:input id='<%= "field" + i %>' label="<%= methodParameterName %>" name="<%= methodParameterName %>" size="<%= size %>" suffix="<%= methodParameterTypeClassName %>" />
+						<aui:input id='<%= "field" + i %>' label="<%= methodParameterName %>" name="<%= methodParameterName %>" rows="1" size="<%= size %>" suffix="<%= methodParameterTypeClassName %>" type="textarea" />
 
 					<%
 					}
@@ -420,6 +420,7 @@ String signature = ParamUtil.getString(request, "signature");
 
 			var formatDataType = function(key, value, includeNull) {
 				value = decodeURIComponent(value.replace(/\+/g, ' '));
+				value = escape(value);
 
 				if (fileType[key]) {
 					value = 'null';
@@ -526,7 +527,7 @@ String signature = ParamUtil.getString(request, "signature");
 						'<%= jsonWebServiceActionMapping.getPath() %>',
 						formEl,
 						function(obj) {
-							serviceOutput.html(JSON.stringify(obj, null, 2));
+							serviceOutput.html(A.Lang.String.escapeHTML(JSON.stringify(obj, null, 2)));
 
 							output.removeClass('loading-results');
 

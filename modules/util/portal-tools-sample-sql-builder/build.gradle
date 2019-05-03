@@ -24,10 +24,10 @@ dependencies {
 	compile project(":apps:collaboration:wiki:wiki-api")
 	compile project(":apps:collaboration:wiki:wiki-service")
 
-	provided group: "com.liferay", name: "com.liferay.petra.string", version: "1.0.0"
-	provided group: "com.liferay", name: "org.freemarker", version: "2.3.23.LIFERAY-PATCHED-4"
-	provided group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
-	provided group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
+	compileOnly group: "com.liferay", name: "com.liferay.petra.string", version: "1.0.0"
+	compileOnly group: "com.liferay", name: "org.freemarker", version: "2.3.23.LIFERAY-PATCHED-4"
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
+	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
 }
 
 writeReleases {

@@ -43,77 +43,77 @@ import javax.portlet.PortletRequest;
 public interface ExportImportHelper {
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String DATA_HANDLER_COMPANY_SECURE_URL =
 		"@data_handler_company_secure_url@";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String DATA_HANDLER_COMPANY_URL =
 		"@data_handler_company_url@";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String DATA_HANDLER_GROUP_FRIENDLY_URL =
 		"@data_handler_group_friendly_url@";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String DATA_HANDLER_PATH_CONTEXT =
 		"@data_handler_path_context@";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String DATA_HANDLER_PRIVATE_GROUP_SERVLET_MAPPING =
 		"@data_handler_private_group_servlet_mapping@";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String DATA_HANDLER_PRIVATE_LAYOUT_SET_SECURE_URL =
 		"@data_handler_private_layout_set_secure_url@";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String DATA_HANDLER_PRIVATE_LAYOUT_SET_URL =
 		"@data_handler_private_layout_set_url@";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String DATA_HANDLER_PRIVATE_USER_SERVLET_MAPPING =
 		"@data_handler_private_user_servlet_mapping@";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String DATA_HANDLER_PUBLIC_LAYOUT_SET_SECURE_URL =
 		"@data_handler_public_layout_set_secure_url@";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String DATA_HANDLER_PUBLIC_LAYOUT_SET_URL =
 		"@data_handler_public_layout_set_url@";
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String DATA_HANDLER_PUBLIC_SERVLET_MAPPING =
@@ -128,7 +128,7 @@ public interface ExportImportHelper {
 		long groupId, boolean privateLayout);
 
 	/**
-	 * @deprecated As of 7.0.0, moved to {@link
+	 * @deprecated As of Wilberforce (7.0.x), moved to {@link
 	 *             ExportImportDateUtil#getCalendar(PortletRequest, String,
 	 *             boolean)}
 	 */
@@ -145,7 +145,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, moved to {@link
+	 * @deprecated As of Wilberforce (7.0.x), moved to {@link
 	 *             ExportImportDateUtil#getDateRange(PortletRequest, long,
 	 *             boolean, long, String, String)}
 	 */
@@ -156,7 +156,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public Layout getExportableLayout(ThemeDisplay themeDisplay)
@@ -166,7 +166,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getExportPortletControlsMap(long, String, Map)}
 	 */
 	@Deprecated
@@ -176,7 +176,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getExportPortletControlsMap(long, String, Map, String)}
 	 */
 	@Deprecated
@@ -196,7 +196,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getImportPortletControlsMap(long, String, Map, Element,
 	 *             ManifestSummary)}
 	 */
@@ -207,7 +207,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getImportPortletControlsMap(long, String, Map, Element,
 	 *             ManifestSummary)}
 	 */
@@ -243,10 +243,21 @@ public interface ExportImportHelper {
 			PortletRequest portletRequest, long targetGroupId)
 		throws PortalException;
 
+	/**
+	 * Returns the layout with the primary key or a dummy root layout
+	 *
+	 * @param  plid the primary key of the layout
+	 * @return the layout
+	 * @throws PortalException if layout is not a dummy and no layout with the
+	 *         primary key could be found
+	 */
+	public Layout getLayoutOrCreateDummyRootLayout(long plid)
+		throws PortalException;
+
 	public ZipWriter getLayoutSetZipWriter(long groupId);
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #getManifestSummary(PortletDataContext)}
 	 */
 	@Deprecated
@@ -292,7 +303,7 @@ public interface ExportImportHelper {
 		PortletDataContext portletDataContext, StagedModel stagedModel);
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
+	 * @deprecated As of Wilberforce (7.0.x), replaced by
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceExportContentReferences(
 	 *             PortletDataContext, StagedModel, String, boolean, boolean) in
 	 *             the export-import-api module
@@ -305,7 +316,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
+	 * @deprecated As of Wilberforce (7.0.x), replaced by
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceExportContentReferences(
 	 *             PortletDataContext, StagedModel, String, boolean, boolean) in
 	 *             the export-import-api module
@@ -318,7 +329,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
+	 * @deprecated As of Wilberforce (7.0.x), replaced by
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessorr#replaceExportContentReferences(
 	 *             PortletDataContext, StagedModel, String, boolean, boolean) in
 	 *             the export-import-api module
@@ -331,7 +342,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceExportDLReferences(
@@ -341,7 +352,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceExportDLReferences(
@@ -351,7 +362,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceExportLayoutReferences(
@@ -359,7 +370,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceExportLayoutReferences(
@@ -368,7 +379,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceExportLinksToLayouts(
@@ -378,7 +389,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceExportLinksToLayouts(
@@ -387,7 +398,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
+	 * @deprecated As of Wilberforce (7.0.x), replaced by
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceImportContentReferences(
 	 *             PortletDataContext, StagedModel, String) in the
 	 *             export-import-api module
@@ -399,7 +410,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by
+	 * @deprecated As of Wilberforce (7.0.x), replaced by
 	 *             com.liferay.exportimport.content.processor.ExportImportContentProcessor#replaceImportContentReferences(
 	 *             PortletDataContext, StagedModel, String) in the
 	 *             export-import-api module
@@ -411,7 +422,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceImportDLReferences(
@@ -420,7 +431,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceImportDLReferences(
@@ -429,7 +440,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceImportLayoutReferences(
@@ -437,7 +448,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceImportLayoutReferences(
@@ -446,7 +457,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceImportLinksToLayouts(
@@ -454,7 +465,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	public String replaceImportLinksToLayouts(
@@ -463,7 +474,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, see {@link
+	 * @deprecated As of Wilberforce (7.0.x), see {@link
 	 *             DefaultConfigurationPortletDataHandler#updateExportPortletPreferencesClassPKs(
 	 *             PortletDataContext, Portlet, PortletPreferences, String,
 	 *             String)}
@@ -475,7 +486,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #updateExportPortletPreferencesClassPKs(PortletDataContext,
 	 *             Portlet, PortletPreferences, String, String)}
 	 */
@@ -487,7 +498,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, see {@link
+	 * @deprecated As of Wilberforce (7.0.x), see {@link
 	 *             DefaultConfigurationPortletDataHandler#updateImportPortletPreferencesClassPKs(
 	 *             PortletDataContext, PortletPreferences, String, Class, long)}
 	 */
@@ -499,7 +510,7 @@ public interface ExportImportHelper {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #validateMissingReferences(PortletDataContext)}
 	 */
 	@Deprecated

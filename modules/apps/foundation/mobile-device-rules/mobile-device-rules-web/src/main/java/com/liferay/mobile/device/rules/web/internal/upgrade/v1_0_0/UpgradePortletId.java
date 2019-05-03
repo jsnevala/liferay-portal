@@ -18,17 +18,13 @@ import com.liferay.mobile.device.rules.constants.MDRPortletKeys;
 import com.liferay.portal.kernel.upgrade.BaseUpgradePortletId;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class UpgradePortletId extends BaseUpgradePortletId {
 
 	@Override
 	protected String[][] getRenamePortletIdsArray() {
-		return new String[][] {
-			new String[] {
-				"178", MDRPortletKeys.MOBILE_DEVICE_RULES
-			}
-		};
+		return new String[][] {{"178", MDRPortletKeys.MOBILE_DEVICE_RULES}};
 	}
 
 }

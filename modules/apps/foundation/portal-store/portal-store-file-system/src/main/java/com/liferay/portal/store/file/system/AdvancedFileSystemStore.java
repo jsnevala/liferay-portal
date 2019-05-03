@@ -142,8 +142,8 @@ public class AdvancedFileSystemStore extends FileSystemStore {
 	}
 
 	/**
-	 * @deprecated As of 2.0.0, replaced by {@link #getFileNames(List, String,
-	 *             String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getFileNames(List, String, String)}
 	 */
 	@Deprecated
 	protected List<String> getAdvancedFileNames(
@@ -345,7 +345,7 @@ public class AdvancedFileSystemStore extends FileSystemStore {
 
 		StringBundler sb = new StringBundler(parts.length - 1);
 
-		for (int i = 0; i < parts.length - 1; i++) {
+		for (int i = 0; i < (parts.length - 1); i++) {
 			sb.append(parts[i]);
 		}
 

@@ -78,7 +78,7 @@ name = HtmlUtil.escapeJS(name);
 			data = <%= HtmlUtil.escapeJS(namespace + initMethod) %>();
 		}
 		else {
-			data = '<%= contents != null ? HtmlUtil.escapeJS(contents) : StringPool.BLANK %>';
+			data = '<%= (contents != null) ? HtmlUtil.escapeJS(contents) : StringPool.BLANK %>';
 		}
 
 		return data;
@@ -92,6 +92,8 @@ name = HtmlUtil.escapeJS(name);
 				var editorContainer = A.one('#<%= name %>Container');
 
 				editorContainer.appendChild(editorNode);
+
+				window['<%= name %>']._dataReady = false;
 
 				window['<%= name %>'].initEditor();
 			}
@@ -186,6 +188,8 @@ name = HtmlUtil.escapeJS(name);
 		setHTML: function(value) {
 			if (window['<%= name %>'].instanceReady) {
 				document.getElementById('<%= name %>').value = value || '';
+
+				window['<%= name %>']._dataReady = true;
 			}
 		}
 	};

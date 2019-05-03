@@ -55,9 +55,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + NestedPortletsPortletKeys.NESTED_PORTLETS
-	},
+	property = "javax.portlet.name=" + NestedPortletsPortletKeys.NESTED_PORTLETS,
 	service = ConfigurationAction.class
 )
 public class NestedPortletsConfigurationAction
@@ -134,6 +132,7 @@ public class NestedPortletsConfigurationAction
 		Layout layout = themeDisplay.getLayout();
 		LayoutTypePortlet layoutTypePortlet =
 			themeDisplay.getLayoutTypePortlet();
+
 		Theme theme = themeDisplay.getTheme();
 
 		LayoutTemplate newLayoutTemplate =

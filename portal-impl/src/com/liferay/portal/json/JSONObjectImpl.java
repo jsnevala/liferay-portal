@@ -85,7 +85,17 @@ public class JSONObjectImpl implements JSONObject {
 
 	@Override
 	public Object get(String key) {
-		return _jsonObject.opt(key);
+		Object value = _jsonObject.opt(key);
+
+		if (value instanceof org.json.JSONArray) {
+			return new JSONArrayImpl((org.json.JSONArray)value);
+		}
+
+		if (value instanceof org.json.JSONObject) {
+			return new JSONObjectImpl((org.json.JSONObject)value);
+		}
+
+		return value;
 	}
 
 	@Override
@@ -187,6 +197,11 @@ public class JSONObjectImpl implements JSONObject {
 	@Override
 	public JSONArray names() {
 		return new JSONArrayImpl(_jsonObject.names());
+	}
+
+	@Override
+	public Object opt(String key) {
+		return get(key);
 	}
 
 	@Override

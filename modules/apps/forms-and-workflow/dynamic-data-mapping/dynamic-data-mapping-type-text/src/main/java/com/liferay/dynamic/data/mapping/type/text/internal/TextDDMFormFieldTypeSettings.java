@@ -70,10 +70,18 @@ public interface TextDDMFormFieldTypeSettings
 	@DDMFormField(
 		label = "%my-text-field-has",
 		optionLabels = {"%a-single-line", "%multiple-lines"},
-		optionValues = {"singleline", "multiline"},
-		properties = {"inline=true"}, type = "radio"
+		optionValues = {"singleline", "multiline"}, properties = "inline=true",
+		type = "radio"
 	)
 	public String displayStyle();
+
+	@DDMFormField(
+		label = "%searchable", optionLabels = {"%disable", "%keyword", "%text"},
+		optionValues = {"none", "keyword", "text"}, predefinedValue = "keyword",
+		type = "radio"
+	)
+	@Override
+	public String indexType();
 
 	@DDMFormField(
 		dataType = "string", label = "%placeholder-text",

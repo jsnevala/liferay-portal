@@ -23,10 +23,8 @@ import org.osgi.service.component.annotations.Component;
  * @author Michael Bowerman
  */
 @Component(
-	property = {
-		"model.class.name=com.liferay.exportimport.content.processor.test.DummyStagedModel"
-	},
-	service = {ExportImportContentProcessor.class}
+	property = "model.class.name=com.liferay.exportimport.content.processor.test.DummyStagedModel",
+	service = ExportImportContentProcessor.class
 )
 public class BaseExportImportContentProcessor
 	extends BaseTextExportImportContentProcessor {

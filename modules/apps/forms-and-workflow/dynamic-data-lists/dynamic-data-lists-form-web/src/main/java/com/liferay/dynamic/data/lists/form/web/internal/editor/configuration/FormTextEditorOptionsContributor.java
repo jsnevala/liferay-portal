@@ -30,8 +30,7 @@ import org.osgi.service.component.annotations.Component;
 @Component(
 	property = {
 		"editor.config.key=descriptionEditor", "editor.config.key=nameEditor",
-		"javax.portlet.name=" +
-			DDLFormPortletKeys.DYNAMIC_DATA_LISTS_FORM_ADMIN
+		"javax.portlet.name=" + DDLFormPortletKeys.DYNAMIC_DATA_LISTS_FORM_ADMIN
 	},
 	service = EditorOptionsContributor.class
 )

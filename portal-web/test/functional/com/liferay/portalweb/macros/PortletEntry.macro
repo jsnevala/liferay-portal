@@ -1,73 +1,67 @@
-<definition>
-	<command name="clickEditFromEllipsis">
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
+definition {
+	macro clickMoveToRecycleBin {
+		MenuItem.click(menuItem = "Move to the Recycle Bin");
+	}
 
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit">
-			<var name="key_menuItem" value="Edit" />
-		</execute>
-	</command>
+	macro inputDescription {
+		Click(locator1 = "TextArea#DESCRIPTION");
 
-	<command name="clickMoveToRecycleBin">
-		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Move to the Recycle Bin">
-			<var name="key_menuItem" value="Move to the Recycle Bin" />
-		</execute>
-	</command>
+		Type(locator1 = "TextArea#DESCRIPTION", value1 = "${description}");
+	}
 
-	<command name="inputDescription">
-		<execute function="Click" locator1="TextArea#DESCRIPTION" />
+	macro inputDescriptionTextInput {
+		Click(locator1 = "TextInput#DESCRIPTION");
 
-		<execute function="Type" locator1="TextArea#DESCRIPTION" value1="${description}" />
-	</command>
+		Type(locator1 = "TextInput#DESCRIPTION", value1 = "${description}");
+	}
 
-	<command name="inputDescriptionTextInput">
-		<execute function="Click" locator1="TextInput#DESCRIPTION" />
+	macro inputLocalizedName {
+		Click(locator1 = "Language#SITE_NAME_TRANSLATION", key_language = "${language}");
 
-		<execute function="Type" locator1="TextInput#DESCRIPTION" value1="${description}" />
-	</command>
+		PortletEntry.inputName(name = "${localizedName}");
+	}
 
-	<command name="inputLocalizedName">
-		<execute function="Click" locator1="Language#SITE_NAME_TRANSLATION">
-			<var name="key_language" value="${language}" />
-		</execute>
+	macro inputName {
+		Click(locator1 = "TextInput#NAME");
 
-		<execute macro="PortletEntry#inputName">
-			<var name="name" value="${localizedName}" />
-		</execute>
-	</command>
+		Type(locator1 = "TextInput#NAME", value1 = "${name}");
 
-	<command name="inputName">
-		<execute function="Click" locator1="TextInput#NAME" />
+		if (IsElementPresent(locator1 = "TextInput#NAME_INVALID")) {
+			Click(locator1 = "TextInput#NAME_MARGIN");
+		}
+	}
 
-		<execute function="Type" locator1="TextInput#NAME" value1="${name}" />
-	</command>
+	macro inputTitle {
+		Click(locator1 = "TextInput#TITLE");
 
-	<command name="inputTitle">
-		<execute function="Click" locator1="TextInput#TITLE" />
+		Type(locator1 = "TextInput#TITLE", value1 = "${title}");
 
-		<execute function="Type" locator1="TextInput#TITLE" value1="${title}" />
-	</command>
+		if (IsElementPresent(locator1 = "TextInput#TITLE_INVALID")) {
+			Click(locator1 = "TextInput#TITLE_MARGIN");
+		}
+	}
 
-	<command name="publish">
-		<execute macro="Button#clickPublish" />
+	macro publish {
+		Button.clickPublish();
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		Alert.viewSuccessMessage();
+	}
 
-	<command name="publishAndWait">
-		<execute macro="Button#clickPublish" />
+	macro publishAndWait {
+		Button.clickPublish();
 
-		<execute function="Pause" locator1="3000" />
+		Pause(locator1 = "3000");
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		Alert.viewSuccessMessage();
+	}
 
-	<command name="save">
-		<execute macro="Button#clickSave" />
+	macro save {
+		Button.clickSave();
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		Alert.viewSuccessMessage();
+	}
 
-	<command name="viewNoNavItemLink">
-		<execute function="AssertElementNotPresent" locator1="NavBar#NAV_ITEM_LINK" />
-	</command>
-</definition>
+	macro viewNoNavItemLink {
+		AssertElementNotPresent(locator1 = "NavBar#NAV_ITEM_LINK");
+	}
+}

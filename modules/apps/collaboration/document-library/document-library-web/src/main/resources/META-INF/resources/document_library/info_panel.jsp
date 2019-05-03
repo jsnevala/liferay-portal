@@ -197,7 +197,7 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isEmp
 								<liferay-ui:message key="description" />
 							</dt>
 							<dd>
-								<%= HtmlUtil.escape(fileEntry.getDescription()) %>
+								<%= HtmlUtil.replaceNewLine(HtmlUtil.escape(fileEntry.getDescription())) %>
 							</dd>
 						</c:if>
 
@@ -335,7 +335,7 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isEmp
 							<liferay-ui:message key="description" />
 						</dt>
 						<dd>
-							<%= HtmlUtil.escape(fileEntry.getDescription()) %>
+							<%= HtmlUtil.replaceNewLine(HtmlUtil.escape(fileEntry.getDescription())) %>
 						</dd>
 
 						<%

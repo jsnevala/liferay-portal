@@ -20,12 +20,14 @@ import com.liferay.dynamic.data.lists.model.DDLRecordSet;
 import com.liferay.dynamic.data.lists.model.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService;
 import com.liferay.dynamic.data.lists.service.permission.DDLPermission;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataException;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.portlet.preferences.processor.Capability;
 import com.liferay.exportimport.portlet.preferences.processor.ExportImportPortletPreferencesProcessor;
 import com.liferay.exportimport.portlet.preferences.processor.capability.ReferencedStagedModelImporterCapability;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
@@ -33,6 +35,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -51,9 +55,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + DDLFormPortletKeys.DYNAMIC_DATA_LISTS_FORM
-	},
+	property = "javax.portlet.name=" + DDLFormPortletKeys.DYNAMIC_DATA_LISTS_FORM,
 	service = ExportImportPortletPreferencesProcessor.class
 )
 public class DDLFormExportImportPortletPreferencesProcessor
@@ -100,6 +102,38 @@ public class DDLFormExportImportPortletPreferencesProcessor
 			return portletPreferences;
 		}
 
+		long recordSetGroupId = GetterUtil.getLong(
+			portletPreferences.getValue("groupId", StringPool.BLANK));
+
+		if (recordSetGroupId <= 0) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"No group ID found in preferences of portlet " + portletId);
+			}
+
+			return portletPreferences;
+		}
+
+		Group group = _groupLocalService.fetchGroup(recordSetGroupId);
+
+		if (ExportImportThreadLocal.isStagingInProcess() &&
+			!group.isStagedPortlet(
+				DDLFormPortletKeys.DYNAMIC_DATA_LISTS_FORM_ADMIN)) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Record set is not staged in the site " + group.getName());
+			}
+
+			return portletPreferences;
+		}
+
+		long previousScopeGroupId = portletDataContext.getScopeGroupId();
+
+		if (recordSetGroupId != previousScopeGroupId) {
+			portletDataContext.setScopeGroupId(recordSetGroupId);
+		}
+
 		DDLRecordSet recordSet = _ddlRecordSetLocalService.fetchRecordSet(
 			recordSetId);
 
@@ -138,6 +172,8 @@ public class DDLFormExportImportPortletPreferencesProcessor
 			}
 		}
 
+		portletDataContext.setScopeGroupId(previousScopeGroupId);
+
 		return portletPreferences;
 	}
 
@@ -156,8 +192,29 @@ public class DDLFormExportImportPortletPreferencesProcessor
 				"Unable to export portlet permissions", pe);
 		}
 
+		long previousScopeGroupId = portletDataContext.getScopeGroupId();
+
+		Map<Long, Long> groupIds =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				Group.class);
+
+		long importGroupId = GetterUtil.getLong(
+			portletPreferences.getValue("groupId", null));
+
+		long groupId = MapUtil.getLong(groupIds, importGroupId, importGroupId);
+
 		long importedRecordSetId = GetterUtil.getLong(
 			portletPreferences.getValue("recordSetId", null));
+
+		Map<String, Long> recordSetGroupIds =
+			(Map<String, Long>)portletDataContext.getNewPrimaryKeysMap(
+				DDLRecordSet.class + ".groupId");
+
+		if (recordSetGroupIds.containsKey(importedRecordSetId)) {
+			groupId = recordSetGroupIds.get(importedRecordSetId);
+		}
+
+		portletDataContext.setScopeGroupId(groupId);
 
 		Map<Long, Long> recordSetIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
@@ -167,6 +224,8 @@ public class DDLFormExportImportPortletPreferencesProcessor
 			recordSetIds, importedRecordSetId, importedRecordSetId);
 
 		try {
+			portletPreferences.setValue("groupId", String.valueOf(groupId));
+
 			portletPreferences.setValue(
 				"recordSetId", String.valueOf(recordSetId));
 		}
@@ -174,6 +233,8 @@ public class DDLFormExportImportPortletPreferencesProcessor
 			throw new PortletDataException(
 				"Unable to update portlet preferences during import", roe);
 		}
+
+		portletDataContext.setScopeGroupId(previousScopeGroupId);
 
 		return portletPreferences;
 	}
@@ -195,6 +256,9 @@ public class DDLFormExportImportPortletPreferencesProcessor
 	private DDLRecordSetLocalService _ddlRecordSetLocalService;
 
 	private DDLRecordStagedModelRepository _ddlRecordStagedModelRepository;
+
+	@Reference(unbind = "-")
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private ReferencedStagedModelImporterCapability

@@ -78,6 +78,7 @@ public class UpgradeWorkflowContext extends UpgradeProcess {
 
 			while (rs.next()) {
 				long fieldValue = rs.getLong(fieldName);
+
 				String workflowContextJSON = rs.getString("workflowContext");
 
 				if (Validator.isNull(workflowContextJSON)) {
@@ -237,8 +238,9 @@ public class UpgradeWorkflowContext extends UpgradeProcess {
 
 		private static final Class<?>[] _JSON_CLASSES = {JSONObject.class};
 
-		private static final Class<?>[] _SERIALIZABLE_CLASSES =
-			{PortletPreferencesIds.class};
+		private static final Class<?>[] _SERIALIZABLE_CLASSES = {
+			PortletPreferencesIds.class
+		};
 
 	}
 

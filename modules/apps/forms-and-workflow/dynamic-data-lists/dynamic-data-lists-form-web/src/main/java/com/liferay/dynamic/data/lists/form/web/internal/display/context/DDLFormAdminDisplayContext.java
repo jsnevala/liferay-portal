@@ -132,6 +132,10 @@ public class DDLFormAdminDisplayContext {
 			renderRequest);
 	}
 
+	public String getCSVExport() {
+		return _ddlFormWebConfiguration.csvExport();
+	}
+
 	public DDLFormViewRecordDisplayContext
 		getDDLFormViewRecordDisplayContext() {
 
@@ -210,17 +214,12 @@ public class DDLFormAdminDisplayContext {
 	}
 
 	public String getOrderByCol() {
-		String orderByCol = ParamUtil.getString(
+		return ParamUtil.getString(
 			_renderRequest, "orderByCol", "modified-date");
-
-		return orderByCol;
 	}
 
 	public String getOrderByType() {
-		String orderByType = ParamUtil.getString(
-			_renderRequest, "orderByType", "asc");
-
-		return orderByType;
+		return ParamUtil.getString(_renderRequest, "orderByType", "asc");
 	}
 
 	public PortletURL getPortletURL() {
@@ -531,11 +530,13 @@ public class DDLFormAdminDisplayContext {
 	}
 
 	protected String getServletContextPath(Servlet servlet) {
+		String proxyPath = PortalUtil.getPathProxy();
+
 		ServletConfig servletConfig = servlet.getServletConfig();
 
 		ServletContext servletContext = servletConfig.getServletContext();
 
-		return servletContext.getContextPath();
+		return proxyPath.concat(servletContext.getContextPath());
 	}
 
 	protected int getTotal() throws PortalException {

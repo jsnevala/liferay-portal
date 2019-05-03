@@ -41,10 +41,10 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
-	immediate = true, property = {"javax.portlet.name=" + WikiPortletKeys.WIKI},
+	immediate = true, property = "javax.portlet.name=" + WikiPortletKeys.WIKI,
 	service = ExportImportPortletPreferencesProcessor.class
 )
 public class WikiExportImportPortletPreferencesProcessor

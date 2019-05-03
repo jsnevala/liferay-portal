@@ -39,8 +39,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Peter Fellwock
  */
 @Component(
-	immediate = true,
-	property = {"service.ranking:Integer=" + Integer.MAX_VALUE}
+	immediate = true, property = "service.ranking:Integer=" + Integer.MAX_VALUE
 )
 public class TestAssetRendererFactory
 	implements AssetRendererFactory<TestAssetRendererModel> {
@@ -95,7 +94,7 @@ public class TestAssetRendererFactory
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -106,7 +105,7 @@ public class TestAssetRendererFactory
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -117,7 +116,7 @@ public class TestAssetRendererFactory
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -131,7 +130,7 @@ public class TestAssetRendererFactory
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -145,7 +144,7 @@ public class TestAssetRendererFactory
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -174,7 +173,7 @@ public class TestAssetRendererFactory
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -188,7 +187,7 @@ public class TestAssetRendererFactory
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -223,7 +222,7 @@ public class TestAssetRendererFactory
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override

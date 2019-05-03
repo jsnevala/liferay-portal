@@ -30,6 +30,7 @@ import de.hunsicker.jalopy.storage.Convention;
 import de.hunsicker.jalopy.storage.ConventionKeys;
 import de.hunsicker.jalopy.storage.Environment;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 
@@ -155,6 +156,44 @@ public class ToolsUtil {
 		return document.asXML();
 	}
 
+	public static int getLevel(String s) {
+		return getLevel(
+			s, new String[] {StringPool.OPEN_PARENTHESIS},
+			new String[] {StringPool.CLOSE_PARENTHESIS}, 0);
+	}
+
+	public static int getLevel(
+		String s, String increaseLevelString, String decreaseLevelString) {
+
+		return getLevel(
+			s, new String[] {increaseLevelString},
+			new String[] {decreaseLevelString}, 0);
+	}
+
+	public static int getLevel(
+		String s, String[] increaseLevelStrings,
+		String[] decreaseLevelStrings) {
+
+		return getLevel(s, increaseLevelStrings, decreaseLevelStrings, 0);
+	}
+
+	public static int getLevel(
+		String s, String[] increaseLevelStrings, String[] decreaseLevelStrings,
+		int startLevel) {
+
+		int level = startLevel;
+
+		for (String increaseLevelString : increaseLevelStrings) {
+			level = _adjustLevel(level, s, increaseLevelString, 1);
+		}
+
+		for (String decreaseLevelString : decreaseLevelStrings) {
+			level = _adjustLevel(level, s, decreaseLevelString, -1);
+		}
+
+		return level;
+	}
+
 	public static String getPackagePath(File file) {
 		String fileName = StringUtil.replace(
 			file.toString(), CharPool.BACK_SLASH, CharPool.SLASH);
@@ -240,7 +279,7 @@ public class ToolsUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #stripFullyQualifiedClassNames(String, String)}
 	 */
 	@Deprecated
@@ -269,13 +308,13 @@ public class ToolsUtil {
 
 		String afterImportsContent = null;
 
-		int pos = content.indexOf(imports);
+		int pos = content.lastIndexOf("\nimport ");
 
 		if (pos == -1) {
 			afterImportsContent = content;
 		}
 		else {
-			pos += imports.length();
+			pos = content.indexOf("\n", pos + 1);
 
 			afterImportsContent = content.substring(pos);
 		}
@@ -310,6 +349,14 @@ public class ToolsUtil {
 
 					if (x == -1) {
 						break;
+					}
+
+					char previousChar = afterImportsContent.charAt(x - 1);
+
+					if (Character.isLetterOrDigit(previousChar) ||
+						(previousChar == CharPool.PERIOD)) {
+
+						continue;
 					}
 
 					char nextChar = afterImportsContent.charAt(
@@ -370,7 +417,8 @@ public class ToolsUtil {
 		throws IOException {
 
 		writeFile(
-			file, content, author, jalopySettings, modifiedFileNames, null);
+			file, content, null, author, jalopySettings, modifiedFileNames,
+			null);
 	}
 
 	public static void writeFile(
@@ -378,6 +426,29 @@ public class ToolsUtil {
 			Map<String, Object> jalopySettings, Set<String> modifiedFileNames,
 			String packagePath)
 		throws IOException {
+
+		writeFile(
+			file, content, null, author, jalopySettings, modifiedFileNames,
+			packagePath);
+	}
+
+	public static void writeFile(
+			File file, String content, String author,
+			Set<String> modifiedFileNames)
+		throws IOException {
+
+		writeFile(file, content, author, null, modifiedFileNames);
+	}
+
+	public static void writeFile(
+			File file, String content, String header, String author,
+			Map<String, Object> jalopySettings, Set<String> modifiedFileNames,
+			String packagePath)
+		throws IOException {
+
+		if (!file.exists()) {
+			_write(file, StringPool.BLANK);
+		}
 
 		if (Validator.isNull(packagePath)) {
 			packagePath = getPackagePath(file);
@@ -391,18 +462,35 @@ public class ToolsUtil {
 
 		content = importsFormatter.format(content, packagePath, className);
 
-		File tempFile = new File(_TMP_DIR, "ServiceBuilder.temp");
-
-		_write(tempFile, content);
-
 		// Beautify
+
+		String jalopyIgnoreStart = "/* @start-ignoring-jalopy@ */";
+
+		int start = content.indexOf(jalopyIgnoreStart);
+
+		String jalopyIgnoreEnd = "/* @stop-ignoring-jalopy@ */";
+
+		String jalopyIgnoreBody = null;
+
+		if (start != -1) {
+			start += jalopyIgnoreStart.length();
+
+			int end = content.indexOf(jalopyIgnoreEnd);
+
+			if (end != -1) {
+				jalopyIgnoreBody = content.substring(start, end);
+
+				content = content.substring(0, start) + content.substring(end);
+			}
+		}
 
 		StringBuffer sb = new StringBuffer();
 
 		Jalopy jalopy = new Jalopy();
 
 		jalopy.setFileFormat(FileFormat.UNIX);
-		jalopy.setInput(tempFile);
+		jalopy.setInput(
+			new ByteArrayInputStream(content.getBytes()), file.getPath());
 		jalopy.setOutput(sb);
 
 		File jalopyXmlFile = new File("tools/jalopy.xml");
@@ -456,6 +544,10 @@ public class ToolsUtil {
 
 		Convention convention = Convention.getInstance();
 
+		if (Validator.isNotNull(header)) {
+			convention.put(ConventionKeys.HEADER_TEXT, header);
+		}
+
 		String classMask = "/**\n * @author $author$\n*/";
 
 		convention.put(
@@ -469,6 +561,18 @@ public class ToolsUtil {
 		boolean formatSuccess = jalopy.format();
 
 		String newContent = sb.toString();
+
+		if (jalopyIgnoreBody != null) {
+			start = newContent.indexOf(jalopyIgnoreStart);
+
+			start = newContent.lastIndexOf('\n', start);
+
+			int end = newContent.indexOf(jalopyIgnoreEnd);
+
+			newContent =
+				newContent.substring(0, start) + jalopyIgnoreBody +
+					newContent.substring(end + jalopyIgnoreEnd.length());
+		}
 
 		// Remove double blank lines after the package or last import
 
@@ -495,19 +599,9 @@ public class ToolsUtil {
 
 		writeFileRaw(file, newContent, modifiedFileNames);
 
-		tempFile.deleteOnExit();
-
 		if (failOnFormatError && !formatSuccess) {
 			throw new IOException("Unable to beautify " + file);
 		}
-	}
-
-	public static void writeFile(
-			File file, String content, String author,
-			Set<String> modifiedFileNames)
-		throws IOException {
-
-		writeFile(file, content, author, null, modifiedFileNames);
 	}
 
 	public static void writeFileRaw(
@@ -535,6 +629,49 @@ public class ToolsUtil {
 
 			element.add(childElement);
 		}
+	}
+
+	private static int _adjustLevel(
+		int level, String text, String s, int diff) {
+
+		boolean multiLineComment = false;
+
+		forLoop:
+		for (String line : StringUtil.splitLines(text)) {
+			line = StringUtil.trim(line);
+
+			if (line.startsWith("/*")) {
+				multiLineComment = true;
+			}
+
+			if (multiLineComment) {
+				if (line.endsWith("*/")) {
+					multiLineComment = false;
+				}
+
+				continue;
+			}
+
+			if (line.startsWith("//") || line.startsWith("*")) {
+				continue;
+			}
+
+			int x = -1;
+
+			while (true) {
+				x = line.indexOf(s, x + 1);
+
+				if (x == -1) {
+					continue forLoop;
+				}
+
+				if (!isInsideQuotes(line, x)) {
+					level += diff;
+				}
+			}
+		}
+
+		return level;
 	}
 
 	private static Document _getContentDocument(String fileName)
@@ -659,7 +796,5 @@ public class ToolsUtil {
 
 		Files.write(path, s.getBytes(StandardCharsets.UTF_8));
 	}
-
-	private static final String _TMP_DIR = System.getProperty("java.io.tmpdir");
 
 }

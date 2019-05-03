@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.security.ldap.LDAPSettings;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.security.exportimport.UserExporter;
 import com.liferay.portal.security.exportimport.UserOperation;
@@ -57,6 +56,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
@@ -318,18 +318,18 @@ public class LDAPUserExporterImpl implements UserExporter {
 				String modifyTimestamp = LDAPUtil.getAttributeString(
 					attributes, "modifyTimestamp");
 
-				if (Validator.isNotNull(modifyTimestamp)) {
-					Date modifiedDate = LDAPUtil.parseDate(modifyTimestamp);
+				Date modifiedDate = LDAPUtil.parseDate(modifyTimestamp);
 
-					if (modifiedDate.equals(user.getModifiedDate())) {
-						if (_log.isDebugEnabled()) {
-							_log.debug(
-								"Skipping user " + user.getEmailAddress() +
-									" because he is already synchronized");
-						}
+				if ((modifiedDate != null) &&
+					modifiedDate.equals(user.getModifiedDate())) {
 
-						return;
+					if (_log.isDebugEnabled()) {
+						_log.debug(
+							"Skipping user " + user.getEmailAddress() +
+								" because he is already synchronized");
 					}
+
+					return;
 				}
 			}
 
@@ -391,13 +391,6 @@ public class LDAPUserExporterImpl implements UserExporter {
 		}
 	}
 
-	@Reference(policyOption = ReferencePolicyOption.GREEDY, unbind = "-")
-	public void setPortalToLDAPConverter(
-		PortalToLDAPConverter portalToLDAPConverter) {
-
-		_portalToLDAPConverter = portalToLDAPConverter;
-	}
-
 	protected Binding addGroup(
 			long ldapServerId, LdapContext ldapContext, UserGroup userGroup,
 			User user, Properties groupMappings, Properties userMappings)
@@ -414,10 +407,8 @@ public class LDAPUserExporterImpl implements UserExporter {
 
 		ldapContext.bind(name, new PortalLDAPContext(attributes));
 
-		Binding binding = _portalLDAP.getGroup(
+		return _portalLDAP.getGroup(
 			ldapServerId, userGroup.getCompanyId(), userGroup.getName());
-
-		return binding;
 	}
 
 	protected Binding addUser(
@@ -436,11 +427,9 @@ public class LDAPUserExporterImpl implements UserExporter {
 
 		ldapContext.bind(name, new PortalLDAPContext(attributes));
 
-		Binding binding = _portalLDAP.getUser(
+		return _portalLDAP.getUser(
 			ldapServerId, user.getCompanyId(), user.getScreenName(),
 			user.getEmailAddress());
-
-		return binding;
 	}
 
 	@Reference(
@@ -457,11 +446,6 @@ public class LDAPUserExporterImpl implements UserExporter {
 	@Reference(unbind = "-")
 	protected void setLdapSettings(LDAPSettings ldapSettings) {
 		_ldapSettings = ldapSettings;
-	}
-
-	@Reference(policyOption = ReferencePolicyOption.GREEDY, unbind = "-")
-	protected void setPortalLDAP(PortalLDAP portalLDAP) {
-		_portalLDAP = portalLDAP;
 	}
 
 	@Reference(unbind = "-")
@@ -482,8 +466,19 @@ public class LDAPUserExporterImpl implements UserExporter {
 	private ConfigurationProvider<LDAPAuthConfiguration>
 		_ldapAuthConfigurationProvider;
 	private LDAPSettings _ldapSettings;
-	private PortalLDAP _portalLDAP;
-	private PortalToLDAPConverter _portalToLDAPConverter;
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile PortalLDAP _portalLDAP;
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile PortalToLDAPConverter _portalToLDAPConverter;
+
 	private UserGroupLocalService _userGroupLocalService;
 	private UserLocalService _userLocalService;
 

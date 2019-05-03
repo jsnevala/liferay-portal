@@ -218,6 +218,10 @@ public class LanguageUtil {
 		return getLanguage().getBCP47LanguageId(portletRequest);
 	}
 
+	public static Set<Locale> getCompanyAvailableLocales(long companyId) {
+		return getLanguage().getCompanyAvailableLocales(companyId);
+	}
+
 	public static Language getLanguage() {
 		PortalRuntimePermission.checkGetBeanProperty(LanguageUtil.class);
 
@@ -234,6 +238,10 @@ public class LanguageUtil {
 
 	public static String getLanguageId(PortletRequest portletRequest) {
 		return getLanguage().getLanguageId(portletRequest);
+	}
+
+	public static long getLastModified() {
+		return getLanguage().getLastModified();
 	}
 
 	public static Locale getLocale(long groupId, String languageCode) {
@@ -322,6 +330,10 @@ public class LanguageUtil {
 		throws PortalException {
 
 		return getLanguage().isInheritLocales(groupId);
+	}
+
+	public static boolean isSameLanguage(Locale locale1, Locale locale2) {
+		return getLanguage().isSameLanguage(locale1, locale2);
 	}
 
 	public static boolean isValidLanguageKey(Locale locale, String key) {

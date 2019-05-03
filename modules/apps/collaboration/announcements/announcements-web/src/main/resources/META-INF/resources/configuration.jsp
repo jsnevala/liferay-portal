@@ -37,6 +37,8 @@ if (!userGroups.isEmpty()) {
 if (!roles.isEmpty()) {
 	tabs1Names = tabs1Names.concat(",roles");
 }
+
+announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(AnnouncementsPortletInstanceConfiguration.class, announcementsPortletInstanceConfiguration, request.getParameterMap(), "preferences--", "--");
 %>
 
 <liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL" />
@@ -53,7 +55,7 @@ if (!roles.isEmpty()) {
 		<div class="container-fluid-1280">
 			<aui:fieldset-group markupView="lexicon">
 				<aui:fieldset collapsible="<%= true %>" id="displaySettingsPanel" label="display-settings">
-					<aui:select label="maximum-items-to-display" name="preferences--pageDelta--">
+					<aui:select label="maximum-items-to-display" name="preferences--pageDelta--" value="<%= announcementsPortletInstanceConfiguration.pageDelta() %>">
 
 						<%
 						for (int pageDeltaValue : PropsValues.ANNOUNCEMENTS_ENTRY_PAGE_DELTA_VALUES) {

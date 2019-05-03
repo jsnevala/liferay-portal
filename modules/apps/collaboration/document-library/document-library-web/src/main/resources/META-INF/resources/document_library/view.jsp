@@ -180,6 +180,27 @@ if (!defaultFolderView && (folder != null) && (portletName.equals(DLPortletKeys.
 	PortalUtil.setPageSubtitle(folder.getName(), request);
 	PortalUtil.setPageDescription(folder.getDescription(), request);
 }
+
+boolean uploadable = true;
+
+if (!DLFolderPermission.contains(permissionChecker, scopeGroupId, folderId, ActionKeys.ADD_DOCUMENT)) {
+	uploadable = false;
+}
+else {
+	List<AssetVocabulary> assetVocabularies = AssetVocabularyServiceUtil.getGroupVocabularies(scopeGroupId);
+
+	if (!assetVocabularies.isEmpty()) {
+		long classNameId = ClassNameLocalServiceUtil.getClassNameId(DLFileEntryConstants.getClassName());
+
+		for (AssetVocabulary assetVocabulary : assetVocabularies) {
+			if (assetVocabulary.isRequired(classNameId, DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT)) {
+				uploadable = false;
+
+				break;
+			}
+		}
+	}
+}
 %>
 
 <aui:script>
@@ -263,7 +284,7 @@ if (!defaultFolderView && (folder != null) && (portletName.equals(DLPortletKeys.
 			scopeGroupId: <%= scopeGroupId %>,
 			searchContainerId: 'entries',
 			trashEnabled: <%= (scopeGroupId == repositoryId) && DLTrashUtil.isTrashEnabled(scopeGroupId, repositoryId) %>,
-			updateable: <%= DLFolderPermission.contains(permissionChecker, scopeGroupId, folderId, ActionKeys.UPDATE) %>,
+			uploadable: <%= uploadable %>,
 			uploadURL: '<%= uploadURL %>',
 			viewFileEntryURL: '<portlet:renderURL><portlet:param name="mvcRenderCommandName" value="/document_library/view_file_entry" /><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:renderURL>'
 		}

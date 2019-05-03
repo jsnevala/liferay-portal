@@ -160,7 +160,7 @@ public class JournalArticleAssetRenderer
 	}
 
 	/**
-	 * @deprecated As of 1.3.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -267,6 +267,14 @@ public class JournalArticleAssetRenderer
 		throws Exception {
 
 		Group group = GroupLocalServiceUtil.fetchGroup(_article.getGroupId());
+
+		if (group.isCompany()) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)liferayPortletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			group = themeDisplay.getScopeGroup();
+		}
 
 		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
 			liferayPortletRequest, group, JournalPortletKeys.JOURNAL, 0, 0,
@@ -385,8 +393,10 @@ public class JournalArticleAssetRenderer
 			return PortalUtil.addPreservedParameters(
 				themeDisplay,
 				groupFriendlyURL.concat(
-					JournalArticleConstants.CANONICAL_URL_SEPARATOR).concat(
-						_article.getUrlTitle()));
+					JournalArticleConstants.CANONICAL_URL_SEPARATOR
+				).concat(
+					_article.getUrlTitle()
+				));
 		}
 
 		String hitLayoutURL = getHitLayoutURL(
@@ -570,7 +580,7 @@ public class JournalArticleAssetRenderer
 	}
 
 	/**
-	 * @deprecated As of 1.7.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	protected void setJournalServiceConfiguration() {

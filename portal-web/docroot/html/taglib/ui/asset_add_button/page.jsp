@@ -19,7 +19,7 @@
 <%
 boolean addDisplayPageParameter = GetterUtil.getBoolean(request.getAttribute("liferay-ui:asset-add-button:addDisplayPageParameter"));
 long[] allAssetCategoryIds = GetterUtil.getLongValues(request.getAttribute("liferay-ui:asset-add-button:allAssetCategoryIds"), null);
-String[] allAssetTagNames = GetterUtil.getStringValues(request.getAttribute("liferay-ui:asset-add-button:allAssetTagNames"), null);
+String[] allAssetTagNames = GetterUtil.getStringValues(request.getAttribute("liferay-ui:asset-add-button:allAssetTagNames"), (String[])null);
 long[] classNameIds = GetterUtil.getLongValues(request.getAttribute("liferay-ui:asset-add-button:classNameIds"));
 long[] classTypeIds = GetterUtil.getLongValues(request.getAttribute("liferay-ui:asset-add-button:classTypeIds"));
 long[] groupIds = GetterUtil.getLongValues(request.getAttribute("liferay-ui:asset-add-button:groupIds"));

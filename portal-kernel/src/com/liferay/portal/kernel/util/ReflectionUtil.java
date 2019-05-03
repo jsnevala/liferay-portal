@@ -84,7 +84,7 @@ public class ReflectionUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static Type getGenericInterface(
@@ -114,7 +114,7 @@ public class ReflectionUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static Class<?> getGenericSuperType(Class<?> clazz) {
@@ -178,7 +178,7 @@ public class ReflectionUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static Class<?>[] getParameterTypes(Object[] arguments) {
@@ -225,7 +225,7 @@ public class ReflectionUtil {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	public static Set<Method> getVisibleMethods(Class<?> clazz) {

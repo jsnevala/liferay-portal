@@ -203,10 +203,7 @@ public class IMAPAccessor {
 
 			Part part = getPart(jxMessage, contentPath);
 
-			AttachmentHandler attachmentHandler = new IMAPAttachmentHandler(
-				part.getInputStream(), jxFolder);
-
-			return attachmentHandler;
+			return new IMAPAttachmentHandler(part.getInputStream(), jxFolder);
 		}
 		catch (MessagingException me) {
 			throw new MailException(me);
@@ -877,8 +874,7 @@ public class IMAPAccessor {
 			int messageCount, int page, int messagesPerPage)
 		throws MailException {
 
-		int pageCount =
-			(int)(Math.ceil(messageCount / (double)messagesPerPage));
+		int pageCount = (int)Math.ceil(messageCount / (double)messagesPerPage);
 
 		if (messageCount == 0) {
 			return new int[] {0, 0};
@@ -976,7 +972,9 @@ public class IMAPAccessor {
 				continue;
 			}
 
-			String prefix = String.valueOf(index).concat(StringPool.PERIOD);
+			String indexValue = String.valueOf(index);
+
+			String prefix = indexValue.concat(StringPool.PERIOD);
 
 			return getPart(
 				multipart.getBodyPart(i),
@@ -1002,8 +1000,11 @@ public class IMAPAccessor {
 
 				getParts(
 					userId, bodyPlainSB, bodyHtmlSB,
-					contentPath.concat(StringPool.PERIOD).concat(
-						String.valueOf(i)),
+					contentPath.concat(
+						StringPool.PERIOD
+					).concat(
+						String.valueOf(i)
+					),
 					curPart, mailFiles);
 			}
 		}
@@ -1022,8 +1023,12 @@ public class IMAPAccessor {
 		}
 		else {
 			MailFile mailFile = new MailFile(
-				contentPath.concat(StringPool.PERIOD).concat("-1"), fileName,
-				part.getSize());
+				contentPath.concat(
+					StringPool.PERIOD
+				).concat(
+					"-1"
+				),
+				fileName, part.getSize());
 
 			mailFiles.add(mailFile);
 		}

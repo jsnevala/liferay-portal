@@ -8,16 +8,6 @@
 <tr><td rowspan="1" colspan="3">Marvel</td></tr>
 </thead>
 <tbody>
-<tr>
-	<td>DIRECT_URL</td>
-	<td>//body/pre</td>
-	<td></td>
-</tr>
-<tr>
-	<td></td>
-	<td></td>
-	<td></td>
-</tr>
 <!--HOME-->
 <tr>
 	<td>CLUSTER_NAME</td>

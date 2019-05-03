@@ -15,8 +15,11 @@
 package com.liferay.portal.lpkg.deployer.override;
 
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.File;
@@ -71,6 +74,8 @@ public class LPKGOverrideTest {
 
 		Map<String, String> overrides = new HashMap<>();
 
+		String[] lpkgStaticFileNames = _getStaticLPKGFileNames();
+
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
 				Paths.get(liferayHome, "/osgi/marketplace"), "*.lpkg")) {
 
@@ -85,7 +90,7 @@ public class LPKGOverrideTest {
 						String name = zipEntry.getName();
 
 						if (!(name.startsWith("com.liferay") &&
-							 name.endsWith(".jar")) &&
+							  name.endsWith(".jar")) &&
 							!name.endsWith(".war")) {
 
 							continue;
@@ -99,9 +104,12 @@ public class LPKGOverrideTest {
 
 						name = matcher.group(1) + matcher.group(4);
 
-						String lpkgPathString = lpkgPath.toString();
+						Path lpkgPathName = lpkgPath.getFileName();
 
-						if (lpkgPathString.endsWith("Static.lpkg")) {
+						if (ArrayUtil.contains(
+								lpkgStaticFileNames, lpkgPathName.toString(),
+								false)) {
+
 							Path staticOverridePath = Paths.get(
 								liferayHome, "/osgi/static/", name);
 
@@ -156,6 +164,30 @@ public class LPKGOverrideTest {
 			Paths.get(liferayHome, "/overrides"), Arrays.asList(sb.toString()),
 			StandardCharsets.UTF_8, StandardOpenOption.CREATE,
 			StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+	}
+
+	private String[] _getStaticLPKGFileNames() {
+		String staticLPKGBundleSymbolicNames = SystemProperties.get(
+			"static.lpkg.bundle.symbolic.names");
+
+		String[] staticLPKGBundleSymbolicNameArray =
+			staticLPKGBundleSymbolicNames.split(",");
+
+		String name = ReleaseInfo.getName();
+
+		String lpkgSymbolicNamePrefix = "Liferay ";
+
+		if (name.contains("Community")) {
+			lpkgSymbolicNamePrefix = "Liferay CE ";
+		}
+
+		for (int i = 0; i < staticLPKGBundleSymbolicNameArray.length; i++) {
+			staticLPKGBundleSymbolicNameArray[i] = StringBundler.concat(
+				lpkgSymbolicNamePrefix, staticLPKGBundleSymbolicNameArray[i],
+				".lpkg");
+		}
+
+		return staticLPKGBundleSymbolicNameArray;
 	}
 
 	private void _upgradeModuleVersion(Path path, Map<String, String> overrides)

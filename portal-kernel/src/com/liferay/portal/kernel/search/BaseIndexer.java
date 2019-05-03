@@ -23,10 +23,6 @@ import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetTagLocalServiceUtil;
 import com.liferay.expando.kernel.model.ExpandoBridge;
-import com.liferay.expando.kernel.model.ExpandoColumn;
-import com.liferay.expando.kernel.model.ExpandoColumnConstants;
-import com.liferay.expando.kernel.service.ExpandoColumnLocalServiceUtil;
-import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.expando.kernel.util.ExpandoBridgeIndexerUtil;
 import com.liferay.portal.kernel.exception.NoSuchCountryException;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
@@ -77,15 +73,16 @@ import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.ratings.kernel.model.RatingsStats;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalServiceUtil;
+import com.liferay.registry.collections.ServiceTrackerCollections;
 import com.liferay.trash.kernel.model.TrashEntry;
 
 import java.io.Serializable;
@@ -162,7 +159,8 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getSearchClassNames}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getSearchClassNames}
 	 */
 	@Deprecated
 	@Override
@@ -273,7 +271,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getClassName}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #getClassName}
 	 */
 	@Deprecated
 	@Override
@@ -346,8 +344,9 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getSummary(Document, String,
-	 *             PortletRequest, PortletResponse)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getSummary(Document, String, PortletRequest,
+	 *             PortletResponse)}
 	 */
 	@Deprecated
 	@Override
@@ -460,7 +459,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #postProcessContextBooleanFilter(BooleanFilter,
 	 *             SearchContext)}
 	 */
@@ -487,7 +486,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
 	 *             #postProcessSearchQuery(BooleanQuery, BooleanFilter,
 	 *             SearchContext)}
 	 */
@@ -636,8 +635,8 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 				}
 
 				SearchResultPermissionFilter searchResultPermissionFilter =
-					new DefaultSearchResultPermissionFilter(
-						this, permissionChecker);
+					_searchResultPermissionFilterFactory.create(
+						this::doSearch, permissionChecker);
 
 				hits = searchResultPermissionFilter.search(searchContext);
 			}
@@ -842,7 +841,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	protected void addFacetClause(
@@ -877,8 +876,8 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		String[] selectedFieldNames = queryConfig.getSelectedFieldNames();
 
 		if (ArrayUtil.isEmpty(selectedFieldNames) ||
-			(selectedFieldNames.length == 1) &&
-			selectedFieldNames[0].equals(Field.ANY)) {
+			((selectedFieldNames.length == 1) &&
+			 selectedFieldNames[0].equals(Field.ANY))) {
 
 			return;
 		}
@@ -940,6 +939,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 
 			for (Map.Entry<Locale, String> entry : titleMap.entrySet()) {
 				Locale locale = entry.getKey();
+
 				String title = entry.getValue();
 
 				if (Validator.isNull(title)) {
@@ -962,6 +962,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 				assetCategoryTitles.entrySet()) {
 
 			Locale locale = entry.getKey();
+
 			List<String> titles = entry.getValue();
 
 			String[] titlesArray = titles.toArray(new String[titles.size()]);
@@ -971,7 +972,11 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			}
 
 			document.addText(
-				field.concat(StringPool.UNDERLINE).concat(locale.toString()),
+				field.concat(
+					StringPool.UNDERLINE
+				).concat(
+					locale.toString()
+				),
 				titlesArray);
 		}
 	}
@@ -1019,49 +1024,14 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 			String keywords)
 		throws Exception {
 
-		Map<String, Query> expandoQueries = new HashMap<>();
+		for (ExpandoQueryContributor expandoQueryContributor :
+				getExpandoQueryContributors()) {
 
-		ExpandoBridge expandoBridge = ExpandoBridgeFactoryUtil.getExpandoBridge(
-			searchContext.getCompanyId(), getClassName(searchContext));
-
-		Set<String> attributeNames = SetUtil.fromEnumeration(
-			expandoBridge.getAttributeNames());
-
-		for (String attributeName : attributeNames) {
-			UnicodeProperties properties = expandoBridge.getAttributeProperties(
-				attributeName);
-
-			int indexType = GetterUtil.getInteger(
-				properties.getProperty(ExpandoColumnConstants.INDEX_TYPE));
-
-			if ((indexType != ExpandoColumnConstants.INDEX_TYPE_NONE) &&
-				Validator.isNotNull(keywords)) {
-
-				String fieldName = getExpandoFieldName(
-					searchContext, expandoBridge, attributeName);
-
-				boolean like = false;
-
-				if (indexType == ExpandoColumnConstants.INDEX_TYPE_TEXT) {
-					like = true;
-				}
-
-				if (searchContext.isAndSearch()) {
-					Query query = searchQuery.addRequiredTerm(
-						fieldName, keywords, like);
-
-					expandoQueries.put(attributeName, query);
-				}
-				else {
-					Query query = searchQuery.addTerm(
-						fieldName, keywords, like);
-
-					expandoQueries.put(attributeName, query);
-				}
-			}
+			expandoQueryContributor.contribute(
+				keywords, searchQuery, getSearchClassNames(), searchContext);
 		}
 
-		return expandoQueries;
+		return new HashMap<>();
 	}
 
 	protected void addSearchFolderId(
@@ -1485,8 +1455,8 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		throws Exception;
 
 	/**
-	 * @deprecated As of 7.0.0, added strictly to support backwards
-	 *             compatibility of {@link
+	 * @deprecated As of Wilberforce (7.0.x), added strictly to support
+	 *             backwards compatibility of {@link
 	 *             Indexer#postProcessSearchQuery(BooleanQuery, SearchContext)}
 	 */
 	@Deprecated
@@ -1669,28 +1639,18 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 		SearchContext searchContext, ExpandoBridge expandoBridge,
 		String attributeName) {
 
-		ExpandoColumn expandoColumn =
-			ExpandoColumnLocalServiceUtil.getDefaultTableColumn(
-				expandoBridge.getCompanyId(), expandoBridge.getClassName(),
-				attributeName);
+		return null;
+	}
 
-		UnicodeProperties unicodeProperties =
-			expandoColumn.getTypeSettingsProperties();
-
-		int indexType = GetterUtil.getInteger(
-			unicodeProperties.getProperty(ExpandoColumnConstants.INDEX_TYPE));
-
-		String fieldName = ExpandoBridgeIndexerUtil.encodeFieldName(
-			attributeName, indexType);
-
-		if (expandoColumn.getType() ==
-				ExpandoColumnConstants.STRING_LOCALIZED) {
-
-			fieldName = DocumentImpl.getLocalizedName(
-				searchContext.getLocale(), fieldName);
+	protected List<ExpandoQueryContributor> getExpandoQueryContributors() {
+		if (_expandoQueryContributors != null) {
+			return _expandoQueryContributors;
 		}
 
-		return fieldName;
+		_expandoQueryContributors = ServiceTrackerCollections.openList(
+			ExpandoQueryContributor.class);
+
+		return _expandoQueryContributors;
 	}
 
 	protected Locale getLocale(PortletRequest portletRequest) {
@@ -1716,7 +1676,7 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, replaced by {@link #getClassName}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #getClassName}
 	 */
 	@Deprecated
 	protected String getPortletId(SearchContext searchContext) {
@@ -2088,10 +2048,17 @@ public abstract class BaseIndexer<T> implements Indexer<T> {
 
 	private static final Log _log = LogFactoryUtil.getLog(BaseIndexer.class);
 
+	private static volatile SearchResultPermissionFilterFactory
+		_searchResultPermissionFilterFactory =
+			ServiceProxyFactory.newServiceTrackedInstance(
+				SearchResultPermissionFilterFactory.class, BaseIndexer.class,
+				"_searchResultPermissionFilterFactory", false);
+
 	private boolean _commitImmediately;
 	private String[] _defaultSelectedFieldNames;
 	private String[] _defaultSelectedLocalizedFieldNames;
 	private final Document _document = new DocumentImpl();
+	private List<ExpandoQueryContributor> _expandoQueryContributors;
 	private boolean _filterSearch;
 	private Boolean _indexerEnabled;
 	private IndexerPostProcessor[] _indexerPostProcessors =

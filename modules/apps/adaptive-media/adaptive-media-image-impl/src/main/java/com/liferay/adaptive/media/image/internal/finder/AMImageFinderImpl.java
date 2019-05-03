@@ -59,9 +59,8 @@ public class AMImageFinderImpl implements AMImageFinder {
 	@Override
 	public Stream<AdaptiveMedia<AMImageProcessor>> getAdaptiveMediaStream(
 			Function
-				<AMImageQueryBuilder,
-					AMQuery<FileVersion, AMImageProcessor>>
-						amImageQueryBuilderFunction)
+				<AMImageQueryBuilder, AMQuery<FileVersion, AMImageProcessor>>
+					amImageQueryBuilderFunction)
 		throws PortalException {
 
 		if (amImageQueryBuilderFunction == null) {
@@ -113,8 +112,8 @@ public class AMImageFinderImpl implements AMImageFinder {
 				filter.test(amImageConfigurationEntry) &&
 				_hasAdaptiveMedia(fileVersion, amImageConfigurationEntry)
 		).map(
-			amImageConfigurationEntry ->
-				_createMedia(fileVersion, uriFactory, amImageConfigurationEntry)
+			amImageConfigurationEntry -> _createMedia(
+				fileVersion, uriFactory, amImageConfigurationEntry)
 		).sorted(
 			amDistanceComparator.toComparator()
 		);

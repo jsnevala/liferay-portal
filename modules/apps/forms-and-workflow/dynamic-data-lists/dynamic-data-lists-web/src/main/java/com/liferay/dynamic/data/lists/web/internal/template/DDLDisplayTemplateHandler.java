@@ -56,9 +56,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + DDLPortletKeys.DYNAMIC_DATA_LISTS_DISPLAY
-	},
+	property = "javax.portlet.name=" + DDLPortletKeys.DYNAMIC_DATA_LISTS_DISPLAY,
 	service = TemplateHandler.class
 )
 public class DDLDisplayTemplateHandler extends BaseDDMTemplateHandler {
@@ -83,8 +81,11 @@ public class DDLDisplayTemplateHandler extends BaseDDMTemplateHandler {
 		String portletTitle = _portal.getPortletTitle(
 			DDLPortletKeys.DYNAMIC_DATA_LISTS, locale);
 
-		return portletTitle.concat(StringPool.SPACE).concat(
-			LanguageUtil.get(locale, "template"));
+		return portletTitle.concat(
+			StringPool.SPACE
+		).concat(
+			LanguageUtil.get(locale, "template")
+		);
 	}
 
 	@Override

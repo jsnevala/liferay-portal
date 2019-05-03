@@ -38,6 +38,7 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.ThemeFactoryUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.LayoutSetImpl;
 import com.liferay.portal.model.impl.LayoutSetModelImpl;
@@ -239,9 +240,9 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 				layoutSetPrototypeLinkEnabled = false;
 			}
 
+			layoutSet.setLayoutSetPrototypeUuid(layoutSetPrototypeUuid);
 			layoutSet.setLayoutSetPrototypeLinkEnabled(
 				layoutSetPrototypeLinkEnabled);
-			layoutSet.setLayoutSetPrototypeUuid(layoutSetPrototypeUuid);
 
 			layoutSetPersistence.update(layoutSet);
 
@@ -261,9 +262,9 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 					"layoutSetPrototypeUuid is null");
 		}
 
+		layoutSetBranch.setLayoutSetPrototypeUuid(layoutSetPrototypeUuid);
 		layoutSetBranch.setLayoutSetPrototypeLinkEnabled(
 			layoutSetPrototypeLinkEnabled);
-		layoutSetBranch.setLayoutSetPrototypeUuid(layoutSetPrototypeUuid);
 
 		layoutSetBranchPersistence.update(layoutSetBranch);
 	}
@@ -361,10 +362,10 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		LayoutSetBranch layoutSetBranch = _getLayoutSetBranch(layoutSet);
 
 		if (layoutSetBranch == null) {
-			layoutSet.setColorSchemeId(colorSchemeId);
-			layoutSet.setCss(css);
 			layoutSet.setModifiedDate(new Date());
 			layoutSet.setThemeId(themeId);
+			layoutSet.setColorSchemeId(colorSchemeId);
+			layoutSet.setCss(css);
 
 			layoutSetPersistence.update(layoutSet);
 
@@ -384,10 +385,10 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 			return layoutSet;
 		}
 
-		layoutSetBranch.setColorSchemeId(colorSchemeId);
-		layoutSetBranch.setCss(css);
 		layoutSetBranch.setModifiedDate(new Date());
 		layoutSetBranch.setThemeId(themeId);
+		layoutSetBranch.setColorSchemeId(colorSchemeId);
+		layoutSetBranch.setCss(css);
 
 		layoutSetBranchPersistence.update(layoutSetBranch);
 
@@ -425,6 +426,10 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 			long groupId, boolean privateLayout, String settings)
 		throws PortalException {
 
+		UnicodeProperties settingsProperties = new UnicodeProperties();
+
+		settingsProperties.fastLoad(settings);
+
 		LayoutSet layoutSet = layoutSetPersistence.findByG_P(
 			groupId, privateLayout);
 
@@ -432,7 +437,11 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 
 		if (layoutSetBranch == null) {
 			layoutSet.setModifiedDate(new Date());
-			layoutSet.setSettings(settings);
+
+			validateSettings(
+				layoutSet.getSettingsProperties(), settingsProperties);
+
+			layoutSet.setSettingsProperties(settingsProperties);
 
 			layoutSetPersistence.update(layoutSet);
 
@@ -440,7 +449,11 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		}
 
 		layoutSetBranch.setModifiedDate(new Date());
-		layoutSetBranch.setSettings(settings);
+
+		validateSettings(
+			layoutSetBranch.getSettingsProperties(), settingsProperties);
+
+		layoutSetBranch.setSettingsProperties(settingsProperties);
 
 		layoutSetBranchPersistence.update(layoutSetBranch);
 
@@ -570,6 +583,21 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		return layoutSet;
 	}
 
+	protected void validateSettings(
+		UnicodeProperties oldSettingsProperties,
+		UnicodeProperties newSettingsProperties) {
+
+		boolean enableJavaScript =
+			PropsValues.
+				FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_LAYOUTSET_JAVASCRIPT;
+
+		if (!enableJavaScript) {
+			String javaScript = oldSettingsProperties.getProperty("javascript");
+
+			newSettingsProperties.setProperty("javascript", javaScript);
+		}
+	}
+
 	private LayoutSetBranch _getLayoutSetBranch(LayoutSet layoutSet)
 		throws PortalException {
 
@@ -581,7 +609,7 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 		}
 
 		if (LayoutStagingUtil.isBranchingLayoutSet(
-				layoutSet.getGroup(), layoutSet.getPrivateLayout())) {
+				layoutSet.getGroup(), layoutSet.isPrivateLayout())) {
 
 			layoutSetStagingHandler = new LayoutSetStagingHandler(layoutSet);
 

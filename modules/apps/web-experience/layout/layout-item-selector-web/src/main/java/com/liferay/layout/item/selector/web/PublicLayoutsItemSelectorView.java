@@ -29,8 +29,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eudaldo Alonso
- * @deprecated As of 1.1.0, replaced by {@link
+ * @author     Eudaldo Alonso
+ * @deprecated As of Judson (7.1.x), replaced by {@link
  *             com.liferay.layout.item.selector.web.internal.PublicLayoutsItemSelectorView}
  */
 @Component(

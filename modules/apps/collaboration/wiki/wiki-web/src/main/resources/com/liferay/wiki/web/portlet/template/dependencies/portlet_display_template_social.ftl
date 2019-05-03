@@ -158,7 +158,7 @@
 	${viewPageAttachmentsURL.setParameter("mvcRenderCommandName", "/wiki/view_page_attachments") }
 
 	<@liferay_ui["icon"]
-		iconCssClass="icon-paperclip"
+		iconCssClass="icon-paper-clip"
 		label=true
 		message='${entry.getAttachmentsFileEntriesCount() + languageUtil.get(locale, "attachments")}'
 		url=viewPageAttachmentsURL?string

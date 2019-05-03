@@ -42,6 +42,8 @@ import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.language.LanguageResources;
 
+import java.io.Serializable;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
@@ -113,6 +115,16 @@ public class LocalizationImpl implements Localization {
 		String className, long classPK, Locale contentDefaultLocale,
 		Locale[] contentAvailableLocales) {
 
+		return getDefaultImportLocale(
+			className, (Serializable)classPK, contentDefaultLocale,
+			contentAvailableLocales);
+	}
+
+	@Override
+	public Locale getDefaultImportLocale(
+		String className, Serializable primaryKey, Locale contentDefaultLocale,
+		Locale[] contentAvailableLocales) {
+
 		if (LanguageUtil.isAvailableLocale(contentDefaultLocale)) {
 			return contentDefaultLocale;
 		}
@@ -137,7 +149,7 @@ public class LocalizationImpl implements Localization {
 			sb.append(" is missing for ");
 			sb.append(className);
 			sb.append(" with primary key ");
-			sb.append(classPK);
+			sb.append(primaryKey);
 			sb.append(". Setting default language to ");
 			sb.append(LocaleUtil.toLanguageId(defaultLocale));
 			sb.append(".");
@@ -588,7 +600,7 @@ public class LocalizationImpl implements Localization {
 		String parameter, String defaultValue) {
 
 		return getLocalizationXmlFromPreferences(
-			preferences, portletRequest, parameter, defaultValue, null);
+			preferences, portletRequest, parameter, null, defaultValue);
 	}
 
 	@Override
@@ -637,7 +649,11 @@ public class LocalizationImpl implements Localization {
 
 	@Override
 	public String getLocalizedName(String name, String languageId) {
-		return name.concat(StringPool.UNDERLINE).concat(languageId);
+		return name.concat(
+			StringPool.UNDERLINE
+		).concat(
+			languageId
+		);
 	}
 
 	@Override
@@ -654,7 +670,7 @@ public class LocalizationImpl implements Localization {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Wilberforce (7.0.x)
 	 */
 	@Deprecated
 	@Override
@@ -994,6 +1010,7 @@ public class LocalizationImpl implements Localization {
 				xmlStreamWriter.writeEndDocument();
 
 				xmlStreamWriter.close();
+
 				xmlStreamWriter = null;
 
 				xml = unsyncStringWriter.toString();
@@ -1213,6 +1230,7 @@ public class LocalizationImpl implements Localization {
 			xmlStreamWriter.writeEndDocument();
 
 			xmlStreamWriter.close();
+
 			xmlStreamWriter = null;
 
 			xml = unsyncStringWriter.toString();

@@ -1185,19 +1185,28 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			workflowUserId = defaultUser.getUserId();
 		}
 
-		ServiceContext workflowServiceContext = serviceContext;
+		ServiceContext workflowServiceContext = new ServiceContext();
 
-		if (workflowServiceContext == null) {
-			workflowServiceContext = new ServiceContext();
+		if (serviceContext != null) {
+			workflowServiceContext = (ServiceContext)serviceContext.clone();
 		}
 
 		workflowServiceContext.setAttribute("autoPassword", autoPassword);
 		workflowServiceContext.setAttribute("passwordUnencrypted", password1);
 		workflowServiceContext.setAttribute("sendEmail", sendEmail);
 
-		WorkflowHandlerRegistryUtil.startWorkflowInstance(
-			companyId, workflowUserId, User.class.getName(), userId, user,
-			workflowServiceContext);
+		Map<String, Serializable> workflowContext =
+			(Map<String, Serializable>)workflowServiceContext.removeAttribute(
+				"workflowContext");
+
+		if (workflowContext == null) {
+			workflowContext = Collections.emptyMap();
+		}
+
+		user = WorkflowHandlerRegistryUtil.startWorkflowInstance(
+			companyId, WorkflowConstants.DEFAULT_GROUP_ID, workflowUserId,
+			User.class.getName(), userId, user, workflowServiceContext,
+			workflowContext);
 
 		if (serviceContext != null) {
 			String passwordUnencrypted = (String)serviceContext.getAttribute(
@@ -1244,7 +1253,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 * @see    AuthPipeline
 	 */
 	@Override
-	@Transactional(propagation = Propagation.SUPPORTS)
+	@Transactional(propagation = Propagation.REQUIRED)
 	public int authenticateByEmailAddress(
 			long companyId, String emailAddress, String password,
 			Map<String, String[]> headerMap, Map<String, String[]> parameterMap,
@@ -1276,7 +1285,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 * @see    AuthPipeline
 	 */
 	@Override
-	@Transactional(propagation = Propagation.SUPPORTS)
+	@Transactional(propagation = Propagation.REQUIRED)
 	public int authenticateByScreenName(
 			long companyId, String screenName, String password,
 			Map<String, String[]> headerMap, Map<String, String[]> parameterMap,
@@ -1308,7 +1317,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 * @see    AuthPipeline
 	 */
 	@Override
-	@Transactional(propagation = Propagation.SUPPORTS)
+	@Transactional(propagation = Propagation.REQUIRED)
 	public int authenticateByUserId(
 			long companyId, long userId, String password,
 			Map<String, String[]> headerMap, Map<String, String[]> parameterMap,
@@ -2213,6 +2222,51 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	}
 
 	/**
+	 * Returns the users belonging to a group.
+	 *
+	 * @param  groupId the primary key of the group
+	 * @param  status the workflow status
+	 * @param  start the lower bound of the range of users
+	 * @param  end the upper bound of the range of users (not inclusive)
+	 * @param  obc the comparator to order the users by (optionally
+	 *         <code>null</code>)
+	 * @return the matching users
+	 */
+	@Override
+	public List<User> getGroupUsers(
+			long groupId, int status, int start, int end,
+			OrderByComparator<User> obc)
+		throws PortalException {
+
+		Group group = groupPersistence.findByPrimaryKey(groupId);
+
+		LinkedHashMap<String, Object> params = new LinkedHashMap<>();
+
+		params.put("usersGroups", Long.valueOf(groupId));
+
+		return search(
+			group.getCompanyId(), null, status, params, start, end, obc);
+	}
+
+	/**
+	 * Returns the users belonging to a group.
+	 *
+	 * @param  groupId the primary key of the group
+	 * @param  status the workflow status
+	 * @param  obc the comparator to order the users by (optionally
+	 *         <code>null</code>)
+	 * @return the matching users
+	 */
+	@Override
+	public List<User> getGroupUsers(
+			long groupId, int status, OrderByComparator<User> obc)
+		throws PortalException {
+
+		return getGroupUsers(
+			groupId, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS, obc);
+	}
+
+	/**
 	 * Returns the number of users with the status belonging to the group.
 	 *
 	 * @param  groupId the primary key of the group
@@ -2282,6 +2336,14 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		return userFinder.findByNoGroups();
 	}
 
+	@Override
+	public int getOrganizationsAndUserGroupsUsersCount(
+		long[] organizationIds, long[] userGroupIds) {
+
+		return userFinder.countByOrganizationsAndUserGroups(
+			organizationIds, userGroupIds);
+	}
+
 	/**
 	 * Returns the primary keys of all the users belonging to the organization.
 	 *
@@ -2291,6 +2353,52 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	@Override
 	public long[] getOrganizationUserIds(long organizationId) {
 		return organizationPersistence.getUserPrimaryKeys(organizationId);
+	}
+
+	/**
+	 * Returns the users belonging to the organization with the status.
+	 *
+	 * @param  organizationId the primary key of the organization
+	 * @param  status the workflow status
+	 * @param  start the lower bound of the range of users
+	 * @param  end the upper bound of the range of users (not inclusive)
+	 * @param  obc the comparator to order the users by (optionally
+	 *         <code>null</code>)
+	 * @return the matching users
+	 */
+	@Override
+	public List<User> getOrganizationUsers(
+			long organizationId, int status, int start, int end,
+			OrderByComparator<User> obc)
+		throws PortalException {
+
+		Organization organization = organizationPersistence.findByPrimaryKey(
+			organizationId);
+
+		LinkedHashMap<String, Object> params = new LinkedHashMap<>();
+
+		params.put("usersOrgs", Long.valueOf(organizationId));
+
+		return search(
+			organization.getCompanyId(), null, status, params, start, end, obc);
+	}
+
+	/**
+	 * Returns the users belonging to the organization with the status.
+	 *
+	 * @param  organizationId the primary key of the organization
+	 * @param  status the workflow status
+	 * @param  obc the comparator to order the users by (optionally
+	 *         <code>null</code>)
+	 * @return the matching users
+	 */
+	@Override
+	public List<User> getOrganizationUsers(
+			long organizationId, int status, OrderByComparator<User> obc)
+		throws PortalException {
+
+		return getOrganizationUsers(
+			organizationId, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS, obc);
 	}
 
 	/**
@@ -2368,8 +2476,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *             <code>null</code>)
 	 * @return     the ordered range of users with a social relation of the type
 	 *             with the user
-	 * @deprecated As of 7.0.0, replaced by {@link #getSocialUsers(long, int,
-	 *             String, int, int, OrderByComparator)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getSocialUsers(long, int, String, int, int,
+	 *             OrderByComparator)}
 	 */
 	@Deprecated
 	@Override
@@ -2402,8 +2511,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *             <code>null</code>)
 	 * @return     the ordered range of users with a social relation with the
 	 *             user
-	 * @deprecated As of 7.0.0, replaced by {@link #getSocialUsers(long, int,
-	 *             String, int, int, OrderByComparator)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getSocialUsers(long, int, String, int, int,
+	 *             OrderByComparator)}
 	 */
 	@Deprecated
 	@Override
@@ -2564,8 +2674,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *
 	 * @param      userId the primary key of the user
 	 * @return     the number of users with a social relation with the user
-	 * @deprecated As of 7.0.0, replaced by {@link #getSocialUsersCount(long,
-	 *             int, String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getSocialUsersCount(long, int, String)}
 	 */
 	@Deprecated
 	@Override
@@ -2584,8 +2694,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *             types can be found in {@link SocialRelationConstants}.
 	 * @return     the number of users with a social relation of the type with
 	 *             the user
-	 * @deprecated As of 7.0.0, replaced by {@link #getSocialUsersCount(long,
-	 *             int, String)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #getSocialUsersCount(long, int, String)}
 	 */
 	@Deprecated
 	@Override
@@ -2948,7 +3058,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	public boolean isPasswordExpired(User user) throws PortalException {
 		PasswordPolicy passwordPolicy = user.getPasswordPolicy();
 
-		if ((passwordPolicy != null) && passwordPolicy.getExpireable()) {
+		if ((passwordPolicy != null) && passwordPolicy.isExpireable()) {
 			long currentTime = System.currentTimeMillis();
 
 			long passwordModifiedTime = 0;
@@ -2983,7 +3093,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 * @param      user the user
 	 * @return     <code>true</code> if the user's password is expiring soon;
 	 *             <code>false</code> otherwise
-	 * @deprecated As of 7.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override
@@ -3474,7 +3584,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		params.put(
 			"socialRelationType",
 			new Long[][] {
-				new Long[] {userId}, ArrayUtil.toLongArray(socialRelationTypes)
+				{userId}, ArrayUtil.toLongArray(socialRelationTypes)
 			});
 		params.put("wildcardMode", WildcardMode.TRAILING);
 
@@ -3510,7 +3620,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		params.put(
 			"socialRelationType",
 			new Long[][] {
-				new Long[] {userId}, ArrayUtil.toLongArray(socialRelationTypes)
+				{userId}, ArrayUtil.toLongArray(socialRelationTypes)
 			});
 		params.put("socialRelationTypeUnionUserGroups", true);
 		params.put("usersGroups", ArrayUtil.toLongArray(groupIds));
@@ -3794,8 +3904,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 				boolean passwordReset = false;
 
-				if (passwordPolicy.getChangeable() &&
-					passwordPolicy.getChangeRequired()) {
+				if (passwordPolicy.isChangeable() &&
+					passwordPolicy.isChangeRequired()) {
 
 					passwordReset = true;
 				}
@@ -4860,6 +4970,12 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			boolean passwordReset, boolean silentUpdate)
 		throws PortalException {
 
+		// Password hashing takes a long time. Therefore, encrypt the password
+		// before we get the user to avoid
+		// an org.hibernate.StaleObjectStateException.
+
+		String newEncPwd = PasswordEncryptorUtil.encrypt(password1);
+
 		User user = userPersistence.findByPrimaryKey(userId);
 
 		if (!silentUpdate) {
@@ -4867,8 +4983,6 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 			trackPassword(user);
 		}
-
-		String newEncPwd = PasswordEncryptorUtil.encrypt(password1);
 
 		if (user.hasCompanyMx()) {
 			mailService.updatePassword(user.getCompanyId(), userId, password1);
@@ -5082,8 +5196,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 * @param      userId the primary key of the user
 	 * @param      status the user's new workflow status
 	 * @return     the user
-	 * @deprecated As of 7.0.0, replaced by {@link #updateStatus(long, int,
-	 *             ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateStatus(long, int, ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -5123,7 +5237,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		user.setStatus(status);
 
-		userPersistence.update(user);
+		user = userPersistence.update(user, serviceContext);
 
 		reindex(user);
 
@@ -5328,7 +5442,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		user.setJobTitle(jobTitle);
 		user.setExpandoBridgeAttributes(serviceContext);
 
-		userPersistence.update(user, serviceContext);
+		user = userPersistence.update(user, serviceContext);
 
 		// Contact
 
@@ -5500,12 +5614,13 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	 *             <code>uuid</code> attribute), asset category IDs, asset tag
 	 *             names, and expando bridge attributes for the user.
 	 * @return     the user
-	 * @deprecated As of 7.0.0, replaced by {@link #updateUser(long, String,
-	 *             String, String, boolean, String, String, String, String,
-	 *             long, String, boolean, byte[], String, String, String,
-	 *             String, String, String, String, long, long, boolean, int,
-	 *             int, int, String, String, String, String, String, String,
-	 *             long[], long[], long[], List, long[], ServiceContext)}
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 *             #updateUser(long, String, String, String, boolean, String,
+	 *             String, String, String, long, String, boolean, byte[],
+	 *             String, String, String, String, String, String, String, long,
+	 *             long, boolean, int, int, int, String, String, String, String,
+	 *             String, String, long[], long[], long[], List, long[],
+	 *             ServiceContext)}
 	 */
 	@Deprecated
 	@Override
@@ -5562,7 +5677,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 					user.getCompanyId(), emailAddress) != null) {
 
 				throw new UserEmailAddressException.MustNotBeDuplicate(
-					user.getUserId(), emailAddress);
+					user.getCompanyId(), user.getUserId(), emailAddress);
 			}
 
 			setEmailAddress(
@@ -5578,7 +5693,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		user.setEmailAddressVerified(true);
 
-		userPersistence.update(user);
+		user = userPersistence.update(user);
 
 		ticketLocalService.deleteTicket(ticket);
 	}
@@ -5831,15 +5946,21 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 			// Update digest
 
+			user = userPersistence.fetchByPrimaryKey(user.getUserId());
+
+			String digest = user.getDigest();
+
 			if (skipLiferayCheck ||
 				!PropsValues.AUTH_PIPELINE_ENABLE_LIFERAY_CHECK ||
-				Validator.isNull(user.getDigest())) {
+				Validator.isNull(digest)) {
 
-				String digest = user.getDigest(password);
+				String newDigest = user.getDigest(password);
 
-				user.setDigest(digest);
+				if (!newDigest.equals(digest)) {
+					user.setDigest(newDigest);
 
-				user = userPersistence.update(user);
+					user = userPersistence.update(user);
+				}
 			}
 		}
 
@@ -6041,6 +6162,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		}
 
 		String[] orderByClauses = StringUtil.split(obc.getOrderBy());
+
 		String[] orderByFields = obc.getOrderByFields();
 
 		Sort[] sorts = new Sort[orderByFields.length];
@@ -6435,8 +6557,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			mailService.deleteEmailAddress(user.getCompanyId(), userId);
 		}
 
-		user.setEmailAddress(emailAddress);
 		user.setDigest(StringPool.BLANK);
+		user.setEmailAddress(emailAddress);
 	}
 
 	protected void trackPassword(User user) throws PortalException {
@@ -6591,7 +6713,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 			if ((user != null) && (user.getUserId() != userId)) {
 				throw new UserEmailAddressException.MustNotBeDuplicate(
-					userId, emailAddress);
+					companyId, emailAddress);
 			}
 		}
 
@@ -6637,7 +6759,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 						user.getCompanyId(), emailAddress) != null) {
 
 					throw new UserEmailAddressException.MustNotBeDuplicate(
-						userId, emailAddress);
+						user.getCompanyId(), userId, emailAddress);
 				}
 			}
 
@@ -6725,7 +6847,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 					user.getCompanyId(), emailAddress1) != null) {
 
 				throw new UserEmailAddressException.MustNotBeDuplicate(
-					user.getUserId(), emailAddress1);
+					user.getCompanyId(), user.getUserId(), emailAddress1);
 			}
 		}
 	}
@@ -6928,7 +7050,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 			user = doCheckLockout(user, passwordPolicy);
 
-			user = doCheckPasswordExpired(user, passwordPolicy);
+			if (!PasswordModificationThreadLocal.isPasswordModified()) {
+				user = doCheckPasswordExpired(user, passwordPolicy);
+			}
 		}
 
 		return user;

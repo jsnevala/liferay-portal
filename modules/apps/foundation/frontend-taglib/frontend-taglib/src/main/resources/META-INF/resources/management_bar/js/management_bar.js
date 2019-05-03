@@ -153,6 +153,14 @@ AUI.add(
 						var managementBarContainer = instance.get('secondaryBar').ancestor('.management-bar-container');
 
 						managementBarContainer.toggleClass(STR_SECONDARY_BAR_OPEN, show);
+
+						var basicSearch = A.one('.basic-search');
+
+						if (basicSearch) {
+							var inputs = basicSearch.all('button[type=submit], input.search-query');
+
+							Liferay.Util.toggleDisabled(inputs, show);
+						}
 					},
 
 					_toggleSelectAll: function(event) {

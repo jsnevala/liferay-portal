@@ -79,7 +79,8 @@ public class SPATopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 		values.put(
 			"message",
 			_language.get(
-				_spaUtil.getLanguageResourceBundle(themeDisplay.getLocale()),
+				_spaUtil.getLanguageResourceBundle(
+					"frontend-js-spa-web", themeDisplay.getLocale()),
 				"it-looks-like-this-is-taking-longer-than-expected"));
 		values.put(
 			"portletsBlacklist", _spaUtil.getPortletsBlacklist(themeDisplay));
@@ -90,7 +91,8 @@ public class SPATopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 		values.put(
 			"title",
 			_language.get(
-				_spaUtil.getLanguageResourceBundle(themeDisplay.getLocale()),
+				_spaUtil.getLanguageResourceBundle(
+					"frontend-js-spa-web", themeDisplay.getLocale()),
 				"oops"));
 		values.put("validStatusCodes", _spaUtil.getValidStatusCodes());
 

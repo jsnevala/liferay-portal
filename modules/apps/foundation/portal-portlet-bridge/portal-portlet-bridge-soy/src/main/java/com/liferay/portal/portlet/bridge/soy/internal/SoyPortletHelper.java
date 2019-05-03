@@ -71,7 +71,11 @@ public class SoyPortletHelper {
 		}
 
 		URL url = _bundle.getEntry(
-			"/META-INF/resources/".concat(path).concat(".es.js"));
+			"/META-INF/resources/".concat(
+				path
+			).concat(
+				".es.js"
+			));
 
 		if (url != null) {
 			controllerName = path.concat(".es");
@@ -117,7 +121,11 @@ public class SoyPortletHelper {
 		String controllerName = getControllerName(path);
 
 		requiredModules.add(
-			_moduleName.concat(StringPool.SLASH).concat(controllerName));
+			_moduleName.concat(
+				StringPool.SLASH
+			).concat(
+				controllerName
+			));
 
 		requiredModules.addAll(additionalRequiredModules);
 

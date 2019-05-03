@@ -15,7 +15,6 @@
 package com.liferay.wsrp.service.persistence.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
@@ -33,21 +32,11 @@ import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
-
 import com.liferay.wsrp.exception.NoSuchConsumerPortletException;
 import com.liferay.wsrp.model.WSRPConsumerPortlet;
 import com.liferay.wsrp.service.WSRPConsumerPortletLocalServiceUtil;
 import com.liferay.wsrp.service.persistence.WSRPConsumerPortletPersistence;
 import com.liferay.wsrp.service.persistence.WSRPConsumerPortletUtil;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-
-import org.junit.runner.RunWith;
 
 import java.io.Serializable;
 
@@ -59,17 +48,27 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 /**
  * @generated
  */
 @RunWith(Arquillian.class)
 public class WSRPConsumerPortletPersistenceTest {
+
 	@ClassRule
 	@Rule
-	public static final AggregateTestRule aggregateTestRule = new AggregateTestRule(new LiferayIntegrationTestRule(),
-			PersistenceTestRule.INSTANCE,
-			new TransactionalTestRule(Propagation.REQUIRED,
-				"com.liferay.wsrp.service"));
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), PersistenceTestRule.INSTANCE,
+			new TransactionalTestRule(
+				Propagation.REQUIRED, "com.liferay.wsrp.service"));
 
 	@Before
 	public void setUp() {
@@ -82,7 +81,8 @@ public class WSRPConsumerPortletPersistenceTest {
 
 	@After
 	public void tearDown() throws Exception {
-		Iterator<WSRPConsumerPortlet> iterator = _wsrpConsumerPortlets.iterator();
+		Iterator<WSRPConsumerPortlet> iterator =
+			_wsrpConsumerPortlets.iterator();
 
 		while (iterator.hasNext()) {
 			_persistence.remove(iterator.next());
@@ -108,7 +108,9 @@ public class WSRPConsumerPortletPersistenceTest {
 
 		_persistence.remove(newWSRPConsumerPortlet);
 
-		WSRPConsumerPortlet existingWSRPConsumerPortlet = _persistence.fetchByPrimaryKey(newWSRPConsumerPortlet.getPrimaryKey());
+		WSRPConsumerPortlet existingWSRPConsumerPortlet =
+			_persistence.fetchByPrimaryKey(
+				newWSRPConsumerPortlet.getPrimaryKey());
 
 		Assert.assertNull(existingWSRPConsumerPortlet);
 	}
@@ -142,29 +144,40 @@ public class WSRPConsumerPortletPersistenceTest {
 
 		_wsrpConsumerPortlets.add(_persistence.update(newWSRPConsumerPortlet));
 
-		WSRPConsumerPortlet existingWSRPConsumerPortlet = _persistence.findByPrimaryKey(newWSRPConsumerPortlet.getPrimaryKey());
+		WSRPConsumerPortlet existingWSRPConsumerPortlet =
+			_persistence.findByPrimaryKey(
+				newWSRPConsumerPortlet.getPrimaryKey());
 
-		Assert.assertEquals(existingWSRPConsumerPortlet.getUuid(),
+		Assert.assertEquals(
+			existingWSRPConsumerPortlet.getUuid(),
 			newWSRPConsumerPortlet.getUuid());
-		Assert.assertEquals(existingWSRPConsumerPortlet.getWsrpConsumerPortletId(),
+		Assert.assertEquals(
+			existingWSRPConsumerPortlet.getWsrpConsumerPortletId(),
 			newWSRPConsumerPortlet.getWsrpConsumerPortletId());
-		Assert.assertEquals(existingWSRPConsumerPortlet.getCompanyId(),
+		Assert.assertEquals(
+			existingWSRPConsumerPortlet.getCompanyId(),
 			newWSRPConsumerPortlet.getCompanyId());
-		Assert.assertEquals(Time.getShortTimestamp(
-				existingWSRPConsumerPortlet.getCreateDate()),
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingWSRPConsumerPortlet.getCreateDate()),
 			Time.getShortTimestamp(newWSRPConsumerPortlet.getCreateDate()));
-		Assert.assertEquals(Time.getShortTimestamp(
+		Assert.assertEquals(
+			Time.getShortTimestamp(
 				existingWSRPConsumerPortlet.getModifiedDate()),
 			Time.getShortTimestamp(newWSRPConsumerPortlet.getModifiedDate()));
-		Assert.assertEquals(existingWSRPConsumerPortlet.getWsrpConsumerId(),
+		Assert.assertEquals(
+			existingWSRPConsumerPortlet.getWsrpConsumerId(),
 			newWSRPConsumerPortlet.getWsrpConsumerId());
-		Assert.assertEquals(existingWSRPConsumerPortlet.getName(),
+		Assert.assertEquals(
+			existingWSRPConsumerPortlet.getName(),
 			newWSRPConsumerPortlet.getName());
-		Assert.assertEquals(existingWSRPConsumerPortlet.getPortletHandle(),
+		Assert.assertEquals(
+			existingWSRPConsumerPortlet.getPortletHandle(),
 			newWSRPConsumerPortlet.getPortletHandle());
-		Assert.assertEquals(Time.getShortTimestamp(
+		Assert.assertEquals(
+			Time.getShortTimestamp(
 				existingWSRPConsumerPortlet.getLastPublishDate()),
-			Time.getShortTimestamp(newWSRPConsumerPortlet.getLastPublishDate()));
+			Time.getShortTimestamp(
+				newWSRPConsumerPortlet.getLastPublishDate()));
 	}
 
 	@Test
@@ -205,9 +218,12 @@ public class WSRPConsumerPortletPersistenceTest {
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		WSRPConsumerPortlet newWSRPConsumerPortlet = addWSRPConsumerPortlet();
 
-		WSRPConsumerPortlet existingWSRPConsumerPortlet = _persistence.findByPrimaryKey(newWSRPConsumerPortlet.getPrimaryKey());
+		WSRPConsumerPortlet existingWSRPConsumerPortlet =
+			_persistence.findByPrimaryKey(
+				newWSRPConsumerPortlet.getPrimaryKey());
 
-		Assert.assertEquals(existingWSRPConsumerPortlet, newWSRPConsumerPortlet);
+		Assert.assertEquals(
+			existingWSRPConsumerPortlet, newWSRPConsumerPortlet);
 	}
 
 	@Test(expected = NoSuchConsumerPortletException.class)
@@ -219,31 +235,36 @@ public class WSRPConsumerPortletPersistenceTest {
 
 	@Test
 	public void testFindAll() throws Exception {
-		_persistence.findAll(QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			getOrderByComparator());
+		_persistence.findAll(
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, getOrderByComparator());
 	}
 
 	protected OrderByComparator<WSRPConsumerPortlet> getOrderByComparator() {
-		return OrderByComparatorFactoryUtil.create("WSRP_WSRPConsumerPortlet",
-			"uuid", true, "wsrpConsumerPortletId", true, "companyId", true,
-			"createDate", true, "modifiedDate", true, "wsrpConsumerId", true,
-			"name", true, "portletHandle", true, "lastPublishDate", true);
+		return OrderByComparatorFactoryUtil.create(
+			"WSRP_WSRPConsumerPortlet", "uuid", true, "wsrpConsumerPortletId",
+			true, "companyId", true, "createDate", true, "modifiedDate", true,
+			"wsrpConsumerId", true, "name", true, "portletHandle", true,
+			"lastPublishDate", true);
 	}
 
 	@Test
 	public void testFetchByPrimaryKeyExisting() throws Exception {
 		WSRPConsumerPortlet newWSRPConsumerPortlet = addWSRPConsumerPortlet();
 
-		WSRPConsumerPortlet existingWSRPConsumerPortlet = _persistence.fetchByPrimaryKey(newWSRPConsumerPortlet.getPrimaryKey());
+		WSRPConsumerPortlet existingWSRPConsumerPortlet =
+			_persistence.fetchByPrimaryKey(
+				newWSRPConsumerPortlet.getPrimaryKey());
 
-		Assert.assertEquals(existingWSRPConsumerPortlet, newWSRPConsumerPortlet);
+		Assert.assertEquals(
+			existingWSRPConsumerPortlet, newWSRPConsumerPortlet);
 	}
 
 	@Test
 	public void testFetchByPrimaryKeyMissing() throws Exception {
 		long pk = RandomTestUtil.nextLong();
 
-		WSRPConsumerPortlet missingWSRPConsumerPortlet = _persistence.fetchByPrimaryKey(pk);
+		WSRPConsumerPortlet missingWSRPConsumerPortlet =
+			_persistence.fetchByPrimaryKey(pk);
 
 		Assert.assertNull(missingWSRPConsumerPortlet);
 	}
@@ -251,6 +272,7 @@ public class WSRPConsumerPortletPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereAllPrimaryKeysExist()
 		throws Exception {
+
 		WSRPConsumerPortlet newWSRPConsumerPortlet1 = addWSRPConsumerPortlet();
 		WSRPConsumerPortlet newWSRPConsumerPortlet2 = addWSRPConsumerPortlet();
 
@@ -259,18 +281,22 @@ public class WSRPConsumerPortletPersistenceTest {
 		primaryKeys.add(newWSRPConsumerPortlet1.getPrimaryKey());
 		primaryKeys.add(newWSRPConsumerPortlet2.getPrimaryKey());
 
-		Map<Serializable, WSRPConsumerPortlet> wsrpConsumerPortlets = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, WSRPConsumerPortlet> wsrpConsumerPortlets =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertEquals(2, wsrpConsumerPortlets.size());
-		Assert.assertEquals(newWSRPConsumerPortlet1,
+		Assert.assertEquals(
+			newWSRPConsumerPortlet1,
 			wsrpConsumerPortlets.get(newWSRPConsumerPortlet1.getPrimaryKey()));
-		Assert.assertEquals(newWSRPConsumerPortlet2,
+		Assert.assertEquals(
+			newWSRPConsumerPortlet2,
 			wsrpConsumerPortlets.get(newWSRPConsumerPortlet2.getPrimaryKey()));
 	}
 
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereNoPrimaryKeysExist()
 		throws Exception {
+
 		long pk1 = RandomTestUtil.nextLong();
 
 		long pk2 = RandomTestUtil.nextLong();
@@ -280,7 +306,8 @@ public class WSRPConsumerPortletPersistenceTest {
 		primaryKeys.add(pk1);
 		primaryKeys.add(pk2);
 
-		Map<Serializable, WSRPConsumerPortlet> wsrpConsumerPortlets = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, WSRPConsumerPortlet> wsrpConsumerPortlets =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertTrue(wsrpConsumerPortlets.isEmpty());
 	}
@@ -288,6 +315,7 @@ public class WSRPConsumerPortletPersistenceTest {
 	@Test
 	public void testFetchByPrimaryKeysWithMultiplePrimaryKeysWhereSomePrimaryKeysExist()
 		throws Exception {
+
 		WSRPConsumerPortlet newWSRPConsumerPortlet = addWSRPConsumerPortlet();
 
 		long pk = RandomTestUtil.nextLong();
@@ -297,36 +325,39 @@ public class WSRPConsumerPortletPersistenceTest {
 		primaryKeys.add(newWSRPConsumerPortlet.getPrimaryKey());
 		primaryKeys.add(pk);
 
-		Map<Serializable, WSRPConsumerPortlet> wsrpConsumerPortlets = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, WSRPConsumerPortlet> wsrpConsumerPortlets =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertEquals(1, wsrpConsumerPortlets.size());
-		Assert.assertEquals(newWSRPConsumerPortlet,
+		Assert.assertEquals(
+			newWSRPConsumerPortlet,
 			wsrpConsumerPortlets.get(newWSRPConsumerPortlet.getPrimaryKey()));
 	}
 
 	@Test
-	public void testFetchByPrimaryKeysWithNoPrimaryKeys()
-		throws Exception {
+	public void testFetchByPrimaryKeysWithNoPrimaryKeys() throws Exception {
 		Set<Serializable> primaryKeys = new HashSet<Serializable>();
 
-		Map<Serializable, WSRPConsumerPortlet> wsrpConsumerPortlets = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, WSRPConsumerPortlet> wsrpConsumerPortlets =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertTrue(wsrpConsumerPortlets.isEmpty());
 	}
 
 	@Test
-	public void testFetchByPrimaryKeysWithOnePrimaryKey()
-		throws Exception {
+	public void testFetchByPrimaryKeysWithOnePrimaryKey() throws Exception {
 		WSRPConsumerPortlet newWSRPConsumerPortlet = addWSRPConsumerPortlet();
 
 		Set<Serializable> primaryKeys = new HashSet<Serializable>();
 
 		primaryKeys.add(newWSRPConsumerPortlet.getPrimaryKey());
 
-		Map<Serializable, WSRPConsumerPortlet> wsrpConsumerPortlets = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, WSRPConsumerPortlet> wsrpConsumerPortlets =
+			_persistence.fetchByPrimaryKeys(primaryKeys);
 
 		Assert.assertEquals(1, wsrpConsumerPortlets.size());
-		Assert.assertEquals(newWSRPConsumerPortlet,
+		Assert.assertEquals(
+			newWSRPConsumerPortlet,
 			wsrpConsumerPortlets.get(newWSRPConsumerPortlet.getPrimaryKey()));
 	}
 
@@ -334,16 +365,22 @@ public class WSRPConsumerPortletPersistenceTest {
 	public void testActionableDynamicQuery() throws Exception {
 		final IntegerWrapper count = new IntegerWrapper();
 
-		ActionableDynamicQuery actionableDynamicQuery = WSRPConsumerPortletLocalServiceUtil.getActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			WSRPConsumerPortletLocalServiceUtil.getActionableDynamicQuery();
 
-		actionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<WSRPConsumerPortlet>() {
+		actionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod
+				<WSRPConsumerPortlet>() {
+
 				@Override
 				public void performAction(
 					WSRPConsumerPortlet wsrpConsumerPortlet) {
+
 					Assert.assertNotNull(wsrpConsumerPortlet);
 
 					count.increment();
 				}
+
 			});
 
 		actionableDynamicQuery.performActions();
@@ -352,53 +389,60 @@ public class WSRPConsumerPortletPersistenceTest {
 	}
 
 	@Test
-	public void testDynamicQueryByPrimaryKeyExisting()
-		throws Exception {
+	public void testDynamicQueryByPrimaryKeyExisting() throws Exception {
 		WSRPConsumerPortlet newWSRPConsumerPortlet = addWSRPConsumerPortlet();
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(WSRPConsumerPortlet.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			WSRPConsumerPortlet.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.add(RestrictionsFactoryUtil.eq("wsrpConsumerPortletId",
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"wsrpConsumerPortletId",
 				newWSRPConsumerPortlet.getWsrpConsumerPortletId()));
 
-		List<WSRPConsumerPortlet> result = _persistence.findWithDynamicQuery(dynamicQuery);
+		List<WSRPConsumerPortlet> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
 
 		Assert.assertEquals(1, result.size());
 
 		WSRPConsumerPortlet existingWSRPConsumerPortlet = result.get(0);
 
-		Assert.assertEquals(existingWSRPConsumerPortlet, newWSRPConsumerPortlet);
+		Assert.assertEquals(
+			existingWSRPConsumerPortlet, newWSRPConsumerPortlet);
 	}
 
 	@Test
 	public void testDynamicQueryByPrimaryKeyMissing() throws Exception {
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(WSRPConsumerPortlet.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			WSRPConsumerPortlet.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.add(RestrictionsFactoryUtil.eq("wsrpConsumerPortletId",
-				RandomTestUtil.nextLong()));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"wsrpConsumerPortletId", RandomTestUtil.nextLong()));
 
-		List<WSRPConsumerPortlet> result = _persistence.findWithDynamicQuery(dynamicQuery);
+		List<WSRPConsumerPortlet> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
 
 		Assert.assertEquals(0, result.size());
 	}
 
 	@Test
-	public void testDynamicQueryByProjectionExisting()
-		throws Exception {
+	public void testDynamicQueryByProjectionExisting() throws Exception {
 		WSRPConsumerPortlet newWSRPConsumerPortlet = addWSRPConsumerPortlet();
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(WSRPConsumerPortlet.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			WSRPConsumerPortlet.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.setProjection(ProjectionFactoryUtil.property(
-				"wsrpConsumerPortletId"));
+		dynamicQuery.setProjection(
+			ProjectionFactoryUtil.property("wsrpConsumerPortletId"));
 
-		Object newWsrpConsumerPortletId = newWSRPConsumerPortlet.getWsrpConsumerPortletId();
+		Object newWsrpConsumerPortletId =
+			newWSRPConsumerPortlet.getWsrpConsumerPortletId();
 
-		dynamicQuery.add(RestrictionsFactoryUtil.in("wsrpConsumerPortletId",
-				new Object[] { newWsrpConsumerPortletId }));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.in(
+				"wsrpConsumerPortletId",
+				new Object[] {newWsrpConsumerPortletId}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -406,20 +450,22 @@ public class WSRPConsumerPortletPersistenceTest {
 
 		Object existingWsrpConsumerPortletId = result.get(0);
 
-		Assert.assertEquals(existingWsrpConsumerPortletId,
-			newWsrpConsumerPortletId);
+		Assert.assertEquals(
+			existingWsrpConsumerPortletId, newWsrpConsumerPortletId);
 	}
 
 	@Test
 	public void testDynamicQueryByProjectionMissing() throws Exception {
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(WSRPConsumerPortlet.class,
-				_dynamicQueryClassLoader);
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			WSRPConsumerPortlet.class, _dynamicQueryClassLoader);
 
-		dynamicQuery.setProjection(ProjectionFactoryUtil.property(
-				"wsrpConsumerPortletId"));
+		dynamicQuery.setProjection(
+			ProjectionFactoryUtil.property("wsrpConsumerPortletId"));
 
-		dynamicQuery.add(RestrictionsFactoryUtil.in("wsrpConsumerPortletId",
-				new Object[] { RandomTestUtil.nextLong() }));
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.in(
+				"wsrpConsumerPortletId",
+				new Object[] {RandomTestUtil.nextLong()}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -432,20 +478,24 @@ public class WSRPConsumerPortletPersistenceTest {
 
 		_persistence.clearCache();
 
-		WSRPConsumerPortlet existingWSRPConsumerPortlet = _persistence.findByPrimaryKey(newWSRPConsumerPortlet.getPrimaryKey());
+		WSRPConsumerPortlet existingWSRPConsumerPortlet =
+			_persistence.findByPrimaryKey(
+				newWSRPConsumerPortlet.getPrimaryKey());
 
-		Assert.assertEquals(Long.valueOf(
-				existingWSRPConsumerPortlet.getWsrpConsumerId()),
-			ReflectionTestUtil.<Long>invoke(existingWSRPConsumerPortlet,
-				"getOriginalWsrpConsumerId", new Class<?>[0]));
-		Assert.assertTrue(Objects.equals(
+		Assert.assertEquals(
+			Long.valueOf(existingWSRPConsumerPortlet.getWsrpConsumerId()),
+			ReflectionTestUtil.<Long>invoke(
+				existingWSRPConsumerPortlet, "getOriginalWsrpConsumerId",
+				new Class<?>[0]));
+		Assert.assertTrue(
+			Objects.equals(
 				existingWSRPConsumerPortlet.getPortletHandle(),
-				ReflectionTestUtil.invoke(existingWSRPConsumerPortlet,
-					"getOriginalPortletHandle", new Class<?>[0])));
+				ReflectionTestUtil.invoke(
+					existingWSRPConsumerPortlet, "getOriginalPortletHandle",
+					new Class<?>[0])));
 	}
 
-	protected WSRPConsumerPortlet addWSRPConsumerPortlet()
-		throws Exception {
+	protected WSRPConsumerPortlet addWSRPConsumerPortlet() throws Exception {
 		long pk = RandomTestUtil.nextLong();
 
 		WSRPConsumerPortlet wsrpConsumerPortlet = _persistence.create(pk);
@@ -471,7 +521,9 @@ public class WSRPConsumerPortletPersistenceTest {
 		return wsrpConsumerPortlet;
 	}
 
-	private List<WSRPConsumerPortlet> _wsrpConsumerPortlets = new ArrayList<WSRPConsumerPortlet>();
+	private List<WSRPConsumerPortlet> _wsrpConsumerPortlets =
+		new ArrayList<WSRPConsumerPortlet>();
 	private WSRPConsumerPortletPersistence _persistence;
 	private ClassLoader _dynamicQueryClassLoader;
+
 }

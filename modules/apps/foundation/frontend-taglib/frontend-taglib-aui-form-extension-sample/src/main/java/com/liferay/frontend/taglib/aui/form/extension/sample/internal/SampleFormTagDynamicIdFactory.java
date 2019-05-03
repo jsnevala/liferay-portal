@@ -30,8 +30,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Carlos Sierra Andrés
  */
 @Component(
-	immediate = true,
-	property = {"tagClassName=com.liferay.taglib.aui.FormTag"},
+	immediate = true, property = "tagClassName=com.liferay.taglib.aui.FormTag",
 	service = TagDynamicIdFactory.class
 )
 public class SampleFormTagDynamicIdFactory implements TagDynamicIdFactory {
@@ -52,7 +51,11 @@ public class SampleFormTagDynamicIdFactory implements TagDynamicIdFactory {
 			return null;
 		}
 
-		return portletId.concat(StringPool.DASH).concat(name);
+		return portletId.concat(
+			StringPool.DASH
+		).concat(
+			name
+		);
 	}
 
 	@Reference

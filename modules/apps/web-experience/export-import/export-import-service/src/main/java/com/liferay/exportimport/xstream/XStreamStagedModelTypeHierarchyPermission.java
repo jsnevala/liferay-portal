@@ -19,7 +19,7 @@ import com.liferay.portal.kernel.model.StagedModel;
 import com.thoughtworks.xstream.security.TypePermission;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class XStreamStagedModelTypeHierarchyPermission
 	implements TypePermission {

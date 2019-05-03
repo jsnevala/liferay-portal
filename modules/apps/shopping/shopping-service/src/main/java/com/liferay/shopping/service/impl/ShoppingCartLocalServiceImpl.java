@@ -80,9 +80,9 @@ public class ShoppingCartLocalServiceImpl
 
 		String[] itemIdsArray = StringUtil.split(itemIds);
 
-		for (int i = 0; i < itemIdsArray.length; i++) {
-			long itemId = ShoppingUtil.getItemId(itemIdsArray[i]);
-			String fields = ShoppingUtil.getItemFields(itemIdsArray[i]);
+		for (String curItemId : itemIdsArray) {
+			long itemId = ShoppingUtil.getItemId(curItemId);
+			String fields = ShoppingUtil.getItemFields(curItemId);
 
 			ShoppingItem item = shoppingItemPersistence.fetchByPrimaryKey(
 				itemId);
@@ -156,26 +156,26 @@ public class ShoppingCartLocalServiceImpl
 
 		String[] couponCodesArray = StringUtil.split(couponCodes);
 
-		for (int i = 0; i < couponCodesArray.length; i++) {
+		for (String couponCode : couponCodesArray) {
 			try {
 				ShoppingCoupon coupon = shoppingCouponPersistence.findByCode(
-					couponCodesArray[i]);
+					couponCode);
 
 				if (coupon.getGroupId() != groupId) {
-					throw new NoSuchCouponException(couponCodesArray[i]);
+					throw new NoSuchCouponException(couponCode);
 				}
 				else if (!coupon.isActive()) {
-					throw new CouponActiveException(couponCodesArray[i]);
+					throw new CouponActiveException(couponCode);
 				}
 				else if (!coupon.hasValidStartDate()) {
-					throw new CouponStartDateException(couponCodesArray[i]);
+					throw new CouponStartDateException(couponCode);
 				}
 				else if (!coupon.hasValidEndDate()) {
-					throw new CouponEndDateException(couponCodesArray[i]);
+					throw new CouponEndDateException(couponCode);
 				}
 			}
 			catch (NoSuchCouponException nsce) {
-				throw new NoSuchCouponException(couponCodesArray[i], nsce);
+				throw new NoSuchCouponException(couponCode, nsce);
 			}
 
 			// Temporarily disable stacking of coupon codes
@@ -225,8 +225,8 @@ public class ShoppingCartLocalServiceImpl
 	protected String checkItemIds(long groupId, String itemIds) {
 		String[] itemIdsArray = StringUtil.split(itemIds);
 
-		for (int i = 0; i < itemIdsArray.length; i++) {
-			long itemId = ShoppingUtil.getItemId(itemIdsArray[i]);
+		for (String curItemId : itemIdsArray) {
+			long itemId = ShoppingUtil.getItemId(curItemId);
 
 			ShoppingItem item = null;
 
@@ -243,7 +243,7 @@ public class ShoppingCartLocalServiceImpl
 			}
 
 			if (item == null) {
-				itemIds = StringUtil.removeFromList(itemIds, itemIdsArray[i]);
+				itemIds = StringUtil.removeFromList(itemIds, curItemId);
 			}
 		}
 

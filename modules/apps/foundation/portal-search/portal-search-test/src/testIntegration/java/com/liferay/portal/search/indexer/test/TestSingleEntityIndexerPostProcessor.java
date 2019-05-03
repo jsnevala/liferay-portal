@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {"indexer.class.name=com.liferay.portal.kernel.model.Contact"},
+	property = "indexer.class.name=com.liferay.portal.kernel.model.Contact",
 	service = IndexerPostProcessor.class
 )
 public class TestSingleEntityIndexerPostProcessor
@@ -43,7 +43,7 @@ public class TestSingleEntityIndexerPostProcessor
 	}
 
 	/**
-	 * @deprecated As of 1.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override
@@ -71,7 +71,7 @@ public class TestSingleEntityIndexerPostProcessor
 	}
 
 	/**
-	 * @deprecated As of 1.0.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override

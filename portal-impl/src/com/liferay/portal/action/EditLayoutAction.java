@@ -15,7 +15,9 @@
 package com.liferay.portal.action;
 
 import com.liferay.portal.events.EventsProcessorUtil;
+import com.liferay.portal.kernel.exception.LayoutParentLayoutIdException;
 import com.liferay.portal.kernel.exception.LayoutTypeException;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Layout;
@@ -106,18 +108,22 @@ public class EditLayoutAction extends JSONAction {
 			if ((lte.getType() == LayoutTypeException.FIRST_LAYOUT) &&
 				(plid > 0)) {
 
-				Layout layout = LayoutLocalServiceUtil.getLayout(plid);
+				fillJSON(jsonObject, plid);
+			}
+		}
+		catch (LayoutParentLayoutIdException lplie) {
+			jsonObject.put(
+				"message",
+				getLayoutParentLayoutIdExceptionMessage(
+					themeDisplay, lplie, cmd));
 
-				jsonObject.put("groupId", layout.getGroupId());
-				jsonObject.put("layoutId", layout.getLayoutId());
-				jsonObject.put(
-					"originalParentLayoutId", layout.getParentLayoutId());
-				jsonObject.put("originalParentPlid", layout.getParentPlid());
-				jsonObject.put("originalPriority", layout.getPriority());
+			long plid = ParamUtil.getLong(request, "plid");
 
-				jsonObject.put("plid", plid);
+			if ((lplie.getType() ==
+					LayoutParentLayoutIdException.NOT_PARENTABLE) &&
+				(plid > 0)) {
 
-				jsonObject.put("status", HttpServletResponse.SC_BAD_REQUEST);
+				fillJSON(jsonObject, plid);
 			}
 		}
 
@@ -190,9 +196,10 @@ public class EditLayoutAction extends JSONAction {
 
 		boolean deleteable = LayoutPermissionUtil.contains(
 			themeDisplay.getPermissionChecker(), layout, ActionKeys.DELETE);
-		boolean sortable = GroupPermissionUtil.contains(
-			themeDisplay.getPermissionChecker(), layout.getGroupId(),
-			ActionKeys.MANAGE_LAYOUTS) &&
+		boolean sortable =
+			GroupPermissionUtil.contains(
+				themeDisplay.getPermissionChecker(), layout.getGroupId(),
+				ActionKeys.MANAGE_LAYOUTS) &&
 			SitesUtil.isLayoutSortable(layout);
 		boolean updateable = LayoutPermissionUtil.contains(
 			themeDisplay.getPermissionChecker(), layout, ActionKeys.UPDATE);
@@ -202,6 +209,35 @@ public class EditLayoutAction extends JSONAction {
 			String.valueOf(deleteable), String.valueOf(sortable),
 			String.valueOf(updateable)
 		};
+	}
+
+	protected void fillJSON(JSONObject jsonObject, long plid)
+		throws PortalException {
+
+		Layout layout = LayoutLocalServiceUtil.getLayout(plid);
+
+		jsonObject.put("groupId", layout.getGroupId());
+		jsonObject.put("layoutId", layout.getLayoutId());
+		jsonObject.put("originalParentLayoutId", layout.getParentLayoutId());
+		jsonObject.put("originalParentPlid", layout.getParentPlid());
+		jsonObject.put("originalPriority", layout.getPriority());
+
+		jsonObject.put("plid", plid);
+
+		jsonObject.put("status", HttpServletResponse.SC_BAD_REQUEST);
+	}
+
+	protected String getLayoutParentLayoutIdExceptionMessage(
+		ThemeDisplay themeDisplay, LayoutParentLayoutIdException lplie,
+		String cmd) {
+
+		if (lplie.getType() == LayoutTypeException.NOT_PARENTABLE) {
+			return themeDisplay.translate(
+				"a-page-cannot-become-a-child-of-a-page-that-is-not-" +
+					"parentable");
+		}
+
+		return StringPool.BLANK;
 	}
 
 	protected String getLayoutTypeExceptionMessage(

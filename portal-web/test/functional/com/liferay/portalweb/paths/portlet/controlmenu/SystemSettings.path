@@ -10,12 +10,7 @@
 <tbody>
 <tr>
 	<td>ENABLED_CHECKBOX</td>
-	<td>//input[contains(@id,'SystemSettingsPortlet') and contains(@name,'enabled')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>IMPORT_ENABLED_CHECKBOX</td>
-	<td>//input[contains(@id,'SystemSettingsPortlet') and contains(@name,'importEnabled')]</td>
+	<td>//label[contains(.,'Enabled')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -33,7 +28,6 @@
 	<td>portal/screenshots/foundation/ldap_server_security_credential.png</td>
 	<td></td>
 </tr>
-<!--WEB_CONTENT-->
 <tr>
 	<td>ARTICLE_VIEW_PERMISSIONS_CHECK_ENABLED_CHECKBOX</td>
 	<td>//input[contains(@id,'articleViewPermissionsCheckEnabled') and @type='checkbox']</td>

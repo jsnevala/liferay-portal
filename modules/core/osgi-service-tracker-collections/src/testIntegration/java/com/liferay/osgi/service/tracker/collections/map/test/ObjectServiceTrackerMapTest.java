@@ -269,7 +269,6 @@ public class ObjectServiceTrackerMapTest {
 	@Test
 	public void testGetServiceWithCustomServiceReferenceMapper() {
 		ServiceTrackerMap<String, TrackedOne> serviceTrackerMap =
-
 			ServiceTrackerMapFactory.openSingleValueMap(
 				_bundleContext, TrackedOne.class, "(&(other=*)(target=*))",
 				new ServiceReferenceMapper<String, TrackedOne>() {
@@ -556,6 +555,7 @@ public class ObjectServiceTrackerMapTest {
 
 		ServiceRegistration<TrackedOne> serviceRegistration1 = registerService(
 			new TrackedOne());
+
 		ServiceRegistration<TrackedOne> serviceRegistration2 = registerService(
 			new TrackedOne());
 

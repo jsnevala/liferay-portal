@@ -976,6 +976,7 @@ public class SyncFileService {
 		// Sync file
 
 		String sourceFilePathName = syncFile.getFilePathName();
+
 		String targetFilePathName = filePath.toString();
 
 		syncFile.setFilePathName(targetFilePathName);

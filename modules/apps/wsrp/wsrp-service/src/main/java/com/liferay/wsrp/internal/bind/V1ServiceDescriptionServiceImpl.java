@@ -64,11 +64,8 @@ public class V1ServiceDescriptionServiceImpl
 			_v2ServiceDescriptionService.getServiceDescription(
 				v2GetServiceDescription);
 
-		ServiceDescription v1ServiceDescription =
-			(ServiceDescription)TypeConvertorUtil.convert(
-				v2ServiceDescription, 2);
-
-		return v1ServiceDescription;
+		return (ServiceDescription)TypeConvertorUtil.convert(
+			v2ServiceDescription, 2);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

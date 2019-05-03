@@ -1,133 +1,96 @@
-<definition component-name="portal-calendar">
-	<property name="custom.properties" value="default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles" />
-	<property name="osgi.app.includes" value="events-display" />
-	<property name="plugins.deployment.type" value="osgi" />
-	<property name="portal.release" value="false" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Calendar" />
+@component-name = "portal-calendar"
+definition {
+	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
+	property osgi.app.includes = "events-display";
+	property plugins.deployment.type = "osgi";
+	property portal.release = "false";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Calendar";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
+		User.firstLoginPG();
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Page.add(pageName = "Calendar Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Portlet#addPG">
-			<var name="pageName" value="Calendar Page" />
-			<var name="portletName" value="Calendar" />
-		</execute>
+		Portlet.addPG(pageName = "Calendar Page", portletName = "Calendar");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="Portlet#addPG">
-			<var name="pageName" value="Calendar Page" />
-			<var name="portletName" value="Events List" />
-		</execute>
+		Portlet.addPG(pageName = "Calendar Page", portletName = "Events List");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
-	</set-up>
+		Navigator.gotoPage(pageName = "Calendar Page");
+	}
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-		</if>
-	</tear-down>
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
 
-	<command name="ViewEventTime" priority="5">
-		<property name="portal.release" value="true" />
+	@priority = "5"
+	test ViewEventTime {
+		property portal.release = "true";
 
-		<execute macro="EventsListPortlet#viewDefaultMessage" />
+		EventsListPortlet.viewDefaultMessage();
 
-		<execute macro="CalendarNavigator#gotoAddEvent" />
+		CalendarNavigator.gotoAddEvent();
 
-		<execute macro="CalendarEvent#editTitle">
-			<var name="eventTitle" value="Calendar Event Title" />
-		</execute>
+		PortletEntry.inputTitle(title = "Calendar Event Title");
 
-		<execute macro="CalendarEvent#publish" />
+		CalendarEvent.publish();
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="EventsListPortlet#viewHeader" />
+		EventsListPortlet.viewHeader();
 
-		<execute macro="EventsListPortlet#viewEventTime">
-			<var name="eventTitle" value="Calendar Event Title" />
-		</execute>
+		EventsListPortlet.viewEventTime(eventTitle = "Calendar Event Title");
 
-		<execute macro="EventsListPortlet#gotoEventToday">
-			<var name="eventTitle" value="Calendar Event Title" />
-		</execute>
-	</command>
+		EventsListPortlet.gotoEventToday(eventTitle = "Calendar Event Title");
+	}
 
-	<command name="ViewRepeatingEventLinks" priority="4">
-		<execute macro="TestCase#getSiteName">
-			<return from="siteName" name="siteName" />
-			<var name="siteName" value="${siteName}" />
-		</execute>
+	@priority = "4"
+	test ViewRepeatingEventLinks {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		<execute macro="CalendarNavigator#gotoAddEvent" />
+		CalendarNavigator.gotoAddEvent();
 
-		<execute macro="CalendarEvent#editTitle">
-			<var name="eventTitle" value="Repeating Event Title" />
-		</execute>
+		PortletEntry.inputTitle(title = "Repeating Event Title");
 
-		<execute macro="CalendarEvent#setRepeating">
-			<var name="frequency" value="Daily" />
-		</execute>
+		CalendarEvent.setRepeating(frequency = "Daily");
 
-		<execute macro="CalendarEvent#setAllDay" />
+		CalendarEvent.setAllDay();
 
-		<execute macro="CalendarEvent#publish" />
+		CalendarEvent.publish();
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="EventsListPortlet#gotoEventToday">
-			<var name="eventTitle" value="Repeating Event Title" />
-		</execute>
+		EventsListPortlet.gotoEventToday(eventTitle = "Repeating Event Title");
 
-		<execute macro="CalendarEvent#viewDetailsInPortlet">
-			<var name="calendarName" value="${siteName}" />
-			<var name="eventTitle" value="Repeating Event Title" />
-		</execute>
+		CalendarEvent.viewDetailsInPortlet(
+			calendarName = "${siteName}",
+			eventTitle = "Repeating Event Title"
+		);
 
-		<execute macro="CalendarEvent#getEventStartDateViaDetails">
-			<return from="startDate" name="startDate" />
-			<var name="startDate" value="${startDate}" />
-		</execute>
+		var startDate = CalendarEvent.getEventStartDateViaDetails(startDate = "${startDate}");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Calendar Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Calendar Page");
 
-		<execute macro="EventsListPortlet#gotoEventUpcoming">
-			<var name="eventTitle" value="Repeating Event Title" />
-		</execute>
+		EventsListPortlet.gotoEventUpcoming(eventTitle = "Repeating Event Title");
 
-		<execute macro="CalendarEvent#viewDetailsInPortlet">
-			<var name="calendarName" value="${siteName}" />
-			<var name="eventTitle" value="Repeating Event Title" />
-		</execute>
+		CalendarEvent.viewDetailsInPortlet(
+			calendarName = "${siteName}",
+			eventTitle = "Repeating Event Title"
+		);
 
-		<execute function="AssertTextNotEquals" locator1="CalendarViewEventDetails#START_DATE_FIELD" value1="${startDate}" />
-	</command>
-</definition>
+		AssertTextNotEquals(
+			locator1 = "CalendarViewEventDetails#START_DATE_FIELD",
+			value1 = "${startDate}"
+		);
+	}
+}

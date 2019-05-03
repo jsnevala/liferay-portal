@@ -14,11 +14,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>ADD_ASSET_SCOPED</td>
-	<td>//a[@data-title='Add Content (Select Scope and Type)']</td>
-	<td></td>
-</tr>
-<tr>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -93,13 +88,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>ASSET_ABSTRACT_DESCRIPTION_SMALL_IMAGE</td>
-	<td>//div[contains(.,'${key_assetTitle}')]//div[@class='asset-small-image']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>ASSET_ABSTRACT_VERTICAL_ELLIPSIS</td>
-	<td>//div[contains(@class,'portlet') and contains(@class,'container')]//div[contains(@class,'asset-abstract ')]/h4[contains(@class,'asset-title') and contains(.,'${key_assetTitle}')]/..//span/*[name()='svg'][contains(@class,'icon-ellipsis')]</td>
+	<td>//div[contains(@class,'portlet') and contains(@class,'container')]//div[contains(@class,'asset-abstract ')]/h4[contains(@class,'asset-title') and contains(.,'${key_assetTitle}')]/..//a[span/*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -118,11 +108,6 @@
 	<td></td>
 </tr>
 <!--ASSET_ABSTRACT_DETAIL-->
-<tr>
-	<td>ASSET_ABSTRACT_DETAIL_TITLE</td>
-	<td>//h4[contains(.,'${key_assetTitle}')]</td>
-	<td></td>
-</tr>
 <tr>
 	<td>ASSET_ABSTRACT_DETAIL_CONTENT</td>
 	<td>//div[@class='asset-content']</td>
@@ -167,18 +152,13 @@
 </tr>
 <!--ASSET_ABSTRACT_BOOKMARK_DETAIL-->
 <tr>
-	<td>ASSET_ABSTRACT_BOOKMARK_DETAIL_NAME</td>
-	<td>//h4[contains(.,'${key_bookmarkName}')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>ASSET_ABSTRACT_BOOKMARK_DETAIL_LINK</td>
 	<td>//div[@class='asset-content']/a</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ASSET_ABSTRACT_BOOKMARK_LIFERAY_LOGO</td>
-	<td>//*[name()='svg'][*[name()='use'][contains(@class,'logo')]]</td>
+	<td>//a[contains(@class,'logo-icon-container')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -224,38 +204,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>METADATA_CREATE_DATE</td>
-	<td>//dd[contains(@class,'create-date')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>METADATA_EXPIRATION_DATE</td>
-	<td>//dd[contains(@class,'expiration-date')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>METADATA_MODIFIED_DATE</td>
-	<td>//dd[contains(@class,'modified-date')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>METADATA_PRIORITY</td>
-	<td>//dd[contains(@class,'priority')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>METADATA_PUBLISH_DATE</td>
-	<td>//dd[contains(@class,'publish-date')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>METADATA_TAGS</td>
 	<td>//dd[contains(@class,'tags')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>METADATA_VIEW_COUNT</td>
-	<td>//dd[contains(@class,'view-count')]</td>
+	<td>SPECIFIC_BORDERLESS_ELLIPSIS_ICON</td>
+	<td>//div[contains(@id,'AssetPublisherPortlet')][${key_order}]//div[contains(@class,'portlet-options')]/a</td>
 	<td></td>
 </tr>
 </tbody>

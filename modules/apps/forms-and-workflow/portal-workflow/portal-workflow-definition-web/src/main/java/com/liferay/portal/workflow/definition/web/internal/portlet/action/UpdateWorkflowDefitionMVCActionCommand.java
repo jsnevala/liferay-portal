@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -30,6 +31,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowDefinitionFileException;
 import com.liferay.portal.kernel.workflow.WorkflowDefinitionManagerUtil;
+import com.liferay.portal.kernel.workflow.WorkflowException;
 
 import java.util.Locale;
 import java.util.Map;
@@ -83,9 +85,21 @@ public class UpdateWorkflowDefitionMVCActionCommand
 				version, getTitle(titleMap));
 		}
 		else {
-			WorkflowDefinitionManagerUtil.deployWorkflowDefinition(
-				themeDisplay.getCompanyId(), themeDisplay.getUserId(),
-				getTitle(titleMap), getFileBytes(tempFileEntry));
+			try {
+				WorkflowDefinitionManagerUtil.deployWorkflowDefinition(
+					themeDisplay.getCompanyId(), themeDisplay.getUserId(),
+					getTitle(titleMap), getFileBytes(tempFileEntry));
+			}
+			catch (WorkflowException we) {
+				SessionErrors.add(actionRequest, we.getClass(), we);
+
+				hideDefaultSuccessMessage(actionRequest);
+			}
+			catch (Exception e) {
+				SessionErrors.add(actionRequest, e.getClass(), e);
+
+				hideDefaultSuccessMessage(actionRequest);
+			}
 		}
 
 		sendRedirect(actionRequest, actionResponse);

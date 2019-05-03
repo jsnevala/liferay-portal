@@ -29,9 +29,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"javax.portlet.name=" + EventsDisplayPortletKeys.EVENTS_DISPLAY
-	},
+	property = "javax.portlet.name=" + EventsDisplayPortletKeys.EVENTS_DISPLAY,
 	service = ConfigurationAction.class
 )
 public class EventsDisplayConfigurationAction

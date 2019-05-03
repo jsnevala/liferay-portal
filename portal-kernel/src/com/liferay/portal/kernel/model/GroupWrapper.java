@@ -17,7 +17,6 @@ package com.liferay.portal.kernel.model;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.portal.kernel.service.ServiceContext;
 
 import java.io.Serializable;
@@ -37,6 +36,7 @@ import java.util.Objects;
  */
 @ProviderType
 public class GroupWrapper implements Group, ModelWrapper<Group> {
+
 	public GroupWrapper(Group group) {
 		_group = group;
 	}
@@ -70,13 +70,13 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 		attributes.put("description", getDescription());
 		attributes.put("type", getType());
 		attributes.put("typeSettings", getTypeSettings());
-		attributes.put("manualMembership", getManualMembership());
+		attributes.put("manualMembership", isManualMembership());
 		attributes.put("membershipRestriction", getMembershipRestriction());
 		attributes.put("friendlyURL", getFriendlyURL());
-		attributes.put("site", getSite());
+		attributes.put("site", isSite());
 		attributes.put("remoteStagingGroupCount", getRemoteStagingGroupCount());
-		attributes.put("inheritContent", getInheritContent());
-		attributes.put("active", getActive());
+		attributes.put("inheritContent", isInheritContent());
+		attributes.put("active", isActive());
 
 		return attributes;
 	}
@@ -180,7 +180,7 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 		}
 
 		Integer membershipRestriction = (Integer)attributes.get(
-				"membershipRestriction");
+			"membershipRestriction");
 
 		if (membershipRestriction != null) {
 			setMembershipRestriction(membershipRestriction);
@@ -199,7 +199,7 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 		}
 
 		Integer remoteStagingGroupCount = (Integer)attributes.get(
-				"remoteStagingGroupCount");
+			"remoteStagingGroupCount");
 
 		if (remoteStagingGroupCount != null) {
 			setRemoteStagingGroupCount(remoteStagingGroupCount);
@@ -219,8 +219,9 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	@Override
-	public java.lang.String buildTreePath()
+	public String buildTreePath()
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _group.buildTreePath();
 	}
 
@@ -230,7 +231,7 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	@Override
-	public java.lang.Object clone() {
+	public Object clone() {
 		return new GroupWrapper((Group)_group.clone());
 	}
 
@@ -240,10 +241,10 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Returns the active of this group.
-	*
-	* @return the active of this group
-	*/
+	 * Returns the active of this group.
+	 *
+	 * @return the active of this group
+	 */
 	@Override
 	public boolean getActive() {
 		return _group.getActive();
@@ -252,11 +253,12 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	@Override
 	public java.util.List<Group> getAncestors()
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _group.getAncestors();
 	}
 
 	@Override
-	public java.lang.String[] getAvailableLanguageIds() {
+	public String[] getAvailableLanguageIds() {
 		return _group.getAvailableLanguageIds();
 	}
 
@@ -266,21 +268,23 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* @deprecated As of 7.0.0, replaced by {@link
-	#getChildrenWithLayouts(boolean, int, int,
-	OrderByComparator)}
-	*/
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 #getChildrenWithLayouts(boolean, int, int,
+	 OrderByComparator)}
+	 */
 	@Deprecated
 	@Override
-	public java.util.List<Group> getChildrenWithLayouts(boolean site,
-		int start, int end) {
+	public java.util.List<Group> getChildrenWithLayouts(
+		boolean site, int start, int end) {
+
 		return _group.getChildrenWithLayouts(site, start, end);
 	}
 
 	@Override
-	public java.util.List<Group> getChildrenWithLayouts(boolean site,
-		int start, int end,
+	public java.util.List<Group> getChildrenWithLayouts(
+		boolean site, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<Group> obc) {
+
 		return _group.getChildrenWithLayouts(site, start, end, obc);
 	}
 
@@ -290,67 +294,67 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Returns the fully qualified class name of this group.
-	*
-	* @return the fully qualified class name of this group
-	*/
+	 * Returns the fully qualified class name of this group.
+	 *
+	 * @return the fully qualified class name of this group
+	 */
 	@Override
-	public java.lang.String getClassName() {
+	public String getClassName() {
 		return _group.getClassName();
 	}
 
 	/**
-	* Returns the class name ID of this group.
-	*
-	* @return the class name ID of this group
-	*/
+	 * Returns the class name ID of this group.
+	 *
+	 * @return the class name ID of this group
+	 */
 	@Override
 	public long getClassNameId() {
 		return _group.getClassNameId();
 	}
 
 	/**
-	* Returns the class pk of this group.
-	*
-	* @return the class pk of this group
-	*/
+	 * Returns the class pk of this group.
+	 *
+	 * @return the class pk of this group
+	 */
 	@Override
 	public long getClassPK() {
 		return _group.getClassPK();
 	}
 
 	/**
-	* Returns the company ID of this group.
-	*
-	* @return the company ID of this group
-	*/
+	 * Returns the company ID of this group.
+	 *
+	 * @return the company ID of this group
+	 */
 	@Override
 	public long getCompanyId() {
 		return _group.getCompanyId();
 	}
 
 	/**
-	* Returns the creator user ID of this group.
-	*
-	* @return the creator user ID of this group
-	*/
+	 * Returns the creator user ID of this group.
+	 *
+	 * @return the creator user ID of this group
+	 */
 	@Override
 	public long getCreatorUserId() {
 		return _group.getCreatorUserId();
 	}
 
 	/**
-	* Returns the creator user uuid of this group.
-	*
-	* @return the creator user uuid of this group
-	*/
+	 * Returns the creator user uuid of this group.
+	 *
+	 * @return the creator user uuid of this group
+	 */
 	@Override
-	public java.lang.String getCreatorUserUuid() {
+	public String getCreatorUserUuid() {
 		return _group.getCreatorUserUuid();
 	}
 
 	@Override
-	public java.lang.String getDefaultLanguageId() {
+	public String getDefaultLanguageId() {
 		return _group.getDefaultLanguageId();
 	}
 
@@ -370,105 +374,107 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Returns the description of this group.
-	*
-	* @return the description of this group
-	*/
+	 * Returns the description of this group.
+	 *
+	 * @return the description of this group
+	 */
 	@Override
-	public java.lang.String getDescription() {
+	public String getDescription() {
 		return _group.getDescription();
 	}
 
 	/**
-	* Returns the localized description of this group in the language. Uses the default language if no localization exists for the requested language.
-	*
-	* @param locale the locale of the language
-	* @return the localized description of this group
-	*/
+	 * Returns the localized description of this group in the language. Uses the default language if no localization exists for the requested language.
+	 *
+	 * @param locale the locale of the language
+	 * @return the localized description of this group
+	 */
 	@Override
-	public java.lang.String getDescription(java.util.Locale locale) {
+	public String getDescription(java.util.Locale locale) {
 		return _group.getDescription(locale);
 	}
 
 	/**
-	* Returns the localized description of this group in the language, optionally using the default language if no localization exists for the requested language.
-	*
-	* @param locale the local of the language
-	* @param useDefault whether to use the default language if no localization exists for the requested language
-	* @return the localized description of this group. If <code>useDefault</code> is <code>false</code> and no localization exists for the requested language, an empty string will be returned.
-	*/
+	 * Returns the localized description of this group in the language, optionally using the default language if no localization exists for the requested language.
+	 *
+	 * @param locale the local of the language
+	 * @param useDefault whether to use the default language if no localization exists for the requested language
+	 * @return the localized description of this group. If <code>useDefault</code> is <code>false</code> and no localization exists for the requested language, an empty string will be returned.
+	 */
 	@Override
-	public java.lang.String getDescription(java.util.Locale locale,
-		boolean useDefault) {
+	public String getDescription(java.util.Locale locale, boolean useDefault) {
 		return _group.getDescription(locale, useDefault);
 	}
 
 	/**
-	* Returns the localized description of this group in the language. Uses the default language if no localization exists for the requested language.
-	*
-	* @param languageId the ID of the language
-	* @return the localized description of this group
-	*/
+	 * Returns the localized description of this group in the language. Uses the default language if no localization exists for the requested language.
+	 *
+	 * @param languageId the ID of the language
+	 * @return the localized description of this group
+	 */
 	@Override
-	public java.lang.String getDescription(java.lang.String languageId) {
+	public String getDescription(String languageId) {
 		return _group.getDescription(languageId);
 	}
 
 	/**
-	* Returns the localized description of this group in the language, optionally using the default language if no localization exists for the requested language.
-	*
-	* @param languageId the ID of the language
-	* @param useDefault whether to use the default language if no localization exists for the requested language
-	* @return the localized description of this group
-	*/
+	 * Returns the localized description of this group in the language, optionally using the default language if no localization exists for the requested language.
+	 *
+	 * @param languageId the ID of the language
+	 * @param useDefault whether to use the default language if no localization exists for the requested language
+	 * @return the localized description of this group
+	 */
 	@Override
-	public java.lang.String getDescription(java.lang.String languageId,
-		boolean useDefault) {
+	public String getDescription(String languageId, boolean useDefault) {
 		return _group.getDescription(languageId, useDefault);
 	}
 
 	@Override
-	public java.lang.String getDescriptionCurrentLanguageId() {
+	public String getDescriptionCurrentLanguageId() {
 		return _group.getDescriptionCurrentLanguageId();
 	}
 
 	@Override
-	public java.lang.String getDescriptionCurrentValue() {
+	public String getDescriptionCurrentValue() {
 		return _group.getDescriptionCurrentValue();
 	}
 
 	/**
-	* Returns a map of the locales and localized descriptions of this group.
-	*
-	* @return the locales and localized descriptions of this group
-	*/
+	 * Returns a map of the locales and localized descriptions of this group.
+	 *
+	 * @return the locales and localized descriptions of this group
+	 */
 	@Override
-	public Map<java.util.Locale, java.lang.String> getDescriptionMap() {
+	public Map<java.util.Locale, String> getDescriptionMap() {
 		return _group.getDescriptionMap();
 	}
 
 	@Override
-	public java.lang.String getDescriptiveName()
+	public String getDescriptiveName()
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _group.getDescriptiveName();
 	}
 
 	@Override
-	public java.lang.String getDescriptiveName(java.util.Locale locale)
+	public String getDescriptiveName(java.util.Locale locale)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _group.getDescriptiveName(locale);
 	}
 
 	@Override
-	public java.lang.String getDisplayURL(
+	public String getDisplayURL(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay) {
+
 		return _group.getDisplayURL(themeDisplay);
 	}
 
 	@Override
-	public java.lang.String getDisplayURL(
+	public String getDisplayURL(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay,
 		boolean privateLayout) {
+
 		return _group.getDisplayURL(themeDisplay, privateLayout);
 	}
 
@@ -478,59 +484,61 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Returns the friendly url of this group.
-	*
-	* @return the friendly url of this group
-	*/
+	 * Returns the friendly url of this group.
+	 *
+	 * @return the friendly url of this group
+	 */
 	@Override
-	public java.lang.String getFriendlyURL() {
+	public String getFriendlyURL() {
 		return _group.getFriendlyURL();
 	}
 
 	/**
-	* Returns the group ID of this group.
-	*
-	* @return the group ID of this group
-	*/
+	 * Returns the group ID of this group.
+	 *
+	 * @return the group ID of this group
+	 */
 	@Override
 	public long getGroupId() {
 		return _group.getGroupId();
 	}
 
 	/**
-	* Returns the group key of this group.
-	*
-	* @return the group key of this group
-	*/
+	 * Returns the group key of this group.
+	 *
+	 * @return the group key of this group
+	 */
 	@Override
-	public java.lang.String getGroupKey() {
+	public String getGroupKey() {
 		return _group.getGroupKey();
 	}
 
 	@Override
-	public java.lang.String getIconCssClass() {
+	public String getIconCssClass() {
 		return _group.getIconCssClass();
 	}
 
 	@Override
-	public java.lang.String getIconURL(
+	public String getIconURL(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay) {
+
 		return _group.getIconURL(themeDisplay);
 	}
 
 	/**
-	* Returns the inherit content of this group.
-	*
-	* @return the inherit content of this group
-	*/
+	 * Returns the inherit content of this group.
+	 *
+	 * @return the inherit content of this group
+	 */
 	@Override
 	public boolean getInheritContent() {
 		return _group.getInheritContent();
 	}
 
 	@Override
-	public java.lang.String getLayoutRootNodeName(boolean privateLayout,
-		java.util.Locale locale) {
+	public String getLayoutRootNodeName(
+		boolean privateLayout, java.util.Locale locale) {
+
 		return _group.getLayoutRootNodeName(privateLayout, locale);
 	}
 
@@ -540,132 +548,131 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Returns the live group ID of this group.
-	*
-	* @return the live group ID of this group
-	*/
+	 * Returns the live group ID of this group.
+	 *
+	 * @return the live group ID of this group
+	 */
 	@Override
 	public long getLiveGroupId() {
 		return _group.getLiveGroupId();
 	}
 
 	@Override
-	public java.lang.String getLiveParentTypeSettingsProperty(
-		java.lang.String key) {
+	public String getLiveParentTypeSettingsProperty(String key) {
 		return _group.getLiveParentTypeSettingsProperty(key);
 	}
 
 	@Override
-	public java.lang.String getLogoURL(
+	public String getLogoURL(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay,
 		boolean useDefault) {
+
 		return _group.getLogoURL(themeDisplay, useDefault);
 	}
 
 	/**
-	* Returns the manual membership of this group.
-	*
-	* @return the manual membership of this group
-	*/
+	 * Returns the manual membership of this group.
+	 *
+	 * @return the manual membership of this group
+	 */
 	@Override
 	public boolean getManualMembership() {
 		return _group.getManualMembership();
 	}
 
 	/**
-	* Returns the membership restriction of this group.
-	*
-	* @return the membership restriction of this group
-	*/
+	 * Returns the membership restriction of this group.
+	 *
+	 * @return the membership restriction of this group
+	 */
 	@Override
 	public int getMembershipRestriction() {
 		return _group.getMembershipRestriction();
 	}
 
 	/**
-	* Returns the mvcc version of this group.
-	*
-	* @return the mvcc version of this group
-	*/
+	 * Returns the mvcc version of this group.
+	 *
+	 * @return the mvcc version of this group
+	 */
 	@Override
 	public long getMvccVersion() {
 		return _group.getMvccVersion();
 	}
 
 	/**
-	* Returns the name of this group.
-	*
-	* @return the name of this group
-	*/
+	 * Returns the name of this group.
+	 *
+	 * @return the name of this group
+	 */
 	@Override
-	public java.lang.String getName() {
+	public String getName() {
 		return _group.getName();
 	}
 
 	/**
-	* Returns the localized name of this group in the language. Uses the default language if no localization exists for the requested language.
-	*
-	* @param locale the locale of the language
-	* @return the localized name of this group
-	*/
+	 * Returns the localized name of this group in the language. Uses the default language if no localization exists for the requested language.
+	 *
+	 * @param locale the locale of the language
+	 * @return the localized name of this group
+	 */
 	@Override
-	public java.lang.String getName(java.util.Locale locale) {
+	public String getName(java.util.Locale locale) {
 		return _group.getName(locale);
 	}
 
 	/**
-	* Returns the localized name of this group in the language, optionally using the default language if no localization exists for the requested language.
-	*
-	* @param locale the local of the language
-	* @param useDefault whether to use the default language if no localization exists for the requested language
-	* @return the localized name of this group. If <code>useDefault</code> is <code>false</code> and no localization exists for the requested language, an empty string will be returned.
-	*/
+	 * Returns the localized name of this group in the language, optionally using the default language if no localization exists for the requested language.
+	 *
+	 * @param locale the local of the language
+	 * @param useDefault whether to use the default language if no localization exists for the requested language
+	 * @return the localized name of this group. If <code>useDefault</code> is <code>false</code> and no localization exists for the requested language, an empty string will be returned.
+	 */
 	@Override
-	public java.lang.String getName(java.util.Locale locale, boolean useDefault) {
+	public String getName(java.util.Locale locale, boolean useDefault) {
 		return _group.getName(locale, useDefault);
 	}
 
 	/**
-	* Returns the localized name of this group in the language. Uses the default language if no localization exists for the requested language.
-	*
-	* @param languageId the ID of the language
-	* @return the localized name of this group
-	*/
+	 * Returns the localized name of this group in the language. Uses the default language if no localization exists for the requested language.
+	 *
+	 * @param languageId the ID of the language
+	 * @return the localized name of this group
+	 */
 	@Override
-	public java.lang.String getName(java.lang.String languageId) {
+	public String getName(String languageId) {
 		return _group.getName(languageId);
 	}
 
 	/**
-	* Returns the localized name of this group in the language, optionally using the default language if no localization exists for the requested language.
-	*
-	* @param languageId the ID of the language
-	* @param useDefault whether to use the default language if no localization exists for the requested language
-	* @return the localized name of this group
-	*/
+	 * Returns the localized name of this group in the language, optionally using the default language if no localization exists for the requested language.
+	 *
+	 * @param languageId the ID of the language
+	 * @param useDefault whether to use the default language if no localization exists for the requested language
+	 * @return the localized name of this group
+	 */
 	@Override
-	public java.lang.String getName(java.lang.String languageId,
-		boolean useDefault) {
+	public String getName(String languageId, boolean useDefault) {
 		return _group.getName(languageId, useDefault);
 	}
 
 	@Override
-	public java.lang.String getNameCurrentLanguageId() {
+	public String getNameCurrentLanguageId() {
 		return _group.getNameCurrentLanguageId();
 	}
 
 	@Override
-	public java.lang.String getNameCurrentValue() {
+	public String getNameCurrentValue() {
 		return _group.getNameCurrentValue();
 	}
 
 	/**
-	* Returns a map of the locales and localized names of this group.
-	*
-	* @return the locales and localized names of this group
-	*/
+	 * Returns a map of the locales and localized names of this group.
+	 *
+	 * @return the locales and localized names of this group
+	 */
 	@Override
-	public Map<java.util.Locale, java.lang.String> getNameMap() {
+	public Map<java.util.Locale, String> getNameMap() {
 		return _group.getNameMap();
 	}
 
@@ -677,35 +684,40 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	@Override
 	public Group getParentGroup()
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _group.getParentGroup();
 	}
 
 	/**
-	* Returns the parent group ID of this group.
-	*
-	* @return the parent group ID of this group
-	*/
+	 * Returns the parent group ID of this group.
+	 *
+	 * @return the parent group ID of this group
+	 */
 	@Override
 	public long getParentGroupId() {
 		return _group.getParentGroupId();
 	}
 
 	@Override
-	public com.liferay.portal.kernel.util.UnicodeProperties getParentLiveGroupTypeSettingsProperties() {
+	public com.liferay.portal.kernel.util.UnicodeProperties
+		getParentLiveGroupTypeSettingsProperties() {
+
 		return _group.getParentLiveGroupTypeSettingsProperties();
 	}
 
 	@Override
-	public java.lang.String getPathFriendlyURL(boolean privateLayout,
+	public String getPathFriendlyURL(
+		boolean privateLayout,
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay) {
+
 		return _group.getPathFriendlyURL(privateLayout, themeDisplay);
 	}
 
 	/**
-	* Returns the primary key of this group.
-	*
-	* @return the primary key of this group
-	*/
+	 * Returns the primary key of this group.
+	 *
+	 * @return the primary key of this group
+	 */
 	@Override
 	public long getPrimaryKey() {
 		return _group.getPrimaryKey();
@@ -742,33 +754,35 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Returns the remote staging group count of this group.
-	*
-	* @return the remote staging group count of this group
-	*/
+	 * Returns the remote staging group count of this group.
+	 *
+	 * @return the remote staging group count of this group
+	 */
 	@Override
 	public int getRemoteStagingGroupCount() {
 		return _group.getRemoteStagingGroupCount();
 	}
 
 	@Override
-	public java.lang.String getScopeDescriptiveName(
-		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay)
+	public String getScopeDescriptiveName(
+			com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _group.getScopeDescriptiveName(themeDisplay);
 	}
 
 	@Override
-	public java.lang.String getScopeLabel(
+	public String getScopeLabel(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay) {
+
 		return _group.getScopeLabel(themeDisplay);
 	}
 
 	/**
-	* Returns the site of this group.
-	*
-	* @return the site of this group
-	*/
+	 * Returns the site of this group.
+	 *
+	 * @return the site of this group
+	 */
 	@Override
 	public boolean getSite() {
 		return _group.getSite();
@@ -780,63 +794,64 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Returns the tree path of this group.
-	*
-	* @return the tree path of this group
-	*/
+	 * Returns the tree path of this group.
+	 *
+	 * @return the tree path of this group
+	 */
 	@Override
-	public java.lang.String getTreePath() {
+	public String getTreePath() {
 		return _group.getTreePath();
 	}
 
 	/**
-	* Returns the type of this group.
-	*
-	* @return the type of this group
-	*/
+	 * Returns the type of this group.
+	 *
+	 * @return the type of this group
+	 */
 	@Override
 	public int getType() {
 		return _group.getType();
 	}
 
 	@Override
-	public java.lang.String getTypeLabel() {
+	public String getTypeLabel() {
 		return _group.getTypeLabel();
 	}
 
 	/**
-	* Returns the type settings of this group.
-	*
-	* @return the type settings of this group
-	*/
+	 * Returns the type settings of this group.
+	 *
+	 * @return the type settings of this group
+	 */
 	@Override
-	public java.lang.String getTypeSettings() {
+	public String getTypeSettings() {
 		return _group.getTypeSettings();
 	}
 
 	@Override
-	public com.liferay.portal.kernel.util.UnicodeProperties getTypeSettingsProperties() {
+	public com.liferay.portal.kernel.util.UnicodeProperties
+		getTypeSettingsProperties() {
+
 		return _group.getTypeSettingsProperties();
 	}
 
 	@Override
-	public java.lang.String getTypeSettingsProperty(java.lang.String key) {
+	public String getTypeSettingsProperty(String key) {
 		return _group.getTypeSettingsProperty(key);
 	}
 
 	@Override
-	public java.lang.String getUnambiguousName(java.lang.String name,
-		java.util.Locale locale) {
+	public String getUnambiguousName(String name, java.util.Locale locale) {
 		return _group.getUnambiguousName(name, locale);
 	}
 
 	/**
-	* Returns the uuid of this group.
-	*
-	* @return the uuid of this group
-	*/
+	 * Returns the uuid of this group.
+	 *
+	 * @return the uuid of this group
+	 */
 	@Override
-	public java.lang.String getUuid() {
+	public String getUuid() {
 		return _group.getUuid();
 	}
 
@@ -876,10 +891,10 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Returns <code>true</code> if this group is active.
-	*
-	* @return <code>true</code> if this group is active; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this group is active.
+	 *
+	 * @return <code>true</code> if this group is active; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isActive() {
 		return _group.isActive();
@@ -891,8 +906,8 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* @deprecated As of 7.0.0, replaced by {@link #hasAncestor}
-	*/
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #hasAncestor}
+	 */
 	@Deprecated
 	@Override
 	public boolean isChild(long groupId) {
@@ -925,17 +940,17 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Returns <code>true</code> if this group is inherit content.
-	*
-	* @return <code>true</code> if this group is inherit content; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this group is inherit content.
+	 *
+	 * @return <code>true</code> if this group is inherit content; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isInheritContent() {
 		return _group.isInheritContent();
 	}
 
 	@Override
-	public boolean isInStagingPortlet(java.lang.String portletId) {
+	public boolean isInStagingPortlet(String portletId) {
 		return _group.isInStagingPortlet(portletId);
 	}
 
@@ -960,10 +975,10 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Returns <code>true</code> if this group is manual membership.
-	*
-	* @return <code>true</code> if this group is manual membership; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this group is manual membership.
+	 *
+	 * @return <code>true</code> if this group is manual membership; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isManualMembership() {
 		return _group.isManualMembership();
@@ -991,17 +1006,19 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 
 	@Override
 	public boolean isShowSite(
-		com.liferay.portal.kernel.security.permission.PermissionChecker permissionChecker,
-		boolean privateSite)
+			com.liferay.portal.kernel.security.permission.PermissionChecker
+				permissionChecker,
+			boolean privateSite)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _group.isShowSite(permissionChecker, privateSite);
 	}
 
 	/**
-	* Returns <code>true</code> if this group is site.
-	*
-	* @return <code>true</code> if this group is site; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this group is site.
+	 *
+	 * @return <code>true</code> if this group is site; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isSite() {
 		return _group.isSite();
@@ -1013,7 +1030,7 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	@Override
-	public boolean isStagedPortlet(java.lang.String portletId) {
+	public boolean isStagedPortlet(String portletId) {
 		return _group.isStagedPortlet(portletId);
 	}
 
@@ -1050,21 +1067,23 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	@Override
 	public void prepareLocalizedFieldsForImport()
 		throws com.liferay.portal.kernel.exception.LocaleException {
+
 		_group.prepareLocalizedFieldsForImport();
 	}
 
 	@Override
 	public void prepareLocalizedFieldsForImport(
-		java.util.Locale defaultImportLocale)
+			java.util.Locale defaultImportLocale)
 		throws com.liferay.portal.kernel.exception.LocaleException {
+
 		_group.prepareLocalizedFieldsForImport(defaultImportLocale);
 	}
 
 	/**
-	* Sets whether this group is active.
-	*
-	* @param active the active of this group
-	*/
+	 * Sets whether this group is active.
+	 *
+	 * @param active the active of this group
+	 */
 	@Override
 	public void setActive(boolean active) {
 		_group.setActive(active);
@@ -1076,121 +1095,124 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	@Override
-	public void setClassName(java.lang.String className) {
+	public void setClassName(String className) {
 		_group.setClassName(className);
 	}
 
 	/**
-	* Sets the class name ID of this group.
-	*
-	* @param classNameId the class name ID of this group
-	*/
+	 * Sets the class name ID of this group.
+	 *
+	 * @param classNameId the class name ID of this group
+	 */
 	@Override
 	public void setClassNameId(long classNameId) {
 		_group.setClassNameId(classNameId);
 	}
 
 	/**
-	* Sets the class pk of this group.
-	*
-	* @param classPK the class pk of this group
-	*/
+	 * Sets the class pk of this group.
+	 *
+	 * @param classPK the class pk of this group
+	 */
 	@Override
 	public void setClassPK(long classPK) {
 		_group.setClassPK(classPK);
 	}
 
 	/**
-	* Sets the company ID of this group.
-	*
-	* @param companyId the company ID of this group
-	*/
+	 * Sets the company ID of this group.
+	 *
+	 * @param companyId the company ID of this group
+	 */
 	@Override
 	public void setCompanyId(long companyId) {
 		_group.setCompanyId(companyId);
 	}
 
 	/**
-	* Sets the creator user ID of this group.
-	*
-	* @param creatorUserId the creator user ID of this group
-	*/
+	 * Sets the creator user ID of this group.
+	 *
+	 * @param creatorUserId the creator user ID of this group
+	 */
 	@Override
 	public void setCreatorUserId(long creatorUserId) {
 		_group.setCreatorUserId(creatorUserId);
 	}
 
 	/**
-	* Sets the creator user uuid of this group.
-	*
-	* @param creatorUserUuid the creator user uuid of this group
-	*/
+	 * Sets the creator user uuid of this group.
+	 *
+	 * @param creatorUserUuid the creator user uuid of this group
+	 */
 	@Override
-	public void setCreatorUserUuid(java.lang.String creatorUserUuid) {
+	public void setCreatorUserUuid(String creatorUserUuid) {
 		_group.setCreatorUserUuid(creatorUserUuid);
 	}
 
 	/**
-	* Sets the description of this group.
-	*
-	* @param description the description of this group
-	*/
+	 * Sets the description of this group.
+	 *
+	 * @param description the description of this group
+	 */
 	@Override
-	public void setDescription(java.lang.String description) {
+	public void setDescription(String description) {
 		_group.setDescription(description);
 	}
 
 	/**
-	* Sets the localized description of this group in the language.
-	*
-	* @param description the localized description of this group
-	* @param locale the locale of the language
-	*/
+	 * Sets the localized description of this group in the language.
+	 *
+	 * @param description the localized description of this group
+	 * @param locale the locale of the language
+	 */
 	@Override
-	public void setDescription(java.lang.String description,
-		java.util.Locale locale) {
+	public void setDescription(String description, java.util.Locale locale) {
 		_group.setDescription(description, locale);
 	}
 
 	/**
-	* Sets the localized description of this group in the language, and sets the default locale.
-	*
-	* @param description the localized description of this group
-	* @param locale the locale of the language
-	* @param defaultLocale the default locale
-	*/
+	 * Sets the localized description of this group in the language, and sets the default locale.
+	 *
+	 * @param description the localized description of this group
+	 * @param locale the locale of the language
+	 * @param defaultLocale the default locale
+	 */
 	@Override
-	public void setDescription(java.lang.String description,
-		java.util.Locale locale, java.util.Locale defaultLocale) {
+	public void setDescription(
+		String description, java.util.Locale locale,
+		java.util.Locale defaultLocale) {
+
 		_group.setDescription(description, locale, defaultLocale);
 	}
 
 	@Override
-	public void setDescriptionCurrentLanguageId(java.lang.String languageId) {
+	public void setDescriptionCurrentLanguageId(String languageId) {
 		_group.setDescriptionCurrentLanguageId(languageId);
 	}
 
 	/**
-	* Sets the localized descriptions of this group from the map of locales and localized descriptions.
-	*
-	* @param descriptionMap the locales and localized descriptions of this group
-	*/
+	 * Sets the localized descriptions of this group from the map of locales and localized descriptions.
+	 *
+	 * @param descriptionMap the locales and localized descriptions of this group
+	 */
 	@Override
 	public void setDescriptionMap(
-		Map<java.util.Locale, java.lang.String> descriptionMap) {
+		Map<java.util.Locale, String> descriptionMap) {
+
 		_group.setDescriptionMap(descriptionMap);
 	}
 
 	/**
-	* Sets the localized descriptions of this group from the map of locales and localized descriptions, and sets the default locale.
-	*
-	* @param descriptionMap the locales and localized descriptions of this group
-	* @param defaultLocale the default locale
-	*/
+	 * Sets the localized descriptions of this group from the map of locales and localized descriptions, and sets the default locale.
+	 *
+	 * @param descriptionMap the locales and localized descriptions of this group
+	 * @param defaultLocale the default locale
+	 */
 	@Override
 	public void setDescriptionMap(
-		Map<java.util.Locale, java.lang.String> descriptionMap,
+		Map<java.util.Locale, String> descriptionMap,
 		java.util.Locale defaultLocale) {
+
 		_group.setDescriptionMap(descriptionMap, defaultLocale);
 	}
 
@@ -1210,143 +1232,145 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Sets the friendly url of this group.
-	*
-	* @param friendlyURL the friendly url of this group
-	*/
+	 * Sets the friendly url of this group.
+	 *
+	 * @param friendlyURL the friendly url of this group
+	 */
 	@Override
-	public void setFriendlyURL(java.lang.String friendlyURL) {
+	public void setFriendlyURL(String friendlyURL) {
 		_group.setFriendlyURL(friendlyURL);
 	}
 
 	/**
-	* Sets the group ID of this group.
-	*
-	* @param groupId the group ID of this group
-	*/
+	 * Sets the group ID of this group.
+	 *
+	 * @param groupId the group ID of this group
+	 */
 	@Override
 	public void setGroupId(long groupId) {
 		_group.setGroupId(groupId);
 	}
 
 	/**
-	* Sets the group key of this group.
-	*
-	* @param groupKey the group key of this group
-	*/
+	 * Sets the group key of this group.
+	 *
+	 * @param groupKey the group key of this group
+	 */
 	@Override
-	public void setGroupKey(java.lang.String groupKey) {
+	public void setGroupKey(String groupKey) {
 		_group.setGroupKey(groupKey);
 	}
 
 	/**
-	* Sets whether this group is inherit content.
-	*
-	* @param inheritContent the inherit content of this group
-	*/
+	 * Sets whether this group is inherit content.
+	 *
+	 * @param inheritContent the inherit content of this group
+	 */
 	@Override
 	public void setInheritContent(boolean inheritContent) {
 		_group.setInheritContent(inheritContent);
 	}
 
 	/**
-	* Sets the live group ID of this group.
-	*
-	* @param liveGroupId the live group ID of this group
-	*/
+	 * Sets the live group ID of this group.
+	 *
+	 * @param liveGroupId the live group ID of this group
+	 */
 	@Override
 	public void setLiveGroupId(long liveGroupId) {
 		_group.setLiveGroupId(liveGroupId);
 	}
 
 	/**
-	* Sets whether this group is manual membership.
-	*
-	* @param manualMembership the manual membership of this group
-	*/
+	 * Sets whether this group is manual membership.
+	 *
+	 * @param manualMembership the manual membership of this group
+	 */
 	@Override
 	public void setManualMembership(boolean manualMembership) {
 		_group.setManualMembership(manualMembership);
 	}
 
 	/**
-	* Sets the membership restriction of this group.
-	*
-	* @param membershipRestriction the membership restriction of this group
-	*/
+	 * Sets the membership restriction of this group.
+	 *
+	 * @param membershipRestriction the membership restriction of this group
+	 */
 	@Override
 	public void setMembershipRestriction(int membershipRestriction) {
 		_group.setMembershipRestriction(membershipRestriction);
 	}
 
 	/**
-	* Sets the mvcc version of this group.
-	*
-	* @param mvccVersion the mvcc version of this group
-	*/
+	 * Sets the mvcc version of this group.
+	 *
+	 * @param mvccVersion the mvcc version of this group
+	 */
 	@Override
 	public void setMvccVersion(long mvccVersion) {
 		_group.setMvccVersion(mvccVersion);
 	}
 
 	/**
-	* Sets the name of this group.
-	*
-	* @param name the name of this group
-	*/
+	 * Sets the name of this group.
+	 *
+	 * @param name the name of this group
+	 */
 	@Override
-	public void setName(java.lang.String name) {
+	public void setName(String name) {
 		_group.setName(name);
 	}
 
 	/**
-	* Sets the localized name of this group in the language.
-	*
-	* @param name the localized name of this group
-	* @param locale the locale of the language
-	*/
+	 * Sets the localized name of this group in the language.
+	 *
+	 * @param name the localized name of this group
+	 * @param locale the locale of the language
+	 */
 	@Override
-	public void setName(java.lang.String name, java.util.Locale locale) {
+	public void setName(String name, java.util.Locale locale) {
 		_group.setName(name, locale);
 	}
 
 	/**
-	* Sets the localized name of this group in the language, and sets the default locale.
-	*
-	* @param name the localized name of this group
-	* @param locale the locale of the language
-	* @param defaultLocale the default locale
-	*/
+	 * Sets the localized name of this group in the language, and sets the default locale.
+	 *
+	 * @param name the localized name of this group
+	 * @param locale the locale of the language
+	 * @param defaultLocale the default locale
+	 */
 	@Override
-	public void setName(java.lang.String name, java.util.Locale locale,
-		java.util.Locale defaultLocale) {
+	public void setName(
+		String name, java.util.Locale locale, java.util.Locale defaultLocale) {
+
 		_group.setName(name, locale, defaultLocale);
 	}
 
 	@Override
-	public void setNameCurrentLanguageId(java.lang.String languageId) {
+	public void setNameCurrentLanguageId(String languageId) {
 		_group.setNameCurrentLanguageId(languageId);
 	}
 
 	/**
-	* Sets the localized names of this group from the map of locales and localized names.
-	*
-	* @param nameMap the locales and localized names of this group
-	*/
+	 * Sets the localized names of this group from the map of locales and localized names.
+	 *
+	 * @param nameMap the locales and localized names of this group
+	 */
 	@Override
-	public void setNameMap(Map<java.util.Locale, java.lang.String> nameMap) {
+	public void setNameMap(Map<java.util.Locale, String> nameMap) {
 		_group.setNameMap(nameMap);
 	}
 
 	/**
-	* Sets the localized names of this group from the map of locales and localized names, and sets the default locale.
-	*
-	* @param nameMap the locales and localized names of this group
-	* @param defaultLocale the default locale
-	*/
+	 * Sets the localized names of this group from the map of locales and localized names, and sets the default locale.
+	 *
+	 * @param nameMap the locales and localized names of this group
+	 * @param defaultLocale the default locale
+	 */
 	@Override
-	public void setNameMap(Map<java.util.Locale, java.lang.String> nameMap,
-		java.util.Locale defaultLocale) {
+	public void setNameMap(
+		Map<java.util.Locale, String> nameMap, java.util.Locale defaultLocale) {
+
 		_group.setNameMap(nameMap, defaultLocale);
 	}
 
@@ -1356,20 +1380,20 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Sets the parent group ID of this group.
-	*
-	* @param parentGroupId the parent group ID of this group
-	*/
+	 * Sets the parent group ID of this group.
+	 *
+	 * @param parentGroupId the parent group ID of this group
+	 */
 	@Override
 	public void setParentGroupId(long parentGroupId) {
 		_group.setParentGroupId(parentGroupId);
 	}
 
 	/**
-	* Sets the primary key of this group.
-	*
-	* @param primaryKey the primary key of this group
-	*/
+	 * Sets the primary key of this group.
+	 *
+	 * @param primaryKey the primary key of this group
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		_group.setPrimaryKey(primaryKey);
@@ -1381,68 +1405,70 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	/**
-	* Sets the remote staging group count of this group.
-	*
-	* @param remoteStagingGroupCount the remote staging group count of this group
-	*/
+	 * Sets the remote staging group count of this group.
+	 *
+	 * @param remoteStagingGroupCount the remote staging group count of this group
+	 */
 	@Override
 	public void setRemoteStagingGroupCount(int remoteStagingGroupCount) {
 		_group.setRemoteStagingGroupCount(remoteStagingGroupCount);
 	}
 
 	/**
-	* Sets whether this group is site.
-	*
-	* @param site the site of this group
-	*/
+	 * Sets whether this group is site.
+	 *
+	 * @param site the site of this group
+	 */
 	@Override
 	public void setSite(boolean site) {
 		_group.setSite(site);
 	}
 
 	/**
-	* Sets the tree path of this group.
-	*
-	* @param treePath the tree path of this group
-	*/
+	 * Sets the tree path of this group.
+	 *
+	 * @param treePath the tree path of this group
+	 */
 	@Override
-	public void setTreePath(java.lang.String treePath) {
+	public void setTreePath(String treePath) {
 		_group.setTreePath(treePath);
 	}
 
 	/**
-	* Sets the type of this group.
-	*
-	* @param type the type of this group
-	*/
+	 * Sets the type of this group.
+	 *
+	 * @param type the type of this group
+	 */
 	@Override
 	public void setType(int type) {
 		_group.setType(type);
 	}
 
 	/**
-	* Sets the type settings of this group.
-	*
-	* @param typeSettings the type settings of this group
-	*/
+	 * Sets the type settings of this group.
+	 *
+	 * @param typeSettings the type settings of this group
+	 */
 	@Override
-	public void setTypeSettings(java.lang.String typeSettings) {
+	public void setTypeSettings(String typeSettings) {
 		_group.setTypeSettings(typeSettings);
 	}
 
 	@Override
 	public void setTypeSettingsProperties(
-		com.liferay.portal.kernel.util.UnicodeProperties typeSettingsProperties) {
+		com.liferay.portal.kernel.util.UnicodeProperties
+			typeSettingsProperties) {
+
 		_group.setTypeSettingsProperties(typeSettingsProperties);
 	}
 
 	/**
-	* Sets the uuid of this group.
-	*
-	* @param uuid the uuid of this group
-	*/
+	 * Sets the uuid of this group.
+	 *
+	 * @param uuid the uuid of this group
+	 */
 	@Override
-	public void setUuid(java.lang.String uuid) {
+	public void setUuid(String uuid) {
 		_group.setUuid(uuid);
 	}
 
@@ -1457,7 +1483,7 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	@Override
-	public java.lang.String toString() {
+	public String toString() {
 		return _group.toString();
 	}
 
@@ -1467,12 +1493,12 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	@Override
-	public java.lang.String toXmlString() {
+	public String toXmlString() {
 		return _group.toXmlString();
 	}
 
 	@Override
-	public void updateTreePath(java.lang.String treePath) {
+	public void updateTreePath(String treePath) {
 		_group.updateTreePath(treePath);
 	}
 
@@ -1516,4 +1542,5 @@ public class GroupWrapper implements Group, ModelWrapper<Group> {
 	}
 
 	private final Group _group;
+
 }

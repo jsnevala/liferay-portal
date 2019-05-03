@@ -364,7 +364,11 @@ public class FilesTest {
 
 			File file = new File(
 				System.getProperty("java.home"),
-				"bin".concat(File.separator).concat(javaCommand));
+				"bin".concat(
+					File.separator
+				).concat(
+					javaCommand
+				));
 
 			file.canRead();
 

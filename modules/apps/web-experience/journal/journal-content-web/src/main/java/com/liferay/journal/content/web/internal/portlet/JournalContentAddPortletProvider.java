@@ -44,7 +44,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"model.class.name=com.liferay.journal.model.JournalArticle"},
+	property = "model.class.name=com.liferay.journal.model.JournalArticle",
 	service = AddPortletProvider.class
 )
 public class JournalContentAddPortletProvider
@@ -79,8 +79,9 @@ public class JournalContentAddPortletProvider
 						JournalArticle.class.getName());
 
 		JournalArticleAssetRenderer articleAssetRenderer =
-			(JournalArticleAssetRenderer)articleAssetRendererFactory.
-				getAssetRenderer(assetEntry.getClassPK());
+			(JournalArticleAssetRenderer)
+				articleAssetRendererFactory.getAssetRenderer(
+					assetEntry.getClassPK());
 
 		JournalArticle article = articleAssetRenderer.getArticle();
 
@@ -96,7 +97,7 @@ public class JournalContentAddPortletProvider
 	}
 
 	/**
-	 * @deprecated As of 1.1.0
+	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
 	@Override
@@ -105,32 +106,9 @@ public class JournalContentAddPortletProvider
 	}
 
 	@Reference
-	protected void setAssetEntryLocalService(
-		AssetEntryLocalService assetEntryLocalService) {
-
-		_assetEntryLocalService = assetEntryLocalService;
-	}
+	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
-	protected void setJournalContentSearchLocal(
-		JournalContentSearchLocalService journalContentSearchLocal) {
-
-		_journalContentSearchLocal = journalContentSearchLocal;
-	}
-
-	protected void unsetAssetEntryLocalService(
-		AssetEntryLocalService assetEntryLocalService) {
-
-		_assetEntryLocalService = null;
-	}
-
-	protected void unsetJournalContentSearchLocal(
-		JournalContentSearchLocalService journalContentSearchLocal) {
-
-		_journalContentSearchLocal = null;
-	}
-
-	private AssetEntryLocalService _assetEntryLocalService;
 	private JournalContentSearchLocalService _journalContentSearchLocal;
 
 }

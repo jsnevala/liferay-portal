@@ -31,9 +31,9 @@ import com.liferay.portal.kernel.service.persistence.CompanyProvider;
 import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.spring.extender.service.ServiceReference;
-
 import com.liferay.social.networking.exception.NoSuchMeetupsEntryException;
 import com.liferay.social.networking.model.MeetupsEntry;
 import com.liferay.social.networking.model.impl.MeetupsEntryImpl;
@@ -41,6 +41,8 @@ import com.liferay.social.networking.model.impl.MeetupsEntryModelImpl;
 import com.liferay.social.networking.service.persistence.MeetupsEntryPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
 import java.util.Date;
@@ -59,53 +61,33 @@ import java.util.Set;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see MeetupsEntryPersistence
- * @see com.liferay.social.networking.service.persistence.MeetupsEntryUtil
  * @generated
  */
 @ProviderType
-public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntry>
+public class MeetupsEntryPersistenceImpl
+	extends BasePersistenceImpl<MeetupsEntry>
 	implements MeetupsEntryPersistence {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link MeetupsEntryUtil} to access the meetups entry persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
+	 * Never modify or reference this class directly. Always use <code>MeetupsEntryUtil</code> to access the meetups entry persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static final String FINDER_CLASS_NAME_ENTITY = MeetupsEntryImpl.class.getName();
-	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List1";
-	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List2";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_ALL = new FinderPath(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL = new FinderPath(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_COUNT_ALL = new FinderPath(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_COMPANYID =
-		new FinderPath(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID =
-		new FinderPath(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
-			new String[] { Long.class.getName() },
-			MeetupsEntryModelImpl.COMPANYID_COLUMN_BITMASK |
-			MeetupsEntryModelImpl.STARTDATE_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_COMPANYID = new FinderPath(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] { Long.class.getName() });
+	public static final String FINDER_CLASS_NAME_ENTITY =
+		MeetupsEntryImpl.class.getName();
+
+	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List1";
+
+	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List2";
+
+	private FinderPath _finderPathWithPaginationFindAll;
+	private FinderPath _finderPathWithoutPaginationFindAll;
+	private FinderPath _finderPathCountAll;
+	private FinderPath _finderPathWithPaginationFindByCompanyId;
+	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
+	private FinderPath _finderPathCountByCompanyId;
 
 	/**
 	 * Returns all the meetups entries where companyId = &#63;.
@@ -115,15 +97,15 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 */
 	@Override
 	public List<MeetupsEntry> findByCompanyId(long companyId) {
-		return findByCompanyId(companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			null);
+		return findByCompanyId(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the meetups entries where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MeetupsEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MeetupsEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -132,7 +114,9 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @return the range of matching meetups entries
 	 */
 	@Override
-	public List<MeetupsEntry> findByCompanyId(long companyId, int start, int end) {
+	public List<MeetupsEntry> findByCompanyId(
+		long companyId, int start, int end) {
+
 		return findByCompanyId(companyId, start, end, null);
 	}
 
@@ -140,7 +124,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * Returns an ordered range of all the meetups entries where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MeetupsEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MeetupsEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -150,8 +134,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @return the ordered range of matching meetups entries
 	 */
 	@Override
-	public List<MeetupsEntry> findByCompanyId(long companyId, int start,
-		int end, OrderByComparator<MeetupsEntry> orderByComparator) {
+	public List<MeetupsEntry> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<MeetupsEntry> orderByComparator) {
+
 		return findByCompanyId(companyId, start, end, orderByComparator, true);
 	}
 
@@ -159,7 +145,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * Returns an ordered range of all the meetups entries where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MeetupsEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MeetupsEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -170,29 +156,34 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @return the ordered range of matching meetups entries
 	 */
 	@Override
-	public List<MeetupsEntry> findByCompanyId(long companyId, int start,
-		int end, OrderByComparator<MeetupsEntry> orderByComparator,
+	public List<MeetupsEntry> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<MeetupsEntry> orderByComparator,
 		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID;
-			finderArgs = new Object[] { companyId };
+			finderPath = _finderPathWithoutPaginationFindByCompanyId;
+			finderArgs = new Object[] {companyId};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_COMPANYID;
-			finderArgs = new Object[] { companyId, start, end, orderByComparator };
+			finderPath = _finderPathWithPaginationFindByCompanyId;
+			finderArgs = new Object[] {
+				companyId, start, end, orderByComparator
+			};
 		}
 
 		List<MeetupsEntry> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<MeetupsEntry>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<MeetupsEntry>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MeetupsEntry meetupsEntry : list) {
@@ -209,8 +200,8 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(3);
@@ -221,11 +212,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 			query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(MeetupsEntryModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -243,16 +233,16 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 				qPos.add(companyId);
 
 				if (!pagination) {
-					list = (List<MeetupsEntry>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<MeetupsEntry>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<MeetupsEntry>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<MeetupsEntry>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -281,11 +271,12 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @throws NoSuchMeetupsEntryException if a matching meetups entry could not be found
 	 */
 	@Override
-	public MeetupsEntry findByCompanyId_First(long companyId,
-		OrderByComparator<MeetupsEntry> orderByComparator)
+	public MeetupsEntry findByCompanyId_First(
+			long companyId, OrderByComparator<MeetupsEntry> orderByComparator)
 		throws NoSuchMeetupsEntryException {
-		MeetupsEntry meetupsEntry = fetchByCompanyId_First(companyId,
-				orderByComparator);
+
+		MeetupsEntry meetupsEntry = fetchByCompanyId_First(
+			companyId, orderByComparator);
 
 		if (meetupsEntry != null) {
 			return meetupsEntry;
@@ -311,10 +302,11 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @return the first matching meetups entry, or <code>null</code> if a matching meetups entry could not be found
 	 */
 	@Override
-	public MeetupsEntry fetchByCompanyId_First(long companyId,
-		OrderByComparator<MeetupsEntry> orderByComparator) {
-		List<MeetupsEntry> list = findByCompanyId(companyId, 0, 1,
-				orderByComparator);
+	public MeetupsEntry fetchByCompanyId_First(
+		long companyId, OrderByComparator<MeetupsEntry> orderByComparator) {
+
+		List<MeetupsEntry> list = findByCompanyId(
+			companyId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -332,11 +324,12 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @throws NoSuchMeetupsEntryException if a matching meetups entry could not be found
 	 */
 	@Override
-	public MeetupsEntry findByCompanyId_Last(long companyId,
-		OrderByComparator<MeetupsEntry> orderByComparator)
+	public MeetupsEntry findByCompanyId_Last(
+			long companyId, OrderByComparator<MeetupsEntry> orderByComparator)
 		throws NoSuchMeetupsEntryException {
-		MeetupsEntry meetupsEntry = fetchByCompanyId_Last(companyId,
-				orderByComparator);
+
+		MeetupsEntry meetupsEntry = fetchByCompanyId_Last(
+			companyId, orderByComparator);
 
 		if (meetupsEntry != null) {
 			return meetupsEntry;
@@ -362,16 +355,17 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @return the last matching meetups entry, or <code>null</code> if a matching meetups entry could not be found
 	 */
 	@Override
-	public MeetupsEntry fetchByCompanyId_Last(long companyId,
-		OrderByComparator<MeetupsEntry> orderByComparator) {
+	public MeetupsEntry fetchByCompanyId_Last(
+		long companyId, OrderByComparator<MeetupsEntry> orderByComparator) {
+
 		int count = countByCompanyId(companyId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<MeetupsEntry> list = findByCompanyId(companyId, count - 1, count,
-				orderByComparator);
+		List<MeetupsEntry> list = findByCompanyId(
+			companyId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -390,9 +384,11 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @throws NoSuchMeetupsEntryException if a meetups entry with the primary key could not be found
 	 */
 	@Override
-	public MeetupsEntry[] findByCompanyId_PrevAndNext(long meetupsEntryId,
-		long companyId, OrderByComparator<MeetupsEntry> orderByComparator)
+	public MeetupsEntry[] findByCompanyId_PrevAndNext(
+			long meetupsEntryId, long companyId,
+			OrderByComparator<MeetupsEntry> orderByComparator)
 		throws NoSuchMeetupsEntryException {
+
 		MeetupsEntry meetupsEntry = findByPrimaryKey(meetupsEntryId);
 
 		Session session = null;
@@ -402,13 +398,13 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 
 			MeetupsEntry[] array = new MeetupsEntryImpl[3];
 
-			array[0] = getByCompanyId_PrevAndNext(session, meetupsEntry,
-					companyId, orderByComparator, true);
+			array[0] = getByCompanyId_PrevAndNext(
+				session, meetupsEntry, companyId, orderByComparator, true);
 
 			array[1] = meetupsEntry;
 
-			array[2] = getByCompanyId_PrevAndNext(session, meetupsEntry,
-					companyId, orderByComparator, false);
+			array[2] = getByCompanyId_PrevAndNext(
+				session, meetupsEntry, companyId, orderByComparator, false);
 
 			return array;
 		}
@@ -420,14 +416,15 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		}
 	}
 
-	protected MeetupsEntry getByCompanyId_PrevAndNext(Session session,
-		MeetupsEntry meetupsEntry, long companyId,
+	protected MeetupsEntry getByCompanyId_PrevAndNext(
+		Session session, MeetupsEntry meetupsEntry, long companyId,
 		OrderByComparator<MeetupsEntry> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -439,7 +436,8 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -509,10 +507,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		qPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(meetupsEntry);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(meetupsEntry)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -533,8 +531,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 */
 	@Override
 	public void removeByCompanyId(long companyId) {
-		for (MeetupsEntry meetupsEntry : findByCompanyId(companyId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (MeetupsEntry meetupsEntry :
+				findByCompanyId(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(meetupsEntry);
 		}
 	}
@@ -547,9 +547,9 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 */
 	@Override
 	public int countByCompanyId(long companyId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_COMPANYID;
+		FinderPath finderPath = _finderPathCountByCompanyId;
 
-		Object[] finderArgs = new Object[] { companyId };
+		Object[] finderArgs = new Object[] {companyId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -590,27 +590,12 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 = "meetupsEntry.companyId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_USERID = new FinderPath(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID =
-		new FinderPath(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
-			new String[] { Long.class.getName() },
-			MeetupsEntryModelImpl.USERID_COLUMN_BITMASK |
-			MeetupsEntryModelImpl.STARTDATE_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_USERID = new FinderPath(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
-			new String[] { Long.class.getName() });
+	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 =
+		"meetupsEntry.companyId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByUserId;
+	private FinderPath _finderPathWithoutPaginationFindByUserId;
+	private FinderPath _finderPathCountByUserId;
 
 	/**
 	 * Returns all the meetups entries where userId = &#63;.
@@ -627,7 +612,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * Returns a range of all the meetups entries where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MeetupsEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MeetupsEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -644,7 +629,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * Returns an ordered range of all the meetups entries where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MeetupsEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MeetupsEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -654,8 +639,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @return the ordered range of matching meetups entries
 	 */
 	@Override
-	public List<MeetupsEntry> findByUserId(long userId, int start, int end,
+	public List<MeetupsEntry> findByUserId(
+		long userId, int start, int end,
 		OrderByComparator<MeetupsEntry> orderByComparator) {
+
 		return findByUserId(userId, start, end, orderByComparator, true);
 	}
 
@@ -663,7 +650,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * Returns an ordered range of all the meetups entries where userId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MeetupsEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MeetupsEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param userId the user ID
@@ -674,29 +661,32 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @return the ordered range of matching meetups entries
 	 */
 	@Override
-	public List<MeetupsEntry> findByUserId(long userId, int start, int end,
+	public List<MeetupsEntry> findByUserId(
+		long userId, int start, int end,
 		OrderByComparator<MeetupsEntry> orderByComparator,
 		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID;
-			finderArgs = new Object[] { userId };
+			finderPath = _finderPathWithoutPaginationFindByUserId;
+			finderArgs = new Object[] {userId};
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_USERID;
-			finderArgs = new Object[] { userId, start, end, orderByComparator };
+			finderPath = _finderPathWithPaginationFindByUserId;
+			finderArgs = new Object[] {userId, start, end, orderByComparator};
 		}
 
 		List<MeetupsEntry> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<MeetupsEntry>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<MeetupsEntry>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MeetupsEntry meetupsEntry : list) {
@@ -713,8 +703,8 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 			StringBundler query = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
 				query = new StringBundler(3);
@@ -725,11 +715,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 			query.append(_FINDER_COLUMN_USERID_USERID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
+			else if (pagination) {
 				query.append(MeetupsEntryModelImpl.ORDER_BY_JPQL);
 			}
 
@@ -747,16 +736,16 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 				qPos.add(userId);
 
 				if (!pagination) {
-					list = (List<MeetupsEntry>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<MeetupsEntry>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<MeetupsEntry>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<MeetupsEntry>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -785,11 +774,12 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @throws NoSuchMeetupsEntryException if a matching meetups entry could not be found
 	 */
 	@Override
-	public MeetupsEntry findByUserId_First(long userId,
-		OrderByComparator<MeetupsEntry> orderByComparator)
+	public MeetupsEntry findByUserId_First(
+			long userId, OrderByComparator<MeetupsEntry> orderByComparator)
 		throws NoSuchMeetupsEntryException {
-		MeetupsEntry meetupsEntry = fetchByUserId_First(userId,
-				orderByComparator);
+
+		MeetupsEntry meetupsEntry = fetchByUserId_First(
+			userId, orderByComparator);
 
 		if (meetupsEntry != null) {
 			return meetupsEntry;
@@ -815,8 +805,9 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @return the first matching meetups entry, or <code>null</code> if a matching meetups entry could not be found
 	 */
 	@Override
-	public MeetupsEntry fetchByUserId_First(long userId,
-		OrderByComparator<MeetupsEntry> orderByComparator) {
+	public MeetupsEntry fetchByUserId_First(
+		long userId, OrderByComparator<MeetupsEntry> orderByComparator) {
+
 		List<MeetupsEntry> list = findByUserId(userId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -835,10 +826,12 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @throws NoSuchMeetupsEntryException if a matching meetups entry could not be found
 	 */
 	@Override
-	public MeetupsEntry findByUserId_Last(long userId,
-		OrderByComparator<MeetupsEntry> orderByComparator)
+	public MeetupsEntry findByUserId_Last(
+			long userId, OrderByComparator<MeetupsEntry> orderByComparator)
 		throws NoSuchMeetupsEntryException {
-		MeetupsEntry meetupsEntry = fetchByUserId_Last(userId, orderByComparator);
+
+		MeetupsEntry meetupsEntry = fetchByUserId_Last(
+			userId, orderByComparator);
 
 		if (meetupsEntry != null) {
 			return meetupsEntry;
@@ -864,16 +857,17 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @return the last matching meetups entry, or <code>null</code> if a matching meetups entry could not be found
 	 */
 	@Override
-	public MeetupsEntry fetchByUserId_Last(long userId,
-		OrderByComparator<MeetupsEntry> orderByComparator) {
+	public MeetupsEntry fetchByUserId_Last(
+		long userId, OrderByComparator<MeetupsEntry> orderByComparator) {
+
 		int count = countByUserId(userId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<MeetupsEntry> list = findByUserId(userId, count - 1, count,
-				orderByComparator);
+		List<MeetupsEntry> list = findByUserId(
+			userId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -892,9 +886,11 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @throws NoSuchMeetupsEntryException if a meetups entry with the primary key could not be found
 	 */
 	@Override
-	public MeetupsEntry[] findByUserId_PrevAndNext(long meetupsEntryId,
-		long userId, OrderByComparator<MeetupsEntry> orderByComparator)
+	public MeetupsEntry[] findByUserId_PrevAndNext(
+			long meetupsEntryId, long userId,
+			OrderByComparator<MeetupsEntry> orderByComparator)
 		throws NoSuchMeetupsEntryException {
+
 		MeetupsEntry meetupsEntry = findByPrimaryKey(meetupsEntryId);
 
 		Session session = null;
@@ -904,13 +900,13 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 
 			MeetupsEntry[] array = new MeetupsEntryImpl[3];
 
-			array[0] = getByUserId_PrevAndNext(session, meetupsEntry, userId,
-					orderByComparator, true);
+			array[0] = getByUserId_PrevAndNext(
+				session, meetupsEntry, userId, orderByComparator, true);
 
 			array[1] = meetupsEntry;
 
-			array[2] = getByUserId_PrevAndNext(session, meetupsEntry, userId,
-					orderByComparator, false);
+			array[2] = getByUserId_PrevAndNext(
+				session, meetupsEntry, userId, orderByComparator, false);
 
 			return array;
 		}
@@ -922,14 +918,15 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		}
 	}
 
-	protected MeetupsEntry getByUserId_PrevAndNext(Session session,
-		MeetupsEntry meetupsEntry, long userId,
+	protected MeetupsEntry getByUserId_PrevAndNext(
+		Session session, MeetupsEntry meetupsEntry, long userId,
 		OrderByComparator<MeetupsEntry> orderByComparator, boolean previous) {
+
 		StringBundler query = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			query = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
@@ -941,7 +938,8 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		query.append(_FINDER_COLUMN_USERID_USERID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
 				query.append(WHERE_AND);
@@ -1011,10 +1009,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		qPos.add(userId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(meetupsEntry);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(meetupsEntry)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				qPos.add(orderByConditionValue);
 			}
 		}
 
@@ -1035,8 +1033,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 */
 	@Override
 	public void removeByUserId(long userId) {
-		for (MeetupsEntry meetupsEntry : findByUserId(userId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (MeetupsEntry meetupsEntry :
+				findByUserId(
+					userId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(meetupsEntry);
 		}
 	}
@@ -1049,9 +1049,9 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 */
 	@Override
 	public int countByUserId(long userId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_USERID;
+		FinderPath finderPath = _finderPathCountByUserId;
 
-		Object[] finderArgs = new Object[] { userId };
+		Object[] finderArgs = new Object[] {userId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
@@ -1092,7 +1092,8 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_USERID_USERID_2 = "meetupsEntry.userId = ?";
+	private static final String _FINDER_COLUMN_USERID_USERID_2 =
+		"meetupsEntry.userId = ?";
 
 	public MeetupsEntryPersistenceImpl() {
 		setModelClass(MeetupsEntry.class);
@@ -1105,8 +1106,9 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 */
 	@Override
 	public void cacheResult(MeetupsEntry meetupsEntry) {
-		entityCache.putResult(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryImpl.class, meetupsEntry.getPrimaryKey(), meetupsEntry);
+		entityCache.putResult(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED, MeetupsEntryImpl.class,
+			meetupsEntry.getPrimaryKey(), meetupsEntry);
 
 		meetupsEntry.resetOriginalValues();
 	}
@@ -1120,8 +1122,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	public void cacheResult(List<MeetupsEntry> meetupsEntries) {
 		for (MeetupsEntry meetupsEntry : meetupsEntries) {
 			if (entityCache.getResult(
-						MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-						MeetupsEntryImpl.class, meetupsEntry.getPrimaryKey()) == null) {
+					MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+					MeetupsEntryImpl.class, meetupsEntry.getPrimaryKey()) ==
+						null) {
+
 				cacheResult(meetupsEntry);
 			}
 			else {
@@ -1134,7 +1138,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * Clears the cache for all meetups entries.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
@@ -1150,13 +1154,14 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * Clears the cache for the meetups entry.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(MeetupsEntry meetupsEntry) {
-		entityCache.removeResult(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryImpl.class, meetupsEntry.getPrimaryKey());
+		entityCache.removeResult(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED, MeetupsEntryImpl.class,
+			meetupsEntry.getPrimaryKey());
 
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
@@ -1168,7 +1173,8 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		for (MeetupsEntry meetupsEntry : meetupsEntries) {
-			entityCache.removeResult(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+			entityCache.removeResult(
+				MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
 				MeetupsEntryImpl.class, meetupsEntry.getPrimaryKey());
 		}
 	}
@@ -1201,6 +1207,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	@Override
 	public MeetupsEntry remove(long meetupsEntryId)
 		throws NoSuchMeetupsEntryException {
+
 		return remove((Serializable)meetupsEntryId);
 	}
 
@@ -1214,21 +1221,22 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	@Override
 	public MeetupsEntry remove(Serializable primaryKey)
 		throws NoSuchMeetupsEntryException {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			MeetupsEntry meetupsEntry = (MeetupsEntry)session.get(MeetupsEntryImpl.class,
-					primaryKey);
+			MeetupsEntry meetupsEntry = (MeetupsEntry)session.get(
+				MeetupsEntryImpl.class, primaryKey);
 
 			if (meetupsEntry == null) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 				}
 
-				throw new NoSuchMeetupsEntryException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-					primaryKey);
+				throw new NoSuchMeetupsEntryException(
+					_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
 			return remove(meetupsEntry);
@@ -1246,16 +1254,14 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 
 	@Override
 	protected MeetupsEntry removeImpl(MeetupsEntry meetupsEntry) {
-		meetupsEntry = toUnwrappedModel(meetupsEntry);
-
 		Session session = null;
 
 		try {
 			session = openSession();
 
 			if (!session.contains(meetupsEntry)) {
-				meetupsEntry = (MeetupsEntry)session.get(MeetupsEntryImpl.class,
-						meetupsEntry.getPrimaryKeyObj());
+				meetupsEntry = (MeetupsEntry)session.get(
+					MeetupsEntryImpl.class, meetupsEntry.getPrimaryKeyObj());
 			}
 
 			if (meetupsEntry != null) {
@@ -1278,13 +1284,30 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 
 	@Override
 	public MeetupsEntry updateImpl(MeetupsEntry meetupsEntry) {
-		meetupsEntry = toUnwrappedModel(meetupsEntry);
-
 		boolean isNew = meetupsEntry.isNew();
 
-		MeetupsEntryModelImpl meetupsEntryModelImpl = (MeetupsEntryModelImpl)meetupsEntry;
+		if (!(meetupsEntry instanceof MeetupsEntryModelImpl)) {
+			InvocationHandler invocationHandler = null;
 
-		ServiceContext serviceContext = ServiceContextThreadLocal.getServiceContext();
+			if (ProxyUtil.isProxyClass(meetupsEntry.getClass())) {
+				invocationHandler = ProxyUtil.getInvocationHandler(
+					meetupsEntry);
+
+				throw new IllegalArgumentException(
+					"Implement ModelWrapper in meetupsEntry proxy " +
+						invocationHandler.getClass());
+			}
+
+			throw new IllegalArgumentException(
+				"Implement ModelWrapper in custom MeetupsEntry implementation " +
+					meetupsEntry.getClass());
+		}
+
+		MeetupsEntryModelImpl meetupsEntryModelImpl =
+			(MeetupsEntryModelImpl)meetupsEntry;
+
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
 
 		Date now = new Date();
 
@@ -1302,7 +1325,8 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 				meetupsEntry.setModifiedDate(now);
 			}
 			else {
-				meetupsEntry.setModifiedDate(serviceContext.getModifiedDate(now));
+				meetupsEntry.setModifiedDate(
+					serviceContext.getModifiedDate(now));
 			}
 		}
 
@@ -1332,100 +1356,74 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		if (!MeetupsEntryModelImpl.COLUMN_BITMASK_ENABLED) {
 			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 		}
-		else
-		 if (isNew) {
-			Object[] args = new Object[] { meetupsEntryModelImpl.getCompanyId() };
+		else if (isNew) {
+			Object[] args = new Object[] {meetupsEntryModelImpl.getCompanyId()};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-				args);
+			finderCache.removeResult(_finderPathCountByCompanyId, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByCompanyId, args);
 
-			args = new Object[] { meetupsEntryModelImpl.getUserId() };
+			args = new Object[] {meetupsEntryModelImpl.getUserId()};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_USERID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID,
-				args);
+			finderCache.removeResult(_finderPathCountByUserId, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByUserId, args);
 
-			finderCache.removeResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL,
-				FINDER_ARGS_EMPTY);
+			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
 		}
-
 		else {
 			if ((meetupsEntryModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID.getColumnBitmask()) != 0) {
+				 _finderPathWithoutPaginationFindByCompanyId.
+					 getColumnBitmask()) != 0) {
+
 				Object[] args = new Object[] {
-						meetupsEntryModelImpl.getOriginalCompanyId()
-					};
+					meetupsEntryModelImpl.getOriginalCompanyId()
+				};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-					args);
+				finderCache.removeResult(_finderPathCountByCompanyId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByCompanyId, args);
 
-				args = new Object[] { meetupsEntryModelImpl.getCompanyId() };
+				args = new Object[] {meetupsEntryModelImpl.getCompanyId()};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-					args);
+				finderCache.removeResult(_finderPathCountByCompanyId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByCompanyId, args);
 			}
 
 			if ((meetupsEntryModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID.getColumnBitmask()) != 0) {
+				 _finderPathWithoutPaginationFindByUserId.getColumnBitmask()) !=
+					 0) {
+
 				Object[] args = new Object[] {
-						meetupsEntryModelImpl.getOriginalUserId()
-					};
+					meetupsEntryModelImpl.getOriginalUserId()
+				};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_USERID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID,
-					args);
+				finderCache.removeResult(_finderPathCountByUserId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByUserId, args);
 
-				args = new Object[] { meetupsEntryModelImpl.getUserId() };
+				args = new Object[] {meetupsEntryModelImpl.getUserId()};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_USERID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_USERID,
-					args);
+				finderCache.removeResult(_finderPathCountByUserId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByUserId, args);
 			}
 		}
 
-		entityCache.putResult(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryImpl.class, meetupsEntry.getPrimaryKey(), meetupsEntry,
-			false);
+		entityCache.putResult(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED, MeetupsEntryImpl.class,
+			meetupsEntry.getPrimaryKey(), meetupsEntry, false);
 
 		meetupsEntry.resetOriginalValues();
 
 		return meetupsEntry;
 	}
 
-	protected MeetupsEntry toUnwrappedModel(MeetupsEntry meetupsEntry) {
-		if (meetupsEntry instanceof MeetupsEntryImpl) {
-			return meetupsEntry;
-		}
-
-		MeetupsEntryImpl meetupsEntryImpl = new MeetupsEntryImpl();
-
-		meetupsEntryImpl.setNew(meetupsEntry.isNew());
-		meetupsEntryImpl.setPrimaryKey(meetupsEntry.getPrimaryKey());
-
-		meetupsEntryImpl.setMeetupsEntryId(meetupsEntry.getMeetupsEntryId());
-		meetupsEntryImpl.setCompanyId(meetupsEntry.getCompanyId());
-		meetupsEntryImpl.setUserId(meetupsEntry.getUserId());
-		meetupsEntryImpl.setUserName(meetupsEntry.getUserName());
-		meetupsEntryImpl.setCreateDate(meetupsEntry.getCreateDate());
-		meetupsEntryImpl.setModifiedDate(meetupsEntry.getModifiedDate());
-		meetupsEntryImpl.setTitle(meetupsEntry.getTitle());
-		meetupsEntryImpl.setDescription(meetupsEntry.getDescription());
-		meetupsEntryImpl.setStartDate(meetupsEntry.getStartDate());
-		meetupsEntryImpl.setEndDate(meetupsEntry.getEndDate());
-		meetupsEntryImpl.setTotalAttendees(meetupsEntry.getTotalAttendees());
-		meetupsEntryImpl.setMaxAttendees(meetupsEntry.getMaxAttendees());
-		meetupsEntryImpl.setPrice(meetupsEntry.getPrice());
-		meetupsEntryImpl.setThumbnailId(meetupsEntry.getThumbnailId());
-
-		return meetupsEntryImpl;
-	}
-
 	/**
-	 * Returns the meetups entry with the primary key or throws a {@link com.liferay.portal.kernel.exception.NoSuchModelException} if it could not be found.
+	 * Returns the meetups entry with the primary key or throws a <code>com.liferay.portal.kernel.exception.NoSuchModelException</code> if it could not be found.
 	 *
 	 * @param primaryKey the primary key of the meetups entry
 	 * @return the meetups entry
@@ -1434,6 +1432,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	@Override
 	public MeetupsEntry findByPrimaryKey(Serializable primaryKey)
 		throws NoSuchMeetupsEntryException {
+
 		MeetupsEntry meetupsEntry = fetchByPrimaryKey(primaryKey);
 
 		if (meetupsEntry == null) {
@@ -1441,15 +1440,15 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 				_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
-			throw new NoSuchMeetupsEntryException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-				primaryKey);
+			throw new NoSuchMeetupsEntryException(
+				_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 		}
 
 		return meetupsEntry;
 	}
 
 	/**
-	 * Returns the meetups entry with the primary key or throws a {@link NoSuchMeetupsEntryException} if it could not be found.
+	 * Returns the meetups entry with the primary key or throws a <code>NoSuchMeetupsEntryException</code> if it could not be found.
 	 *
 	 * @param meetupsEntryId the primary key of the meetups entry
 	 * @return the meetups entry
@@ -1458,6 +1457,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	@Override
 	public MeetupsEntry findByPrimaryKey(long meetupsEntryId)
 		throws NoSuchMeetupsEntryException {
+
 		return findByPrimaryKey((Serializable)meetupsEntryId);
 	}
 
@@ -1469,8 +1469,9 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 */
 	@Override
 	public MeetupsEntry fetchByPrimaryKey(Serializable primaryKey) {
-		Serializable serializable = entityCache.getResult(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-				MeetupsEntryImpl.class, primaryKey);
+		Serializable serializable = entityCache.getResult(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED, MeetupsEntryImpl.class,
+			primaryKey);
 
 		if (serializable == nullModel) {
 			return null;
@@ -1484,19 +1485,21 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 			try {
 				session = openSession();
 
-				meetupsEntry = (MeetupsEntry)session.get(MeetupsEntryImpl.class,
-						primaryKey);
+				meetupsEntry = (MeetupsEntry)session.get(
+					MeetupsEntryImpl.class, primaryKey);
 
 				if (meetupsEntry != null) {
 					cacheResult(meetupsEntry);
 				}
 				else {
-					entityCache.putResult(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+					entityCache.putResult(
+						MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
 						MeetupsEntryImpl.class, primaryKey, nullModel);
 				}
 			}
 			catch (Exception e) {
-				entityCache.removeResult(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+				entityCache.removeResult(
+					MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
 					MeetupsEntryImpl.class, primaryKey);
 
 				throw processException(e);
@@ -1523,11 +1526,13 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	@Override
 	public Map<Serializable, MeetupsEntry> fetchByPrimaryKeys(
 		Set<Serializable> primaryKeys) {
+
 		if (primaryKeys.isEmpty()) {
 			return Collections.emptyMap();
 		}
 
-		Map<Serializable, MeetupsEntry> map = new HashMap<Serializable, MeetupsEntry>();
+		Map<Serializable, MeetupsEntry> map =
+			new HashMap<Serializable, MeetupsEntry>();
 
 		if (primaryKeys.size() == 1) {
 			Iterator<Serializable> iterator = primaryKeys.iterator();
@@ -1546,8 +1551,9 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		Set<Serializable> uncachedPrimaryKeys = null;
 
 		for (Serializable primaryKey : primaryKeys) {
-			Serializable serializable = entityCache.getResult(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-					MeetupsEntryImpl.class, primaryKey);
+			Serializable serializable = entityCache.getResult(
+				MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+				MeetupsEntryImpl.class, primaryKey);
 
 			if (serializable != nullModel) {
 				if (serializable == null) {
@@ -1567,8 +1573,8 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 			return map;
 		}
 
-		StringBundler query = new StringBundler((uncachedPrimaryKeys.size() * 2) +
-				1);
+		StringBundler query = new StringBundler(
+			uncachedPrimaryKeys.size() * 2 + 1);
 
 		query.append(_SQL_SELECT_MEETUPSENTRY_WHERE_PKS_IN);
 
@@ -1600,7 +1606,8 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 			}
 
 			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				entityCache.putResult(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+				entityCache.putResult(
+					MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
 					MeetupsEntryImpl.class, primaryKey, nullModel);
 			}
 		}
@@ -1628,7 +1635,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * Returns a range of all the meetups entries.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MeetupsEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MeetupsEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of meetups entries
@@ -1644,7 +1651,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * Returns an ordered range of all the meetups entries.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MeetupsEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MeetupsEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of meetups entries
@@ -1653,8 +1660,9 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @return the ordered range of meetups entries
 	 */
 	@Override
-	public List<MeetupsEntry> findAll(int start, int end,
-		OrderByComparator<MeetupsEntry> orderByComparator) {
+	public List<MeetupsEntry> findAll(
+		int start, int end, OrderByComparator<MeetupsEntry> orderByComparator) {
+
 		return findAll(start, end, orderByComparator, true);
 	}
 
@@ -1662,7 +1670,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * Returns an ordered range of all the meetups entries.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link MeetupsEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not <code>QueryUtil#ALL_POS</code>), then the query will include the default ORDER BY logic from <code>MeetupsEntryModelImpl</code>. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of meetups entries
@@ -1672,29 +1680,31 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * @return the ordered range of meetups entries
 	 */
 	@Override
-	public List<MeetupsEntry> findAll(int start, int end,
-		OrderByComparator<MeetupsEntry> orderByComparator,
+	public List<MeetupsEntry> findAll(
+		int start, int end, OrderByComparator<MeetupsEntry> orderByComparator,
 		boolean retrieveFromCache) {
+
 		boolean pagination = true;
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
+			(orderByComparator == null)) {
+
 			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL;
+			finderPath = _finderPathWithoutPaginationFindAll;
 			finderArgs = FINDER_ARGS_EMPTY;
 		}
 		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_ALL;
-			finderArgs = new Object[] { start, end, orderByComparator };
+			finderPath = _finderPathWithPaginationFindAll;
+			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<MeetupsEntry> list = null;
 
 		if (retrieveFromCache) {
-			list = (List<MeetupsEntry>)finderCache.getResult(finderPath,
-					finderArgs, this);
+			list = (List<MeetupsEntry>)finderCache.getResult(
+				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
@@ -1702,13 +1712,13 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(2 +
-						(orderByComparator.getOrderByFields().length * 2));
+				query = new StringBundler(
+					2 + (orderByComparator.getOrderByFields().length * 2));
 
 				query.append(_SQL_SELECT_MEETUPSENTRY);
 
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
 				sql = query.toString();
 			}
@@ -1728,16 +1738,16 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 				Query q = session.createQuery(sql);
 
 				if (!pagination) {
-					list = (List<MeetupsEntry>)QueryUtil.list(q, getDialect(),
-							start, end, false);
+					list = (List<MeetupsEntry>)QueryUtil.list(
+						q, getDialect(), start, end, false);
 
 					Collections.sort(list);
 
 					list = Collections.unmodifiableList(list);
 				}
 				else {
-					list = (List<MeetupsEntry>)QueryUtil.list(q, getDialect(),
-							start, end);
+					list = (List<MeetupsEntry>)QueryUtil.list(
+						q, getDialect(), start, end);
 				}
 
 				cacheResult(list);
@@ -1775,8 +1785,8 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)finderCache.getResult(FINDER_PATH_COUNT_ALL,
-				FINDER_ARGS_EMPTY, this);
+		Long count = (Long)finderCache.getResult(
+			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
 			Session session = null;
@@ -1788,12 +1798,12 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 
 				count = (Long)q.uniqueResult();
 
-				finderCache.putResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY,
-					count);
+				finderCache.putResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_COUNT_ALL,
-					FINDER_ARGS_EMPTY);
+				finderCache.removeResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 				throw processException(e);
 			}
@@ -1814,6 +1824,68 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 	 * Initializes the meetups entry persistence.
 	 */
 	public void afterPropertiesSet() {
+		_finderPathWithPaginationFindAll = new FinderPath(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+
+		_finderPathWithoutPaginationFindAll = new FinderPath(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
+			new String[0]);
+
+		_finderPathCountAll = new FinderPath(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
+			new String[0]);
+
+		_finderPathWithPaginationFindByCompanyId = new FinderPath(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
+			new String[] {Long.class.getName()},
+			MeetupsEntryModelImpl.COMPANYID_COLUMN_BITMASK |
+			MeetupsEntryModelImpl.STARTDATE_COLUMN_BITMASK);
+
+		_finderPathCountByCompanyId = new FinderPath(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
+			new String[] {Long.class.getName()});
+
+		_finderPathWithPaginationFindByUserId = new FinderPath(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByUserId = new FinderPath(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, MeetupsEntryImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
+			new String[] {Long.class.getName()},
+			MeetupsEntryModelImpl.USERID_COLUMN_BITMASK |
+			MeetupsEntryModelImpl.STARTDATE_COLUMN_BITMASK);
+
+		_finderPathCountByUserId = new FinderPath(
+			MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
+			MeetupsEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
+			new String[] {Long.class.getName()});
 	}
 
 	public void destroy() {
@@ -1825,17 +1897,37 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 
 	@ServiceReference(type = CompanyProviderWrapper.class)
 	protected CompanyProvider companyProvider;
+
 	@ServiceReference(type = EntityCache.class)
 	protected EntityCache entityCache;
+
 	@ServiceReference(type = FinderCache.class)
 	protected FinderCache finderCache;
-	private static final String _SQL_SELECT_MEETUPSENTRY = "SELECT meetupsEntry FROM MeetupsEntry meetupsEntry";
-	private static final String _SQL_SELECT_MEETUPSENTRY_WHERE_PKS_IN = "SELECT meetupsEntry FROM MeetupsEntry meetupsEntry WHERE meetupsEntryId IN (";
-	private static final String _SQL_SELECT_MEETUPSENTRY_WHERE = "SELECT meetupsEntry FROM MeetupsEntry meetupsEntry WHERE ";
-	private static final String _SQL_COUNT_MEETUPSENTRY = "SELECT COUNT(meetupsEntry) FROM MeetupsEntry meetupsEntry";
-	private static final String _SQL_COUNT_MEETUPSENTRY_WHERE = "SELECT COUNT(meetupsEntry) FROM MeetupsEntry meetupsEntry WHERE ";
+
+	private static final String _SQL_SELECT_MEETUPSENTRY =
+		"SELECT meetupsEntry FROM MeetupsEntry meetupsEntry";
+
+	private static final String _SQL_SELECT_MEETUPSENTRY_WHERE_PKS_IN =
+		"SELECT meetupsEntry FROM MeetupsEntry meetupsEntry WHERE meetupsEntryId IN (";
+
+	private static final String _SQL_SELECT_MEETUPSENTRY_WHERE =
+		"SELECT meetupsEntry FROM MeetupsEntry meetupsEntry WHERE ";
+
+	private static final String _SQL_COUNT_MEETUPSENTRY =
+		"SELECT COUNT(meetupsEntry) FROM MeetupsEntry meetupsEntry";
+
+	private static final String _SQL_COUNT_MEETUPSENTRY_WHERE =
+		"SELECT COUNT(meetupsEntry) FROM MeetupsEntry meetupsEntry WHERE ";
+
 	private static final String _ORDER_BY_ENTITY_ALIAS = "meetupsEntry.";
-	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY = "No MeetupsEntry exists with the primary key ";
-	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No MeetupsEntry exists with the key {";
-	private static final Log _log = LogFactoryUtil.getLog(MeetupsEntryPersistenceImpl.class);
+
+	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY =
+		"No MeetupsEntry exists with the primary key ";
+
+	private static final String _NO_SUCH_ENTITY_WITH_KEY =
+		"No MeetupsEntry exists with the key {";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		MeetupsEntryPersistenceImpl.class);
+
 }

@@ -25,7 +25,7 @@ public class UpgradeEventsDisplayPortletId extends BaseUpgradePortletId {
 	@Override
 	protected String[][] getRenamePortletIdsArray() {
 		return new String[][] {
-			new String[] {
+			{
 				"1_WAR_eventsdisplayportlet",
 				EventsDisplayPortletKeys.EVENTS_DISPLAY
 			}

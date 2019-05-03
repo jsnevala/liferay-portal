@@ -1,7 +1,6 @@
 Bundle-Name: Liferay Frontend JS Web
 Bundle-SymbolicName: com.liferay.frontend.js.web
-Bundle-Version: 1.0.71
-Liferay-Releng-Module-Group-Description:
+Bundle-Version: 1.0.87
 Liferay-Releng-Module-Group-Title: Frontend Infrastructure
 Provide-Capability:\
 	osgi.extender;\

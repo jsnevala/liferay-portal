@@ -39,7 +39,9 @@ public class GetAllFolderSyncDLObjectsHandler extends BaseJSONHandler {
 	@Override
 	public void processResponse(String response) throws Exception {
 		_syncFiles = JSONUtil.readValue(
-			response, new TypeReference<List<SyncFile>>() {});
+			response,
+			new TypeReference<List<SyncFile>>() {
+			});
 	}
 
 	private List<SyncFile> _syncFiles = new ArrayList<>();

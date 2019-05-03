@@ -59,3 +59,43 @@ String value = ParamUtil.getString(request, name);
 		Liferay.Util.focusFormField('#<%= namespace %><%= id %>');
 	</aui:script>
 </c:if>
+
+<aui:script>
+	var searchInput = $('#<%= namespace %><%= id %>');
+
+	var searchForm = searchInput.closest('form');
+
+	searchForm.on(
+		'submit',
+		function(event) {
+			var keywords = searchInput.val();
+
+			var searchURL = $(this).attr('action');
+
+			if (searchURL.includes('?')) {
+				searchURL = searchURL.concat('&<%= namespace %>keywords=' + keywords);
+			}
+			else {
+				searchURL = searchURL.concat('?<%= namespace %>keywords=' + keywords);
+			}
+
+			$(this).attr('action', searchURL);
+		}
+	);
+
+	var viewLinks = $("a[id*='view']");
+
+	viewLinks.each(
+		function() {
+			var href = $(this).attr('href');
+
+			var keywordsParameterName = '<%= namespace %>keywords';
+
+			var keywordsRegex = new RegExp('%26' + keywordsParameterName + '(%3D[^&]*)?|^' + keywordsParameterName + '(%3D[^&]*)?&?', 'g');
+
+			var hrefKeywordsParameterRemoved = href.replace(keywordsRegex, '');
+
+			$(this).attr('href', hrefKeywordsParameterRemoved);
+		}
+	);
+</aui:script>

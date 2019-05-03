@@ -136,15 +136,15 @@ if (editorOptions != null) {
 			</div>
 
 			<div class="alloy-editor-switch hide">
-				<button class="btn btn-default btn-xs hide" id="<%= HtmlUtil.escapeAttribute(name) %>Fullscreen" type="button">
+				<button class="btn btn-default btn-xs hide lfr-portal-tooltip" data-title="<%= LanguageUtil.get(resourceBundle, "fullscreen") %>" id="<%= HtmlUtil.escapeAttribute(name) %>Fullscreen" type="button">
 					<aui:icon cssClass="icon-monospaced" image="expand" markupView="lexicon" />
 				</button>
 
-				<button class="btn btn-default btn-xs hide" id="<%= HtmlUtil.escapeAttribute(name) %>SwitchTheme" type="button">
+				<button class="btn btn-default btn-xs hide lfr-portal-tooltip" data-title="<%= LanguageUtil.get(resourceBundle, "switch-theme") %>" id="<%= HtmlUtil.escapeAttribute(name) %>SwitchTheme" type="button">
 					<aui:icon cssClass="icon-monospaced" image="moon" markupView="lexicon" />
 				</button>
 
-				<button class="btn btn-default btn-xs" id="<%= HtmlUtil.escapeAttribute(name) %>Switch" type="button">
+				<button class="btn btn-default btn-xs editor-view lfr-portal-tooltip" data-title="<%= LanguageUtil.get(resourceBundle, "code-view") %>" id="<%= HtmlUtil.escapeAttribute(name) %>Switch" type="button">
 					<aui:icon cssClass="icon-monospaced" image="code" markupView="lexicon" />
 				</button>
 			</div>
@@ -182,6 +182,7 @@ name = HtmlUtil.escapeJS(name);
 %>
 
 <aui:script use="<%= modules %>">
+	var windowNode = A.getWin();
 
 	<%
 	Locale contentsLocale = LocaleUtil.fromLanguageId(contentsLanguageId);
@@ -198,14 +199,28 @@ name = HtmlUtil.escapeJS(name);
 			data = <%= HtmlUtil.escapeJS(namespace + initMethod) %>();
 		}
 		else {
-			data = '<%= contents != null ? HtmlUtil.escapeJS(contents) : StringPool.BLANK %>';
+			data = '<%= (contents != null) ? HtmlUtil.escapeJS(contents) : StringPool.BLANK %>';
 		}
 
 		return data;
 	};
 
 	var createInstance = function() {
-		document.getElementById('<%= name %>').setAttribute('contenteditable', true);
+		var editorNode = A.one('#<%= name %>');
+
+		if (!editorNode) {
+			var editorContainer = A.one('#<%= name %>Container');
+
+			editorContainer.setHTML('');
+
+			editorNode = A.Node.create('<%= HtmlUtil.escapeJS(editor) %>');
+
+			editorContainer.appendChild(editorNode);
+		}
+
+		if (editorNode) {
+			editorNode.attr('contenteditable', true);
+		}
 
 		var editorConfig = <%= Validator.isNotNull(editorConfigJSONObject) %> ? <%= editorConfigJSONObject %> : {};
 
@@ -220,9 +235,12 @@ name = HtmlUtil.escapeJS(name);
 
 		editorConfig.removePlugins = editorConfig.removePlugins ? editorConfig.removePlugins + ',ae_embed' : 'ae_embed';
 
+		var uiNode = Liferay.Util.getOpener() !== window.self ? document.querySelector('#main-content') : null;
+
 		editorConfig = A.merge(
 			{
-				title: '<%= LanguageUtil.get(resourceBundle, "rich-text-editor") %>'
+				title: false,
+				uiNode: uiNode
 			},
 			editorConfig
 		);
@@ -284,8 +302,47 @@ name = HtmlUtil.escapeJS(name);
 			);
 		</c:if>
 
+		CKEDITOR.dom.selection.prototype.selectElement = function(element) {
+			this.isLocked = 0;
+
+			var range = new CKEDITOR.dom.range(this.root);
+
+			range.setEndAfter(element);
+			range.setStartBefore(element);
+
+			this.selectRanges([range]);
+		};
+
 		<liferay-util:dynamic-include key='<%= "com.liferay.frontend.editor.alloyeditor.web#" + editorName + "#onEditorCreate" %>' />
 	};
+
+	var preventImageDragoverHandler = windowNode.on(
+		'dragover',
+		function(event) {
+			var validDropTarget = event.target.getDOMNode().isContentEditable;
+
+			if (!validDropTarget) {
+				event.preventDefault();
+			}
+		}
+	);
+
+	var preventImageDropHandler = windowNode.on(
+		'drop',
+		function(event) {
+			var validDropTarget = event.target.getDOMNode().isContentEditable;
+
+			if (!validDropTarget) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+			}
+		}
+	);
+
+	var eventHandles = [
+		preventImageDragoverHandler,
+		preventImageDropHandler
+	];
 
 	window['<%= name %>'] = {
 		create: function() {
@@ -312,6 +369,8 @@ name = HtmlUtil.escapeJS(name);
 
 				alloyEditor = null;
 			}
+
+			(new A.EventHandle(eventHandles)).detach();
 
 			var editorNode = document.getElementById('<%= name %>');
 

@@ -15,11 +15,11 @@
 package com.liferay.announcements.web.internal.upgrade;
 
 import com.liferay.announcements.web.internal.upgrade.v1_0_2.UpgradePermission;
+import com.liferay.announcements.web.internal.upgrade.v1_0_4.UpgradePortletPreferences;
 import com.liferay.portal.kernel.upgrade.BaseReplacePortletId;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
-import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.portal.upgrade.release.BaseUpgradeWebModuleRelease;
 
@@ -66,12 +66,20 @@ public class AnnouncementsWebUpgrade implements UpgradeStepRegistrator {
 			@Override
 			protected String[][] getRenamePortletIdsArray() {
 				return new String[][] {
-					new String[] {
+					{
 						"1_WAR_soannouncementsportlet",
-						PortletKeys.ANNOUNCEMENTS
+						"com_liferay_announcements_web_portlet_" +
+							"AnnouncementsPortlet"
 					},
-					new String[] {"83", PortletKeys.ALERTS},
-					new String[] {"84", PortletKeys.ANNOUNCEMENTS}
+					{
+						"83",
+						"com_liferay_announcements_web_portlet_AlertsPortlet"
+					},
+					{
+						"84",
+						"com_liferay_announcements_web_portlet_" +
+							"AnnouncementsPortlet"
+					}
 				};
 			}
 
@@ -96,6 +104,10 @@ public class AnnouncementsWebUpgrade implements UpgradeStepRegistrator {
 		registry.register(
 			"com.liferay.announcements.web", "1.0.2", "1.0.3", upgradePortletId,
 			new UpgradePermission(true));
+
+		registry.register(
+			"com.liferay.announcements.web", "1.0.3", "1.0.4",
+			new UpgradePortletPreferences());
 	}
 
 }

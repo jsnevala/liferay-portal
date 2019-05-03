@@ -19,7 +19,7 @@ import com.liferay.portal.kernel.security.pacl.DoPrivileged;
 import com.liferay.portal.util.PropsValues;
 
 /**
- * @author Peter Borkuti
+ * @author Péter Borkuti
  */
 @DoPrivileged
 public class InterruptedPortletRequestWhitelistImpl

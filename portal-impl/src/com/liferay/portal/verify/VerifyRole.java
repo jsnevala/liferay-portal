@@ -77,8 +77,8 @@ public class VerifyRole extends VerifyProcess {
 	}
 
 	protected void verifyRoles(long companyId) throws Exception {
-		try (LoggingTimer loggingTimer =
-				new LoggingTimer(String.valueOf(companyId))) {
+		try (LoggingTimer loggingTimer = new LoggingTimer(
+				String.valueOf(companyId))) {
 
 			RoleLocalServiceUtil.checkSystemRoles(companyId);
 

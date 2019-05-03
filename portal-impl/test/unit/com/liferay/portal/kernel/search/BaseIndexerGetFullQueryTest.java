@@ -19,9 +19,8 @@ import com.liferay.message.boards.kernel.model.MBMessage;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.search.test.TestIndexerRegistry;
 import com.liferay.portlet.documentlibrary.util.DLFileEntryIndexer;
 import com.liferay.portlet.messageboards.util.MBMessageIndexer;
@@ -30,6 +29,7 @@ import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
 
 import javax.portlet.PortletRequest;
@@ -159,9 +159,7 @@ public class BaseIndexerGetFullQueryTest extends PowerMockito {
 	}
 
 	protected void setUpPropsUtil() {
-		Props props = mock(Props.class);
-
-		PropsUtil.setProps(props);
+		PropsTestUtil.setProps(Collections.emptyMap());
 	}
 
 	protected void setUpRegistryUtil() throws Exception {

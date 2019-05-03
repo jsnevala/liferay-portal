@@ -36,7 +36,14 @@ long recordSetId = ddlFormDisplayContext.getRecordSetId();
 				<portlet:actionURL name="addRecord" var="addRecordActionURL" />
 
 				<div class="portlet-forms">
-					<aui:form action="<%= addRecordActionURL %>" data-DDLRecordSetId="<%= recordSetId %>" method="post" name="fm">
+
+					<%
+					DDLRecordSet recordSet = ddlFormDisplayContext.getRecordSet();
+
+					String name = recordSet.getName(locale);
+					%>
+
+					<aui:form action="<%= addRecordActionURL %>" data-DDLRecordSetId="<%= recordSetId %>" data-DDLRecordSetName="<%= HtmlUtil.escapeAttribute(name) %>" method="post" name="fm">
 
 						<%
 						String redirectURL = ddlFormDisplayContext.getRedirectURL();
@@ -45,10 +52,6 @@ long recordSetId = ddlFormDisplayContext.getRecordSetId();
 						<c:if test="<%= Validator.isNull(redirectURL) %>">
 							<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 						</c:if>
-
-						<%
-						DDLRecordSet recordSet = ddlFormDisplayContext.getRecordSet();
-						%>
 
 						<aui:input name="groupId" type="hidden" value="<%= recordSet.getGroupId() %>" />
 						<aui:input name="recordSetId" type="hidden" value="<%= recordSet.getRecordSetId() %>" />
@@ -68,7 +71,7 @@ long recordSetId = ddlFormDisplayContext.getRecordSetId();
 							for (DDMFormFieldEvaluationResult ddmFormFieldEvaluationResult : ddmFormFieldEvaluationResults) {
 							%>
 
-								<liferay-ui:message arguments="<%= new Object[] {ddmFormFieldEvaluationResult.getName(), ddmFormFieldEvaluationResult.getErrorMessage()} %>" key="validation-failed-for-field-x" translateArguments="<%= false %>" />
+								<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(ddmFormFieldEvaluationResult.getName()), ddmFormFieldEvaluationResult.getErrorMessage()} %>" key="validation-failed-for-field-x" translateArguments="<%= false %>" />
 
 								<br />
 
@@ -84,7 +87,7 @@ long recordSetId = ddlFormDisplayContext.getRecordSetId();
 							DDMFormValuesValidationException.RequiredValue rv = (DDMFormValuesValidationException.RequiredValue)errorException;
 							%>
 
-							<liferay-ui:message arguments="<%= rv.getFieldName() %>" key="no-value-is-defined-for-field-x" translateArguments="<%= false %>" />
+							<liferay-ui:message arguments="<%= HtmlUtil.escape(rv.getFieldName()) %>" key="no-value-is-defined-for-field-x" translateArguments="<%= false %>" />
 						</liferay-ui:error>
 
 						<liferay-ui:error exception="<%= NoSuchRecordSetException.class %>" message="the-selected-form-no-longer-exists" />
@@ -95,20 +98,23 @@ long recordSetId = ddlFormDisplayContext.getRecordSetId();
 
 						<div class="ddl-form-basic-info">
 							<div class="container-fluid-1280">
-								<h1 class="ddl-form-name"><%= recordSet.getName(locale) %></h1>
 
 								<%
 								String description = recordSet.getDescription(locale);
 								%>
 
+								<h1 class="ddl-form-name"><%= HtmlUtil.escape(name) %></h1>
+
 								<c:if test="<%= Validator.isNotNull(description) %>">
-									<h2 class="ddl-form-description"><%= description %></h2>
+									<h2 class="ddl-form-description"><%= HtmlUtil.escape(description) %></h2>
 								</c:if>
 							</div>
 						</div>
 
 						<div class="container-fluid-1280 ddl-form-builder-app">
 							<%= ddlFormDisplayContext.getDDMFormHTML() %>
+
+							<aui:input name="empty" type="hidden" value="" />
 						</div>
 					</aui:form>
 				</div>

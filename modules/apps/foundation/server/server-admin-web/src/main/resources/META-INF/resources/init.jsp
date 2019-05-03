@@ -47,6 +47,7 @@ page import="com.liferay.portal.kernel.image.ImageMagickUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.*" %><%@
 page import="com.liferay.portal.kernel.model.impl.*" %><%@
+page import="com.liferay.portal.kernel.patcher.PatcherUtil" %><%@
 page import="com.liferay.portal.kernel.scripting.ScriptingUtil" %><%@
 page import="com.liferay.portal.kernel.search.Indexer" %><%@
 page import="com.liferay.portal.kernel.search.IndexerClassNameComparator" %><%@

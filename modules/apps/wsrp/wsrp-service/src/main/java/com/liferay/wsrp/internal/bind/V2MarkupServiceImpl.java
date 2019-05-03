@@ -14,6 +14,7 @@
 
 package com.liferay.wsrp.internal.bind;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -364,7 +365,7 @@ public class V2MarkupServiceImpl
 			NamedString clientAttribute = new NamedString();
 
 			clientAttribute.setName(HttpHeaders.CONTENT_LENGTH);
-			clientAttribute.setValue(Integer.toString(contentLength));
+			clientAttribute.setValue(String.valueOf(contentLength));
 
 			clientAttributes.add(clientAttribute);
 		}
@@ -382,9 +383,7 @@ public class V2MarkupServiceImpl
 	protected HandleEventsResponse doHandleEvents(HandleEvents handleEvents)
 		throws Exception {
 
-		HandleEventsResponse handleEventsResponse = new HandleEventsResponse();
-
-		return handleEventsResponse;
+		return new HandleEventsResponse();
 	}
 
 	protected Extension[] doInitCookie(InitCookie initCookie) throws Exception {
@@ -830,7 +829,9 @@ public class V2MarkupServiceImpl
 
 		if (ArrayUtil.contains(localesEnabled, languageId)) {
 			sb.append(StringPool.SLASH);
-			sb.append(languageId);
+			sb.append(
+				StringUtil.replaceFirst(
+					languageId, CharPool.UNDERLINE, CharPool.DASH));
 		}
 
 		sb.append(_PATH_WIDGET);

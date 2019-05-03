@@ -87,8 +87,8 @@ public class VerifyResourcePermissions extends VerifyProcess {
 
 		verify(
 			verifiableResourcedModels.toArray(
-				new VerifiableResourcedModel[
-					verifiableResourcedModels.size()]));
+				new VerifiableResourcedModel
+					[verifiableResourcedModels.size()]));
 	}
 
 	private String _getVerifyResourcedModelSQL(
@@ -130,7 +130,6 @@ public class VerifyResourcePermissions extends VerifyProcess {
 				sb.append(verifiableResourcedModel.getTableName());
 				sb.append(".");
 				sb.append(verifiableResourcedModel.getUserIdColumnName());
-				sb.append(", ResourcePermission.resourcePermissionId");
 			}
 
 			sb.append(" from ");
@@ -142,17 +141,17 @@ public class VerifyResourcePermissions extends VerifyProcess {
 			sb.append(verifiableResourcedModel.getModelName());
 			sb.append("' and ResourcePermission.scope = ");
 			sb.append(ResourceConstants.SCOPE_INDIVIDUAL);
-			sb.append(" and ResourcePermission.primKey = CAST_TEXT(");
+			sb.append(" and ResourcePermission.primKeyId = ");
 			sb.append(verifiableResourcedModel.getTableName());
 			sb.append(".");
 			sb.append(verifiableResourcedModel.getPrimaryKeyColumnName());
-			sb.append(") and ResourcePermission.roleId = ");
+			sb.append(" and ResourcePermission.roleId = ");
 			sb.append(role.getRoleId());
 			sb.append(") where ");
 			sb.append(verifiableResourcedModel.getTableName());
 			sb.append(".companyId = ");
 			sb.append(role.getCompanyId());
-			sb.append(" and ResourcePermission.resourcePermissionId is NULL");
+			sb.append(" and ResourcePermission.primKeyId is NULL");
 		}
 
 		return SQLTransformer.transform(sb.toString());
@@ -231,7 +230,7 @@ public class VerifyResourcePermissions extends VerifyProcess {
 
 		try (LoggingTimer loggingTimer = new LoggingTimer(
 				verifiableResourcedModel.getTableName());
-			Connection con = DataAccess.getUpgradeOptimizedConnection();
+			Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(
 				_getVerifyResourcedModelSQL(
 					true, verifiableResourcedModel, role));
@@ -244,7 +243,7 @@ public class VerifyResourcePermissions extends VerifyProcess {
 
 		try (LoggingTimer loggingTimer = new LoggingTimer(
 				verifiableResourcedModel.getTableName());
-			Connection con = DataAccess.getUpgradeOptimizedConnection();
+			Connection con = DataAccess.getConnection();
 			PreparedStatement ps = con.prepareStatement(
 				_getVerifyResourcedModelSQL(
 					false, verifiableResourcedModel, role));

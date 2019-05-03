@@ -18,10 +18,13 @@ import com.liferay.dynamic.data.lists.form.web.internal.constants.DDLFormPortlet
 import com.liferay.dynamic.data.lists.form.web.internal.display.context.DDLFormDisplayContext;
 import com.liferay.dynamic.data.lists.form.web.internal.instance.lifecycle.AddDefaultSharedFormLayoutPortalInstanceLifecycleListener;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetService;
+import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderer;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
+import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesJSONSerializer;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -190,7 +193,8 @@ public class DDLFormPortlet extends MVCPortlet {
 
 		DDLFormDisplayContext ddlFormDisplayContext = new DDLFormDisplayContext(
 			renderRequest, renderResponse, _ddlRecordSetService,
-			_ddmFormRenderer, _ddmFormValuesFactory,
+			_ddmFormFieldTypesJSONSerializer, _ddmFormFieldTypeServicesTracker,
+			_ddmFormRenderer, _ddmFormValuesFactory, _jsonFactory,
 			_workflowDefinitionLinkLocalService);
 
 		renderRequest.setAttribute(
@@ -207,10 +211,19 @@ public class DDLFormPortlet extends MVCPortlet {
 	private DDLRecordSetService _ddlRecordSetService;
 
 	@Reference
+	private DDMFormFieldTypeServicesTracker _ddmFormFieldTypeServicesTracker;
+
+	@Reference
+	private DDMFormFieldTypesJSONSerializer _ddmFormFieldTypesJSONSerializer;
+
+	@Reference
 	private DDMFormRenderer _ddmFormRenderer;
 
 	@Reference
 	private DDMFormValuesFactory _ddmFormValuesFactory;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Portal _portal;

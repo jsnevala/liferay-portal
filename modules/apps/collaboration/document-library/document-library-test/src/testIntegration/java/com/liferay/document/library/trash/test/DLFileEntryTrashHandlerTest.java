@@ -405,7 +405,6 @@ public class DLFileEntryTrashHandlerTest
 
 		PermissionThreadLocal.setPermissionChecker(
 			new SimplePermissionChecker() {
-
 				{
 					init(TestPropsValues.getUser());
 				}

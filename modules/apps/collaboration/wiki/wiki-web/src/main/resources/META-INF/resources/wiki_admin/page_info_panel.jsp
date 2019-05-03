@@ -213,6 +213,7 @@ if (wikiPageInfoPanelDisplayContext.isSinglePageSelection()) {
 					<div>
 						<ul class="sidebar-header-actions">
 							<li>
+								<liferay-ui:message arguments='<%= new Object[] {HtmlUtil.escape(Validator.isNotNull(curPage.getUserName()) ? curPage.getUserName() : "Liferay"), dateFormatDateTime.format(curPage.getStatusDate())} %>' key="by-x-on-x" />
 
 								<%
 								request.setAttribute("page_info_panel.jsp-wikiPage", curPage);

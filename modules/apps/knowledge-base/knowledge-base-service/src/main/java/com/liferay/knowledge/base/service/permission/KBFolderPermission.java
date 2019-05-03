@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Roberto Díaz
  */
 @Component(
-	property = {"model.class.name=com.liferay.knowledge.base.model.KBFolder"},
+	property = "model.class.name=com.liferay.knowledge.base.model.KBFolder",
 	service = BaseModelPermissionChecker.class
 )
 public class KBFolderPermission implements BaseModelPermissionChecker {

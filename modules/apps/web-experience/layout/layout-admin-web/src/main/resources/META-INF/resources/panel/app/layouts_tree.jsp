@@ -246,11 +246,11 @@ LayoutsTreeDisplayContext layoutsTreeDisplayContext = new LayoutsTreeDisplayCont
 	<liferay-util:buffer
 		var="linkTemplate"
 	>
-		<a class="{cssClass}" data-plid="{plid}" data-regularurl="{regularURL}" data-url="{url}" data-uuid="{uuid}" href="{regularURL}" id="{id}" title="{label}">{label}</a>
+		<a class="{cssClass}" data-plid="{plid}" data-regularurl="{regularURL}" data-url="{url}" data-uuid="{uuid}" href="{regularURL}" id="{id}" {target} title="{label}">{label}</a>
 
 		<div class="dropdown dropdown-menu-no-arrow layout-tree-options" data-deleteable="{deleteable}" data-parentable="{parentable}" data-updateable="{updateable}">
 			<a aria-expanded="false" class="dropdown-toggle icon-monospaced" data-qa-id="pageOptions" data-toggle="dropdown" href="javascript:;">
-				<aui:icon image="ellipsis-v" markupView="lexicon" />
+				<aui:icon id="{id}_{plid}" image="ellipsis-v" markupView="lexicon" />
 			</a>
 
 			<ul class="dropdown-menu dropdown-menu-left-side">
@@ -289,7 +289,7 @@ LayoutsTreeDisplayContext layoutsTreeDisplayContext = new LayoutsTreeDisplayCont
 
 	<c:if test="<%= layoutsTreeDisplayContext.isShowStagingProcessMessage() %>">
 		<div class="alert alert-default alert-dismissible" data-dismiss="alert" role="alert">
-			<button class="close" type="button">
+			<button aria-label="<%= LanguageUtil.get(request, "close") %>" class="close" type="button">
 				<aui:icon image="times" markupView="lexicon" />
 
 				<span class="sr-only"><liferay-ui:message key="close" /></span>
@@ -322,6 +322,7 @@ LayoutsTreeDisplayContext layoutsTreeDisplayContext = new LayoutsTreeDisplayCont
 			if (confirm('<%= UnicodeLanguageUtil.get(resourceBundle, "are-you-sure-you-want-to-delete-the-selected-page") %>')) {
 				var link = event.currentTarget;
 
+				document.hrefFm.setAttribute('data-senna-off', 'true');
 				submitForm(document.hrefFm, link.attr('href'));
 			}
 		},

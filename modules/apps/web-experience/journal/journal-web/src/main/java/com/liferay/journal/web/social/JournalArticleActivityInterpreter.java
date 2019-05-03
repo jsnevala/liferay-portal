@@ -14,6 +14,9 @@
 
 package com.liferay.journal.web.social;
 
+import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
+import com.liferay.asset.kernel.model.AssetRenderer;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalArticleConstants;
@@ -23,6 +26,8 @@ import com.liferay.journal.service.permission.JournalFolderPermission;
 import com.liferay.journal.social.JournalActivityKeys;
 import com.liferay.journal.web.util.JournalResourceBundleLoader;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -38,11 +43,11 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Roberto Diaz
+ * @author Roberto Díaz
  * @author Zsolt Berentey
  */
 @Component(
-	property = {"javax.portlet.name=" + JournalPortletKeys.JOURNAL},
+	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 	service = SocialActivityInterpreter.class
 )
 public class JournalArticleActivityInterpreter
@@ -58,6 +63,28 @@ public class JournalArticleActivityInterpreter
 			SocialActivity activity, ServiceContext serviceContext)
 		throws Exception {
 
+		AssetRendererFactory journalArticleAssetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClass(
+				JournalArticle.class);
+
+		AssetRenderer journalArticleAssetRenderer =
+			journalArticleAssetRendererFactory.getAssetRenderer(
+				activity.getClassPK());
+
+		LiferayPortletRequest liferayPortletRequest =
+			serviceContext.getLiferayPortletRequest();
+
+		LiferayPortletResponse liferayPortletResponse =
+			serviceContext.getLiferayPortletResponse();
+
+		if ((liferayPortletRequest != null) &&
+			(liferayPortletResponse != null)) {
+
+			return journalArticleAssetRenderer.getURLViewInContext(
+				serviceContext.getLiferayPortletRequest(),
+				serviceContext.getLiferayPortletResponse(), null);
+		}
+
 		JournalArticle article = _journalArticleLocalService.getLatestArticle(
 			activity.getClassPK());
 
@@ -68,8 +95,10 @@ public class JournalArticleActivityInterpreter
 				layout.getLayoutSet(), serviceContext.getThemeDisplay());
 
 			return groupFriendlyURL.concat(
-				JournalArticleConstants.CANONICAL_URL_SEPARATOR).concat(
-					article.getUrlTitle());
+				JournalArticleConstants.CANONICAL_URL_SEPARATOR
+			).concat(
+				article.getUrlTitle()
+			);
 		}
 
 		return null;
@@ -157,8 +186,9 @@ public class JournalArticleActivityInterpreter
 		_journalArticleLocalService = journalArticleLocalService;
 	}
 
-	private static final String[] _CLASS_NAMES =
-		{JournalArticle.class.getName()};
+	private static final String[] _CLASS_NAMES = {
+		JournalArticle.class.getName()
+	};
 
 	private JournalArticleLocalService _journalArticleLocalService;
 

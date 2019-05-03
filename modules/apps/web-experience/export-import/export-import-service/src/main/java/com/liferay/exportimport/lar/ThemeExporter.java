@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.xml.Element;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class ThemeExporter {
 

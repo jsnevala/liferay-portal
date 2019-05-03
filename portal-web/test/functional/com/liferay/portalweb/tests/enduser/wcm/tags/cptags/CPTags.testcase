@@ -1,541 +1,463 @@
-<definition component-name="portal-tags">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Tags" />
-
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
-
-		<execute macro="User#firstLoginPG" />
-	</set-up>
-
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
-
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="Tag#tearDownCP" />
-			</else>
-		</if>
-	</tear-down>
-
-	<command name="AddTag" priority="5">
-		<property name="portal.acceptance" value="true" />
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addCP">
-			<var name="tagName" value="tag name" />
-		</execute>
-
-		<execute macro="Tag#viewCP">
-			<var name="tagName" value="tag name" />
-		</execute>
-	</command>
-
-	<command name="AddTagInvalidCharacters" priority="4">
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[&tag]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA['tag']]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[*tag]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[@tag]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[\test]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
+@component-name = "portal-tags"
+definition {
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Tags";
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[[tag]]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[>tag<]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
+		User.firstLoginPG();
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[{tag}]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[:tag]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			Tag.tearDownCP();
+		}
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[,tag]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
+	@priority = "5"
+	test AddTag {
+		property portal.acceptance = "true";
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addCP">
-			<var name="tagName" value="tag name" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName" value="tag name" />
-		</execute>
+		Navigator.openURL();
 
-		<execute macro="Navigator#openURL" />
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[=tag]]></var>
-		</execute>
+		Tag.addCP(tagName = "tag name");
 
-		<execute macro="Navigator#openURL" />
+		Tag.viewCP(tagName = "tag name");
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[/test]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
+	@priority = "4"
+	test AddTagInvalidCharacters {
+		Navigator.openURL();
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addWithNullTitleCP">
-			<var name="tagName" value=" " />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[%tag]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[+tag]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[#tag]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[?tag]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA["tag"]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[;tag]]></var>
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addInvalidCP">
-			<var name="tagName"><![CDATA[~tag]]></var>
-		</execute>
-	</command>
-
-	<command name="AddTags" priority="4">
-		<for list="1,2,3" param="n">
-			<execute macro="Navigator#openURL" />
-
-			<execute macro="ProductMenu#gotoPortlet">
-				<var name="category" value="Content" />
-				<var name="panel" value="Site Administration" />
-				<var name="portlet" value="Tags" />
-			</execute>
-
-			<execute macro="Tag#addCP">
-				<var name="tagName" value="tag name ${n}" />
-			</execute>
-		</for>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#viewTagsCP">
-			<var name="tagName1" value="tag name 1" />
-			<var name="tagName2" value="tag name 2" />
-			<var name="tagName3" value="tag name 3" />
-		</execute>
-	</command>
-
-	<command name="AddTagWithUTF8Encoding" priority="4">
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addCP">
-			<var name="tagName" value="標籤名稱" />
-		</execute>
-
-		<execute macro="Tag#viewCP">
-			<var name="tagName" value="標籤名稱" />
-		</execute>
-	</command>
-
-	<command name="DeleteTagFromList" priority="4">
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addCP">
-			<var name="tagName" value="tag name" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#deleteCP">
-			<var name="deleteMethod" value="From List" />
-			<var name="tagName" value="tag name" />
-		</execute>
-	</command>
-
-	<command name="DeleteTagFromToolbar" priority="4">
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addCP">
-			<var name="tagName" value="tag name" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#deleteCP">
-			<var name="deleteMethod" value="From Toolbar" />
-			<var name="tagName" value="tag name" />
-		</execute>
-	</command>
-
-	<command name="EditTag" priority="5">
-		<property name="portal.acceptance" value="true" />
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addCP">
-			<var name="tagName" value="tag name" />
-		</execute>
-
-		<execute macro="Tag#editCP">
-			<var name="tagName" value="tag name" />
-			<var name="tagNameEdit" value="tag name edit" />
-		</execute>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#viewCP">
-			<var name="tagName" value="tag name edit" />
-		</execute>
-	</command>
-
-	<command name="EditTagCancel" priority="4">
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addCP">
-			<var name="tagName" value="tag name" />
-		</execute>
-
-		<execute macro="Tag#editCancelCP">
-			<var name="tagName" value="tag name" />
-		</execute>
-	</command>
-
-	<command name="MergeMultipleTags" priority="3">
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<for list="1,2,3" param="n">
-			<execute macro="Tag#addCP">
-				<var name="tagName" value="tag name ${n}" />
-			</execute>
-		</for>
-
-		<execute macro="Tag#mergeTags">
-			<var name="mergeConfirmation"><![CDATA[Are you sure you want to merge "tag name 1,tag name 2,tag name 3" into "tag name 2"? This will change all items tagged with "tag name 1,tag name 2,tag name 3" to instead be tagged with "tag name 2".]]></var>
-			<var name="selectTagToMergeTo" value="tag name 2" />
-		</execute>
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#viewCP">
-			<var name="tagName" value="tag name 2" />
-		</execute>
-
-		<for list="tag name 1,tag name 3" param="tagName">
-			<execute macro="Tag#viewMergedTagsCP">
-				<var name="tagName" value="${tagName}" />
-			</execute>
-		</for>
-	</command>
-
-	<command name="MergeSingleTagWarning" priority="3">
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#addCP">
-			<var name="tagName" value="tag name" />
-		</execute>
-
-		<execute macro="Tag#mergeSingleTagWarning">
-			<var name="tagName" value="tag name" />
-		</execute>
-	</command>
-
-	<command name="SearchTag" priority="5">
-		<property name="portal.acceptance" value="true" />
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<for list="1,2,3" param="n">
-			<execute macro="Tag#addCP">
-				<var name="tagName" value="tag name ${n}" />
-			</execute>
-		</for>
-
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Tags" />
-		</execute>
-
-		<execute macro="Tag#searchTagCP">
-			<var name="tagName1" value="tag name 1" />
-			<var name="tagName2" value="tag name 2" />
-			<var name="tagName3" value="tag name 3" />
-		</execute>
-	</command>
-</definition>
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''&tag''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = "&apos;tag&apos;");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''*tag''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''@tag''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''\test''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''[tag]''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''>tag<''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''{tag}''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = ''':tag''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = ''',tag''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addCP(tagName = "tag name");
+
+		Tag.addInvalidCP(tagName = "tag name");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''=tag''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''/test''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addWithNullTitleCP(tagName = " ");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''%tag''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''+tag''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''#tag''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''?tag''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''"tag"''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = ''';tag''');
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addInvalidCP(tagName = '''~tag''');
+	}
+
+	@priority = "4"
+	test AddTags {
+		for (var n : list "1,2,3") {
+			Navigator.openURL();
+
+			ProductMenu.gotoPortlet(
+				category = "Content",
+				panel = "Site Administration",
+				portlet = "Tags"
+			);
+
+			Tag.addCP(tagName = "tag name ${n}");
+		}
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.viewTagsCP(
+			tagName1 = "tag name 1",
+			tagName2 = "tag name 2",
+			tagName3 = "tag name 3"
+		);
+	}
+
+	@priority = "4"
+	test AddTagWithUTF8Encoding {
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addCP(tagName = "標籤名稱");
+
+		Tag.viewCP(tagName = "標籤名稱");
+	}
+
+	@priority = "4"
+	test DeleteTagFromList {
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addCP(tagName = "tag name");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.deleteCP(deleteMethod = "From List", tagName = "tag name");
+	}
+
+	@priority = "4"
+	test DeleteTagFromToolbar {
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addCP(tagName = "tag name");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.deleteCP(deleteMethod = "From Toolbar", tagName = "tag name");
+	}
+
+	@priority = "5"
+	test EditTag {
+		property portal.acceptance = "true";
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addCP(tagName = "tag name");
+
+		Tag.editCP(tagName = "tag name", tagNameEdit = "tag name edit");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.viewCP(tagName = "tag name edit");
+	}
+
+	@priority = "4"
+	test EditTagCancel {
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addCP(tagName = "tag name");
+
+		Tag.editCancelCP(tagName = "tag name");
+	}
+
+	@priority = "3"
+	test MergeMultipleTags {
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		for (var n : list "1,2,3") {
+			Tag.addCP(tagName = "tag name ${n}");
+		}
+
+		Tag.mergeTags(
+			mergeConfirmation = '''Are you sure you want to merge "tag name 1,tag name 2,tag name 3" into "tag name 2"? This will change all items tagged with "tag name 1,tag name 2,tag name 3" to instead be tagged with "tag name 2".''',
+			selectTagToMergeTo = "tag name 2"
+		);
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.viewCP(tagName = "tag name 2");
+
+		for (var tagName : list "tag name 1,tag name 3") {
+			Tag.viewMergedTagsCP(tagName = "${tagName}");
+		}
+	}
+
+	@priority = "3"
+	test MergeSingleTagWarning {
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.addCP(tagName = "tag name");
+
+		Tag.mergeSingleTagWarning(tagName = "tag name");
+	}
+
+	@priority = "5"
+	test SearchTag {
+		property portal.acceptance = "true";
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		for (var n : list "1,2,3") {
+			Tag.addCP(tagName = "tag name ${n}");
+		}
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Tags"
+		);
+
+		Tag.searchTagCP(
+			tagName1 = "tag name 1",
+			tagName2 = "tag name 2",
+			tagName3 = "tag name 3"
+		);
+	}
+}

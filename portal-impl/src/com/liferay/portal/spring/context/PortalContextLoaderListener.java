@@ -17,14 +17,15 @@ package com.liferay.portal.spring.context;
 import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.petra.lang.ClassLoaderPool;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.bean.BeanLocatorImpl;
 import com.liferay.portal.dao.orm.hibernate.FieldInterceptionHelperUtil;
 import com.liferay.portal.deploy.hot.CustomJspBagRegistryUtil;
 import com.liferay.portal.deploy.hot.ServiceWrapperRegistry;
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
-import com.liferay.portal.kernel.cache.MultiVMPoolUtil;
-import com.liferay.portal.kernel.cache.SingleVMPoolUtil;
+import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
+import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCacheManager;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.deploy.DeployManagerUtil;
@@ -40,6 +41,7 @@ import com.liferay.portal.kernel.scheduler.SchedulerEngineHelper;
 import com.liferay.portal.kernel.servlet.DirectServletRegistryUtil;
 import com.liferay.portal.kernel.servlet.PortletSessionListenerManager;
 import com.liferay.portal.kernel.servlet.SerializableSessionAttributeListener;
+import com.liferay.portal.kernel.servlet.ServletContextClassLoaderPool;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.template.TemplateResourceLoaderUtil;
 import com.liferay.portal.kernel.util.ClassLoaderUtil;
@@ -50,7 +52,6 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.MethodCache;
 import com.liferay.portal.kernel.util.PortalLifecycleUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.ReferenceRegistry;
 import com.liferay.portal.kernel.util.ReflectionUtil;
 import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.kernel.util.StringPool;
@@ -76,8 +77,11 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
@@ -178,6 +182,9 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 				_arrayApplicationContext);
 
 			_arrayApplicationContext.close();
+
+			ClassLoaderPool.unregister(_portalServletContextName);
+			ServletContextClassLoaderPool.unregister(_portalServletContextName);
 		}
 		finally {
 			PortalContextLoaderLifecycleThreadLocal.setDestroying(false);
@@ -199,8 +206,6 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		PortalBeanLocatorUtil.reset();
 		PortletBagPool.reset();
 
-		ReferenceRegistry.releaseReferences();
-
 		FieldInterceptionHelperUtil.initialize();
 
 		final ServletContext servletContext =
@@ -220,6 +225,10 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		PortalClassPathUtil.initializeClassPaths(servletContext);
 
 		InitUtil.init();
+
+		// Log JVM arguments after Log4j is initialized
+
+		_logJVMArguments();
 
 		_portalServletContextName = servletContext.getServletContextName();
 
@@ -287,6 +296,8 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		ClassLoader portalClassLoader = ClassLoaderUtil.getPortalClassLoader();
 
 		ClassLoaderPool.register(_portalServletContextName, portalClassLoader);
+		ServletContextClassLoaderPool.register(
+			_portalServletContextName, portalClassLoader);
 
 		PortalContextLoaderLifecycleThreadLocal.setInitializing(true);
 
@@ -319,8 +330,10 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 			ServletContextPool.clear();
 
-			MultiVMPoolUtil.clear();
-			SingleVMPoolUtil.clear();
+			PortalCacheHelperUtil.clearPortalCaches(
+				PortalCacheManagerNames.MULTI_VM);
+			PortalCacheHelperUtil.clearPortalCaches(
+				PortalCacheManagerNames.SINGLE_VM);
 		}
 
 		ServletContextPool.put(_portalServletContextName, servletContext);
@@ -400,6 +413,31 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 		servletContext.addListener(PortalSessionListener.class);
 		servletContext.addListener(PortletSessionListenerManager.class);
+	}
+
+	private void _logJVMArguments() {
+		if (!_log.isInfoEnabled()) {
+			return;
+		}
+
+		RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+
+		List<String> inputArguments = runtimeMXBean.getInputArguments();
+
+		StringBundler sb = new StringBundler(inputArguments.size() * 2);
+
+		sb.append("JVM arguments: ");
+
+		for (String inputArgument : inputArguments) {
+			sb.append(inputArgument);
+			sb.append(StringPool.SPACE);
+		}
+
+		if (!inputArguments.isEmpty()) {
+			sb.setIndex(sb.index() - 1);
+		}
+
+		_log.info(sb.toString());
 	}
 
 	private static final Field _FILTERED_PROPERTY_DESCRIPTORS_CACHE_FIELD;

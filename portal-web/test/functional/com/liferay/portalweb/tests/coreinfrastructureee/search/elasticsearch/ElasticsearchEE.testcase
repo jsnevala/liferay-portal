@@ -1,351 +1,300 @@
-<definition component-name="portal-search-ee">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="test.run.environment" value="EE" />
-	<property name="testray.main.component.name" value="Elastic Search Impl" />
+@component-name = "portal-search-ee"
+definition {
+	property portal.release = "true";
+	property portal.suite.search.engine = "elasticsearch2";
+	property portal.upstream = "true";
+	property test.run.environment = "EE";
+	property testray.main.component.name = "Elastic Search Impl";
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	setUp {
+		TestCase.setUpPortalInstance();
 
-		<execute macro="User#firstLoginPG" />
-	</set-up>
+		User.firstLoginPG();
+	}
 
-	<tear-down>
-		<var method="TestPropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="MessageboardsThread#tearDownCP" />
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			MessageboardsThread.tearDownCP();
 
-				<execute macro="DMDocument#tearDownCP" />
+			DMDocument.tearDownCP();
 
-				<execute macro="Page#tearDownPG" />
-			</else>
-		</if>
-	</tear-down>
+			Page.tearDownPG();
+		}
+	}
 
-	<command name="ElasticsearchClusterSmokeTest" priority="5">
-		<description message="This test asserts Elasticsearch clustering to add/remove replicas as nodes are added/removed from the portal cluster. Also, we want to maintain no loss in search functionality as replicas are being added or removed." />
+	@description = "This test asserts Elasticsearch clustering to add/remove replicas as nodes are added/removed from the portal cluster. Also, we want to maintain no loss in search functionality as replicas are being added or removed."
+	@priority = "5"
+	test ElasticsearchClusterSmokeTest {
+		property app.server.bundles.size = "1";
+		property cluster.enabled = "true";
+		property test.name.skip.portal.instance = "ElasticsearchEE#ElasticsearchClusterSmokeTest";
 
-		<property name="app.server.bundles.size" value="1" />
-		<property name="cluster.enabled" value="true" />
-		<property name="test.name.skip.portal.instance" value="ElasticsearchEE#ElasticsearchClusterSmokeTest" />
+		// Verify the total number of Elasticsearch replicas is two as there are two nodes/bundles running
 
-		<!-- Verify the total number of Elasticsearch replicas is two as there are two nodes/bundles running -->
+		// LRQA-28998
 
-		<!-- LRQA-28998 -->
-
-		<!--<execute macro="Elasticsearch#viewClusterStatusViaClusterHealthAPI">
+		/* <execute macro="Elasticsearch#viewClusterStatusViaClusterHealthAPI">
 			<var name="numberOfNodes" value="2" />
-		</execute>-->
+		</execute> */
 
-		<!--<execute macro="Elasticsearch#viewReplicaAddedInConsole" />-->
+		// <execute macro="Elasticsearch#viewReplicaAddedInConsole" />
 
-		<!--<execute macro="Navigator#openURL" />-->
+		// <execute macro="Navigator#openURL" />
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Message Boards" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Message Boards"
+		);
 
-		<execute macro="MessageboardsThread#addCP">
-			<var name="threadBody" value="Orange" />
-			<var name="threadSubject" value="Apple" />
-		</execute>
+		MessageboardsThread.addCP(threadBody = "Orange", threadSubject = "Apple");
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
 
-		<execute macro="DMDocument#addCP">
-			<var name="dmDocumentDescription" value="Orange" />
-			<var name="dmDocumentFile" value="Document_1.txt" />
-			<var name="dmDocumentTitle" value="Apple" />
-		</execute>
+		DMDocument.addCP(
+			dmDocumentDescription = "Orange",
+			dmDocumentFile = "Document_1.txt",
+			dmDocumentTitle = "Apple"
+		);
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Configuration" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Server Administration" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Server Administration"
+		);
 
-		<execute macro="ServerAdministration#executeServerResourcesActions">
-			<var name="actionsDescription" value="Reindex all search indexes." />
-		</execute>
+		ServerAdministration.executeServerResourcesActions(
+			actionsDescription = "Reindex all search indexes."
+		);
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="Search#searchPG">
-			<var name="searchTerm" value="Apple" />
-		</execute>
+		Search.searchPG(searchTerm = "Apple");
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Document" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Document"
+		);
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Message Boards Message" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Message Boards Message"
+		);
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="Search#searchPG">
-			<var name="searchTerm" value="Orange" />
-		</execute>
+		Search.searchPG(searchTerm = "Orange");
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Document" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Document"
+		);
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Message Boards Message" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Message Boards Message"
+		);
 
-		<execute macro="Portlet#shutdownSpecificServer">
-			<var name="nodePort" value="9" />
-		</execute>
+		Portlet.shutdownSpecificServer(nodePort = "9");
 
-		<!-- Verify the total number of Elasticsearch replicas has decreased to one -->
+		// Verify the total number of Elasticsearch replicas has decreased to one
 
-		<!-- LRQA-28998 -->
+		// LRQA-28998
 
-		<!-- <execute macro="Elasticsearch#viewReplicaRemovedInConsole" /> -->
+		// <execute macro="Elasticsearch#viewReplicaRemovedInConsole" />
 
-		<!-- <execute macro="Elasticsearch#viewClusterStatusViaClusterHealthAPI">
+		/* <execute macro="Elasticsearch#viewClusterStatusViaClusterHealthAPI">
 			<var name="numberOfNodes" value="1" />
-		</execute> -->
+		</execute> */
 
-		<!-- Verify search functionality after a replica has been removed -->
+		// Verify search functionality after a replica has been removed
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="Search#searchPG">
-			<var name="searchTerm" value="Apple" />
-		</execute>
+		Search.searchPG(searchTerm = "Apple");
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Document" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Document"
+		);
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Message Boards Message" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Message Boards Message"
+		);
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="Search#searchPG">
-			<var name="searchTerm" value="Orange" />
-		</execute>
+		Search.searchPG(searchTerm = "Orange");
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Document" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Document"
+		);
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Message Boards Message" />
-		</execute>
-	</command>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Message Boards Message"
+		);
+	}
 
-	<command name="ElasticsearchRemotePortalClusterSmokeTest" priority="5">
-		<property name="app.server.bundles.size" value="1" />
-		<property name="cluster.enabled" value="true" />
-		<property name="remote.elasticsearch.enabled" value="true" />
-		<property name="test.name.skip.portal.instance" value="ElasticsearchEE#ElasticsearchRemotePortalClusterSmokeTest" />
+	@priority = "5"
+	test ElasticsearchRemotePortalClusterSmokeTest {
+		property app.server.bundles.size = "1";
+		property cluster.enabled = "true";
+		property remote.elasticsearch.enabled = "true";
+		property test.name.skip.portal.instance = "ElasticsearchEE#ElasticsearchRemotePortalClusterSmokeTest";
 
-		<execute macro="Elasticsearch#viewClusterStatusViaClusterHealthAPI">
-			<var name="numberOfNodes" value="1" />
-		</execute>
+		Elasticsearch.viewClusterStatusViaClusterHealthAPI(numberOfNodes = "1");
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Message Boards" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Message Boards"
+		);
 
-		<execute macro="MessageboardsThread#addCP">
-			<var name="threadBody" value="Orange" />
-			<var name="threadSubject" value="Apple" />
-		</execute>
+		MessageboardsThread.addCP(threadBody = "Orange", threadSubject = "Apple");
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Documents and Media" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Content",
+			panel = "Site Administration",
+			portlet = "Documents and Media"
+		);
 
-		<execute macro="DMDocument#addCP">
-			<var name="dmDocumentDescription" value="Orange" />
-			<var name="dmDocumentFile" value="Document_1.txt" />
-			<var name="dmDocumentTitle" value="Apple" />
-		</execute>
+		DMDocument.addCP(
+			dmDocumentDescription = "Orange",
+			dmDocumentFile = "Document_1.txt",
+			dmDocumentTitle = "Apple"
+		);
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="Search#searchPG">
-			<var name="searchTerm" value="Apple" />
-		</execute>
+		Search.searchPG(searchTerm = "Apple");
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Document" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Document"
+		);
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Message Boards Message" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Message Boards Message"
+		);
 
-		<execute macro="Navigator#openURL" />
+		Navigator.openURL();
 
-		<execute macro="Search#searchPG">
-			<var name="searchTerm" value="Orange" />
-		</execute>
+		Search.searchPG(searchTerm = "Orange");
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Document" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Document"
+		);
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Message Boards Message" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Message Boards Message"
+		);
 
-		<execute macro="User#logoutPG">
-			<var name="password" value="test" />
-			<var name="userEmailAddress" value="test@liferay.com" />
-		</execute>
+		User.logoutPG(password = "test", userEmailAddress = "test@liferay.com");
 
-		<execute macro="User#loginPG">
-			<var name="nodePort" value="9080" />
-			<var name="password" value="test" />
-			<var name="userEmailAddress" value="test@liferay.com" />
-		</execute>
+		User.loginPG(
+			nodePort = "9080",
+			password = "test",
+			userEmailAddress = "test@liferay.com"
+		);
 
-		<execute macro="Portlet#shutdownSpecificServer">
-			<var name="nodePort" value="8" />
-		</execute>
+		Portlet.shutdownSpecificServer(nodePort = "8");
 
-		<execute macro="Search#searchPG">
-			<var name="searchTerm" value="Apple" />
-		</execute>
+		Search.searchPG(searchTerm = "Apple");
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Document" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Document"
+		);
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Message Boards Message" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Message Boards Message"
+		);
 
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="http://localhost:9080" />
-		</execute>
+		Navigator.openSpecificURL(url = "http://localhost:9080");
 
-		<execute macro="Search#searchPG">
-			<var name="searchTerm" value="Orange" />
-		</execute>
+		Search.searchPG(searchTerm = "Orange");
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Document" />
-		</execute>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Document"
+		);
 
-		<execute macro="Search#viewSearchResultsPG">
-			<var name="searchAssetTitle" value="Apple" />
-			<var name="searchAssetType" value="Message Boards Message" />
-		</execute>
-	</command>
+		Search.viewSearchResultsPG(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Message Boards Message"
+		);
+	}
 
-	<command name="ElasticsearchRemoteWithMarvelAndKibanaAndShieldSmokeTest" priority="5">
-		<property name="elastic.kibana.enabled" value="true" />
-		<property name="elastic.shield.enabled" value="true" />
-		<property name="osgi.app.includes" value="portal-search-elasticsearch-marvel" />
-		<property name="plugins.deployment.type" value="osgi" />
-		<property name="remote.elasticsearch.enabled" value="true" />
-		<property name="test.name.skip.portal.instance" value="ElasticsearchEE#ElasticsearchRemoteWithMarvelAndKibanaAndShieldSmokeTest" />
+	@priority = "5"
+	test ElasticsearchRemoteWithMarvelAndKibanaAndShieldSmokeTest {
+		property elastic.kibana.enabled = "true";
+		property elastic.shield.enabled = "true";
+		property osgi.app.includes = "portal-search-elasticsearch-marvel";
+		property plugins.deployment.type = "osgi";
+		property remote.elasticsearch.enabled = "true";
+		property test.name.skip.portal.instance = "ElasticsearchEE#ElasticsearchRemoteWithMarvelAndKibanaAndShieldSmokeTest";
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Marvel Page" />
-		</execute>
+		Page.add(pageName = "Marvel Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Marvel Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Marvel Page");
 
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Marvel" />
-		</execute>
+		Portlet.addPG(portletName = "Marvel");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Marvel Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Marvel Page");
 
-		<execute macro="Marvel#viewPG" />
+		Marvel.viewPG();
 
-		<execute macro="User#logoutPG" />
+		User.logoutPG();
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Marvel Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Marvel Page");
 
-		<execute macro="Marvel#viewAsGuestPG" />
-	</command>
+		Marvel.viewAsGuestPG();
+	}
 
-	<command name="ElasticsearchRemoteWithMarvelAndKibanaSmokeTest" priority="5">
-		<property name="elastic.kibana.enabled" value="true" />
-		<property name="osgi.app.includes" value="portal-search-elasticsearch-marvel" />
-		<property name="plugins.deployment.type" value="osgi" />
-		<property name="remote.elasticsearch.enabled" value="true" />
-		<property name="test.name.skip.portal.instance" value="ElasticsearchEE#ElasticsearchRemoteWithMarvelAndKibanaSmokeTest" />
+	@priority = "5"
+	test ElasticsearchRemoteWithMarvelAndKibanaSmokeTest {
+		property elastic.kibana.enabled = "true";
+		property osgi.app.includes = "portal-search-elasticsearch-marvel";
+		property plugins.deployment.type = "osgi";
+		property remote.elasticsearch.enabled = "true";
+		property test.name.skip.portal.instance = "ElasticsearchEE#ElasticsearchRemoteWithMarvelAndKibanaSmokeTest";
 
-		<execute macro="Page#add">
-			<var name="pageName" value="Marvel Page" />
-		</execute>
+		Page.add(pageName = "Marvel Page");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Marvel Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Marvel Page");
 
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Marvel" />
-		</execute>
+		Portlet.addPG(portletName = "Marvel");
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Marvel Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Marvel Page");
 
-		<execute macro="Marvel#viewPG" />
+		Marvel.viewPG();
 
-		<execute macro="User#logoutPG" />
+		User.logoutPG();
 
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Marvel Page" />
-		</execute>
+		Navigator.gotoPage(pageName = "Marvel Page");
 
-		<execute macro="Marvel#viewAsGuestPG" />
-	</command>
-</definition>
+		Marvel.viewAsGuestPG();
+	}
+}

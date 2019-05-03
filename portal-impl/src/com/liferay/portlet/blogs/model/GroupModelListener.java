@@ -21,7 +21,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.SubscriptionLocalServiceUtil;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class GroupModelListener extends BaseModelListener<Group> {
 

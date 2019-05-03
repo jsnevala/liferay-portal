@@ -74,6 +74,7 @@ public class PluginsGitSvnSyncer {
 		Process process = runtime.exec(cmd);
 
 		String[] stdout = _getExecOutput(process.getInputStream());
+
 		String[] stderr = _getExecOutput(process.getErrorStream());
 
 		if (stderr.length > 0) {
@@ -314,8 +315,9 @@ public class PluginsGitSvnSyncer {
 		"/docroot/WEB-INF/tld"
 	};
 
-	private static final String[] _PLUGIN_TYPES =
-		{"clients", "ext", "hooks", "layouttpl", "portlets", "themes", "webs"};
+	private static final String[] _PLUGIN_TYPES = {
+		"clients", "ext", "hooks", "layouttpl", "portlets", "themes", "webs"
+	};
 
 	private static final String _SVN_DEL_IGNORES = "svn propdel svn:ignore ";
 

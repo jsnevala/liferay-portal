@@ -26,10 +26,11 @@ import com.liferay.portal.kernel.util.MethodKey;
 
 /**
  * Provides the HTTP utility for the
- * {@link BackgroundTaskServiceUtil} service utility. The
+ * <code>BackgroundTaskServiceUtil</code> service
+ * utility. The
  * static methods of this class calls the same methods of the service utility.
  * However, the signatures are different because it requires an additional
- * {@link HttpPrincipal} parameter.
+ * <code>HttpPrincipal</code> parameter.
  *
  * <p>
  * The benefits of using the HTTP utility is that it is fast and allows for
@@ -48,22 +49,22 @@ import com.liferay.portal.kernel.util.MethodKey;
  *
  * @author Brian Wing Shun Chan
  * @see BackgroundTaskServiceSoap
- * @see HttpPrincipal
- * @see BackgroundTaskServiceUtil
  * @generated
  */
 @ProviderType
 public class BackgroundTaskServiceHttp {
-	public static int getBackgroundTasksCount(HttpPrincipal httpPrincipal,
-		long groupId, java.lang.String taskExecutorClassName,
-		java.lang.String completed) {
-		try {
-			MethodKey methodKey = new MethodKey(BackgroundTaskServiceUtil.class,
-					"getBackgroundTasksCount",
-					_getBackgroundTasksCountParameterTypes0);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					taskExecutorClassName, completed);
+	public static int getBackgroundTasksCount(
+		HttpPrincipal httpPrincipal, long groupId, String taskExecutorClassName,
+		String completed) {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				BackgroundTaskServiceUtil.class, "getBackgroundTasksCount",
+				_getBackgroundTasksCountParameterTypes0);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, taskExecutorClassName, completed);
 
 			Object returnObj = null;
 
@@ -71,7 +72,8 @@ public class BackgroundTaskServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return ((Integer)returnObj).intValue();
@@ -83,15 +85,16 @@ public class BackgroundTaskServiceHttp {
 		}
 	}
 
-	public static java.lang.String getBackgroundTaskStatusJSON(
+	public static String getBackgroundTaskStatusJSON(
 		HttpPrincipal httpPrincipal, long backgroundTaskId) {
-		try {
-			MethodKey methodKey = new MethodKey(BackgroundTaskServiceUtil.class,
-					"getBackgroundTaskStatusJSON",
-					_getBackgroundTaskStatusJSONParameterTypes1);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					backgroundTaskId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				BackgroundTaskServiceUtil.class, "getBackgroundTaskStatusJSON",
+				_getBackgroundTaskStatusJSONParameterTypes1);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, backgroundTaskId);
 
 			Object returnObj = null;
 
@@ -99,10 +102,11 @@ public class BackgroundTaskServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
-			return (java.lang.String)returnObj;
+			return (String)returnObj;
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
 			_log.error(se, se);
@@ -111,11 +115,12 @@ public class BackgroundTaskServiceHttp {
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(BackgroundTaskServiceHttp.class);
-	private static final Class<?>[] _getBackgroundTasksCountParameterTypes0 = new Class[] {
-			long.class, java.lang.String.class, java.lang.String.class
-		};
-	private static final Class<?>[] _getBackgroundTaskStatusJSONParameterTypes1 = new Class[] {
-			long.class
-		};
+	private static Log _log = LogFactoryUtil.getLog(
+		BackgroundTaskServiceHttp.class);
+
+	private static final Class<?>[] _getBackgroundTasksCountParameterTypes0 =
+		new Class[] {long.class, String.class, String.class};
+	private static final Class<?>[]
+		_getBackgroundTaskStatusJSONParameterTypes1 = new Class[] {long.class};
+
 }

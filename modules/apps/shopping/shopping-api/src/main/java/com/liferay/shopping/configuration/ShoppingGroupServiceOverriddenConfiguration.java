@@ -19,7 +19,7 @@ import com.liferay.shopping.configuration.definition.ShoppingGroupServiceConfigu
 
 /**
  * @author Brian Wing Shun Chan
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Settings.OverrideClass(ShoppingGroupServiceConfigurationOverrideImpl.class)
 public interface ShoppingGroupServiceOverriddenConfiguration

@@ -29,7 +29,7 @@ import java.util.Map;
 import javax.portlet.PortletPreferences;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public abstract class BaseExportImportPortletPreferencesProcessor
 	implements ExportImportPortletPreferencesProcessor {

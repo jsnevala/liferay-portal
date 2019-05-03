@@ -17,9 +17,7 @@ package com.liferay.journal.model;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.service.ServiceContext;
 
@@ -40,8 +38,9 @@ import java.util.Objects;
  * @generated
  */
 @ProviderType
-public class JournalFeedWrapper implements JournalFeed,
-	ModelWrapper<JournalFeed> {
+public class JournalFeedWrapper
+	implements JournalFeed, ModelWrapper<JournalFeed> {
+
 	public JournalFeedWrapper(JournalFeed journalFeed) {
 		_journalFeed = journalFeed;
 	}
@@ -168,7 +167,7 @@ public class JournalFeedWrapper implements JournalFeed,
 		}
 
 		String DDMRendererTemplateKey = (String)attributes.get(
-				"DDMRendererTemplateKey");
+			"DDMRendererTemplateKey");
 
 		if (DDMRendererTemplateKey != null) {
 			setDDMRendererTemplateKey(DDMRendererTemplateKey);
@@ -193,7 +192,7 @@ public class JournalFeedWrapper implements JournalFeed,
 		}
 
 		String targetLayoutFriendlyUrl = (String)attributes.get(
-				"targetLayoutFriendlyUrl");
+			"targetLayoutFriendlyUrl");
 
 		if (targetLayoutFriendlyUrl != null) {
 			setTargetLayoutFriendlyUrl(targetLayoutFriendlyUrl);
@@ -231,7 +230,7 @@ public class JournalFeedWrapper implements JournalFeed,
 	}
 
 	@Override
-	public java.lang.Object clone() {
+	public Object clone() {
 		return new JournalFeedWrapper((JournalFeed)_journalFeed.clone());
 	}
 
@@ -241,82 +240,82 @@ public class JournalFeedWrapper implements JournalFeed,
 	}
 
 	/**
-	* Returns the company ID of this journal feed.
-	*
-	* @return the company ID of this journal feed
-	*/
+	 * Returns the company ID of this journal feed.
+	 *
+	 * @return the company ID of this journal feed
+	 */
 	@Override
 	public long getCompanyId() {
 		return _journalFeed.getCompanyId();
 	}
 
 	/**
-	* Returns the content field of this journal feed.
-	*
-	* @return the content field of this journal feed
-	*/
+	 * Returns the content field of this journal feed.
+	 *
+	 * @return the content field of this journal feed
+	 */
 	@Override
-	public java.lang.String getContentField() {
+	public String getContentField() {
 		return _journalFeed.getContentField();
 	}
 
 	/**
-	* Returns the create date of this journal feed.
-	*
-	* @return the create date of this journal feed
-	*/
+	 * Returns the create date of this journal feed.
+	 *
+	 * @return the create date of this journal feed
+	 */
 	@Override
 	public Date getCreateDate() {
 		return _journalFeed.getCreateDate();
 	}
 
 	/**
-	* Returns the ddm renderer template key of this journal feed.
-	*
-	* @return the ddm renderer template key of this journal feed
-	*/
+	 * Returns the ddm renderer template key of this journal feed.
+	 *
+	 * @return the ddm renderer template key of this journal feed
+	 */
 	@Override
-	public java.lang.String getDDMRendererTemplateKey() {
+	public String getDDMRendererTemplateKey() {
 		return _journalFeed.getDDMRendererTemplateKey();
 	}
 
 	/**
-	* Returns the ddm structure key of this journal feed.
-	*
-	* @return the ddm structure key of this journal feed
-	*/
+	 * Returns the ddm structure key of this journal feed.
+	 *
+	 * @return the ddm structure key of this journal feed
+	 */
 	@Override
-	public java.lang.String getDDMStructureKey() {
+	public String getDDMStructureKey() {
 		return _journalFeed.getDDMStructureKey();
 	}
 
 	/**
-	* Returns the ddm template key of this journal feed.
-	*
-	* @return the ddm template key of this journal feed
-	*/
+	 * Returns the ddm template key of this journal feed.
+	 *
+	 * @return the ddm template key of this journal feed
+	 */
 	@Override
-	public java.lang.String getDDMTemplateKey() {
+	public String getDDMTemplateKey() {
 		return _journalFeed.getDDMTemplateKey();
 	}
 
 	/**
-	* Returns the delta of this journal feed.
-	*
-	* @return the delta of this journal feed
-	*/
+	 * Returns the delta of this journal feed.
+	 *
+	 * @return the delta of this journal feed
+	 */
 	@Override
 	public int getDelta() {
 		return _journalFeed.getDelta();
 	}
 
 	/**
-	* Returns the description of this journal feed.
-	*
-	* @return the description of this journal feed
-	*/
+	 * Returns the description of this journal feed.
+	 *
+	 * @return the description of this journal feed
+	 */
 	@Override
-	public java.lang.String getDescription() {
+	public String getDescription() {
 		return _journalFeed.getDescription();
 	}
 
@@ -326,110 +325,110 @@ public class JournalFeedWrapper implements JournalFeed,
 	}
 
 	/**
-	* Returns the feed format of this journal feed.
-	*
-	* @return the feed format of this journal feed
-	*/
+	 * Returns the feed format of this journal feed.
+	 *
+	 * @return the feed format of this journal feed
+	 */
 	@Override
-	public java.lang.String getFeedFormat() {
+	public String getFeedFormat() {
 		return _journalFeed.getFeedFormat();
 	}
 
 	/**
-	* Returns the feed ID of this journal feed.
-	*
-	* @return the feed ID of this journal feed
-	*/
+	 * Returns the feed ID of this journal feed.
+	 *
+	 * @return the feed ID of this journal feed
+	 */
 	@Override
-	public java.lang.String getFeedId() {
+	public String getFeedId() {
 		return _journalFeed.getFeedId();
 	}
 
 	/**
-	* Returns the feed version of this journal feed.
-	*
-	* @return the feed version of this journal feed
-	*/
+	 * Returns the feed version of this journal feed.
+	 *
+	 * @return the feed version of this journal feed
+	 */
 	@Override
 	public double getFeedVersion() {
 		return _journalFeed.getFeedVersion();
 	}
 
 	/**
-	* Returns the group ID of this journal feed.
-	*
-	* @return the group ID of this journal feed
-	*/
+	 * Returns the group ID of this journal feed.
+	 *
+	 * @return the group ID of this journal feed
+	 */
 	@Override
 	public long getGroupId() {
 		return _journalFeed.getGroupId();
 	}
 
 	/**
-	* Returns the ID of this journal feed.
-	*
-	* @return the ID of this journal feed
-	*/
+	 * Returns the ID of this journal feed.
+	 *
+	 * @return the ID of this journal feed
+	 */
 	@Override
 	public long getId() {
 		return _journalFeed.getId();
 	}
 
 	/**
-	* Returns the last publish date of this journal feed.
-	*
-	* @return the last publish date of this journal feed
-	*/
+	 * Returns the last publish date of this journal feed.
+	 *
+	 * @return the last publish date of this journal feed
+	 */
 	@Override
 	public Date getLastPublishDate() {
 		return _journalFeed.getLastPublishDate();
 	}
 
 	/**
-	* Returns the modified date of this journal feed.
-	*
-	* @return the modified date of this journal feed
-	*/
+	 * Returns the modified date of this journal feed.
+	 *
+	 * @return the modified date of this journal feed
+	 */
 	@Override
 	public Date getModifiedDate() {
 		return _journalFeed.getModifiedDate();
 	}
 
 	/**
-	* Returns the name of this journal feed.
-	*
-	* @return the name of this journal feed
-	*/
+	 * Returns the name of this journal feed.
+	 *
+	 * @return the name of this journal feed
+	 */
 	@Override
-	public java.lang.String getName() {
+	public String getName() {
 		return _journalFeed.getName();
 	}
 
 	/**
-	* Returns the order by col of this journal feed.
-	*
-	* @return the order by col of this journal feed
-	*/
+	 * Returns the order by col of this journal feed.
+	 *
+	 * @return the order by col of this journal feed
+	 */
 	@Override
-	public java.lang.String getOrderByCol() {
+	public String getOrderByCol() {
 		return _journalFeed.getOrderByCol();
 	}
 
 	/**
-	* Returns the order by type of this journal feed.
-	*
-	* @return the order by type of this journal feed
-	*/
+	 * Returns the order by type of this journal feed.
+	 *
+	 * @return the order by type of this journal feed
+	 */
 	@Override
-	public java.lang.String getOrderByType() {
+	public String getOrderByType() {
 		return _journalFeed.getOrderByType();
 	}
 
 	/**
-	* Returns the primary key of this journal feed.
-	*
-	* @return the primary key of this journal feed
-	*/
+	 * Returns the primary key of this journal feed.
+	 *
+	 * @return the primary key of this journal feed
+	 */
 	@Override
 	public long getPrimaryKey() {
 		return _journalFeed.getPrimaryKey();
@@ -441,89 +440,92 @@ public class JournalFeedWrapper implements JournalFeed,
 	}
 
 	/**
-	* @deprecated As of 3.3.0, replaced by {@link #getDDMRendererTemplateKey()}
-	*/
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 #getDDMRendererTemplateKey()}
+	 */
 	@Deprecated
 	@Override
-	public java.lang.String getRendererTemplateId() {
+	public String getRendererTemplateId() {
 		return _journalFeed.getRendererTemplateId();
 	}
 
 	/**
-	* @deprecated As of 3.3.0, replaced by {@link #getDDMStructureKey()}
-	*/
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 #getDDMStructureKey()}
+	 */
 	@Deprecated
 	@Override
-	public java.lang.String getStructureId() {
+	public String getStructureId() {
 		return _journalFeed.getStructureId();
 	}
 
 	/**
-	* Returns the target layout friendly url of this journal feed.
-	*
-	* @return the target layout friendly url of this journal feed
-	*/
+	 * Returns the target layout friendly url of this journal feed.
+	 *
+	 * @return the target layout friendly url of this journal feed
+	 */
 	@Override
-	public java.lang.String getTargetLayoutFriendlyUrl() {
+	public String getTargetLayoutFriendlyUrl() {
 		return _journalFeed.getTargetLayoutFriendlyUrl();
 	}
 
 	/**
-	* Returns the target portlet ID of this journal feed.
-	*
-	* @return the target portlet ID of this journal feed
-	*/
+	 * Returns the target portlet ID of this journal feed.
+	 *
+	 * @return the target portlet ID of this journal feed
+	 */
 	@Override
-	public java.lang.String getTargetPortletId() {
+	public String getTargetPortletId() {
 		return _journalFeed.getTargetPortletId();
 	}
 
 	/**
-	* @deprecated As of 3.3.0, replaced by {@link #getDDMTemplateKey()}
-	*/
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 #getDDMTemplateKey()}
+	 */
 	@Deprecated
 	@Override
-	public java.lang.String getTemplateId() {
+	public String getTemplateId() {
 		return _journalFeed.getTemplateId();
 	}
 
 	/**
-	* Returns the user ID of this journal feed.
-	*
-	* @return the user ID of this journal feed
-	*/
+	 * Returns the user ID of this journal feed.
+	 *
+	 * @return the user ID of this journal feed
+	 */
 	@Override
 	public long getUserId() {
 		return _journalFeed.getUserId();
 	}
 
 	/**
-	* Returns the user name of this journal feed.
-	*
-	* @return the user name of this journal feed
-	*/
+	 * Returns the user name of this journal feed.
+	 *
+	 * @return the user name of this journal feed
+	 */
 	@Override
-	public java.lang.String getUserName() {
+	public String getUserName() {
 		return _journalFeed.getUserName();
 	}
 
 	/**
-	* Returns the user uuid of this journal feed.
-	*
-	* @return the user uuid of this journal feed
-	*/
+	 * Returns the user uuid of this journal feed.
+	 *
+	 * @return the user uuid of this journal feed
+	 */
 	@Override
-	public java.lang.String getUserUuid() {
+	public String getUserUuid() {
 		return _journalFeed.getUserUuid();
 	}
 
 	/**
-	* Returns the uuid of this journal feed.
-	*
-	* @return the uuid of this journal feed
-	*/
+	 * Returns the uuid of this journal feed.
+	 *
+	 * @return the uuid of this journal feed
+	 */
 	@Override
-	public java.lang.String getUuid() {
+	public String getUuid() {
 		return _journalFeed.getUuid();
 	}
 
@@ -558,89 +560,89 @@ public class JournalFeedWrapper implements JournalFeed,
 	}
 
 	/**
-	* Sets the company ID of this journal feed.
-	*
-	* @param companyId the company ID of this journal feed
-	*/
+	 * Sets the company ID of this journal feed.
+	 *
+	 * @param companyId the company ID of this journal feed
+	 */
 	@Override
 	public void setCompanyId(long companyId) {
 		_journalFeed.setCompanyId(companyId);
 	}
 
 	/**
-	* Sets the content field of this journal feed.
-	*
-	* @param contentField the content field of this journal feed
-	*/
+	 * Sets the content field of this journal feed.
+	 *
+	 * @param contentField the content field of this journal feed
+	 */
 	@Override
-	public void setContentField(java.lang.String contentField) {
+	public void setContentField(String contentField) {
 		_journalFeed.setContentField(contentField);
 	}
 
 	/**
-	* Sets the create date of this journal feed.
-	*
-	* @param createDate the create date of this journal feed
-	*/
+	 * Sets the create date of this journal feed.
+	 *
+	 * @param createDate the create date of this journal feed
+	 */
 	@Override
 	public void setCreateDate(Date createDate) {
 		_journalFeed.setCreateDate(createDate);
 	}
 
 	/**
-	* Sets the ddm renderer template key of this journal feed.
-	*
-	* @param DDMRendererTemplateKey the ddm renderer template key of this journal feed
-	*/
+	 * Sets the ddm renderer template key of this journal feed.
+	 *
+	 * @param DDMRendererTemplateKey the ddm renderer template key of this journal feed
+	 */
 	@Override
-	public void setDDMRendererTemplateKey(
-		java.lang.String DDMRendererTemplateKey) {
+	public void setDDMRendererTemplateKey(String DDMRendererTemplateKey) {
 		_journalFeed.setDDMRendererTemplateKey(DDMRendererTemplateKey);
 	}
 
 	/**
-	* Sets the ddm structure key of this journal feed.
-	*
-	* @param DDMStructureKey the ddm structure key of this journal feed
-	*/
+	 * Sets the ddm structure key of this journal feed.
+	 *
+	 * @param DDMStructureKey the ddm structure key of this journal feed
+	 */
 	@Override
-	public void setDDMStructureKey(java.lang.String DDMStructureKey) {
+	public void setDDMStructureKey(String DDMStructureKey) {
 		_journalFeed.setDDMStructureKey(DDMStructureKey);
 	}
 
 	/**
-	* Sets the ddm template key of this journal feed.
-	*
-	* @param DDMTemplateKey the ddm template key of this journal feed
-	*/
+	 * Sets the ddm template key of this journal feed.
+	 *
+	 * @param DDMTemplateKey the ddm template key of this journal feed
+	 */
 	@Override
-	public void setDDMTemplateKey(java.lang.String DDMTemplateKey) {
+	public void setDDMTemplateKey(String DDMTemplateKey) {
 		_journalFeed.setDDMTemplateKey(DDMTemplateKey);
 	}
 
 	/**
-	* Sets the delta of this journal feed.
-	*
-	* @param delta the delta of this journal feed
-	*/
+	 * Sets the delta of this journal feed.
+	 *
+	 * @param delta the delta of this journal feed
+	 */
 	@Override
 	public void setDelta(int delta) {
 		_journalFeed.setDelta(delta);
 	}
 
 	/**
-	* Sets the description of this journal feed.
-	*
-	* @param description the description of this journal feed
-	*/
+	 * Sets the description of this journal feed.
+	 *
+	 * @param description the description of this journal feed
+	 */
 	@Override
-	public void setDescription(java.lang.String description) {
+	public void setDescription(String description) {
 		_journalFeed.setDescription(description);
 	}
 
 	@Override
 	public void setExpandoBridgeAttributes(
 		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
+
 		_journalFeed.setExpandoBridgeAttributes(baseModel);
 	}
 
@@ -655,82 +657,82 @@ public class JournalFeedWrapper implements JournalFeed,
 	}
 
 	/**
-	* Sets the feed format of this journal feed.
-	*
-	* @param feedFormat the feed format of this journal feed
-	*/
+	 * Sets the feed format of this journal feed.
+	 *
+	 * @param feedFormat the feed format of this journal feed
+	 */
 	@Override
-	public void setFeedFormat(java.lang.String feedFormat) {
+	public void setFeedFormat(String feedFormat) {
 		_journalFeed.setFeedFormat(feedFormat);
 	}
 
 	/**
-	* Sets the feed ID of this journal feed.
-	*
-	* @param feedId the feed ID of this journal feed
-	*/
+	 * Sets the feed ID of this journal feed.
+	 *
+	 * @param feedId the feed ID of this journal feed
+	 */
 	@Override
-	public void setFeedId(java.lang.String feedId) {
+	public void setFeedId(String feedId) {
 		_journalFeed.setFeedId(feedId);
 	}
 
 	/**
-	* Sets the feed version of this journal feed.
-	*
-	* @param feedVersion the feed version of this journal feed
-	*/
+	 * Sets the feed version of this journal feed.
+	 *
+	 * @param feedVersion the feed version of this journal feed
+	 */
 	@Override
 	public void setFeedVersion(double feedVersion) {
 		_journalFeed.setFeedVersion(feedVersion);
 	}
 
 	/**
-	* Sets the group ID of this journal feed.
-	*
-	* @param groupId the group ID of this journal feed
-	*/
+	 * Sets the group ID of this journal feed.
+	 *
+	 * @param groupId the group ID of this journal feed
+	 */
 	@Override
 	public void setGroupId(long groupId) {
 		_journalFeed.setGroupId(groupId);
 	}
 
 	/**
-	* Sets the ID of this journal feed.
-	*
-	* @param id the ID of this journal feed
-	*/
+	 * Sets the ID of this journal feed.
+	 *
+	 * @param id the ID of this journal feed
+	 */
 	@Override
 	public void setId(long id) {
 		_journalFeed.setId(id);
 	}
 
 	/**
-	* Sets the last publish date of this journal feed.
-	*
-	* @param lastPublishDate the last publish date of this journal feed
-	*/
+	 * Sets the last publish date of this journal feed.
+	 *
+	 * @param lastPublishDate the last publish date of this journal feed
+	 */
 	@Override
 	public void setLastPublishDate(Date lastPublishDate) {
 		_journalFeed.setLastPublishDate(lastPublishDate);
 	}
 
 	/**
-	* Sets the modified date of this journal feed.
-	*
-	* @param modifiedDate the modified date of this journal feed
-	*/
+	 * Sets the modified date of this journal feed.
+	 *
+	 * @param modifiedDate the modified date of this journal feed
+	 */
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		_journalFeed.setModifiedDate(modifiedDate);
 	}
 
 	/**
-	* Sets the name of this journal feed.
-	*
-	* @param name the name of this journal feed
-	*/
+	 * Sets the name of this journal feed.
+	 *
+	 * @param name the name of this journal feed
+	 */
 	@Override
-	public void setName(java.lang.String name) {
+	public void setName(String name) {
 		_journalFeed.setName(name);
 	}
 
@@ -740,30 +742,30 @@ public class JournalFeedWrapper implements JournalFeed,
 	}
 
 	/**
-	* Sets the order by col of this journal feed.
-	*
-	* @param orderByCol the order by col of this journal feed
-	*/
+	 * Sets the order by col of this journal feed.
+	 *
+	 * @param orderByCol the order by col of this journal feed
+	 */
 	@Override
-	public void setOrderByCol(java.lang.String orderByCol) {
+	public void setOrderByCol(String orderByCol) {
 		_journalFeed.setOrderByCol(orderByCol);
 	}
 
 	/**
-	* Sets the order by type of this journal feed.
-	*
-	* @param orderByType the order by type of this journal feed
-	*/
+	 * Sets the order by type of this journal feed.
+	 *
+	 * @param orderByType the order by type of this journal feed
+	 */
 	@Override
-	public void setOrderByType(java.lang.String orderByType) {
+	public void setOrderByType(String orderByType) {
 		_journalFeed.setOrderByType(orderByType);
 	}
 
 	/**
-	* Sets the primary key of this journal feed.
-	*
-	* @param primaryKey the primary key of this journal feed
-	*/
+	 * Sets the primary key of this journal feed.
+	 *
+	 * @param primaryKey the primary key of this journal feed
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		_journalFeed.setPrimaryKey(primaryKey);
@@ -775,96 +777,99 @@ public class JournalFeedWrapper implements JournalFeed,
 	}
 
 	/**
-	* @deprecated As of 3.3.0, replaced by {@link
-	#setDDMRendererTemplateKey(String)}
-	*/
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 #setDDMRendererTemplateKey(String)}
+	 */
 	@Deprecated
 	@Override
-	public void setRendererTemplateId(java.lang.String rendererTemplateKey) {
+	public void setRendererTemplateId(String rendererTemplateKey) {
 		_journalFeed.setRendererTemplateId(rendererTemplateKey);
 	}
 
 	/**
-	* @deprecated As of 3.3.0, replaced by {@link #setDDMStructureKey(String)}
-	*/
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 #setDDMStructureKey(String)}
+	 */
 	@Deprecated
 	@Override
-	public void setStructureId(java.lang.String structureKey) {
+	public void setStructureId(String structureKey) {
 		_journalFeed.setStructureId(structureKey);
 	}
 
 	/**
-	* Sets the target layout friendly url of this journal feed.
-	*
-	* @param targetLayoutFriendlyUrl the target layout friendly url of this journal feed
-	*/
+	 * Sets the target layout friendly url of this journal feed.
+	 *
+	 * @param targetLayoutFriendlyUrl the target layout friendly url of this journal feed
+	 */
 	@Override
-	public void setTargetLayoutFriendlyUrl(
-		java.lang.String targetLayoutFriendlyUrl) {
+	public void setTargetLayoutFriendlyUrl(String targetLayoutFriendlyUrl) {
 		_journalFeed.setTargetLayoutFriendlyUrl(targetLayoutFriendlyUrl);
 	}
 
 	/**
-	* Sets the target portlet ID of this journal feed.
-	*
-	* @param targetPortletId the target portlet ID of this journal feed
-	*/
+	 * Sets the target portlet ID of this journal feed.
+	 *
+	 * @param targetPortletId the target portlet ID of this journal feed
+	 */
 	@Override
-	public void setTargetPortletId(java.lang.String targetPortletId) {
+	public void setTargetPortletId(String targetPortletId) {
 		_journalFeed.setTargetPortletId(targetPortletId);
 	}
 
 	/**
-	* @deprecated As of 3.3.0, replaced by {@link #setDDMTemplateKey(String)}
-	*/
+	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
+	 #setDDMTemplateKey(String)}
+	 */
 	@Deprecated
 	@Override
-	public void setTemplateId(java.lang.String templateKey) {
+	public void setTemplateId(String templateKey) {
 		_journalFeed.setTemplateId(templateKey);
 	}
 
 	/**
-	* Sets the user ID of this journal feed.
-	*
-	* @param userId the user ID of this journal feed
-	*/
+	 * Sets the user ID of this journal feed.
+	 *
+	 * @param userId the user ID of this journal feed
+	 */
 	@Override
 	public void setUserId(long userId) {
 		_journalFeed.setUserId(userId);
 	}
 
 	/**
-	* Sets the user name of this journal feed.
-	*
-	* @param userName the user name of this journal feed
-	*/
+	 * Sets the user name of this journal feed.
+	 *
+	 * @param userName the user name of this journal feed
+	 */
 	@Override
-	public void setUserName(java.lang.String userName) {
+	public void setUserName(String userName) {
 		_journalFeed.setUserName(userName);
 	}
 
 	/**
-	* Sets the user uuid of this journal feed.
-	*
-	* @param userUuid the user uuid of this journal feed
-	*/
+	 * Sets the user uuid of this journal feed.
+	 *
+	 * @param userUuid the user uuid of this journal feed
+	 */
 	@Override
-	public void setUserUuid(java.lang.String userUuid) {
+	public void setUserUuid(String userUuid) {
 		_journalFeed.setUserUuid(userUuid);
 	}
 
 	/**
-	* Sets the uuid of this journal feed.
-	*
-	* @param uuid the uuid of this journal feed
-	*/
+	 * Sets the uuid of this journal feed.
+	 *
+	 * @param uuid the uuid of this journal feed
+	 */
 	@Override
-	public void setUuid(java.lang.String uuid) {
+	public void setUuid(String uuid) {
 		_journalFeed.setUuid(uuid);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.CacheModel<JournalFeed> toCacheModel() {
+	public com.liferay.portal.kernel.model.CacheModel<JournalFeed>
+		toCacheModel() {
+
 		return _journalFeed.toCacheModel();
 	}
 
@@ -874,7 +879,7 @@ public class JournalFeedWrapper implements JournalFeed,
 	}
 
 	@Override
-	public java.lang.String toString() {
+	public String toString() {
 		return _journalFeed.toString();
 	}
 
@@ -884,7 +889,7 @@ public class JournalFeedWrapper implements JournalFeed,
 	}
 
 	@Override
-	public java.lang.String toXmlString() {
+	public String toXmlString() {
 		return _journalFeed.toXmlString();
 	}
 
@@ -933,4 +938,5 @@ public class JournalFeedWrapper implements JournalFeed,
 	}
 
 	private final JournalFeed _journalFeed;
+
 }

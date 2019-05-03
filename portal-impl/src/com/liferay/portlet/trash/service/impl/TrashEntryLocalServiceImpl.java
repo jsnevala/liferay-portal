@@ -80,6 +80,7 @@ public class TrashEntryLocalServiceImpl extends TrashEntryLocalServiceBaseImpl {
 		throws PortalException {
 
 		User user = userPersistence.findByPrimaryKey(userId);
+
 		long classNameId = classNameLocalService.getClassNameId(className);
 
 		TrashEntry trashEntry = trashEntryPersistence.fetchByC_C(

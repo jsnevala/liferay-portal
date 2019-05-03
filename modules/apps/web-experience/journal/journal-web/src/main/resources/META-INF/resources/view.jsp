@@ -81,7 +81,9 @@ data.put("qa-id", "navigation");
 
 		<div class="sidenav-content">
 			<div class="journal-breadcrumb" id="<portlet:namespace />breadcrumbContainer">
-				<liferay-util:include page="/breadcrumb.jsp" servletContext="<%= application %>" />
+				<c:if test="<%= !journalDisplayContext.isNavigationMine() && !journalDisplayContext.isNavigationRecent() %>">
+					<liferay-util:include page="/breadcrumb.jsp" servletContext="<%= application %>" />
+				</c:if>
 			</div>
 
 			<%
@@ -145,7 +147,6 @@ data.put("qa-id", "navigation");
 								<c:when test='<%= Objects.equals(journalDisplayContext.getTabs1(), "versions") || (journalDisplayContext.hasVersionsResults() && Validator.isNull(journalDisplayContext.getTabs1())) %>'>
 									<liferay-util:include page="/view_versions.jsp" servletContext="<%= application %>">
 										<liferay-util:param name="searchContainerId" value="versions" />
-										<liferay-util:param name="showEditActions" value="<%= Boolean.FALSE.toString() %>" />
 									</liferay-util:include>
 								</c:when>
 								<c:when test='<%= Objects.equals(journalDisplayContext.getTabs1(), "comments") || (journalDisplayContext.hasCommentsResults() && Validator.isNull(journalDisplayContext.getTabs1())) %>'>

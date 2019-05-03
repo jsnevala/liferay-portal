@@ -49,9 +49,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"factoryPid=com.liferay.portal.security.ldap.configuration.LDAPServerConfiguration"
-	},
+	property = "factoryPid=com.liferay.portal.security.ldap.configuration.LDAPServerConfiguration",
 	service = ConfigurationProvider.class
 )
 public class LDAPServerConfigurationProviderImpl
@@ -417,8 +415,9 @@ public class LDAPServerConfigurationProviderImpl
 		super.configurationAdmin = configurationAdmin;
 	}
 
-	private final Map<Long,
-		Map<Long, ObjectValuePair<Configuration, LDAPServerConfiguration>>>
+	private final Map
+		<Long,
+		 Map<Long, ObjectValuePair<Configuration, LDAPServerConfiguration>>>
 			_configurations = new ConcurrentHashMap<>();
 	private final LDAPServerConfiguration _defaultLDAPServerConfiguration =
 		ConfigurableUtil.createConfigurable(

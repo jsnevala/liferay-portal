@@ -50,7 +50,7 @@ else if (displayStyle.equals("vertical")) {
 		}(document, 'script', 'facebook-jssdk'));
 
 		(function() {
-			if (FB && typeof(FB) !== 'undefined') {
+			if (typeof(FB) !== 'undefined' && FB) {
 				var fbLike = document.getElementById('<%= randomNamespace %>');
 
 				FB.XFBML.parse(fbLike);

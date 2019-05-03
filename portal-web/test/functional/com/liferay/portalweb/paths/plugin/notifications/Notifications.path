@@ -51,12 +51,12 @@
 </tr>
 <tr>
 	<td>NOTIFICATIONS_VERTICAL_ELLIPSIS</td>
-	<td>//li[contains(.,'${key_contentBody}')]//span/*[name()='svg'][contains(@class,'icon-ellipsis')]</td>
+	<td>//li[contains(.,'${key_contentBody}')]//a[span/*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>NOTIFICATIONS_WORKFLOW_TITLE</td>
-	<td>//div[@class=' list-group-item-content']//a</td>
+	<td>//div[@class=' list-group-item-content']//a | //div[@class=' list-group-item-content']//a[contains(.,'${key_notificationsWorkflowTitle}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -94,16 +94,6 @@
 <tr>
 	<td>NOTIFICATION_DELIVERY_CHECKBOX</td>
 	<td>//table[contains(.,'${key_contentType}')]//tr[contains(.,'${key_actionType}')]//label[contains(.,'${key_notificationType}')]/input[@type='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NOTIFICATION_DELIVERY_CHECKBOX_1</td>
-	<td>//table[contains(.,'${key_contentType}')]//tr/td[2]//input</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NOTIFICATION_DELIVERY_CHECKBOX_2</td>
-	<td>//table[contains(.,'${key_contentType}')]//div[2]/div/label/input</td>
 	<td></td>
 </tr>
 <tr>
@@ -147,16 +137,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>NOTIFICATION_DELIVERY_CONTACTS_CENTER_WEBSITE_CHECKBOX</td>
-	<td>//table[contains(.,'Contacts Center')]//tr[contains(.,'sends you a social relationship request.')]//label[contains(.,'Website')]/input[@type='checkbox' and contains(@class,'disabled')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NOTIFICATION_DELIVERY_INVITE_MEMBERS_WEBSITE_CHECKBOX</td>
-	<td>//table[contains(.,'Invite Members')]//tr[contains(.,'sends you a membership request.')]//label[contains(.,'Website')]/input[@type='checkbox' and contains(@class,'disabled')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -164,7 +144,7 @@
 <!--REQUESTS-->
 <tr>
 	<td>REQUESTS_LIST_TAB</td>
-	<td>//a[@title='Requests List']</td>
+	<td>//a[contains(@title,'Requests List')]</td>
 	<td></td>
 </tr>
 </tbody>

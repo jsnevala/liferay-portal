@@ -15,6 +15,7 @@
 package com.liferay.dynamic.data.mapping.expression;
 
 import com.liferay.dynamic.data.mapping.expression.internal.DDMExpressionFactoryImpl;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MathUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 
@@ -112,7 +113,7 @@ public class DDMExpressionEvaluationTest {
 				"54541180012973280712983712089370912739031219430349040" +
 					"4040405 / 2.0");
 
-		double divisionExpectedValue = Double.parseDouble(
+		double divisionExpectedValue = GetterUtil.getDouble(
 			"2.727059000648664E59");
 		double divisionActualValue = ddmExpression.evaluate();
 
@@ -283,6 +284,26 @@ public class DDMExpressionEvaluationTest {
 		ddmExpression.setIntegerVariableValue("var2", 6);
 
 		Assert.assertFalse(ddmExpression.evaluate());
+	}
+
+	@Test
+	public void testEvaluateIsEmailAddressesExpression() throws Exception {
+		DDMExpression<Boolean> ddmExpression =
+			_ddmExpressionFactory.createBooleanDDMExpression(
+				"isEmailAddresses(var1)");
+
+		ddmExpression.setStringVariableValue("var1", "invalid_email");
+
+		Assert.assertFalse(ddmExpression.evaluate());
+
+		ddmExpression.setStringVariableValue("var1", "test@liferay.com");
+
+		Assert.assertTrue(ddmExpression.evaluate());
+
+		ddmExpression.setStringVariableValue(
+			"var1", "test@liferay.com,test1@liferay.com");
+
+		Assert.assertTrue(ddmExpression.evaluate());
 	}
 
 	@Test

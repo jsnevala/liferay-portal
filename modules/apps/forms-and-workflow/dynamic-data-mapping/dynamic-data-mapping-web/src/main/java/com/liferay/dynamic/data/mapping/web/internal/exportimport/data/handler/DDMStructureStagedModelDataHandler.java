@@ -31,6 +31,7 @@ import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceLinkLocal
 import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.service.permission.DDMStructurePermission;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataException;
@@ -43,6 +44,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -65,12 +67,12 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Daniel Kocsis
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING},
+	property = "javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING,
 	service = StagedModelDataHandler.class
 )
 public class DDMStructureStagedModelDataHandler
@@ -176,10 +178,15 @@ public class DDMStructureStagedModelDataHandler
 		long classNameId = _portal.getClassNameId(
 			referenceElement.attributeValue("referenced-class-name"));
 		String structureKey = referenceElement.attributeValue("structure-key");
+
 		boolean preloaded = GetterUtil.getBoolean(
 			referenceElement.attributeValue("preloaded"));
 
-		DDMStructure existingStructure = fetchExistingStructure(
+		if (!preloaded) {
+			return super.validateMissingReference(uuid, groupId);
+		}
+
+		DDMStructure existingStructure = fetchExistingStructureWithParentGroups(
 			uuid, groupId, classNameId, structureKey, preloaded);
 
 		if (existingStructure == null) {
@@ -226,6 +233,9 @@ public class DDMStructureStagedModelDataHandler
 		portletDataContext.addClassedModel(
 			structureElement, ExportImportPathUtil.getModelPath(structure),
 			structure);
+
+		portletDataContext.addPermissions(
+			getResourceName(structure), structure.getPrimaryKey());
 	}
 
 	@Override
@@ -252,10 +262,15 @@ public class DDMStructureStagedModelDataHandler
 		boolean preloaded = GetterUtil.getBoolean(
 			referenceElement.attributeValue("preloaded"));
 
-		DDMStructure existingStructure = null;
+		DDMStructure existingStructure;
 
-		existingStructure = fetchExistingStructure(
-			uuid, groupId, classNameId, structureKey, preloaded);
+		if (!preloaded) {
+			existingStructure = fetchMissingReference(uuid, groupId);
+		}
+		else {
+			existingStructure = fetchExistingStructureWithParentGroups(
+				uuid, groupId, classNameId, structureKey, preloaded);
+		}
 
 		Map<Long, Long> structureIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
@@ -315,14 +330,12 @@ public class DDMStructureStagedModelDataHandler
 
 		DDMStructure importedStructure = null;
 
-		Map<Long, Long> groupIds =
-			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
-				Group.class);
+		long groupId = portletDataContext.getScopeGroupId();
 
-		long targetGroupId = portletDataContext.getScopeGroupId();
+		long structureGroupId = structure.getGroupId();
 
-		if (groupIds.containsKey(structure.getGroupId())) {
-			targetGroupId = groupIds.get(structure.getGroupId());
+		if (structureGroupId == portletDataContext.getSourceCompanyGroupId()) {
+			groupId = portletDataContext.getCompanyGroupId();
 		}
 
 		if (portletDataContext.isDataStrategyMirror()) {
@@ -333,14 +346,14 @@ public class DDMStructureStagedModelDataHandler
 				element.attributeValue("preloaded"));
 
 			DDMStructure existingStructure = fetchExistingStructure(
-				structure.getUuid(), targetGroupId, structure.getClassNameId(),
+				structure.getUuid(), groupId, structure.getClassNameId(),
 				structure.getStructureKey(), preloaded);
 
 			if (existingStructure == null) {
 				serviceContext.setUuid(structure.getUuid());
 
 				existingStructure = _ddmStructureLocalService.fetchStructure(
-					targetGroupId, structure.getClassNameId(),
+					groupId, structure.getClassNameId(),
 					structure.getStructureKey());
 
 				String structureKey = null;
@@ -350,7 +363,7 @@ public class DDMStructureStagedModelDataHandler
 				}
 
 				importedStructure = _ddmStructureLocalService.addStructure(
-					userId, targetGroupId, parentStructureId,
+					userId, groupId, parentStructureId,
 					structure.getClassNameId(), structureKey,
 					structure.getNameMap(), structure.getDescriptionMap(),
 					ddmForm, ddmFormLayout, structure.getStorageType(),
@@ -376,14 +389,17 @@ public class DDMStructureStagedModelDataHandler
 		}
 		else {
 			importedStructure = _ddmStructureLocalService.addStructure(
-				userId, targetGroupId, parentStructureId,
-				structure.getClassNameId(), null, structure.getNameMap(),
-				structure.getDescriptionMap(), ddmForm, ddmFormLayout,
-				structure.getStorageType(), structure.getType(),
-				serviceContext);
+				userId, groupId, parentStructureId, structure.getClassNameId(),
+				null, structure.getNameMap(), structure.getDescriptionMap(),
+				ddmForm, ddmFormLayout, structure.getStorageType(),
+				structure.getType(), serviceContext);
 		}
 
 		portletDataContext.importClassedModel(structure, importedStructure);
+
+		portletDataContext.importPermissions(
+			getResourceName(structure), structure.getPrimaryKey(),
+			importedStructure.getPrimaryKey());
 
 		structureKeys.put(
 			structure.getStructureKey(), importedStructure.getStructureKey());
@@ -478,6 +494,47 @@ public class DDMStructureStagedModelDataHandler
 		return existingStructure;
 	}
 
+	protected DDMStructure fetchExistingStructureWithParentGroups(
+		String uuid, long groupId, long classNameId, String structureKey,
+		boolean preloaded) {
+
+		Group group = _groupLocalService.fetchGroup(groupId);
+
+		if (group == null) {
+			return null;
+		}
+
+		long companyId = group.getCompanyId();
+
+		while (group != null) {
+			DDMStructure existingStructure = fetchExistingStructure(
+				uuid, group.getGroupId(), classNameId, structureKey, preloaded);
+
+			if (existingStructure != null) {
+				return existingStructure;
+			}
+
+			try {
+				group = group.getParentGroup();
+			}
+			catch (PortalException pe) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(pe, pe);
+				}
+			}
+		}
+
+		Group companyGroup = _groupLocalService.fetchCompanyGroup(companyId);
+
+		if (companyGroup == null) {
+			return null;
+		}
+
+		return fetchExistingStructure(
+			uuid, companyGroup.getGroupId(), classNameId, structureKey,
+			preloaded);
+	}
+
 	protected DDMForm getImportDDMForm(
 			PortletDataContext portletDataContext, Element structureElement)
 		throws PortalException {
@@ -504,6 +561,13 @@ public class DDMStructureStagedModelDataHandler
 			serializedDDMFormLayout);
 	}
 
+	protected String getResourceName(DDMStructure structure)
+		throws PortalException {
+
+		return ddmStructurePermission.getStructureModelResourceName(
+			structure.getClassNameId());
+	}
+
 	protected void importDDMDataProviderInstances(
 			PortletDataContext portletDataContext, Element structureElement,
 			DDMForm ddmForm)
@@ -521,7 +585,7 @@ public class DDMStructureStagedModelDataHandler
 				DDMDataProviderInstance.class);
 
 		for (String ddmDataProviderInstanceId : ddmDataProviderInstanceIds) {
-			long oldDDMDataProviderInstanceId = Long.parseLong(
+			long oldDDMDataProviderInstanceId = GetterUtil.getLong(
 				ddmDataProviderInstanceId);
 
 			long newDDMDataProviderInstanceId = MapUtil.getLong(
@@ -541,9 +605,12 @@ public class DDMStructureStagedModelDataHandler
 				continue;
 			}
 
-			long oldDDMDataProviderInstanceId = Long.valueOf(
-				String.valueOf(
-					ddmFormField.getProperty("ddmDataProviderInstanceId")));
+			long oldDDMDataProviderInstanceId = GetterUtil.getLong(
+				ddmFormField.getProperty("ddmDataProviderInstanceId"));
+
+			if (oldDDMDataProviderInstanceId == 0) {
+				continue;
+			}
 
 			long newDDMDataProviderInstanceId = MapUtil.getLong(
 				dataProviderInstanceIdsMap, oldDDMDataProviderInstanceId);
@@ -633,6 +700,9 @@ public class DDMStructureStagedModelDataHandler
 		_userLocalService = userLocalService;
 	}
 
+	@Reference
+	protected DDMStructurePermission ddmStructurePermission;
+
 	private static final String _DDM_DATA_PROVIDER_INSTANCE_IDS =
 		"ddm-data-provider-instance-ids";
 
@@ -651,6 +721,9 @@ public class DDMStructureStagedModelDataHandler
 	private DDMFormLayoutJSONDeserializer _ddmFormLayoutJSONDeserializer;
 	private DDMStructureLayoutLocalService _ddmStructureLayoutLocalService;
 	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Portal _portal;

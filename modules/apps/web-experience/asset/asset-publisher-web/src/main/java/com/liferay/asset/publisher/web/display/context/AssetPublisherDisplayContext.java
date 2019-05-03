@@ -93,8 +93,9 @@ public class AssetPublisherDisplayContext {
 
 	public static final String PAGINATION_TYPE_SIMPLE = "simple";
 
-	public static final String[] PAGINATION_TYPES =
-		{PAGINATION_TYPE_NONE, PAGINATION_TYPE_REGULAR, PAGINATION_TYPE_SIMPLE};
+	public static final String[] PAGINATION_TYPES = {
+		PAGINATION_TYPE_NONE, PAGINATION_TYPE_REGULAR, PAGINATION_TYPE_SIMPLE
+	};
 
 	public AssetPublisherDisplayContext(
 		AssetPublisherCustomizer assetPublisherCustomizer,
@@ -113,7 +114,7 @@ public class AssetPublisherDisplayContext {
 	}
 
 	/**
-	 * @deprecated As of 1.2.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #AssetPublisherDisplayContext(AssetPublisherCustomizer,
 	 *             PortletRequest, PortletResponse, PortletPreferences)}
 	 */
@@ -128,7 +129,7 @@ public class AssetPublisherDisplayContext {
 	}
 
 	/**
-	 * @deprecated As of 1.2.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #AssetPublisherDisplayContext(AssetPublisherCustomizer,
 	 *             PortletRequest, PortletResponse, PortletPreferences)}
 	 */

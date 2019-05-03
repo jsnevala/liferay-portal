@@ -45,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Igor Spasic
  */
 @Component(
-	property = {"model.class.name=com.liferay.blogs.kernel.model.BlogsEntry"},
+	property = "model.class.name=com.liferay.blogs.kernel.model.BlogsEntry",
 	service = AtomCollectionAdapter.class
 )
 public class BlogsEntryAtomCollectionAdapter
@@ -227,7 +227,7 @@ public class BlogsEntryAtomCollectionAdapter
 		_blogsEntryService.updateEntry(
 			blogsEntry.getEntryId(), title, blogsEntry.getSubtitle(), summary,
 			content, displayDateMonth, displayDateDay, displayDateYear,
-			displayDateHour, displayDateMinute, blogsEntry.getAllowPingbacks(),
+			displayDateHour, displayDateMinute, blogsEntry.isAllowPingbacks(),
 			blogsEntry.isAllowTrackbacks(), trackbacks, StringPool.BLANK, null,
 			null, serviceContext);
 	}

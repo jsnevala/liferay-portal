@@ -56,7 +56,7 @@ MBBreadcrumbUtil.addPortletBreadcrumbEntries(message, request, renderResponse);
 		</c:otherwise>
 	</c:choose>
 
-	<c:if test="<%= MBCategoryPermission.contains(permissionChecker, scopeGroupId, message.getCategoryId(), ActionKeys.REPLY_TO_MESSAGE) && !thread.isLocked() %>">
+	<c:if test="<%= !thread.isLocked() && !message.isDraft() && MBCategoryPermission.contains(permissionChecker, scopeGroupId, message.getCategoryId(), ActionKeys.REPLY_TO_MESSAGE) %>">
 		<div class="hide" id="<portlet:namespace />addQuickReplyDiv">
 			<%@ include file="/message_boards/edit_message_quick.jspf" %>
 		</div>
@@ -78,6 +78,10 @@ MBBreadcrumbUtil.addPortletBreadcrumbEntries(message, request, renderResponse);
 
 			if (editorInstance) {
 				setTimeout(AUI._.bind(editorInstance.focus, editorInstance), 50);
+
+				if (AUI().UA.mobile) {
+					document.getElementById('<portlet:namespace />addQuickReplyDiv').scrollIntoView(false);
+				}
 			}
 		}
 		else {

@@ -233,8 +233,8 @@ public class SocialOfficeUpgradeOSGiCommands {
 		final AtomicInteger atomicInteger = new AtomicInteger(0);
 
 		actionableDynamicQuery.setPerformActionMethod(
-			new ActionableDynamicQuery.
-				PerformActionMethod<PortletPreferences>() {
+			new ActionableDynamicQuery.PerformActionMethod
+				<PortletPreferences>() {
 
 				public void performAction(PortletPreferences portletPreferences)
 					throws PortalException {

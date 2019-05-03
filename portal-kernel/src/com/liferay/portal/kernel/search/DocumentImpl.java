@@ -72,7 +72,11 @@ public class DocumentImpl implements Document {
 	}
 
 	public static String getSortableFieldName(String name) {
-		return name.concat(StringPool.UNDERLINE).concat(_SORTABLE_FIELD_SUFFIX);
+		return name.concat(
+			StringPool.UNDERLINE
+		).concat(
+			_SORTABLE_FIELD_SUFFIX
+		);
 	}
 
 	public static String getSortFieldName(Sort sort, String scoreFieldName) {
@@ -1062,7 +1066,11 @@ public class DocumentImpl implements Document {
 		Class<? extends Number> clazz) {
 
 		if (typify) {
-			name = name.concat(StringPool.UNDERLINE).concat("Number");
+			name = name.concat(
+				StringPool.UNDERLINE
+			).concat(
+				"Number"
+			);
 		}
 
 		Field field = createField(getSortableFieldName(name), value);
@@ -1142,7 +1150,11 @@ public class DocumentImpl implements Document {
 		String name, boolean typify, String value) {
 
 		if (typify) {
-			name = name.concat(StringPool.UNDERLINE).concat("String");
+			name = name.concat(
+				StringPool.UNDERLINE
+			).concat(
+				"String"
+			);
 		}
 
 		String truncatedValue = value;

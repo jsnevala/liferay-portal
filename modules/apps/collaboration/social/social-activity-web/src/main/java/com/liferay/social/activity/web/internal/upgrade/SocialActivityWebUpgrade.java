@@ -39,9 +39,7 @@ public class SocialActivityWebUpgrade implements UpgradeStepRegistrator {
 			@Override
 			protected String[][] getRenamePortletIdsArray() {
 				return new String[][] {
-					new String[] {
-						"179", SocialActivityPortletKeys.SOCIAL_ACTIVITY
-					}
+					{"179", SocialActivityPortletKeys.SOCIAL_ACTIVITY}
 				};
 			}
 

@@ -47,11 +47,10 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {
-		"model.class.name=com.liferay.dynamic.data.lists.model.DDLRecordSet"
-	},
-	service =
-		{DDLRecordSetStagedModelRepository.class, StagedModelRepository.class}
+	property = "model.class.name=com.liferay.dynamic.data.lists.model.DDLRecordSet",
+	service = {
+		DDLRecordSetStagedModelRepository.class, StagedModelRepository.class
+	}
 )
 public class DDLRecordSetStagedModelRepository
 	extends BaseStagedModelRepository<DDLRecordSet> {
@@ -121,7 +120,13 @@ public class DDLRecordSetStagedModelRepository
 			new DDLRecordSetNameComparator());
 
 		for (DDLRecordSet recordSet : recordSets) {
-			recordSetDDMStructureIds.add(recordSet.getDDMStructureId());
+			DDMStructure ddmStructure =
+				_ddmStructureLocalService.getDDMStructure(
+					recordSet.getDDMStructureId());
+
+			if (ddmStructure.getGroupId() == recordSet.getGroupId()) {
+				recordSetDDMStructureIds.add(recordSet.getDDMStructureId());
+			}
 
 			_ddlRecordSetLocalService.deleteRecordSet(recordSet);
 		}

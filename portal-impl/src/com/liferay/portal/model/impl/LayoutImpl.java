@@ -1043,19 +1043,52 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 	@Override
 	public boolean isPortletEmbedded(String portletId, long groupId) {
-		List<Portlet> embeddedPortlets = getEmbeddedPortlets(groupId);
+		PortletPreferences portletPreferences =
+			PortletPreferencesLocalServiceUtil.fetchPortletPreferences(
+				PortletKeys.PREFS_OWNER_ID_DEFAULT,
+				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, getPlid(), portletId);
 
-		if (embeddedPortlets.isEmpty()) {
+		if (portletPreferences == null) {
 			return false;
 		}
 
-		for (Portlet portlet : embeddedPortlets) {
-			if (Objects.equals(portlet.getPortletId(), portletId)) {
-				return true;
+		portletPreferences =
+			PortletPreferencesLocalServiceUtil.fetchPortletPreferences(
+				groupId, PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
+				PortletKeys.PREFS_PLID_SHARED, portletId);
+
+		if ((portletPreferences == null) && isTypePortlet()) {
+			LayoutTypePortlet layoutTypePortlet =
+				(LayoutTypePortlet)getLayoutType();
+
+			PortalPreferences portalPreferences =
+				layoutTypePortlet.getPortalPreferences();
+
+			if ((portalPreferences != null) &&
+				layoutTypePortlet.isCustomizable()) {
+
+				portletPreferences =
+					PortletPreferencesLocalServiceUtil.fetchPortletPreferences(
+						portalPreferences.getUserId(),
+						PortletKeys.PREFS_OWNER_TYPE_USER, getPlid(),
+						portletId);
 			}
 		}
 
-		return false;
+		if (portletPreferences == null) {
+			return false;
+		}
+
+		Portlet portlet = PortletLocalServiceUtil.getPortletById(
+			getCompanyId(), portletId);
+
+		if ((portlet == null) || !portlet.isReady() ||
+			portlet.isUndeployedPortlet() || !portlet.isActive()) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -1122,7 +1155,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1194,7 +1227,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of 7.0.0, with no direct replacement
+	 * @deprecated As of Judson (7.1.x), with no direct replacement
 	 */
 	@Deprecated
 	@Override
@@ -1281,7 +1314,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 			new String[PropsValues.LAYOUT_FRIENDLY_URL_KEYWORDS.length];
 
 		for (int i = 0; i < PropsValues.LAYOUT_FRIENDLY_URL_KEYWORDS.length;
-			i++) {
+			 i++) {
 
 			String keyword = PropsValues.LAYOUT_FRIENDLY_URL_KEYWORDS[i];
 
@@ -1416,8 +1449,8 @@ public class LayoutImpl extends LayoutBaseImpl {
 			}
 
 			if (layoutTypePortlet.hasStateMax()) {
-				String portletId = StringUtil.split(
-					layoutTypePortlet.getStateMax())[0];
+				String portletId =
+					StringUtil.split(layoutTypePortlet.getStateMax())[0];
 
 				LiferayPortletURL portletURL = PortletURLFactoryUtil.create(
 					request, portletId, this, PortletRequest.ACTION_PHASE);

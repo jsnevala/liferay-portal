@@ -22,7 +22,6 @@ import com.liferay.calendar.social.CalendarActivityKeys;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
@@ -43,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marcellus Tavares
  */
 @Component(
-	property = {"javax.portlet.name=" + CalendarPortletKeys.CALENDAR},
+	property = "javax.portlet.name=" + CalendarPortletKeys.CALENDAR,
 	service = SocialActivityInterpreter.class
 )
 public class CalendarActivityInterpreter extends BaseSocialActivityInterpreter {
@@ -51,17 +50,6 @@ public class CalendarActivityInterpreter extends BaseSocialActivityInterpreter {
 	@Override
 	public String[] getClassNames() {
 		return _CLASS_NAMES;
-	}
-
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.calendar.web)", unbind = "-"
-	)
-	public void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader,
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
 	}
 
 	@Override
@@ -86,7 +74,9 @@ public class CalendarActivityInterpreter extends BaseSocialActivityInterpreter {
 
 	@Override
 	protected ResourceBundleLoader getResourceBundleLoader() {
-		return _resourceBundleLoader;
+		return ResourceBundleLoaderUtil.
+			getResourceBundleLoaderByBundleSymbolicName(
+				"com.liferay.calendar.web");
 	}
 
 	@Override
@@ -154,14 +144,13 @@ public class CalendarActivityInterpreter extends BaseSocialActivityInterpreter {
 		_calendarBookingLocalService = calendarBookingLocalService;
 	}
 
-	private static final String[] _CLASS_NAMES =
-		{CalendarBooking.class.getName()};
+	private static final String[] _CLASS_NAMES = {
+		CalendarBooking.class.getName()
+	};
 
 	private CalendarBookingLocalService _calendarBookingLocalService;
 
 	@Reference
 	private Portal _portal;
-
-	private ResourceBundleLoader _resourceBundleLoader;
 
 }

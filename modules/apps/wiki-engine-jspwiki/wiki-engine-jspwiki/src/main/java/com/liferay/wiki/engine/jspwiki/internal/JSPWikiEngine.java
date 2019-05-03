@@ -23,13 +23,12 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
+import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.language.LanguageResources;
 import com.liferay.wiki.configuration.WikiGroupServiceConfiguration;
 import com.liferay.wiki.engine.BaseWikiEngine;
 import com.liferay.wiki.engine.WikiEngine;
@@ -60,7 +59,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Jorge Ferrer
  */
 @Component(
-	property = {"service.ranking:Integer=-1000"}, service = WikiEngine.class
+	property = "service.ranking:Integer=-1000", service = WikiEngine.class
 )
 public class JSPWikiEngine extends BaseWikiEngine {
 
@@ -95,8 +94,8 @@ public class JSPWikiEngine extends BaseWikiEngine {
 
 	@Override
 	public String getHelpURL() {
-		return
-			"https://jspwiki-wiki.apache.org/Wiki.jsp?page=TextFormattingRules";
+		return "https://jspwiki-wiki.apache.org/Wiki.jsp?page=" +
+			"TextFormattingRules";
 	}
 
 	@Override
@@ -239,7 +238,9 @@ public class JSPWikiEngine extends BaseWikiEngine {
 
 	@Override
 	protected ResourceBundleLoader getResourceBundleLoader() {
-		return _resourceBundleLoader;
+		return ResourceBundleLoaderUtil.
+			getResourceBundleLoaderByBundleSymbolicName(
+				"com.liferay.wiki.engine.lang");
 	}
 
 	protected synchronized void setProperties(String configuration) {
@@ -254,17 +255,6 @@ public class JSPWikiEngine extends BaseWikiEngine {
 		catch (IOException ioe) {
 			_log.error(ioe, ioe);
 		}
-	}
-
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.wiki.engine.lang)",
-		unbind = "-"
-	)
-	protected void setResourceBundleLoader(
-		ResourceBundleLoader resourceBundleLoader) {
-
-		_resourceBundleLoader = new AggregateResourceBundleLoader(
-			resourceBundleLoader, LanguageResources.RESOURCE_BUNDLE_LOADER);
 	}
 
 	@Reference(
@@ -346,6 +336,7 @@ public class JSPWikiEngine extends BaseWikiEngine {
 	private static String _encodeLink(String content, Matcher wikiLinkMatcher) {
 		while (wikiLinkMatcher.find()) {
 			String link = wikiLinkMatcher.group();
+
 			String linkValues = wikiLinkMatcher.group(1);
 
 			String name = linkValues;
@@ -390,7 +381,6 @@ public class JSPWikiEngine extends BaseWikiEngine {
 	private final Map<Long, LiferayJSPWikiEngine> _engines =
 		new ConcurrentHashMap<>();
 	private Properties _properties = new Properties();
-	private ResourceBundleLoader _resourceBundleLoader;
 	private ServletContext _servletContext;
 
 	@Reference(

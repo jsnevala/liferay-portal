@@ -157,8 +157,11 @@ request.setAttribute("edit_role_permissions_form.jsp-unselectedResourceBlockPerm
 				boolean supportsFilterByGroup = true;
 				String target = resource + actionId;
 				List<Group> groups = Collections.emptyList();
+
 				String groupIds = ParamUtil.getString(request, "groupIds" + target, null);
+
 				long[] groupIdsArray = StringUtil.split(groupIds, 0L);
+
 				List<String> groupNames = new ArrayList<String>();
 
 				Portlet curPortlet = PortletLocalServiceUtil.getPortletById(company.getCompanyId(), resource);

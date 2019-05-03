@@ -51,6 +51,12 @@ portletURL.setParameter("displayStyle", displayStyle);
 					<portlet:param name="displayStyle" value="<%= displayStyle %>" />
 				</portlet:renderURL>
 
+				<%
+				if (!ddlFormAdminDisplayContext.isShowEditRecordSetIcon(recordSet)) {
+					rowURL = null;
+				}
+				%>
+
 				<c:choose>
 					<c:when test='<%= displayStyle.equals("descriptive") %>'>
 						<liferay-ui:search-container-column-icon
@@ -73,13 +79,13 @@ portletURL.setParameter("displayStyle", displayStyle);
 							cssClass="table-cell-content"
 							href="<%= rowURL %>"
 							name="name"
-							value="<%= HtmlUtil.escape(recordSet.getName(locale)) %>"
+							value="<%= HtmlUtil.escape(recordSet.getName(LocaleUtil.US)) %>"
 						/>
 
 						<liferay-ui:search-container-column-text
 							cssClass="table-cell-content"
 							name="description"
-							value="<%= HtmlUtil.escape(recordSet.getDescription(locale)) %>"
+							value="<%= HtmlUtil.escape(recordSet.getDescription(LocaleUtil.US)) %>"
 						/>
 
 						<liferay-ui:search-container-column-date

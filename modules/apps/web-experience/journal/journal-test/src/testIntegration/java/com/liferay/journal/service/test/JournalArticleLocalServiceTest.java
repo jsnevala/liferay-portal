@@ -32,6 +32,7 @@ import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
@@ -46,7 +47,9 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.HashMap;
@@ -79,6 +82,65 @@ public class JournalArticleLocalServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
+	}
+
+	@Test
+	public void testCopyArticle() throws Exception {
+		JournalArticle oldArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		JournalArticle newArticle = JournalArticleLocalServiceUtil.copyArticle(
+			oldArticle.getUserId(), oldArticle.getGroupId(),
+			oldArticle.getArticleId(), null, true, oldArticle.getVersion());
+
+		Assert.assertNotEquals(oldArticle, newArticle);
+
+		List<ResourcePermission> oldResourcePermissions =
+			ResourcePermissionLocalServiceUtil.getResourcePermissions(
+				oldArticle.getCompanyId(), JournalArticle.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(oldArticle.getResourcePrimKey()));
+
+		List<ResourcePermission> newResourcePermissions =
+			ResourcePermissionLocalServiceUtil.getResourcePermissions(
+				newArticle.getCompanyId(), JournalArticle.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(newArticle.getResourcePrimKey()));
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append("Old resource permissions: ");
+		sb.append(oldResourcePermissions);
+		sb.append("new resource permissions: ");
+		sb.append(newResourcePermissions);
+
+		Assert.assertEquals(
+			sb.toString(), oldResourcePermissions.size(),
+			newResourcePermissions.size());
+
+		for (int i = 0; i < oldResourcePermissions.size(); i++) {
+			ResourcePermission oldResourcePermission =
+				oldResourcePermissions.get(i);
+			ResourcePermission newResourcePermission =
+				newResourcePermissions.get(i);
+
+			Assert.assertNotEquals(
+				oldResourcePermission, newResourcePermission);
+
+			Assert.assertEquals(
+				oldResourcePermission.getRoleId(),
+				newResourcePermission.getRoleId());
+			Assert.assertEquals(
+				oldResourcePermission.getOwnerId(),
+				newResourcePermission.getOwnerId());
+			Assert.assertEquals(
+				oldResourcePermission.getActionIds(),
+				newResourcePermission.getActionIds());
+			Assert.assertEquals(
+				oldResourcePermission.isViewActionId(),
+				newResourcePermission.isViewActionId());
+		}
 	}
 
 	@Test(expected = DuplicateArticleIdException.class)
@@ -159,6 +221,94 @@ public class JournalArticleLocalServiceTest {
 
 		Assert.assertEquals(articles.toString(), 1, articles.size());
 		Assert.assertEquals(article, articles.get(0));
+	}
+
+	@Test
+	public void testGetUniqueUrlTitleDoesntUseExistingNumberedUrlTitle()
+		throws Exception {
+
+		String urlTitle = "test 1";
+
+		JournalArticle baseArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, urlTitle);
+
+		Assert.assertEquals("test-1", baseArticle.getUrlTitle());
+
+		JournalArticle newArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, urlTitle);
+
+		Assert.assertEquals("test-1-1", newArticle.getUrlTitle());
+	}
+
+	@Test
+	public void testGetUniqueUrlTitleDoesntUseExistingOldUniqueUrlTitle()
+		throws Exception {
+
+		String urlTitle = "te-1";
+
+		JournalArticle oldArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, urlTitle);
+
+		Assert.assertEquals(urlTitle, oldArticle.getUrlTitle());
+
+		String newUrlTitle = "test";
+
+		JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, newUrlTitle);
+
+		JournalArticle newArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, newUrlTitle);
+
+		Assert.assertEquals("test-1", newArticle.getUrlTitle());
+	}
+
+	@Test
+	public void testGetUniqueUrlTitleResolvesConflicts() throws Exception {
+		String urlTitle = "existing-url-title";
+
+		JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, urlTitle);
+
+		JournalArticle newArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, urlTitle);
+
+		Assert.assertEquals("existing-url-title-1", newArticle.getUrlTitle());
+	}
+
+	@Test
+	public void testGetUniqueUrlTitleReusesOwnedUrlTitles() throws Exception {
+		String urlTitle = "existing-url-title";
+
+		JournalArticle oldArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, urlTitle);
+
+		JournalArticle newArticle = JournalTestUtil.updateArticle(oldArticle);
+
+		Assert.assertEquals(urlTitle, newArticle.getUrlTitle());
+	}
+
+	@Test
+	public void testGetUniqueUrlTitleShortensToMaxLength() throws Exception {
+		int maxLength = ModelHintsUtil.getMaxLength(
+			JournalArticle.class.getName(), "urlTitle");
+
+		String urlTitle = StringUtil.randomString(maxLength + 1);
+
+		JournalArticle article = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, urlTitle);
+
+		String articleURLTitle = article.getUrlTitle();
+
+		Assert.assertEquals(maxLength, articleURLTitle.length());
 	}
 
 	@Test

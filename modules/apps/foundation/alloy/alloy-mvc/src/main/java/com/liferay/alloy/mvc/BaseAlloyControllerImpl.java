@@ -323,7 +323,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	@SuppressWarnings("unused")
 	@Transactional(
 		isolation = Isolation.PORTAL, propagation = Propagation.REQUIRES_NEW,
-		rollbackFor = {Exception.class}
+		rollbackFor = Exception.class
 	)
 	public void invoke(Method method) throws Exception {
 		method.invoke(this);
@@ -604,7 +604,11 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	protected String getMessageListenerGroupName() {
 		String rootPortletId = portlet.getRootPortletId();
 
-		return rootPortletId.concat(StringPool.SLASH).concat(controllerPath);
+		return rootPortletId.concat(
+			StringPool.SLASH
+		).concat(
+			controllerPath
+		);
 	}
 
 	protected Method getMethod(String methodName, Class<?>... parameterTypes) {
@@ -1094,7 +1098,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	@SuppressWarnings("unused")
 	@Transactional(
 		isolation = Isolation.PORTAL, propagation = Propagation.REQUIRES_NEW,
-		rollbackFor = {Exception.class}
+		rollbackFor = Exception.class
 	)
 	protected String processDataRequest(ActionRequest actionRequest)
 		throws Exception {
@@ -1187,8 +1191,8 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 				data = toJSONArray(documents);
 			}
 			else if (object instanceof Collection) {
-				Object[] objects =
-					((Collection)object).toArray(new BaseModel[0]);
+				Object[] objects = ((Collection)object).toArray(
+					new BaseModel[0]);
 
 				data = toJSONArray(objects);
 			}

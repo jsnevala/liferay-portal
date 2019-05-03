@@ -21,7 +21,7 @@ import com.liferay.portal.kernel.model.ResourcedModel;
 import com.liferay.portal.kernel.model.StagedModel;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @ProviderType
 public class ExportImportClassedModelUtil {

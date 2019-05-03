@@ -15,7 +15,7 @@
 package com.liferay.shopping.constants;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class ShoppingConstants {
 

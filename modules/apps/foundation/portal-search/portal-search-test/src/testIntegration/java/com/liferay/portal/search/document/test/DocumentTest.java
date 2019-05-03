@@ -521,14 +521,17 @@ public class DocumentTest {
 		"sixthuser"
 	};
 
-	private static final String[] _SCREEN_NAMES_ODD_ASCENDING =
-		{"firstuser", "thirduser", "fifthuser"};
+	private static final String[] _SCREEN_NAMES_ODD_ASCENDING = {
+		"firstuser", "thirduser", "fifthuser"
+	};
 
-	private static final String[] _SCREEN_NAMES_ODD_DESCENDING =
-		{"fifthuser", "thirduser", "firstuser"};
+	private static final String[] _SCREEN_NAMES_ODD_DESCENDING = {
+		"fifthuser", "thirduser", "firstuser"
+	};
 
-	private static final String[] _SCREEN_NAMES_ODD_MIXED =
-		{"firstuser", "fifthuser", "thirduser"};
+	private static final String[] _SCREEN_NAMES_ODD_MIXED = {
+		"firstuser", "fifthuser", "thirduser"
+	};
 
 	private final Map<String, Double[]> _doubleArrays = new HashMap<>();
 	private final Map<String, Double> _doubles = new HashMap<>();

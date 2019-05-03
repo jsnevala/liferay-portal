@@ -14,15 +14,6 @@
 
 package com.liferay.exportimport.controller;
 
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_LAYOUT_IMPORT_FAILED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_LAYOUT_IMPORT_STARTED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_LAYOUT_IMPORT_SUCCEEDED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_FAILED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_STARTED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_SUCCEEDED;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.PROCESS_FLAG_LAYOUT_IMPORT_IN_PROCESS;
-import static com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants.PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS;
-
 import com.liferay.asset.kernel.model.adapter.StagedAssetLink;
 import com.liferay.exportimport.kernel.controller.ExportImportController;
 import com.liferay.exportimport.kernel.controller.ImportController;
@@ -43,6 +34,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataHandlerStatusMessageSender
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.exportimport.kernel.lar.UserIdStrategy;
+import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.lar.DeletionSystemEventImporter;
@@ -131,7 +123,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = {"model.class.name=com.liferay.portal.kernel.model.Layout"},
+	property = "model.class.name=com.liferay.portal.kernel.model.Layout",
 	service = {ExportImportController.class, LayoutImportController.class}
 )
 public class LayoutImportController implements ImportController {
@@ -213,8 +205,8 @@ public class LayoutImportController implements ImportController {
 				exportImportConfiguration, file);
 
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_LAYOUT_IMPORT_STARTED, getProcessFlag(),
-				portletDataContext.getExportImportProcessId(),
+				ExportImportLifecycleConstants.EVENT_LAYOUT_IMPORT_STARTED,
+				getProcessFlag(), portletDataContext.getExportImportProcessId(),
 				_portletDataContextFactory.clonePortletDataContext(
 					portletDataContext));
 
@@ -228,8 +220,8 @@ public class LayoutImportController implements ImportController {
 			ExportImportThreadLocal.setLayoutImportInProcess(false);
 
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_LAYOUT_IMPORT_SUCCEEDED, getProcessFlag(),
-				portletDataContext.getExportImportProcessId(),
+				ExportImportLifecycleConstants.EVENT_LAYOUT_IMPORT_SUCCEEDED,
+				getProcessFlag(), portletDataContext.getExportImportProcessId(),
 				_portletDataContextFactory.clonePortletDataContext(
 					portletDataContext),
 				userId);
@@ -238,7 +230,8 @@ public class LayoutImportController implements ImportController {
 			ExportImportThreadLocal.setLayoutImportInProcess(false);
 
 			_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-				EVENT_LAYOUT_IMPORT_FAILED, getProcessFlag(),
+				ExportImportLifecycleConstants.EVENT_LAYOUT_IMPORT_FAILED,
+				getProcessFlag(),
 				String.valueOf(
 					exportImportConfiguration.getExportImportConfigurationId()),
 				_portletDataContextFactory.clonePortletDataContext(
@@ -408,6 +401,7 @@ public class LayoutImportController implements ImportController {
 			PortletDataHandlerKeys.LAYOUTS_IMPORT_MODE_MERGE_BY_LAYOUT_UUID);
 		boolean logo = MapUtil.getBoolean(
 			parameterMap, PortletDataHandlerKeys.LOGO);
+
 		boolean permissions = MapUtil.getBoolean(
 			parameterMap, PortletDataHandlerKeys.PERMISSIONS);
 
@@ -801,7 +795,8 @@ public class LayoutImportController implements ImportController {
 
 			try {
 				_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-					EVENT_PORTLET_IMPORT_STARTED, getProcessFlag(),
+					ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_STARTED,
+					getProcessFlag(),
 					portletDataContext.getExportImportProcessId(),
 					_portletDataContextFactory.clonePortletDataContext(
 						portletDataContext));
@@ -830,14 +825,17 @@ public class LayoutImportController implements ImportController {
 				}
 
 				_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-					EVENT_PORTLET_IMPORT_SUCCEEDED, getProcessFlag(),
+					ExportImportLifecycleConstants.
+						EVENT_PORTLET_IMPORT_SUCCEEDED,
+					getProcessFlag(),
 					portletDataContext.getExportImportProcessId(),
 					_portletDataContextFactory.clonePortletDataContext(
 						portletDataContext));
 			}
 			catch (Throwable t) {
 				_exportImportLifecycleManager.fireExportImportLifecycleEvent(
-					EVENT_PORTLET_IMPORT_FAILED, getProcessFlag(),
+					ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_FAILED,
+					getProcessFlag(),
 					portletDataContext.getExportImportProcessId(),
 					_portletDataContextFactory.clonePortletDataContext(
 						portletDataContext),
@@ -1027,10 +1025,12 @@ public class LayoutImportController implements ImportController {
 
 	protected int getProcessFlag() {
 		if (ExportImportThreadLocal.isLayoutStagingInProcess()) {
-			return PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS;
+			return ExportImportLifecycleConstants.
+				PROCESS_FLAG_LAYOUT_STAGING_IN_PROCESS;
 		}
 
-		return PROCESS_FLAG_LAYOUT_IMPORT_IN_PROCESS;
+		return ExportImportLifecycleConstants.
+			PROCESS_FLAG_LAYOUT_IMPORT_IN_PROCESS;
 	}
 
 	protected void importLayout(
@@ -1583,7 +1583,7 @@ public class LayoutImportController implements ImportController {
 	}
 
 	/**
-	 * @deprecated As of 3.0.0, replaced by {@link
+	 * @deprecated As of Judson (7.1.x), replaced by {@link
 	 *             #validateLayoutPrototypes(long, Element, Element)}
 	 */
 	@Deprecated

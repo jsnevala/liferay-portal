@@ -194,16 +194,15 @@ public abstract class BaseBSFPortlet extends GenericPortlet {
 
 		StringBundler sb = new StringBundler();
 
-		for (int i = 0; i < globalFiles.length; i++) {
+		for (String globalFile : globalFiles) {
 			PortletContext portletContext = getPortletContext();
 
 			InputStream inputStream = portletContext.getResourceAsStream(
-				globalFiles[i]);
+				globalFile);
 
 			if (inputStream == null) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(
-						"Global file " + globalFiles[i] + " does not exist");
+					_log.warn("Global file " + globalFile + " does not exist");
 				}
 			}
 

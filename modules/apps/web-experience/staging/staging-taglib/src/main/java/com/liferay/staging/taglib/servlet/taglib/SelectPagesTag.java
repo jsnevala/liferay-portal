@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class SelectPagesTag extends IncludeTag {
 

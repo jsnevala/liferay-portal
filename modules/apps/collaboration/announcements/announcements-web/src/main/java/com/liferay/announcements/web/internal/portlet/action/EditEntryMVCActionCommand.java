@@ -90,8 +90,7 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 		catch (NoSuchEntryException | PrincipalException e) {
 			SessionErrors.add(actionRequest, e.getClass());
 
-			actionResponse.setRenderParameter(
-				"mvcPath", "/announcements/error.jsp");
+			actionResponse.setRenderParameter("mvcPath", "/error.jsp");
 		}
 	}
 

@@ -17,7 +17,6 @@ package com.liferay.portlet.messageboards.service.http;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.message.boards.kernel.service.MBThreadServiceUtil;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
@@ -27,10 +26,11 @@ import com.liferay.portal.kernel.util.MethodKey;
 
 /**
  * Provides the HTTP utility for the
- * {@link MBThreadServiceUtil} service utility. The
+ * <code>MBThreadServiceUtil</code> service
+ * utility. The
  * static methods of this class calls the same methods of the service utility.
  * However, the signatures are different because it requires an additional
- * {@link HttpPrincipal} parameter.
+ * <code>HttpPrincipal</code> parameter.
  *
  * <p>
  * The benefits of using the HTTP utility is that it is fast and allows for
@@ -49,29 +49,35 @@ import com.liferay.portal.kernel.util.MethodKey;
  *
  * @author Brian Wing Shun Chan
  * @see MBThreadServiceSoap
- * @see HttpPrincipal
- * @see MBThreadServiceUtil
  * @generated
  */
 @ProviderType
 public class MBThreadServiceHttp {
+
 	public static void deleteThread(HttpPrincipal httpPrincipal, long threadId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"deleteThread", _deleteThreadParameterTypes0);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, threadId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "deleteThread",
+				_deleteThreadParameterTypes0);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, threadId);
 
 			try {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
@@ -81,16 +87,227 @@ public class MBThreadServiceHttp {
 		}
 	}
 
-	public static java.util.List<com.liferay.message.boards.kernel.model.MBThread> getGroupThreads(
+	public static java.util.List
+		<com.liferay.message.boards.kernel.model.MBThread> getGroupThreads(
+				HttpPrincipal httpPrincipal, long groupId, long userId,
+				java.util.Date modifiedDate, boolean includeAnonymous,
+				int status, int start, int end)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getGroupThreads",
+				_getGroupThreadsParameterTypes1);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId, modifiedDate, includeAnonymous,
+				status, start, end);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception e) {
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
+			}
+
+			return (java.util.List
+				<com.liferay.message.boards.kernel.model.MBThread>)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException se) {
+			_log.error(se, se);
+
+			throw se;
+		}
+	}
+
+	public static java.util.List
+		<com.liferay.message.boards.kernel.model.MBThread> getGroupThreads(
+				HttpPrincipal httpPrincipal, long groupId, long userId,
+				java.util.Date modifiedDate, int status, int start, int end)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getGroupThreads",
+				_getGroupThreadsParameterTypes2);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId, modifiedDate, status, start, end);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception e) {
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
+			}
+
+			return (java.util.List
+				<com.liferay.message.boards.kernel.model.MBThread>)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException se) {
+			_log.error(se, se);
+
+			throw se;
+		}
+	}
+
+	public static java.util.List
+		<com.liferay.message.boards.kernel.model.MBThread> getGroupThreads(
+				HttpPrincipal httpPrincipal, long groupId, long userId,
+				int status, boolean subscribed, boolean includeAnonymous,
+				int start, int end)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getGroupThreads",
+				_getGroupThreadsParameterTypes3);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId, status, subscribed,
+				includeAnonymous, start, end);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception e) {
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
+			}
+
+			return (java.util.List
+				<com.liferay.message.boards.kernel.model.MBThread>)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException se) {
+			_log.error(se, se);
+
+			throw se;
+		}
+	}
+
+	public static java.util.List
+		<com.liferay.message.boards.kernel.model.MBThread> getGroupThreads(
+				HttpPrincipal httpPrincipal, long groupId, long userId,
+				int status, boolean subscribed, int start, int end)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getGroupThreads",
+				_getGroupThreadsParameterTypes4);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId, status, subscribed, start, end);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception e) {
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
+			}
+
+			return (java.util.List
+				<com.liferay.message.boards.kernel.model.MBThread>)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException se) {
+			_log.error(se, se);
+
+			throw se;
+		}
+	}
+
+	public static java.util.List
+		<com.liferay.message.boards.kernel.model.MBThread> getGroupThreads(
+				HttpPrincipal httpPrincipal, long groupId, long userId,
+				int status, int start, int end)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getGroupThreads",
+				_getGroupThreadsParameterTypes5);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId, status, start, end);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception e) {
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
+			}
+
+			return (java.util.List
+				<com.liferay.message.boards.kernel.model.MBThread>)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException se) {
+			_log.error(se, se);
+
+			throw se;
+		}
+	}
+
+	public static int getGroupThreadsCount(
 		HttpPrincipal httpPrincipal, long groupId, long userId,
-		java.util.Date modifiedDate, int status, int start, int end)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"getGroupThreads", _getGroupThreadsParameterTypes1);
+		java.util.Date modifiedDate, boolean includeAnonymous, int status) {
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					userId, modifiedDate, status, start, end);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getGroupThreadsCount",
+				_getGroupThreadsCountParameterTypes6);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId, modifiedDate, includeAnonymous,
+				status);
 
 			Object returnObj = null;
 
@@ -98,14 +315,11 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
-				}
-
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
-			return (java.util.List<com.liferay.message.boards.kernel.model.MBThread>)returnObj;
+			return ((Integer)returnObj).intValue();
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
 			_log.error(se, se);
@@ -114,16 +328,78 @@ public class MBThreadServiceHttp {
 		}
 	}
 
-	public static java.util.List<com.liferay.message.boards.kernel.model.MBThread> getGroupThreads(
+	public static int getGroupThreadsCount(
+		HttpPrincipal httpPrincipal, long groupId, long userId,
+		java.util.Date modifiedDate, int status) {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getGroupThreadsCount",
+				_getGroupThreadsCountParameterTypes7);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId, modifiedDate, status);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception e) {
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
+			}
+
+			return ((Integer)returnObj).intValue();
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException se) {
+			_log.error(se, se);
+
+			throw se;
+		}
+	}
+
+	public static int getGroupThreadsCount(
+		HttpPrincipal httpPrincipal, long groupId, long userId, int status) {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getGroupThreadsCount",
+				_getGroupThreadsCountParameterTypes8);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId, status);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception e) {
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
+			}
+
+			return ((Integer)returnObj).intValue();
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException se) {
+			_log.error(se, se);
+
+			throw se;
+		}
+	}
+
+	public static int getGroupThreadsCount(
 		HttpPrincipal httpPrincipal, long groupId, long userId, int status,
-		boolean subscribed, boolean includeAnonymous, int start, int end)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"getGroupThreads", _getGroupThreadsParameterTypes2);
+		boolean subscribed) {
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					userId, status, subscribed, includeAnonymous, start, end);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getGroupThreadsCount",
+				_getGroupThreadsCountParameterTypes9);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId, status, subscribed);
 
 			Object returnObj = null;
 
@@ -131,14 +407,11 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
-				}
-
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
-			return (java.util.List<com.liferay.message.boards.kernel.model.MBThread>)returnObj;
+			return ((Integer)returnObj).intValue();
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
 			_log.error(se, se);
@@ -147,16 +420,18 @@ public class MBThreadServiceHttp {
 		}
 	}
 
-	public static java.util.List<com.liferay.message.boards.kernel.model.MBThread> getGroupThreads(
+	public static int getGroupThreadsCount(
 		HttpPrincipal httpPrincipal, long groupId, long userId, int status,
-		boolean subscribed, int start, int end)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"getGroupThreads", _getGroupThreadsParameterTypes3);
+		boolean subscribed, boolean includeAnonymous) {
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					userId, status, subscribed, start, end);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getGroupThreadsCount",
+				_getGroupThreadsCountParameterTypes10);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, userId, status, subscribed,
+				includeAnonymous);
 
 			Object returnObj = null;
 
@@ -164,71 +439,8 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
-				}
-
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
-			}
-
-			return (java.util.List<com.liferay.message.boards.kernel.model.MBThread>)returnObj;
-		}
-		catch (com.liferay.portal.kernel.exception.SystemException se) {
-			_log.error(se, se);
-
-			throw se;
-		}
-	}
-
-	public static java.util.List<com.liferay.message.boards.kernel.model.MBThread> getGroupThreads(
-		HttpPrincipal httpPrincipal, long groupId, long userId, int status,
-		int start, int end)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"getGroupThreads", _getGroupThreadsParameterTypes4);
-
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					userId, status, start, end);
-
-			Object returnObj = null;
-
-			try {
-				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
-			}
-			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
-				}
-
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
-			}
-
-			return (java.util.List<com.liferay.message.boards.kernel.model.MBThread>)returnObj;
-		}
-		catch (com.liferay.portal.kernel.exception.SystemException se) {
-			_log.error(se, se);
-
-			throw se;
-		}
-	}
-
-	public static int getGroupThreadsCount(HttpPrincipal httpPrincipal,
-		long groupId, long userId, java.util.Date modifiedDate, int status) {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"getGroupThreadsCount", _getGroupThreadsCountParameterTypes5);
-
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					userId, modifiedDate, status);
-
-			Object returnObj = null;
-
-			try {
-				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
-			}
-			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return ((Integer)returnObj).intValue();
@@ -240,14 +452,18 @@ public class MBThreadServiceHttp {
 		}
 	}
 
-	public static int getGroupThreadsCount(HttpPrincipal httpPrincipal,
-		long groupId, long userId, int status) {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"getGroupThreadsCount", _getGroupThreadsCountParameterTypes6);
+	public static java.util.List
+		<com.liferay.message.boards.kernel.model.MBThread> getThreads(
+			HttpPrincipal httpPrincipal, long groupId, long categoryId,
+			int status, int start, int end) {
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					userId, status);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getThreads",
+				_getThreadsParameterTypes11);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, categoryId, status, start, end);
 
 			Object returnObj = null;
 
@@ -255,10 +471,12 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
-			return ((Integer)returnObj).intValue();
+			return (java.util.List
+				<com.liferay.message.boards.kernel.model.MBThread>)returnObj;
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
 			_log.error(se, se);
@@ -267,14 +485,17 @@ public class MBThreadServiceHttp {
 		}
 	}
 
-	public static int getGroupThreadsCount(HttpPrincipal httpPrincipal,
-		long groupId, long userId, int status, boolean subscribed) {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"getGroupThreadsCount", _getGroupThreadsCountParameterTypes7);
+	public static int getThreadsCount(
+		HttpPrincipal httpPrincipal, long groupId, long categoryId,
+		int status) {
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					userId, status, subscribed);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "getThreadsCount",
+				_getThreadsCountParameterTypes12);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, categoryId, status);
 
 			Object returnObj = null;
 
@@ -282,90 +503,8 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
-			}
-
-			return ((Integer)returnObj).intValue();
-		}
-		catch (com.liferay.portal.kernel.exception.SystemException se) {
-			_log.error(se, se);
-
-			throw se;
-		}
-	}
-
-	public static int getGroupThreadsCount(HttpPrincipal httpPrincipal,
-		long groupId, long userId, int status, boolean subscribed,
-		boolean includeAnonymous) {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"getGroupThreadsCount", _getGroupThreadsCountParameterTypes8);
-
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					userId, status, subscribed, includeAnonymous);
-
-			Object returnObj = null;
-
-			try {
-				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
-			}
-			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
-			}
-
-			return ((Integer)returnObj).intValue();
-		}
-		catch (com.liferay.portal.kernel.exception.SystemException se) {
-			_log.error(se, se);
-
-			throw se;
-		}
-	}
-
-	public static java.util.List<com.liferay.message.boards.kernel.model.MBThread> getThreads(
-		HttpPrincipal httpPrincipal, long groupId, long categoryId, int status,
-		int start, int end) {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"getThreads", _getThreadsParameterTypes9);
-
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					categoryId, status, start, end);
-
-			Object returnObj = null;
-
-			try {
-				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
-			}
-			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
-			}
-
-			return (java.util.List<com.liferay.message.boards.kernel.model.MBThread>)returnObj;
-		}
-		catch (com.liferay.portal.kernel.exception.SystemException se) {
-			_log.error(se, se);
-
-			throw se;
-		}
-	}
-
-	public static int getThreadsCount(HttpPrincipal httpPrincipal,
-		long groupId, long categoryId, int status) {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"getThreadsCount", _getThreadsCountParameterTypes10);
-
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					categoryId, status);
-
-			Object returnObj = null;
-
-			try {
-				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
-			}
-			catch (Exception e) {
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return ((Integer)returnObj).intValue();
@@ -378,13 +517,16 @@ public class MBThreadServiceHttp {
 	}
 
 	public static com.liferay.portal.kernel.lock.Lock lockThread(
-		HttpPrincipal httpPrincipal, long threadId)
+			HttpPrincipal httpPrincipal, long threadId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"lockThread", _lockThreadParameterTypes11);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, threadId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "lockThread",
+				_lockThreadParameterTypes13);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, threadId);
 
 			Object returnObj = null;
 
@@ -392,11 +534,15 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.portal.kernel.lock.Lock)returnObj;
@@ -409,14 +555,16 @@ public class MBThreadServiceHttp {
 	}
 
 	public static com.liferay.message.boards.kernel.model.MBThread moveThread(
-		HttpPrincipal httpPrincipal, long categoryId, long threadId)
+			HttpPrincipal httpPrincipal, long categoryId, long threadId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"moveThread", _moveThreadParameterTypes12);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					categoryId, threadId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "moveThread",
+				_moveThreadParameterTypes14);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, categoryId, threadId);
 
 			Object returnObj = null;
 
@@ -424,11 +572,15 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.message.boards.kernel.model.MBThread)returnObj;
@@ -440,15 +592,18 @@ public class MBThreadServiceHttp {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBThread moveThreadFromTrash(
-		HttpPrincipal httpPrincipal, long categoryId, long threadId)
+	public static com.liferay.message.boards.kernel.model.MBThread
+			moveThreadFromTrash(
+				HttpPrincipal httpPrincipal, long categoryId, long threadId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"moveThreadFromTrash", _moveThreadFromTrashParameterTypes13);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					categoryId, threadId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "moveThreadFromTrash",
+				_moveThreadFromTrashParameterTypes15);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, categoryId, threadId);
 
 			Object returnObj = null;
 
@@ -456,11 +611,15 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.message.boards.kernel.model.MBThread)returnObj;
@@ -472,14 +631,17 @@ public class MBThreadServiceHttp {
 		}
 	}
 
-	public static com.liferay.message.boards.kernel.model.MBThread moveThreadToTrash(
-		HttpPrincipal httpPrincipal, long threadId)
+	public static com.liferay.message.boards.kernel.model.MBThread
+			moveThreadToTrash(HttpPrincipal httpPrincipal, long threadId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"moveThreadToTrash", _moveThreadToTrashParameterTypes14);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, threadId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "moveThreadToTrash",
+				_moveThreadToTrashParameterTypes16);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, threadId);
 
 			Object returnObj = null;
 
@@ -487,11 +649,15 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.message.boards.kernel.model.MBThread)returnObj;
@@ -503,25 +669,31 @@ public class MBThreadServiceHttp {
 		}
 	}
 
-	public static void restoreThreadFromTrash(HttpPrincipal httpPrincipal,
-		long threadId)
+	public static void restoreThreadFromTrash(
+			HttpPrincipal httpPrincipal, long threadId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"restoreThreadFromTrash",
-					_restoreThreadFromTrashParameterTypes15);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, threadId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "restoreThreadFromTrash",
+				_restoreThreadFromTrashParameterTypes17);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, threadId);
 
 			try {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
@@ -532,15 +704,16 @@ public class MBThreadServiceHttp {
 	}
 
 	public static com.liferay.portal.kernel.search.Hits search(
-		HttpPrincipal httpPrincipal, long groupId, long creatorUserId,
-		int status, int start, int end)
+			HttpPrincipal httpPrincipal, long groupId, long creatorUserId,
+			int status, int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"search", _searchParameterTypes16);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					creatorUserId, status, start, end);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "search", _searchParameterTypes18);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, creatorUserId, status, start, end);
 
 			Object returnObj = null;
 
@@ -548,11 +721,15 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.portal.kernel.search.Hits)returnObj;
@@ -565,15 +742,17 @@ public class MBThreadServiceHttp {
 	}
 
 	public static com.liferay.portal.kernel.search.Hits search(
-		HttpPrincipal httpPrincipal, long groupId, long creatorUserId,
-		long startDate, long endDate, int status, int start, int end)
+			HttpPrincipal httpPrincipal, long groupId, long creatorUserId,
+			long startDate, long endDate, int status, int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"search", _searchParameterTypes17);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, groupId,
-					creatorUserId, startDate, endDate, status, start, end);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "search", _searchParameterTypes19);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, groupId, creatorUserId, startDate, endDate, status,
+				start, end);
 
 			Object returnObj = null;
 
@@ -581,11 +760,15 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.portal.kernel.search.Hits)returnObj;
@@ -598,15 +781,17 @@ public class MBThreadServiceHttp {
 	}
 
 	public static com.liferay.message.boards.kernel.model.MBThread splitThread(
-		HttpPrincipal httpPrincipal, long messageId, java.lang.String subject,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+			HttpPrincipal httpPrincipal, long messageId, String subject,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"splitThread", _splitThreadParameterTypes18);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey,
-					messageId, subject, serviceContext);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "splitThread",
+				_splitThreadParameterTypes20);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, messageId, subject, serviceContext);
 
 			Object returnObj = null;
 
@@ -614,11 +799,15 @@ public class MBThreadServiceHttp {
 				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 
 			return (com.liferay.message.boards.kernel.model.MBThread)returnObj;
@@ -632,21 +821,28 @@ public class MBThreadServiceHttp {
 
 	public static void unlockThread(HttpPrincipal httpPrincipal, long threadId)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		try {
-			MethodKey methodKey = new MethodKey(MBThreadServiceUtil.class,
-					"unlockThread", _unlockThreadParameterTypes19);
 
-			MethodHandler methodHandler = new MethodHandler(methodKey, threadId);
+		try {
+			MethodKey methodKey = new MethodKey(
+				MBThreadServiceUtil.class, "unlockThread",
+				_unlockThreadParameterTypes21);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, threadId);
 
 			try {
 				TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception e) {
-				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
-					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				if (e instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						e;
 				}
 
-				throw new com.liferay.portal.kernel.exception.SystemException(e);
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					e);
 			}
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException se) {
@@ -657,69 +853,76 @@ public class MBThreadServiceHttp {
 	}
 
 	private static Log _log = LogFactoryUtil.getLog(MBThreadServiceHttp.class);
+
 	private static final Class<?>[] _deleteThreadParameterTypes0 = new Class[] {
-			long.class
+		long.class
+	};
+	private static final Class<?>[] _getGroupThreadsParameterTypes1 =
+		new Class[] {
+			long.class, long.class, java.util.Date.class, boolean.class,
+			int.class, int.class, int.class
 		};
-	private static final Class<?>[] _getGroupThreadsParameterTypes1 = new Class[] {
+	private static final Class<?>[] _getGroupThreadsParameterTypes2 =
+		new Class[] {
 			long.class, long.class, java.util.Date.class, int.class, int.class,
 			int.class
 		};
-	private static final Class<?>[] _getGroupThreadsParameterTypes2 = new Class[] {
+	private static final Class<?>[] _getGroupThreadsParameterTypes3 =
+		new Class[] {
 			long.class, long.class, int.class, boolean.class, boolean.class,
 			int.class, int.class
 		};
-	private static final Class<?>[] _getGroupThreadsParameterTypes3 = new Class[] {
+	private static final Class<?>[] _getGroupThreadsParameterTypes4 =
+		new Class[] {
 			long.class, long.class, int.class, boolean.class, int.class,
 			int.class
 		};
-	private static final Class<?>[] _getGroupThreadsParameterTypes4 = new Class[] {
-			long.class, long.class, int.class, int.class, int.class
-		};
-	private static final Class<?>[] _getGroupThreadsCountParameterTypes5 = new Class[] {
-			long.class, long.class, java.util.Date.class, int.class
-		};
-	private static final Class<?>[] _getGroupThreadsCountParameterTypes6 = new Class[] {
-			long.class, long.class, int.class
-		};
-	private static final Class<?>[] _getGroupThreadsCountParameterTypes7 = new Class[] {
-			long.class, long.class, int.class, boolean.class
-		};
-	private static final Class<?>[] _getGroupThreadsCountParameterTypes8 = new Class[] {
-			long.class, long.class, int.class, boolean.class, boolean.class
-		};
-	private static final Class<?>[] _getThreadsParameterTypes9 = new Class[] {
-			long.class, long.class, int.class, int.class, int.class
-		};
-	private static final Class<?>[] _getThreadsCountParameterTypes10 = new Class[] {
-			long.class, long.class, int.class
-		};
-	private static final Class<?>[] _lockThreadParameterTypes11 = new Class[] {
-			long.class
-		};
-	private static final Class<?>[] _moveThreadParameterTypes12 = new Class[] {
-			long.class, long.class
-		};
-	private static final Class<?>[] _moveThreadFromTrashParameterTypes13 = new Class[] {
-			long.class, long.class
-		};
-	private static final Class<?>[] _moveThreadToTrashParameterTypes14 = new Class[] {
-			long.class
-		};
-	private static final Class<?>[] _restoreThreadFromTrashParameterTypes15 = new Class[] {
-			long.class
-		};
-	private static final Class<?>[] _searchParameterTypes16 = new Class[] {
-			long.class, long.class, int.class, int.class, int.class
-		};
-	private static final Class<?>[] _searchParameterTypes17 = new Class[] {
-			long.class, long.class, long.class, long.class, int.class, int.class,
+	private static final Class<?>[] _getGroupThreadsParameterTypes5 =
+		new Class[] {long.class, long.class, int.class, int.class, int.class};
+	private static final Class<?>[] _getGroupThreadsCountParameterTypes6 =
+		new Class[] {
+			long.class, long.class, java.util.Date.class, boolean.class,
 			int.class
 		};
-	private static final Class<?>[] _splitThreadParameterTypes18 = new Class[] {
-			long.class, java.lang.String.class,
-			com.liferay.portal.kernel.service.ServiceContext.class
+	private static final Class<?>[] _getGroupThreadsCountParameterTypes7 =
+		new Class[] {long.class, long.class, java.util.Date.class, int.class};
+	private static final Class<?>[] _getGroupThreadsCountParameterTypes8 =
+		new Class[] {long.class, long.class, int.class};
+	private static final Class<?>[] _getGroupThreadsCountParameterTypes9 =
+		new Class[] {long.class, long.class, int.class, boolean.class};
+	private static final Class<?>[] _getGroupThreadsCountParameterTypes10 =
+		new Class[] {
+			long.class, long.class, int.class, boolean.class, boolean.class
 		};
-	private static final Class<?>[] _unlockThreadParameterTypes19 = new Class[] {
-			long.class
-		};
+	private static final Class<?>[] _getThreadsParameterTypes11 = new Class[] {
+		long.class, long.class, int.class, int.class, int.class
+	};
+	private static final Class<?>[] _getThreadsCountParameterTypes12 =
+		new Class[] {long.class, long.class, int.class};
+	private static final Class<?>[] _lockThreadParameterTypes13 = new Class[] {
+		long.class
+	};
+	private static final Class<?>[] _moveThreadParameterTypes14 = new Class[] {
+		long.class, long.class
+	};
+	private static final Class<?>[] _moveThreadFromTrashParameterTypes15 =
+		new Class[] {long.class, long.class};
+	private static final Class<?>[] _moveThreadToTrashParameterTypes16 =
+		new Class[] {long.class};
+	private static final Class<?>[] _restoreThreadFromTrashParameterTypes17 =
+		new Class[] {long.class};
+	private static final Class<?>[] _searchParameterTypes18 = new Class[] {
+		long.class, long.class, int.class, int.class, int.class
+	};
+	private static final Class<?>[] _searchParameterTypes19 = new Class[] {
+		long.class, long.class, long.class, long.class, int.class, int.class,
+		int.class
+	};
+	private static final Class<?>[] _splitThreadParameterTypes20 = new Class[] {
+		long.class, String.class,
+		com.liferay.portal.kernel.service.ServiceContext.class
+	};
+	private static final Class<?>[] _unlockThreadParameterTypes21 =
+		new Class[] {long.class};
+
 }

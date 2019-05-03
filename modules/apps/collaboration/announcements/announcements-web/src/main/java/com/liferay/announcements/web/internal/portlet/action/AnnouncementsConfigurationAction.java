@@ -25,7 +25,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = {"javax.portlet.name=" + AnnouncementsPortletKeys.ANNOUNCEMENTS},
+	property = "javax.portlet.name=" + AnnouncementsPortletKeys.ANNOUNCEMENTS,
 	service = ConfigurationAction.class
 )
 public class AnnouncementsConfigurationAction
