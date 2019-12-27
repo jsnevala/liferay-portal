@@ -60,6 +60,18 @@ public class AggregateSuggesterTranslatorImpl
 
 				aggregateSuggestBuilder.addSuggestion(
 					aggregateSuggester.getName(), suggestionBuilder.getValue());
+
+
+				// GSearch modified
+				// Bug in original code: having multiple suggester with same name causes a name conflict
+
+				aggregateSuggestBuilder.addSuggestion(
+					suggester.getName(), suggestionBuilder.getValue());
+
+				// aggregateSuggestBuilder.addSuggestion(
+				//	aggregateSuggester.getName(), suggestionBuilder.getValue());
+
+
 			}
 		}
 
