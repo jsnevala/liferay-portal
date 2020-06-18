@@ -31,15 +31,16 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Daniel Kocsis
  */
 @Component(immediate = true, service = StagedModelDataHandler.class)
 public class BookmarksFolderStagedModelDataHandler
 	extends BaseStagedModelDataHandler<BookmarksFolder> {
 
-	public static final String[] CLASS_NAMES =
-		{BookmarksFolder.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		BookmarksFolder.class.getName()
+	};
 
 	@Override
 	public String[] getClassNames() {
@@ -98,6 +99,7 @@ public class BookmarksFolderStagedModelDataHandler
 				portletDataContext, importedFolder);
 		}
 		else {
+			importedFolder.setMvccVersion(existingFolder.getMvccVersion());
 			importedFolder.setFolderId(existingFolder.getFolderId());
 
 			importedFolder = _stagedModelRepository.updateStagedModel(
@@ -115,15 +117,8 @@ public class BookmarksFolderStagedModelDataHandler
 	}
 
 	@Reference(
-		target = "(model.class.name=com.liferay.bookmarks.model.BookmarksFolder)",
-		unbind = "-"
+		target = "(model.class.name=com.liferay.bookmarks.model.BookmarksFolder)"
 	)
-	protected void setStagedModelRepository(
-		StagedModelRepository<BookmarksFolder> stagedModelRepository) {
-
-		_stagedModelRepository = stagedModelRepository;
-	}
-
 	private StagedModelRepository<BookmarksFolder> _stagedModelRepository;
 
 }

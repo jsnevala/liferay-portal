@@ -171,48 +171,68 @@ List<LayoutRevision> rootLayoutRevisions = LayoutRevisionLocalServiceUtil.getChi
 	</c:if>
 </div>
 
-<aui:script>
-	function <portlet:namespace />selectRevision(layoutRevisionId, layoutSetBranchId) {
-		AUI.$.ajax(
-			themeDisplay.getPathMain() + '/portal/update_layout',
-			{
-				data: {
-					cmd: 'select_layout_revision',
-					doAsUserId: themeDisplay.getDoAsUserIdEncoded(),
-					layoutRevisionId: layoutRevisionId,
-					layoutSetBranchId: layoutSetBranchId,
-					p_auth: Liferay.authToken,
-					p_l_id: themeDisplay.getPlid(),
-					p_v_l_s_g_id: themeDisplay.getSiteGroupId()
-				},
-				success: function(event, id, obj) {
-					var parentWindow = Liferay.Util.getOpener();
+<script>
+function <portlet:namespace />selectRevision(
+	layoutRevisionId,
+	layoutSetBranchId
+) {
+	var updateLayoutData = {
+		cmd: 'select_layout_revision',
+		doAsUserId: themeDisplay.getDoAsUserIdEncoded(),
+		layoutRevisionId: layoutRevisionId,
+		layoutSetBranchId: layoutSetBranchId,
+		p_auth: Liferay.authToken,
+		p_l_id: themeDisplay.getPlid(),
+		p_v_l_s_g_id: themeDisplay.getSiteGroupId(),
+	};
 
-					parentWindow.location.reload();
-				}
-			}
-		);
-	}
-</aui:script>
+	Liferay.Util.fetch(themeDisplay.getPathMain() + '/portal/update_layout', {
+		body: Liferay.Util.objectToFormData(updateLayoutData),
+		method: 'POST',
+	}).then(function () {
+		var parentWindow = Liferay.Util.getOpener();
 
-<aui:script sandbox="<%= true %>">
-	var variationsSelector = $('#<portlet:namespace />variationsSelector');
+		parentWindow.location = parentWindow.location.href.split('?')[0];
+	});
+}
 
-	var layoutBranchesContainer = $('.layout-variation-container');
+(function () {
+	var layoutBranchesContainers = document.querySelectorAll(
+		'.layout-variation-container'
+	);
+	var variationsSelector = document.getElementById(
+		'<portlet:namespace />variationsSelector'
+	);
 
-	variationsSelector.on(
-		'change',
-		function() {
-			var variation = variationsSelector.val();
+	if (layoutBranchesContainers && variationsSelector) {
+		variationsSelector.addEventListener('change', function () {
+			var variation = variationsSelector.value;
 
-			if (variation == 'all') {
-				layoutBranchesContainer.removeClass('hide');
+			if (variation === 'all') {
+				Array.prototype.forEach.call(
+					layoutBranchesContainers,
+					function (layoutBranchesContainer) {
+						layoutBranchesContainer.classList.remove('hide');
+					}
+				);
 			}
 			else {
-				layoutBranchesContainer.addClass('hide');
+				Array.prototype.forEach.call(
+					layoutBranchesContainers,
+					function (layoutBranchesContainer) {
+						layoutBranchesContainer.classList.add('hide');
+					}
+				);
 
-				$('#<portlet:namespace />' + variation).removeClass('hide');
+				var variationElement = document.getElementById(
+					'<portlet:namespace />' + variation
+				);
+
+				if (variationElement) {
+					variationElement.classList.remove('hide');
+				}
 			}
-		}
-	);
-</aui:script>
+		});
+	}
+})();
+</script>

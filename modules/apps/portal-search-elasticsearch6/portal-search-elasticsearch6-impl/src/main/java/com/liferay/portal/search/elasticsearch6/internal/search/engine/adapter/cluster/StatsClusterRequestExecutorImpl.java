@@ -15,19 +15,20 @@
 package com.liferay.portal.search.elasticsearch6.internal.search.engine.adapter.cluster;
 
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.engine.adapter.cluster.StatsClusterRequest;
 import com.liferay.portal.search.engine.adapter.cluster.StatsClusterResponse;
 
 import java.io.IOException;
 
+import org.elasticsearch.action.admin.cluster.stats.ClusterStatsAction;
 import org.elasticsearch.action.admin.cluster.stats.ClusterStatsRequestBuilder;
 import org.elasticsearch.action.admin.cluster.stats.ClusterStatsResponse;
-import org.elasticsearch.client.ClusterAdminClient;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.xpack.watcher.watch.Payload;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -55,39 +56,44 @@ public class StatsClusterRequestExecutorImpl
 			xContentBuilder.startObject();
 
 			xContentBuilder = clusterStatsResponse.toXContent(
-				xContentBuilder, Payload.XContent.EMPTY_PARAMS);
+				xContentBuilder, ToXContent.EMPTY_PARAMS);
 
 			xContentBuilder.endObject();
 
 			ClusterHealthStatus clusterHealthStatus =
 				clusterStatsResponse.getStatus();
 
-			StatsClusterResponse statsClusterResponse =
-				new StatsClusterResponse(
-					clusterHealthStatusTranslator.translate(
-						clusterHealthStatus),
-					xContentBuilder.string());
-
-			return statsClusterResponse;
+			return new StatsClusterResponse(
+				_clusterHealthStatusTranslator.translate(clusterHealthStatus),
+				Strings.toString(xContentBuilder));
 		}
-		catch (IOException ioe) {
-			throw new SystemException(ioe);
+		catch (IOException ioException) {
+			throw new SystemException(ioException);
 		}
 	}
 
 	protected ClusterStatsRequestBuilder createClusterStatsRequestBuilder(
 		StatsClusterRequest statsClusterRequest) {
 
-		ClusterAdminClient clusterAdminClient =
-			elasticsearchConnectionManager.getClusterAdminClient();
-
-		return clusterAdminClient.prepareClusterStats();
+		return ClusterStatsAction.INSTANCE.newRequestBuilder(
+			_elasticsearchClientResolver.getClient());
 	}
 
-	@Reference
-	protected ClusterHealthStatusTranslator clusterHealthStatusTranslator;
+	@Reference(unbind = "-")
+	protected void setClusterHealthStatusTranslator(
+		ClusterHealthStatusTranslator clusterHealthStatusTranslator) {
 
-	@Reference
-	protected ElasticsearchConnectionManager elasticsearchConnectionManager;
+		_clusterHealthStatusTranslator = clusterHealthStatusTranslator;
+	}
+
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private ClusterHealthStatusTranslator _clusterHealthStatusTranslator;
+	private ElasticsearchClientResolver _elasticsearchClientResolver;
 
 }

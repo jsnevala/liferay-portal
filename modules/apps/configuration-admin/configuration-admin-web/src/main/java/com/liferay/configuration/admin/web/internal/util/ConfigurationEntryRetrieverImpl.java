@@ -25,12 +25,16 @@ import com.liferay.configuration.admin.web.internal.display.ConfigurationScreenC
 import com.liferay.configuration.admin.web.internal.model.ConfigurationModel;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 
+import java.io.Serializable;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -56,6 +60,12 @@ import org.osgi.service.component.annotations.Reference;
 public class ConfigurationEntryRetrieverImpl
 	implements ConfigurationEntryRetriever {
 
+	@Override
+	public Collection<ConfigurationScreen> getAllConfigurationScreens() {
+		return _configurationScreenServiceTrackerMap.values();
+	}
+
+	@Override
 	public ConfigurationCategory getConfigurationCategory(
 		String configurationCategoryKey) {
 
@@ -65,7 +75,8 @@ public class ConfigurationEntryRetrieverImpl
 
 	@Override
 	public ConfigurationCategoryMenuDisplay getConfigurationCategoryMenuDisplay(
-		String configurationCategory, String languageId) {
+		String configurationCategory, String languageId,
+		ExtendedObjectClassDefinition.Scope scope, Serializable scopePK) {
 
 		ConfigurationCategoryDisplay configurationCategoryDisplay =
 			new ConfigurationCategoryDisplay(
@@ -73,18 +84,20 @@ public class ConfigurationEntryRetrieverImpl
 
 		return new ConfigurationCategoryMenuDisplay(
 			configurationCategoryDisplay,
-			getConfigurationEntries(configurationCategory, languageId));
+			getConfigurationEntries(
+				configurationCategory, languageId, scope, scopePK));
 	}
 
 	@Override
 	public List<ConfigurationCategorySectionDisplay>
-		getConfigurationCategorySectionDisplays() {
+		getConfigurationCategorySectionDisplays(
+			ExtendedObjectClassDefinition.Scope scope, Serializable scopePK) {
 
 		Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
 
 		Map<String, ConfigurationModel> configurationModelsMap =
 			_configurationModelRetriever.getConfigurationModels(
-				locale.getLanguage());
+				locale.getLanguage(), scope, scopePK);
 
 		Map<String, Set<ConfigurationModel>> categorizedConfigurationModels =
 			_configurationModelRetriever.categorizeConfigurationModels(
@@ -96,41 +109,27 @@ public class ConfigurationEntryRetrieverImpl
 		for (String curConfigurationCategoryKey :
 				categorizedConfigurationModels.keySet()) {
 
-			ConfigurationCategory curConfigurationCategory =
-				_configurationCategoryServiceTrackerMap.getService(
-					curConfigurationCategoryKey);
+			_populateConfigurationCategorySectionDisplay(
+				configurationCategorySectionDisplaysMap,
+				curConfigurationCategoryKey);
+		}
 
-			if (curConfigurationCategory == null) {
-				curConfigurationCategory = new AdhocConfigurationCategory(
-					curConfigurationCategoryKey);
+		for (ConfigurationScreen configurationScreen :
+				_configurationScreenServiceTrackerMap.values()) {
 
-				_registerConfigurationCategory(curConfigurationCategory);
+			if (!scope.equals(configurationScreen.getScope()) ||
+				!configurationScreen.isVisible()) {
+
+				continue;
 			}
 
-			ConfigurationCategorySectionDisplay
-				configurationCategorySectionDisplay =
-					configurationCategorySectionDisplaysMap.get(
-						curConfigurationCategory.getCategorySection());
-
-			if (configurationCategorySectionDisplay == null) {
-				configurationCategorySectionDisplay =
-					new ConfigurationCategorySectionDisplay(
-						curConfigurationCategory.getCategorySection());
-
-				configurationCategorySectionDisplaysMap.put(
-					curConfigurationCategory.getCategorySection(),
-					configurationCategorySectionDisplay);
-			}
-
-			ConfigurationCategoryDisplay configurationCategoryDisplay =
-				new ConfigurationCategoryDisplay(curConfigurationCategory);
-
-			configurationCategorySectionDisplay.add(
-				configurationCategoryDisplay);
+			_populateConfigurationCategorySectionDisplay(
+				configurationCategorySectionDisplaysMap,
+				configurationScreen.getCategoryKey());
 		}
 
 		Set<ConfigurationCategorySectionDisplay> configurationCategorySections =
-			new TreeSet(new ConfigurationCategorySectionDisplayComparator());
+			new TreeSet<>(new ConfigurationCategorySectionDisplayComparator());
 
 		configurationCategorySections.addAll(
 			configurationCategorySectionDisplaysMap.values());
@@ -140,16 +139,34 @@ public class ConfigurationEntryRetrieverImpl
 
 	@Override
 	public Set<ConfigurationEntry> getConfigurationEntries(
-		String configurationCategory, String languageId) {
+		String configurationCategory, String languageId,
+		ExtendedObjectClassDefinition.Scope scope, Serializable scopePK) {
 
-		Set<ConfigurationEntry> configurationEntries = new TreeSet(
+		Set<ConfigurationEntry> configurationEntries = new TreeSet<>(
 			getConfigurationEntryComparator());
 
 		Locale locale = LocaleUtil.fromLanguageId(languageId);
 
+		Set<ConfigurationScreen> configurationScreens = getConfigurationScreens(
+			configurationCategory);
+
+		for (ConfigurationScreen configurationScreen : configurationScreens) {
+			if (!scope.equals(configurationScreen.getScope()) ||
+				!configurationScreen.isVisible()) {
+
+				continue;
+			}
+
+			ConfigurationEntry configurationEntry =
+				new ConfigurationScreenConfigurationEntry(
+					configurationScreen, locale);
+
+			configurationEntries.add(configurationEntry);
+		}
+
 		Set<ConfigurationModel> configurationModels =
 			_configurationModelRetriever.getConfigurationModels(
-				configurationCategory, languageId);
+				configurationCategory, languageId, scope, scopePK);
 
 		for (ConfigurationModel configurationModel : configurationModels) {
 			if (configurationModel.isGenerateUI()) {
@@ -160,17 +177,6 @@ public class ConfigurationEntryRetrieverImpl
 
 				configurationEntries.add(configurationEntry);
 			}
-		}
-
-		Set<ConfigurationScreen> configurationScreens = getConfigurationScreens(
-			configurationCategory);
-
-		for (ConfigurationScreen configurationScreen : configurationScreens) {
-			ConfigurationEntry configurationEntry =
-				new ConfigurationScreenConfigurationEntry(
-					configurationScreen, locale);
-
-			configurationEntries.add(configurationEntry);
 		}
 
 		return configurationEntries;
@@ -260,6 +266,43 @@ public class ConfigurationEntryRetrieverImpl
 		return configurationCategoriesSet;
 	}
 
+	private void _populateConfigurationCategorySectionDisplay(
+		Map<String, ConfigurationCategorySectionDisplay>
+			configurationCategorySectionDisplaysMap,
+		String curConfigurationCategoryKey) {
+
+		ConfigurationCategory curConfigurationCategory =
+			_configurationCategoryServiceTrackerMap.getService(
+				curConfigurationCategoryKey);
+
+		if (curConfigurationCategory == null) {
+			curConfigurationCategory = new AdhocConfigurationCategory(
+				curConfigurationCategoryKey);
+
+			_registerConfigurationCategory(curConfigurationCategory);
+		}
+
+		ConfigurationCategorySectionDisplay
+			configurationCategorySectionDisplay =
+				configurationCategorySectionDisplaysMap.get(
+					curConfigurationCategory.getCategorySection());
+
+		if (configurationCategorySectionDisplay == null) {
+			configurationCategorySectionDisplay =
+				new ConfigurationCategorySectionDisplay(
+					curConfigurationCategory.getCategorySection());
+
+			configurationCategorySectionDisplaysMap.put(
+				curConfigurationCategory.getCategorySection(),
+				configurationCategorySectionDisplay);
+		}
+
+		ConfigurationCategoryDisplay configurationCategoryDisplay =
+			new ConfigurationCategoryDisplay(curConfigurationCategory);
+
+		configurationCategorySectionDisplay.add(configurationCategoryDisplay);
+	}
+
 	private void _registerConfigurationCategory(
 		ConfigurationCategory configurationCategory) {
 
@@ -335,9 +378,7 @@ public class ConfigurationEntryRetrieverImpl
 
 		private final List<String> _orderedConfigurationCategorySections =
 			ListUtil.fromArray(
-				new String[] {
-					"content", "social", "commerce", "platform", "security"
-				});
+				"content", "social", "commerce", "platform", "security");
 
 	}
 

@@ -22,13 +22,18 @@ import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalContentSearchLocalService;
+import com.liferay.layout.model.LayoutClassedModelUsage;
+import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.AddPortletProvider;
 import com.liferay.portal.kernel.portlet.BasePortletProvider;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Portal;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.PortletRequest;
@@ -56,11 +61,12 @@ public class JournalContentAddPortletProvider
 	}
 
 	@Override
-	public PortletURL getPortletURL(HttpServletRequest request, Group group)
+	public PortletURL getPortletURL(
+			HttpServletRequest httpServletRequest, Group group)
 		throws PortalException {
 
 		return PortletURLFactoryUtil.create(
-			request, getPortletName(), PortletRequest.RENDER_PHASE);
+			httpServletRequest, getPortletName(), PortletRequest.RENDER_PHASE);
 	}
 
 	@Override
@@ -91,24 +97,44 @@ public class JournalContentAddPortletProvider
 
 		Layout layout = themeDisplay.getLayout();
 
-		_journalContentSearchLocal.updateContentSearch(
+		_addLayoutClassedModelUsage(layout, portletId, article);
+
+		_journalContentSearchLocalService.updateContentSearch(
 			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
 			portletId, article.getArticleId(), true);
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	protected long getPlid(ThemeDisplay themeDisplay) {
-		return themeDisplay.getPlid();
+	private void _addLayoutClassedModelUsage(
+		Layout layout, String portletId, JournalArticle article) {
+
+		LayoutClassedModelUsage layoutClassedModelUsage =
+			_layoutClassedModelUsageLocalService.fetchLayoutClassedModelUsage(
+				_portal.getClassNameId(JournalArticle.class),
+				article.getResourcePrimKey(), portletId,
+				_portal.getClassNameId(Portlet.class), layout.getPlid());
+
+		if (layoutClassedModelUsage != null) {
+			return;
+		}
+
+		_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
+			layout.getGroupId(), _portal.getClassNameId(JournalArticle.class),
+			article.getResourcePrimKey(), portletId,
+			_portal.getClassNameId(Portlet.class), layout.getPlid(),
+			ServiceContextThreadLocal.getServiceContext());
 	}
 
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
-	private JournalContentSearchLocalService _journalContentSearchLocal;
+	private JournalContentSearchLocalService _journalContentSearchLocalService;
+
+	@Reference
+	private LayoutClassedModelUsageLocalService
+		_layoutClassedModelUsageLocalService;
+
+	@Reference
+	private Portal _portal;
 
 }

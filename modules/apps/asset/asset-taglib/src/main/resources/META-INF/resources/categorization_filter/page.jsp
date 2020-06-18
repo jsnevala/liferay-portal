@@ -32,34 +32,40 @@ if (Validator.isNotNull(assetTagName) && !AssetTagLocalServiceUtil.hasTag(layout
 	assetTagName = null;
 }
 
+AssetCategory assetCategory = null;
+
 String assetCategoryTitle = null;
 String assetVocabularyTitle = null;
 
 if (assetCategoryId != 0) {
-	AssetCategory assetCategory = AssetCategoryLocalServiceUtil.getAssetCategory(assetCategoryId);
+	assetCategory = AssetCategoryLocalServiceUtil.fetchAssetCategory(assetCategoryId);
 
-	assetCategoryTitle = HtmlUtil.escape(assetCategory.getTitle(locale));
+	if (assetCategory != null) {
+		assetCategoryTitle = HtmlUtil.escape(assetCategory.getTitle(locale));
 
-	AssetVocabulary assetVocabulary = AssetVocabularyLocalServiceUtil.getAssetVocabulary(assetCategory.getVocabularyId());
+		AssetVocabulary assetVocabulary = AssetVocabularyLocalServiceUtil.getAssetVocabulary(assetCategory.getVocabularyId());
 
-	assetVocabularyTitle = HtmlUtil.escape(assetVocabulary.getTitle(locale));
+		assetVocabularyTitle = HtmlUtil.escape(assetVocabulary.getTitle(locale));
+	}
 }
 %>
 
 <liferay-util:buffer
 	var="removeCategory"
 >
-	<c:if test="<%= assetCategoryId != 0 %>">
-		<span class="asset-entry badge badge-default badge-sm">
-			<%= assetCategoryTitle %>
+	<c:if test="<%= assetCategory != null %>">
+		<portlet:renderURL var="viewURLWithoutCategory">
+			<portlet:param name="categoryId" value="0" />
+		</portlet:renderURL>
 
-			<portlet:renderURL var="viewURLWithoutCategory">
-				<portlet:param name="categoryId" value="0" />
-			</portlet:renderURL>
+		<span class="label label-dark label-dismissible label-lg text-uppercase">
+			<span class="label-item label-item-expand"><%= assetCategoryTitle %></span>
 
-			<a href="<%= viewURLWithoutCategory %>" title="<liferay-ui:message key="remove" />">
-				<aui:icon cssClass="textboxlistentry-remove" image="times" markupView="lexicon" />
-			</a>
+			<span class="label-item label-item-after">
+				<a href="<%= viewURLWithoutCategory %>" title="<liferay-ui:message key="remove" />">
+					<aui:icon image="times-circle" markupView="lexicon" />
+				</a>
+			</span>
 		</span>
 	</c:if>
 </liferay-util:buffer>
@@ -68,22 +74,24 @@ if (assetCategoryId != 0) {
 	var="removeTag"
 >
 	<c:if test="<%= Validator.isNotNull(assetTagName) %>">
-		<span class="asset-entry badge badge-default badge-sm">
-			<%= HtmlUtil.escape(assetTagName) %>
+		<liferay-portlet:renderURL allowEmptyParam="<%= true %>" var="viewURLWithoutTag">
+			<liferay-portlet:param name="tag" value="" />
+		</liferay-portlet:renderURL>
 
-			<liferay-portlet:renderURL allowEmptyParam="<%= true %>" var="viewURLWithoutTag">
-				<liferay-portlet:param name="tag" value="" />
-			</liferay-portlet:renderURL>
+		<span class="label label-dark label-dismissible label-lg text-uppercase">
+			<span class="label-item label-item-expand"><%= HtmlUtil.escape(assetTagName) %></span>
 
-			<a href="<%= viewURLWithoutTag %>" title="<liferay-ui:message key="remove" />">
-				<aui:icon cssClass="textboxlistentry-remove" image="times" markupView="lexicon" />
-			</a>
+			<span class="label-item label-item-after">
+				<a href="<%= viewURLWithoutTag %>" title="<liferay-ui:message key="remove" />">
+					<aui:icon image="times-circle" markupView="lexicon" />
+				</a>
+			</span>
 		</span>
 	</c:if>
 </liferay-util:buffer>
 
 <c:choose>
-	<c:when test="<%= (assetCategoryId != 0) && Validator.isNotNull(assetTagName) %>">
+	<c:when test="<%= (assetCategory != null) && Validator.isNotNull(assetTagName) %>">
 
 		<%
 		AssetCategoryUtil.addPortletBreadcrumbEntries(assetCategoryId, request, portletURL);
@@ -98,7 +106,7 @@ if (assetCategoryId != 0) {
 			<liferay-ui:message arguments="<%= new String[] {assetVocabularyTitle, removeCategory, removeTag} %>" key='<%= assetType.concat("-with-x-x-and-tag-x") %>' translateArguments="<%= false %>" />
 		</h2>
 	</c:when>
-	<c:when test="<%= assetCategoryId != 0 %>">
+	<c:when test="<%= assetCategory != null %>">
 
 		<%
 		AssetCategoryUtil.addPortletBreadcrumbEntries(assetCategoryId, request, portletURL);

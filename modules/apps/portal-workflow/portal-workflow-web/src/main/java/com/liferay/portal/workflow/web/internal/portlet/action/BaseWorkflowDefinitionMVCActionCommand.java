@@ -56,18 +56,19 @@ public abstract class BaseWorkflowDefinitionMVCActionCommand
 
 			return SessionErrors.isEmpty(actionRequest);
 		}
-		catch (WorkflowException we) {
+		catch (WorkflowException workflowException) {
 			hideDefaultErrorMessage(actionRequest);
 
-			SessionErrors.add(actionRequest, we.getClass(), we);
+			SessionErrors.add(
+				actionRequest, workflowException.getClass(), workflowException);
 
 			return false;
 		}
-		catch (PortletException pe) {
-			throw pe;
+		catch (PortletException portletException) {
+			throw portletException;
 		}
-		catch (Exception e) {
-			throw new PortletException(e);
+		catch (Exception exception) {
+			throw new PortletException(exception);
 		}
 	}
 
@@ -91,9 +92,9 @@ public abstract class BaseWorkflowDefinitionMVCActionCommand
 	protected void addSuccessMessage(
 		ActionRequest actionRequest, ActionResponse actionResponse) {
 
-		String successMessage = getSuccessMessage(actionRequest);
-
-		SessionMessages.add(actionRequest, "requestProcessed", successMessage);
+		SessionMessages.add(
+			actionRequest, "requestProcessed",
+			getSuccessMessage(actionRequest));
 	}
 
 	@Override
@@ -111,10 +112,8 @@ public abstract class BaseWorkflowDefinitionMVCActionCommand
 	}
 
 	protected String getSuccessMessage(ActionRequest actionRequest) {
-		ResourceBundle resourceBundle = getResourceBundle(actionRequest);
-
 		return LanguageUtil.get(
-			resourceBundle, "workflow-updated-successfully");
+			getResourceBundle(actionRequest), "workflow-updated-successfully");
 	}
 
 	protected String getTitle(

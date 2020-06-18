@@ -14,9 +14,15 @@
 
 package com.liferay.wiki.web.internal.upgrade;
 
+import com.liferay.portal.configuration.persistence.upgrade.ConfigurationUpgradeStepFactory;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.settings.SettingsFactory;
+import com.liferay.portal.kernel.upgrade.BaseUpgradeStagingGroupTypeSettings;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
+import com.liferay.wiki.constants.WikiPortletKeys;
+import com.liferay.wiki.web.internal.configuration.WikiPortletInstanceConfiguration;
 import com.liferay.wiki.web.internal.upgrade.v1_0_0.UpgradePortletSettings;
 
 import org.osgi.service.component.annotations.Component;
@@ -35,13 +41,35 @@ public class WikiWebUpgrade implements UpgradeStepRegistrator {
 
 		registry.register(
 			"0.0.1", "1.0.0", new UpgradePortletSettings(_settingsFactory));
+
+		registry.register(
+			"1.0.0", "1.0.1",
+			new BaseUpgradeStagingGroupTypeSettings(
+				_companyLocalService, _groupLocalService, WikiPortletKeys.WIKI,
+				WikiPortletKeys.WIKI_ADMIN));
+
+		registry.register(
+			"1.0.1", "1.0.2",
+			_configurationUpgradeStepFactory.createUpgradeStep(
+				"com.liferay.wiki.configuration." +
+					"WikiPortletInstanceConfiguration",
+				WikiPortletInstanceConfiguration.class.getName()),
+			_configurationUpgradeStepFactory.createUpgradeStep(
+				"com.liferay.wiki.web.configuration." +
+					"WikiPortletInstanceConfiguration",
+				WikiPortletInstanceConfiguration.class.getName()));
 	}
 
-	@Reference(unbind = "-")
-	protected void setSettingsFactory(SettingsFactory settingsFactory) {
-		_settingsFactory = settingsFactory;
-	}
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
+	@Reference
+	private ConfigurationUpgradeStepFactory _configurationUpgradeStepFactory;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
 	private SettingsFactory _settingsFactory;
 
 }

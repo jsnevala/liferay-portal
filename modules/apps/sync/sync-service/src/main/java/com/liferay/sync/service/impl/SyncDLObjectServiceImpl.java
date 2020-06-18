@@ -26,6 +26,7 @@ import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.sync.model.DLSyncEvent;
 import com.liferay.document.library.sync.service.DLSyncEventLocalService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
@@ -38,10 +39,11 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.ResourceConstants;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
@@ -49,15 +51,21 @@ import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
@@ -65,22 +73,24 @@ import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.util.comparator.GroupNameComparator;
 import com.liferay.portal.kernel.zip.ZipReader;
-import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
+import com.liferay.portal.kernel.zip.ZipReaderFactory;
+import com.liferay.portal.theme.ThemeDisplayFactory;
 import com.liferay.sync.constants.SyncConstants;
 import com.liferay.sync.constants.SyncDLObjectConstants;
 import com.liferay.sync.constants.SyncDeviceConstants;
+import com.liferay.sync.internal.configuration.SyncServiceConfigurationValues;
 import com.liferay.sync.internal.util.JSONWebServiceActionParametersMap;
 import com.liferay.sync.internal.util.SyncContext;
 import com.liferay.sync.internal.util.SyncDLObjectUpdate;
 import com.liferay.sync.internal.util.SyncDeviceThreadLocal;
 import com.liferay.sync.model.SyncDLObject;
 import com.liferay.sync.model.SyncDevice;
+import com.liferay.sync.service.SyncDLFileVersionDiffLocalService;
 import com.liferay.sync.service.base.SyncDLObjectServiceBaseImpl;
 import com.liferay.sync.service.configuration.SyncServiceConfigurationKeys;
-import com.liferay.sync.service.internal.configuration.SyncServiceConfigurationValues;
 import com.liferay.sync.util.SyncHelper;
 import com.liferay.sync.util.comparator.SyncDLObjectModifiedTimeComparator;
 
@@ -97,17 +107,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import jodd.bean.BeanUtil;
 
 import jodd.util.NameValue;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Michael Young
  * @author Dennis Ju
  */
+@Component(
+	property = {
+		"json.web.service.context.name=sync",
+		"json.web.service.context.path=SyncDLObject"
+	},
+	service = AopService.class
+)
 public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 	@Override
@@ -140,6 +161,8 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			serviceContext.setCommand(Constants.ADD);
 
+			populateServiceContext(serviceContext, group.getGroupId());
+
 			FileEntry fileEntry = dlAppService.addFileEntry(
 				repositoryId, folderId, sourceFileName, mimeType, title,
 				description, changeLog, file, serviceContext);
@@ -147,23 +170,23 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 			return toSyncDLObject(
 				fileEntry, SyncDLObjectConstants.EVENT_ADD, checksum);
 		}
-		catch (PortalException pe) {
-			if (pe instanceof DuplicateFileEntryException) {
-				if (GetterUtil.getBoolean(
-						serviceContext.getAttribute("overwrite"))) {
+		catch (PortalException portalException) {
+			if ((portalException instanceof DuplicateFileEntryException) &&
+				GetterUtil.getBoolean(
+					serviceContext.getAttribute("overwrite"))) {
 
-					FileEntry fileEntry = dlAppService.getFileEntry(
-						repositoryId, folderId, title);
+				FileEntry fileEntry = dlAppService.getFileEntry(
+					repositoryId, folderId, title);
 
-					return updateFileEntry(
-						fileEntry.getFileEntryId(), sourceFileName, mimeType,
-						title, description, changeLog, false, file, checksum,
-						serviceContext);
-				}
+				return updateFileEntry(
+					fileEntry.getFileEntryId(), sourceFileName, mimeType, title,
+					description, changeLog, false, file, checksum,
+					serviceContext);
 			}
 
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -199,22 +222,21 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return toSyncDLObject(folder, SyncDLObjectConstants.EVENT_ADD);
 		}
-		catch (PortalException pe) {
-			if (pe instanceof DuplicateFolderNameException) {
-				if (GetterUtil.getBoolean(
-						serviceContext.getAttribute("overwrite"))) {
+		catch (PortalException portalException) {
+			if ((portalException instanceof DuplicateFolderNameException) &&
+				GetterUtil.getBoolean(
+					serviceContext.getAttribute("overwrite"))) {
 
-					Folder folder = dlAppService.getFolder(
-						repositoryId, parentFolderId, name);
+				Folder folder = dlAppService.getFolder(
+					repositoryId, parentFolderId, name);
 
-					return updateFolder(
-						folder.getFolderId(), name, description,
-						serviceContext);
-				}
+				return updateFolder(
+					folder.getFolderId(), name, description, serviceContext);
 			}
 
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -236,9 +258,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 			return toSyncDLObject(
 				fileEntry, SyncDLObjectConstants.EVENT_CANCEL_CHECK_OUT);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -265,9 +288,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 			return toSyncDLObject(
 				fileEntry, SyncDLObjectConstants.EVENT_CHECK_IN);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -290,9 +314,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 			return toSyncDLObject(
 				fileEntry, SyncDLObjectConstants.EVENT_CHECK_OUT);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -315,9 +340,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 			return toSyncDLObject(
 				fileEntry, SyncDLObjectConstants.EVENT_CHECK_OUT);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -359,6 +385,8 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			serviceContext.setCommand(Constants.ADD);
 
+			populateServiceContext(serviceContext, group.getGroupId());
+
 			FileEntry fileEntry = dlAppService.addFileEntry(
 				repositoryId, folderId, sourceFileName,
 				sourceFileEntry.getMimeType(), title, null, null,
@@ -369,9 +397,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 				fileEntry, SyncDLObjectConstants.EVENT_ADD,
 				sourceSyncDLObject.getChecksum());
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -391,9 +420,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return checkSyncDLObjects(syncDLObjects, repositoryId, 0);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -410,9 +440,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return toSyncDLObject(fileEntry, SyncDLObjectConstants.EVENT_GET);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -439,9 +470,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return syncDLObjects;
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -462,9 +494,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return toSyncDLObject(folder, SyncDLObjectConstants.EVENT_GET);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -485,9 +518,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return toSyncDLObject(folder, SyncDLObjectConstants.EVENT_GET);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -517,9 +551,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return syncDLObjects;
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -530,9 +565,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return groupService.getGroup(groupId);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -543,9 +579,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return syncDLObjectLocalService.getLatestModifiedTime();
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -627,9 +664,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return syncContext;
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -710,9 +748,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return syncDLObjectUpdate.toString();
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -741,9 +780,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return syncDLObjectUpdate.toString();
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -756,10 +796,12 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			List<Group> groups = new ArrayList<>();
 
-			LinkedHashMap<String, Object> groupParams = new LinkedHashMap<>();
-
-			groupParams.put("active", true);
-			groupParams.put("usersGroups", user.getUserId());
+			LinkedHashMap<String, Object> groupParams =
+				LinkedHashMapBuilder.<String, Object>put(
+					"active", true
+				).put(
+					"usersGroups", user.getUserId()
+				).build();
 
 			List<Group> userSiteGroups = groupLocalService.search(
 				user.getCompanyId(), null, groupParams, QueryUtil.ALL_POS,
@@ -837,10 +879,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return ListUtil.unique(groups);
 		}
-		catch (PortalException pe) {
-			Class<?> clazz = pe.getClass();
+		catch (PortalException portalException) {
+			Class<?> clazz = portalException.getClass();
 
-			throw new PortalException(clazz.getName(), pe);
+			throw new PortalException(clazz.getName(), portalException);
 		}
 	}
 
@@ -861,9 +903,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return toSyncDLObject(fileEntry, SyncDLObjectConstants.EVENT_MOVE);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -882,9 +925,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return toSyncDLObject(fileEntry, SyncDLObjectConstants.EVENT_TRASH);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -905,9 +949,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return toSyncDLObject(folder, SyncDLObjectConstants.EVENT_MOVE);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -926,9 +971,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return toSyncDLObject(folder, SyncDLObjectConstants.EVENT_TRASH);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -939,6 +985,8 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 			boolean majorVersion, File deltaFile, String checksum,
 			ServiceContext serviceContext)
 		throws PortalException {
+
+		File sourceFile = null;
 
 		File patchedFile = null;
 
@@ -952,8 +1000,9 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 			DLFileVersion dlFileVersion =
 				dlFileVersionLocalService.getDLFileVersion(sourceVersionId);
 
-			File sourceFile = dlFileEntryLocalService.getFile(
-				fileEntryId, dlFileVersion.getVersion(), false);
+			sourceFile = FileUtil.createTempFile(
+				dlFileEntryLocalService.getFileAsStream(
+					fileEntryId, dlFileVersion.getVersion(), false));
 
 			patchedFile = FileUtil.createTempFile();
 
@@ -970,18 +1019,20 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 					dlFileVersionLocalService.getFileVersion(
 						syncDLObject.getVersionId());
 
-				syncDLFileVersionDiffLocalService.addSyncDLFileVersionDiff(
+				_syncDLFileVersionDiffLocalService.addSyncDLFileVersionDiff(
 					fileEntryId, sourceVersionId,
 					targetDLFileVersion.getFileVersionId(), deltaFile);
 			}
 
 			return syncDLObject;
 		}
-		catch (PortalException pe) {
+		catch (Exception exception) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(exception), exception);
 		}
 		finally {
+			FileUtil.delete(sourceFile);
+
 			FileUtil.delete(patchedFile);
 		}
 	}
@@ -1002,9 +1053,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 			return toSyncDLObject(
 				fileEntry, SyncDLObjectConstants.EVENT_RESTORE);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -1023,9 +1075,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return toSyncDLObject(folder, SyncDLObjectConstants.EVENT_RESTORE);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -1041,7 +1094,7 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 		try {
 			_syncHelper.checkSyncEnabled(0);
 
-			zipReader = ZipReaderFactoryUtil.getZipReader(zipFile);
+			zipReader = _zipReaderFactory.getZipReader(zipFile);
 
 			String manifest = zipReader.getEntryAsString("/manifest.json");
 
@@ -1066,13 +1119,13 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 							zipReader, zipFileId,
 							jsonWebServiceActionParametersMap));
 				}
-				catch (Exception e) {
-					String message = e.getMessage();
+				catch (Exception exception) {
+					String message = exception.getMessage();
 
 					if (message == null) {
-						_log.error(e, e);
+						_log.error(exception, exception);
 
-						message = e.toString();
+						message = exception.toString();
 					}
 
 					if (!message.startsWith(StringPool.QUOTE) &&
@@ -1087,9 +1140,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 				}
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 		finally {
 			if (zipReader != null) {
@@ -1117,6 +1171,8 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			serviceContext.setCommand(Constants.UPDATE);
 
+			populateServiceContext(serviceContext, fileEntry.getGroupId());
+
 			fileEntry = dlAppService.updateFileEntry(
 				fileEntryId, sourceFileName, mimeType, title, description,
 				changeLog,
@@ -1126,9 +1182,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 			return toSyncDLObject(
 				fileEntry, SyncDLObjectConstants.EVENT_UPDATE, checksum);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -1150,9 +1207,10 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 			return toSyncDLObject(folder, SyncDLObjectConstants.EVENT_UPDATE);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortalException(
-				_syncHelper.buildExceptionMessage(pe), pe);
+				_syncHelper.buildExceptionMessage(portalException),
+				portalException);
 		}
 	}
 
@@ -1219,9 +1277,7 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 			return;
 		}
 
-		Folder folder = dlAppService.getFolder(folderId);
-
-		checkFolder(folder);
+		checkFolder(dlAppService.getFolder(folderId));
 	}
 
 	protected SyncDLObject checkModifiedTime(
@@ -1329,90 +1385,79 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 			return syncDLObjectFinder.filterFindByR_U_T(
 				repositoryId, userId, ArrayUtil.toLongArray(typePKs));
 		}
-		else {
-			List<Long> sublistTypePKs = typePKs.subList(
-				0, _SQL_DATA_MAX_PARAMETERS);
 
-			List<Long> checkedTypePKs = syncDLObjectFinder.filterFindByR_U_T(
-				repositoryId, userId, ArrayUtil.toLongArray(sublistTypePKs));
+		List<Long> sublistTypePKs = typePKs.subList(
+			0, _SQL_DATA_MAX_PARAMETERS);
 
-			sublistTypePKs.clear();
+		List<Long> checkedTypePKs = syncDLObjectFinder.filterFindByR_U_T(
+			repositoryId, userId, ArrayUtil.toLongArray(sublistTypePKs));
 
-			checkedTypePKs.addAll(checkTypePKs(repositoryId, userId, typePKs));
+		sublistTypePKs.clear();
 
-			return checkedTypePKs;
-		}
+		checkedTypePKs.addAll(checkTypePKs(repositoryId, userId, typePKs));
+
+		return checkedTypePKs;
 	}
 
 	protected Map<String, String> getPortletPreferencesMap()
 		throws PortalException {
 
-		Map<String, String> portletPreferencesMap = new HashMap<>();
-
 		User user = getUser();
 
-		portletPreferencesMap.put(
+		return HashMapBuilder.put(
 			SyncServiceConfigurationKeys.
 				SYNC_CLIENT_AUTHENTICATION_RETRY_INTERVAL,
 			String.valueOf(
 				SyncServiceConfigurationValues.
-					SYNC_CLIENT_AUTHENTICATION_RETRY_INTERVAL));
-
-		int batchFileMaxSize = PrefsPropsUtil.getInteger(
-			user.getCompanyId(),
+					SYNC_CLIENT_AUTHENTICATION_RETRY_INTERVAL)
+		).put(
 			SyncServiceConfigurationKeys.SYNC_CLIENT_BATCH_FILE_MAX_SIZE,
-			SyncServiceConfigurationValues.SYNC_CLIENT_BATCH_FILE_MAX_SIZE);
-
-		portletPreferencesMap.put(
-			SyncServiceConfigurationKeys.SYNC_CLIENT_BATCH_FILE_MAX_SIZE,
-			String.valueOf(batchFileMaxSize));
-
-		boolean forceSecurityMode = PrefsPropsUtil.getBoolean(
-			user.getCompanyId(),
+			String.valueOf(
+				PrefsPropsUtil.getInteger(
+					user.getCompanyId(),
+					SyncServiceConfigurationKeys.
+						SYNC_CLIENT_BATCH_FILE_MAX_SIZE,
+					SyncServiceConfigurationValues.
+						SYNC_CLIENT_BATCH_FILE_MAX_SIZE))
+		).put(
 			SyncServiceConfigurationKeys.SYNC_CLIENT_FORCE_SECURITY_MODE,
-			SyncServiceConfigurationValues.SYNC_CLIENT_FORCE_SECURITY_MODE);
-
-		portletPreferencesMap.put(
-			SyncServiceConfigurationKeys.SYNC_CLIENT_FORCE_SECURITY_MODE,
-			String.valueOf(forceSecurityMode));
-
-		int maxConnections = PrefsPropsUtil.getInteger(
-			user.getCompanyId(),
+			String.valueOf(
+				PrefsPropsUtil.getBoolean(
+					user.getCompanyId(),
+					SyncServiceConfigurationKeys.
+						SYNC_CLIENT_FORCE_SECURITY_MODE,
+					SyncServiceConfigurationValues.
+						SYNC_CLIENT_FORCE_SECURITY_MODE))
+		).put(
 			SyncServiceConfigurationKeys.SYNC_CLIENT_MAX_CONNECTIONS,
-			SyncServiceConfigurationValues.SYNC_CLIENT_MAX_CONNECTIONS);
-
-		portletPreferencesMap.put(
-			SyncServiceConfigurationKeys.SYNC_CLIENT_MAX_CONNECTIONS,
-			String.valueOf(maxConnections));
-
-		int maxDownloadRate = PrefsPropsUtil.getInteger(
-			user.getCompanyId(),
+			String.valueOf(
+				PrefsPropsUtil.getInteger(
+					user.getCompanyId(),
+					SyncServiceConfigurationKeys.SYNC_CLIENT_MAX_CONNECTIONS,
+					SyncServiceConfigurationValues.SYNC_CLIENT_MAX_CONNECTIONS))
+		).put(
 			SyncServiceConfigurationKeys.SYNC_CLIENT_MAX_DOWNLOAD_RATE,
-			SyncServiceConfigurationValues.SYNC_CLIENT_MAX_DOWNLOAD_RATE);
-
-		portletPreferencesMap.put(
-			SyncServiceConfigurationKeys.SYNC_CLIENT_MAX_DOWNLOAD_RATE,
-			String.valueOf(maxDownloadRate));
-
-		int maxUploadRate = PrefsPropsUtil.getInteger(
-			user.getCompanyId(),
+			String.valueOf(
+				PrefsPropsUtil.getInteger(
+					user.getCompanyId(),
+					SyncServiceConfigurationKeys.SYNC_CLIENT_MAX_DOWNLOAD_RATE,
+					SyncServiceConfigurationValues.
+						SYNC_CLIENT_MAX_DOWNLOAD_RATE))
+		).put(
 			SyncServiceConfigurationKeys.SYNC_CLIENT_MAX_UPLOAD_RATE,
-			SyncServiceConfigurationValues.SYNC_CLIENT_MAX_UPLOAD_RATE);
-
-		portletPreferencesMap.put(
-			SyncServiceConfigurationKeys.SYNC_CLIENT_MAX_UPLOAD_RATE,
-			String.valueOf(maxUploadRate));
-
-		int pollInterval = PrefsPropsUtil.getInteger(
-			user.getCompanyId(),
+			String.valueOf(
+				PrefsPropsUtil.getInteger(
+					user.getCompanyId(),
+					SyncServiceConfigurationKeys.SYNC_CLIENT_MAX_UPLOAD_RATE,
+					SyncServiceConfigurationValues.SYNC_CLIENT_MAX_UPLOAD_RATE))
+		).put(
 			SyncServiceConfigurationKeys.SYNC_CLIENT_POLL_INTERVAL,
-			SyncServiceConfigurationValues.SYNC_CLIENT_POLL_INTERVAL);
-
-		portletPreferencesMap.put(
-			SyncServiceConfigurationKeys.SYNC_CLIENT_POLL_INTERVAL,
-			String.valueOf(pollInterval));
-
-		return portletPreferencesMap;
+			String.valueOf(
+				PrefsPropsUtil.getInteger(
+					user.getCompanyId(),
+					SyncServiceConfigurationKeys.SYNC_CLIENT_POLL_INTERVAL,
+					SyncServiceConfigurationValues.SYNC_CLIENT_POLL_INTERVAL))
+		).build();
 	}
 
 	protected boolean hasModelPermission(long groupId, String name)
@@ -1481,6 +1526,39 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 		return true;
 	}
 
+	protected void populateServiceContext(
+			ServiceContext serviceContext, long groupId)
+		throws PortalException {
+
+		ServiceContext serviceContextThreadLocal =
+			ServiceContextThreadLocal.getServiceContext();
+
+		HttpServletRequest httpServletRequest =
+			serviceContextThreadLocal.getRequest();
+
+		if (httpServletRequest == null) {
+			return;
+		}
+
+		long companyId = CompanyThreadLocal.getCompanyId();
+
+		serviceContext.setCompanyId(companyId);
+
+		serviceContext.setPlid(LayoutConstants.DEFAULT_PLID);
+		serviceContext.setRequest(httpServletRequest);
+
+		ThemeDisplay themeDisplay = ThemeDisplayFactory.create();
+
+		themeDisplay.setCompany(_companyLocalService.getCompany(companyId));
+		themeDisplay.setPermissionChecker(getPermissionChecker());
+		themeDisplay.setPlid(_portal.getControlPanelPlid(companyId));
+		themeDisplay.setRequest(httpServletRequest);
+		themeDisplay.setScopeGroupId(groupId);
+		themeDisplay.setSiteGroupId(groupId);
+
+		httpServletRequest.setAttribute(WebKeys.THEME_DISPLAY, themeDisplay);
+	}
+
 	protected SyncDLObject toSyncDLObject(FileEntry fileEntry, String event)
 		throws PortalException {
 
@@ -1525,6 +1603,11 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 
 		ServiceContext serviceContext = new ServiceContext();
 
+		ServiceContext serviceContextThreadLocal =
+			ServiceContextThreadLocal.getServiceContext();
+
+		serviceContext.setRequest(serviceContextThreadLocal.getRequest());
+
 		List<NameValue<String, Object>> innerParameters =
 			jsonWebServiceActionParametersMap.getInnerParameters(
 				"serviceContext");
@@ -1536,9 +1619,9 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 						serviceContext, innerParameter.getName(),
 						innerParameter.getValue());
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isDebugEnabled()) {
-						_log.debug(e.getMessage(), e);
+						_log.debug(exception.getMessage(), exception);
 					}
 				}
 			}
@@ -1745,10 +1828,23 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 	private static final Log _log = LogFactoryUtil.getLog(
 		SyncDLObjectServiceImpl.class);
 
-	@ServiceReference(type = DLSyncEventLocalService.class)
+	@Reference
+	private CompanyLocalService _companyLocalService;
+
+	@Reference
 	private DLSyncEventLocalService _dlSyncEventLocalService;
 
-	@ServiceReference(type = SyncHelper.class)
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private SyncDLFileVersionDiffLocalService
+		_syncDLFileVersionDiffLocalService;
+
+	@Reference
 	private SyncHelper _syncHelper;
+
+	@Reference
+	private ZipReaderFactory _zipReaderFactory;
 
 }

@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -79,9 +79,10 @@ public class DLFileEntryTypeDLRelationshipResource
 					return _dlAppLocalService.getFileEntry(
 						dlFileEntry.getFileEntryId());
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(pe.getMessage(), pe);
+						_log.warn(
+							portalException.getMessage(), portalException);
 					}
 
 					return null;
@@ -102,9 +103,10 @@ public class DLFileEntryTypeDLRelationshipResource
 				try {
 					return _dlAppLocalService.getFolder(dlFolder.getFolderId());
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(pe.getMessage(), pe);
+						_log.warn(
+							portalException.getMessage(), portalException);
 					}
 
 					return null;

@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -130,8 +131,8 @@ public class CleanServiceBuilderCommand extends BaseCommand {
 	private void _deleteReleaseRows(Connection connection) throws SQLException {
 		String sql = "delete from Release_ where servletContextName = ?";
 
-		try (PreparedStatement preparedStatement =
-				connection.prepareStatement(sql)) {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				sql)) {
 
 			preparedStatement.setString(1, _servletContextName);
 
@@ -145,8 +146,8 @@ public class CleanServiceBuilderCommand extends BaseCommand {
 
 		String sql = "delete from ServiceComponent where buildNamespace = ?";
 
-		try (PreparedStatement preparedStatement =
-				connection.prepareStatement(sql)) {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				sql)) {
 
 			preparedStatement.setString(1, namespace);
 
@@ -187,7 +188,7 @@ public class CleanServiceBuilderCommand extends BaseCommand {
 
 			String localized = columnElement.getAttribute("localized");
 
-			if ("extra-table".equals(localized)) {
+			if (Objects.equals(localized, "extra-table")) {
 				return true;
 			}
 		}
@@ -213,8 +214,8 @@ public class CleanServiceBuilderCommand extends BaseCommand {
 					add(line);
 				}
 			}
-			catch (IOException ioe) {
-				throw new ExceptionInInitializerError(ioe);
+			catch (IOException ioException) {
+				throw new ExceptionInInitializerError(ioException);
 			}
 		}
 	};

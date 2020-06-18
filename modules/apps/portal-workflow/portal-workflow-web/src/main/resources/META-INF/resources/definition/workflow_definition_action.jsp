@@ -75,11 +75,13 @@ String duplicateTitle = workflowDefinitionDisplayContext.getDuplicateTitle(workf
 				url="<%= deactivateWorkflowDefinitionURL %>"
 			/>
 
-			<liferay-ui:icon
-				id='<%= "duplicate" + HtmlUtil.getAUICompatibleId(workflowDefinition.getName()) %>'
-				message="duplicate"
-				url="javascript:;"
-			/>
+			<c:if test="<%= workflowDefinitionDisplayContext.canPublishWorkflowDefinition() %>">
+				<liferay-ui:icon
+					id='<%= "duplicate" + HtmlUtil.getAUICompatibleId(workflowDefinition.getName()) %>'
+					message="duplicate"
+					url="javascript:;"
+				/>
+			</c:if>
 		</c:when>
 		<c:otherwise>
 			<liferay-portlet:actionURL name="deleteWorkflowDefinition" var="deleteWorkflowDefinitionURL">
@@ -107,18 +109,22 @@ String duplicateTitle = workflowDefinitionDisplayContext.getDuplicateTitle(workf
 		<aui:input name="duplicatedDefinitionTitle" type="hidden" value="<%= workflowDefinition.getTitle(LanguageUtil.getLanguageId(request)) %>" />
 
 		<aui:fieldset>
-			<aui:col>
+			<clay:col
+				size="12"
+			>
 				<aui:field-wrapper label="title">
 					<liferay-ui:input-localized
 						name='<%= randomNamespace + "title" %>'
 						xml="<%= duplicateTitle %>"
 					/>
 				</aui:field-wrapper>
-			</aui:col>
+			</clay:col>
 
-			<aui:col>
+			<clay:col
+				size="12"
+			>
 				<liferay-ui:message key="copy-does-not-include-revisions" />
-			</aui:col>
+			</clay:col>
 		</aui:fieldset>
 	</aui:form>
 </div>
@@ -126,7 +132,17 @@ String duplicateTitle = workflowDefinitionDisplayContext.getDuplicateTitle(workf
 <aui:script use="liferay-workflow-web">
 	var title = '<liferay-ui:message key="duplicate-workflow" />';
 
-	var confirmBeforeDuplicateDialog = A.rbind('confirmBeforeDuplicateDialog', Liferay.WorkflowWeb, '<%= duplicateWorkflowDefinition %>', title, '<%= randomNamespace %>', '<portlet:namespace />');
+	var confirmBeforeDuplicateDialog = A.rbind(
+		'confirmBeforeDuplicateDialog',
+		Liferay.WorkflowWeb,
+		'<%= duplicateWorkflowDefinition %>',
+		title,
+		'<%= randomNamespace %>',
+		'<portlet:namespace />'
+	);
 
-	Liferay.delegateClick('<portlet:namespace />duplicate<%= HtmlUtil.getAUICompatibleId(workflowDefinition.getName()) %>', confirmBeforeDuplicateDialog);
+	Liferay.delegateClick(
+		'<portlet:namespace />duplicate<%= HtmlUtil.getAUICompatibleId(workflowDefinition.getName()) %>',
+		confirmBeforeDuplicateDialog
+	);
 </aui:script>

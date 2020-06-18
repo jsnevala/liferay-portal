@@ -100,13 +100,12 @@ public class RepositoryModelSizeComparator<T> extends OrderByComparator<T> {
 
 			return ORDER_BY_MODEL_DESC;
 		}
-		else {
-			if (_ascending) {
-				return ORDER_BY_ASC;
-			}
 
-			return ORDER_BY_DESC;
+		if (_ascending) {
+			return ORDER_BY_ASC;
 		}
+
+		return ORDER_BY_DESC;
 	}
 
 	@Override
@@ -139,7 +138,7 @@ public class RepositoryModelSizeComparator<T> extends OrderByComparator<T> {
 
 			return dlFileEntry.getSize();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return 0;
 		}
 	}

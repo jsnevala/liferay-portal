@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class MBCategoryTrashRenderer extends BaseTrashRenderer {
 
@@ -82,8 +82,8 @@ public class MBCategoryTrashRenderer extends BaseTrashRenderer {
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response,
-			String template)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String template)
 		throws Exception {
 
 		return false;

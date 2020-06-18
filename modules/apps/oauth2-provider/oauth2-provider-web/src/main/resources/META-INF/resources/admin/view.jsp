@@ -24,16 +24,12 @@ OAuth2ApplicationsManagementToolbarDisplayContext oAuth2ApplicationsManagementTo
 String displayStyle = oAuth2ApplicationsManagementToolbarDisplayContext.getDisplayStyle();
 %>
 
-<clay:navigation-bar
-	inverted="<%= true %>"
-	navigationItems="<%= oAuth2ApplicationsManagementToolbarDisplayContext.getNavigationItems() %>"
-/>
-
 <clay:management-toolbar
 	actionDropdownItems="<%= oAuth2ApplicationsManagementToolbarDisplayContext.getActionDropdownItems() %>"
 	creationMenu="<%= oAuth2ApplicationsManagementToolbarDisplayContext.getCreationMenu() %>"
 	disabled="<%= oAuth2ApplicationsCount == 0 %>"
 	filterDropdownItems="<%= oAuth2ApplicationsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
+	itemsTotal="<%= oAuth2ApplicationsCount %>"
 	namespace="<%= renderResponse.getNamespace() %>"
 	searchContainerId="oAuth2ApplicationsSearchContainer"
 	selectable="<%= true %>"
@@ -134,11 +130,6 @@ String displayStyle = oAuth2ApplicationsManagementToolbarDisplayContext.getDispl
 							value="<%= String.valueOf(oAuth2AdminPortletDisplayContext.getOAuth2AuthorizationsCount(oAuth2Application)) %>"
 						/>
 
-						<liferay-ui:search-container-column-text
-							name="scopes"
-							value="<%= String.valueOf(oAuth2AdminPortletDisplayContext.getScopeAliasesSize(oAuth2Application)) %>"
-						/>
-
 						<liferay-ui:search-container-column-jsp
 							align="right"
 							path="/admin/application_actions.jsp"
@@ -155,15 +146,25 @@ String displayStyle = oAuth2ApplicationsManagementToolbarDisplayContext.getDispl
 	</aui:form>
 </div>
 
-<aui:script>
+<script>
 	function <portlet:namespace />deleteOAuth2Applications() {
-		if (confirm('<%= HtmlUtil.escapeJS(LanguageUtil.get(request, "are-you-sure-you-want-to-delete-the-selected-entries-this-action-revokes-all-authorizations-and-associated-tokens")) %>')) {
-			var form = AUI.$(document.<portlet:namespace />fm);
+		if (
+			confirm(
+				'<%= HtmlUtil.escapeJS(LanguageUtil.get(request, "are-you-sure-you-want-to-delete-the-selected-entries-this-action-revokes-all-authorizations-and-associated-tokens")) %>'
+			)
+		) {
+			var form = document.<portlet:namespace />fm;
 
-			form.attr('method', 'post');
-			form.fm('oAuth2ApplicationIds').val(Liferay.Util.listCheckedExcept(form, '<portlet:namespace />allRowIds'));
-
-			submitForm(form, '<portlet:actionURL name="/admin/delete_oauth2_applications" />');
+			Liferay.Util.postForm(form, {
+				data: {
+					oAuth2ApplicationIds: Liferay.Util.listCheckedExcept(
+						form,
+						'<portlet:namespace />allRowIds'
+					),
+				},
+				url:
+					'<portlet:actionURL name="/admin/delete_oauth2_applications" />',
+			});
 		}
 	}
-</aui:script>
+</script>

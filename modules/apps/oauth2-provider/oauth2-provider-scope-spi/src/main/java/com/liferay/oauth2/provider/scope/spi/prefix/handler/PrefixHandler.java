@@ -14,7 +14,7 @@
 
 package com.liferay.oauth2.provider.scope.spi.prefix.handler;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Represents a prefix for the input scope. This abstraction allows the
@@ -31,7 +31,7 @@ public interface PrefixHandler {
 	 *
 	 * @review
 	 */
-	public static PrefixHandler PASSTHROUGH_PREFIXHANDLER =
+	public static PrefixHandler PASS_THROUGH_PREFIX_HANDLER =
 		new PrefixHandler() {
 
 			@Override

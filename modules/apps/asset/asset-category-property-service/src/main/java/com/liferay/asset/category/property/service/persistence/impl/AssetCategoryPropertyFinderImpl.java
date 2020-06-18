@@ -24,16 +24,19 @@ import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Brian Wing Shun Chan
  * @author Jorge Ferrer
  */
+@Component(service = AssetCategoryPropertyFinder.class)
 public class AssetCategoryPropertyFinderImpl
 	extends AssetCategoryPropertyFinderBaseImpl
 	implements AssetCategoryPropertyFinder {
@@ -53,16 +56,16 @@ public class AssetCategoryPropertyFinderImpl
 
 			String sql = _customSQL.get(getClass(), COUNT_BY_G_K);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(key);
+			queryPos.add(groupId);
+			queryPos.add(key);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -74,8 +77,8 @@ public class AssetCategoryPropertyFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -98,19 +101,19 @@ public class AssetCategoryPropertyFinderImpl
 
 			String sql = _customSQL.get(getClass(), FIND_BY_G_K);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar("categoryPropertyValue", Type.STRING);
+			sqlQuery.addScalar("categoryPropertyValue", Type.STRING);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(key);
+			queryPos.add(groupId);
+			queryPos.add(key);
 
 			List<AssetCategoryProperty> categoryProperties = new ArrayList<>();
 
 			Iterator<String> itr = (Iterator<String>)QueryUtil.iterate(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 
 			while (itr.hasNext()) {
 				String value = itr.next();
@@ -126,15 +129,15 @@ public class AssetCategoryPropertyFinderImpl
 
 			return categoryProperties;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

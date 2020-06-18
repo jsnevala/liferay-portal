@@ -14,15 +14,13 @@
 
 package com.liferay.reading.time.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -43,12 +41,11 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
-
 import com.liferay.reading.time.model.ReadingTimeEntry;
 import com.liferay.reading.time.service.ReadingTimeEntryLocalService;
 import com.liferay.reading.time.service.persistence.ReadingTimeEntryPersistence;
@@ -59,6 +56,8 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * Provides the base implementation for the reading time entry local service.
  *
@@ -68,17 +67,17 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.reading.time.service.impl.ReadingTimeEntryLocalServiceImpl
- * @see com.liferay.reading.time.service.ReadingTimeEntryLocalServiceUtil
  * @generated
  */
-@ProviderType
 public abstract class ReadingTimeEntryLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements ReadingTimeEntryLocalService,
-		IdentifiableOSGiService {
+	extends BaseLocalServiceImpl
+	implements AopService, IdentifiableOSGiService,
+			   ReadingTimeEntryLocalService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.reading.time.service.ReadingTimeEntryLocalServiceUtil} to access the reading time entry local service.
+	 * Never modify or reference this class directly. Use <code>ReadingTimeEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.reading.time.service.ReadingTimeEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -91,6 +90,7 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	@Override
 	public ReadingTimeEntry addReadingTimeEntry(
 		ReadingTimeEntry readingTimeEntry) {
+
 		readingTimeEntry.setNew(true);
 
 		return readingTimeEntryPersistence.update(readingTimeEntry);
@@ -119,6 +119,7 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	@Override
 	public ReadingTimeEntry deleteReadingTimeEntry(long readingTimeEntryId)
 		throws PortalException {
+
 		return readingTimeEntryPersistence.remove(readingTimeEntryId);
 	}
 
@@ -132,15 +133,21 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	@Override
 	public ReadingTimeEntry deleteReadingTimeEntry(
 		ReadingTimeEntry readingTimeEntry) {
+
 		return readingTimeEntryPersistence.remove(readingTimeEntry);
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return readingTimeEntryPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(ReadingTimeEntry.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			ReadingTimeEntry.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -158,7 +165,7 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.reading.time.model.impl.ReadingTimeEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.reading.time.model.impl.ReadingTimeEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -167,17 +174,18 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return readingTimeEntryPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return readingTimeEntryPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.reading.time.model.impl.ReadingTimeEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.reading.time.model.impl.ReadingTimeEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -187,10 +195,12 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return readingTimeEntryPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return readingTimeEntryPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -212,15 +222,17 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return readingTimeEntryPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return readingTimeEntryPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
 	public ReadingTimeEntry fetchReadingTimeEntry(long readingTimeEntryId) {
-		return readingTimeEntryPersistence.fetchByPrimaryKey(readingTimeEntryId);
+		return readingTimeEntryPersistence.fetchByPrimaryKey(
+			readingTimeEntryId);
 	}
 
 	/**
@@ -231,8 +243,9 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	 * @return the matching reading time entry, or <code>null</code> if a matching reading time entry could not be found
 	 */
 	@Override
-	public ReadingTimeEntry fetchReadingTimeEntryByUuidAndGroupId(String uuid,
-		long groupId) {
+	public ReadingTimeEntry fetchReadingTimeEntryByUuidAndGroupId(
+		String uuid, long groupId) {
+
 		return readingTimeEntryPersistence.fetchByUUID_G(uuid, groupId);
 	}
 
@@ -246,14 +259,17 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	@Override
 	public ReadingTimeEntry getReadingTimeEntry(long readingTimeEntryId)
 		throws PortalException {
+
 		return readingTimeEntryPersistence.findByPrimaryKey(readingTimeEntryId);
 	}
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
-		actionableDynamicQuery.setBaseLocalService(readingTimeEntryLocalService);
+		actionableDynamicQuery.setBaseLocalService(
+			readingTimeEntryLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(ReadingTimeEntry.class);
 
@@ -263,10 +279,14 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(readingTimeEntryLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			readingTimeEntryLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(ReadingTimeEntry.class);
 
@@ -278,7 +298,9 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
-		actionableDynamicQuery.setBaseLocalService(readingTimeEntryLocalService);
+
+		actionableDynamicQuery.setBaseLocalService(
+			readingTimeEntryLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(ReadingTimeEntry.class);
 
@@ -288,65 +310,88 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
-		final ExportActionableDynamicQuery exportActionableDynamicQuery = new ExportActionableDynamicQuery() {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
 				@Override
 				public long performCount() throws PortalException {
-					ManifestSummary manifestSummary = portletDataContext.getManifestSummary();
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
 
 					StagedModelType stagedModelType = getStagedModelType();
 
 					long modelAdditionCount = super.performCount();
 
-					manifestSummary.addModelAdditionCount(stagedModelType,
-						modelAdditionCount);
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
 
-					long modelDeletionCount = ExportImportHelperUtil.getModelDeletionCount(portletDataContext,
-							stagedModelType);
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
 
-					manifestSummary.addModelDeletionCount(stagedModelType,
-						modelDeletionCount);
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
 
 					return modelAdditionCount;
 				}
+
 			};
 
 		initActionableDynamicQuery(exportActionableDynamicQuery);
 
-		exportActionableDynamicQuery.setAddCriteriaMethod(new ActionableDynamicQuery.AddCriteriaMethod() {
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
 				@Override
 				public void addCriteria(DynamicQuery dynamicQuery) {
-					portletDataContext.addDateRangeCriteria(dynamicQuery,
-						"modifiedDate");
+					portletDataContext.addDateRangeCriteria(
+						dynamicQuery, "modifiedDate");
 
-					StagedModelType stagedModelType = exportActionableDynamicQuery.getStagedModelType();
+					StagedModelType stagedModelType =
+						exportActionableDynamicQuery.getStagedModelType();
 
-					long referrerClassNameId = stagedModelType.getReferrerClassNameId();
+					long referrerClassNameId =
+						stagedModelType.getReferrerClassNameId();
 
 					Property classNameIdProperty = PropertyFactoryUtil.forName(
-							"classNameId");
+						"classNameId");
 
-					if ((referrerClassNameId != StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
-							(referrerClassNameId != StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
-						dynamicQuery.add(classNameIdProperty.eq(
+					if ((referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
+						(referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
+
+						dynamicQuery.add(
+							classNameIdProperty.eq(
 								stagedModelType.getReferrerClassNameId()));
 					}
-					else if (referrerClassNameId == StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
+					else if (referrerClassNameId ==
+								StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
+
 						dynamicQuery.add(classNameIdProperty.isNotNull());
 					}
 				}
+
 			});
 
-		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<ReadingTimeEntry>() {
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<ReadingTimeEntry>() {
+
 				@Override
 				public void performAction(ReadingTimeEntry readingTimeEntry)
 					throws PortalException {
-					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
-						readingTimeEntry);
+
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, readingTimeEntry);
 				}
+
 			});
-		exportActionableDynamicQuery.setStagedModelType(new StagedModelType(
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
 				PortalUtil.getClassNameId(ReadingTimeEntry.class.getName()),
 				StagedModelType.REFERRER_CLASS_NAME_ID_ALL));
 
@@ -356,15 +401,35 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return readingTimeEntryPersistence.create(
+			((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
-		return readingTimeEntryLocalService.deleteReadingTimeEntry((ReadingTimeEntry)persistedModel);
+
+		return readingTimeEntryLocalService.deleteReadingTimeEntry(
+			(ReadingTimeEntry)persistedModel);
 	}
 
+	public BasePersistence<ReadingTimeEntry> getBasePersistence() {
+		return readingTimeEntryPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return readingTimeEntryPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -378,6 +443,7 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	@Override
 	public List<ReadingTimeEntry> getReadingTimeEntriesByUuidAndCompanyId(
 		String uuid, long companyId) {
+
 		return readingTimeEntryPersistence.findByUuid_C(uuid, companyId);
 	}
 
@@ -395,8 +461,9 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	public List<ReadingTimeEntry> getReadingTimeEntriesByUuidAndCompanyId(
 		String uuid, long companyId, int start, int end,
 		OrderByComparator<ReadingTimeEntry> orderByComparator) {
-		return readingTimeEntryPersistence.findByUuid_C(uuid, companyId, start,
-			end, orderByComparator);
+
+		return readingTimeEntryPersistence.findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -408,8 +475,10 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	 * @throws PortalException if a matching reading time entry could not be found
 	 */
 	@Override
-	public ReadingTimeEntry getReadingTimeEntryByUuidAndGroupId(String uuid,
-		long groupId) throws PortalException {
+	public ReadingTimeEntry getReadingTimeEntryByUuidAndGroupId(
+			String uuid, long groupId)
+		throws PortalException {
+
 		return readingTimeEntryPersistence.findByUUID_G(uuid, groupId);
 	}
 
@@ -417,7 +486,7 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	 * Returns a range of all the reading time entries.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.reading.time.model.impl.ReadingTimeEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.reading.time.model.impl.ReadingTimeEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of reading time entries
@@ -449,74 +518,21 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 	@Override
 	public ReadingTimeEntry updateReadingTimeEntry(
 		ReadingTimeEntry readingTimeEntry) {
+
 		return readingTimeEntryPersistence.update(readingTimeEntry);
 	}
 
-	/**
-	 * Returns the reading time entry local service.
-	 *
-	 * @return the reading time entry local service
-	 */
-	public ReadingTimeEntryLocalService getReadingTimeEntryLocalService() {
-		return readingTimeEntryLocalService;
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			ReadingTimeEntryLocalService.class, IdentifiableOSGiService.class,
+			PersistedModelLocalService.class
+		};
 	}
 
-	/**
-	 * Sets the reading time entry local service.
-	 *
-	 * @param readingTimeEntryLocalService the reading time entry local service
-	 */
-	public void setReadingTimeEntryLocalService(
-		ReadingTimeEntryLocalService readingTimeEntryLocalService) {
-		this.readingTimeEntryLocalService = readingTimeEntryLocalService;
-	}
-
-	/**
-	 * Returns the reading time entry persistence.
-	 *
-	 * @return the reading time entry persistence
-	 */
-	public ReadingTimeEntryPersistence getReadingTimeEntryPersistence() {
-		return readingTimeEntryPersistence;
-	}
-
-	/**
-	 * Sets the reading time entry persistence.
-	 *
-	 * @param readingTimeEntryPersistence the reading time entry persistence
-	 */
-	public void setReadingTimeEntryPersistence(
-		ReadingTimeEntryPersistence readingTimeEntryPersistence) {
-		this.readingTimeEntryPersistence = readingTimeEntryPersistence;
-	}
-
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
-		return counterLocalService;
-	}
-
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
-		this.counterLocalService = counterLocalService;
-	}
-
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.reading.time.model.ReadingTimeEntry",
-			readingTimeEntryLocalService);
-	}
-
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.reading.time.model.ReadingTimeEntry");
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		readingTimeEntryLocalService = (ReadingTimeEntryLocalService)aopProxy;
 	}
 
 	/**
@@ -551,22 +567,23 @@ public abstract class ReadingTimeEntryLocalServiceBaseImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = ReadingTimeEntryLocalService.class)
 	protected ReadingTimeEntryLocalService readingTimeEntryLocalService;
-	@BeanReference(type = ReadingTimeEntryPersistence.class)
+
+	@Reference
 	protected ReadingTimeEntryPersistence readingTimeEntryPersistence;
-	@ServiceReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+
+	@Reference
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
 }

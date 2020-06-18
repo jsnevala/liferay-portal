@@ -35,13 +35,9 @@ import java.util.Locale;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Leonardo Barros
  */
-@Component(immediate = true, service = Indexer.class)
 public class DDMFormInstanceIndexer extends BaseIndexer<DDMFormInstance> {
 
 	public static final String CLASS_NAME = DDMFormInstance.class.getName();
@@ -83,11 +79,9 @@ public class DDMFormInstanceIndexer extends BaseIndexer<DDMFormInstance> {
 
 	@Override
 	protected void doReindex(DDMFormInstance ddmFormInstance) throws Exception {
-		Document document = getDocument(ddmFormInstance);
-
 		indexWriterHelper.updateDocument(
-			getSearchEngineId(), ddmFormInstance.getCompanyId(), document,
-			isCommitImmediately());
+			getSearchEngineId(), ddmFormInstance.getCompanyId(),
+			getDocument(ddmFormInstance), isCommitImmediately());
 
 		reindexRecords(ddmFormInstance);
 	}
@@ -121,12 +115,12 @@ public class DDMFormInstanceIndexer extends BaseIndexer<DDMFormInstance> {
 						indexableActionableDynamicQuery.addDocuments(document);
 					}
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to index form instance record " +
 								ddmFormInstance.getFormInstanceId(),
-							pe);
+							portalException);
 					}
 				}
 			});
@@ -144,13 +138,8 @@ public class DDMFormInstanceIndexer extends BaseIndexer<DDMFormInstance> {
 		indexer.reindex(ddmFormInstance.getFormInstanceRecords());
 	}
 
-	@Reference
 	protected DDMFormInstanceLocalService ddmFormInstanceLocalService;
-
-	@Reference
 	protected IndexerRegistry indexerRegistry;
-
-	@Reference
 	protected IndexWriterHelper indexWriterHelper;
 
 	private static final Log _log = LogFactoryUtil.getLog(

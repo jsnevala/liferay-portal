@@ -17,6 +17,8 @@ package com.liferay.dynamic.data.lists.service.impl;
 import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
@@ -24,10 +26,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,7 +46,7 @@ public class DDLRecordLocalServiceImplTest {
 		Field field = toField(fieldValue);
 
 		assertFieldValues(
-			Arrays.asList(fieldValue), field.getValues(Locale.US));
+			Arrays.asList(fieldValue), field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -58,7 +58,7 @@ public class DDLRecordLocalServiceImplTest {
 
 		Field field = toField(fieldValues);
 
-		assertFieldValues(toList(fieldValues), field.getValues(Locale.US));
+		assertFieldValues(toList(fieldValues), field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -70,7 +70,7 @@ public class DDLRecordLocalServiceImplTest {
 
 		Field field = toField((Serializable)fieldValues);
 
-		assertFieldValues(fieldValues, field.getValues(Locale.US));
+		assertFieldValues(fieldValues, field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -82,7 +82,7 @@ public class DDLRecordLocalServiceImplTest {
 
 		Field field = toField((Serializable)fieldValues);
 
-		assertFieldValues(fieldValues, field.getValues(Locale.US));
+		assertFieldValues(fieldValues, field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -92,7 +92,7 @@ public class DDLRecordLocalServiceImplTest {
 		Field field = toField(fieldValue);
 
 		assertFieldValues(
-			Arrays.asList(fieldValue), field.getValues(Locale.US));
+			Arrays.asList(fieldValue), field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -104,7 +104,7 @@ public class DDLRecordLocalServiceImplTest {
 
 		Field field = toField(fieldValues);
 
-		assertFieldValues(toList(fieldValues), field.getValues(Locale.US));
+		assertFieldValues(toList(fieldValues), field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -116,7 +116,7 @@ public class DDLRecordLocalServiceImplTest {
 
 		Field field = toField((Serializable)fieldValues);
 
-		assertFieldValues(fieldValues, field.getValues(Locale.US));
+		assertFieldValues(fieldValues, field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -128,7 +128,7 @@ public class DDLRecordLocalServiceImplTest {
 
 		Field field = toField((Serializable)fieldValues);
 
-		assertFieldValues(fieldValues, field.getValues(Locale.US));
+		assertFieldValues(fieldValues, field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -138,7 +138,7 @@ public class DDLRecordLocalServiceImplTest {
 		Field field = toField(fieldValue);
 
 		assertFieldValues(
-			Arrays.asList(fieldValue), field.getValues(Locale.US));
+			Arrays.asList(fieldValue), field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -150,7 +150,7 @@ public class DDLRecordLocalServiceImplTest {
 
 		Field field = toField(fieldValues);
 
-		assertFieldValues(toList(fieldValues), field.getValues(Locale.US));
+		assertFieldValues(toList(fieldValues), field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -162,7 +162,7 @@ public class DDLRecordLocalServiceImplTest {
 
 		Field field = toField((Serializable)fieldValues);
 
-		assertFieldValues(fieldValues, field.getValues(Locale.US));
+		assertFieldValues(fieldValues, field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -174,7 +174,7 @@ public class DDLRecordLocalServiceImplTest {
 
 		Field field = toField((Serializable)fieldValues);
 
-		assertFieldValues(fieldValues, field.getValues(Locale.US));
+		assertFieldValues(fieldValues, field.getValues(LocaleUtil.US));
 	}
 
 	protected void assertFieldValues(
@@ -195,45 +195,48 @@ public class DDLRecordLocalServiceImplTest {
 	protected void assertToFields(Collection<Serializable> fieldValues)
 		throws Exception {
 
-		Map<String, Serializable> fieldsMap = new HashMap<>();
-
 		String fieldName = StringUtil.randomString();
 
-		fieldsMap.put(fieldName, (Serializable)fieldValues);
+		Map<String, Serializable> fieldsMap =
+			HashMapBuilder.<String, Serializable>put(
+				fieldName, (Serializable)fieldValues
+			).build();
 
-		Fields fields = _recordLocalServiceImpl.toFields(
-			0, fieldsMap, Locale.US, Locale.US);
+		Fields fields = _ddlRecordLocalServiceImpl.toFields(
+			0, fieldsMap, LocaleUtil.US, LocaleUtil.US);
 
 		Field field = fields.get(fieldName);
 
-		assertFieldValues(fieldValues, field.getValues(Locale.US));
+		assertFieldValues(fieldValues, field.getValues(LocaleUtil.US));
 	}
 
 	protected void assertToFields(Serializable[] fieldValues) throws Exception {
-		Map<String, Serializable> fieldsMap = new HashMap<>();
-
 		String fieldName = StringUtil.randomString();
 
-		fieldsMap.put(fieldName, (Serializable)fieldValues);
+		Map<String, Serializable> fieldsMap =
+			HashMapBuilder.<String, Serializable>put(
+				fieldName, (Serializable)fieldValues
+			).build();
 
-		Fields fields = _recordLocalServiceImpl.toFields(
-			0, fieldsMap, Locale.US, Locale.US);
+		Fields fields = _ddlRecordLocalServiceImpl.toFields(
+			0, fieldsMap, LocaleUtil.US, LocaleUtil.US);
 
 		Field field = fields.get(fieldName);
 
 		assertFieldValues(
-			Arrays.asList(fieldValues), field.getValues(Locale.US));
+			Arrays.asList(fieldValues), field.getValues(LocaleUtil.US));
 	}
 
 	protected Field toField(Serializable fieldValue) throws Exception {
-		Map<String, Serializable> fieldsMap = new HashMap<>();
-
 		String fieldName = StringUtil.randomString();
 
-		fieldsMap.put(fieldName, fieldValue);
+		Map<String, Serializable> fieldsMap =
+			HashMapBuilder.<String, Serializable>put(
+				fieldName, fieldValue
+			).build();
 
-		Fields fields = _recordLocalServiceImpl.toFields(
-			0, fieldsMap, Locale.US, Locale.US);
+		Fields fields = _ddlRecordLocalServiceImpl.toFields(
+			0, fieldsMap, LocaleUtil.US, LocaleUtil.US);
 
 		return fields.get(fieldName);
 	}
@@ -268,7 +271,7 @@ public class DDLRecordLocalServiceImplTest {
 		return fieldValuesList;
 	}
 
-	private final DDLRecordLocalServiceImpl _recordLocalServiceImpl =
+	private final DDLRecordLocalServiceImpl _ddlRecordLocalServiceImpl =
 		new DDLRecordLocalServiceImpl();
 
 }

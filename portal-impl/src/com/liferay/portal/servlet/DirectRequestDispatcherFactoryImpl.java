@@ -30,6 +30,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 /**
@@ -62,17 +63,6 @@ public class DirectRequestDispatcherFactoryImpl
 		}
 
 		return getRequestDispatcher(servletContext, path);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public interface PACL {
-
-		public RequestDispatcher getRequestDispatcher(
-			ServletContext servletContext, RequestDispatcher requestDispatcher);
-
 	}
 
 	protected RequestDispatcher doGetRequestDispatcher(
@@ -114,17 +104,13 @@ public class DirectRequestDispatcherFactoryImpl
 
 		Servlet servlet = DirectServletRegistryUtil.getServlet(fullPath);
 
-		RequestDispatcher requestDispatcher = null;
-
 		if (servlet == null) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("No servlet found for " + fullPath);
 			}
 
-			requestDispatcher = servletContext.getRequestDispatcher(path);
-
 			return new DirectServletPathRegisterDispatcher(
-				path, requestDispatcher);
+				path, servletContext.getRequestDispatcher(path));
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -141,6 +127,26 @@ public class DirectRequestDispatcherFactoryImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		DirectRequestDispatcherFactoryImpl.class);
 
+	private static class DirectRequestDispatcherServletRequest
+		extends HttpServletRequestWrapper {
+
+		@Override
+		public ServletContext getServletContext() {
+			return _servletContext;
+		}
+
+		private DirectRequestDispatcherServletRequest(
+			ServletRequest servletRequest, ServletContext servletContext) {
+
+			super((HttpServletRequest)servletRequest);
+
+			_servletContext = servletContext;
+		}
+
+		private final ServletContext _servletContext;
+
+	}
+
 	/**
 	 * See LPS-79937. We need to protect against redispatch from the module
 	 * framework back to the portal, which means we have to unwrap the request.
@@ -149,35 +155,39 @@ public class DirectRequestDispatcherFactoryImpl
 		implements RequestDispatcher {
 
 		@Override
-		public void forward(ServletRequest request, ServletResponse response)
+		public void forward(
+				ServletRequest servletRequest, ServletResponse servletResponse)
 			throws IOException, ServletException {
 
-			Class<?> clazz = request.getClass();
+			Class<?> clazz = servletRequest.getClass();
 
 			if (_EQUINOX_REQUEST_CLASS_NAME.equals(clazz.getName())) {
 				HttpServletRequestWrapper wrapper =
-					(HttpServletRequestWrapper)request;
+					(HttpServletRequestWrapper)servletRequest;
 
-				request = wrapper.getRequest();
+				servletRequest = new DirectRequestDispatcherServletRequest(
+					wrapper.getRequest(), wrapper.getServletContext());
 			}
 
-			_requestDispatcher.forward(request, response);
+			_requestDispatcher.forward(servletRequest, servletResponse);
 		}
 
 		@Override
-		public void include(ServletRequest request, ServletResponse response)
+		public void include(
+				ServletRequest servletRequest, ServletResponse servletResponse)
 			throws IOException, ServletException {
 
-			Class<?> clazz = request.getClass();
+			Class<?> clazz = servletRequest.getClass();
 
 			if (_EQUINOX_REQUEST_CLASS_NAME.equals(clazz.getName())) {
 				HttpServletRequestWrapper wrapper =
-					(HttpServletRequestWrapper)request;
+					(HttpServletRequestWrapper)servletRequest;
 
-				request = wrapper.getRequest();
+				servletRequest = new DirectRequestDispatcherServletRequest(
+					wrapper.getRequest(), wrapper.getServletContext());
 			}
 
-			_requestDispatcher.include(request, response);
+			_requestDispatcher.include(servletRequest, servletResponse);
 		}
 
 		private IndirectRequestDispatcher(RequestDispatcher requestDispatcher) {

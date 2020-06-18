@@ -14,8 +14,6 @@
 
 package com.liferay.message.boards.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,11 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.message.boards.service.http.MBMessageServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.message.boards.service.http.MBMessageServiceSoap
  * @generated
  */
-@ProviderType
 public class MBMessageSoap implements Serializable {
+
 	public static MBMessageSoap toSoapModel(MBMessage model) {
 		MBMessageSoap soapModel = new MBMessageSoap();
 
@@ -48,7 +45,9 @@ public class MBMessageSoap implements Serializable {
 		soapModel.setThreadId(model.getThreadId());
 		soapModel.setRootMessageId(model.getRootMessageId());
 		soapModel.setParentMessageId(model.getParentMessageId());
+		soapModel.setTreePath(model.getTreePath());
 		soapModel.setSubject(model.getSubject());
+		soapModel.setUrlSubject(model.getUrlSubject());
 		soapModel.setBody(model.getBody());
 		soapModel.setFormat(model.getFormat());
 		soapModel.setAnonymous(model.isAnonymous());
@@ -92,7 +91,8 @@ public class MBMessageSoap implements Serializable {
 	}
 
 	public static MBMessageSoap[] toSoapModels(List<MBMessage> models) {
-		List<MBMessageSoap> soapModels = new ArrayList<MBMessageSoap>(models.size());
+		List<MBMessageSoap> soapModels = new ArrayList<MBMessageSoap>(
+			models.size());
 
 		for (MBMessage model : models) {
 			soapModels.add(toSoapModel(model));
@@ -224,12 +224,28 @@ public class MBMessageSoap implements Serializable {
 		_parentMessageId = parentMessageId;
 	}
 
+	public String getTreePath() {
+		return _treePath;
+	}
+
+	public void setTreePath(String treePath) {
+		_treePath = treePath;
+	}
+
 	public String getSubject() {
 		return _subject;
 	}
 
 	public void setSubject(String subject) {
 		_subject = subject;
+	}
+
+	public String getUrlSubject() {
+		return _urlSubject;
+	}
+
+	public void setUrlSubject(String urlSubject) {
+		_urlSubject = urlSubject;
 	}
 
 	public String getBody() {
@@ -346,7 +362,9 @@ public class MBMessageSoap implements Serializable {
 	private long _threadId;
 	private long _rootMessageId;
 	private long _parentMessageId;
+	private String _treePath;
 	private String _subject;
+	private String _urlSubject;
 	private String _body;
 	private String _format;
 	private boolean _anonymous;
@@ -358,4 +376,5 @@ public class MBMessageSoap implements Serializable {
 	private long _statusByUserId;
 	private String _statusByUserName;
 	private Date _statusDate;
+
 }

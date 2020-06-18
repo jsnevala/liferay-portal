@@ -148,13 +148,15 @@ String searchURL = HttpUtil.removeParameter(searchBaseURL.toString(), liferayPor
 <aui:script use="liferay-search-container">
 	var Util = Liferay.Util;
 
-	var searchContainer = Liferay.SearchContainer.get('<portlet:namespace />wikiPagesSearchContainer');
+	var searchContainer = Liferay.SearchContainer.get(
+		'<portlet:namespace />wikiPagesSearchContainer'
+	);
 
 	var searchContainerContentBox = searchContainer.get('contentBox');
 
 	searchContainerContentBox.delegate(
 		'click',
-		function(event) {
+		function (event) {
 			var selectedItem = event.currentTarget;
 
 			var linkItem = selectedItem.one('.wiki-page');
@@ -164,8 +166,8 @@ String searchURL = HttpUtil.removeParameter(searchBaseURL.toString(), liferayPor
 				{
 					data: {
 						title: linkItem.attr('data-title'),
-						value: linkItem.attr('data-value')
-					}
+						value: linkItem.attr('data-value'),
+					},
 				}
 			);
 

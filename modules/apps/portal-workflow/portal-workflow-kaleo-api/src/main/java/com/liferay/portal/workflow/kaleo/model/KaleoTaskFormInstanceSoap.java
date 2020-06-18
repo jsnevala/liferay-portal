@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,23 +26,29 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class KaleoTaskFormInstanceSoap implements Serializable {
+
 	public static KaleoTaskFormInstanceSoap toSoapModel(
 		KaleoTaskFormInstance model) {
+
 		KaleoTaskFormInstanceSoap soapModel = new KaleoTaskFormInstanceSoap();
 
-		soapModel.setKaleoTaskFormInstanceId(model.getKaleoTaskFormInstanceId());
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setKaleoTaskFormInstanceId(
+			model.getKaleoTaskFormInstanceId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setUserId(model.getUserId());
 		soapModel.setUserName(model.getUserName());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
-		soapModel.setKaleoDefinitionVersionId(model.getKaleoDefinitionVersionId());
+		soapModel.setKaleoDefinitionId(model.getKaleoDefinitionId());
+		soapModel.setKaleoDefinitionVersionId(
+			model.getKaleoDefinitionVersionId());
 		soapModel.setKaleoInstanceId(model.getKaleoInstanceId());
 		soapModel.setKaleoTaskId(model.getKaleoTaskId());
-		soapModel.setKaleoTaskInstanceTokenId(model.getKaleoTaskInstanceTokenId());
+		soapModel.setKaleoTaskInstanceTokenId(
+			model.getKaleoTaskInstanceTokenId());
 		soapModel.setKaleoTaskFormId(model.getKaleoTaskFormId());
 		soapModel.setFormValues(model.getFormValues());
 		soapModel.setFormValueEntryGroupId(model.getFormValueEntryGroupId());
@@ -57,7 +61,9 @@ public class KaleoTaskFormInstanceSoap implements Serializable {
 
 	public static KaleoTaskFormInstanceSoap[] toSoapModels(
 		KaleoTaskFormInstance[] models) {
-		KaleoTaskFormInstanceSoap[] soapModels = new KaleoTaskFormInstanceSoap[models.length];
+
+		KaleoTaskFormInstanceSoap[] soapModels =
+			new KaleoTaskFormInstanceSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -68,10 +74,12 @@ public class KaleoTaskFormInstanceSoap implements Serializable {
 
 	public static KaleoTaskFormInstanceSoap[][] toSoapModels(
 		KaleoTaskFormInstance[][] models) {
+
 		KaleoTaskFormInstanceSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new KaleoTaskFormInstanceSoap[models.length][models[0].length];
+			soapModels =
+				new KaleoTaskFormInstanceSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new KaleoTaskFormInstanceSoap[0][0];
@@ -86,13 +94,16 @@ public class KaleoTaskFormInstanceSoap implements Serializable {
 
 	public static KaleoTaskFormInstanceSoap[] toSoapModels(
 		List<KaleoTaskFormInstance> models) {
-		List<KaleoTaskFormInstanceSoap> soapModels = new ArrayList<KaleoTaskFormInstanceSoap>(models.size());
+
+		List<KaleoTaskFormInstanceSoap> soapModels =
+			new ArrayList<KaleoTaskFormInstanceSoap>(models.size());
 
 		for (KaleoTaskFormInstance model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new KaleoTaskFormInstanceSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new KaleoTaskFormInstanceSoap[soapModels.size()]);
 	}
 
 	public KaleoTaskFormInstanceSoap() {
@@ -104,6 +115,14 @@ public class KaleoTaskFormInstanceSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setKaleoTaskFormInstanceId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getKaleoTaskFormInstanceId() {
@@ -160,6 +179,14 @@ public class KaleoTaskFormInstanceSoap implements Serializable {
 
 	public void setModifiedDate(Date modifiedDate) {
 		_modifiedDate = modifiedDate;
+	}
+
+	public long getKaleoDefinitionId() {
+		return _kaleoDefinitionId;
+	}
+
+	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		_kaleoDefinitionId = kaleoDefinitionId;
 	}
 
 	public long getKaleoDefinitionVersionId() {
@@ -242,6 +269,7 @@ public class KaleoTaskFormInstanceSoap implements Serializable {
 		_metadata = metadata;
 	}
 
+	private long _mvccVersion;
 	private long _kaleoTaskFormInstanceId;
 	private long _groupId;
 	private long _companyId;
@@ -249,6 +277,7 @@ public class KaleoTaskFormInstanceSoap implements Serializable {
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
+	private long _kaleoDefinitionId;
 	private long _kaleoDefinitionVersionId;
 	private long _kaleoInstanceId;
 	private long _kaleoTaskId;
@@ -259,4 +288,5 @@ public class KaleoTaskFormInstanceSoap implements Serializable {
 	private long _formValueEntryId;
 	private String _formValueEntryUuid;
 	private String _metadata;
+
 }

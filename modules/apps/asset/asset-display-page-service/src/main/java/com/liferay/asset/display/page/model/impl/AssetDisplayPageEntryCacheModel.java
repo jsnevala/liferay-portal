@@ -14,14 +14,11 @@
 
 package com.liferay.asset.display.page.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.display.page.model.AssetDisplayPageEntry;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing AssetDisplayPageEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see AssetDisplayPageEntry
  * @generated
  */
-@ProviderType
-public class AssetDisplayPageEntryCacheModel implements CacheModel<AssetDisplayPageEntry>,
-	Externalizable {
+public class AssetDisplayPageEntryCacheModel
+	implements CacheModel<AssetDisplayPageEntry>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,13 @@ public class AssetDisplayPageEntryCacheModel implements CacheModel<AssetDisplayP
 			return false;
 		}
 
-		AssetDisplayPageEntryCacheModel assetDisplayPageEntryCacheModel = (AssetDisplayPageEntryCacheModel)obj;
+		AssetDisplayPageEntryCacheModel assetDisplayPageEntryCacheModel =
+			(AssetDisplayPageEntryCacheModel)obj;
 
-		if (assetDisplayPageEntryId == assetDisplayPageEntryCacheModel.assetDisplayPageEntryId) {
+		if ((assetDisplayPageEntryId ==
+				assetDisplayPageEntryCacheModel.assetDisplayPageEntryId) &&
+			(mvccVersion == assetDisplayPageEntryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +61,30 @@ public class AssetDisplayPageEntryCacheModel implements CacheModel<AssetDisplayP
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, assetDisplayPageEntryId);
+		int hashCode = HashUtil.hash(0, assetDisplayPageEntryId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(25);
+		StringBundler sb = new StringBundler(31);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", assetDisplayPageEntryId=");
 		sb.append(assetDisplayPageEntryId);
@@ -92,6 +108,8 @@ public class AssetDisplayPageEntryCacheModel implements CacheModel<AssetDisplayP
 		sb.append(layoutPageTemplateEntryId);
 		sb.append(", type=");
 		sb.append(type);
+		sb.append(", plid=");
+		sb.append(plid);
 		sb.append("}");
 
 		return sb.toString();
@@ -99,7 +117,11 @@ public class AssetDisplayPageEntryCacheModel implements CacheModel<AssetDisplayP
 
 	@Override
 	public AssetDisplayPageEntry toEntityModel() {
-		AssetDisplayPageEntryImpl assetDisplayPageEntryImpl = new AssetDisplayPageEntryImpl();
+		AssetDisplayPageEntryImpl assetDisplayPageEntryImpl =
+			new AssetDisplayPageEntryImpl();
+
+		assetDisplayPageEntryImpl.setMvccVersion(mvccVersion);
+		assetDisplayPageEntryImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			assetDisplayPageEntryImpl.setUuid("");
@@ -108,7 +130,8 @@ public class AssetDisplayPageEntryCacheModel implements CacheModel<AssetDisplayP
 			assetDisplayPageEntryImpl.setUuid(uuid);
 		}
 
-		assetDisplayPageEntryImpl.setAssetDisplayPageEntryId(assetDisplayPageEntryId);
+		assetDisplayPageEntryImpl.setAssetDisplayPageEntryId(
+			assetDisplayPageEntryId);
 		assetDisplayPageEntryImpl.setGroupId(groupId);
 		assetDisplayPageEntryImpl.setCompanyId(companyId);
 		assetDisplayPageEntryImpl.setUserId(userId);
@@ -136,8 +159,10 @@ public class AssetDisplayPageEntryCacheModel implements CacheModel<AssetDisplayP
 
 		assetDisplayPageEntryImpl.setClassNameId(classNameId);
 		assetDisplayPageEntryImpl.setClassPK(classPK);
-		assetDisplayPageEntryImpl.setLayoutPageTemplateEntryId(layoutPageTemplateEntryId);
+		assetDisplayPageEntryImpl.setLayoutPageTemplateEntryId(
+			layoutPageTemplateEntryId);
 		assetDisplayPageEntryImpl.setType(type);
+		assetDisplayPageEntryImpl.setPlid(plid);
 
 		assetDisplayPageEntryImpl.resetOriginalValues();
 
@@ -146,6 +171,9 @@ public class AssetDisplayPageEntryCacheModel implements CacheModel<AssetDisplayP
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		assetDisplayPageEntryId = objectInput.readLong();
@@ -166,11 +194,16 @@ public class AssetDisplayPageEntryCacheModel implements CacheModel<AssetDisplayP
 		layoutPageTemplateEntryId = objectInput.readLong();
 
 		type = objectInput.readInt();
+
+		plid = objectInput.readLong();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -203,8 +236,12 @@ public class AssetDisplayPageEntryCacheModel implements CacheModel<AssetDisplayP
 		objectOutput.writeLong(layoutPageTemplateEntryId);
 
 		objectOutput.writeInt(type);
+
+		objectOutput.writeLong(plid);
 	}
 
+	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long assetDisplayPageEntryId;
 	public long groupId;
@@ -217,4 +254,6 @@ public class AssetDisplayPageEntryCacheModel implements CacheModel<AssetDisplayP
 	public long classPK;
 	public long layoutPageTemplateEntryId;
 	public int type;
+	public long plid;
+
 }

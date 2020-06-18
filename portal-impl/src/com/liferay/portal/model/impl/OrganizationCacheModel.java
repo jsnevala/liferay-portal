@@ -14,14 +14,11 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.Organization;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing Organization in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see Organization
  * @generated
  */
-@ProviderType
-public class OrganizationCacheModel implements CacheModel<Organization>,
-	Externalizable, MVCCModel {
+public class OrganizationCacheModel
+	implements CacheModel<Organization>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,10 +46,12 @@ public class OrganizationCacheModel implements CacheModel<Organization>,
 			return false;
 		}
 
-		OrganizationCacheModel organizationCacheModel = (OrganizationCacheModel)obj;
+		OrganizationCacheModel organizationCacheModel =
+			(OrganizationCacheModel)obj;
 
 		if ((organizationId == organizationCacheModel.organizationId) &&
-				(mvccVersion == organizationCacheModel.mvccVersion)) {
+			(mvccVersion == organizationCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -79,10 +77,12 @@ public class OrganizationCacheModel implements CacheModel<Organization>,
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(39);
+		StringBundler sb = new StringBundler(41);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", externalReferenceCode=");
@@ -129,6 +129,7 @@ public class OrganizationCacheModel implements CacheModel<Organization>,
 		OrganizationImpl organizationImpl = new OrganizationImpl();
 
 		organizationImpl.setMvccVersion(mvccVersion);
+		organizationImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			organizationImpl.setUuid("");
@@ -214,6 +215,8 @@ public class OrganizationCacheModel implements CacheModel<Organization>,
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 		externalReferenceCode = objectInput.readUTF();
 
@@ -244,9 +247,10 @@ public class OrganizationCacheModel implements CacheModel<Organization>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		if (uuid == null) {
 			objectOutput.writeUTF("");
@@ -320,6 +324,7 @@ public class OrganizationCacheModel implements CacheModel<Organization>,
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public String externalReferenceCode;
 	public long organizationId;
@@ -338,4 +343,5 @@ public class OrganizationCacheModel implements CacheModel<Organization>,
 	public long statusId;
 	public String comments;
 	public long logoId;
+
 }

@@ -23,6 +23,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.List;
 import java.util.Optional;
@@ -65,13 +66,6 @@ public class AMImageHTMLTagFactoryImpl implements AMImageHTMLTagFactory {
 		return sb.toString();
 	}
 
-	@Reference(unbind = "-")
-	protected void setMediaQueryProvider(
-		MediaQueryProvider mediaQueryProvider) {
-
-		_mediaQueryProvider = mediaQueryProvider;
-	}
-
 	private Optional<String> _getMediaQueryString(MediaQuery mediaQuery) {
 		List<Condition> conditions = mediaQuery.getConditions();
 
@@ -95,7 +89,7 @@ public class AMImageHTMLTagFactoryImpl implements AMImageHTMLTagFactory {
 			conditionStrings[i] = sb.toString();
 		}
 
-		return Optional.of(String.join(" and ", conditionStrings));
+		return Optional.of(StringUtil.merge(conditionStrings, " and "));
 	}
 
 	private String _getSourceElement(MediaQuery mediaQuery) {
@@ -111,7 +105,6 @@ public class AMImageHTMLTagFactoryImpl implements AMImageHTMLTagFactory {
 				sb.append("\" srcset=\"");
 				sb.append(mediaQuery.getSrc());
 				sb.append("\" />");
-
 			});
 
 		return sb.toString();
@@ -132,6 +125,7 @@ public class AMImageHTMLTagFactoryImpl implements AMImageHTMLTagFactory {
 		);
 	}
 
+	@Reference
 	private MediaQueryProvider _mediaQueryProvider;
 
 }

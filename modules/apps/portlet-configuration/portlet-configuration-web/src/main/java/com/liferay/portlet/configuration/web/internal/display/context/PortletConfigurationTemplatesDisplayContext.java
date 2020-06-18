@@ -15,12 +15,8 @@
 package com.liferay.portlet.configuration.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.settings.ArchivedSettings;
@@ -31,6 +27,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portlet.configuration.web.internal.constants.PortletConfigurationWebKeys;
+import com.liferay.portlet.configuration.web.internal.servlet.taglib.util.ArchivedSettingsActionDropdownItemsProvider;
 import com.liferay.portlet.configuration.web.internal.util.comparator.ArchivedSettingsModifiedDateComparator;
 import com.liferay.portlet.configuration.web.internal.util.comparator.ArchivedSettingsNameComparator;
 
@@ -49,28 +47,27 @@ import javax.servlet.http.HttpServletRequest;
 public class PortletConfigurationTemplatesDisplayContext {
 
 	public PortletConfigurationTemplatesDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
+
+		_moduleName = (String)renderRequest.getAttribute(
+			PortletConfigurationWebKeys.MODULE_NAME);
 	}
 
-	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData(
-							"action", "deleteArchivedSettings");
-						dropdownItem.setIcon("trash");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
-			}
-		};
+	public List<DropdownItem> getActionDropdownItems(
+		ArchivedSettings archivedSettings) {
+
+		ArchivedSettingsActionDropdownItemsProvider
+			archivedSettingsActionDropdownItemsProvider =
+				new ArchivedSettingsActionDropdownItemsProvider(
+					archivedSettings, _renderRequest, _renderResponse);
+
+		return archivedSettingsActionDropdownItemsProvider.
+			getActionDropdownItems();
 	}
 
 	public SearchContainer getArchivedSettingsSearchContainer() {
@@ -78,8 +75,9 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _archivedSettingsSearch;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		SearchContainer<ArchivedSettings> archivedSettingsSearch =
 			new SearchContainer<>(
@@ -89,6 +87,8 @@ public class PortletConfigurationTemplatesDisplayContext {
 
 		archivedSettingsSearch.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
+
+		archivedSettingsSearch.setOrderByCol(getOrderByCol());
 
 		Portlet selPortlet = PortletLocalServiceUtil.getPortletById(
 			themeDisplay.getCompanyId(), getPortletResource());
@@ -106,15 +106,19 @@ public class PortletConfigurationTemplatesDisplayContext {
 		OrderByComparator orderByComparator = null;
 
 		if (Objects.equals(getOrderByCol(), "modified-date")) {
-			orderByComparator = new ArchivedSettingsNameComparator(orderByAsc);
-		}
-		else {
 			orderByComparator = new ArchivedSettingsModifiedDateComparator(
 				orderByAsc);
 		}
+		else {
+			orderByComparator = new ArchivedSettingsNameComparator(orderByAsc);
+		}
+
+		archivedSettingsSearch.setOrderByComparator(orderByComparator);
 
 		archivedSettingsList = ListUtil.sort(
 			archivedSettingsList, orderByComparator);
+
+		archivedSettingsSearch.setOrderByType(getOrderByType());
 
 		int archivedSettingsCount = archivedSettingsList.size();
 
@@ -136,31 +140,14 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(_request, "displayStyle", "list");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
 	}
 
-	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
-			}
-		};
+	public String getModuleName() {
+		return _moduleName;
 	}
 
 	public String getOrderByCol() {
@@ -168,7 +155,8 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol", "name");
+		_orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol", "name");
 
 		return _orderByCol;
 	}
@@ -178,7 +166,8 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
 	}
@@ -188,7 +177,8 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _portletResource;
 		}
 
-		_portletResource = ParamUtil.getString(_request, "portletResource");
+		_portletResource = ParamUtil.getString(
+			_httpServletRequest, "portletResource");
 
 		return _portletResource;
 	}
@@ -228,7 +218,7 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _redirect;
 		}
 
-		_redirect = ParamUtil.getString(_request, "redirect");
+		_redirect = ParamUtil.getString(_httpServletRequest, "redirect");
 
 		return _redirect;
 	}
@@ -239,95 +229,21 @@ public class PortletConfigurationTemplatesDisplayContext {
 		}
 
 		_returnToFullPageURL = ParamUtil.getString(
-			_request, "returnToFullPageURL");
+			_httpServletRequest, "returnToFullPageURL");
 
 		return _returnToFullPageURL;
 	}
 
-	public String getSortingURL() {
-		PortletURL sortingURL = getPortletURL();
-
-		sortingURL.setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL.toString();
-	}
-
-	public int getTotalItems() {
-		SearchContainer archivedSettingsSearch =
-			getArchivedSettingsSearchContainer();
-
-		return archivedSettingsSearch.getTotal();
-	}
-
-	public List<ViewTypeItem> getViewTypeItems() {
-		return new ViewTypeItemList(getPortletURL(), getDisplayStyle()) {
-			{
-				addCardViewTypeItem();
-				addListViewTypeItem();
-				addTableViewTypeItem();
-			}
-		};
-	}
-
-	public boolean isDisabledManagementBar() {
-		if (getTotalItems() <= 0) {
-			return true;
-		}
-
-		return false;
-	}
-
-	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(getPortletURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
-			}
-		};
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "name"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "modified-date"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "modified-date");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "modified-date"));
-					});
-			}
-		};
-	}
-
 	private SearchContainer _archivedSettingsSearch;
 	private String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
+	private final String _moduleName;
 	private String _orderByCol;
 	private String _orderByType;
 	private String _portletResource;
 	private String _redirect;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private String _returnToFullPageURL;
 
 }

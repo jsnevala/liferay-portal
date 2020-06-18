@@ -162,9 +162,7 @@ public abstract class SyntaxLogger {
 			getLineNumberItemText(
 				PoshiRunnerGetterUtil.getLineNumber(element)));
 
-		List<Element> childElements = element.elements();
-
-		if (!childElements.isEmpty() && !isExecuting(element)) {
+		if (isExecuteChildElementLogged(element)) {
 			sb.append(getBtnItemText("btn-collapse"));
 		}
 
@@ -297,6 +295,10 @@ public abstract class SyntaxLogger {
 				else if (childElementName.equals("return")) {
 					loggerElement.addChildLoggerElement(
 						getReturnLoggerElement(childElement));
+				}
+				else if (childElementName.equals("take-screenshot")) {
+					loggerElement.addChildLoggerElement(
+						getTakeScreenshotLoggerElement(childElement));
 				}
 				else if (childElementName.equals("var")) {
 					loggerElement.addChildLoggerElement(
@@ -434,6 +436,10 @@ public abstract class SyntaxLogger {
 		return getLineGroupLoggerElement("return", element);
 	}
 
+	protected LoggerElement getTakeScreenshotLoggerElement(Element element) {
+		return getLineGroupLoggerElement("take-screenshot", element);
+	}
+
 	protected LoggerElement getTestCaseCommandLoggerElement(
 			String namespacedClassCommandName)
 		throws Exception {
@@ -481,6 +487,20 @@ public abstract class SyntaxLogger {
 
 	protected abstract LoggerElement getWhileLoggerElement(Element element)
 		throws Exception;
+
+	protected boolean isExecuteChildElementLogged(Element element) {
+		List<Element> childElements = element.elements();
+
+		if ((!childElements.isEmpty() && !isExecutingFunction(element) &&
+			 !isExecutingGroovyScript(element) &&
+			 !isExecutingMethod(element)) ||
+			isExecutingMacro(element) || isExecutingTestCase(element)) {
+
+			return true;
+		}
+
+		return false;
+	}
 
 	protected boolean isExecuting(Element element) {
 		if (isExecutingFunction(element) || isExecutingGroovyScript(element) ||

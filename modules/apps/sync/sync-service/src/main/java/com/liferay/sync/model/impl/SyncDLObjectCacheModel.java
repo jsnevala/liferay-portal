@@ -14,13 +14,9 @@
 
 package com.liferay.sync.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-
 import com.liferay.sync.model.SyncDLObject;
 
 import java.io.Externalizable;
@@ -34,12 +30,11 @@ import java.util.Date;
  * The cache model class for representing SyncDLObject in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see SyncDLObject
  * @generated
  */
-@ProviderType
-public class SyncDLObjectCacheModel implements CacheModel<SyncDLObject>,
-	Externalizable {
+public class SyncDLObjectCacheModel
+	implements CacheModel<SyncDLObject>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,7 +45,8 @@ public class SyncDLObjectCacheModel implements CacheModel<SyncDLObject>,
 			return false;
 		}
 
-		SyncDLObjectCacheModel syncDLObjectCacheModel = (SyncDLObjectCacheModel)obj;
+		SyncDLObjectCacheModel syncDLObjectCacheModel =
+			(SyncDLObjectCacheModel)obj;
 
 		if (syncDLObjectId == syncDLObjectCacheModel.syncDLObjectId) {
 			return true;
@@ -233,15 +229,16 @@ public class SyncDLObjectCacheModel implements CacheModel<SyncDLObject>,
 			syncDLObjectImpl.setLastPermissionChangeDate(null);
 		}
 		else {
-			syncDLObjectImpl.setLastPermissionChangeDate(new Date(
-					lastPermissionChangeDate));
+			syncDLObjectImpl.setLastPermissionChangeDate(
+				new Date(lastPermissionChangeDate));
 		}
 
 		if (lockExpirationDate == Long.MIN_VALUE) {
 			syncDLObjectImpl.setLockExpirationDate(null);
 		}
 		else {
-			syncDLObjectImpl.setLockExpirationDate(new Date(lockExpirationDate));
+			syncDLObjectImpl.setLockExpirationDate(
+				new Date(lockExpirationDate));
 		}
 
 		syncDLObjectImpl.setLockUserId(lockUserId);
@@ -275,7 +272,9 @@ public class SyncDLObjectCacheModel implements CacheModel<SyncDLObject>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		syncDLObjectId = objectInput.readLong();
 
 		companyId = objectInput.readLong();
@@ -296,7 +295,7 @@ public class SyncDLObjectCacheModel implements CacheModel<SyncDLObject>,
 		mimeType = objectInput.readUTF();
 		description = objectInput.readUTF();
 		changeLog = objectInput.readUTF();
-		extraSettings = objectInput.readUTF();
+		extraSettings = (String)objectInput.readObject();
 		version = objectInput.readUTF();
 
 		versionId = objectInput.readLong();
@@ -317,8 +316,7 @@ public class SyncDLObjectCacheModel implements CacheModel<SyncDLObject>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(syncDLObjectId);
 
 		objectOutput.writeLong(companyId);
@@ -383,10 +381,10 @@ public class SyncDLObjectCacheModel implements CacheModel<SyncDLObject>,
 		}
 
 		if (extraSettings == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(extraSettings);
+			objectOutput.writeObject(extraSettings);
 		}
 
 		if (version == null) {
@@ -478,4 +476,5 @@ public class SyncDLObjectCacheModel implements CacheModel<SyncDLObject>,
 	public String type;
 	public long typePK;
 	public String typeUuid;
+
 }

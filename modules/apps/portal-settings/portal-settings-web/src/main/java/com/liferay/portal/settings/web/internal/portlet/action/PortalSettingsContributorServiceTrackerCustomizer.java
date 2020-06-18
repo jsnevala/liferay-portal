@@ -14,11 +14,11 @@
 
 package com.liferay.portal.settings.web.internal.portlet.action;
 
+import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.util.HashMapDictionary;
-import com.liferay.portal.settings.constants.PortalSettingsPortletKeys;
 import com.liferay.portal.settings.portlet.action.PortalSettingsFormContributor;
 
 import java.util.Dictionary;
@@ -46,14 +46,6 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 public class PortalSettingsContributorServiceTrackerCustomizer
 	implements ServiceTrackerCustomizer
 		<PortalSettingsFormContributor, PortalSettingsFormContributor> {
-
-	@Activate
-	public void activate(BundleContext bundleContext) {
-		_bundleContext = bundleContext;
-
-		_serviceTracker = ServiceTrackerFactory.open(
-			bundleContext, PortalSettingsFormContributor.class, this);
-	}
 
 	@Override
 	public PortalSettingsFormContributor addingService(
@@ -109,13 +101,6 @@ public class PortalSettingsContributorServiceTrackerCustomizer
 		return portalSettingsFormContributor;
 	}
 
-	@Deactivate
-	public void deactivate() {
-		_bundleContext = null;
-
-		_serviceTracker.close();
-	}
-
 	@Override
 	public void modifiedService(
 		ServiceReference<PortalSettingsFormContributor> reference,
@@ -134,13 +119,29 @@ public class PortalSettingsContributorServiceTrackerCustomizer
 		unregister(service);
 	}
 
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_bundleContext = bundleContext;
+
+		_serviceTracker = ServiceTrackerFactory.open(
+			bundleContext, PortalSettingsFormContributor.class, this);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_bundleContext = null;
+
+		_serviceTracker.close();
+	}
+
 	protected ServiceRegistration<MVCActionCommand> registerMVCActionCommand(
 		String mvcActionCommandName, MVCActionCommand mvcActionCommand) {
 
 		Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 		properties.put(
-			"javax.portlet.name", PortalSettingsPortletKeys.PORTAL_SETTINGS);
+			"javax.portlet.name",
+			ConfigurationAdminPortletKeys.INSTANCE_SETTINGS);
 		properties.put("mvc.command.name", mvcActionCommandName);
 
 		return _bundleContext.registerService(

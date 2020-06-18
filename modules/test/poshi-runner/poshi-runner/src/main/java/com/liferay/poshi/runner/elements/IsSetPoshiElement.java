@@ -14,6 +14,8 @@
 
 package com.liferay.poshi.runner.elements;
 
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -37,7 +39,8 @@ public class IsSetPoshiElement extends PoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		if (_isElementType(parentPoshiElement, poshiScript)) {
 			return new IsSetPoshiElement(parentPoshiElement, poshiScript);
@@ -47,7 +50,9 @@ public class IsSetPoshiElement extends PoshiElement {
 	}
 
 	@Override
-	public void parsePoshiScript(String poshiScript) {
+	public void parsePoshiScript(String poshiScript)
+		throws PoshiScriptParserException {
+
 		String issetContent = getParentheticalContent(poshiScript);
 
 		addAttribute("var", issetContent);
@@ -70,7 +75,8 @@ public class IsSetPoshiElement extends PoshiElement {
 	}
 
 	protected IsSetPoshiElement(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}

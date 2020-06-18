@@ -20,7 +20,7 @@ import com.liferay.portal.kernel.portlet.ControlPanelEntry;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
 import com.liferay.portal.workflow.WorkflowControlPanelEntry;
-import com.liferay.portal.workflow.web.internal.constants.WorkflowPortletKeys;
+import com.liferay.portal.workflow.constants.WorkflowPortletKeys;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -39,10 +39,11 @@ public class UserWorkflowControlPanelEntry extends WorkflowControlPanelEntry {
 			PermissionChecker permissionChecker, Group group, Portlet portlet)
 		throws Exception {
 
-		if (WorkflowInstanceManagerUtil.getWorkflowInstanceCount(
-				permissionChecker.getCompanyId(), permissionChecker.getUserId(),
-				null, null, null) > 0) {
+		int count = WorkflowInstanceManagerUtil.getWorkflowInstanceCount(
+			permissionChecker.getCompanyId(), permissionChecker.getUserId(),
+			null, null, null);
 
+		if (count > 0) {
 			return true;
 		}
 

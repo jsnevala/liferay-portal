@@ -14,11 +14,10 @@
 
 package com.liferay.portal.kernel.theme;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.admin.kernel.util.PortalMyAccountApplicationType;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.mobile.device.rules.kernel.MDRRuleGroupInstance;
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -50,7 +49,6 @@ import com.liferay.portal.kernel.service.LayoutFriendlyURLLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
@@ -101,7 +99,6 @@ import javax.servlet.http.HttpServletResponse;
  * @author Brian Wing Shun Chan
  */
 @JSON
-@ProviderType
 public class ThemeDisplay
 	implements Cloneable, Mergeable<ThemeDisplay>, Serializable {
 
@@ -147,8 +144,8 @@ public class ThemeDisplay
 			try {
 				_account = _company.getAccount();
 			}
-			catch (PortalException pe) {
-				ReflectionUtil.throwException(pe);
+			catch (PortalException portalException) {
+				ReflectionUtil.throwException(portalException);
 			}
 		}
 
@@ -178,8 +175,8 @@ public class ThemeDisplay
 			try {
 				portalURL = PortalUtil.getPortalURL(getLayout(), this);
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 
 			host = portalURL;
@@ -302,8 +299,8 @@ public class ThemeDisplay
 			try {
 				_contact = _user.getContact();
 			}
-			catch (PortalException pe) {
-				ReflectionUtil.throwException(pe);
+			catch (PortalException portalException) {
+				ReflectionUtil.throwException(portalException);
 			}
 		}
 
@@ -316,8 +313,8 @@ public class ThemeDisplay
 				_controlPanelGroup = GroupLocalServiceUtil.getGroup(
 					_company.getCompanyId(), GroupConstants.CONTROL_PANEL);
 			}
-			catch (PortalException pe) {
-				ReflectionUtil.throwException(pe);
+			catch (PortalException portalException) {
+				ReflectionUtil.throwException(portalException);
 			}
 		}
 
@@ -385,14 +382,6 @@ public class ThemeDisplay
 
 	public String getDoAsUserLanguageId() {
 		return _doAsUserLanguageId;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public String getFacebookCanvasPageURL() {
-		return _facebookCanvasPageURL;
 	}
 
 	/**
@@ -467,7 +456,10 @@ public class ThemeDisplay
 			Group group = layout.getGroup();
 
 			return VirtualLayoutConstants.CANONICAL_URL_SEPARATOR.concat(
-				group.getFriendlyURL()).concat(_getFriendlyURL(layout));
+				group.getFriendlyURL()
+			).concat(
+				_getFriendlyURL(layout)
+			);
 		}
 
 		return _getFriendlyURL(layout);
@@ -793,7 +785,7 @@ public class ThemeDisplay
 	 */
 	@JSON(include = false)
 	public HttpServletRequest getRequest() {
-		return _request;
+		return _httpServletRequest;
 	}
 
 	/**
@@ -803,7 +795,7 @@ public class ThemeDisplay
 	 */
 	@JSON(include = false)
 	public HttpServletResponse getResponse() {
-		return _response;
+		return _httpServletResponse;
 	}
 
 	/**
@@ -1013,14 +1005,6 @@ public class ThemeDisplay
 		return _unfilteredLayouts;
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public String getURLAddContent() {
-		return StringPool.BLANK;
-	}
-
 	public String getURLControlPanel() {
 		return _urlControlPanel;
 	}
@@ -1031,18 +1015,6 @@ public class ThemeDisplay
 
 	public String getURLHome() {
 		return _urlHome;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public String getURLLayoutTemplates() {
-		if (Validator.isNull(_urlLayoutTemplates)) {
-			return getURLPageSettings() + "#layout";
-		}
-
-		return _urlLayoutTemplates;
 	}
 
 	@JSON(include = false)
@@ -1057,23 +1029,6 @@ public class ThemeDisplay
 		}
 
 		return _urlMyAccount;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@JSON(include = false)
-	public PortletURL getURLPageSettings() {
-		if (_urlPageSettings == null) {
-			String portletId = PortletProviderUtil.getPortletId(
-				Layout.class.getName(), PortletProvider.Action.EDIT);
-
-			_urlPageSettings = PortalUtil.getControlPanelPortletURL(
-				getRequest(), portletId, PortletRequest.RENDER_PHASE);
-		}
-
-		return _urlPageSettings;
 	}
 
 	public String getURLPortal() {
@@ -1133,16 +1088,8 @@ public class ThemeDisplay
 		return _ajax;
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public boolean isFacebook() {
-		return false;
-	}
-
-	public boolean isFreeformLayout() {
-		return _freeformLayout;
+	public boolean isAsync() {
+		return _async;
 	}
 
 	public boolean isHubAction() {
@@ -1228,22 +1175,6 @@ public class ThemeDisplay
 
 	public boolean isSecure() {
 		return _secure;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public boolean isShowAddContentIcon() {
-		return false;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public boolean isShowAddContentIconPermission() {
-		return false;
 	}
 
 	public boolean isShowControlPanelIcon() {
@@ -1353,6 +1284,10 @@ public class ThemeDisplay
 		_ajax = ajax;
 	}
 
+	public void setAsync(boolean async) {
+		_async = async;
+	}
+
 	public void setCDNBaseURL(String cdnBase) {
 		_cdnBaseURL = cdnBase;
 	}
@@ -1400,18 +1335,6 @@ public class ThemeDisplay
 
 	public void setDoAsUserLanguageId(String doAsUserLanguageId) {
 		_doAsUserLanguageId = doAsUserLanguageId;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setFacebookCanvasPageURL(String facebookCanvasPageURL) {
-		_facebookCanvasPageURL = facebookCanvasPageURL;
-	}
-
-	public void setFreeformLayout(boolean freeformLayout) {
-		_freeformLayout = freeformLayout;
 	}
 
 	public void setHubAction(boolean hubAction) {
@@ -1534,8 +1457,8 @@ public class ThemeDisplay
 			try {
 				portalURL = PortalUtil.getPortalURL(getLayout(), this);
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 
 			dynamicResourcesHost = portalURL;
@@ -1684,8 +1607,8 @@ public class ThemeDisplay
 			try {
 				_refererGroup = GroupLocalServiceUtil.getGroup(_refererGroupId);
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 	}
@@ -1694,12 +1617,12 @@ public class ThemeDisplay
 		_refererPlid = refererPlid;
 	}
 
-	public void setRequest(HttpServletRequest request) {
-		_request = request;
+	public void setRequest(HttpServletRequest httpServletRequest) {
+		_httpServletRequest = httpServletRequest;
 	}
 
-	public void setResponse(HttpServletResponse response) {
-		_response = response;
+	public void setResponse(HttpServletResponse httpServletResponse) {
+		_httpServletResponse = httpServletResponse;
 	}
 
 	public void setScopeGroupId(long scopeGroupId) {
@@ -1709,8 +1632,8 @@ public class ThemeDisplay
 			try {
 				_scopeGroup = GroupLocalServiceUtil.getGroup(_scopeGroupId);
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 	}
@@ -1729,21 +1652,6 @@ public class ThemeDisplay
 
 	public void setSessionId(String sessionId) {
 		_sessionId = sessionId;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setShowAddContentIcon(boolean showAddContentIcon) {
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setShowAddContentIconPermission(
-		boolean showAddContentIconPermission) {
 	}
 
 	public void setShowControlPanelIcon(boolean showControlPanelIcon) {
@@ -1811,8 +1719,8 @@ public class ThemeDisplay
 			try {
 				_siteGroup = GroupLocalServiceUtil.getGroup(_siteGroupId);
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 	}
@@ -1867,13 +1775,6 @@ public class ThemeDisplay
 		_unfilteredLayouts = unfilteredLayouts;
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setURLAddContent(String urlAddContent) {
-	}
-
 	public void setURLControlPanel(String urlControlPanel) {
 		_urlControlPanel = urlControlPanel;
 	}
@@ -1888,22 +1789,6 @@ public class ThemeDisplay
 
 	public void setURLLayoutTemplates(String urlLayoutTemplates) {
 		_urlLayoutTemplates = urlLayoutTemplates;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setURLMyAccount(PortletURL urlMyAccount) {
-		_urlMyAccount = urlMyAccount;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setURLPageSettings(PortletURL urlPageSettings) {
-		_urlPageSettings = urlPageSettings;
 	}
 
 	public void setURLPortal(String urlPortal) {
@@ -1922,14 +1807,6 @@ public class ThemeDisplay
 		_urlSignOut = urlSignOut;
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setURLUpdateManager(PortletURL urlUpdateManager) {
-		_urlUpdateManager = urlUpdateManager;
-	}
-
 	public void setUser(User user) {
 		_user = user;
 	}
@@ -1943,8 +1820,8 @@ public class ThemeDisplay
 		try {
 			return (ThemeDisplay)clone();
 		}
-		catch (CloneNotSupportedException cnse) {
-			throw new RuntimeException(cnse);
+		catch (CloneNotSupportedException cloneNotSupportedException) {
+			throw new RuntimeException(cloneNotSupportedException);
 		}
 	}
 
@@ -2015,6 +1892,7 @@ public class ThemeDisplay
 	private Account _account;
 	private boolean _addSessionIdToURL;
 	private boolean _ajax;
+	private boolean _async;
 	private String _cdnBaseURL;
 	private String _cdnDynamicResourcesHost = StringPool.BLANK;
 	private String _cdnHost = StringPool.BLANK;
@@ -2032,14 +1910,8 @@ public class ThemeDisplay
 	private long _doAsGroupId;
 	private String _doAsUserId = StringPool.BLANK;
 	private String _doAsUserLanguageId = StringPool.BLANK;
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	private String _facebookCanvasPageURL;
-
-	private boolean _freeformLayout;
+	private transient HttpServletRequest _httpServletRequest;
+	private transient HttpServletResponse _httpServletResponse;
 	private boolean _hubAction;
 	private boolean _hubPartialAction;
 	private boolean _hubResource;
@@ -2095,8 +1967,6 @@ public class ThemeDisplay
 	private Group _refererGroup;
 	private long _refererGroupId;
 	private long _refererPlid;
-	private transient HttpServletRequest _request;
-	private transient HttpServletResponse _response;
 	private Group _scopeGroup;
 	private long _scopeGroupId;
 	private boolean _secure;
@@ -2136,7 +2006,6 @@ public class ThemeDisplay
 	private String _urlHome = StringPool.BLANK;
 	private String _urlLayoutTemplates = StringPool.BLANK;
 	private transient PortletURL _urlMyAccount;
-	private transient PortletURL _urlPageSettings;
 	private String _urlPortal = StringPool.BLANK;
 	private transient PortletURL _urlPublishToLive;
 	private String _urlSignIn = StringPool.BLANK;

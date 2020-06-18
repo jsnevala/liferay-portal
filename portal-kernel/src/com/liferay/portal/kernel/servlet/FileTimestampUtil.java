@@ -46,7 +46,18 @@ public class FileTimestampUtil {
 			return 0;
 		}
 
-		Long timestamp = _timestamps.get(path);
+		String timestampsCacheKey = FileTimestampUtil.class.getName();
+
+		Map<String, Long> timestamps =
+			(Map<String, Long>)servletContext.getAttribute(timestampsCacheKey);
+
+		if (timestamps == null) {
+			timestamps = new ConcurrentHashMap<>();
+
+			servletContext.setAttribute(timestampsCacheKey, timestamps);
+		}
+
+		Long timestamp = timestamps.get(path);
 
 		if (timestamp != null) {
 			return timestamp;
@@ -62,7 +73,7 @@ public class FileTimestampUtil {
 			if (uriFile.exists()) {
 				timestamp = uriFile.lastModified();
 
-				_timestamps.put(path, timestamp);
+				timestamps.put(path, timestamp);
 
 				return timestamp;
 			}
@@ -78,23 +89,22 @@ public class FileTimestampUtil {
 				timestamp = URLUtil.getLastModifiedTime(url);
 			}
 		}
-		catch (IOException ioe) {
-			_log.error(ioe, ioe);
+		catch (IOException ioException) {
+			_log.error(ioException, ioException);
 		}
 
-		_timestamps.put(path, timestamp);
+		timestamps.put(path, timestamp);
 
 		return timestamp;
 	}
 
-	public static void reset() {
-		_timestamps.clear();
+	public static void reset(ServletContext servletContext) {
+		String timestampsCacheKey = FileTimestampUtil.class.getName();
+
+		servletContext.removeAttribute(timestampsCacheKey);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		FileTimestampUtil.class);
-
-	private static final Map<String, Long> _timestamps =
-		new ConcurrentHashMap<>();
 
 }

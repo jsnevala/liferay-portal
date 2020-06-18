@@ -14,11 +14,7 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
-import com.liferay.petra.string.CharPool;
-import com.liferay.portal.kernel.util.StringUtil;
-
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
-import com.puppycrawl.tools.checkstyle.api.FileContents;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 /**
@@ -33,35 +29,33 @@ public class TestClassCheck extends BaseCheck {
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		FileContents fileContents = getFileContents();
+		String absolutePath = getAbsolutePath();
 
-		String fileName = StringUtil.replace(
-			fileContents.getFileName(), CharPool.BACK_SLASH, CharPool.SLASH);
-
-		if (!fileName.contains("/test/") &&
-			!fileName.contains("/testIntegration/")) {
+		if (!absolutePath.contains("/test/") &&
+			!absolutePath.contains("/testIntegration/")) {
 
 			return;
 		}
 
-		DetailAST parentAST = detailAST.getParent();
+		DetailAST parentDetailAST = detailAST.getParent();
 
-		if (parentAST != null) {
+		if (parentDetailAST != null) {
 			return;
 		}
 
-		DetailAST nameAST = detailAST.findFirstToken(TokenTypes.IDENT);
+		DetailAST nameDetailAST = detailAST.findFirstToken(TokenTypes.IDENT);
 
-		String name = nameAST.getText();
+		String name = nameDetailAST.getText();
 
 		if (!name.matches(".*Test(Case)?")) {
 			return;
 		}
 
-		DetailAST modifiersAST = detailAST.findFirstToken(TokenTypes.MODIFIERS);
+		DetailAST modifiersDetailAST = detailAST.findFirstToken(
+			TokenTypes.MODIFIERS);
 
 		if (name.endsWith("TestCase")) {
-			if (!modifiersAST.branchContains(TokenTypes.ABSTRACT)) {
+			if (!modifiersDetailAST.branchContains(TokenTypes.ABSTRACT)) {
 				log(
 					detailAST, _MSG_INCORRECT_ABSTRACT_TEST_CASE_CLASS,
 					name.substring(0, name.length() - 4));
@@ -70,7 +64,7 @@ public class TestClassCheck extends BaseCheck {
 				log(detailAST, _MSG_INVALID_BASE_CLASS_NAME, name);
 			}
 		}
-		else if (modifiersAST.branchContains(TokenTypes.ABSTRACT)) {
+		else if (modifiersDetailAST.branchContains(TokenTypes.ABSTRACT)) {
 			log(detailAST, _MSG_INCORRECT_ABSTRACT_TEST_CLASS, name);
 		}
 	}

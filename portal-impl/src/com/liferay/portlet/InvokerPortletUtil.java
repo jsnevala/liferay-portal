@@ -37,11 +37,15 @@ public class InvokerPortletUtil {
 
 		String sesResponseId = encodeResponseKey(plid, portletId, languageId);
 
-		getResponses(session).remove(sesResponseId);
+		Map<String, InvokerPortletResponse> responses = getResponses(session);
+
+		responses.remove(sesResponseId);
 	}
 
 	public static void clearResponses(PortletSession session) {
-		getResponses(session).clear();
+		Map<String, InvokerPortletResponse> responses = getResponses(session);
+
+		responses.clear();
 	}
 
 	public static String encodeResponseKey(
@@ -77,8 +81,10 @@ public class InvokerPortletUtil {
 	public static Map<String, InvokerPortletResponse> getResponses(
 		PortletSession portletSession) {
 
-		return getResponses(
-			((PortletSessionImpl)portletSession).getHttpSession());
+		PortletSessionImpl portletSessionImpl =
+			(PortletSessionImpl)portletSession;
+
+		return getResponses(portletSessionImpl.getHttpSession());
 	}
 
 }

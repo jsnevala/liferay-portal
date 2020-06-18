@@ -14,7 +14,8 @@
 
 package com.liferay.poshi.runner.elements;
 
-import java.util.ArrayList;
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -38,7 +39,8 @@ public class AndPoshiElement extends PoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		if (_isElementType(parentPoshiElement, poshiScript)) {
 			return new AndPoshiElement(parentPoshiElement, poshiScript);
@@ -48,9 +50,19 @@ public class AndPoshiElement extends PoshiElement {
 	}
 
 	@Override
-	public void parsePoshiScript(String poshiScript) {
-		for (String poshiScriptSnippet : getPoshiScriptSnippets(poshiScript)) {
-			add(PoshiNodeFactory.newPoshiNode(this, poshiScriptSnippet));
+	public void parsePoshiScript(String poshiScript)
+		throws PoshiScriptParserException {
+
+		for (String nestedCondition : getNestedConditions(poshiScript, "&&")) {
+			nestedCondition = nestedCondition.trim();
+
+			if (nestedCondition.endsWith(")") &&
+				nestedCondition.startsWith("(")) {
+
+				nestedCondition = getParentheticalContent(nestedCondition);
+			}
+
+			add(PoshiNodeFactory.newPoshiNode(this, nestedCondition));
 		}
 	}
 
@@ -81,7 +93,8 @@ public class AndPoshiElement extends PoshiElement {
 	}
 
 	protected AndPoshiElement(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}
@@ -96,22 +109,16 @@ public class AndPoshiElement extends PoshiElement {
 		return _conditionPattern;
 	}
 
-	protected List<String> getPoshiScriptSnippets(String poshiScript) {
-		List<String> poshiScriptSnippets = new ArrayList<>();
-
-		for (String condition : poshiScript.split("&&")) {
-			condition = getParentheticalContent(condition);
-
-			poshiScriptSnippets.add(condition);
-		}
-
-		return poshiScriptSnippets;
-	}
-
 	private boolean _isElementType(
 		PoshiElement parentPoshiElement, String poshiScript) {
 
-		return isConditionElementType(parentPoshiElement, poshiScript);
+		if (!isConditionElementType(parentPoshiElement, poshiScript)) {
+			return false;
+		}
+
+		List<String> nestedConditions = getNestedConditions(poshiScript, "&&");
+
+		return !nestedConditions.isEmpty();
 	}
 
 	private static final String _ELEMENT_NAME = "and";

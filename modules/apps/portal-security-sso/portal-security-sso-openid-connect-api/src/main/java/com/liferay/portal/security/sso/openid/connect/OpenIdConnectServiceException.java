@@ -14,14 +14,11 @@
 
 package com.liferay.portal.security.sso.openid.connect;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Thuong Dinh
  */
-@ProviderType
 public class OpenIdConnectServiceException extends PortalException {
 
 	public OpenIdConnectServiceException(String msg) {

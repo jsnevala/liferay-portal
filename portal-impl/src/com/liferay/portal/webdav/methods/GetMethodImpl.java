@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.webdav.methods.Method;
 
 import java.io.InputStream;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -52,8 +51,8 @@ public class GetMethodImpl implements Method {
 			try {
 				is = resource.getContentAsStream();
 			}
-			catch (Exception e) {
-				_log.error(e.getMessage());
+			catch (Exception exception) {
+				_log.error(exception.getMessage());
 			}
 
 			if (is != null) {
@@ -69,18 +68,14 @@ public class GetMethodImpl implements Method {
 				is = flashMagicBytesUtilResult.getInputStream();
 
 				try {
-					HttpServletRequest request =
-						webDAVRequest.getHttpServletRequest();
-					HttpServletResponse response =
-						webDAVRequest.getHttpServletResponse();
-
 					ServletResponseUtil.sendFileWithRangeHeader(
-						request, response, fileName, is, resource.getSize(),
-						resource.getContentType());
+						webDAVRequest.getHttpServletRequest(),
+						webDAVRequest.getHttpServletResponse(), fileName, is,
+						resource.getSize(), resource.getContentType());
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(e, e);
+						_log.warn(exception, exception);
 					}
 				}
 
@@ -89,8 +84,8 @@ public class GetMethodImpl implements Method {
 
 			return HttpServletResponse.SC_NOT_FOUND;
 		}
-		catch (Exception e) {
-			throw new WebDAVException(e);
+		catch (Exception exception) {
+			throw new WebDAVException(exception);
 		}
 	}
 

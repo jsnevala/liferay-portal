@@ -134,10 +134,9 @@ public class CapabilityLocalRepository
 			userId, fileEntryId, dlVersionNumberIncrease, changeLog,
 			serviceContext);
 
-		FileEntry fileEntry = localRepository.getFileEntry(fileEntryId);
-
 		_repositoryEventTrigger.trigger(
-			RepositoryEventType.Update.class, FileEntry.class, fileEntry);
+			RepositoryEventType.Update.class, FileEntry.class,
+			localRepository.getFileEntry(fileEntryId));
 	}
 
 	@Override
@@ -151,10 +150,9 @@ public class CapabilityLocalRepository
 		localRepository.checkInFileEntry(
 			userId, fileEntryId, lockUuid, serviceContext);
 
-		FileEntry fileEntry = localRepository.getFileEntry(fileEntryId);
-
 		_repositoryEventTrigger.trigger(
-			RepositoryEventType.Update.class, FileEntry.class, fileEntry);
+			RepositoryEventType.Update.class, FileEntry.class,
+			localRepository.getFileEntry(fileEntryId));
 	}
 
 	@Override
@@ -189,10 +187,9 @@ public class CapabilityLocalRepository
 	public void deleteFileEntry(long fileEntryId) throws PortalException {
 		LocalRepository localRepository = getRepository();
 
-		FileEntry fileEntry = localRepository.getFileEntry(fileEntryId);
-
 		_repositoryEventTrigger.trigger(
-			RepositoryEventType.Delete.class, FileEntry.class, fileEntry);
+			RepositoryEventType.Delete.class, FileEntry.class,
+			localRepository.getFileEntry(fileEntryId));
 
 		localRepository.deleteFileEntry(fileEntryId);
 	}
@@ -201,11 +198,9 @@ public class CapabilityLocalRepository
 	public void deleteFileShortcut(long fileShortcutId) throws PortalException {
 		LocalRepository localRepository = getRepository();
 
-		FileShortcut fileShortcut = localRepository.getFileShortcut(
-			fileShortcutId);
-
 		_repositoryEventTrigger.trigger(
-			RepositoryEventType.Delete.class, FileShortcut.class, fileShortcut);
+			RepositoryEventType.Delete.class, FileShortcut.class,
+			localRepository.getFileShortcut(fileShortcutId));
 
 		localRepository.deleteFileShortcut(fileShortcutId);
 	}
@@ -228,13 +223,23 @@ public class CapabilityLocalRepository
 	}
 
 	@Override
+	public void deleteFileVersion(long fileVersionId) throws PortalException {
+		LocalRepository localRepository = getRepository();
+
+		_repositoryEventTrigger.trigger(
+			RepositoryEventType.Delete.class, FileVersion.class,
+			localRepository.getFileVersion(fileVersionId));
+
+		localRepository.deleteFileVersion(fileVersionId);
+	}
+
+	@Override
 	public void deleteFolder(long folderId) throws PortalException {
 		LocalRepository localRepository = getRepository();
 
-		Folder folder = localRepository.getFolder(folderId);
-
 		_repositoryEventTrigger.trigger(
-			RepositoryEventType.Delete.class, Folder.class, folder);
+			RepositoryEventType.Delete.class, Folder.class,
+			localRepository.getFolder(folderId));
 
 		localRepository.deleteFolder(folderId);
 	}
@@ -463,26 +468,9 @@ public class CapabilityLocalRepository
 		localRepository.revertFileEntry(
 			userId, fileEntryId, version, serviceContext);
 
-		FileEntry fileEntry = getFileEntry(fileEntryId);
-
 		_repositoryEventTrigger.trigger(
-			RepositoryEventType.Update.class, FileEntry.class, fileEntry);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void updateAsset(
-			long userId, FileEntry fileEntry, FileVersion fileVersion,
-			long[] assetCategoryIds, String[] assetTagNames,
-			long[] assetLinkEntryIds)
-		throws PortalException {
-
-		getRepository().updateAsset(
-			userId, fileEntry, fileVersion, assetCategoryIds, assetTagNames,
-			assetLinkEntryIds);
+			RepositoryEventType.Update.class, FileEntry.class,
+			getFileEntry(fileEntryId));
 	}
 
 	@Override

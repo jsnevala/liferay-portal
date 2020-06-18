@@ -29,7 +29,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -41,18 +41,14 @@ public class UserGroupsAdminExportImportPortletPreferencesProcessor
 
 	@Override
 	public List<Capability> getExportCapabilities() {
-		return ListUtil.toList(
-			new Capability[] {
-				_userGroupsAdminPortletDisplayTemplateExportCapability
-			});
+		return ListUtil.fromArray(
+			_userGroupsAdminPortletDisplayTemplateExportCapability);
 	}
 
 	@Override
 	public List<Capability> getImportCapabilities() {
-		return ListUtil.toList(
-			new Capability[] {
-				_userGroupsAdminPortletDisplayTemplateImportCapability
-			});
+		return ListUtil.fromArray(
+			_userGroupsAdminPortletDisplayTemplateImportCapability);
 	}
 
 	@Override

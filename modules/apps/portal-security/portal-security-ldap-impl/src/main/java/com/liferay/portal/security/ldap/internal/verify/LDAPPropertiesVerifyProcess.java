@@ -320,21 +320,22 @@ public class LDAPPropertiesVerifyProcess extends VerifyProcess {
 				}
 
 				_companyLocalService.removePreferences(
-					companyId, keys.toArray(new String[keys.size()]));
+					companyId, keys.toArray(new String[0]));
 
-				UnicodeProperties properties = new UnicodeProperties();
+				UnicodeProperties unicodeProperties = new UnicodeProperties();
 
-				properties.put("ldap.server.ids", StringPool.BLANK);
+				unicodeProperties.put("ldap.server.ids", StringPool.BLANK);
 
 				if (_log.isInfoEnabled()) {
 					_log.info(
 						StringBundler.concat(
 							"Removing LDAP server IDs ",
-							ListUtil.toList(ldapServerIds), " for company ",
+							ListUtil.fromArray(ldapServerIds), " for company ",
 							companyId));
 				}
 
-				_companyLocalService.updatePreferences(companyId, properties);
+				_companyLocalService.updatePreferences(
+					companyId, unicodeProperties);
 			}
 		}
 	}
@@ -375,8 +376,7 @@ public class LDAPPropertiesVerifyProcess extends VerifyProcess {
 			LDAPConstants.GROUP_DEFAULT_OBJECT_CLASSES,
 			_prefsProps.getStringArray(
 				companyId,
-				LegacyLDAPPropsKeys.LDAP_GROUP_DEFAULT_OBJECT_CLASSES +
-					postfix,
+				LegacyLDAPPropsKeys.LDAP_GROUP_DEFAULT_OBJECT_CLASSES + postfix,
 				StringPool.COMMA));
 		dictionary.put(
 			LDAPConstants.GROUP_MAPPINGS,
@@ -427,8 +427,7 @@ public class LDAPPropertiesVerifyProcess extends VerifyProcess {
 			LDAPConstants.USER_DEFAULT_OBJECT_CLASSES,
 			_prefsProps.getStringArray(
 				companyId,
-				LegacyLDAPPropsKeys.LDAP_USER_DEFAULT_OBJECT_CLASSES +
-					postfix,
+				LegacyLDAPPropsKeys.LDAP_USER_DEFAULT_OBJECT_CLASSES + postfix,
 				StringPool.COMMA));
 		dictionary.put(
 			LDAPConstants.USER_IGNORE_ATTRIBUTES,
@@ -483,8 +482,7 @@ public class LDAPPropertiesVerifyProcess extends VerifyProcess {
 
 		dictionary.put(
 			LDAPConstants.CONNECTION_PROPERTIES,
-			connectionPropertiesList.toArray(
-				new String[connectionPropertiesList.size()]));
+			connectionPropertiesList.toArray(new String[0]));
 		dictionary.put(
 			LDAPConstants.ERROR_PASSWORD_AGE_KEYWORDS,
 			new String[] {

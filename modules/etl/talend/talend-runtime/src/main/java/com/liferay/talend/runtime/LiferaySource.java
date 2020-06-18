@@ -14,71 +14,48 @@
 
 package com.liferay.talend.runtime;
 
-import com.liferay.talend.runtime.reader.LiferayInputReader;
+import com.liferay.talend.runtime.reader.LiferayReader;
 import com.liferay.talend.tliferayinput.TLiferayInputProperties;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.talend.components.api.component.runtime.BoundedReader;
-import org.talend.components.api.component.runtime.BoundedSource;
+import org.talend.components.api.component.runtime.Reader;
+import org.talend.components.api.component.runtime.Source;
 import org.talend.components.api.container.RuntimeContainer;
 
 /**
  * @author Zoltán Takács
  */
-public class LiferaySource
-	extends LiferaySourceOrSink implements BoundedSource {
+public class LiferaySource extends LiferaySourceOrSink implements Source {
 
 	@Override
-	public BoundedReader<?> createReader(RuntimeContainer runtimeContainer) {
-		if (_log.isDebugEnabled()) {
-			_log.debug("Creating reader for fetching data from the datastore");
+	public Reader<?> createReader(RuntimeContainer runtimeContainer) {
+		if (_logger.isDebugEnabled()) {
+			_logger.debug(
+				"Creating reader for fetching data from the datastore");
 		}
 
-		if (liferayConnectionPropertiesProvider instanceof
-				TLiferayInputProperties) {
+		Object componentData = runtimeContainer.getComponentData(
+			runtimeContainer.getCurrentComponentId(),
+			"COMPONENT_RUNTIME_PROPERTIES");
 
-			TLiferayInputProperties tLiferayInputProperties =
-				(TLiferayInputProperties)liferayConnectionPropertiesProvider;
-
-			return new LiferayInputReader(
-				runtimeContainer, this, tLiferayInputProperties);
+		if (!(componentData instanceof TLiferayInputProperties)) {
+			throw new IllegalArgumentException(
+				String.format(
+					"Unable to locate %s in given runtime container",
+					TLiferayInputProperties.class));
 		}
 
-		_log.error("Unexpected property instance");
-
-		return new LiferayInputReader(
-			runtimeContainer, this,
-			(TLiferayInputProperties)liferayConnectionPropertiesProvider);
+		return new LiferayReader(this, (TLiferayInputProperties)componentData);
 	}
 
 	@Override
-	public long getEstimatedSizeBytes(RuntimeContainer runtimeContainer) {
-		return 0;
+	protected String getLiferayConnectionPropertiesPath() {
+		return "resource." + super.getLiferayConnectionPropertiesPath();
 	}
 
-	@Override
-	public boolean producesSortedKeys(RuntimeContainer runtimeContainer) {
-		return false;
-	}
-
-	@Override
-	public List<? extends BoundedSource> splitIntoBundles(
-			long desiredBundleSizeBytes, RuntimeContainer runtimeContainer)
-		throws Exception {
-
-		List<BoundedSource> boundedSources = new ArrayList<>();
-
-		boundedSources.add(this);
-
-		return boundedSources;
-	}
-
-	private static final Logger _log = LoggerFactory.getLogger(
+	private static final Logger _logger = LoggerFactory.getLogger(
 		LiferaySource.class);
 
 	private static final long serialVersionUID = 7966201253956643887L;

@@ -17,12 +17,10 @@ package com.liferay.source.formatter.checkstyle.checks;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.source.formatter.checks.util.BNDSourceUtil;
 import com.liferay.source.formatter.checks.util.SourceUtil;
-import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
 import com.liferay.source.formatter.parser.JavaClass;
 import com.liferay.source.formatter.parser.JavaClassParser;
 import com.liferay.source.formatter.parser.JavaConstructor;
@@ -34,7 +32,6 @@ import com.liferay.source.formatter.parser.JavaVariable;
 import com.liferay.source.formatter.util.FileUtil;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
-import com.puppycrawl.tools.checkstyle.api.FileContents;
 import com.puppycrawl.tools.checkstyle.api.FullIdent;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 import com.puppycrawl.tools.checkstyle.utils.AnnotationUtil;
@@ -68,19 +65,11 @@ public class DeprecatedUsageCheck extends BaseCheck {
 		return new int[] {TokenTypes.CLASS_DEF};
 	}
 
-	public void setAllowedFullyQualifiedClassNames(
-		String allowedFullyQualifiedClassNames) {
-
-		_allowedFullyQualifiedClassNames = ArrayUtil.append(
-			_allowedFullyQualifiedClassNames,
-			StringUtil.split(allowedFullyQualifiedClassNames));
-	}
-
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		DetailAST parentAST = detailAST.getParent();
+		DetailAST parentDetailAST = detailAST.getParent();
 
-		if (parentAST != null) {
+		if (parentDetailAST != null) {
 			return;
 		}
 
@@ -88,18 +77,13 @@ public class DeprecatedUsageCheck extends BaseCheck {
 			return;
 		}
 
-		FileContents fileContents = getFileContents();
-
-		String fileName = StringUtil.replace(
-			fileContents.getFileName(), CharPool.BACK_SLASH, CharPool.SLASH);
-
-		String absolutePath = SourceUtil.getAbsolutePath(fileName);
+		String absolutePath = getAbsolutePath();
 
 		int x = absolutePath.lastIndexOf("/");
 
 		String directoryPath = absolutePath.substring(0, x + 1);
 
-		List<String> importNames = DetailASTUtil.getImportNames(detailAST);
+		List<String> importNames = getImportNames(detailAST);
 		String packageName = _getPackageName(detailAST);
 
 		_checkDeprecatedConstructorsUsage(
@@ -109,9 +93,9 @@ public class DeprecatedUsageCheck extends BaseCheck {
 		_checkDeprecatedTypesUsage(
 			detailAST, packageName, importNames, directoryPath);
 
-		DetailAST nameAST = detailAST.findFirstToken(TokenTypes.IDENT);
+		DetailAST nameDetailAST = detailAST.findFirstToken(TokenTypes.IDENT);
 
-		String className = nameAST.getText();
+		String className = nameDetailAST.getText();
 
 		_checkDeprecatedMethodsUsage(
 			detailAST, className, packageName, importNames, directoryPath);
@@ -175,31 +159,36 @@ public class DeprecatedUsageCheck extends BaseCheck {
 		DetailAST detailAST, String packageName, List<String> importNames,
 		String directoryPath) {
 
-		List<DetailAST> literalNewASTList = DetailASTUtil.getAllChildTokens(
+		List<String> allowedFullyQualifiedClassNames = getAttributeValues(
+			_ALLOWED_FULLY_QUALIFIED_CLASS_NAMES_KEY);
+
+		List<DetailAST> literalNewDetailASTList = getAllChildTokens(
 			detailAST, true, TokenTypes.LITERAL_NEW);
 
-		for (DetailAST literalNewAST : literalNewASTList) {
-			if (_hasDeprecatedParent(literalNewAST) ||
-				_hasSuppressDeprecationWarningsAnnotation(literalNewAST)) {
+		for (DetailAST literalNewDetailAST : literalNewDetailASTList) {
+			if (_hasDeprecatedParent(literalNewDetailAST) ||
+				_hasSuppressDeprecationWarningsAnnotation(
+					literalNewDetailAST)) {
 
 				continue;
 			}
 
-			DetailAST lparenAST = literalNewAST.findFirstToken(
+			DetailAST lparenDetailAST = literalNewDetailAST.findFirstToken(
 				TokenTypes.LPAREN);
 
-			if (lparenAST == null) {
+			if (lparenDetailAST == null) {
 				continue;
 			}
 
-			String constructorName = _getConstructorName(literalNewAST);
+			String constructorName = _getConstructorName(literalNewDetailAST);
 
-			DetailAST firstChildAST = literalNewAST.getFirstChild();
+			DetailAST firstChildDetailAST = literalNewDetailAST.getFirstChild();
 
 			String fullyQualifiedClassName = null;
 
-			if (firstChildAST.getType() == TokenTypes.DOT) {
-				FullIdent fullIdent = FullIdent.createFullIdent(firstChildAST);
+			if (firstChildDetailAST.getType() == TokenTypes.DOT) {
+				FullIdent fullIdent = FullIdent.createFullIdent(
+					firstChildDetailAST);
 
 				fullyQualifiedClassName = fullIdent.getText();
 			}
@@ -210,8 +199,7 @@ public class DeprecatedUsageCheck extends BaseCheck {
 
 			if ((fullyQualifiedClassName == null) ||
 				!fullyQualifiedClassName.startsWith("com.liferay.") ||
-				ArrayUtil.contains(
-					_allowedFullyQualifiedClassNames,
+				allowedFullyQualifiedClassNames.contains(
 					fullyQualifiedClassName)) {
 
 				continue;
@@ -226,14 +214,14 @@ public class DeprecatedUsageCheck extends BaseCheck {
 
 			if (classInfo.isDeprecatedClass()) {
 				log(
-					literalNewAST, _MSG_DEPRECATED_TYPE_CALL,
+					literalNewDetailAST, _MSG_DEPRECATED_TYPE_CALL,
 					fullyQualifiedClassName);
 
 				continue;
 			}
 
 			List<String> parameterTypeNames = _getParameterTypeNames(
-				literalNewAST);
+				literalNewDetailAST);
 
 			if (classInfo.isInheritsThirdParty() &&
 				parameterTypeNames.contains(_TYPE_UNKNOWN)) {
@@ -249,7 +237,7 @@ public class DeprecatedUsageCheck extends BaseCheck {
 					classInfo.getJavaConstructors(false))) {
 
 				log(
-					literalNewAST, _MSG_DEPRECATED_CONSTRUCTOR_CALL,
+					literalNewDetailAST, _MSG_DEPRECATED_CONSTRUCTOR_CALL,
 					constructorName);
 			}
 		}
@@ -259,26 +247,29 @@ public class DeprecatedUsageCheck extends BaseCheck {
 		DetailAST detailAST, String packageName, List<String> importNames,
 		String directoryPath) {
 
-		List<DetailAST> dotASTList = DetailASTUtil.getAllChildTokens(
+		List<String> allowedFullyQualifiedClassNames = getAttributeValues(
+			_ALLOWED_FULLY_QUALIFIED_CLASS_NAMES_KEY);
+
+		List<DetailAST> dotDetailASTList = getAllChildTokens(
 			detailAST, true, TokenTypes.DOT);
 
-		for (DetailAST dotAST : dotASTList) {
-			if (_hasDeprecatedParent(dotAST) ||
-				_hasSuppressDeprecationWarningsAnnotation(dotAST)) {
+		for (DetailAST dotDetailAST : dotDetailASTList) {
+			if (_hasDeprecatedParent(dotDetailAST) ||
+				_hasSuppressDeprecationWarningsAnnotation(dotDetailAST)) {
 
 				continue;
 			}
 
-			DetailAST parentAST = dotAST.getParent();
+			DetailAST parentDetailAST = dotDetailAST.getParent();
 
-			if ((parentAST.getType() == TokenTypes.DOT) ||
-				(parentAST.getType() == TokenTypes.LITERAL_NEW) ||
-				(parentAST.getType() == TokenTypes.METHOD_CALL)) {
+			if ((parentDetailAST.getType() == TokenTypes.DOT) ||
+				(parentDetailAST.getType() == TokenTypes.LITERAL_NEW) ||
+				(parentDetailAST.getType() == TokenTypes.METHOD_CALL)) {
 
 				continue;
 			}
 
-			FullIdent fullIdent = FullIdent.createFullIdent(dotAST);
+			FullIdent fullIdent = FullIdent.createFullIdent(dotDetailAST);
 
 			Matcher matcher = _fieldNamePattern.matcher(fullIdent.getText());
 
@@ -298,8 +289,7 @@ public class DeprecatedUsageCheck extends BaseCheck {
 
 			if ((fullyQualifiedClassName == null) ||
 				!fullyQualifiedClassName.startsWith("com.liferay.") ||
-				ArrayUtil.contains(
-					_allowedFullyQualifiedClassNames,
+				allowedFullyQualifiedClassNames.contains(
 					fullyQualifiedClassName)) {
 
 				continue;
@@ -321,10 +311,12 @@ public class DeprecatedUsageCheck extends BaseCheck {
 			}
 
 			if (classInfo.isDeprecatedClass()) {
-				log(dotAST, _MSG_DEPRECATED_TYPE_CALL, fullyQualifiedClassName);
+				log(
+					dotDetailAST, _MSG_DEPRECATED_TYPE_CALL,
+					fullyQualifiedClassName);
 			}
 			else {
-				log(dotAST, _MSG_DEPRECATED_FIELD_CALL, fieldName);
+				log(dotDetailAST, _MSG_DEPRECATED_FIELD_CALL, fieldName);
 			}
 		}
 	}
@@ -333,23 +325,26 @@ public class DeprecatedUsageCheck extends BaseCheck {
 		DetailAST detailAST, String className, String packageName,
 		List<String> importNames, String directoryPath) {
 
-		List<DetailAST> methodCallASTList = DetailASTUtil.getAllChildTokens(
+		List<String> allowedFullyQualifiedClassNames = getAttributeValues(
+			_ALLOWED_FULLY_QUALIFIED_CLASS_NAMES_KEY);
+
+		List<DetailAST> methodCallDetailASTList = getAllChildTokens(
 			detailAST, true, TokenTypes.METHOD_CALL);
 
-		for (DetailAST methodCallAST : methodCallASTList) {
-			if (_hasDeprecatedParent(methodCallAST) ||
-				_hasSuppressDeprecationWarningsAnnotation(methodCallAST)) {
+		for (DetailAST methodCallDetailAST : methodCallDetailASTList) {
+			if (_hasDeprecatedParent(methodCallDetailAST) ||
+				_hasSuppressDeprecationWarningsAnnotation(
+					methodCallDetailAST)) {
 
 				continue;
 			}
 
 			String fullyQualifiedClassName = _getFullyQualifiedClassName(
-				methodCallAST, className, packageName, importNames);
+				methodCallDetailAST, className, packageName, importNames);
 
 			if ((fullyQualifiedClassName == null) ||
 				!fullyQualifiedClassName.startsWith("com.liferay.") ||
-				ArrayUtil.contains(
-					_allowedFullyQualifiedClassNames,
+				allowedFullyQualifiedClassNames.contains(
 					fullyQualifiedClassName)) {
 
 				continue;
@@ -362,18 +357,18 @@ public class DeprecatedUsageCheck extends BaseCheck {
 				continue;
 			}
 
-			String methodName = DetailASTUtil.getMethodName(methodCallAST);
+			String methodName = getMethodName(methodCallDetailAST);
 
 			if (classInfo.isDeprecatedClass()) {
 				log(
-					methodCallAST, _MSG_DEPRECATED_TYPE_CALL,
+					methodCallDetailAST, _MSG_DEPRECATED_TYPE_CALL,
 					fullyQualifiedClassName);
 
 				continue;
 			}
 
 			List<String> parameterTypeNames = _getParameterTypeNames(
-				methodCallAST);
+				methodCallDetailAST);
 
 			if (classInfo.isInheritsThirdParty() &&
 				parameterTypeNames.contains(_TYPE_UNKNOWN)) {
@@ -388,7 +383,9 @@ public class DeprecatedUsageCheck extends BaseCheck {
 					methodName, parameterTypeNames,
 					classInfo.getJavaMethods(false))) {
 
-				log(methodCallAST, _MSG_DEPRECATED_METHOD_CALL, methodName);
+				log(
+					methodCallDetailAST, _MSG_DEPRECATED_METHOD_CALL,
+					methodName);
 			}
 		}
 	}
@@ -397,7 +394,7 @@ public class DeprecatedUsageCheck extends BaseCheck {
 		DetailAST detailAST, String packageName, List<String> importNames,
 		String directoryPath) {
 
-		List<DetailAST> detailASTList = DetailASTUtil.getAllChildTokens(
+		List<DetailAST> detailASTList = getAllChildTokens(
 			detailAST, true, TokenTypes.EXTENDS_CLAUSE,
 			TokenTypes.IMPLEMENTS_CLAUSE, TokenTypes.TYPE,
 			TokenTypes.TYPE_ARGUMENT);
@@ -407,21 +404,22 @@ public class DeprecatedUsageCheck extends BaseCheck {
 				curDetailAST, packageName, importNames, directoryPath);
 		}
 
-		detailASTList = DetailASTUtil.getAllChildTokens(
+		detailASTList = getAllChildTokens(
 			detailAST, true, TokenTypes.LITERAL_CLASS, TokenTypes.LITERAL_THIS);
 
 		for (DetailAST curDetailAST : detailASTList) {
-			DetailAST parentAST = curDetailAST.getParent();
+			DetailAST parentDetailAST = curDetailAST.getParent();
 
-			if (parentAST.getType() != TokenTypes.DOT) {
+			if (parentDetailAST.getType() != TokenTypes.DOT) {
 				continue;
 			}
 
-			DetailAST previousSiblingAST = curDetailAST.getPreviousSibling();
+			DetailAST previousSiblingDetailAST =
+				curDetailAST.getPreviousSibling();
 
-			if (previousSiblingAST != null) {
+			if (previousSiblingDetailAST != null) {
 				_checkDeprecatedTypeUsage(
-					parentAST, packageName, importNames, directoryPath);
+					parentDetailAST, packageName, importNames, directoryPath);
 			}
 		}
 	}
@@ -436,33 +434,36 @@ public class DeprecatedUsageCheck extends BaseCheck {
 			return;
 		}
 
-		DetailAST firstChildAST = detailAST.getFirstChild();
+		DetailAST firstChildDetailAST = detailAST.getFirstChild();
 
-		if (firstChildAST == null) {
+		if (firstChildDetailAST == null) {
 			return;
 		}
 
 		String className = null;
 		String fullyQualifiedClassName = null;
 
-		if (firstChildAST.getType() == TokenTypes.IDENT) {
-			className = firstChildAST.getText();
+		if (firstChildDetailAST.getType() == TokenTypes.IDENT) {
+			className = firstChildDetailAST.getText();
 
 			fullyQualifiedClassName = _getFullyQualifiedClassName(
 				className, packageName, importNames);
 		}
-		else if (firstChildAST.getType() == TokenTypes.DOT) {
-			FullIdent fullIdent = FullIdent.createFullIdent(firstChildAST);
+		else if (firstChildDetailAST.getType() == TokenTypes.DOT) {
+			FullIdent fullIdent = FullIdent.createFullIdent(
+				firstChildDetailAST);
 
 			className = fullIdent.getText();
 
 			fullyQualifiedClassName = className;
 		}
 
+		List<String> allowedFullyQualifiedClassNames = getAttributeValues(
+			_ALLOWED_FULLY_QUALIFIED_CLASS_NAMES_KEY);
+
 		if ((fullyQualifiedClassName == null) ||
 			!fullyQualifiedClassName.startsWith("com.liferay.") ||
-			ArrayUtil.contains(
-				_allowedFullyQualifiedClassNames, fullyQualifiedClassName)) {
+			allowedFullyQualifiedClassNames.contains(fullyQualifiedClassName)) {
 
 			return;
 		}
@@ -612,31 +613,17 @@ public class DeprecatedUsageCheck extends BaseCheck {
 				}
 			}
 
-			for (String extendedClassName : javaClass.getExtendedClassNames()) {
-				String fullyQualifiedName = null;
-
-				if (extendedClassName.matches("([a-z]\\w*\\.){2,}[A-Z]\\w*")) {
-					fullyQualifiedName = extendedClassName;
-				}
-				else {
-					for (String importName : javaClass.getImports()) {
-						if (importName.endsWith("." + extendedClassName)) {
-							fullyQualifiedName = importName;
-
-							break;
-						}
-					}
-				}
+			for (String fullyQualifiedName :
+					javaClass.getExtendedClassNames(true)) {
 
 				ClassInfo extendedClassInfo = null;
 
-				if (fullyQualifiedName != null) {
+				if (!fullyQualifiedName.startsWith(
+						javaClass.getPackageName())) {
+
 					extendedClassInfo = _getClassInfo(fullyQualifiedName);
 				}
 				else {
-					fullyQualifiedName =
-						javaClass.getPackageName() + "." + extendedClassName;
-
 					String absolutePath = SourceUtil.getAbsolutePath(file);
 
 					int x = absolutePath.lastIndexOf("/");
@@ -652,7 +639,7 @@ public class DeprecatedUsageCheck extends BaseCheck {
 					classInfo, extendedClassInfo, deprecatedClass);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return classInfo;
@@ -708,23 +695,25 @@ public class DeprecatedUsageCheck extends BaseCheck {
 		return classInfo;
 	}
 
-	private String _getConstructorName(DetailAST literalNewAST) {
-		DetailAST identAST = literalNewAST.findFirstToken(TokenTypes.IDENT);
+	private String _getConstructorName(DetailAST literalNewDetailAST) {
+		DetailAST identDetailAST = literalNewDetailAST.findFirstToken(
+			TokenTypes.IDENT);
 
-		if (identAST != null) {
-			return identAST.getText();
+		if (identDetailAST != null) {
+			return identDetailAST.getText();
 		}
 
-		DetailAST dotAST = literalNewAST.findFirstToken(TokenTypes.DOT);
+		DetailAST dotDetailAST = literalNewDetailAST.findFirstToken(
+			TokenTypes.DOT);
 
-		if (dotAST == null) {
+		if (dotDetailAST == null) {
 			return null;
 		}
 
-		identAST = dotAST.findFirstToken(TokenTypes.IDENT);
+		identDetailAST = dotDetailAST.findFirstToken(TokenTypes.IDENT);
 
-		if (identAST != null) {
-			return identAST.getText();
+		if (identDetailAST != null) {
+			return identDetailAST.getText();
 		}
 
 		return null;
@@ -770,7 +759,7 @@ public class DeprecatedUsageCheck extends BaseCheck {
 				return file;
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return null;
@@ -803,31 +792,32 @@ public class DeprecatedUsageCheck extends BaseCheck {
 	}
 
 	private String _getFullyQualifiedClassName(
-		DetailAST methodCallAST, String className, String packageName,
+		DetailAST methodCallDetailAST, String className, String packageName,
 		List<String> importNames) {
 
-		DetailAST firstChildAST = methodCallAST.getFirstChild();
+		DetailAST firstChildDetailAST = methodCallDetailAST.getFirstChild();
 
-		if (firstChildAST.getType() == TokenTypes.IDENT) {
+		if (firstChildDetailAST.getType() == TokenTypes.IDENT) {
 			return packageName + "." + className;
 		}
 
-		firstChildAST = firstChildAST.getFirstChild();
+		firstChildDetailAST = firstChildDetailAST.getFirstChild();
 
-		if (firstChildAST.getType() == TokenTypes.DOT) {
-			FullIdent fullIdent = FullIdent.createFullIdent(firstChildAST);
+		if (firstChildDetailAST.getType() == TokenTypes.DOT) {
+			FullIdent fullIdent = FullIdent.createFullIdent(
+				firstChildDetailAST);
 
 			return fullIdent.getText();
 		}
 
-		if (firstChildAST.getType() != TokenTypes.IDENT) {
+		if (firstChildDetailAST.getType() != TokenTypes.IDENT) {
 			return null;
 		}
 
-		String s = firstChildAST.getText();
+		String s = firstChildDetailAST.getText();
 
 		if (s.matches("_?[a-z].*")) {
-			s = DetailASTUtil.getVariableTypeName(methodCallAST, s, false);
+			s = getVariableTypeName(methodCallDetailAST, s, false);
 
 			if (Validator.isNull(s)) {
 				return null;
@@ -899,22 +889,23 @@ public class DeprecatedUsageCheck extends BaseCheck {
 	}
 
 	private String _getPackageName(DetailAST detailAST) {
-		DetailAST siblingAST = detailAST.getPreviousSibling();
+		DetailAST siblingDetailAST = detailAST.getPreviousSibling();
 
 		while (true) {
-			if (siblingAST == null) {
+			if (siblingDetailAST == null) {
 				return null;
 			}
 
-			if (siblingAST.getType() == TokenTypes.PACKAGE_DEF) {
-				DetailAST dotAST = siblingAST.findFirstToken(TokenTypes.DOT);
+			if (siblingDetailAST.getType() == TokenTypes.PACKAGE_DEF) {
+				DetailAST dotDetailAST = siblingDetailAST.findFirstToken(
+					TokenTypes.DOT);
 
-				FullIdent fullIdent = FullIdent.createFullIdent(dotAST);
+				FullIdent fullIdent = FullIdent.createFullIdent(dotDetailAST);
 
 				return fullIdent.getText();
 			}
 
-			siblingAST = siblingAST.getPreviousSibling();
+			siblingDetailAST = siblingDetailAST.getPreviousSibling();
 		}
 	}
 
@@ -938,18 +929,18 @@ public class DeprecatedUsageCheck extends BaseCheck {
 	private List<String> _getParameterTypeNames(DetailAST detailAST) {
 		List<String> parameterTypeNames = new ArrayList<>();
 
-		DetailAST elistAST = detailAST.findFirstToken(TokenTypes.ELIST);
+		DetailAST elistDetailAST = detailAST.findFirstToken(TokenTypes.ELIST);
 
-		List<DetailAST> exprASTList = DetailASTUtil.getAllChildTokens(
-			elistAST, false, TokenTypes.EXPR);
+		List<DetailAST> exprDetailASTList = getAllChildTokens(
+			elistDetailAST, false, TokenTypes.EXPR);
 
-		for (DetailAST exprAST : exprASTList) {
-			DetailAST firstChildAST = exprAST.getFirstChild();
+		for (DetailAST exprDetailAST : exprDetailASTList) {
+			DetailAST firstChildDetailAST = exprDetailAST.getFirstChild();
 
-			if (firstChildAST.getType() == TokenTypes.IDENT) {
-				String parameterName = firstChildAST.getText();
+			if (firstChildDetailAST.getType() == TokenTypes.IDENT) {
+				String parameterName = firstChildDetailAST.getText();
 
-				String parameterTypeName = DetailASTUtil.getVariableTypeName(
+				String parameterTypeName = getVariableTypeName(
 					detailAST, parameterName, false);
 
 				if (Validator.isNotNull(parameterTypeName)) {
@@ -959,7 +950,9 @@ public class DeprecatedUsageCheck extends BaseCheck {
 					parameterTypeNames.add(_TYPE_UNKNOWN);
 				}
 			}
-			else if (firstChildAST.getType() == TokenTypes.STRING_LITERAL) {
+			else if (firstChildDetailAST.getType() ==
+						TokenTypes.STRING_LITERAL) {
+
 				parameterTypeNames.add("String");
 			}
 			else {
@@ -975,12 +968,7 @@ public class DeprecatedUsageCheck extends BaseCheck {
 			return _rootDirName;
 		}
 
-		FileContents fileContents = getFileContents();
-
-		String fileName = StringUtil.replace(
-			fileContents.getFileName(), CharPool.BACK_SLASH, CharPool.SLASH);
-
-		String absolutePath = SourceUtil.getAbsolutePath(fileName);
+		String absolutePath = getAbsolutePath();
 
 		while (true) {
 			int x = absolutePath.lastIndexOf("/");
@@ -1004,46 +992,50 @@ public class DeprecatedUsageCheck extends BaseCheck {
 	}
 
 	private boolean _hasDeprecatedParent(DetailAST detailAST) {
-		DetailAST parentAST = detailAST.getParent();
+		DetailAST parentDetailAST = detailAST.getParent();
 
 		while (true) {
-			if (parentAST == null) {
+			if (parentDetailAST == null) {
 				return false;
 			}
 
-			if (((parentAST.getType() == TokenTypes.CTOR_DEF) ||
-				 (parentAST.getType() == TokenTypes.METHOD_DEF) ||
-				 (parentAST.getType() == TokenTypes.VARIABLE_DEF)) &&
-				AnnotationUtil.containsAnnotation(parentAST, "Deprecated")) {
+			if (((parentDetailAST.getType() == TokenTypes.CTOR_DEF) ||
+				 (parentDetailAST.getType() == TokenTypes.METHOD_DEF) ||
+				 (parentDetailAST.getType() == TokenTypes.VARIABLE_DEF)) &&
+				AnnotationUtil.containsAnnotation(
+					parentDetailAST, "Deprecated")) {
 
 				return true;
 			}
 
-			parentAST = parentAST.getParent();
+			parentDetailAST = parentDetailAST.getParent();
 		}
 	}
 
 	private boolean _hasSuppressDeprecationWarningsAnnotation(
 		DetailAST detailAST) {
 
-		DetailAST parentAST = detailAST.getParent();
+		DetailAST parentDetailAST = detailAST.getParent();
 
 		while (true) {
-			if (parentAST == null) {
+			if (parentDetailAST == null) {
 				return false;
 			}
 
-			if (parentAST.findFirstToken(TokenTypes.MODIFIERS) != null) {
-				DetailAST annotationAST = AnnotationUtil.getAnnotation(
-					parentAST, "SuppressWarnings");
+			if (parentDetailAST.findFirstToken(TokenTypes.MODIFIERS) != null) {
+				DetailAST annotationDetailAST = AnnotationUtil.getAnnotation(
+					parentDetailAST, "SuppressWarnings");
 
-				if (annotationAST != null) {
-					List<DetailAST> literalStringASTList =
-						DetailASTUtil.getAllChildTokens(
-							annotationAST, true, TokenTypes.STRING_LITERAL);
+				if (annotationDetailAST != null) {
+					List<DetailAST> literalStringDetailASTList =
+						getAllChildTokens(
+							annotationDetailAST, true,
+							TokenTypes.STRING_LITERAL);
 
-					for (DetailAST literalStringAST : literalStringASTList) {
-						String s = literalStringAST.getText();
+					for (DetailAST literalStringDetailAST :
+							literalStringDetailASTList) {
+
+						String s = literalStringDetailAST.getText();
 
 						if (s.equals("\"deprecation\"")) {
 							return true;
@@ -1052,9 +1044,12 @@ public class DeprecatedUsageCheck extends BaseCheck {
 				}
 			}
 
-			parentAST = parentAST.getParent();
+			parentDetailAST = parentDetailAST.getParent();
 		}
 	}
+
+	private static final String _ALLOWED_FULLY_QUALIFIED_CLASS_NAMES_KEY =
+		"allowedFullyQualifiedClassNames";
 
 	private static final FileSystem _FILE_SYSTEM = FileSystems.getDefault();
 
@@ -1095,7 +1090,6 @@ public class DeprecatedUsageCheck extends BaseCheck {
 	private static final Pattern _fieldNamePattern = Pattern.compile(
 		"((.*\\.)?([A-Z]\\w+))\\.(\\w+)");
 
-	private String[] _allowedFullyQualifiedClassNames = new String[0];
 	private Map<String, String> _bundleSymbolicNamesMap;
 	private final Map<String, ClassInfo> _classInfoMap = new HashMap<>();
 	private String _rootDirName;

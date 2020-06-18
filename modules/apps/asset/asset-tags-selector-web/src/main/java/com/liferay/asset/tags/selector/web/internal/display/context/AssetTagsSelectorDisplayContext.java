@@ -17,11 +17,7 @@ package com.liferay.asset.tags.selector.web.internal.display.context;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetTagServiceUtil;
 import com.liferay.asset.tags.selector.web.internal.search.EntriesChecker;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -31,7 +27,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.asset.util.comparator.AssetTagNameComparator;
 
 import java.util.List;
-import java.util.Objects;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -45,20 +40,20 @@ import javax.servlet.http.HttpServletRequest;
 public class AssetTagsSelectorDisplayContext {
 
 	public AssetTagsSelectorDisplayContext(
-		RenderRequest renderRequest, RenderResponse renderResponse,
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
+		RenderResponse renderResponse) {
 
-		_renderRequest = renderRequest;
-		_renderResponse = renderResponse;
-		_request = request;
+		this(httpServletRequest, renderRequest, renderResponse, true);
 	}
 
-	public String getClearResultsURL() {
-		PortletURL clearResultsURL = _getPortletURL();
+	public AssetTagsSelectorDisplayContext(
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
+		RenderResponse renderResponse, boolean rowChecker) {
 
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		_httpServletRequest = httpServletRequest;
+		_renderRequest = renderRequest;
+		_renderResponse = renderResponse;
+		_rowChecker = rowChecker;
 	}
 
 	public String getEventName() {
@@ -67,32 +62,10 @@ public class AssetTagsSelectorDisplayContext {
 		}
 
 		_eventName = ParamUtil.getString(
-			_request, "eventName",
+			_httpServletRequest, "eventName",
 			_renderResponse.getNamespace() + "selectTag");
 
 		return _eventName;
-	}
-
-	public List<DropdownItem> getFilterItemsDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
-			}
-		};
 	}
 
 	public String getOrderByType() {
@@ -100,15 +73,22 @@ public class AssetTagsSelectorDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
 	}
 
-	public String getSearchActionURL() {
-		PortletURL searchActionURL = _getPortletURL();
+	public PortletURL getPortletURL() {
+		PortletURL portletURL = _renderResponse.createRenderURL();
 
-		return searchActionURL.toString();
+		portletURL.setParameter("mvcPath", _getMvcPath());
+		portletURL.setParameter("groupIds", StringUtil.merge(_getGroupIds()));
+		portletURL.setParameter("eventName", getEventName());
+		portletURL.setParameter(
+			"selectedTagNames", StringUtil.merge(getSelectedTagNames()));
+
+		return portletURL;
 	}
 
 	public String[] getSelectedTagNames() {
@@ -122,26 +102,13 @@ public class AssetTagsSelectorDisplayContext {
 		return _selectedTagNames;
 	}
 
-	public String getSortingURL() {
-		PortletURL sortingURL = _getPortletURL();
-
-		sortingURL.setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL.toString();
-	}
-
 	public SearchContainer getTagsSearchContainer() {
 		if (_tagsSearchContainer != null) {
 			return _tagsSearchContainer;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		SearchContainer tagsSearchContainer = new SearchContainer(
-			_renderRequest, _getPortletURL(), null, "there-are-no-tags");
+			_renderRequest, getPortletURL(), null, "there-are-no-tags");
 
 		String orderByCol = _getOrderByCol();
 
@@ -160,11 +127,13 @@ public class AssetTagsSelectorDisplayContext {
 
 		tagsSearchContainer.setOrderByType(orderByType);
 
-		tagsSearchContainer.setRowChecker(
-			new EntriesChecker(_renderRequest, _renderResponse));
+		if (_rowChecker) {
+			tagsSearchContainer.setRowChecker(
+				new EntriesChecker(_renderRequest, _renderResponse));
+		}
 
 		int tagsCount = AssetTagServiceUtil.getTagsCount(
-			themeDisplay.getScopeGroupId(), _getKeywords());
+			_getGroupIds(), _getKeywords());
 
 		tagsSearchContainer.setTotal(tagsCount);
 
@@ -180,60 +149,17 @@ public class AssetTagsSelectorDisplayContext {
 		return _tagsSearchContainer;
 	}
 
-	public int getTotalItems() {
-		SearchContainer tagsSearchContainer = getTagsSearchContainer();
-
-		return tagsSearchContainer.getTotal();
-	}
-
-	public boolean isDisabledTagsManagementBar() {
-		SearchContainer tagsSearchContainer = getTagsSearchContainer();
-
-		if (tagsSearchContainer.getTotal() <= 0) {
-			return true;
-		}
-
-		return false;
-	}
-
-	public boolean isShowTagsSearch() {
-		if (Validator.isNotNull(_getKeywords())) {
-			return true;
-		}
-
-		SearchContainer tagsSearchContainer = getTagsSearchContainer();
-
-		if (tagsSearchContainer.getTotal() > 0) {
-			return true;
-		}
-
-		return false;
-	}
-
-	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(_getPortletURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
-			}
-		};
-	}
-
 	private long[] _getGroupIds() {
 		if (ArrayUtil.isNotEmpty(_groupIds)) {
 			return _groupIds;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		_groupIds = StringUtil.split(
-			ParamUtil.getString(_request, "groupIds"), 0L);
+			ParamUtil.getString(_httpServletRequest, "groupIds"), 0L);
 
 		if (ArrayUtil.isEmpty(_groupIds)) {
 			_groupIds = new long[] {themeDisplay.getScopeGroupId()};
@@ -247,9 +173,20 @@ public class AssetTagsSelectorDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords", null);
+		_keywords = ParamUtil.getString(_httpServletRequest, "keywords", null);
 
 		return _keywords;
+	}
+
+	private String _getMvcPath() {
+		if (Validator.isNotNull(_mvcPath)) {
+			return _mvcPath;
+		}
+
+		_mvcPath = ParamUtil.getString(
+			_httpServletRequest, "mvcPath", "/view.jsp");
+
+		return _mvcPath;
 	}
 
 	private String _getOrderByCol() {
@@ -257,44 +194,22 @@ public class AssetTagsSelectorDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol", "name");
+		_orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol", "name");
 
 		return _orderByCol;
 	}
 
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(
-							_getPortletURL(), "orderByCol", "name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "name"));
-					});
-			}
-		};
-	}
-
-	private PortletURL _getPortletURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter("eventName", getEventName());
-		portletURL.setParameter(
-			"selectedTagNames", StringUtil.merge(getSelectedTagNames()));
-
-		return portletURL;
-	}
-
 	private String _eventName;
 	private long[] _groupIds;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
+	private String _mvcPath;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
+	private final boolean _rowChecker;
 	private String[] _selectedTagNames;
 	private SearchContainer _tagsSearchContainer;
 

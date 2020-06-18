@@ -23,10 +23,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.polls.constants.PollsConstants;
 import com.liferay.polls.constants.PollsPortletKeys;
 import com.liferay.polls.exception.NoSuchQuestionException;
-import com.liferay.polls.internal.exportimport.data.handler.PollsPortletDataHandler;
-import com.liferay.polls.model.PollsChoice;
 import com.liferay.polls.model.PollsQuestion;
-import com.liferay.polls.model.PollsVote;
 import com.liferay.polls.service.persistence.PollsQuestionUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -45,7 +42,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -62,7 +59,7 @@ public class PollsDisplayExportImportPortletPreferencesProcessor
 
 	@Override
 	public List<Capability> getImportCapabilities() {
-		return ListUtil.toList(new Capability[] {_capability});
+		return ListUtil.fromArray(_capability);
 	}
 
 	@Override
@@ -91,9 +88,9 @@ public class PollsDisplayExportImportPortletPreferencesProcessor
 		try {
 			question = PollsQuestionUtil.findByPrimaryKey(questionId);
 		}
-		catch (NoSuchQuestionException nsqe) {
+		catch (NoSuchQuestionException noSuchQuestionException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(nsqe, nsqe);
+				_log.warn(noSuchQuestionException, noSuchQuestionException);
 			}
 
 			return portletPreferences;
@@ -103,27 +100,13 @@ public class PollsDisplayExportImportPortletPreferencesProcessor
 			portletDataContext.addPortletPermissions(
 				PollsConstants.RESOURCE_NAME);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortletDataException(
-				"Unable to export portlet permissions", pe);
+				"Unable to export portlet permissions", portalException);
 		}
 
 		StagedModelDataHandlerUtil.exportReferenceStagedModel(
 			portletDataContext, portletId, question);
-
-		for (PollsChoice choice : question.getChoices()) {
-			StagedModelDataHandlerUtil.exportReferenceStagedModel(
-				portletDataContext, portletId, choice);
-		}
-
-		if (portletDataContext.getBooleanParameter(
-				PollsPortletDataHandler.NAMESPACE, "votes")) {
-
-			for (PollsVote vote : question.getVotes()) {
-				StagedModelDataHandlerUtil.exportReferenceStagedModel(
-					portletDataContext, portletId, vote);
-			}
-		}
 
 		return portletPreferences;
 	}
@@ -138,9 +121,9 @@ public class PollsDisplayExportImportPortletPreferencesProcessor
 			portletDataContext.importPortletPermissions(
 				PollsConstants.RESOURCE_NAME);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new PortletDataException(
-				"Unable to import portlet permissions", pe);
+				"Unable to import portlet permissions", portalException);
 		}
 
 		long questionId = GetterUtil.getLong(
@@ -157,9 +140,10 @@ public class PollsDisplayExportImportPortletPreferencesProcessor
 				portletPreferences.setValue(
 					"questionId", String.valueOf(questionId));
 			}
-			catch (ReadOnlyException roe) {
+			catch (ReadOnlyException readOnlyException) {
 				throw new PortletDataException(
-					"Unable to update portlet preferences during import", roe);
+					"Unable to update portlet preferences during import",
+					readOnlyException);
 			}
 		}
 

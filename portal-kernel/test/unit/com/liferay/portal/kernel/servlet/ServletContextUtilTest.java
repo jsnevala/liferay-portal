@@ -31,7 +31,7 @@ import org.junit.Test;
 import org.springframework.mock.web.MockServletContext;
 
 /**
- * @author Laszlo Csontos
+ * @author László Csontos
  */
 public class ServletContextUtilTest {
 
@@ -97,8 +97,8 @@ public class ServletContextUtilTest {
 		try {
 			return new URI("file", path, null);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return null;

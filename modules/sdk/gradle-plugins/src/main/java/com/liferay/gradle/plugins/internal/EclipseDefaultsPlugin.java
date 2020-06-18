@@ -16,11 +16,15 @@ package com.liferay.gradle.plugins.internal;
 
 import com.liferay.gradle.plugins.BaseDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.util.GradleUtil;
+import com.liferay.gradle.util.Validator;
 
 import groovy.lang.Closure;
 
 import groovy.util.Node;
 
+import java.io.File;
+
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,6 +33,9 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.XmlProvider;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.plugins.PluginContainer;
 import org.gradle.plugins.ide.api.FileContentMerger;
 import org.gradle.plugins.ide.api.XmlFileContentMerger;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
@@ -47,11 +54,14 @@ public class EclipseDefaultsPlugin extends BaseDefaultsPlugin<EclipsePlugin> {
 	public static final Plugin<Project> INSTANCE = new EclipseDefaultsPlugin();
 
 	@Override
-	protected void configureDefaults(
+	protected void applyPluginDefaults(
 		Project project, EclipsePlugin eclipsePlugin) {
 
+		final File portalRootDir = GradleUtil.getRootDir(
+			project.getRootProject(), "portal-impl");
+
 		_configureEclipseClasspathFile(project);
-		_configureEclipseProject(project);
+		_configureEclipseProject(project, portalRootDir);
 		_configureTaskEclipse(project);
 	}
 
@@ -63,14 +73,15 @@ public class EclipseDefaultsPlugin extends BaseDefaultsPlugin<EclipsePlugin> {
 	private EclipseDefaultsPlugin() {
 	}
 
-	private void _configureEclipseClasspathFile(Project project) {
+	private void _configureEclipseClasspathFile(final Project project) {
 		EclipseModel eclipseModel = GradleUtil.getExtension(
 			project, EclipseModel.class);
 
-		EclipseClasspath eclipseClasspath = eclipseModel.getClasspath();
+		final EclipseClasspath eclipseClasspath = eclipseModel.getClasspath();
 
 		FileContentMerger fileContentMerger = eclipseClasspath.getFile();
 
+		@SuppressWarnings("serial")
 		Closure<Void> closure = new Closure<Void>(project) {
 
 			@SuppressWarnings("unused")
@@ -101,13 +112,59 @@ public class EclipseDefaultsPlugin extends BaseDefaultsPlugin<EclipsePlugin> {
 		};
 
 		fileContentMerger.whenMerged(closure);
+
+		PluginContainer pluginContainer = project.getPlugins();
+
+		pluginContainer.withType(
+			JavaPlugin.class,
+			new Action<JavaPlugin>() {
+
+				@Override
+				public void execute(JavaPlugin javaPlugin) {
+					_configureEclipseClasspathFileForJavaPlugin(
+						project, eclipseClasspath);
+				}
+
+			});
 	}
 
-	private void _configureEclipseProject(Project project) {
+	private void _configureEclipseClasspathFileForJavaPlugin(
+		Project project, EclipseClasspath eclipseClasspath) {
+
+		Collection<Configuration> configurations =
+			eclipseClasspath.getPlusConfigurations();
+
+		Configuration configuration = GradleUtil.getConfiguration(
+			project, JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
+
+		configurations.add(configuration);
+	}
+
+	private void _configureEclipseProject(Project project, File portalRootDir) {
 		EclipseModel eclipseModel = GradleUtil.getExtension(
 			project, EclipseModel.class);
 
 		EclipseProject eclipseProject = eclipseModel.getProject();
+
+		String name = project.getName();
+
+		Task task = GradleUtil.getTask(project, _ECLIPSE_TASK_NAME);
+
+		String gitWorkingBranch = GradleUtil.getTaskPrefixedProperty(
+			task, "git.working.branch");
+
+		if (Boolean.parseBoolean(gitWorkingBranch) && (portalRootDir != null) &&
+			portalRootDir.exists()) {
+
+			String gitWorkingBranchName = GradleUtil.getProperty(
+				project, "git.working.branch.name", (String)null);
+
+			if (Validator.isNotNull(gitWorkingBranchName)) {
+				name = name + '-' + gitWorkingBranchName;
+			}
+		}
+
+		eclipseProject.setName(name);
 
 		List<String> natures = eclipseProject.getNatures();
 
@@ -163,7 +220,8 @@ public class EclipseDefaultsPlugin extends BaseDefaultsPlugin<EclipsePlugin> {
 
 	private static final String _ECLIPSE_TASK_NAME = "eclipse";
 
-	private static final String[] _FILTERED_DIR_NAMES =
-		{".git", ".gradle", "build", "node_modules", "tmp"};
+	private static final String[] _FILTERED_DIR_NAMES = {
+		".git", ".gradle", "build", "node_modules", "node_modules_cache", "tmp"
+	};
 
 }

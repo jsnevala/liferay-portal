@@ -14,6 +14,7 @@
 
 package com.liferay.taglib.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -33,8 +34,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.ServerDetector;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -80,7 +79,7 @@ public class IncludeTag extends AttributesTagSupport {
 				return EVAL_PAGE;
 			}
 
-			if (!FileAvailabilityUtil.isAvailable(servletContext, page)) {
+			if (!FileAvailabilityUtil.isAvailable(getServletContext(), page)) {
 				logUnavailablePage(page);
 
 				return processEndTag();
@@ -90,8 +89,8 @@ public class IncludeTag extends AttributesTagSupport {
 
 			return EVAL_PAGE;
 		}
-		catch (Exception e) {
-			throw new JspException(e);
+		catch (Exception exception) {
+			throw new JspException(exception);
 		}
 		finally {
 			doClearTag();
@@ -111,7 +110,7 @@ public class IncludeTag extends AttributesTagSupport {
 				return EVAL_BODY_INCLUDE;
 			}
 
-			if (!FileAvailabilityUtil.isAvailable(servletContext, page)) {
+			if (!FileAvailabilityUtil.isAvailable(getServletContext(), page)) {
 				logUnavailablePage(page);
 
 				return processStartTag();
@@ -121,8 +120,8 @@ public class IncludeTag extends AttributesTagSupport {
 
 			return EVAL_BODY_INCLUDE;
 		}
-		catch (Exception e) {
-			throw new JspException(e);
+		catch (Exception exception) {
+			throw new JspException(exception);
 		}
 	}
 
@@ -141,7 +140,7 @@ public class IncludeTag extends AttributesTagSupport {
 
 			PortletBag portletBag = PortletBagPool.get(rootPortletId);
 
-			servletContext = portletBag.getServletContext();
+			setServletContext(portletBag.getServletContext());
 		}
 	}
 
@@ -154,7 +153,7 @@ public class IncludeTag extends AttributesTagSupport {
 	}
 
 	protected void callSetAttributes() {
-		HttpServletRequest request = getOriginalServletRequest();
+		HttpServletRequest httpServletRequest = getOriginalServletRequest();
 
 		if (isCleanUpSetAttributes()) {
 			if (_setAttributeNames == null) {
@@ -165,23 +164,28 @@ public class IncludeTag extends AttributesTagSupport {
 			}
 
 			_trackedRequest = new TrackedServletRequest(
-				request, _setAttributeNames);
+				httpServletRequest, _setAttributeNames);
 
-			request = _trackedRequest;
+			httpServletRequest = _trackedRequest;
 		}
 
-		setNamespacedAttribute(request, "bodyContent", getBodyContentWrapper());
-		setNamespacedAttribute(
-			request, "dynamicAttributes", getDynamicAttributes());
+		Class<? extends IncludeTag> clazz = getClass();
 
-		setAttributes(request);
+		httpServletRequest.setAttribute(clazz.getName(), this);
+
+		setNamespacedAttribute(
+			httpServletRequest, "bodyContent", getBodyContentWrapper());
+		setNamespacedAttribute(
+			httpServletRequest, "dynamicAttributes", getDynamicAttributes());
+
+		setAttributes(httpServletRequest);
 	}
 
 	protected void cleanUp() {
 	}
 
 	protected void cleanUpSetAttributes() {
-		if (isCleanUpSetAttributes() && (_trackedRequest != null)) {
+		if (isCleanUpSetAttributes()) {
 			for (String name : _setAttributeNames) {
 				_trackedRequest.removeAttribute(name);
 			}
@@ -199,12 +203,10 @@ public class IncludeTag extends AttributesTagSupport {
 
 		cleanUpSetAttributes();
 
-		if (!ServerDetector.isResin()) {
-			setPage(null);
-			setUseCustomPage(true);
+		setPage(null);
+		setUseCustomPage(true);
 
-			cleanUp();
-		}
+		cleanUp();
 	}
 
 	protected void doInclude(
@@ -214,29 +216,35 @@ public class IncludeTag extends AttributesTagSupport {
 		try {
 			include(page, dynamicIncludeAscendingPriority);
 		}
-		catch (Exception e) {
-			String currentURL = (String)request.getAttribute(
+		catch (Exception exception) {
+			HttpServletRequest httpServletRequest = getRequest();
+
+			String currentURL = (String)httpServletRequest.getAttribute(
 				WebKeys.CURRENT_URL);
 
 			String message = StringBundler.concat(
 				"Current URL ", currentURL, " generates exception: ",
-				e.getMessage());
+				exception.getMessage());
 
-			LogUtil.log(_log, e, message);
+			LogUtil.log(_log, exception, message);
 
-			if (e instanceof JspException) {
-				throw (JspException)e;
+			if (exception instanceof JspException) {
+				throw (JspException)exception;
 			}
 		}
 	}
 
 	protected void doIncludeTheme(String page) throws Exception {
-		HttpServletResponse response =
+		HttpServletResponse httpServletResponse =
 			(HttpServletResponse)pageContext.getResponse();
 
-		Theme theme = (Theme)request.getAttribute(WebKeys.THEME);
+		HttpServletRequest httpServletRequest = getRequest();
 
-		ThemeUtil.include(servletContext, request, response, page, theme);
+		Theme theme = (Theme)httpServletRequest.getAttribute(WebKeys.THEME);
+
+		ThemeUtil.include(
+			getServletContext(), httpServletRequest, httpServletResponse, page,
+			theme);
 	}
 
 	protected Object getBodyContentWrapper() {
@@ -257,15 +265,16 @@ public class IncludeTag extends AttributesTagSupport {
 	}
 
 	protected String getCustomPage(
-		ServletContext servletContext, HttpServletRequest request,
+		ServletContext servletContext, HttpServletRequest httpServletRequest,
 		String page) {
 
 		if (Validator.isNull(page)) {
 			return null;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (themeDisplay == null) {
 			return null;
@@ -277,13 +286,22 @@ public class IncludeTag extends AttributesTagSupport {
 			group = group.getLiveGroup();
 		}
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			group.getTypeSettingsProperties();
 
-		String customJspServletContextName = typeSettingsProperties.getProperty(
-			"customJspServletContextName");
+		String customJspServletContextName =
+			typeSettingsUnicodeProperties.getProperty(
+				"customJspServletContextName");
 
 		if (Validator.isNull(customJspServletContextName)) {
+			return null;
+		}
+
+		if (customJspServletContextName.contains("/../")) {
+			_log.error(
+				"Illegal directory traversal in " +
+					customJspServletContextName);
+
 			return null;
 		}
 
@@ -334,20 +352,23 @@ public class IncludeTag extends AttributesTagSupport {
 		TagDynamicIdFactory tagDynamicIdFactory =
 			TagDynamicIdFactoryRegistry.getTagDynamicIdFactory(tagClassName);
 
+		HttpServletRequest httpServletRequest = getRequest();
+
 		if (tagDynamicIdFactory != null) {
 			httpServletResponse =
 				PipingServletResponse.createPipingServletResponse(pageContext);
 
 			tagDynamicId = tagDynamicIdFactory.getTagDynamicId(
-				request, httpServletResponse, this);
+				httpServletRequest, httpServletResponse, this);
 
 			TagDynamicIncludeUtil.include(
-				request, httpServletResponse, tagClassName, tagDynamicId,
-				tagPointPrefix + "before", doStartTag);
+				httpServletRequest, httpServletResponse, tagClassName,
+				tagDynamicId, tagPointPrefix + "before", doStartTag);
 		}
 
 		if (_useCustomPage) {
-			String customPage = getCustomPage(servletContext, request, page);
+			String customPage = getCustomPage(
+				getServletContext(), httpServletRequest, page);
 
 			if (Validator.isNotNull(customPage)) {
 				page = customPage;
@@ -355,7 +376,7 @@ public class IncludeTag extends AttributesTagSupport {
 		}
 
 		if (_THEME_JSP_OVERRIDE_ENABLED) {
-			request.setAttribute(
+			httpServletRequest.setAttribute(
 				WebKeys.SERVLET_CONTEXT_INCLUDE_FILTER_STRICT, _strict);
 		}
 
@@ -364,25 +385,26 @@ public class IncludeTag extends AttributesTagSupport {
 			PipingServletResponse.createPipingServletResponse(pageContext));
 
 		if (_THEME_JSP_OVERRIDE_ENABLED) {
-			request.removeAttribute(
+			httpServletRequest.removeAttribute(
 				WebKeys.SERVLET_CONTEXT_INCLUDE_FILTER_STRICT);
 		}
 
 		if (tagDynamicIdFactory != null) {
 			TagDynamicIncludeUtil.include(
-				request, httpServletResponse, tagClassName, tagDynamicId,
-				tagPointPrefix + "after", doStartTag);
+				httpServletRequest, httpServletResponse, tagClassName,
+				tagDynamicId, tagPointPrefix + "after", doStartTag);
 		}
 	}
 
-	protected void includePage(String page, HttpServletResponse response)
+	protected void includePage(
+			String page, HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		RequestDispatcher requestDispatcher =
 			DirectRequestDispatcherFactoryUtil.getRequestDispatcher(
-				servletContext, page);
+				getServletContext(), page);
 
-		requestDispatcher.include(request, response);
+		requestDispatcher.include(getRequest(), httpServletResponse);
 	}
 
 	protected boolean isCleanUpSetAttributes() {
@@ -415,6 +437,8 @@ public class IncludeTag extends AttributesTagSupport {
 		sb.append(page);
 		sb.append(" in the context ");
 
+		ServletContext servletContext = getServletContext();
+
 		String contextPath = PortalUtil.getPathContext(
 			servletContext.getContextPath());
 
@@ -442,11 +466,10 @@ public class IncludeTag extends AttributesTagSupport {
 			if (portalContext) {
 				return;
 			}
-			else {
-				sb.append(" You must not use a taglib from a module and set ");
-				sb.append("the attribute \"servletContext\". Inline the ");
-				sb.append("content directly where the taglib is invoked.");
-			}
+
+			sb.append(" You must not use a taglib from a module and set the ");
+			sb.append("attribute \"servletContext\". Inline the content ");
+			sb.append("directly where the taglib is invoked.");
 		}
 		else if (portalContext) {
 			Class<?> clazz = getClass();
@@ -474,7 +497,7 @@ public class IncludeTag extends AttributesTagSupport {
 		return EVAL_BODY_INCLUDE;
 	}
 
-	protected void setAttributes(HttpServletRequest request) {
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
 	}
 
 	protected boolean themeResourceExists(String page) throws Exception {
@@ -482,11 +505,14 @@ public class IncludeTag extends AttributesTagSupport {
 			return false;
 		}
 
-		Theme theme = (Theme)request.getAttribute(WebKeys.THEME);
+		HttpServletRequest httpServletRequest = getRequest();
+
+		Theme theme = (Theme)httpServletRequest.getAttribute(WebKeys.THEME);
 
 		if (theme == null) {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			if (themeDisplay != null) {
 				theme = themeDisplay.getTheme();
@@ -497,13 +523,13 @@ public class IncludeTag extends AttributesTagSupport {
 			return false;
 		}
 
-		String portletId = ThemeUtil.getPortletId(request);
-
-		boolean exists = theme.resourceExists(servletContext, portletId, page);
+		boolean exists = theme.resourceExists(
+			getServletContext(), ThemeUtil.getPortletId(httpServletRequest),
+			page);
 
 		if (_log.isDebugEnabled() && exists) {
 			String resourcePath = theme.getResourcePath(
-				servletContext, null, page);
+				getServletContext(), null, page);
 
 			_log.debug(resourcePath);
 		}
@@ -536,9 +562,10 @@ public class IncludeTag extends AttributesTagSupport {
 		}
 
 		private TrackedServletRequest(
-			HttpServletRequest request, Set<String> setAttributeNames) {
+			HttpServletRequest httpServletRequest,
+			Set<String> setAttributeNames) {
 
-			super(request);
+			super(httpServletRequest);
 
 			_setAttributeNames = setAttributeNames;
 		}

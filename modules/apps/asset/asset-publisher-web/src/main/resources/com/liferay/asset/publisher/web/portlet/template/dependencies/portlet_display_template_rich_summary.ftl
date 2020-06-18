@@ -20,7 +20,7 @@
 	/>
 
 	<div class="asset-abstract">
-		<div class="pull-right">
+		<div class="float-right">
 			<@getPrintIcon />
 
 			<@getFlagsIcon />
@@ -82,12 +82,7 @@
 
 <#macro getEditIcon>
 	<#if assetRenderer.hasEditPermission(themeDisplay.getPermissionChecker())>
-		<#assign redirectURL = renderResponse.createRenderURL() />
-
-		${redirectURL.setParameter("mvcPath", "/add_asset_redirect.jsp")}
-		${redirectURL.setWindowState("pop_up")}
-
-		<#assign editPortletURL = assetRenderer.getURLEdit(renderRequest, renderResponse, windowStateFactory.getWindowState("pop_up"), redirectURL)!"" />
+		<#assign editPortletURL = assetRenderer.getURLEdit(renderRequest, renderResponse, windowStateFactory.getWindowState("NORMAL"), themeDisplay.getURLCurrent())!"" />
 
 		<#if validator.isNotNull(editPortletURL)>
 			<#assign title = languageUtil.format(locale, "edit-x", entryTitle, false) />
@@ -97,7 +92,7 @@
 				icon="pencil"
 				markupView="lexicon"
 				message=title
-				url="javascript:Liferay.Util.openWindow({id:'" + renderResponse.getNamespace() + "editAsset', title: '" + title + "', uri:'" + htmlUtil.escapeURL(editPortletURL.toString()) + "'});"
+				url=editPortletURL.toString()
 			/>
 		</#if>
 	</#if>
@@ -161,19 +156,11 @@
 		${printURL.setParameter("assetEntryId", entry.getEntryId()?string)}
 		${printURL.setParameter("viewMode", "print")}
 		${printURL.setParameter("type", entry.getAssetRendererFactory().getType())}
-
-		<#if assetRenderer.getUrlTitle()?? && validator.isNotNull(assetRenderer.getUrlTitle())>
-			<#if assetRenderer.getGroupId() != themeDisplay.getScopeGroupId()>
-				${printURL.setParameter("groupId", assetRenderer.getGroupId()?string)}
-			</#if>
-
-			${printURL.setParameter("urlTitle", assetRenderer.getUrlTitle())}
-		</#if>
-
 		${printURL.setWindowState("pop_up")}
 
 		<@liferay_ui["icon"]
-			iconCssClass="icon-print"
+			icon="print"
+			markupView="lexicon"
 			message="print"
 			url="javascript:Liferay.Util.openWindow({id:'" + renderResponse.getNamespace() + "printAsset', title: '" + languageUtil.format(locale, "print-x-x", ["hide-accessible", entryTitle], false) + "', uri: '" + htmlUtil.escapeURL(printURL.toString()) + "'});"
 		/>
@@ -207,6 +194,7 @@
 		displayStyle="${socialBookmarksDisplayStyle}"
 		target="_blank"
 		title=entry.getTitle(locale)
+		types="${socialBookmarksTypes}"
 		url=viewURL
 	/>
 </#macro>

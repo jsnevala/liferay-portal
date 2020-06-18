@@ -74,26 +74,28 @@ public class DDMFormInstanceRecordStagingModelListener
 					ExportImportClassedModelUtil.getClassName(
 						ddmFormInstanceRecord));
 
-			int[] exportableStatuses =
-				stagedModelDataHandler.getExportableStatuses();
+			if (stagedModelDataHandler != null) {
+				int[] exportableStatuses =
+					stagedModelDataHandler.getExportableStatuses();
 
-			DDMFormInstanceRecordVersion formInstanceRecordVersion =
-				ddmFormInstanceRecord.getFormInstanceRecordVersion();
+				DDMFormInstanceRecordVersion formInstanceRecordVersion =
+					ddmFormInstanceRecord.getFormInstanceRecordVersion();
 
-			if (!ArrayUtil.contains(
-					exportableStatuses,
-					formInstanceRecordVersion.getStatus())) {
+				if (ArrayUtil.contains(
+						exportableStatuses,
+						formInstanceRecordVersion.getStatus())) {
 
-				return true;
+					return false;
+				}
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 
-		return false;
+		return true;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

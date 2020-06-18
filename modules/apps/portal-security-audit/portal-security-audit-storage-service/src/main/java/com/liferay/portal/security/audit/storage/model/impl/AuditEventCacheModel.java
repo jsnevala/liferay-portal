@@ -14,12 +14,9 @@
 
 package com.liferay.portal.security.audit.storage.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.security.audit.storage.model.AuditEvent;
 
 import java.io.Externalizable;
@@ -33,12 +30,11 @@ import java.util.Date;
  * The cache model class for representing AuditEvent in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see AuditEvent
  * @generated
  */
-@ProviderType
-public class AuditEventCacheModel implements CacheModel<AuditEvent>,
-	Externalizable {
+public class AuditEventCacheModel
+	implements CacheModel<AuditEvent>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -195,7 +191,9 @@ public class AuditEventCacheModel implements CacheModel<AuditEvent>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		auditEventId = objectInput.readLong();
 
 		companyId = objectInput.readLong();
@@ -213,12 +211,11 @@ public class AuditEventCacheModel implements CacheModel<AuditEvent>,
 
 		serverPort = objectInput.readInt();
 		sessionID = objectInput.readUTF();
-		additionalInfo = objectInput.readUTF();
+		additionalInfo = (String)objectInput.readObject();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(auditEventId);
 
 		objectOutput.writeLong(companyId);
@@ -293,10 +290,10 @@ public class AuditEventCacheModel implements CacheModel<AuditEvent>,
 		}
 
 		if (additionalInfo == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(additionalInfo);
+			objectOutput.writeObject(additionalInfo);
 		}
 	}
 
@@ -315,4 +312,5 @@ public class AuditEventCacheModel implements CacheModel<AuditEvent>,
 	public int serverPort;
 	public String sessionID;
 	public String additionalInfo;
+
 }

@@ -19,7 +19,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -131,8 +131,8 @@ public class UpgradeCalendarResource extends UpgradeProcess {
 		sb.append("CalendarResource.classNameId = ? and ");
 		sb.append("CalendarResource.userId = ?");
 
-		try (PreparedStatement ps =
-				connection.prepareStatement(sb.toString())) {
+		try (PreparedStatement ps = connection.prepareStatement(
+				sb.toString())) {
 
 			ps.setLong(1, groupClassNameId);
 			ps.setLong(2, defaultUserId);

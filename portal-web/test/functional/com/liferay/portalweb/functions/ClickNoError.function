@@ -1,43 +1,31 @@
-<definition default="click" summary="Click on '${locator1}'">
-	<command name="click">
-		<execute function="WaitForSPARefresh" />
+@default = "click"
+@summary = "Click on '${locator1}'"
+definition {
 
-		<execute selenium="waitForVisible" />
+	function click {
+		WaitForSPARefresh();
 
-		<execute selenium="mouseOver" />
+		selenium.waitForVisible();
 
-		<execute selenium="click" />
-	</command>
+		selenium.mouseOver();
 
-	<command name="clickNoMouseOver">
-		<execute function="WaitForSPARefresh" />
+		selenium.click();
+	}
 
-		<execute selenium="waitForVisible" />
+	function clickNoMouseOver {
+		WaitForSPARefresh();
 
-		<execute selenium="click" />
-	</command>
+		selenium.waitForVisible();
 
-	<command name="mouseDownMouseUp">
-		<execute function="WaitForSPARefresh" />
+		selenium.click();
+	}
 
-		<execute selenium="mouseDown" />
+	function mouseDownMouseUp {
+		WaitForSPARefresh();
 
-		<execute selenium="mouseUp" />
-	</command>
+		selenium.mouseDown();
 
-	<command name="pauseClick">
-		<execute function="WaitForSPARefresh" />
+		selenium.mouseUp();
+	}
 
-		<execute argument1="1000" selenium="pause" />
-
-		<execute function="ClickNoError#click" />
-	</command>
-
-	<command name="waitForMenuToggleJSClick">
-		<execute argument1="//script[contains(@src,'/o/frontend-js-web/liferay/menu_toggle.js')]" selenium="waitForElementPresent" />
-
-		<execute argument1="3000" selenium="pause" />
-
-		<execute function="Click" />
-	</command>
-</definition>
+}

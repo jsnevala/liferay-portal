@@ -14,15 +14,18 @@
 
 package com.liferay.portal.minifier;
 
+import com.liferay.petra.io.unsync.UnsyncStringReader;
+import com.liferay.petra.io.unsync.UnsyncStringWriter;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.internal.minifier.MinifierThreadLocal;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
 import com.liferay.registry.ServiceTracker;
+
+import org.apache.commons.lang.time.StopWatch;
 
 /**
  * @author Brian Wing Shun Chan
@@ -48,6 +51,10 @@ public class MinifierUtil {
 	}
 
 	private static String _minifyCss(String content) {
+		StopWatch stopWatch = new StopWatch();
+
+		stopWatch.start();
+
 		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
 
 		try {
@@ -59,12 +66,28 @@ public class MinifierUtil {
 
 			return unsyncStringWriter.toString();
 		}
-		catch (Exception e) {
-			_log.error("Unable to minify CSS:\n" + content, e);
+		catch (Exception exception) {
+			_log.error("Unable to minify CSS:\n" + content, exception);
 
 			unsyncStringWriter.append(content);
 
 			return unsyncStringWriter.toString();
+		}
+		finally {
+			if (_log.isDebugEnabled()) {
+				int length = 0;
+
+				if (content != null) {
+					byte[] bytes = content.getBytes();
+
+					length = bytes.length;
+				}
+
+				_log.debug(
+					StringBundler.concat(
+						"Minification for ", length, " bytes of CSS took ",
+						stopWatch.getTime(), " ms"));
+			}
 		}
 	}
 
@@ -78,7 +101,30 @@ public class MinifierUtil {
 			return content;
 		}
 
-		return javaScriptMinifier.compress(resourceName, content);
+		StopWatch stopWatch = new StopWatch();
+
+		stopWatch.start();
+
+		try {
+			return javaScriptMinifier.compress(resourceName, content);
+		}
+		finally {
+			if (_log.isDebugEnabled()) {
+				int length = 0;
+
+				if (content != null) {
+					byte[] bytes = content.getBytes();
+
+					length = bytes.length;
+				}
+
+				_log.debug(
+					StringBundler.concat(
+						"Minification for ", length,
+						" bytes of JavaScript in resource ", resourceName,
+						" took ", stopWatch.getTime(), " ms"));
+			}
+		}
 	}
 
 	private MinifierUtil() {

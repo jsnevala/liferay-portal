@@ -14,17 +14,14 @@
 
 package com.liferay.portal.upgrade.v7_0_3;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.ReleaseConstants;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.ReleaseInfo;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -43,8 +40,6 @@ public class UpgradeOracle extends UpgradeProcess {
 						"char_used = 'B'");
 			ResultSet rs = ps.executeQuery()) {
 
-			int buildNumber = getBuildNumber();
-
 			while (rs.next()) {
 				String tableName = rs.getString(1);
 
@@ -54,28 +49,14 @@ public class UpgradeOracle extends UpgradeProcess {
 
 				String columnName = rs.getString(2);
 
-				int dataLength = rs.getInt(3);
-
-				if (buildNumber < ReleaseInfo.RELEASE_6_2_0_BUILD_NUMBER) {
-
-					// LPS-33903
-
-					if (!ArrayUtil.contains(
-							_ORIGINAL_DATA_LENGTH_VALUES, dataLength)) {
-
-						dataLength = dataLength / 4;
-					}
-				}
-
 				try {
 					runSQL(
 						StringBundler.concat(
 							"alter table ", tableName, " modify ", columnName,
-							" varchar2(", String.valueOf(dataLength),
-							" char)"));
+							" varchar2(", rs.getInt(3), " char)"));
 				}
-				catch (SQLException sqle) {
-					if (sqle.getErrorCode() == 1441) {
+				catch (SQLException sqlException) {
+					if (sqlException.getErrorCode() == 1441) {
 						if (_log.isWarnEnabled()) {
 							StringBundler sb = new StringBundler(6);
 
@@ -90,7 +71,7 @@ public class UpgradeOracle extends UpgradeProcess {
 						}
 					}
 					else {
-						throw sqle;
+						throw sqlException;
 					}
 				}
 			}
@@ -107,24 +88,6 @@ public class UpgradeOracle extends UpgradeProcess {
 
 		alterVarchar2Columns();
 	}
-
-	protected int getBuildNumber() throws Exception {
-		try (PreparedStatement ps = connection.prepareStatement(
-				"select buildNumber from Release_ where servletContextName = " +
-					"?")) {
-
-			ps.setString(1, ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME);
-
-			try (ResultSet rs = ps.executeQuery()) {
-				rs.next();
-
-				return rs.getInt(1);
-			}
-		}
-	}
-
-	private static final int[] _ORIGINAL_DATA_LENGTH_VALUES =
-		{75, 100, 150, 200, 255, 500, 1000, 1024, 2000, 4000};
 
 	private static final Log _log = LogFactoryUtil.getLog(UpgradeOracle.class);
 

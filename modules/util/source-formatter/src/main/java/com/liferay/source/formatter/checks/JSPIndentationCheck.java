@@ -178,6 +178,15 @@ public class JSPIndentationCheck extends BaseFileCheck {
 
 				return _fixTabs(content, start, end, diff);
 			}
+
+			String javaCloseTagTabs = matcher.group(4);
+
+			if (!tabs.equals(javaCloseTagTabs)) {
+				int diff = javaCloseTagTabs.length() - tabs.length();
+
+				return _fixTabs(
+					content, getLineNumber(content, matcher.end(4)), diff);
+			}
 		}
 
 		matcher = _javaSourcePattern2.matcher(content);
@@ -376,6 +385,12 @@ public class JSPIndentationCheck extends BaseFileCheck {
 
 				String trimmedLine = StringUtil.trimLeading(line);
 
+				if (trimmedLine.matches(
+						"(<%@ )?(page import|tag import|taglib uri)=.*")) {
+
+					continue;
+				}
+
 				if (javaSource) {
 					if (trimmedLine.matches("%>[\"']?")) {
 						javaSource = false;
@@ -523,7 +538,7 @@ public class JSPIndentationCheck extends BaseFileCheck {
 	}
 
 	private static final Pattern _javaSourcePattern1 = Pattern.compile(
-		"\n(\t*)(<%\n(\t*[^\t%].*?))\n\t*%>\n", Pattern.DOTALL);
+		"\n(\t*)(<%\n(\t*[^\t%].*?))\n(\t*)%>\n", Pattern.DOTALL);
 	private static final Pattern _javaSourcePattern2 = Pattern.compile(
 		"\n(\t*)([^\t\n]+[\"']<%=\n(\t*[^\t%].*?))\n\t*%>[\"']\n",
 		Pattern.DOTALL);

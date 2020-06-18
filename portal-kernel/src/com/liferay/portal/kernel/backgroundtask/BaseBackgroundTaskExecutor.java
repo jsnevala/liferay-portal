@@ -22,10 +22,7 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 
-import java.io.Serializable;
-
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * @author Michael C. Han
@@ -55,8 +52,10 @@ public abstract class BaseBackgroundTaskExecutor
 	}
 
 	@Override
-	public String handleException(BackgroundTask backgroundTask, Exception e) {
-		return "Unable to execute background task: " + e.getMessage();
+	public String handleException(
+		BackgroundTask backgroundTask, Exception exception) {
+
+		return "Unable to execute background task: " + exception.getMessage();
 	}
 
 	@Override
@@ -71,10 +70,8 @@ public abstract class BaseBackgroundTaskExecutor
 	}
 
 	protected Locale getLocale(BackgroundTask backgroundTask) {
-		Map<String, Serializable> taskContextMap =
-			backgroundTask.getTaskContextMap();
-
-		long userId = MapUtil.getLong(taskContextMap, "userId");
+		long userId = MapUtil.getLong(
+			backgroundTask.getTaskContextMap(), "userId");
 
 		if (userId > 0) {
 			try {
@@ -84,9 +81,9 @@ public abstract class BaseBackgroundTaskExecutor
 					return user.getLocale();
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isDebugEnabled()) {
-					_log.debug("Unable to get the user's locale", e);
+					_log.debug("Unable to get the user's locale", exception);
 				}
 			}
 		}

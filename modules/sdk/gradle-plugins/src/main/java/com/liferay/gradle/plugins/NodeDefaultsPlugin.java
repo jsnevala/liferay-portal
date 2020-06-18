@@ -18,19 +18,14 @@ import com.liferay.gradle.plugins.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.node.NodeExtension;
 import com.liferay.gradle.plugins.node.NodePlugin;
 import com.liferay.gradle.plugins.node.tasks.ExecuteNodeTask;
-import com.liferay.gradle.plugins.node.tasks.ExecuteNpmTask;
+import com.liferay.gradle.plugins.node.tasks.ExecutePackageManagerTask;
 import com.liferay.gradle.plugins.node.tasks.NpmInstallTask;
 import com.liferay.gradle.plugins.node.tasks.PublishNodeModuleTask;
 import com.liferay.gradle.util.Validator;
 
-import java.io.File;
-
 import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.TaskContainer;
-import org.gradle.api.tasks.TaskOutputs;
 
 /**
  * @author Andrea Di Giorgi
@@ -38,9 +33,9 @@ import org.gradle.api.tasks.TaskOutputs;
 public class NodeDefaultsPlugin extends BaseDefaultsPlugin<NodePlugin> {
 
 	@Override
-	protected void configureDefaults(Project project, NodePlugin nodePlugin) {
+	protected void applyPluginDefaults(Project project, NodePlugin nodePlugin) {
 		_configureNode(project);
-		_configureTasksExecuteNpm(project);
+		_configureTasksExecutePackageManager(project);
 		_configureTasksNpmInstall(project);
 		_configureTasksPublishNodeModule(project);
 	}
@@ -66,40 +61,34 @@ public class NodeDefaultsPlugin extends BaseDefaultsPlugin<NodePlugin> {
 		}
 	}
 
-	private void _configureTaskExecuteNpm(ExecuteNpmTask executeNpmTask) {
+	private void _configureTaskExecutePackageManager(
+		ExecutePackageManagerTask executePackageManagerTask) {
+
+		String nodeEnv = GradleUtil.getProperty(
+			executePackageManagerTask.getProject(), "nodejs.node.env",
+			(String)null);
+
+		if (Validator.isNotNull(nodeEnv)) {
+			executePackageManagerTask.environment("NODE_ENV", nodeEnv);
+		}
+
 		String registry = GradleUtil.getProperty(
-			executeNpmTask.getProject(), "nodejs.npm.registry", (String)null);
+			executePackageManagerTask.getProject(), "nodejs.npm.registry",
+			(String)null);
 
 		if (Validator.isNotNull(registry)) {
-			executeNpmTask.setRegistry(registry);
+			executePackageManagerTask.setRegistry(registry);
 		}
 	}
 
 	private void _configureTaskNpmInstall(NpmInstallTask npmInstallTask) {
-		Project project = npmInstallTask.getProject();
-
 		String sassBinarySite = GradleUtil.getProperty(
-			project, "nodejs.npm.sass.binary.site", (String)null);
+			npmInstallTask.getProject(), "nodejs.npm.sass.binary.site",
+			(String)null);
 
 		if (Validator.isNotNull(sassBinarySite)) {
 			_setTaskExecuteNodeArgDefault(
 				npmInstallTask, _SASS_BINARY_SITE_ARG, sassBinarySite);
-		}
-
-		File nodeModulesDir = npmInstallTask.getNodeModulesDir();
-
-		if (!nodeModulesDir.exists()) {
-			TaskOutputs taskOutputs = npmInstallTask.getOutputs();
-
-			taskOutputs.upToDateWhen(
-				new Spec<Task>() {
-
-					@Override
-					public boolean isSatisfiedBy(Task task) {
-						return false;
-					}
-
-				});
 		}
 	}
 
@@ -158,16 +147,19 @@ public class NodeDefaultsPlugin extends BaseDefaultsPlugin<NodePlugin> {
 		}
 	}
 
-	private void _configureTasksExecuteNpm(Project project) {
+	private void _configureTasksExecutePackageManager(Project project) {
 		TaskContainer taskContainer = project.getTasks();
 
 		taskContainer.withType(
-			ExecuteNpmTask.class,
-			new Action<ExecuteNpmTask>() {
+			ExecutePackageManagerTask.class,
+			new Action<ExecutePackageManagerTask>() {
 
 				@Override
-				public void execute(ExecuteNpmTask executeNpmTask) {
-					_configureTaskExecuteNpm(executeNpmTask);
+				public void execute(
+					ExecutePackageManagerTask executePackageManagerTask) {
+
+					_configureTaskExecutePackageManager(
+						executePackageManagerTask);
 				}
 
 			});
@@ -219,9 +211,9 @@ public class NodeDefaultsPlugin extends BaseDefaultsPlugin<NodePlugin> {
 		executeNodeTask.args(key + value);
 	}
 
-	private static final String _NODE_VERSION = "8.10.0";
+	private static final String _NODE_VERSION = "10.15.1";
 
-	private static final String _NPM_VERSION = "5.7.1";
+	private static final String _NPM_VERSION = "6.4.1";
 
 	private static final String _SASS_BINARY_SITE_ARG = "--sass-binary-site=";
 

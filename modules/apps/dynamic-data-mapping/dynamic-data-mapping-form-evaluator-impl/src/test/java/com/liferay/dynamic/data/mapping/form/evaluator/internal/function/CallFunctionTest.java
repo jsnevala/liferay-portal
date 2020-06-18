@@ -56,37 +56,7 @@ public class CallFunctionTest extends PowerMockito {
 
 	@Before
 	public void setUp() {
-		setUpCallFunction();
-	}
-
-	@Test
-	public void testAutoSelectOption() {
-		DDMForm ddmForm = DDMFormTestUtil.createDDMForm("field0");
-
-		DDMFormValues ddmFormValues = DDMFormValuesTestUtil.createDDMFormValues(
-			ddmForm);
-
-		ddmFormValues.addDDMFormFieldValue(
-			DDMFormValuesTestUtil.createDDMFormFieldValue(
-				"1", "field0", new UnlocalizedValue("a")));
-
-		MockDDMExpressionObserver mockDDMExpressionObserver =
-			mockDDMExpressionObserver(ddmFormValues);
-
-		List<KeyValuePair> keyValuePairs = new ArrayList<>();
-
-		keyValuePairs.add(new KeyValuePair("key_1", "value_1"));
-
-		_callFunction.setDDMFormFieldOptions("field0", keyValuePairs);
-
-		JSONArray jsonArray = _jsonFactory.createJSONArray();
-
-		jsonArray.put("value_1");
-
-		Object value = mockDDMExpressionObserver.getFieldPropertyValue(
-			"field0", "1", "value");
-
-		Assert.assertEquals(jsonArray.toString(), value.toString());
+		_callFunction = new CallFunction(null, _jsonFactory);
 	}
 
 	@Test
@@ -240,12 +210,6 @@ public class CallFunctionTest extends PowerMockito {
 		_callFunction.setDDMExpressionObserver(mockDDMExpressionObserver);
 
 		return mockDDMExpressionObserver;
-	}
-
-	protected void setUpCallFunction() {
-		_callFunction = new CallFunction();
-
-		_callFunction.jsonFactory = _jsonFactory;
 	}
 
 	private CallFunction _callFunction;

@@ -17,333 +17,270 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String redirect = ParamUtil.getString(request, "redirect");
-
-String portletResource = ParamUtil.getString(request, "portletResource");
-
-long referringPlid = ParamUtil.getLong(request, "referringPlid");
-String referringPortletResource = ParamUtil.getString(request, "referringPortletResource");
-
-boolean changeStructure = GetterUtil.getBoolean(ParamUtil.getString(request, "changeStructure"));
-
 JournalArticle article = journalDisplayContext.getArticle();
 
-long groupId = BeanParamUtil.getLong(article, request, "groupId", scopeGroupId);
-
-long folderId = BeanParamUtil.getLong(article, request, "folderId", JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
-
-long classNameId = BeanParamUtil.getLong(article, request, "classNameId");
-long classPK = BeanParamUtil.getLong(article, request, "classPK");
-
-String articleId = BeanParamUtil.getString(article, request, "articleId");
-
-double version = BeanParamUtil.getDouble(article, request, "version", JournalArticleConstants.VERSION_DEFAULT);
-
-String ddmStructureKey = ParamUtil.getString(request, "ddmStructureKey");
-
-if (Validator.isNull(ddmStructureKey) && (article != null)) {
-	ddmStructureKey = article.getDDMStructureKey();
-}
-
-DDMStructure ddmStructure = null;
-
-long ddmStructureId = ParamUtil.getLong(request, "ddmStructureId");
-
-if (ddmStructureId > 0) {
-	ddmStructure = DDMStructureLocalServiceUtil.fetchStructure(ddmStructureId);
-}
-else if (Validator.isNotNull(ddmStructureKey)) {
-	ddmStructure = DDMStructureLocalServiceUtil.fetchStructure((article != null) ? article.getGroupId() : themeDisplay.getSiteGroupId(), PortalUtil.getClassNameId(JournalArticle.class), ddmStructureKey, true);
-}
-
-String ddmTemplateKey = ParamUtil.getString(request, "ddmTemplateKey");
-
-if (Validator.isNull(ddmTemplateKey) && (article != null) && Objects.equals(article.getDDMStructureKey(), ddmStructureKey)) {
-	ddmTemplateKey = article.getDDMTemplateKey();
-}
-
-DDMTemplate ddmTemplate = null;
-
-long ddmTemplateId = ParamUtil.getLong(request, "ddmTemplateId");
-
-if (ddmTemplateId > 0) {
-	ddmTemplate = DDMTemplateLocalServiceUtil.fetchDDMTemplate(ddmTemplateId);
-}
-else if (Validator.isNotNull(ddmTemplateKey)) {
-	ddmTemplate = DDMTemplateLocalServiceUtil.fetchTemplate((article != null) ? article.getGroupId() : themeDisplay.getSiteGroupId(), PortalUtil.getClassNameId(DDMStructure.class), ddmTemplateKey, true);
-}
-
-if (ddmTemplate == null) {
-	List<DDMTemplate> ddmTemplates = DDMTemplateServiceUtil.getTemplates(company.getCompanyId(), ddmStructure.getGroupId(), PortalUtil.getClassNameId(DDMStructure.class), ddmStructure.getStructureId(), PortalUtil.getClassNameId(JournalArticle.class), true, WorkflowConstants.STATUS_APPROVED);
-
-	if (!ddmTemplates.isEmpty()) {
-		ddmTemplate = ddmTemplates.get(0);
-	}
-}
-
-String defaultLanguageId = LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault());
-
-if (article != null) {
-	defaultLanguageId = LocalizationUtil.getDefaultLanguageId(article.getContent(), LocaleUtil.getSiteDefault());
-}
-
-boolean showHeader = ParamUtil.getBoolean(request, "showHeader", true);
-
-boolean hideDefaultSuccessMessage = ParamUtil.getBoolean(request, "hideDefaultSuccessMessage", false);
-
-request.setAttribute("edit_article.jsp-redirect", redirect);
-
-request.setAttribute("edit_article.jsp-structure", ddmStructure);
-request.setAttribute("edit_article.jsp-template", ddmTemplate);
-
-request.setAttribute("edit_article.jsp-defaultLanguageId", defaultLanguageId);
-
-request.setAttribute("edit_article.jsp-changeStructure", changeStructure);
-
-if (showHeader) {
-	portletDisplay.setShowBackIcon(true);
-
-	if (Validator.isNotNull(redirect)) {
-		portletDisplay.setURLBack(redirect);
-	}
-	else if ((classNameId == JournalArticleConstants.CLASSNAME_ID_DEFAULT) && (article != null)) {
-		PortletURL backURL = liferayPortletResponse.createRenderURL();
-
-		backURL.setParameter("groupId", String.valueOf(article.getGroupId()));
-		backURL.setParameter("folderId", String.valueOf(article.getFolderId()));
-
-		portletDisplay.setURLBack(backURL.toString());
-	}
-
-	String title = StringPool.BLANK;
-
-	if (classNameId > JournalArticleConstants.CLASSNAME_ID_DEFAULT) {
-		title = LanguageUtil.get(request, "structure-default-values");
-	}
-	else if ((article != null) && !article.isNew()) {
-		title = article.getTitle(locale);
-	}
-	else {
-		title = LanguageUtil.get(request, "new-web-content");
-	}
-
-	renderResponse.setTitle(title);
-}
-
-boolean approved = false;
-boolean pending = false;
-
-long inheritedWorkflowDDMStructuresFolderId = JournalFolderLocalServiceUtil.getInheritedWorkflowFolderId(folderId);
-
-boolean hasInheritedWorkflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), groupId, JournalArticle.class.getName());
-
-if (inheritedWorkflowDDMStructuresFolderId > 0) {
-	JournalFolder inheritedWorkflowDDMStructuresFolder = JournalFolderLocalServiceUtil.getFolder(inheritedWorkflowDDMStructuresFolderId);
-
-	hasInheritedWorkflowDefinitionLink = false;
-
-	if (inheritedWorkflowDDMStructuresFolder.getRestrictionType() == JournalFolderConstants.RESTRICTION_TYPE_INHERIT) {
-		hasInheritedWorkflowDefinitionLink = true;
-	}
-}
-
-boolean workflowEnabled = hasInheritedWorkflowDefinitionLink || WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), groupId, JournalFolder.class.getName(), folderId, ddmStructure.getStructureId()) || WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), groupId, JournalFolder.class.getName(), inheritedWorkflowDDMStructuresFolderId, ddmStructure.getStructureId()) || WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), groupId, JournalFolder.class.getName(), inheritedWorkflowDDMStructuresFolderId, JournalArticleConstants.DDM_STRUCTURE_ID_ALL);
-
-if ((article != null) && (version > 0)) {
-	approved = article.isApproved();
-
-	if (workflowEnabled) {
-		pending = article.isPending();
-	}
-}
-
-boolean hasSavePermission = false;
-
-if ((article != null) && !article.isNew()) {
-	hasSavePermission = JournalArticlePermission.contains(permissionChecker, article, ActionKeys.UPDATE);
-}
-else {
-	hasSavePermission = JournalFolderPermission.contains(permissionChecker, groupId, folderId, ActionKeys.ADD_ARTICLE);
-}
-
-String saveButtonLabel = "save";
-
-if ((article == null) || article.isApproved() || article.isDraft() || article.isExpired() || article.isScheduled()) {
-	saveButtonLabel = "save-as-draft";
-}
-
-String publishButtonLabel = "publish";
-
-if (workflowEnabled) {
-	publishButtonLabel = "submit-for-publication";
-}
-
-if (classNameId > JournalArticleConstants.CLASSNAME_ID_DEFAULT) {
-	publishButtonLabel = "save";
-}
+JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalEditArticleDisplayContext(request, liferayPortletResponse, article);
 %>
 
 <aui:model-context bean="<%= article %>" model="<%= JournalArticle.class %>" />
 
 <portlet:actionURL var="editArticleActionURL" windowState="<%= WindowState.MAXIMIZED.toString() %>">
 	<portlet:param name="mvcPath" value="/edit_article.jsp" />
-	<portlet:param name="ddmStructureKey" value="<%= ddmStructureKey %>" />
+	<portlet:param name="ddmStructureKey" value="<%= journalEditArticleDisplayContext.getDDMStructureKey() %>" />
 </portlet:actionURL>
 
 <portlet:renderURL var="editArticleRenderURL" windowState="<%= WindowState.MAXIMIZED.toString() %>">
 	<portlet:param name="mvcPath" value="/edit_article.jsp" />
 </portlet:renderURL>
 
-<liferay-frontend:edit-form
-	action="<%= editArticleActionURL %>"
-	enctype="multipart/form-data"
-	method="post"
-	name="fm1"
-	onSubmit="event.preventDefault();"
->
+<aui:form action="<%= editArticleActionURL %>" cssClass="edit-article-form" enctype="multipart/form-data" method="post" name="fm1" onSubmit="event.preventDefault();">
 	<aui:input name="<%= ActionRequest.ACTION_NAME %>" type="hidden" />
-	<aui:input name="hideDefaultSuccessMessage" type="hidden" value="<%= hideDefaultSuccessMessage || (classNameId == PortalUtil.getClassNameId(DDMStructure.class)) %>" />
-	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
-	<aui:input name="portletResource" type="hidden" value="<%= portletResource %>" />
-	<aui:input name="referringPlid" type="hidden" value="<%= referringPlid %>" />
-	<aui:input name="referringPortletResource" type="hidden" value="<%= referringPortletResource %>" />
-	<aui:input name="groupId" type="hidden" value="<%= groupId %>" />
-	<aui:input name="privateLayout" type="hidden" value="<%= layout.isPrivateLayout() %>" />
-	<aui:input name="folderId" type="hidden" value="<%= folderId %>" />
-	<aui:input name="classNameId" type="hidden" value="<%= classNameId %>" />
-	<aui:input name="classPK" type="hidden" value="<%= classPK %>" />
-	<aui:input name="articleId" type="hidden" value="<%= articleId %>" />
-	<aui:input name="articleIds" type="hidden" value="<%= articleId + JournalPortlet.VERSION_SEPARATOR + version %>" />
-	<aui:input name="version" type="hidden" value="<%= ((article == null) || article.isNew()) ? version : article.getVersion() %>" />
+	<aui:input name="hideDefaultSuccessMessage" type="hidden" value="<%= journalEditArticleDisplayContext.getClassNameId() == PortalUtil.getClassNameId(DDMStructure.class) %>" />
+	<aui:input name="redirect" type="hidden" value="<%= journalEditArticleDisplayContext.getRedirect() %>" />
+	<aui:input name="portletResource" type="hidden" value="<%= journalEditArticleDisplayContext.getPortletResource() %>" />
+	<aui:input name="refererPlid" type="hidden" value="<%= journalEditArticleDisplayContext.getRefererPlid() %>" />
+	<aui:input name="referringPortletResource" type="hidden" value="<%= journalEditArticleDisplayContext.getReferringPortletResource() %>" />
+	<aui:input name="groupId" type="hidden" value="<%= journalEditArticleDisplayContext.getGroupId() %>" />
+	<aui:input name="folderId" type="hidden" value="<%= journalEditArticleDisplayContext.getFolderId() %>" />
+	<aui:input name="classNameId" type="hidden" value="<%= journalEditArticleDisplayContext.getClassNameId() %>" />
+	<aui:input name="classPK" type="hidden" value="<%= journalEditArticleDisplayContext.getClassPK() %>" />
+	<aui:input name="articleId" type="hidden" value="<%= journalEditArticleDisplayContext.getArticleId() %>" />
+	<aui:input name="version" type="hidden" value="<%= ((article == null) || article.isNew()) ? journalEditArticleDisplayContext.getVersion() : article.getVersion() %>" />
 	<aui:input name="articleURL" type="hidden" value="<%= editArticleRenderURL %>" />
-	<aui:input name="changeDDMStructure" type="hidden" />
 	<aui:input name="ddmStructureId" type="hidden" />
 	<aui:input name="ddmTemplateId" type="hidden" />
+	<aui:input name="languageId" type="hidden" value="<%= journalEditArticleDisplayContext.getSelectedLanguageId() %>" />
 	<aui:input name="workflowAction" type="hidden" value="<%= String.valueOf(WorkflowConstants.ACTION_SAVE_DRAFT) %>" />
 
-	<liferay-frontend:edit-form-body>
-		<liferay-ui:error exception="<%= ArticleContentSizeException.class %>" message="you-have-exceeded-the-maximum-web-content-size-allowed" />
-		<liferay-ui:error exception="<%= ArticleFriendlyURLException.class %>" message="you-must-define-a-friendly-url-for-default-language" />
-		<liferay-ui:error exception="<%= DuplicateFileEntryException.class %>" message="a-file-with-that-name-already-exists" />
+	<nav class="component-tbar subnav-tbar-light tbar tbar-article">
+		<div class="container-fluid container-fluid-max-xl">
+			<ul class="tbar-nav">
+				<li class="tbar-item tbar-item-expand">
 
-		<liferay-ui:error exception="<%= ExportImportContentValidationException.class %>">
+					<%
+					DDMStructure ddmStructure = journalEditArticleDisplayContext.getDDMStructure();
+					%>
 
-			<%
-			ExportImportContentValidationException eicve = (ExportImportContentValidationException)errorException;
-			%>
+					<aui:input autoFocus="<%= (article == null) || article.isNew() %>" cssClass="form-control-inline" defaultLanguageId="<%= journalEditArticleDisplayContext.getDefaultArticleLanguageId() %>" label="" localized="<%= true %>" name="titleMapAsXML" placeholder='<%= LanguageUtil.format(request, "untitled-x", HtmlUtil.escape(ddmStructure.getName(locale))) %>' required="<%= journalEditArticleDisplayContext.getClassNameId() == JournalArticleConstants.CLASSNAME_ID_DEFAULT %>" selectedLanguageId="<%= journalEditArticleDisplayContext.getSelectedLanguageId() %>" type="text" wrapperCssClass="article-content-title mb-0" />
+				</li>
+				<li class="tbar-item">
+					<div class="journal-article-button-row tbar-section text-right">
+						<aui:button cssClass="btn-outline-borderless btn-outline-secondary btn-sm mr-3" href="<%= journalEditArticleDisplayContext.getRedirect() %>" type="cancel" />
 
-			<c:choose>
-				<c:when test="<%= eicve.getType() == ExportImportContentValidationException.ARTICLE_NOT_FOUND %>">
-					<liferay-ui:message key="unable-to-validate-referenced-journal-article" />
-				</c:when>
-				<c:when test="<%= eicve.getType() == ExportImportContentValidationException.FILE_ENTRY_NOT_FOUND %>">
-					<liferay-ui:message arguments="<%= new String[] {MapUtil.toString(eicve.getDlReferenceParameters())} %>" key="unable-to-validate-referenced-file-entry-because-it-cannot-be-found-with-the-following-parameters-x" />
-				</c:when>
-				<c:when test="<%= eicve.getType() == ExportImportContentValidationException.LAYOUT_GROUP_NOT_FOUND %>">
-					<liferay-ui:message arguments="<%= new String[] {eicve.getLayoutURL(), eicve.getGroupFriendlyURL()} %>" key="unable-to-validate-referenced-page-with-url-x-because-the-page-group-with-url-x-cannot-be-found" />
-				</c:when>
-				<c:when test="<%= eicve.getType() == ExportImportContentValidationException.LAYOUT_NOT_FOUND %>">
-					<liferay-ui:message arguments="<%= new String[] {MapUtil.toString(eicve.getLayoutReferenceParameters())} %>" key="unable-to-validate-referenced-page-because-it-cannot-be-found-with-the-following-parameters-x" />
-				</c:when>
-				<c:when test="<%= eicve.getType() == ExportImportContentValidationException.LAYOUT_WITH_URL_NOT_FOUND %>">
-					<liferay-ui:message arguments="<%= new String[] {eicve.getLayoutURL()} %>" key="unable-to-validate-referenced-page-because-it-cannot-be-found-with-url-x" />
-				</c:when>
-				<c:otherwise>
-					<liferay-ui:message key="an-unexpected-error-occurred" />
-				</c:otherwise>
-			</c:choose>
-		</liferay-ui:error>
+						<c:if test="<%= journalEditArticleDisplayContext.getClassNameId() > JournalArticleConstants.CLASSNAME_ID_DEFAULT %>">
+							<portlet:actionURL name="/journal/reset_values_ddm_structure" var="resetValuesDDMStructureURL">
+								<portlet:param name="mvcPath" value="/edit_ddm_structure.jsp" />
+								<portlet:param name="redirect" value="<%= currentURL %>" />
+								<portlet:param name="groupId" value="<%= String.valueOf(journalEditArticleDisplayContext.getGroupId()) %>" />
+								<portlet:param name="articleId" value="<%= journalEditArticleDisplayContext.getArticleId() %>" />
+								<portlet:param name="ddmStructureKey" value="<%= ddmStructure.getStructureKey() %>" />
+							</portlet:actionURL>
 
-		<liferay-ui:error exception="<%= FileSizeException.class %>">
+							<aui:button cssClass="btn-secondary btn-sm mr-3" data-url="<%= resetValuesDDMStructureURL %>" name="resetValuesButton" value="reset-values" />
+						</c:if>
 
-			<%
-			long fileMaxSize = DLValidatorUtil.getMaxAllowableSize();
-			%>
+						<c:if test="<%= journalEditArticleDisplayContext.hasSavePermission() %>">
+							<c:if test="<%= journalEditArticleDisplayContext.getClassNameId() == JournalArticleConstants.CLASSNAME_ID_DEFAULT %>">
+								<aui:button cssClass="btn-sm mr-3" data-actionname='<%= ((article == null) || Validator.isNull(article.getArticleId())) ? "/journal/add_article" : "/journal/update_article" %>' name="saveButton" primary="<%= false %>" type="submit" value="<%= journalEditArticleDisplayContext.getSaveButtonLabel() %>" />
+							</c:if>
 
-			<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(fileMaxSize, locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
-		</liferay-ui:error>
+							<aui:button cssClass="btn-sm mr-3" data-actionname="<%= Constants.PUBLISH %>" disabled="<%= journalEditArticleDisplayContext.isPending() %>" name="publishButton" type="submit" value="<%= journalEditArticleDisplayContext.getPublishButtonLabel() %>" />
+						</c:if>
 
-		<liferay-ui:error exception="<%= LiferayFileItemException.class %>">
-			<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(LiferayFileItem.THRESHOLD_SIZE, locale) %>" key="please-enter-valid-content-with-valid-content-size-no-larger-than-x" translateArguments="<%= false %>" />
-		</liferay-ui:error>
-
-		<c:if test="<%= (article != null) && !article.isNew() && (classNameId == JournalArticleConstants.CLASSNAME_ID_DEFAULT) %>">
-			<liferay-frontend:info-bar>
-				<aui:workflow-status id="<%= String.valueOf(article.getArticleId()) %>" markupView="lexicon" showHelpMessage="<%= false %>" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= article.getStatus() %>" version="<%= String.valueOf(article.getVersion()) %>" />
-			</liferay-frontend:info-bar>
-		</c:if>
-
-		<c:if test="<%= classNameId == JournalArticleConstants.CLASSNAME_ID_DEFAULT %>">
-			<c:if test="<%= approved %>">
-				<div class="alert alert-info">
-					<liferay-ui:message key="a-new-version-is-created-automatically-if-this-content-is-modified" />
-				</div>
-			</c:if>
-
-			<c:if test="<%= pending %>">
-				<div class="alert alert-info">
-					<liferay-ui:message key="there-is-a-publication-workflow-in-process" />
-				</div>
-			</c:if>
-		</c:if>
-
-		<liferay-frontend:form-navigator
-			formModelBean="<%= article %>"
-			id="<%= FormNavigatorConstants.FORM_NAVIGATOR_ID_JOURNAL %>"
-			showButtons="<%= false %>"
-		/>
-	</liferay-frontend:edit-form-body>
-
-	<liferay-frontend:edit-form-footer>
-		<div class="journal-article-button-row">
-			<c:if test="<%= hasSavePermission %>">
-				<aui:button data-actionname="<%= Constants.PUBLISH %>" disabled="<%= pending %>" name="publishButton" type="submit" value="<%= publishButtonLabel %>" />
-
-				<c:if test="<%= classNameId == JournalArticleConstants.CLASSNAME_ID_DEFAULT %>">
-					<aui:button data-actionname='<%= ((article == null) || Validator.isNull(article.getArticleId())) ? "addArticle" : "updateArticle" %>' name="saveButton" primary="<%= false %>" type="submit" value="<%= saveButtonLabel %>" />
-				</c:if>
-			</c:if>
-
-			<aui:button href="<%= redirect %>" type="cancel" />
+						<clay:button
+							icon="cog"
+							id='<%= renderResponse.getNamespace() + "contextualSidebarButton" %>'
+							monospaced="<%= true %>"
+							size="sm"
+							style="borderless"
+						/>
+					</div>
+				</li>
+			</ul>
 		</div>
-	</liferay-frontend:edit-form-footer>
-</liferay-frontend:edit-form>
+	</nav>
 
-<liferay-portlet:renderURL plid="<%= JournalUtil.getPreviewPlid(article, themeDisplay) %>" var="previewArticleContentURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-	<portlet:param name="mvcPath" value="/preview_article_content.jsp" />
+	<div class="contextual-sidebar edit-article-sidebar sidebar-light sidebar-sm" id="<portlet:namespace />contextualSidebarContainer">
+		<div class="sidebar-body">
 
-	<c:if test="<%= article != null %>">
-		<portlet:param name="groupId" value="<%= String.valueOf(article.getGroupId()) %>" />
-		<portlet:param name="articleId" value="<%= article.getArticleId() %>" />
-		<portlet:param name="version" value="<%= String.valueOf(article.getVersion()) %>" />
-		<portlet:param name="ddmTemplateKey" value="<%= (ddmTemplate != null) ? ddmTemplate.getTemplateKey() : article.getDDMTemplateKey() %>" />
-	</c:if>
-</liferay-portlet:renderURL>
+			<%
+			String tabs1Names = "properties,usages";
 
-<portlet:renderURL var="editArticleURL">
-	<portlet:param name="redirect" value="<%= redirect %>" />
-	<portlet:param name="mvcPath" value="/edit_article.jsp" />
-	<portlet:param name="groupId" value="<%= String.valueOf(groupId) %>" />
-	<portlet:param name="articleId" value="<%= articleId %>" />
-	<portlet:param name="version" value="<%= String.valueOf(version) %>" />
-</portlet:renderURL>
+			if ((article == null) || (journalEditArticleDisplayContext.getClassNameId() != JournalArticleConstants.CLASSNAME_ID_DEFAULT)) {
+				tabs1Names = "properties";
+			}
+			%>
 
-<aui:script use="liferay-portlet-journal">
-	new Liferay.Portlet.Journal(
-		{
-			article: {
-				editUrl: '<%= editArticleURL %>',
-				id: '<%= (article != null) ? HtmlUtil.escape(articleId) : StringPool.BLANK %>',
+			<liferay-ui:tabs
+				names="<%= tabs1Names %>"
+				param="tabs1"
+				refresh="<%= false %>"
+			>
+				<liferay-ui:section>
+					<liferay-frontend:form-navigator
+						fieldSetCssClass="panel-group-flush"
+						formModelBean="<%= article %>"
+						id="<%= FormNavigatorConstants.FORM_NAVIGATOR_ID_JOURNAL %>"
+						showButtons="<%= false %>"
+					/>
+				</liferay-ui:section>
 
-				<c:if test="<%= (article != null) && !article.isNew() %>">
-					previewUrl: '<%= HtmlUtil.escapeJS(previewArticleContentURL.toString()) %>',
+				<c:if test="<%= (article != null) && (journalEditArticleDisplayContext.getClassNameId() == JournalArticleConstants.CLASSNAME_ID_DEFAULT) %>">
+					<liferay-ui:section>
+						<liferay-layout:layout-classed-model-usages-view
+							className="<%= JournalArticle.class.getName() %>"
+							classPK="<%= article.getResourcePrimKey() %>"
+						/>
+					</liferay-ui:section>
 				</c:if>
+			</liferay-ui:tabs>
+		</div>
+	</div>
 
-				title: '<%= (article != null) ? HtmlUtil.escapeJS(article.getTitle(locale)) : StringPool.BLANK %>'
-			},
-			namespace: '<portlet:namespace />',
-			'strings.addTemplate': '<liferay-ui:message key="please-add-a-template-to-render-this-structure" />',
-			'strings.saveAsDraftBeforePreview': '<liferay-ui:message key="in-order-to-preview-your-changes,-the-web-content-is-saved-as-a-draft" />'
-		}
-	);
-</aui:script>
+	<div class="contextual-sidebar-content">
+		<div class="container-fluid container-fluid-max-xl container-view">
+			<div class="sheet sheet-lg">
+				<aui:model-context bean="<%= article %>" defaultLanguageId="<%= journalEditArticleDisplayContext.getDefaultArticleLanguageId() %>" model="<%= JournalArticle.class %>" />
+
+				<liferay-ui:error exception="<%= ArticleContentException.class %>" message="please-enter-valid-content" />
+				<liferay-ui:error exception="<%= ArticleContentSizeException.class %>" message="you-have-exceeded-the-maximum-web-content-size-allowed" />
+				<liferay-ui:error exception="<%= ArticleFriendlyURLException.class %>" message="you-must-define-a-friendly-url-for-default-language" />
+				<liferay-ui:error exception="<%= ArticleIdException.class %>" message="please-enter-a-valid-id" />
+				<liferay-ui:error exception="<%= ArticleTitleException.class %>" message="please-enter-a-valid-title" />
+
+				<liferay-ui:error exception="<%= ArticleTitleException.MustNotExceedMaximumLength.class %>">
+
+					<%
+					int titleMaxLength = ModelHintsUtil.getMaxLength(JournalArticleLocalization.class.getName(), "title");
+					%>
+
+					<liferay-ui:message arguments="<%= String.valueOf(titleMaxLength) %>" key="please-enter-a-title-with-fewer-than-x-characters" />
+				</liferay-ui:error>
+
+				<liferay-ui:error exception="<%= ArticleVersionException.class %>" message="another-user-has-made-changes-since-you-started-editing-please-copy-your-changes-and-try-again" />
+				<liferay-ui:error exception="<%= DuplicateArticleIdException.class %>" message="please-enter-a-unique-id" />
+				<liferay-ui:error exception="<%= DuplicateFileEntryException.class %>" message="a-file-with-that-name-already-exists" />
+
+				<liferay-ui:error exception="<%= ExportImportContentValidationException.class %>">
+
+					<%
+					ExportImportContentValidationException eicve = (ExportImportContentValidationException)errorException;
+					%>
+
+					<c:choose>
+						<c:when test="<%= eicve.getType() == ExportImportContentValidationException.ARTICLE_NOT_FOUND %>">
+							<liferay-ui:message key="unable-to-validate-referenced-journal-article" />
+						</c:when>
+						<c:when test="<%= eicve.getType() == ExportImportContentValidationException.FILE_ENTRY_NOT_FOUND %>">
+							<liferay-ui:message arguments="<%= new String[] {MapUtil.toString(eicve.getDlReferenceParameters()), eicve.getDlReference()} %>" key="unable-to-validate-referenced-document-because-it-cannot-be-found-with-the-following-parameters-x-when-analyzing-link-x" />
+						</c:when>
+						<c:when test="<%= eicve.getType() == ExportImportContentValidationException.LAYOUT_GROUP_NOT_FOUND %>">
+							<liferay-ui:message arguments="<%= new String[] {eicve.getLayoutURL(), eicve.getGroupFriendlyURL()} %>" key="unable-to-validate-referenced-page-with-url-x-because-the-page-group-with-url-x-cannot-be-found" />
+						</c:when>
+						<c:when test="<%= eicve.getType() == ExportImportContentValidationException.LAYOUT_NOT_FOUND %>">
+							<liferay-ui:message arguments="<%= new String[] {MapUtil.toString(eicve.getLayoutReferenceParameters())} %>" key="unable-to-validate-referenced-page-because-it-cannot-be-found-with-the-following-parameters-x" />
+						</c:when>
+						<c:when test="<%= eicve.getType() == ExportImportContentValidationException.LAYOUT_WITH_URL_NOT_FOUND %>">
+							<liferay-ui:message arguments="<%= new String[] {eicve.getLayoutURL()} %>" key="unable-to-validate-referenced-page-because-it-cannot-be-found-with-url-x" />
+						</c:when>
+						<c:otherwise>
+							<liferay-ui:message key="an-unexpected-error-occurred" />
+						</c:otherwise>
+					</c:choose>
+				</liferay-ui:error>
+
+				<liferay-ui:error exception="<%= FileSizeException.class %>">
+					<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(DLValidatorUtil.getMaxAllowableSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
+				</liferay-ui:error>
+
+				<liferay-ui:error exception="<%= InvalidDDMStructureException.class %>" message="the-structure-you-selected-is-not-valid-for-this-folder" />
+
+				<liferay-ui:error exception="<%= LiferayFileItemException.class %>">
+					<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(LiferayFileItem.THRESHOLD_SIZE, locale) %>" key="please-enter-valid-content-with-valid-content-size-no-larger-than-x" translateArguments="<%= false %>" />
+				</liferay-ui:error>
+
+				<liferay-ui:error exception="<%= LocaleException.class %>">
+
+					<%
+					LocaleException le = (LocaleException)errorException;
+					%>
+
+					<c:if test="<%= le.getType() == LocaleException.TYPE_CONTENT %>">
+						<liferay-ui:message arguments="<%= new String[] {StringUtil.merge(le.getSourceAvailableLocales(), StringPool.COMMA_AND_SPACE), StringUtil.merge(le.getTargetAvailableLocales(), StringPool.COMMA_AND_SPACE)} %>" key="the-default-language-x-does-not-match-the-portal's-available-languages-x" />
+					</c:if>
+				</liferay-ui:error>
+
+				<liferay-ui:error exception="<%= NoSuchFileEntryException.class %>" message="the-content-references-a-missing-file-entry" />
+				<liferay-ui:error exception="<%= NoSuchImageException.class %>" message="please-select-an-existing-small-image" />
+
+				<liferay-ui:error exception="<%= NoSuchLayoutException.class %>">
+
+					<%
+					NoSuchLayoutException nsle = (NoSuchLayoutException)errorException;
+
+					String message = nsle.getMessage();
+					%>
+
+					<c:choose>
+						<c:when test="<%= Objects.equals(message, JournalArticleConstants.DISPLAY_PAGE) %>">
+							<liferay-ui:message key="please-select-an-existing-display-page-template" />
+						</c:when>
+						<c:otherwise>
+							<liferay-ui:message key="the-content-references-a-missing-page" />
+						</c:otherwise>
+					</c:choose>
+				</liferay-ui:error>
+
+				<liferay-ui:error exception="<%= NoSuchStructureException.class %>" message="please-select-an-existing-structure" />
+				<liferay-ui:error exception="<%= NoSuchTemplateException.class %>" message="please-select-an-existing-template" />
+				<liferay-ui:error exception="<%= StorageFieldRequiredException.class %>" message="please-fill-out-all-required-fields" />
+
+				<%
+				JournalItemSelectorHelper journalItemSelectorHelper = new JournalItemSelectorHelper(article, journalDisplayContext.getFolder(), renderRequest, renderResponse);
+
+				long classNameId = ParamUtil.getLong(request, "classNameId");
+				%>
+
+				<div class="article-content-content">
+					<c:choose>
+						<c:when test="<%= journalDisplayContext.useDataEngineEditor() %>">
+							<liferay-data-engine:data-layout-renderer
+								containerId='<%= renderResponse.getNamespace() + "dataEngineLayoutRenderer" %>'
+								dataDefinitionId="<%= ddmStructure.getStructureId() %>"
+								dataRecordValues="<%= journalEditArticleDisplayContext.getValues(ddmStructure) %>"
+								namespace="<%= renderResponse.getNamespace() %>"
+							/>
+
+							<liferay-frontend:component
+								componentId='<%= renderResponse.getNamespace() + "dataEngineLayoutRendererLanguageProxy" %>'
+								module="js/dataEngineLayoutRendererLanguageProxy.es"
+								servletContext="<%= application %>"
+							/>
+						</c:when>
+						<c:otherwise>
+							<liferay-ddm:html
+								checkRequired="<%= classNameId == JournalArticleConstants.CLASSNAME_ID_DEFAULT %>"
+								classNameId="<%= PortalUtil.getClassNameId(DDMStructure.class) %>"
+								classPK="<%= ddmStructure.getStructureId() %>"
+								ddmFormValues="<%= journalEditArticleDisplayContext.getDDMFormValues(ddmStructure) %>"
+								defaultEditLocale="<%= LocaleUtil.fromLanguageId(journalEditArticleDisplayContext.getSelectedLanguageId()) %>"
+								defaultLocale="<%= LocaleUtil.fromLanguageId(journalEditArticleDisplayContext.getDefaultArticleLanguageId()) %>"
+								documentLibrarySelectorURL="<%= String.valueOf(journalItemSelectorHelper.getDocumentLibrarySelectorURL()) %>"
+								groupId="<%= journalEditArticleDisplayContext.getGroupId() %>"
+								ignoreRequestValue="<%= journalEditArticleDisplayContext.isChangeStructure() %>"
+								imageSelectorURL="<%= String.valueOf(journalItemSelectorHelper.getImageSelectorURL()) %>"
+								requestedLocale="<%= locale %>"
+							/>
+						</c:otherwise>
+					</c:choose>
+				</div>
+			</div>
+		</div>
+	</div>
+</aui:form>
+
+<liferay-frontend:component
+	componentId='<%= renderResponse.getNamespace() + "JournalPortletComponent" %>'
+	module="js/JournalPortlet.es"
+	servletContext="<%= application %>"
+/>

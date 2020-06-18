@@ -17,8 +17,9 @@ package com.liferay.project.templates;
 import aQute.bnd.osgi.Constants;
 import aQute.bnd.version.VersionRange;
 
-import com.liferay.project.templates.internal.util.FileUtil;
-import com.liferay.project.templates.internal.util.Validator;
+import com.liferay.project.templates.extensions.util.FileUtil;
+import com.liferay.project.templates.extensions.util.Validator;
+import com.liferay.project.templates.extensions.util.WorkspaceUtil;
 import com.liferay.project.templates.util.FileTestUtil;
 import com.liferay.project.templates.util.StringTestUtil;
 import com.liferay.project.templates.util.XMLTestUtil;
@@ -122,7 +123,7 @@ public class ProjectTemplateFilesTest {
 			String configuration = matcher.group(1);
 			String dependencyGroup = matcher.group(2);
 			String dependencyName = matcher.group(3);
-			String dependencyVersion = matcher.group(4);
+			String dependencyVersion = matcher.group(5);
 
 			boolean provided = false;
 
@@ -420,8 +421,7 @@ public class ProjectTemplateFilesTest {
 		return properties;
 	}
 
-	private void _testBuildGradle(
-			String projectTemplateDirName, Path archetypeResourcesDirPath)
+	private void _testBuildGradle(Path archetypeResourcesDirPath)
 		throws IOException {
 
 		Path buildGradlePath = archetypeResourcesDirPath.resolve(
@@ -431,15 +431,6 @@ public class ProjectTemplateFilesTest {
 			"Missing " + buildGradlePath, Files.exists(buildGradlePath));
 
 		String buildGradle = FileUtil.read(buildGradlePath);
-
-		if (!projectTemplateDirName.equals("project-templates-workspace")) {
-			Matcher matcher = _buildGradleWorkspaceVariantPattern.matcher(
-				buildGradle);
-
-			Assert.assertTrue(
-				buildGradlePath + " is missing non-workspace specific variant",
-				matcher.matches());
-		}
 
 		Assert.assertFalse(
 			buildGradlePath + " contains \"latest.release\". Please use a " +
@@ -498,8 +489,6 @@ public class ProjectTemplateFilesTest {
 	}
 
 	private void _testLanguageProperties(Path path) throws IOException {
-		boolean portlet = false;
-
 		try (BufferedReader bufferedReader = Files.newBufferedReader(
 				path, StandardCharsets.UTF_8)) {
 
@@ -532,49 +521,8 @@ public class ProjectTemplateFilesTest {
 					(_languagePropertiesKeyComparator.compare(
 						key, previousKey) > 0));
 
-				if (key.startsWith("javax.portlet.")) {
-					portlet = true;
-				}
-
 				previousKey = key;
 			}
-		}
-
-		if (portlet) {
-			Properties properties = FileUtil.readProperties(path);
-
-			String keywords = properties.getProperty(
-				"javax.portlet.keywords.${className.toLowerCase()}");
-
-			Assert.assertTrue(
-				"Value of \"javax.portlet.keywords.${className.toLowerCase()}" +
-					"\" in " + path + " must be \"${className}\"",
-				(keywords != null) && keywords.equals("${className}"));
-
-			String title = properties.getProperty(
-				"javax.portlet.title.${className.toLowerCase()}");
-
-			Assert.assertTrue(
-				"Value of \"javax.portlet.title.${className.toLowerCase()}" +
-					"\" in " + path + " must be \"${className}\"",
-				(title != null) && title.equals("${className}"));
-
-			String expectedShortTitle = "${className}";
-
-			Assert.assertEquals(
-				"Incorrect value of " +
-					"\"javax.portlet.display-name.${className.toLowerCase()}" +
-						"\" in " + path,
-				expectedShortTitle,
-				properties.getProperty(
-					"javax.portlet.display-name.${className.toLowerCase()}"));
-
-			Assert.assertEquals(
-				"Incorrect value of \"javax.portlet.short-title.${className." +
-					"toLowerCase()}\" in " + path,
-				expectedShortTitle,
-				properties.getProperty(
-					"javax.portlet.short-title.${className.toLowerCase()}"));
 		}
 	}
 
@@ -589,9 +537,6 @@ public class ProjectTemplateFilesTest {
 			String line = null;
 
 			while ((line = bufferedReader.readLine()) != null) {
-				Assert.assertFalse(
-					"Forbidden empty line in " + path, line.isEmpty());
-
 				if (line.startsWith("#set")) {
 					continue;
 				}
@@ -615,7 +560,8 @@ public class ProjectTemplateFilesTest {
 		_testPropertyValue(path, properties, "change-log", "");
 		_testPropertyValue(path, properties, "licenses", "LGPL");
 		_testPropertyValue(
-			path, properties, "liferay-versions", "7.0.0+,7.1.0+");
+			path, properties, "liferay-versions",
+			"7.0.0+,7.1.0+,7.2.0+,7.3.0+");
 		_testPropertyValue(path, properties, "long-description", "");
 		_testPropertyValue(path, properties, "module-group-id", "liferay");
 		_testPropertyValue(path, properties, "module-incremental-version", "1");
@@ -743,20 +689,23 @@ public class ProjectTemplateFilesTest {
 			XMLTestUtil.testXmlElement(
 				pomXmlPath, dependencyElementString, dependencyChildElements, 1,
 				"artifactId", buildGradleDependency.name);
-			XMLTestUtil.testXmlElement(
-				pomXmlPath, dependencyElementString, dependencyChildElements, 2,
-				"version", buildGradleDependency.version);
 
-			if (buildGradleDependency.provided) {
+			if (buildGradleDependency.version != null) {
 				XMLTestUtil.testXmlElement(
 					pomXmlPath, dependencyElementString,
-					dependencyChildElements, 3, "scope", "provided");
+					dependencyChildElements, 2, "version",
+					buildGradleDependency.version);
+
+				if (buildGradleDependency.provided) {
+					XMLTestUtil.testXmlElement(
+						pomXmlPath, dependencyElementString,
+						dependencyChildElements, 3, "scope", "provided");
+				}
 			}
-			else {
-				Assert.assertEquals(
-					"Incorrect number of child nodes of " +
-						dependencyElementString + " in " + pomXmlPath,
-					dependencyChildElements.size(), 3);
+			else if (buildGradleDependency.provided) {
+				XMLTestUtil.testXmlElement(
+					pomXmlPath, dependencyElementString,
+					dependencyChildElements, 2, "scope", "provided");
 			}
 		}
 
@@ -778,6 +727,14 @@ public class ProjectTemplateFilesTest {
 				element, "artifactId");
 
 			String artifactId = artifactIdElement.getTextContent();
+
+			String pomXml = pomXmlPath.toString();
+
+			if (artifactId.equals("com.liferay.css.builder") &&
+				pomXml.contains("project-templates-theme/")) {
+
+				continue;
+			}
 
 			String key = artifactId + ".version";
 
@@ -811,9 +768,17 @@ public class ProjectTemplateFilesTest {
 		sb.append(projectTemplateDirName.replace('-', '.'));
 		sb.append(".internal.");
 
-		Matcher matcher = _projectTemplateDirNameSeparatorPattern.matcher(
-			projectTemplateDirName.substring(
-				FileTestUtil.PROJECT_TEMPLATE_DIR_PREFIX.length()));
+		Path bndBndPath = projectTemplateDirPath.resolve("bnd.bnd");
+
+		Properties properties = FileUtil.readProperties(bndBndPath);
+
+		String bundleName = properties.getProperty(Constants.BUNDLE_NAME);
+
+		bundleName = bundleName.replaceAll("[^\\w\\s]", "");
+
+		Matcher matcher = _bundleNameSeparatorPattern.matcher(
+			bundleName.substring(
+				FileTestUtil.PROJECT_TEMPLATE_BUNDLE_NAME_PREFIX.length()));
 
 		while (matcher.find()) {
 			String initial = matcher.group(1);
@@ -853,14 +818,16 @@ public class ProjectTemplateFilesTest {
 
 		Properties bndProperties = _testBndBnd(projectTemplateDirPath);
 
-		_testBuildGradle(projectTemplateDirName, archetypeResourcesDirPath);
+		_testBuildGradle(archetypeResourcesDirPath);
 		_testGitIgnore(projectTemplateDirName, archetypeResourcesDirPath);
 		_testGradleWrapper(archetypeResourcesDirPath);
 		_testMavenWrapper(archetypeResourcesDirPath);
 
 		String pathString = archetypeResourcesDirPath.toString();
 
-		if (!pathString.contains("ext")) {
+		if (!pathString.contains("ext") && !pathString.contains("spring-mvc") &&
+			!pathString.contains("form-field")) {
+
 			_testPomXml(archetypeResourcesDirPath, documentBuilder);
 		}
 
@@ -940,11 +907,13 @@ public class ProjectTemplateFilesTest {
 		String archetypePostGenerateGroovy = _testArchetypePostGenerateGroovy(
 			projectTemplateDirPath);
 
-		_testArchetypeMetadataXml(
-			projectTemplateDirPath, projectTemplateDirName,
-			archetypeResourcesDirPath, bndProperties,
-			requireAuthorProperty.get(), archetypePostGenerateGroovy,
-			archetypeResourceExpressions, documentBuilder);
+		if (!pathString.contains("form-field")) {
+			_testArchetypeMetadataXml(
+				projectTemplateDirPath, projectTemplateDirName,
+				archetypeResourcesDirPath, bndProperties,
+				requireAuthorProperty.get(), archetypePostGenerateGroovy,
+				archetypeResourceExpressions, documentBuilder);
+		}
 	}
 
 	private void _testPropertyValue(
@@ -1002,7 +971,12 @@ public class ProjectTemplateFilesTest {
 				text.contains("* @author ${author}"));
 		}
 
-		if (extension.equals("xml") && Validator.isNotNull(text)) {
+		String pathString = path.toString();
+
+		if (!pathString.contains("spring-mvc-portlet") &&
+			!fileName.equals("portlet") && extension.equals("xml") &&
+			Validator.isNotNull(text)) {
+
 			String xmlDeclaration = _xmlDeclarations.get(fileName);
 
 			if (xmlDeclaration == null) {
@@ -1027,8 +1001,9 @@ public class ProjectTemplateFilesTest {
 		}
 	}
 
-	private static final String[] _SOURCESET_NAMES =
-		{"main", "test", "testIntegration"};
+	private static final String[] _SOURCESET_NAMES = {
+		"main", "test", "testIntegration"
+	};
 
 	private static final List<String>
 		_archetypeMetadataXmlDefaultPropertyNames = Arrays.asList(
@@ -1041,14 +1016,13 @@ public class ProjectTemplateFilesTest {
 		Pattern.compile("\\$\\{([^\\}]*)\\}");
 	private static final Pattern _buildGradleDependencyPattern =
 		Pattern.compile(
-			"(compile(?:Only)?) group: \"(.+)\", name: \"(.+)\", " +
-				"(?:transitive: (?:true|false), )?version: \"(.+)\"");
-	private static final Pattern _buildGradleWorkspaceVariantPattern =
-		Pattern.compile(
-			".*^#if \\(\\$\\{projectType\\} != \"workspace\"\\).*",
-			Pattern.DOTALL | Pattern.MULTILINE);
+			"(compile(?:Only)?) \\(?group: \\\"(.+)\\\", name: \\\"([a-zA-Z" +
+				"0-9\\.\\-]+)\\\"((?:, version: )\\\"([0-9\\.]+)\\\")?(, " +
+					"transitive: (?: true|false))?(\\) \\{force = true\\})?");
 	private static final Pattern _bundleDescriptionPattern = Pattern.compile(
 		"Creates a .+\\.");
+	private static final Pattern _bundleNameSeparatorPattern = Pattern.compile(
+		"(?:^|\\s)(\\w)");
 	private static final List<String> _gitIgnoreLines = Arrays.asList(
 		".gradle/", "build/", "target/");
 
@@ -1077,8 +1051,6 @@ public class ProjectTemplateFilesTest {
 
 	private static final Pattern _pomXmlExecutionIdPattern = Pattern.compile(
 		"[a-z]+(?:-[a-z]+)*");
-	private static final Pattern _projectTemplateDirNameSeparatorPattern =
-		Pattern.compile("(?:^|-)(\\w)");
 	private static final Set<String> _textFileExtensions = new HashSet<>(
 		Arrays.asList(
 			"bnd", "gradle", "java", "js", "json", "jsp", "jspf", "properties",
@@ -1106,8 +1078,8 @@ public class ProjectTemplateFilesTest {
 			_addXmlDeclaration("service.xml", "service_xml_declaration.tmpl");
 			_addXmlDeclaration("web.xml", "web_xml_declaration.tmpl");
 		}
-		catch (IOException ioe) {
-			throw new ExceptionInInitializerError(ioe);
+		catch (IOException ioException) {
+			throw new ExceptionInInitializerError(ioException);
 		}
 	}
 

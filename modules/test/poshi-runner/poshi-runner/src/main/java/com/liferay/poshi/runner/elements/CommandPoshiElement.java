@@ -14,6 +14,8 @@
 
 package com.liferay.poshi.runner.elements;
 
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
+
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,7 +40,8 @@ public class CommandPoshiElement extends PoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		if (_isElementType(parentPoshiElement, poshiScript)) {
 			return new CommandPoshiElement(parentPoshiElement, poshiScript);
@@ -53,7 +56,14 @@ public class CommandPoshiElement extends PoshiElement {
 	}
 
 	@Override
-	public void parsePoshiScript(String poshiScript) {
+	public int getPoshiScriptLineNumber() {
+		return getPoshiScriptLineNumber(false);
+	}
+
+	@Override
+	public void parsePoshiScript(String poshiScript)
+		throws PoshiScriptParserException {
+
 		String blockName = getBlockName(poshiScript);
 
 		Matcher poshiScriptAnnotationMatcher =
@@ -93,12 +103,13 @@ public class CommandPoshiElement extends PoshiElement {
 
 		sb.append("\n");
 
-		for (PoshiElement poshiElement :
-				toPoshiElements(elements("description"))) {
+		DescriptionPoshiElement descriptionPoshiElement =
+			(DescriptionPoshiElement)element("description");
 
-			sb.append("\n\t@description = \"");
-			sb.append(poshiElement.attributeValue("message"));
-			sb.append("\"");
+		if (descriptionPoshiElement != null) {
+			sb.append("\n\t");
+
+			sb.append(descriptionPoshiElement.toPoshiScript());
 		}
 
 		for (PoshiElementAttribute poshiElementAttribute :
@@ -133,7 +144,8 @@ public class CommandPoshiElement extends PoshiElement {
 	}
 
 	protected CommandPoshiElement(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		this(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}
@@ -149,7 +161,8 @@ public class CommandPoshiElement extends PoshiElement {
 	}
 
 	protected CommandPoshiElement(
-		String name, PoshiElement parentPoshiElement, String poshiScript) {
+			String name, PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		super(name, parentPoshiElement, poshiScript);
 	}
@@ -172,7 +185,7 @@ public class CommandPoshiElement extends PoshiElement {
 	private static final String _ELEMENT_NAME = "command";
 
 	private static final String _POSHI_SCRIPT_KEYWORD_REGEX =
-		"(function|macro|test)";
+		"(function|macro|test)[\\s]+";
 
 	private static final Pattern _blockNamePattern = Pattern.compile(
 		"^" + BLOCK_NAME_ANNOTATION_REGEX + _POSHI_SCRIPT_KEYWORD_REGEX +

@@ -15,9 +15,10 @@
 package com.liferay.portal.search.web.internal.display.context;
 
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.search.facet.faceted.searcher.FacetedSearcherManager;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.searcher.Searcher;
 import com.liferay.portal.search.summary.SummaryBuilderFactory;
 import com.liferay.portal.search.web.internal.facet.SearchFacetTracker;
 
@@ -44,13 +45,11 @@ public class SearchDisplayContextFactoryImpl
 
 		return new SearchDisplayContext(
 			renderRequest, portletPreferences, portal, HtmlUtil.getHtml(),
-			language, facetedSearcherManager, new IndexSearchPropsValuesImpl(),
+			language, searcher, new IndexSearchPropsValuesImpl(),
 			new PortletURLFactoryImpl(renderRequest, renderResponse),
-			summaryBuilderFactory, searchFacetTracker);
+			summaryBuilderFactory, searchRequestBuilderFactory,
+			searchFacetTracker);
 	}
-
-	@Reference
-	protected FacetedSearcherManager facetedSearcherManager;
 
 	@Reference
 	protected Language language;
@@ -59,7 +58,13 @@ public class SearchDisplayContextFactoryImpl
 	protected Portal portal;
 
 	@Reference
+	protected Searcher searcher;
+
+	@Reference
 	protected SearchFacetTracker searchFacetTracker;
+
+	@Reference
+	protected SearchRequestBuilderFactory searchRequestBuilderFactory;
 
 	@Reference
 	protected SummaryBuilderFactory summaryBuilderFactory;

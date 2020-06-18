@@ -16,25 +16,43 @@ package com.liferay.portal.odata.internal.filter;
 
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
+import com.liferay.portal.kernel.search.filter.ExistsFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.search.filter.PrefixFilter;
+import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.search.filter.RangeTermFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
+import com.liferay.portal.kernel.search.generic.WildcardQueryImpl;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.odata.entity.CollectionEntityField;
+import com.liferay.portal.odata.entity.ComplexEntityField;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.InvalidFilterException;
 import com.liferay.portal.odata.filter.expression.BinaryExpression;
+import com.liferay.portal.odata.filter.expression.CollectionPropertyExpression;
+import com.liferay.portal.odata.filter.expression.ComplexPropertyExpression;
+import com.liferay.portal.odata.filter.expression.Expression;
+import com.liferay.portal.odata.filter.expression.ExpressionVisitException;
 import com.liferay.portal.odata.filter.expression.ExpressionVisitor;
+import com.liferay.portal.odata.filter.expression.LambdaFunctionExpression;
+import com.liferay.portal.odata.filter.expression.LambdaVariableExpression;
 import com.liferay.portal.odata.filter.expression.LiteralExpression;
 import com.liferay.portal.odata.filter.expression.MemberExpression;
+import com.liferay.portal.odata.filter.expression.MethodExpression;
+import com.liferay.portal.odata.filter.expression.PrimitivePropertyExpression;
+import com.liferay.portal.odata.filter.expression.PropertyExpression;
+import com.liferay.portal.odata.filter.expression.UnaryExpression;
 
 import java.text.Format;
 import java.text.ParseException;
 import java.text.ParsePosition;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -69,9 +87,88 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 	}
 
 	@Override
+	public Object visitCollectionPropertyExpression(
+			CollectionPropertyExpression collectionPropertyExpression)
+		throws ExpressionVisitException {
+
+		LambdaFunctionExpression lambdaFunctionExpression =
+			collectionPropertyExpression.getLambdaFunctionExpression();
+
+		Map<String, EntityField> entityFieldsMap =
+			_entityModel.getEntityFieldsMap();
+
+		return lambdaFunctionExpression.accept(
+			new ExpressionVisitorImpl(
+				_format, _locale,
+				_getLambdaEntityModel(
+					lambdaFunctionExpression.getVariableName(),
+					(CollectionEntityField)entityFieldsMap.get(
+						collectionPropertyExpression.getName()))));
+	}
+
+	@Override
+	public Object visitComplexPropertyExpression(
+		ComplexPropertyExpression complexPropertyExpression) {
+
+		Map<String, EntityField> entityFieldsMap =
+			_entityModel.getEntityFieldsMap();
+
+		ComplexEntityField complexEntityField =
+			(ComplexEntityField)entityFieldsMap.get(
+				complexPropertyExpression.getName());
+
+		PropertyExpression propertyExpression =
+			complexPropertyExpression.getPropertyExpression();
+
+		Map<String, EntityField> complexEntityFieldEntityFieldsMap =
+			complexEntityField.getEntityFieldsMap();
+
+		return complexEntityFieldEntityFieldsMap.get(
+			propertyExpression.getName());
+	}
+
+	@Override
+	public Object visitLambdaFunctionExpression(
+			LambdaFunctionExpression.Type type, String variable,
+			Expression expression)
+		throws ExpressionVisitException {
+
+		if (type == LambdaFunctionExpression.Type.ANY) {
+			return _any(expression);
+		}
+
+		throw new UnsupportedOperationException(
+			"Unsupported type visitLambdaFunctionExpression with type " + type);
+	}
+
+	@Override
+	public EntityField visitLambdaVariableExpression(
+			LambdaVariableExpression lambdaVariableExpression)
+		throws ExpressionVisitException {
+
+		Map<String, EntityField> entityFieldsMap =
+			_entityModel.getEntityFieldsMap();
+
+		EntityField entityField = entityFieldsMap.get(
+			lambdaVariableExpression.getVariableName());
+
+		if (entityField == null) {
+			throw new ExpressionVisitException(
+				"Invoked visitlambdavariableexpression when no entity field " +
+					"is stored for lambda variable name " +
+						lambdaVariableExpression.getVariableName());
+		}
+
+		return entityField;
+	}
+
+	@Override
 	public Object visitLiteralExpression(LiteralExpression literalExpression) {
 		if (Objects.equals(
-				LiteralExpression.Type.DATE, literalExpression.getType())) {
+				LiteralExpression.Type.DATE, literalExpression.getType()) ||
+			Objects.equals(
+				LiteralExpression.Type.DATE_TIME,
+				literalExpression.getType())) {
 
 			return _normalizeDateLiteral(literalExpression.getText());
 		}
@@ -86,13 +183,81 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 	}
 
 	@Override
-	public Object visitMemberExpression(MemberExpression memberExpression) {
-		List<String> resourcePath = memberExpression.getResourcePath();
+	public Object visitMemberExpression(MemberExpression memberExpression)
+		throws ExpressionVisitException {
+
+		Expression expression = memberExpression.getExpression();
+
+		return expression.accept(this);
+	}
+
+	@Override
+	public Object visitMethodExpression(
+		List<Object> expressions, MethodExpression.Type type) {
+
+		if (type == MethodExpression.Type.CONTAINS) {
+			if (expressions.size() != 2) {
+				throw new UnsupportedOperationException(
+					StringBundler.concat(
+						"Unsupported method visitMethodExpression with method",
+						"type ", type, " and ", expressions.size(), "params"));
+			}
+
+			return _contains(
+				(EntityField)expressions.get(0), expressions.get(1), _locale);
+		}
+
+		if (type == MethodExpression.Type.STARTS_WITH) {
+			if (expressions.size() != 2) {
+				throw new UnsupportedOperationException(
+					StringBundler.concat(
+						"Unsupported method visitMethodExpression with method",
+						"type ", type, " and ", expressions.size(), "params"));
+			}
+
+			return _startsWith(
+				(EntityField)expressions.get(0), expressions.get(1), _locale);
+		}
+
+		throw new UnsupportedOperationException(
+			"Unsupported method visitMethodExpression with method type " +
+				type);
+	}
+
+	@Override
+	public Object visitPrimitivePropertyExpression(
+		PrimitivePropertyExpression primitivePropertyExpression) {
 
 		Map<String, EntityField> entityFieldsMap =
 			_entityModel.getEntityFieldsMap();
 
-		return entityFieldsMap.get(resourcePath.get(0));
+		return entityFieldsMap.get(primitivePropertyExpression.getName());
+	}
+
+	@Override
+	public Filter visitUnaryExpressionOperation(
+		UnaryExpression.Operation operation, Object operand) {
+
+		if (Objects.equals(UnaryExpression.Operation.NOT, operation)) {
+			return _getNotFilter((Filter)operand);
+		}
+
+		throw new UnsupportedOperationException(
+			"Unsupported method visitUnaryExpressionOperation with operation " +
+				operation);
+	}
+
+	private Object _any(Expression expression) throws ExpressionVisitException {
+		return expression.accept(this);
+	}
+
+	private Filter _contains(
+		EntityField entityField, Object fieldValue, Locale locale) {
+
+		return new QueryFilter(
+			new WildcardQueryImpl(
+				entityField.getFilterableName(locale),
+				"*" + entityField.getFilterableValue(fieldValue) + "*"));
 	}
 
 	private Filter _getANDFilter(Filter leftFilter, Filter rightFilter) {
@@ -106,6 +271,16 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 
 	private Filter _getEQFilter(
 		EntityField entityField, Object fieldValue, Locale locale) {
+
+		if (fieldValue == null) {
+			BooleanFilter booleanFilter = new BooleanFilter();
+
+			booleanFilter.add(
+				new ExistsFilter(entityField.getFilterableName(locale)),
+				BooleanClauseOccur.MUST_NOT);
+
+			return booleanFilter;
+		}
 
 		return new TermFilter(
 			entityField.getFilterableName(locale),
@@ -136,6 +311,9 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 		else if (Objects.equals(BinaryExpression.Operation.LT, operation)) {
 			filter = _getLTFilter((EntityField)left, right, locale);
 		}
+		else if (Objects.equals(BinaryExpression.Operation.NE, operation)) {
+			filter = _getNEFilter((EntityField)left, right, locale);
+		}
 		else if (Objects.equals(BinaryExpression.Operation.OR, operation)) {
 			filter = _getORFilter((Filter)left, (Filter)right);
 		}
@@ -149,12 +327,20 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 	private Filter _getGEFilter(
 		EntityField entityField, Object fieldValue, Locale locale) {
 
+		if (fieldValue == null) {
+			throw new UnsupportedOperationException(
+				"Unsupported method _getGEFilter with null values");
+		}
+
 		if (Objects.equals(entityField.getType(), EntityField.Type.DATE) ||
+			Objects.equals(entityField.getType(), EntityField.Type.DATE_TIME) ||
+			Objects.equals(entityField.getType(), EntityField.Type.DOUBLE) ||
+			Objects.equals(entityField.getType(), EntityField.Type.INTEGER) ||
 			Objects.equals(entityField.getType(), EntityField.Type.STRING)) {
 
 			return new RangeTermFilter(
 				entityField.getFilterableName(locale), true, true,
-				String.valueOf(fieldValue), null);
+				entityField.getFilterableValue(fieldValue), null);
 		}
 
 		throw new UnsupportedOperationException(
@@ -165,12 +351,20 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 	private Filter _getGTFilter(
 		EntityField entityField, Object fieldValue, Locale locale) {
 
+		if (fieldValue == null) {
+			throw new UnsupportedOperationException(
+				"Unsupported method _getGTFilter with null values");
+		}
+
 		if (Objects.equals(entityField.getType(), EntityField.Type.DATE) ||
+			Objects.equals(entityField.getType(), EntityField.Type.DATE_TIME) ||
+			Objects.equals(entityField.getType(), EntityField.Type.DOUBLE) ||
+			Objects.equals(entityField.getType(), EntityField.Type.INTEGER) ||
 			Objects.equals(entityField.getType(), EntityField.Type.STRING)) {
 
 			return new RangeTermFilter(
 				entityField.getFilterableName(locale), false, true,
-				String.valueOf(fieldValue), null);
+				entityField.getFilterableValue(fieldValue), null);
 		}
 
 		throw new UnsupportedOperationException(
@@ -178,15 +372,42 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 				entityField.getType());
 	}
 
+	private EntityModel _getLambdaEntityModel(
+		String variableName, CollectionEntityField collectionEntityField) {
+
+		return new EntityModel() {
+
+			@Override
+			public Map<String, EntityField> getEntityFieldsMap() {
+				return Collections.singletonMap(
+					variableName, collectionEntityField.getEntityField());
+			}
+
+			@Override
+			public String getName() {
+				return collectionEntityField.getName();
+			}
+
+		};
+	}
+
 	private Filter _getLEFilter(
 		EntityField entityField, Object fieldValue, Locale locale) {
 
+		if (fieldValue == null) {
+			throw new UnsupportedOperationException(
+				"Unsupported method _getLEFilter with null values");
+		}
+
 		if (Objects.equals(entityField.getType(), EntityField.Type.DATE) ||
+			Objects.equals(entityField.getType(), EntityField.Type.DATE_TIME) ||
+			Objects.equals(entityField.getType(), EntityField.Type.DOUBLE) ||
+			Objects.equals(entityField.getType(), EntityField.Type.INTEGER) ||
 			Objects.equals(entityField.getType(), EntityField.Type.STRING)) {
 
 			return new RangeTermFilter(
 				entityField.getFilterableName(locale), false, true, null,
-				String.valueOf(fieldValue));
+				entityField.getFilterableValue(fieldValue));
 		}
 
 		throw new UnsupportedOperationException(
@@ -197,17 +418,51 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 	private Filter _getLTFilter(
 		EntityField entityField, Object fieldValue, Locale locale) {
 
+		if (fieldValue == null) {
+			throw new UnsupportedOperationException(
+				"Unsupported method _getLTFilter with null values");
+		}
+
 		if (Objects.equals(entityField.getType(), EntityField.Type.DATE) ||
+			Objects.equals(entityField.getType(), EntityField.Type.DATE_TIME) ||
+			Objects.equals(entityField.getType(), EntityField.Type.DOUBLE) ||
+			Objects.equals(entityField.getType(), EntityField.Type.INTEGER) ||
 			Objects.equals(entityField.getType(), EntityField.Type.STRING)) {
 
 			return new RangeTermFilter(
 				entityField.getFilterableName(locale), false, false, null,
-				String.valueOf(fieldValue));
+				entityField.getFilterableValue(fieldValue));
 		}
 
 		throw new UnsupportedOperationException(
 			"Unsupported method _getLTFilter with entity field type " +
 				entityField.getType());
+	}
+
+	private Filter _getNEFilter(
+		EntityField entityField, Object fieldValue, Locale locale) {
+
+		if (fieldValue == null) {
+			return new ExistsFilter(entityField.getFilterableName(locale));
+		}
+
+		BooleanFilter booleanFilter = new BooleanFilter();
+
+		booleanFilter.add(
+			new TermFilter(
+				entityField.getFilterableName(locale),
+				entityField.getFilterableValue(fieldValue)),
+			BooleanClauseOccur.MUST_NOT);
+
+		return booleanFilter;
+	}
+
+	private Filter _getNotFilter(Filter filter) {
+		BooleanFilter booleanFilter = new BooleanFilter();
+
+		booleanFilter.add(filter, BooleanClauseOccur.MUST_NOT);
+
+		return booleanFilter;
 	}
 
 	private Filter _getORFilter(Filter leftFilter, Filter rightFilter) {
@@ -225,9 +480,10 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 
 			return _format.format(date);
 		}
-		catch (ParseException pe) {
+		catch (ParseException parseException) {
 			throw new InvalidFilterException(
-				"Invalid date format, use ISO 8601: " + pe.getMessage());
+				"Invalid date format, use ISO 8601: " +
+					parseException.getMessage());
 		}
 	}
 
@@ -238,6 +494,14 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 
 		return StringUtil.replace(
 			literal, StringPool.DOUBLE_APOSTROPHE, StringPool.APOSTROPHE);
+	}
+
+	private Filter _startsWith(
+		EntityField entityField, Object fieldValue, Locale locale) {
+
+		return new PrefixFilter(
+			entityField.getFilterableName(locale),
+			entityField.getFilterableValue(fieldValue));
 	}
 
 	private final EntityModel _entityModel;

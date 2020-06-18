@@ -14,14 +14,11 @@
 
 package com.liferay.blogs.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.blogs.model.BlogsEntry;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing BlogsEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see BlogsEntry
  * @generated
  */
-@ProviderType
-public class BlogsEntryCacheModel implements CacheModel<BlogsEntry>,
-	Externalizable {
+public class BlogsEntryCacheModel
+	implements CacheModel<BlogsEntry>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -52,7 +48,9 @@ public class BlogsEntryCacheModel implements CacheModel<BlogsEntry>,
 
 		BlogsEntryCacheModel blogsEntryCacheModel = (BlogsEntryCacheModel)obj;
 
-		if (entryId == blogsEntryCacheModel.entryId) {
+		if ((entryId == blogsEntryCacheModel.entryId) &&
+			(mvccVersion == blogsEntryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +59,28 @@ public class BlogsEntryCacheModel implements CacheModel<BlogsEntry>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, entryId);
+		int hashCode = HashUtil.hash(0, entryId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(59);
+		StringBundler sb = new StringBundler(61);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", entryId=");
 		sb.append(entryId);
@@ -134,6 +146,8 @@ public class BlogsEntryCacheModel implements CacheModel<BlogsEntry>,
 	@Override
 	public BlogsEntry toEntityModel() {
 		BlogsEntryImpl blogsEntryImpl = new BlogsEntryImpl();
+
+		blogsEntryImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			blogsEntryImpl.setUuid("");
@@ -277,7 +291,10 @@ public class BlogsEntryCacheModel implements CacheModel<BlogsEntry>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		entryId = objectInput.readLong();
@@ -294,13 +311,13 @@ public class BlogsEntryCacheModel implements CacheModel<BlogsEntry>,
 		subtitle = objectInput.readUTF();
 		urlTitle = objectInput.readUTF();
 		description = objectInput.readUTF();
-		content = objectInput.readUTF();
+		content = (String)objectInput.readObject();
 		displayDate = objectInput.readLong();
 
 		allowPingbacks = objectInput.readBoolean();
 
 		allowTrackbacks = objectInput.readBoolean();
-		trackbacks = objectInput.readUTF();
+		trackbacks = (String)objectInput.readObject();
 		coverImageCaption = objectInput.readUTF();
 
 		coverImageFileEntryId = objectInput.readLong();
@@ -322,8 +339,9 @@ public class BlogsEntryCacheModel implements CacheModel<BlogsEntry>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -378,10 +396,10 @@ public class BlogsEntryCacheModel implements CacheModel<BlogsEntry>,
 		}
 
 		if (content == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(content);
+			objectOutput.writeObject(content);
 		}
 
 		objectOutput.writeLong(displayDate);
@@ -391,10 +409,10 @@ public class BlogsEntryCacheModel implements CacheModel<BlogsEntry>,
 		objectOutput.writeBoolean(allowTrackbacks);
 
 		if (trackbacks == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(trackbacks);
+			objectOutput.writeObject(trackbacks);
 		}
 
 		if (coverImageCaption == null) {
@@ -442,6 +460,7 @@ public class BlogsEntryCacheModel implements CacheModel<BlogsEntry>,
 		objectOutput.writeLong(statusDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long entryId;
 	public long groupId;
@@ -471,4 +490,5 @@ public class BlogsEntryCacheModel implements CacheModel<BlogsEntry>,
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

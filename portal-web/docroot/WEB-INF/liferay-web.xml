@@ -22,7 +22,7 @@
 		<filter-class>com.liferay.portal.servlet.filters.aggregate.AggregateFilter</filter-class>
 		<init-param>
 			<param-name>url-regex-pattern</param-name>
-			<param-value>.+/(aui_lang|barebone|css|everything|main)\.jsp</param-value>
+			<param-value>.+/(aui_lang|available_languages|barebone|css|everything|main)\.jsp</param-value>
 		</init-param>
 	</filter>
 	<filter>
@@ -110,7 +110,7 @@
 		<filter-class>com.liferay.portal.servlet.filters.etag.ETagFilter</filter-class>
 		<init-param>
 			<param-name>url-regex-pattern</param-name>
-			<param-value>.+/(barebone|css|everything|main)\.jsp</param-value>
+			<param-value>.+/(available_languages|barebone|css|everything|main)\.jsp</param-value>
 		</init-param>
 	</filter>
 	<filter>
@@ -162,7 +162,7 @@
 		<filter-class>com.liferay.portal.servlet.filters.header.HeaderFilter</filter-class>
 		<init-param>
 			<param-name>url-regex-pattern</param-name>
-			<param-value>.+/(barebone|css|everything|main)\.jsp</param-value>
+			<param-value>.+/(available_languages|barebone|css|everything|main)\.jsp</param-value>
 		</init-param>
 		<init-param>
 			<param-name>Cache-Control</param-name>
@@ -242,16 +242,12 @@
 		</init-param>
 	</filter>
 	<filter>
-		<filter-name>Password Modified Filter</filter-name>
-		<filter-class>com.liferay.portal.servlet.filters.password.modified.PasswordModifiedFilter</filter-class>
+		<filter-name>Lockout Filter</filter-name>
+		<filter-class>com.liferay.portal.servlet.filters.lockout.LockoutFilter</filter-class>
 	</filter>
 	<filter>
-		<filter-name>Remoting Servlet Filter</filter-name>
-		<filter-class>com.liferay.portal.servlet.filters.authverifier.AuthVerifierFilter</filter-class>
-		<init-param>
-			<param-name>portal_property_prefix</param-name>
-			<param-value>spring.remoting.servlet.</param-value>
-		</init-param>
+		<filter-name>Password Modified Filter</filter-name>
+		<filter-class>com.liferay.portal.servlet.filters.password.modified.PasswordModifiedFilter</filter-class>
 	</filter>
 	<filter>
 		<filter-name>Secure Friendly URL Servlet Filter</filter-name>
@@ -409,6 +405,10 @@
 		<filter-name>WebLogic Include Filter</filter-name>
 		<filter-class>com.liferay.portal.servlet.filters.weblogic.WebLogicIncludeFilter</filter-class>
 	</filter>
+	<filter>
+		<filter-name>WebSphere Async Servlet Request Filter</filter-name>
+		<filter-class>com.liferay.portal.servlet.filters.websphere.WebSphereAsyncServletRequestFilter</filter-class>
+	</filter>
 	<filter-mapping>
 		<filter-name>Ignore Filter - FTL</filter-name>
 		<url-pattern>*.ftl</url-pattern>
@@ -436,11 +436,6 @@
 	<filter-mapping>
 		<filter-name>Thread Local Filter</filter-name>
 		<url-pattern>/c/portal/j_login</url-pattern>
-		<dispatcher>FORWARD</dispatcher>
-	</filter-mapping>
-	<filter-mapping>
-		<filter-name>Thread Local Filter</filter-name>
-		<url-pattern>/c/portal/resiliency</url-pattern>
 		<dispatcher>FORWARD</dispatcher>
 	</filter-mapping>
 	<filter-mapping>
@@ -502,6 +497,12 @@
 	<filter-mapping>
 		<filter-name>SSO Open SSO Filter</filter-name>
 		<url-pattern>/c/portal/logout</url-pattern>
+		<dispatcher>FORWARD</dispatcher>
+		<dispatcher>REQUEST</dispatcher>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>Auto Login Filter</filter-name>
+		<url-pattern>/c/document_library/get_file/*</url-pattern>
 		<dispatcher>FORWARD</dispatcher>
 		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
@@ -579,6 +580,14 @@
 	</filter-mapping>
 	<filter-mapping>
 		<filter-name>Header Filter</filter-name>
+		<url-pattern>/o/js_bundle_config</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>Header Filter</filter-name>
+		<url-pattern>/o/js_loader_config</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>Header Filter</filter-name>
 		<url-pattern>*.css</url-pattern>
 	</filter-mapping>
 	<filter-mapping>
@@ -650,6 +659,14 @@
 	<filter-mapping>
 		<filter-name>ETag Filter</filter-name>
 		<url-pattern>/language/*</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>ETag Filter</filter-name>
+		<url-pattern>/o/js_bundle_config</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>ETag Filter</filter-name>
+		<url-pattern>/o/js_loader_config</url-pattern>
 	</filter-mapping>
 	<filter-mapping>
 		<filter-name>ETag Filter</filter-name>
@@ -762,6 +779,12 @@
 		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
 	<filter-mapping>
+		<filter-name>Lockout Filter</filter-name>
+		<url-pattern>/*</url-pattern>
+		<dispatcher>FORWARD</dispatcher>
+		<dispatcher>REQUEST</dispatcher>
+	</filter-mapping>
+	<filter-mapping>
 		<filter-name>Password Modified Filter</filter-name>
 		<url-pattern>/*</url-pattern>
 		<dispatcher>FORWARD</dispatcher>
@@ -816,7 +839,12 @@
 	</filter-mapping>
 	<filter-mapping>
 		<filter-name>GZip Filter</filter-name>
-		<url-pattern>/o/js_loader_modules</url-pattern>
+		<url-pattern>/o/js_loader_config</url-pattern>
+		<dispatcher>REQUEST</dispatcher>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>GZip Filter</filter-name>
+		<url-pattern>/o/js_resolve_modules</url-pattern>
 		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
 	<filter-mapping>
@@ -973,13 +1001,6 @@
 		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
 	<filter-mapping>
-		<filter-name>Remoting Servlet Filter</filter-name>
-		<url-pattern>/api/spring/*</url-pattern>
-		<dispatcher>FORWARD</dispatcher>
-		<dispatcher>INCLUDE</dispatcher>
-		<dispatcher>REQUEST</dispatcher>
-	</filter-mapping>
-	<filter-mapping>
 		<filter-name>Tunnel Servlet Filter</filter-name>
 		<url-pattern>/api/liferay/*</url-pattern>
 		<dispatcher>FORWARD</dispatcher>
@@ -1004,6 +1025,13 @@
 		<filter-name>WebLogic Include Filter</filter-name>
 		<url-pattern>/*</url-pattern>
 		<dispatcher>INCLUDE</dispatcher>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>WebSphere Async Servlet Request Filter</filter-name>
+		<url-pattern>/*</url-pattern>
+		<dispatcher>FORWARD</dispatcher>
+		<dispatcher>INCLUDE</dispatcher>
+		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
 	<filter-mapping>
 		<filter-name>Upload Servlet Request Filter</filter-name>

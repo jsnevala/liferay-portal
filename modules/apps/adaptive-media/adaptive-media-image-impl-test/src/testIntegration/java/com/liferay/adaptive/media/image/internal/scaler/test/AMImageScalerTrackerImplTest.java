@@ -303,10 +303,11 @@ public class AMImageScalerTrackerImplTest {
 		Registry registry = RegistryUtil.getRegistry();
 
 		ServiceComponentRuntime serviceComponentRuntime = registry.getService(
-			ServiceComponentRuntime.class);
+			registry.getServiceReference(ServiceComponentRuntime.class));
 
 		Object service = registry.getService(
-			_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER);
+			registry.getServiceReference(
+				_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER));
 
 		Bundle bundle = FrameworkUtil.getBundle(service.getClass());
 
@@ -324,10 +325,11 @@ public class AMImageScalerTrackerImplTest {
 		Registry registry = RegistryUtil.getRegistry();
 
 		ServiceComponentRuntime serviceComponentRuntime = registry.getService(
-			ServiceComponentRuntime.class);
+			registry.getServiceReference(ServiceComponentRuntime.class));
 
 		Object service = registry.getService(
-			_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER);
+			registry.getServiceReference(
+				_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER));
 
 		Bundle bundle = FrameworkUtil.getBundle(service.getClass());
 
@@ -348,7 +350,8 @@ public class AMImageScalerTrackerImplTest {
 		Registry registry = RegistryUtil.getRegistry();
 
 		Object service = registry.getService(
-			_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER);
+			registry.getServiceReference(
+				_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER));
 
 		Bundle bundle = FrameworkUtil.getBundle(service.getClass());
 
@@ -387,7 +390,7 @@ public class AMImageScalerTrackerImplTest {
 			"com.liferay.adaptive.media.image.internal.scaler." +
 				"AMImageScalerTrackerImpl";
 
-	@Inject (filter = "component.name=*.AMDefaultImageScaler")
+	@Inject(filter = "component.name=*.AMDefaultImageScaler")
 	private AMImageScaler _amDefaultImageScaler;
 
 	@Inject

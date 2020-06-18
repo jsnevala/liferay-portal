@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,11 +26,12 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class KaleoTransitionSoap implements Serializable {
+
 	public static KaleoTransitionSoap toSoapModel(KaleoTransition model) {
 		KaleoTransitionSoap soapModel = new KaleoTransitionSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setKaleoTransitionId(model.getKaleoTransitionId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -40,7 +39,9 @@ public class KaleoTransitionSoap implements Serializable {
 		soapModel.setUserName(model.getUserName());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
-		soapModel.setKaleoDefinitionVersionId(model.getKaleoDefinitionVersionId());
+		soapModel.setKaleoDefinitionId(model.getKaleoDefinitionId());
+		soapModel.setKaleoDefinitionVersionId(
+			model.getKaleoDefinitionVersionId());
 		soapModel.setKaleoNodeId(model.getKaleoNodeId());
 		soapModel.setName(model.getName());
 		soapModel.setDescription(model.getDescription());
@@ -54,7 +55,8 @@ public class KaleoTransitionSoap implements Serializable {
 	}
 
 	public static KaleoTransitionSoap[] toSoapModels(KaleoTransition[] models) {
-		KaleoTransitionSoap[] soapModels = new KaleoTransitionSoap[models.length];
+		KaleoTransitionSoap[] soapModels =
+			new KaleoTransitionSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -65,10 +67,12 @@ public class KaleoTransitionSoap implements Serializable {
 
 	public static KaleoTransitionSoap[][] toSoapModels(
 		KaleoTransition[][] models) {
+
 		KaleoTransitionSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new KaleoTransitionSoap[models.length][models[0].length];
+			soapModels =
+				new KaleoTransitionSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new KaleoTransitionSoap[0][0];
@@ -83,7 +87,9 @@ public class KaleoTransitionSoap implements Serializable {
 
 	public static KaleoTransitionSoap[] toSoapModels(
 		List<KaleoTransition> models) {
-		List<KaleoTransitionSoap> soapModels = new ArrayList<KaleoTransitionSoap>(models.size());
+
+		List<KaleoTransitionSoap> soapModels =
+			new ArrayList<KaleoTransitionSoap>(models.size());
 
 		for (KaleoTransition model : models) {
 			soapModels.add(toSoapModel(model));
@@ -101,6 +107,14 @@ public class KaleoTransitionSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setKaleoTransitionId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getKaleoTransitionId() {
@@ -157,6 +171,14 @@ public class KaleoTransitionSoap implements Serializable {
 
 	public void setModifiedDate(Date modifiedDate) {
 		_modifiedDate = modifiedDate;
+	}
+
+	public long getKaleoDefinitionId() {
+		return _kaleoDefinitionId;
+	}
+
+	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		_kaleoDefinitionId = kaleoDefinitionId;
 	}
 
 	public long getKaleoDefinitionVersionId() {
@@ -235,6 +257,7 @@ public class KaleoTransitionSoap implements Serializable {
 		_defaultTransition = defaultTransition;
 	}
 
+	private long _mvccVersion;
 	private long _kaleoTransitionId;
 	private long _groupId;
 	private long _companyId;
@@ -242,6 +265,7 @@ public class KaleoTransitionSoap implements Serializable {
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
+	private long _kaleoDefinitionId;
 	private long _kaleoDefinitionVersionId;
 	private long _kaleoNodeId;
 	private String _name;
@@ -251,4 +275,5 @@ public class KaleoTransitionSoap implements Serializable {
 	private long _targetKaleoNodeId;
 	private String _targetKaleoNodeName;
 	private boolean _defaultTransition;
+
 }

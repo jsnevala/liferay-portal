@@ -17,7 +17,7 @@ package com.liferay.knowledge.base.web.internal.display.context;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.SafeConsumer;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
 import com.liferay.knowledge.base.model.KBArticle;
@@ -42,6 +42,7 @@ import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -51,7 +52,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,72 +70,66 @@ import javax.servlet.http.HttpServletRequest;
 public class KBAdminManagementToolbarDisplayContext {
 
 	public KBAdminManagementToolbarDisplayContext(
+			HttpServletRequest httpServletRequest,
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
-			HttpServletRequest request, RenderRequest renderRequest,
-			RenderResponse renderResponse, PortletConfig portletConfig)
+			RenderRequest renderRequest, RenderResponse renderResponse,
+			PortletConfig portletConfig)
 		throws PortalException, PortletException {
 
+		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
-		_request = request;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_portletConfig = portletConfig;
 
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_createSearchContainer();
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData("action", "deleteEntries");
-						dropdownItem.setIcon("times");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "deleteEntries");
+				dropdownItem.setIcon("times-circle");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "delete"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
-	public List<String> getAvailableActionDropdownItems(KBArticle kbArticle)
+	public List<String> getAvailableActions(KBArticle kbArticle)
 		throws PortalException {
 
-		List<String> availableActionDropdownItems = new ArrayList<>();
-
-		PermissionChecker permissionChecker =
-			_themeDisplay.getPermissionChecker();
+		List<String> availableActions = new ArrayList<>();
 
 		if (KBArticlePermission.contains(
-				permissionChecker, kbArticle, ActionKeys.DELETE)) {
+				_themeDisplay.getPermissionChecker(), kbArticle,
+				ActionKeys.DELETE)) {
 
-			availableActionDropdownItems.add("deleteEntries");
+			availableActions.add("deleteEntries");
 		}
 
-		return availableActionDropdownItems;
+		return availableActions;
 	}
 
-	public List<String> getAvailableActionDropdownItems(KBFolder kbFolder)
+	public List<String> getAvailableActions(KBFolder kbFolder)
 		throws PortalException {
 
-		List<String> availableActionDropdownItems = new ArrayList<>();
-
-		PermissionChecker permissionChecker =
-			_themeDisplay.getPermissionChecker();
+		List<String> availableActions = new ArrayList<>();
 
 		if (KBFolderPermission.contains(
-				permissionChecker, kbFolder, ActionKeys.DELETE)) {
+				_themeDisplay.getPermissionChecker(), kbFolder,
+				ActionKeys.DELETE)) {
 
-			availableActionDropdownItems.add("deleteEntries");
+			availableActions.add("deleteEntries");
 		}
 
-		return availableActionDropdownItems;
+		return availableActions;
 	}
 
 	public CreationMenu getCreationMenu() throws PortalException {
@@ -145,10 +139,11 @@ public class KBAdminManagementToolbarDisplayContext {
 			KBFolderConstants.getClassName());
 
 		long parentResourceClassNameId = ParamUtil.getLong(
-			_request, "parentResourceClassNameId", kbFolderClassNameId);
+			_httpServletRequest, "parentResourceClassNameId",
+			kbFolderClassNameId);
 
 		long parentResourcePrimKey = ParamUtil.getLong(
-			_request, "parentResourcePrimKey",
+			_httpServletRequest, "parentResourcePrimKey",
 			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
 		boolean hasAddKBArticlePermission = false;
@@ -184,7 +179,8 @@ public class KBAdminManagementToolbarDisplayContext {
 					addFolderURL.setParameter(
 						"mvcPath", "/admin/common/edit_folder.jsp");
 					addFolderURL.setParameter(
-						"redirect", PortalUtil.getCurrentURL(_request));
+						"redirect",
+						PortalUtil.getCurrentURL(_httpServletRequest));
 					addFolderURL.setParameter(
 						"parentResourceClassNameId",
 						String.valueOf(
@@ -196,7 +192,8 @@ public class KBAdminManagementToolbarDisplayContext {
 
 					dropdownItem.setHref(addFolderURL);
 
-					dropdownItem.setLabel(LanguageUtil.get(_request, "folder"));
+					dropdownItem.setLabel(
+						LanguageUtil.get(_httpServletRequest, "folder"));
 				});
 		}
 
@@ -216,7 +213,8 @@ public class KBAdminManagementToolbarDisplayContext {
 						"mvcPath", templatePath + "edit_article.jsp");
 
 					addBasicKBArticleURL.setParameter(
-						"redirect", PortalUtil.getCurrentURL(_request));
+						"redirect",
+						PortalUtil.getCurrentURL(_httpServletRequest));
 					addBasicKBArticleURL.setParameter(
 						"parentResourceClassNameId",
 						String.valueOf(parentResourceClassNameId));
@@ -227,7 +225,7 @@ public class KBAdminManagementToolbarDisplayContext {
 					dropdownItem.setHref(addBasicKBArticleURL);
 
 					dropdownItem.setLabel(
-						LanguageUtil.get(_request, "basic-article"));
+						LanguageUtil.get(_httpServletRequest, "basic-article"));
 				});
 
 			OrderByComparator<KBTemplate> obc =
@@ -249,7 +247,8 @@ public class KBAdminManagementToolbarDisplayContext {
 							addKBArticleURL.setParameter(
 								"mvcPath", templatePath + "edit_article.jsp");
 							addKBArticleURL.setParameter(
-								"redirect", PortalUtil.getCurrentURL(_request));
+								"redirect",
+								PortalUtil.getCurrentURL(_httpServletRequest));
 							addKBArticleURL.setParameter(
 								"parentResourceClassNameId",
 								String.valueOf(parentResourceClassNameId));
@@ -264,7 +263,8 @@ public class KBAdminManagementToolbarDisplayContext {
 
 							dropdownItem.setLabel(
 								LanguageUtil.get(
-									_request, kbTemplate.getTitle()));
+									_httpServletRequest,
+									kbTemplate.getTitle()));
 						});
 				}
 			}
@@ -286,14 +286,16 @@ public class KBAdminManagementToolbarDisplayContext {
 
 					importURL.setParameter("mvcPath", "/admin/import.jsp");
 					importURL.setParameter(
-						"redirect", PortalUtil.getCurrentURL(_request));
+						"redirect",
+						PortalUtil.getCurrentURL(_httpServletRequest));
 					importURL.setParameter(
 						"parentKBFolderId",
 						String.valueOf(parentResourcePrimKey));
 
 					dropdownItem.setHref(importURL);
 
-					dropdownItem.setLabel(LanguageUtil.get(_request, "import"));
+					dropdownItem.setLabel(
+						LanguageUtil.get(_httpServletRequest, "import"));
 				});
 		}
 
@@ -301,17 +303,13 @@ public class KBAdminManagementToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
 			}
-		};
+		).build();
 	}
 
 	public String getOrderByType() {
@@ -362,10 +360,11 @@ public class KBAdminManagementToolbarDisplayContext {
 			KBFolderConstants.getClassName());
 
 		long parentResourceClassNameId = ParamUtil.getLong(
-			_request, "parentResourceClassNameId", kbFolderClassNameId);
+			_httpServletRequest, "parentResourceClassNameId",
+			kbFolderClassNameId);
 
 		long parentResourcePrimKey = ParamUtil.getLong(
-			_request, "parentResourcePrimKey",
+			_httpServletRequest, "parentResourcePrimKey",
 			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
 		_searchContainer = new KBObjectsSearch(
@@ -442,7 +441,7 @@ public class KBAdminManagementToolbarDisplayContext {
 	}
 
 	private String _getKeywords() {
-		return ParamUtil.getString(_request, "keywords");
+		return ParamUtil.getString(_httpServletRequest, "keywords");
 	}
 
 	private String _getOrderByCol() {
@@ -452,30 +451,33 @@ public class KBAdminManagementToolbarDisplayContext {
 	private List<DropdownItem> _getOrderByDropdownItems() {
 		return new DropdownItemList() {
 			{
-				final Map<String, String> orderColumnsMap = new HashMap<>();
+				final Map<String, String> orderColumnsMap = HashMapBuilder.put(
+					"modifiedDate", "modified-date"
+				).put(
+					"priority", "priority"
+				).put(
+					"title", "title"
+				).put(
+					"viewCount", "view-count"
+				).build();
 
-				orderColumnsMap.put("modifiedDate", "modified-date");
-				orderColumnsMap.put("priority", "priority");
-				orderColumnsMap.put("title", "title");
-				orderColumnsMap.put("viewCount", "view-count");
-
-				String[] orderColumns =
-					{"priority", "modifiedDate", "title", "viewCount"};
+				String[] orderColumns = {
+					"priority", "modifiedDate", "title", "viewCount"
+				};
 
 				for (String orderByCol : orderColumns) {
 					add(
-						SafeConsumer.ignore(
-							dropdownItem -> {
-								dropdownItem.setActive(
-									orderByCol.equals(_getOrderByCol()));
-								dropdownItem.setHref(
-									_getCurrentSortingURL(), "orderByCol",
-									orderByCol);
-								dropdownItem.setLabel(
-									LanguageUtil.get(
-										_request,
-										orderColumnsMap.get(orderByCol)));
-							}));
+						dropdownItem -> {
+							dropdownItem.setActive(
+								orderByCol.equals(_getOrderByCol()));
+							dropdownItem.setHref(
+								_getCurrentSortingURL(), "orderByCol",
+								orderByCol);
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest,
+									orderColumnsMap.get(orderByCol)));
+						});
 				}
 			}
 		};
@@ -484,19 +486,20 @@ public class KBAdminManagementToolbarDisplayContext {
 	private String _getRedirect() {
 		return PortalUtil.escapeRedirect(
 			ParamUtil.getString(
-				_request, "redirect", PortalUtil.getCurrentURL(_request)));
+				_httpServletRequest, "redirect",
+				PortalUtil.getCurrentURL(_httpServletRequest)));
 	}
 
 	private String _getTemplatePath() {
 		return _portletConfig.getInitParameter("template-path");
 	}
 
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final PortletConfig _portletConfig;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private SearchContainer _searchContainer;
 	private final ThemeDisplay _themeDisplay;
 

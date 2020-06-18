@@ -14,12 +14,10 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.workflow.kaleo.model.KaleoTimer;
 
 import java.io.Externalizable;
@@ -33,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing KaleoTimer in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see KaleoTimer
  * @generated
  */
-@ProviderType
-public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
-	Externalizable {
+public class KaleoTimerCacheModel
+	implements CacheModel<KaleoTimer>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -51,7 +48,9 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 
 		KaleoTimerCacheModel kaleoTimerCacheModel = (KaleoTimerCacheModel)obj;
 
-		if (kaleoTimerId == kaleoTimerCacheModel.kaleoTimerId) {
+		if ((kaleoTimerId == kaleoTimerCacheModel.kaleoTimerId) &&
+			(mvccVersion == kaleoTimerCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -60,14 +59,28 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, kaleoTimerId);
+		int hashCode = HashUtil.hash(0, kaleoTimerId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(35);
+		StringBundler sb = new StringBundler(39);
 
-		sb.append("{kaleoTimerId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", kaleoTimerId=");
 		sb.append(kaleoTimerId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -85,6 +98,8 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 		sb.append(kaleoClassName);
 		sb.append(", kaleoClassPK=");
 		sb.append(kaleoClassPK);
+		sb.append(", kaleoDefinitionId=");
+		sb.append(kaleoDefinitionId);
 		sb.append(", kaleoDefinitionVersionId=");
 		sb.append(kaleoDefinitionVersionId);
 		sb.append(", name=");
@@ -110,6 +125,7 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 	public KaleoTimer toEntityModel() {
 		KaleoTimerImpl kaleoTimerImpl = new KaleoTimerImpl();
 
+		kaleoTimerImpl.setMvccVersion(mvccVersion);
 		kaleoTimerImpl.setKaleoTimerId(kaleoTimerId);
 		kaleoTimerImpl.setGroupId(groupId);
 		kaleoTimerImpl.setCompanyId(companyId);
@@ -144,6 +160,7 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 		}
 
 		kaleoTimerImpl.setKaleoClassPK(kaleoClassPK);
+		kaleoTimerImpl.setKaleoDefinitionId(kaleoDefinitionId);
 		kaleoTimerImpl.setKaleoDefinitionVersionId(kaleoDefinitionVersionId);
 
 		if (name == null) {
@@ -187,6 +204,8 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
+
 		kaleoTimerId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -200,6 +219,8 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 		kaleoClassName = objectInput.readUTF();
 
 		kaleoClassPK = objectInput.readLong();
+
+		kaleoDefinitionId = objectInput.readLong();
 
 		kaleoDefinitionVersionId = objectInput.readLong();
 		name = objectInput.readUTF();
@@ -215,8 +236,9 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		objectOutput.writeLong(kaleoTimerId);
 
 		objectOutput.writeLong(groupId);
@@ -243,6 +265,8 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 		}
 
 		objectOutput.writeLong(kaleoClassPK);
+
+		objectOutput.writeLong(kaleoDefinitionId);
 
 		objectOutput.writeLong(kaleoDefinitionVersionId);
 
@@ -281,6 +305,7 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 		}
 	}
 
+	public long mvccVersion;
 	public long kaleoTimerId;
 	public long groupId;
 	public long companyId;
@@ -290,6 +315,7 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 	public long modifiedDate;
 	public String kaleoClassName;
 	public long kaleoClassPK;
+	public long kaleoDefinitionId;
 	public long kaleoDefinitionVersionId;
 	public String name;
 	public boolean blocking;
@@ -298,4 +324,5 @@ public class KaleoTimerCacheModel implements CacheModel<KaleoTimer>,
 	public String scale;
 	public double recurrenceDuration;
 	public String recurrenceScale;
+
 }

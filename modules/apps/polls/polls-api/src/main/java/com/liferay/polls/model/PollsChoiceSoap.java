@@ -14,8 +14,6 @@
 
 package com.liferay.polls.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,14 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.polls.service.http.PollsChoiceServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.polls.service.http.PollsChoiceServiceSoap
  * @generated
  */
-@ProviderType
 public class PollsChoiceSoap implements Serializable {
+
 	public static PollsChoiceSoap toSoapModel(PollsChoice model) {
 		PollsChoiceSoap soapModel = new PollsChoiceSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setChoiceId(model.getChoiceId());
 		soapModel.setGroupId(model.getGroupId());
@@ -78,7 +76,8 @@ public class PollsChoiceSoap implements Serializable {
 	}
 
 	public static PollsChoiceSoap[] toSoapModels(List<PollsChoice> models) {
-		List<PollsChoiceSoap> soapModels = new ArrayList<PollsChoiceSoap>(models.size());
+		List<PollsChoiceSoap> soapModels = new ArrayList<PollsChoiceSoap>(
+			models.size());
 
 		for (PollsChoice model : models) {
 			soapModels.add(toSoapModel(model));
@@ -96,6 +95,14 @@ public class PollsChoiceSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setChoiceId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -194,6 +201,7 @@ public class PollsChoiceSoap implements Serializable {
 		_lastPublishDate = lastPublishDate;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _choiceId;
 	private long _groupId;
@@ -206,4 +214,5 @@ public class PollsChoiceSoap implements Serializable {
 	private String _name;
 	private String _description;
 	private Date _lastPublishDate;
+
 }

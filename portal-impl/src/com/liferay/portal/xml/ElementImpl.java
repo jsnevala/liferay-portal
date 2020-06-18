@@ -279,12 +279,16 @@ public class ElementImpl extends BranchImpl implements Element {
 
 	@Override
 	public Iterator<Element> elementIterator(QName qName) {
-		return elements(qName).iterator();
+		List<Element> elementList = elements(qName);
+
+		return elementList.iterator();
 	}
 
 	@Override
 	public Iterator<Element> elementIterator(String name) {
-		return elements(name).iterator();
+		List<Element> elementList = elements(name);
+
+		return elementList.iterator();
 	}
 
 	@Override
@@ -350,7 +354,9 @@ public class ElementImpl extends BranchImpl implements Element {
 			return false;
 		}
 
-		org.dom4j.Element element = ((ElementImpl)obj).getWrappedElement();
+		ElementImpl elementImpl = (ElementImpl)obj;
+
+		org.dom4j.Element element = elementImpl.getWrappedElement();
 
 		return _element.equals(element);
 	}
@@ -611,13 +617,13 @@ public class ElementImpl extends BranchImpl implements Element {
 			Element element = elements.get(i);
 
 			if (!foundLastElementWithElementName) {
-				if (elementName.equals(element.getName())) {
-					if ((i + 1) < elements.size()) {
-						Element nextElement = elements.get(i + 1);
+				if (elementName.equals(element.getName()) &&
+					((i + 1) < elements.size())) {
 
-						if (!elementName.equals(nextElement.getName())) {
-							foundLastElementWithElementName = true;
-						}
+					Element nextElement = elements.get(i + 1);
+
+					if (!elementName.equals(nextElement.getName())) {
+						foundLastElementWithElementName = true;
 					}
 				}
 			}
@@ -666,13 +672,13 @@ public class ElementImpl extends BranchImpl implements Element {
 			Element element = elements.get(i);
 
 			if (!foundLastElementWithElementName) {
-				if (elementName.equals(element.getName())) {
-					if ((i + 1) < elements.size()) {
-						Element nextElement = elements.get(i + 1);
+				if (elementName.equals(element.getName()) &&
+					((i + 1) < elements.size())) {
 
-						if (!elementName.equals(nextElement.getName())) {
-							foundLastElementWithElementName = true;
-						}
+					Element nextElement = elements.get(i + 1);
+
+					if (!elementName.equals(nextElement.getName())) {
+						foundLastElementWithElementName = true;
 					}
 				}
 			}

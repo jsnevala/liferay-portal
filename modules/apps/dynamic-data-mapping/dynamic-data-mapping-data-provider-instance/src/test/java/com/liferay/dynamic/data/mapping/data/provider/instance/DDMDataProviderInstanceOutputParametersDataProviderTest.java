@@ -21,7 +21,6 @@ import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderTracker;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeResponse;
-import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerTracker;
 import com.liferay.dynamic.data.mapping.model.DDMDataProviderInstance;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceService;
@@ -33,12 +32,16 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.ResourceBundle;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -63,6 +66,7 @@ public class DDMDataProviderInstanceOutputParametersDataProviderTest
 	@Before
 	public void setUp() throws Exception {
 		_setUpLanguageUtil();
+		_setUpPortalUtil();
 		_setUpResourceBundleUtil();
 
 		_ddmDataProviderInstanceOutputParametersDataProvider =
@@ -73,15 +77,7 @@ public class DDMDataProviderInstanceOutputParametersDataProviderTest
 		_ddmDataProviderInstanceOutputParametersDataProvider.
 			ddmDataProviderTracker = _ddmDataProviderTracker;
 		_ddmDataProviderInstanceOutputParametersDataProvider.
-			ddmFormValuesDeserializerTracker =
-				_ddmFormValuesDeserializerTracker;
-
-		when(
-			_ddmFormValuesDeserializerTracker.getDDMFormValuesDeserializer(
-				Matchers.anyString())
-		).thenReturn(
-			_ddmFormValuesDeserializer
-		);
+			jsonDDMFormValuesDeserializer = _ddmFormValuesDeserializer;
 	}
 
 	@Test
@@ -144,6 +140,12 @@ public class DDMDataProviderInstanceOutputParametersDataProviderTest
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
 				"outputParameterType", "[\"number\"]"));
 
+		String countryIdOutputParameterId = StringUtil.randomString();
+
+		outputParamaters.addNestedDDMFormFieldValue(
+			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
+				"outputParameterId", countryIdOutputParameterId));
+
 		outputParamaters =
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
 				"outputParameters", StringPool.BLANK);
@@ -161,6 +163,12 @@ public class DDMDataProviderInstanceOutputParametersDataProviderTest
 		outputParamaters.addNestedDDMFormFieldValue(
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
 				"outputParameterType", "[\"string\"]"));
+
+		String countryNameOutputParameterId = StringUtil.randomString();
+
+		outputParamaters.addNestedDDMFormFieldValue(
+			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
+				"outputParameterId", countryNameOutputParameterId));
 
 		DDMFormValuesDeserializerDeserializeResponse
 			ddmFormValuesDeserializerDeserializeResponse =
@@ -185,10 +193,12 @@ public class DDMDataProviderInstanceOutputParametersDataProviderTest
 
 		Assert.assertTrue(outputParameterNamesOptional.isPresent());
 
-		List<KeyValuePair> keyValuePairs = new ArrayList() {
+		List<KeyValuePair> keyValuePairs = new ArrayList<KeyValuePair>() {
 			{
-				add(new KeyValuePair("Country Id", "Country Id"));
-				add(new KeyValuePair("Country Name", "Country Name"));
+				add(new KeyValuePair(countryIdOutputParameterId, "Country Id"));
+				add(
+					new KeyValuePair(
+						countryNameOutputParameterId, "Country Name"));
 			}
 		};
 
@@ -293,8 +303,20 @@ public class DDMDataProviderInstanceOutputParametersDataProviderTest
 			_ddmDataProviderInstanceOutputParametersDataProvider.getData(
 				ddmDataProviderRequest);
 
-		Assert.assertFalse(
+		Assert.assertTrue(
 			ddmDataProviderResponse.hasOutput("outputParameterNames"));
+
+		Optional<List<KeyValuePair>> outputParameterNamesOptional =
+			ddmDataProviderResponse.getOutputOptional(
+				"outputParameterNames", List.class);
+
+		Assert.assertTrue(outputParameterNamesOptional.isPresent());
+
+		List<KeyValuePair> keyValuePairs = new ArrayList<>();
+
+		Assert.assertEquals(
+			keyValuePairs.toString(), keyValuePairs,
+			outputParameterNamesOptional.get());
 	}
 
 	private void _setUpLanguageUtil() {
@@ -303,6 +325,22 @@ public class DDMDataProviderInstanceOutputParametersDataProviderTest
 		Language language = PowerMockito.mock(Language.class);
 
 		languageUtil.setLanguage(language);
+	}
+
+	private void _setUpPortalUtil() {
+		PortalUtil portalUtil = new PortalUtil();
+
+		Portal portal = mock(Portal.class);
+
+		ResourceBundle resourceBundle = mock(ResourceBundle.class);
+
+		when(
+			portal.getResourceBundle(Matchers.any(Locale.class))
+		).thenReturn(
+			resourceBundle
+		);
+
+		portalUtil.setPortal(portal);
 	}
 
 	private void _setUpResourceBundleUtil() {
@@ -334,8 +372,5 @@ public class DDMDataProviderInstanceOutputParametersDataProviderTest
 
 	@Mock
 	private DDMFormValuesDeserializer _ddmFormValuesDeserializer;
-
-	@Mock
-	private DDMFormValuesDeserializerTracker _ddmFormValuesDeserializerTracker;
 
 }

@@ -14,6 +14,8 @@
 
 package com.liferay.poshi.runner.elements;
 
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
+
 import java.util.List;
 
 import org.dom4j.Attribute;
@@ -36,7 +38,8 @@ public class DescriptionPoshiElement extends PoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		if (_isElementType(parentPoshiElement, poshiScript)) {
 			return new DescriptionPoshiElement(parentPoshiElement, poshiScript);
@@ -46,10 +49,32 @@ public class DescriptionPoshiElement extends PoshiElement {
 	}
 
 	@Override
-	public void parsePoshiScript(String poshiScript) {
+	public int getPoshiScriptLineNumber() {
+		PoshiElement parentPoshiElement = (PoshiElement)getParent();
+
+		return parentPoshiElement.getPoshiScriptLineNumber(true);
+	}
+
+	@Override
+	public void parsePoshiScript(String poshiScript)
+		throws PoshiScriptParserException {
+
 		String message = getDoubleQuotedContent(poshiScript);
 
 		addAttribute("message", message);
+	}
+
+	@Override
+	public String toPoshiScript() {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("@");
+		sb.append(_ELEMENT_NAME);
+		sb.append(" = \"");
+		sb.append(attributeValue("message"));
+		sb.append("\"");
+
+		return sb.toString();
 	}
 
 	protected DescriptionPoshiElement() {
@@ -66,7 +91,8 @@ public class DescriptionPoshiElement extends PoshiElement {
 	}
 
 	protected DescriptionPoshiElement(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}

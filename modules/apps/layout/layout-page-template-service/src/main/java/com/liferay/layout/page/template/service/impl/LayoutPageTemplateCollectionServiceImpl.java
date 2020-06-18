@@ -18,23 +18,31 @@ import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.service.base.LayoutPageTemplateCollectionServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.dao.orm.WildcardMode;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Jürgen Kappler
  */
+@Component(
+	property = {
+		"json.web.service.context.name=layout",
+		"json.web.service.context.path=LayoutPageTemplateCollection"
+	},
+	service = AopService.class
+)
 public class LayoutPageTemplateCollectionServiceImpl
 	extends LayoutPageTemplateCollectionServiceBaseImpl {
 
@@ -134,8 +142,8 @@ public class LayoutPageTemplateCollectionServiceImpl
 		OrderByComparator<LayoutPageTemplateCollection> orderByComparator) {
 
 		return layoutPageTemplateCollectionPersistence.filterFindByG_LikeN(
-			groupId, _customSQL.keywords(name, WildcardMode.SURROUND)[0], start,
-			end, orderByComparator);
+			groupId, _customSQL.keywords(name, false, WildcardMode.SURROUND)[0],
+			start, end, orderByComparator);
 	}
 
 	@Override
@@ -149,7 +157,8 @@ public class LayoutPageTemplateCollectionServiceImpl
 		long groupId, String name) {
 
 		return layoutPageTemplateCollectionPersistence.filterCountByG_LikeN(
-			groupId, _customSQL.keywords(name, WildcardMode.SURROUND)[0]);
+			groupId,
+			_customSQL.keywords(name, false, WildcardMode.SURROUND)[0]);
 	}
 
 	@Override
@@ -167,21 +176,18 @@ public class LayoutPageTemplateCollectionServiceImpl
 				layoutPageTemplateCollectionId, name, description);
 	}
 
-	private static volatile
-		ModelResourcePermission<LayoutPageTemplateCollection>
-			_layoutPageTemplateCollectionModelResourcePermission =
-				ModelResourcePermissionFactory.getInstance(
-					LayoutPageTemplateCollectionServiceImpl.class,
-					"_layoutPageTemplateCollectionModelResourcePermission",
-					LayoutPageTemplateCollection.class);
-	private static volatile PortletResourcePermission
-		_portletResourcePermission =
-			PortletResourcePermissionFactory.getInstance(
-				LayoutPageTemplateCollectionServiceImpl.class,
-				"_portletResourcePermission",
-				LayoutPageTemplateConstants.RESOURCE_NAME);
-
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.layout.page.template.model.LayoutPageTemplateCollection)"
+	)
+	private ModelResourcePermission<LayoutPageTemplateCollection>
+		_layoutPageTemplateCollectionModelResourcePermission;
+
+	@Reference(
+		target = "(resource.name=" + LayoutPageTemplateConstants.RESOURCE_NAME + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
 
 }

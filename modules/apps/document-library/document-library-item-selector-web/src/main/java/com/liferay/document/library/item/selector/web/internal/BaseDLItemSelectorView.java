@@ -15,13 +15,14 @@
 package com.liferay.document.library.item.selector.web.internal;
 
 import com.liferay.asset.kernel.service.AssetVocabularyService;
-import com.liferay.document.library.display.context.DLMimeTypeDisplayContext;
+import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.item.selector.web.internal.constants.DLItemSelectorWebKeys;
 import com.liferay.document.library.item.selector.web.internal.display.context.DLItemSelectorViewDisplayContext;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolverHandler;
+import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.language.LanguageResources;
@@ -29,6 +30,8 @@ import com.liferay.staging.StagingGroupHelper;
 
 import java.io.IOException;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -39,11 +42,9 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Roberto Díaz
@@ -61,13 +62,15 @@ public abstract class BaseDLItemSelectorView<T extends ItemSelectorCriterion>
 		return new String[0];
 	}
 
-	public ServletContext getServletContext() {
-		return _servletContext;
+	@Override
+	public List<String> getPortletIds() {
+		return _portletIds;
 	}
 
 	@Override
 	public String getTitle(Locale locale) {
-		ResourceBundleLoader resourceBundleLoader = getResourceBundleLoader();
+		ResourceBundleLoader resourceBundleLoader =
+			LanguageResources.RESOURCE_BUNDLE_LOADER;
 
 		ResourceBundle resourceBundle = resourceBundleLoader.loadResourceBundle(
 			locale);
@@ -77,88 +80,53 @@ public abstract class BaseDLItemSelectorView<T extends ItemSelectorCriterion>
 	}
 
 	@Override
-	public boolean isVisible(ThemeDisplay themeDisplay) {
-		return true;
-	}
-
-	@Override
 	public void renderHTML(
-			ServletRequest request, ServletResponse response, T t,
+			ServletRequest servletRequest, ServletResponse servletResponse, T t,
 			PortletURL portletURL, String itemSelectedEventName, boolean search)
 		throws IOException, ServletException {
-
-		ServletContext servletContext = getServletContext();
 
 		RequestDispatcher requestDispatcher =
 			servletContext.getRequestDispatcher("/documents.jsp");
 
 		DLItemSelectorViewDisplayContext dlItemSelectorViewDisplayContext =
-			new DLItemSelectorViewDisplayContext(
-				t, this, _itemSelectorReturnTypeResolverHandler,
-				itemSelectedEventName, search, portletURL,
-				_assetVocabularyService, _classNameLocalService,
+			new DLItemSelectorViewDisplayContext<>(
+				assetVocabularyService, classNameLocalService, this,
+				folderModelResourcePermission,
+				(HttpServletRequest)servletRequest, t, itemSelectedEventName,
+				itemSelectorReturnTypeResolverHandler, portletURL, search,
 				stagingGroupHelper);
 
-		request.setAttribute(
+		servletRequest.setAttribute(
 			DLItemSelectorWebKeys.DL_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT,
 			dlItemSelectorViewDisplayContext);
 
-		request.setAttribute(
-			DLItemSelectorWebKeys.DL_MIME_TYPE_DISPLAY_CONTEXT,
-			dlMimeTypeDisplayContext);
-
-		requestDispatcher.include(request, response);
+		requestDispatcher.include(servletRequest, servletResponse);
 	}
 
-	@Reference(unbind = "-")
-	public void setAssetVocabularyService(
-		AssetVocabularyService assetVocabularyService) {
+	@Reference
+	protected AssetVocabularyService assetVocabularyService;
 
-		_assetVocabularyService = assetVocabularyService;
-	}
-
-	@Reference(unbind = "-")
-	public void setClassNameLocalService(
-		ClassNameLocalService classNameLocalService) {
-
-		_classNameLocalService = classNameLocalService;
-	}
-
-	@Reference(unbind = "-")
-	public void setItemSelectorReturnTypeResolverHandler(
-		ItemSelectorReturnTypeResolverHandler
-			itemSelectorReturnTypeResolverHandler) {
-
-		_itemSelectorReturnTypeResolverHandler =
-			itemSelectorReturnTypeResolverHandler;
-	}
+	@Reference
+	protected ClassNameLocalService classNameLocalService;
 
 	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.document.library.item.selector.web)",
-		unbind = "-"
+		target = "(model.class.name=com.liferay.portal.kernel.repository.model.Folder)"
 	)
-	public void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-	}
+	protected ModelResourcePermission<Folder> folderModelResourcePermission;
 
-	protected ResourceBundleLoader getResourceBundleLoader() {
-		return LanguageResources.RESOURCE_BUNDLE_LOADER;
-	}
+	@Reference
+	protected ItemSelectorReturnTypeResolverHandler
+		itemSelectorReturnTypeResolverHandler;
 
 	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
+		target = "(osgi.web.symbolicname=com.liferay.document.library.item.selector.web)"
 	)
-	protected volatile DLMimeTypeDisplayContext dlMimeTypeDisplayContext;
+	protected ServletContext servletContext;
 
 	@Reference
 	protected StagingGroupHelper stagingGroupHelper;
 
-	private AssetVocabularyService _assetVocabularyService;
-	private ClassNameLocalService _classNameLocalService;
-	private ItemSelectorReturnTypeResolverHandler
-		_itemSelectorReturnTypeResolverHandler;
-	private ServletContext _servletContext;
+	private static final List<String> _portletIds = Arrays.asList(
+		DLPortletKeys.DOCUMENT_LIBRARY_ADMIN, DLPortletKeys.DOCUMENT_LIBRARY);
 
 }

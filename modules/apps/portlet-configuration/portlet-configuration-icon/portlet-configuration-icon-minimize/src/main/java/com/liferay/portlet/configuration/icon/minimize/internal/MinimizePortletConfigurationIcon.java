@@ -78,7 +78,10 @@ public class MinimizePortletConfigurationIcon
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
 		return "Liferay.Portlet.minimize('#p_p_id_".concat(
-			portletDisplay.getId()).concat("_', this); return false;");
+			portletDisplay.getId()
+		).concat(
+			"_', this); return false;"
+		);
 	}
 
 	@Override
@@ -138,13 +141,12 @@ public class MinimizePortletConfigurationIcon
 
 		Group group = themeDisplay.getScopeGroup();
 
-		if (!themeDisplay.isSignedIn() ||
-			(group.hasStagingGroup() && !group.isStagingGroup()) ||
-			!hasUpdateLayoutPermission(themeDisplay)) {
+		if ((!themeDisplay.isSignedIn() ||
+			 (group.hasStagingGroup() && !group.isStagingGroup()) ||
+			 !hasUpdateLayoutPermission(themeDisplay)) &&
+			!PropsValues.LAYOUT_GUEST_SHOW_MIN_ICON) {
 
-			if (!PropsValues.LAYOUT_GUEST_SHOW_MIN_ICON) {
-				return false;
-			}
+			return false;
 		}
 
 		return true;
@@ -161,8 +163,8 @@ public class MinimizePortletConfigurationIcon
 				themeDisplay.getPermissionChecker(), themeDisplay.getLayout(),
 				ActionKeys.UPDATE);
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 
 			return false;
 		}

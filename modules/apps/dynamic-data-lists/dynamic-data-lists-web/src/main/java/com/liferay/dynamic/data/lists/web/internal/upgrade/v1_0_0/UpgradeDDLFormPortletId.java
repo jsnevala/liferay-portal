@@ -75,10 +75,7 @@ public class UpgradeDDLFormPortletId extends BaseUpgradePortletId {
 	@Override
 	protected String[][] getRenamePortletIdsArray() {
 		return new String[][] {
-			{
-				"1_WAR_ddlformportlet",
-				DDLPortletKeys.DYNAMIC_DATA_LISTS_DISPLAY
-			}
+			{"1_WAR_ddlformportlet", DDLPortletKeys.DYNAMIC_DATA_LISTS_DISPLAY}
 		};
 	}
 
@@ -136,10 +133,8 @@ public class UpgradeDDLFormPortletId extends BaseUpgradePortletId {
 			});
 		actionableDynamicQuery.setParallel(true);
 		actionableDynamicQuery.setPerformActionMethod(
-			(PortletPreferences portletPreference) -> {
-				updatePortletPreferences(
-					portletPreference, oldRootPortletId, newRootPortletId);
-			});
+			(PortletPreferences portletPreference) -> updatePortletPreferences(
+				portletPreference, oldRootPortletId, newRootPortletId));
 
 		actionableDynamicQuery.performActions();
 	}
@@ -157,9 +152,9 @@ public class UpgradeDDLFormPortletId extends BaseUpgradePortletId {
 
 			updateLayouts(oldRootPortletId, newRootPortletId, false);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 	}

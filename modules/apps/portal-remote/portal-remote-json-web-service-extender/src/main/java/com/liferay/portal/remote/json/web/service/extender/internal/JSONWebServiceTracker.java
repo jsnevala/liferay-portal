@@ -15,10 +15,11 @@
 package com.liferay.portal.remote.json.web.service.extender.internal;
 
 import com.liferay.osgi.util.ServiceTrackerFactory;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceActionsManager;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceRegistrator;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceRegistratorFactory;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -39,31 +40,9 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 public class JSONWebServiceTracker
 	implements ServiceTrackerCustomizer<Object, Object> {
 
-	@Activate
-	public void activate(ComponentContext componentContext) {
-		_componentContext = componentContext;
-
-		BundleContext bundleContext = componentContext.getBundleContext();
-
-		_serviceTracker = ServiceTrackerFactory.open(
-			bundleContext,
-			"(&(json.web.service.context.name=*)(json.web.service.context." +
-				"path=*))",
-			this);
-	}
-
 	@Override
 	public Object addingService(ServiceReference<Object> serviceReference) {
 		return registerService(serviceReference);
-	}
-
-	@Deactivate
-	public void deactivate() {
-		_componentContext = null;
-
-		_serviceTracker.close();
-
-		_serviceTracker = null;
 	}
 
 	@Override
@@ -80,6 +59,27 @@ public class JSONWebServiceTracker
 		ServiceReference<Object> serviceReference, Object service) {
 
 		unregisterService(service);
+	}
+
+	@Activate
+	protected void activate(ComponentContext componentContext) {
+		_componentContext = componentContext;
+
+		_serviceTracker = ServiceTrackerFactory.open(
+			componentContext.getBundleContext(),
+			StringBundler.concat(
+				"(&(json.web.service.context.name=*)(json.web.service.context.",
+				"path=*)(!(objectClass=", AopService.class.getName(), ")))"),
+			this);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_componentContext = null;
+
+		_serviceTracker.close();
+
+		_serviceTracker = null;
 	}
 
 	protected ClassLoader getBundleClassLoader(Bundle bundle) {
@@ -103,20 +103,21 @@ public class JSONWebServiceTracker
 			"json.web.service.context.path");
 		Object service = getService(serviceReference);
 
-		ClassLoader contextClassLoader =
-			ClassLoaderUtil.getContextClassLoader();
+		Thread currentThread = Thread.currentThread();
+
+		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
 
 		ClassLoader classLoader = getBundleClassLoader(
 			serviceReference.getBundle());
 
-		ClassLoaderUtil.setContextClassLoader(classLoader);
+		currentThread.setContextClassLoader(classLoader);
 
 		try {
 			_jsonWebServiceActionsManager.registerService(
 				contextName, contextPath, service, _jsonWebServiceRegistrator);
 		}
 		finally {
-			ClassLoaderUtil.setContextClassLoader(contextClassLoader);
+			currentThread.setContextClassLoader(contextClassLoader);
 		}
 
 		return service;

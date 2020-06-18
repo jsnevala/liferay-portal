@@ -39,14 +39,8 @@ sortingURL.setParameter("displayStyle", displayStyle);
 sortingURL.setParameter("orderByType", orderByAsc ? "desc" : "asc");
 %>
 
-<aui:nav-bar markupView="lexicon">
-	<aui:nav cssClass="navbar-nav">
-		<aui:nav-item label="policies" selected="<%= true %>" />
-	</aui:nav>
-</aui:nav-bar>
-
 <clay:management-toolbar
-	creationMenu="<%=
+	creationMenu='<%=
 		new JSPCreationMenu(pageContext) {
 			{
 					addPrimaryDropdownItem(
@@ -57,7 +51,7 @@ sortingURL.setParameter("orderByType", orderByAsc ? "desc" : "asc");
 					);
 			}
 		}
-	%>"
+	%>'
 	disabled="<%= sapEntriesCount == 0 %>"
 	namespace="<%= renderResponse.getNamespace() %>"
 	selectable="<%= false %>"

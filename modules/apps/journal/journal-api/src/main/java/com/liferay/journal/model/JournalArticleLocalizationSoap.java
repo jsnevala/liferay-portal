@@ -14,8 +14,6 @@
 
 package com.liferay.journal.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,12 +25,16 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class JournalArticleLocalizationSoap implements Serializable {
+
 	public static JournalArticleLocalizationSoap toSoapModel(
 		JournalArticleLocalization model) {
-		JournalArticleLocalizationSoap soapModel = new JournalArticleLocalizationSoap();
 
+		JournalArticleLocalizationSoap soapModel =
+			new JournalArticleLocalizationSoap();
+
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setArticleLocalizationId(model.getArticleLocalizationId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setArticlePK(model.getArticlePK());
@@ -45,7 +47,9 @@ public class JournalArticleLocalizationSoap implements Serializable {
 
 	public static JournalArticleLocalizationSoap[] toSoapModels(
 		JournalArticleLocalization[] models) {
-		JournalArticleLocalizationSoap[] soapModels = new JournalArticleLocalizationSoap[models.length];
+
+		JournalArticleLocalizationSoap[] soapModels =
+			new JournalArticleLocalizationSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -56,10 +60,13 @@ public class JournalArticleLocalizationSoap implements Serializable {
 
 	public static JournalArticleLocalizationSoap[][] toSoapModels(
 		JournalArticleLocalization[][] models) {
+
 		JournalArticleLocalizationSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new JournalArticleLocalizationSoap[models.length][models[0].length];
+			soapModels =
+				new JournalArticleLocalizationSoap
+					[models.length][models[0].length];
 		}
 		else {
 			soapModels = new JournalArticleLocalizationSoap[0][0];
@@ -74,13 +81,16 @@ public class JournalArticleLocalizationSoap implements Serializable {
 
 	public static JournalArticleLocalizationSoap[] toSoapModels(
 		List<JournalArticleLocalization> models) {
-		List<JournalArticleLocalizationSoap> soapModels = new ArrayList<JournalArticleLocalizationSoap>(models.size());
+
+		List<JournalArticleLocalizationSoap> soapModels =
+			new ArrayList<JournalArticleLocalizationSoap>(models.size());
 
 		for (JournalArticleLocalization model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new JournalArticleLocalizationSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new JournalArticleLocalizationSoap[soapModels.size()]);
 	}
 
 	public JournalArticleLocalizationSoap() {
@@ -92,6 +102,22 @@ public class JournalArticleLocalizationSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setArticleLocalizationId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public long getArticleLocalizationId() {
@@ -142,10 +168,13 @@ public class JournalArticleLocalizationSoap implements Serializable {
 		_languageId = languageId;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _articleLocalizationId;
 	private long _companyId;
 	private long _articlePK;
 	private String _title;
 	private String _description;
 	private String _languageId;
+
 }

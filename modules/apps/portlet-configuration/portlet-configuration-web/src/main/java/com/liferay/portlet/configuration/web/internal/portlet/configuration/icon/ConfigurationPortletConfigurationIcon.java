@@ -39,6 +39,11 @@ public class ConfigurationPortletConfigurationIcon
 	}
 
 	@Override
+	public String getIconCssClass() {
+		return "cog";
+	}
+
+	@Override
 	public String getMessage(PortletRequest portletRequest) {
 		return LanguageUtil.get(
 			getResourceBundle(getLocale(portletRequest)), "configuration");
@@ -83,9 +88,18 @@ public class ConfigurationPortletConfigurationIcon
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
+		if (isEmbeddedPersonalApplicationLayout(themeDisplay.getLayout())) {
+			return false;
+		}
+
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
 		return portletDisplay.isShowConfigurationIcon();
+	}
+
+	@Override
+	public boolean isShowInEditMode(PortletRequest portletRequest) {
+		return true;
 	}
 
 	@Override

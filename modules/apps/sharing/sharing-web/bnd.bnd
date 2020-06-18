@@ -1,11 +1,13 @@
 Bundle-Name: Liferay Sharing Web
 Bundle-SymbolicName: com.liferay.sharing.web
-Bundle-Version: 1.0.0
+Bundle-Version: 2.0.15
 Provide-Capability:\
-	soy;\
-		type="sharing-web";\
-		version:Version="${Bundle-Version}"
+	liferay.resource.bundle;\
+		resource.bundle.aggregate:String="(bundle.symbolic.name=com.liferay.sharing.lang),(bundle.symbolic.name=com.liferay.sharing.web)";\
+		resource.bundle.base.name="content.Language";\
+		service.ranking=1
 Require-Capability:\
-	soy;\
-		filter:="(type=frontend-js-web)"
+	liferay.resource.bundle;\
+		filter:="(bundle.symbolic.name=com.liferay.sharing.lang)"
 Web-ContextPath: /sharing-web
+-dsannotations-options: inherit

@@ -15,9 +15,6 @@
 package com.liferay.portal.monitoring.internal.messaging;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.concurrent.DiscardOldestPolicy;
-import com.liferay.portal.kernel.concurrent.RejectedExecutionHandler;
-import com.liferay.portal.kernel.concurrent.ThreadPoolExecutor;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.Destination;
@@ -29,12 +26,15 @@ import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.monitoring.internal.configuration.MonitoringConfiguration;
 
 import java.util.Dictionary;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
@@ -42,8 +42,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Michael C. Han
  */
 @Component(
-	enabled = false, immediate = true,
-	service = MonitoringMessagingConfigurator.class
+	configurationPid = "com.liferay.portal.monitoring.internal.configuration.MonitoringConfiguration",
+	configurationPolicy = ConfigurationPolicy.OPTIONAL, enabled = false,
+	immediate = true, service = MonitoringMessagingConfigurator.class
 )
 public class MonitoringMessagingConfigurator {
 
@@ -51,12 +52,10 @@ public class MonitoringMessagingConfigurator {
 	protected void activate(ComponentContext componentContext) {
 		_bundleContext = componentContext.getBundleContext();
 
-		Dictionary<String, Object> properties =
-			componentContext.getProperties();
-
 		MonitoringConfiguration monitoringConfiguration =
 			ConfigurableUtil.createConfigurable(
-				MonitoringConfiguration.class, properties);
+				MonitoringConfiguration.class,
+				componentContext.getProperties());
 
 		DestinationConfiguration destinationConfiguration =
 			new DestinationConfiguration(
@@ -67,7 +66,7 @@ public class MonitoringMessagingConfigurator {
 			monitoringConfiguration.monitoringMessageMaxQueueSize());
 
 		RejectedExecutionHandler rejectedExecutionHandler =
-			new DiscardOldestPolicy() {
+			new ThreadPoolExecutor.DiscardOldestPolicy() {
 
 				@Override
 				public void rejectedExecution(

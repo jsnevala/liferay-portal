@@ -26,11 +26,13 @@ import java.util.Map;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.TaskAction;
 
 /**
  * @author Andrea Di Giorgi
  */
+@CacheableTask
 public class ExecuteNodeTask extends DefaultTask {
 
 	public ExecuteNodeTask() {
@@ -71,10 +73,10 @@ public class ExecuteNodeTask extends DefaultTask {
 			getProject(), NodePlugin.NPM_INSTALL_TASK_NAME,
 			NpmInstallTask.class);
 
-		if ((this instanceof ExecuteNpmTask) || (npmInstallRetries <= 0) ||
-			(npmInstallTask == null)) {
+		if ((this instanceof ExecutePackageManagerTask) ||
+			(npmInstallRetries <= 0) || (npmInstallTask == null)) {
 
-			_nodeExecutor.execute();
+			_result = _nodeExecutor.execute();
 
 			return;
 		}
@@ -83,18 +85,19 @@ public class ExecuteNodeTask extends DefaultTask {
 
 		for (int i = 1; i <= npmInstallRetries; i++) {
 			try {
-				_nodeExecutor.execute();
+				_result = _nodeExecutor.execute();
 
 				break;
 			}
-			catch (IOException ioe) {
+			catch (IOException ioException) {
 				if (i == npmInstallRetries) {
-					throw ioe;
+					throw ioException;
 				}
 
 				if (logger.isWarnEnabled()) {
 					logger.warn(
-						ioe.getMessage() + ". Running \"npm install\" again");
+						ioException.getMessage() +
+							". Running \"npm install\" again");
 				}
 
 				npmInstallTask.executeNpmInstall(true);
@@ -120,6 +123,14 @@ public class ExecuteNodeTask extends DefaultTask {
 
 	public int getNpmInstallRetries() {
 		return _npmInstallRetries;
+	}
+
+	public String getResult() {
+		if (_result == null) {
+			return "";
+		}
+
+		return _result;
 	}
 
 	public File getWorkingDir() {
@@ -172,5 +183,6 @@ public class ExecuteNodeTask extends DefaultTask {
 
 	private final NodeExecutor _nodeExecutor;
 	private int _npmInstallRetries;
+	private String _result;
 
 }

@@ -14,10 +14,7 @@
 
 package com.liferay.portal.tools.service.builder.test.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -27,12 +24,14 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.exception.NoSuchLVEntryLocalizationException;
 import com.liferay.portal.tools.service.builder.test.model.LVEntryLocalization;
+import com.liferay.portal.tools.service.builder.test.model.LVEntryLocalizationTable;
 import com.liferay.portal.tools.service.builder.test.model.impl.LVEntryLocalizationImpl;
 import com.liferay.portal.tools.service.builder.test.model.impl.LVEntryLocalizationModelImpl;
 import com.liferay.portal.tools.service.builder.test.service.persistence.LVEntryLocalizationPersistence;
@@ -41,10 +40,6 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,56 +53,32 @@ import java.util.Set;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see LVEntryLocalizationPersistence
- * @see com.liferay.portal.tools.service.builder.test.service.persistence.LVEntryLocalizationUtil
  * @generated
  */
-@ProviderType
-public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEntryLocalization>
+public class LVEntryLocalizationPersistenceImpl
+	extends BasePersistenceImpl<LVEntryLocalization>
 	implements LVEntryLocalizationPersistence {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link LVEntryLocalizationUtil} to access the lv entry localization persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
+	 * Never modify or reference this class directly. Always use <code>LVEntryLocalizationUtil</code> to access the lv entry localization persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static final String FINDER_CLASS_NAME_ENTITY = LVEntryLocalizationImpl.class.getName();
-	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List1";
-	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List2";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_ALL = new FinderPath(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryLocalizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL = new FinderPath(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryLocalizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_COUNT_ALL = new FinderPath(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_LVENTRYID =
-		new FinderPath(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryLocalizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByLvEntryId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LVENTRYID =
-		new FinderPath(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryLocalizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByLvEntryId",
-			new String[] { Long.class.getName() },
-			LVEntryLocalizationModelImpl.LVENTRYID_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_LVENTRYID = new FinderPath(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByLvEntryId",
-			new String[] { Long.class.getName() });
+	public static final String FINDER_CLASS_NAME_ENTITY =
+		LVEntryLocalizationImpl.class.getName();
+
+	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List1";
+
+	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List2";
+
+	private FinderPath _finderPathWithPaginationFindAll;
+	private FinderPath _finderPathWithoutPaginationFindAll;
+	private FinderPath _finderPathCountAll;
+	private FinderPath _finderPathWithPaginationFindByLvEntryId;
+	private FinderPath _finderPathWithoutPaginationFindByLvEntryId;
+	private FinderPath _finderPathCountByLvEntryId;
 
 	/**
 	 * Returns all the lv entry localizations where lvEntryId = &#63;.
@@ -117,15 +88,15 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 */
 	@Override
 	public List<LVEntryLocalization> findByLvEntryId(long lvEntryId) {
-		return findByLvEntryId(lvEntryId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			null);
+		return findByLvEntryId(
+			lvEntryId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the lv entry localizations where lvEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link LVEntryLocalizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryLocalizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param lvEntryId the lv entry ID
@@ -134,8 +105,9 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * @return the range of matching lv entry localizations
 	 */
 	@Override
-	public List<LVEntryLocalization> findByLvEntryId(long lvEntryId, int start,
-		int end) {
+	public List<LVEntryLocalization> findByLvEntryId(
+		long lvEntryId, int start, int end) {
+
 		return findByLvEntryId(lvEntryId, start, end, null);
 	}
 
@@ -143,7 +115,7 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * Returns an ordered range of all the lv entry localizations where lvEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link LVEntryLocalizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryLocalizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param lvEntryId the lv entry ID
@@ -153,8 +125,10 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * @return the ordered range of matching lv entry localizations
 	 */
 	@Override
-	public List<LVEntryLocalization> findByLvEntryId(long lvEntryId, int start,
-		int end, OrderByComparator<LVEntryLocalization> orderByComparator) {
+	public List<LVEntryLocalization> findByLvEntryId(
+		long lvEntryId, int start, int end,
+		OrderByComparator<LVEntryLocalization> orderByComparator) {
+
 		return findByLvEntryId(lvEntryId, start, end, orderByComparator, true);
 	}
 
@@ -162,44 +136,49 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * Returns an ordered range of all the lv entry localizations where lvEntryId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link LVEntryLocalizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryLocalizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param lvEntryId the lv entry ID
 	 * @param start the lower bound of the range of lv entry localizations
 	 * @param end the upper bound of the range of lv entry localizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching lv entry localizations
 	 */
 	@Override
-	public List<LVEntryLocalization> findByLvEntryId(long lvEntryId, int start,
-		int end, OrderByComparator<LVEntryLocalization> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<LVEntryLocalization> findByLvEntryId(
+		long lvEntryId, int start, int end,
+		OrderByComparator<LVEntryLocalization> orderByComparator,
+		boolean useFinderCache) {
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LVENTRYID;
-			finderArgs = new Object[] { lvEntryId };
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByLvEntryId;
+				finderArgs = new Object[] {lvEntryId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_LVENTRYID;
-			finderArgs = new Object[] { lvEntryId, start, end, orderByComparator };
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByLvEntryId;
+			finderArgs = new Object[] {
+				lvEntryId, start, end, orderByComparator
+			};
 		}
 
 		List<LVEntryLocalization> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<LVEntryLocalization>)finderCache.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache) {
+			list = (List<LVEntryLocalization>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (LVEntryLocalization lvEntryLocalization : list) {
-					if ((lvEntryId != lvEntryLocalization.getLvEntryId())) {
+					if (lvEntryId != lvEntryLocalization.getLvEntryId()) {
 						list = null;
 
 						break;
@@ -209,63 +188,56 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_LVENTRYLOCALIZATION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYLOCALIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
+			sb.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(LVEntryLocalizationModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(LVEntryLocalizationModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(lvEntryId);
+				queryPos.add(lvEntryId);
 
-				if (!pagination) {
-					list = (List<LVEntryLocalization>)QueryUtil.list(q,
-							getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryLocalization>)QueryUtil.list(q,
-							getDialect(), start, end);
-				}
+				list = (List<LVEntryLocalization>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					finderCache.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -284,26 +256,28 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * @throws NoSuchLVEntryLocalizationException if a matching lv entry localization could not be found
 	 */
 	@Override
-	public LVEntryLocalization findByLvEntryId_First(long lvEntryId,
-		OrderByComparator<LVEntryLocalization> orderByComparator)
+	public LVEntryLocalization findByLvEntryId_First(
+			long lvEntryId,
+			OrderByComparator<LVEntryLocalization> orderByComparator)
 		throws NoSuchLVEntryLocalizationException {
-		LVEntryLocalization lvEntryLocalization = fetchByLvEntryId_First(lvEntryId,
-				orderByComparator);
+
+		LVEntryLocalization lvEntryLocalization = fetchByLvEntryId_First(
+			lvEntryId, orderByComparator);
 
 		if (lvEntryLocalization != null) {
 			return lvEntryLocalization;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("lvEntryId=");
-		msg.append(lvEntryId);
+		sb.append("lvEntryId=");
+		sb.append(lvEntryId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryLocalizationException(msg.toString());
+		throw new NoSuchLVEntryLocalizationException(sb.toString());
 	}
 
 	/**
@@ -314,10 +288,12 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * @return the first matching lv entry localization, or <code>null</code> if a matching lv entry localization could not be found
 	 */
 	@Override
-	public LVEntryLocalization fetchByLvEntryId_First(long lvEntryId,
+	public LVEntryLocalization fetchByLvEntryId_First(
+		long lvEntryId,
 		OrderByComparator<LVEntryLocalization> orderByComparator) {
-		List<LVEntryLocalization> list = findByLvEntryId(lvEntryId, 0, 1,
-				orderByComparator);
+
+		List<LVEntryLocalization> list = findByLvEntryId(
+			lvEntryId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -335,26 +311,28 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * @throws NoSuchLVEntryLocalizationException if a matching lv entry localization could not be found
 	 */
 	@Override
-	public LVEntryLocalization findByLvEntryId_Last(long lvEntryId,
-		OrderByComparator<LVEntryLocalization> orderByComparator)
+	public LVEntryLocalization findByLvEntryId_Last(
+			long lvEntryId,
+			OrderByComparator<LVEntryLocalization> orderByComparator)
 		throws NoSuchLVEntryLocalizationException {
-		LVEntryLocalization lvEntryLocalization = fetchByLvEntryId_Last(lvEntryId,
-				orderByComparator);
+
+		LVEntryLocalization lvEntryLocalization = fetchByLvEntryId_Last(
+			lvEntryId, orderByComparator);
 
 		if (lvEntryLocalization != null) {
 			return lvEntryLocalization;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("lvEntryId=");
-		msg.append(lvEntryId);
+		sb.append("lvEntryId=");
+		sb.append(lvEntryId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchLVEntryLocalizationException(msg.toString());
+		throw new NoSuchLVEntryLocalizationException(sb.toString());
 	}
 
 	/**
@@ -365,16 +343,18 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * @return the last matching lv entry localization, or <code>null</code> if a matching lv entry localization could not be found
 	 */
 	@Override
-	public LVEntryLocalization fetchByLvEntryId_Last(long lvEntryId,
+	public LVEntryLocalization fetchByLvEntryId_Last(
+		long lvEntryId,
 		OrderByComparator<LVEntryLocalization> orderByComparator) {
+
 		int count = countByLvEntryId(lvEntryId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<LVEntryLocalization> list = findByLvEntryId(lvEntryId, count - 1,
-				count, orderByComparator);
+		List<LVEntryLocalization> list = findByLvEntryId(
+			lvEntryId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -394,10 +374,12 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 */
 	@Override
 	public LVEntryLocalization[] findByLvEntryId_PrevAndNext(
-		long lvEntryLocalizationId, long lvEntryId,
-		OrderByComparator<LVEntryLocalization> orderByComparator)
+			long lvEntryLocalizationId, long lvEntryId,
+			OrderByComparator<LVEntryLocalization> orderByComparator)
 		throws NoSuchLVEntryLocalizationException {
-		LVEntryLocalization lvEntryLocalization = findByPrimaryKey(lvEntryLocalizationId);
+
+		LVEntryLocalization lvEntryLocalization = findByPrimaryKey(
+			lvEntryLocalizationId);
 
 		Session session = null;
 
@@ -406,122 +388,128 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 
 			LVEntryLocalization[] array = new LVEntryLocalizationImpl[3];
 
-			array[0] = getByLvEntryId_PrevAndNext(session, lvEntryLocalization,
-					lvEntryId, orderByComparator, true);
+			array[0] = getByLvEntryId_PrevAndNext(
+				session, lvEntryLocalization, lvEntryId, orderByComparator,
+				true);
 
 			array[1] = lvEntryLocalization;
 
-			array[2] = getByLvEntryId_PrevAndNext(session, lvEntryLocalization,
-					lvEntryId, orderByComparator, false);
+			array[2] = getByLvEntryId_PrevAndNext(
+				session, lvEntryLocalization, lvEntryId, orderByComparator,
+				false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected LVEntryLocalization getByLvEntryId_PrevAndNext(Session session,
-		LVEntryLocalization lvEntryLocalization, long lvEntryId,
+	protected LVEntryLocalization getByLvEntryId_PrevAndNext(
+		Session session, LVEntryLocalization lvEntryLocalization,
+		long lvEntryId,
 		OrderByComparator<LVEntryLocalization> orderByComparator,
 		boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_LVENTRYLOCALIZATION_WHERE);
+		sb.append(_SQL_SELECT_LVENTRYLOCALIZATION_WHERE);
 
-		query.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
+		sb.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(LVEntryLocalizationModelImpl.ORDER_BY_JPQL);
+			sb.append(LVEntryLocalizationModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(lvEntryId);
+		queryPos.add(lvEntryId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(lvEntryLocalization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						lvEntryLocalization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<LVEntryLocalization> list = q.list();
+		List<LVEntryLocalization> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -538,8 +526,10 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 */
 	@Override
 	public void removeByLvEntryId(long lvEntryId) {
-		for (LVEntryLocalization lvEntryLocalization : findByLvEntryId(
-				lvEntryId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (LVEntryLocalization lvEntryLocalization :
+				findByLvEntryId(
+					lvEntryId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(lvEntryLocalization);
 		}
 	}
@@ -552,40 +542,40 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 */
 	@Override
 	public int countByLvEntryId(long lvEntryId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_LVENTRYID;
+		FinderPath finderPath = _finderPathCountByLvEntryId;
 
-		Object[] finderArgs = new Object[] { lvEntryId };
+		Object[] finderArgs = new Object[] {lvEntryId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_LVENTRYLOCALIZATION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYLOCALIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
+			sb.append(_FINDER_COLUMN_LVENTRYID_LVENTRYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(lvEntryId);
+				queryPos.add(lvEntryId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				finderCache.removeResult(finderPath, finderArgs);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -595,22 +585,14 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_LVENTRYID_LVENTRYID_2 = "lvEntryLocalization.lvEntryId = ?";
-	public static final FinderPath FINDER_PATH_FETCH_BY_LVENTRYID_LANGUAGEID = new FinderPath(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryLocalizationImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByLvEntryId_LanguageId",
-			new String[] { Long.class.getName(), String.class.getName() },
-			LVEntryLocalizationModelImpl.LVENTRYID_COLUMN_BITMASK |
-			LVEntryLocalizationModelImpl.LANGUAGEID_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_LVENTRYID_LANGUAGEID = new FinderPath(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"countByLvEntryId_LanguageId",
-			new String[] { Long.class.getName(), String.class.getName() });
+	private static final String _FINDER_COLUMN_LVENTRYID_LVENTRYID_2 =
+		"lvEntryLocalization.lvEntryId = ?";
+
+	private FinderPath _finderPathFetchByLvEntryId_LanguageId;
+	private FinderPath _finderPathCountByLvEntryId_LanguageId;
 
 	/**
-	 * Returns the lv entry localization where lvEntryId = &#63; and languageId = &#63; or throws a {@link NoSuchLVEntryLocalizationException} if it could not be found.
+	 * Returns the lv entry localization where lvEntryId = &#63; and languageId = &#63; or throws a <code>NoSuchLVEntryLocalizationException</code> if it could not be found.
 	 *
 	 * @param lvEntryId the lv entry ID
 	 * @param languageId the language ID
@@ -618,29 +600,31 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * @throws NoSuchLVEntryLocalizationException if a matching lv entry localization could not be found
 	 */
 	@Override
-	public LVEntryLocalization findByLvEntryId_LanguageId(long lvEntryId,
-		String languageId) throws NoSuchLVEntryLocalizationException {
-		LVEntryLocalization lvEntryLocalization = fetchByLvEntryId_LanguageId(lvEntryId,
-				languageId);
+	public LVEntryLocalization findByLvEntryId_LanguageId(
+			long lvEntryId, String languageId)
+		throws NoSuchLVEntryLocalizationException {
+
+		LVEntryLocalization lvEntryLocalization = fetchByLvEntryId_LanguageId(
+			lvEntryId, languageId);
 
 		if (lvEntryLocalization == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("lvEntryId=");
-			msg.append(lvEntryId);
+			sb.append("lvEntryId=");
+			sb.append(lvEntryId);
 
-			msg.append(", languageId=");
-			msg.append(languageId);
+			sb.append(", languageId=");
+			sb.append(languageId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchLVEntryLocalizationException(msg.toString());
+			throw new NoSuchLVEntryLocalizationException(sb.toString());
 		}
 
 		return lvEntryLocalization;
@@ -654,8 +638,9 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * @return the matching lv entry localization, or <code>null</code> if a matching lv entry localization could not be found
 	 */
 	@Override
-	public LVEntryLocalization fetchByLvEntryId_LanguageId(long lvEntryId,
-		String languageId) {
+	public LVEntryLocalization fetchByLvEntryId_LanguageId(
+		long lvEntryId, String languageId) {
+
 		return fetchByLvEntryId_LanguageId(lvEntryId, languageId, true);
 	}
 
@@ -664,74 +649,83 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 *
 	 * @param lvEntryId the lv entry ID
 	 * @param languageId the language ID
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching lv entry localization, or <code>null</code> if a matching lv entry localization could not be found
 	 */
 	@Override
-	public LVEntryLocalization fetchByLvEntryId_LanguageId(long lvEntryId,
-		String languageId, boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] { lvEntryId, languageId };
+	public LVEntryLocalization fetchByLvEntryId_LanguageId(
+		long lvEntryId, String languageId, boolean useFinderCache) {
+
+		languageId = Objects.toString(languageId, "");
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {lvEntryId, languageId};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
-			result = finderCache.getResult(FINDER_PATH_FETCH_BY_LVENTRYID_LANGUAGEID,
-					finderArgs, this);
+		if (useFinderCache) {
+			result = finderCache.getResult(
+				_finderPathFetchByLvEntryId_LanguageId, finderArgs, this);
 		}
 
 		if (result instanceof LVEntryLocalization) {
-			LVEntryLocalization lvEntryLocalization = (LVEntryLocalization)result;
+			LVEntryLocalization lvEntryLocalization =
+				(LVEntryLocalization)result;
 
 			if ((lvEntryId != lvEntryLocalization.getLvEntryId()) ||
-					!Objects.equals(languageId,
-						lvEntryLocalization.getLanguageId())) {
+				!Objects.equals(
+					languageId, lvEntryLocalization.getLanguageId())) {
+
 				result = null;
 			}
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_LVENTRYLOCALIZATION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYLOCALIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LVENTRYID_2);
+			sb.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LVENTRYID_2);
 
 			boolean bindLanguageId = false;
 
-			if (languageId == null) {
-				query.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_1);
-			}
-			else if (languageId.equals("")) {
-				query.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_3);
+			if (languageId.isEmpty()) {
+				sb.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_3);
 			}
 			else {
 				bindLanguageId = true;
 
-				query.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_2);
+				sb.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(lvEntryId);
+				queryPos.add(lvEntryId);
 
 				if (bindLanguageId) {
-					qPos.add(languageId);
+					queryPos.add(languageId);
 				}
 
-				List<LVEntryLocalization> list = q.list();
+				List<LVEntryLocalization> list = query.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(FINDER_PATH_FETCH_BY_LVENTRYID_LANGUAGEID,
-						finderArgs, list);
+					if (useFinderCache) {
+						finderCache.putResult(
+							_finderPathFetchByLvEntryId_LanguageId, finderArgs,
+							list);
+					}
 				}
 				else {
 					LVEntryLocalization lvEntryLocalization = list.get(0);
@@ -741,11 +735,13 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 					cacheResult(lvEntryLocalization);
 				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_FETCH_BY_LVENTRYID_LANGUAGEID,
-					finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					finderCache.removeResult(
+						_finderPathFetchByLvEntryId_LanguageId, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -768,10 +764,12 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * @return the lv entry localization that was removed
 	 */
 	@Override
-	public LVEntryLocalization removeByLvEntryId_LanguageId(long lvEntryId,
-		String languageId) throws NoSuchLVEntryLocalizationException {
-		LVEntryLocalization lvEntryLocalization = findByLvEntryId_LanguageId(lvEntryId,
-				languageId);
+	public LVEntryLocalization removeByLvEntryId_LanguageId(
+			long lvEntryId, String languageId)
+		throws NoSuchLVEntryLocalizationException {
+
+		LVEntryLocalization lvEntryLocalization = findByLvEntryId_LanguageId(
+			lvEntryId, languageId);
 
 		return remove(lvEntryLocalization);
 	}
@@ -785,58 +783,57 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 */
 	@Override
 	public int countByLvEntryId_LanguageId(long lvEntryId, String languageId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_LVENTRYID_LANGUAGEID;
+		languageId = Objects.toString(languageId, "");
 
-		Object[] finderArgs = new Object[] { lvEntryId, languageId };
+		FinderPath finderPath = _finderPathCountByLvEntryId_LanguageId;
+
+		Object[] finderArgs = new Object[] {lvEntryId, languageId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_LVENTRYLOCALIZATION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYLOCALIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LVENTRYID_2);
+			sb.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LVENTRYID_2);
 
 			boolean bindLanguageId = false;
 
-			if (languageId == null) {
-				query.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_1);
-			}
-			else if (languageId.equals("")) {
-				query.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_3);
+			if (languageId.isEmpty()) {
+				sb.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_3);
 			}
 			else {
 				bindLanguageId = true;
 
-				query.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_2);
+				sb.append(_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(lvEntryId);
+				queryPos.add(lvEntryId);
 
 				if (bindLanguageId) {
-					qPos.add(languageId);
+					queryPos.add(languageId);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				finderCache.removeResult(finderPath, finderArgs);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -846,25 +843,23 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_LVENTRYID_LANGUAGEID_LVENTRYID_2 = "lvEntryLocalization.lvEntryId = ? AND ";
-	private static final String _FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_1 =
-		"lvEntryLocalization.languageId IS NULL";
-	private static final String _FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_2 =
-		"lvEntryLocalization.languageId = ?";
-	private static final String _FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_3 =
-		"(lvEntryLocalization.languageId IS NULL OR lvEntryLocalization.languageId = '')";
-	public static final FinderPath FINDER_PATH_FETCH_BY_HEADID = new FinderPath(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
-			LVEntryLocalizationImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByHeadId", new String[] { Long.class.getName() },
-			LVEntryLocalizationModelImpl.HEADID_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_HEADID = new FinderPath(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByHeadId",
-			new String[] { Long.class.getName() });
+	private static final String
+		_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LVENTRYID_2 =
+			"lvEntryLocalization.lvEntryId = ? AND ";
+
+	private static final String
+		_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_2 =
+			"lvEntryLocalization.languageId = ?";
+
+	private static final String
+		_FINDER_COLUMN_LVENTRYID_LANGUAGEID_LANGUAGEID_3 =
+			"(lvEntryLocalization.languageId IS NULL OR lvEntryLocalization.languageId = '')";
+
+	private FinderPath _finderPathFetchByHeadId;
+	private FinderPath _finderPathCountByHeadId;
 
 	/**
-	 * Returns the lv entry localization where headId = &#63; or throws a {@link NoSuchLVEntryLocalizationException} if it could not be found.
+	 * Returns the lv entry localization where headId = &#63; or throws a <code>NoSuchLVEntryLocalizationException</code> if it could not be found.
 	 *
 	 * @param headId the head ID
 	 * @return the matching lv entry localization
@@ -873,23 +868,24 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	@Override
 	public LVEntryLocalization findByHeadId(long headId)
 		throws NoSuchLVEntryLocalizationException {
+
 		LVEntryLocalization lvEntryLocalization = fetchByHeadId(headId);
 
 		if (lvEntryLocalization == null) {
-			StringBundler msg = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("headId=");
-			msg.append(headId);
+			sb.append("headId=");
+			sb.append(headId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchLVEntryLocalizationException(msg.toString());
+			throw new NoSuchLVEntryLocalizationException(sb.toString());
 		}
 
 		return lvEntryLocalization;
@@ -910,54 +906,62 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * Returns the lv entry localization where headId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param headId the head ID
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching lv entry localization, or <code>null</code> if a matching lv entry localization could not be found
 	 */
 	@Override
-	public LVEntryLocalization fetchByHeadId(long headId,
-		boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] { headId };
+	public LVEntryLocalization fetchByHeadId(
+		long headId, boolean useFinderCache) {
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {headId};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
-			result = finderCache.getResult(FINDER_PATH_FETCH_BY_HEADID,
-					finderArgs, this);
+		if (useFinderCache) {
+			result = finderCache.getResult(
+				_finderPathFetchByHeadId, finderArgs, this);
 		}
 
 		if (result instanceof LVEntryLocalization) {
-			LVEntryLocalization lvEntryLocalization = (LVEntryLocalization)result;
+			LVEntryLocalization lvEntryLocalization =
+				(LVEntryLocalization)result;
 
-			if ((headId != lvEntryLocalization.getHeadId())) {
+			if (headId != lvEntryLocalization.getHeadId()) {
 				result = null;
 			}
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_SELECT_LVENTRYLOCALIZATION_WHERE);
+			sb.append(_SQL_SELECT_LVENTRYLOCALIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_HEADID_HEADID_2);
+			sb.append(_FINDER_COLUMN_HEADID_HEADID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(headId);
+				queryPos.add(headId);
 
-				List<LVEntryLocalization> list = q.list();
+				List<LVEntryLocalization> list = query.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(FINDER_PATH_FETCH_BY_HEADID,
-						finderArgs, list);
+					if (useFinderCache) {
+						finderCache.putResult(
+							_finderPathFetchByHeadId, finderArgs, list);
+					}
 				}
 				else {
 					LVEntryLocalization lvEntryLocalization = list.get(0);
@@ -967,10 +971,13 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 					cacheResult(lvEntryLocalization);
 				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_FETCH_BY_HEADID, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					finderCache.removeResult(
+						_finderPathFetchByHeadId, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -994,6 +1001,7 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	@Override
 	public LVEntryLocalization removeByHeadId(long headId)
 		throws NoSuchLVEntryLocalizationException {
+
 		LVEntryLocalization lvEntryLocalization = findByHeadId(headId);
 
 		return remove(lvEntryLocalization);
@@ -1007,40 +1015,40 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 */
 	@Override
 	public int countByHeadId(long headId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_HEADID;
+		FinderPath finderPath = _finderPathCountByHeadId;
 
-		Object[] finderArgs = new Object[] { headId };
+		Object[] finderArgs = new Object[] {headId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_LVENTRYLOCALIZATION_WHERE);
+			sb.append(_SQL_COUNT_LVENTRYLOCALIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_HEADID_HEADID_2);
+			sb.append(_FINDER_COLUMN_HEADID_HEADID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(headId);
+				queryPos.add(headId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				finderCache.removeResult(finderPath, finderArgs);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1050,10 +1058,18 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_HEADID_HEADID_2 = "lvEntryLocalization.headId = ?";
+	private static final String _FINDER_COLUMN_HEADID_HEADID_2 =
+		"lvEntryLocalization.headId = ?";
 
 	public LVEntryLocalizationPersistenceImpl() {
 		setModelClass(LVEntryLocalization.class);
+
+		setModelImplClass(LVEntryLocalizationImpl.class);
+		setModelPKClass(long.class);
+		setEntityCacheEnabled(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED);
+
+		setTable(LVEntryLocalizationTable.INSTANCE);
 	}
 
 	/**
@@ -1063,18 +1079,22 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 */
 	@Override
 	public void cacheResult(LVEntryLocalization lvEntryLocalization) {
-		entityCache.putResult(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+		entityCache.putResult(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
 			LVEntryLocalizationImpl.class, lvEntryLocalization.getPrimaryKey(),
 			lvEntryLocalization);
 
-		finderCache.putResult(FINDER_PATH_FETCH_BY_LVENTRYID_LANGUAGEID,
+		finderCache.putResult(
+			_finderPathFetchByLvEntryId_LanguageId,
 			new Object[] {
 				lvEntryLocalization.getLvEntryId(),
 				lvEntryLocalization.getLanguageId()
-			}, lvEntryLocalization);
+			},
+			lvEntryLocalization);
 
-		finderCache.putResult(FINDER_PATH_FETCH_BY_HEADID,
-			new Object[] { lvEntryLocalization.getHeadId() },
+		finderCache.putResult(
+			_finderPathFetchByHeadId,
+			new Object[] {lvEntryLocalization.getHeadId()},
 			lvEntryLocalization);
 
 		lvEntryLocalization.resetOriginalValues();
@@ -1089,9 +1109,10 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	public void cacheResult(List<LVEntryLocalization> lvEntryLocalizations) {
 		for (LVEntryLocalization lvEntryLocalization : lvEntryLocalizations) {
 			if (entityCache.getResult(
-						LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-						LVEntryLocalizationImpl.class,
-						lvEntryLocalization.getPrimaryKey()) == null) {
+					LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+					LVEntryLocalizationImpl.class,
+					lvEntryLocalization.getPrimaryKey()) == null) {
+
 				cacheResult(lvEntryLocalization);
 			}
 			else {
@@ -1104,7 +1125,7 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * Clears the cache for all lv entry localizations.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
@@ -1120,19 +1141,20 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * Clears the cache for the lv entry localization.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(LVEntryLocalization lvEntryLocalization) {
-		entityCache.removeResult(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+		entityCache.removeResult(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
 			LVEntryLocalizationImpl.class, lvEntryLocalization.getPrimaryKey());
 
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
-		clearUniqueFindersCache((LVEntryLocalizationModelImpl)lvEntryLocalization,
-			true);
+		clearUniqueFindersCache(
+			(LVEntryLocalizationModelImpl)lvEntryLocalization, true);
 	}
 
 	@Override
@@ -1141,80 +1163,101 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		for (LVEntryLocalization lvEntryLocalization : lvEntryLocalizations) {
-			entityCache.removeResult(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+			entityCache.removeResult(
+				LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
 				LVEntryLocalizationImpl.class,
 				lvEntryLocalization.getPrimaryKey());
 
-			clearUniqueFindersCache((LVEntryLocalizationModelImpl)lvEntryLocalization,
-				true);
+			clearUniqueFindersCache(
+				(LVEntryLocalizationModelImpl)lvEntryLocalization, true);
+		}
+	}
+
+	@Override
+	public void clearCache(Set<Serializable> primaryKeys) {
+		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
+		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		for (Serializable primaryKey : primaryKeys) {
+			entityCache.removeResult(
+				LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+				LVEntryLocalizationImpl.class, primaryKey);
 		}
 	}
 
 	protected void cacheUniqueFindersCache(
 		LVEntryLocalizationModelImpl lvEntryLocalizationModelImpl) {
+
 		Object[] args = new Object[] {
-				lvEntryLocalizationModelImpl.getLvEntryId(),
-				lvEntryLocalizationModelImpl.getLanguageId()
-			};
+			lvEntryLocalizationModelImpl.getLvEntryId(),
+			lvEntryLocalizationModelImpl.getLanguageId()
+		};
 
-		finderCache.putResult(FINDER_PATH_COUNT_BY_LVENTRYID_LANGUAGEID, args,
-			Long.valueOf(1), false);
-		finderCache.putResult(FINDER_PATH_FETCH_BY_LVENTRYID_LANGUAGEID, args,
+		finderCache.putResult(
+			_finderPathCountByLvEntryId_LanguageId, args, Long.valueOf(1),
+			false);
+		finderCache.putResult(
+			_finderPathFetchByLvEntryId_LanguageId, args,
 			lvEntryLocalizationModelImpl, false);
 
-		args = new Object[] { lvEntryLocalizationModelImpl.getHeadId() };
+		args = new Object[] {lvEntryLocalizationModelImpl.getHeadId()};
 
-		finderCache.putResult(FINDER_PATH_COUNT_BY_HEADID, args,
-			Long.valueOf(1), false);
-		finderCache.putResult(FINDER_PATH_FETCH_BY_HEADID, args,
-			lvEntryLocalizationModelImpl, false);
+		finderCache.putResult(
+			_finderPathCountByHeadId, args, Long.valueOf(1), false);
+		finderCache.putResult(
+			_finderPathFetchByHeadId, args, lvEntryLocalizationModelImpl,
+			false);
 	}
 
 	protected void clearUniqueFindersCache(
 		LVEntryLocalizationModelImpl lvEntryLocalizationModelImpl,
 		boolean clearCurrent) {
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-					lvEntryLocalizationModelImpl.getLvEntryId(),
-					lvEntryLocalizationModelImpl.getLanguageId()
-				};
-
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_LVENTRYID_LANGUAGEID,
-				args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_LVENTRYID_LANGUAGEID,
-				args);
-		}
-
-		if ((lvEntryLocalizationModelImpl.getColumnBitmask() &
-				FINDER_PATH_FETCH_BY_LVENTRYID_LANGUAGEID.getColumnBitmask()) != 0) {
-			Object[] args = new Object[] {
-					lvEntryLocalizationModelImpl.getOriginalLvEntryId(),
-					lvEntryLocalizationModelImpl.getOriginalLanguageId()
-				};
-
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_LVENTRYID_LANGUAGEID,
-				args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_LVENTRYID_LANGUAGEID,
-				args);
-		}
 
 		if (clearCurrent) {
 			Object[] args = new Object[] {
-					lvEntryLocalizationModelImpl.getHeadId()
-				};
+				lvEntryLocalizationModelImpl.getLvEntryId(),
+				lvEntryLocalizationModelImpl.getLanguageId()
+			};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_HEADID, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_HEADID, args);
+			finderCache.removeResult(
+				_finderPathCountByLvEntryId_LanguageId, args);
+			finderCache.removeResult(
+				_finderPathFetchByLvEntryId_LanguageId, args);
 		}
 
 		if ((lvEntryLocalizationModelImpl.getColumnBitmask() &
-				FINDER_PATH_FETCH_BY_HEADID.getColumnBitmask()) != 0) {
-			Object[] args = new Object[] {
-					lvEntryLocalizationModelImpl.getOriginalHeadId()
-				};
+			 _finderPathFetchByLvEntryId_LanguageId.getColumnBitmask()) != 0) {
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_HEADID, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_HEADID, args);
+			Object[] args = new Object[] {
+				lvEntryLocalizationModelImpl.getOriginalLvEntryId(),
+				lvEntryLocalizationModelImpl.getOriginalLanguageId()
+			};
+
+			finderCache.removeResult(
+				_finderPathCountByLvEntryId_LanguageId, args);
+			finderCache.removeResult(
+				_finderPathFetchByLvEntryId_LanguageId, args);
+		}
+
+		if (clearCurrent) {
+			Object[] args = new Object[] {
+				lvEntryLocalizationModelImpl.getHeadId()
+			};
+
+			finderCache.removeResult(_finderPathCountByHeadId, args);
+			finderCache.removeResult(_finderPathFetchByHeadId, args);
+		}
+
+		if ((lvEntryLocalizationModelImpl.getColumnBitmask() &
+			 _finderPathFetchByHeadId.getColumnBitmask()) != 0) {
+
+			Object[] args = new Object[] {
+				lvEntryLocalizationModelImpl.getOriginalHeadId()
+			};
+
+			finderCache.removeResult(_finderPathCountByHeadId, args);
+			finderCache.removeResult(_finderPathFetchByHeadId, args);
 		}
 	}
 
@@ -1231,6 +1274,8 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 		lvEntryLocalization.setNew(true);
 		lvEntryLocalization.setPrimaryKey(lvEntryLocalizationId);
 
+		lvEntryLocalization.setCompanyId(CompanyThreadLocal.getCompanyId());
+
 		return lvEntryLocalization;
 	}
 
@@ -1244,6 +1289,7 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	@Override
 	public LVEntryLocalization remove(long lvEntryLocalizationId)
 		throws NoSuchLVEntryLocalizationException {
+
 		return remove((Serializable)lvEntryLocalizationId);
 	}
 
@@ -1257,30 +1303,32 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	@Override
 	public LVEntryLocalization remove(Serializable primaryKey)
 		throws NoSuchLVEntryLocalizationException {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			LVEntryLocalization lvEntryLocalization = (LVEntryLocalization)session.get(LVEntryLocalizationImpl.class,
-					primaryKey);
+			LVEntryLocalization lvEntryLocalization =
+				(LVEntryLocalization)session.get(
+					LVEntryLocalizationImpl.class, primaryKey);
 
 			if (lvEntryLocalization == null) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 				}
 
-				throw new NoSuchLVEntryLocalizationException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-					primaryKey);
+				throw new NoSuchLVEntryLocalizationException(
+					_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
 			return remove(lvEntryLocalization);
 		}
-		catch (NoSuchLVEntryLocalizationException nsee) {
-			throw nsee;
+		catch (NoSuchLVEntryLocalizationException noSuchEntityException) {
+			throw noSuchEntityException;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1290,22 +1338,24 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	@Override
 	protected LVEntryLocalization removeImpl(
 		LVEntryLocalization lvEntryLocalization) {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
 			if (!session.contains(lvEntryLocalization)) {
-				lvEntryLocalization = (LVEntryLocalization)session.get(LVEntryLocalizationImpl.class,
-						lvEntryLocalization.getPrimaryKeyObj());
+				lvEntryLocalization = (LVEntryLocalization)session.get(
+					LVEntryLocalizationImpl.class,
+					lvEntryLocalization.getPrimaryKeyObj());
 			}
 
 			if (lvEntryLocalization != null) {
 				session.delete(lvEntryLocalization);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1321,25 +1371,28 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	@Override
 	public LVEntryLocalization updateImpl(
 		LVEntryLocalization lvEntryLocalization) {
+
 		boolean isNew = lvEntryLocalization.isNew();
 
 		if (!(lvEntryLocalization instanceof LVEntryLocalizationModelImpl)) {
 			InvocationHandler invocationHandler = null;
 
 			if (ProxyUtil.isProxyClass(lvEntryLocalization.getClass())) {
-				invocationHandler = ProxyUtil.getInvocationHandler(lvEntryLocalization);
+				invocationHandler = ProxyUtil.getInvocationHandler(
+					lvEntryLocalization);
 
 				throw new IllegalArgumentException(
 					"Implement ModelWrapper in lvEntryLocalization proxy " +
-					invocationHandler.getClass());
+						invocationHandler.getClass());
 			}
 
 			throw new IllegalArgumentException(
 				"Implement ModelWrapper in custom LVEntryLocalization implementation " +
-				lvEntryLocalization.getClass());
+					lvEntryLocalization.getClass());
 		}
 
-		LVEntryLocalizationModelImpl lvEntryLocalizationModelImpl = (LVEntryLocalizationModelImpl)lvEntryLocalization;
+		LVEntryLocalizationModelImpl lvEntryLocalizationModelImpl =
+			(LVEntryLocalizationModelImpl)lvEntryLocalization;
 
 		Session session = null;
 
@@ -1352,11 +1405,12 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 				lvEntryLocalization.setNew(false);
 			}
 			else {
-				lvEntryLocalization = (LVEntryLocalization)session.merge(lvEntryLocalization);
+				lvEntryLocalization = (LVEntryLocalization)session.merge(
+					lvEntryLocalization);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1367,41 +1421,44 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 		if (!LVEntryLocalizationModelImpl.COLUMN_BITMASK_ENABLED) {
 			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 		}
-		else
-		 if (isNew) {
+		else if (isNew) {
 			Object[] args = new Object[] {
+				lvEntryLocalizationModelImpl.getLvEntryId()
+			};
+
+			finderCache.removeResult(_finderPathCountByLvEntryId, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByLvEntryId, args);
+
+			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
+		}
+		else {
+			if ((lvEntryLocalizationModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByLvEntryId.
+					 getColumnBitmask()) != 0) {
+
+				Object[] args = new Object[] {
+					lvEntryLocalizationModelImpl.getOriginalLvEntryId()
+				};
+
+				finderCache.removeResult(_finderPathCountByLvEntryId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByLvEntryId, args);
+
+				args = new Object[] {
 					lvEntryLocalizationModelImpl.getLvEntryId()
 				};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_LVENTRYID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LVENTRYID,
-				args);
-
-			finderCache.removeResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL,
-				FINDER_ARGS_EMPTY);
-		}
-
-		else {
-			if ((lvEntryLocalizationModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LVENTRYID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						lvEntryLocalizationModelImpl.getOriginalLvEntryId()
-					};
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_LVENTRYID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LVENTRYID,
-					args);
-
-				args = new Object[] { lvEntryLocalizationModelImpl.getLvEntryId() };
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_LVENTRYID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LVENTRYID,
-					args);
+				finderCache.removeResult(_finderPathCountByLvEntryId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByLvEntryId, args);
 			}
 		}
 
-		entityCache.putResult(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+		entityCache.putResult(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
 			LVEntryLocalizationImpl.class, lvEntryLocalization.getPrimaryKey(),
 			lvEntryLocalization, false);
 
@@ -1414,7 +1471,7 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	}
 
 	/**
-	 * Returns the lv entry localization with the primary key or throws a {@link com.liferay.portal.kernel.exception.NoSuchModelException} if it could not be found.
+	 * Returns the lv entry localization with the primary key or throws a <code>com.liferay.portal.kernel.exception.NoSuchModelException</code> if it could not be found.
 	 *
 	 * @param primaryKey the primary key of the lv entry localization
 	 * @return the lv entry localization
@@ -1423,6 +1480,7 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	@Override
 	public LVEntryLocalization findByPrimaryKey(Serializable primaryKey)
 		throws NoSuchLVEntryLocalizationException {
+
 		LVEntryLocalization lvEntryLocalization = fetchByPrimaryKey(primaryKey);
 
 		if (lvEntryLocalization == null) {
@@ -1430,15 +1488,15 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 				_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
-			throw new NoSuchLVEntryLocalizationException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-				primaryKey);
+			throw new NoSuchLVEntryLocalizationException(
+				_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 		}
 
 		return lvEntryLocalization;
 	}
 
 	/**
-	 * Returns the lv entry localization with the primary key or throws a {@link NoSuchLVEntryLocalizationException} if it could not be found.
+	 * Returns the lv entry localization with the primary key or throws a <code>NoSuchLVEntryLocalizationException</code> if it could not be found.
 	 *
 	 * @param lvEntryLocalizationId the primary key of the lv entry localization
 	 * @return the lv entry localization
@@ -1447,55 +1505,8 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	@Override
 	public LVEntryLocalization findByPrimaryKey(long lvEntryLocalizationId)
 		throws NoSuchLVEntryLocalizationException {
+
 		return findByPrimaryKey((Serializable)lvEntryLocalizationId);
-	}
-
-	/**
-	 * Returns the lv entry localization with the primary key or returns <code>null</code> if it could not be found.
-	 *
-	 * @param primaryKey the primary key of the lv entry localization
-	 * @return the lv entry localization, or <code>null</code> if a lv entry localization with the primary key could not be found
-	 */
-	@Override
-	public LVEntryLocalization fetchByPrimaryKey(Serializable primaryKey) {
-		Serializable serializable = entityCache.getResult(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-				LVEntryLocalizationImpl.class, primaryKey);
-
-		if (serializable == nullModel) {
-			return null;
-		}
-
-		LVEntryLocalization lvEntryLocalization = (LVEntryLocalization)serializable;
-
-		if (lvEntryLocalization == null) {
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				lvEntryLocalization = (LVEntryLocalization)session.get(LVEntryLocalizationImpl.class,
-						primaryKey);
-
-				if (lvEntryLocalization != null) {
-					cacheResult(lvEntryLocalization);
-				}
-				else {
-					entityCache.putResult(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-						LVEntryLocalizationImpl.class, primaryKey, nullModel);
-				}
-			}
-			catch (Exception e) {
-				entityCache.removeResult(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-					LVEntryLocalizationImpl.class, primaryKey);
-
-				throw processException(e);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return lvEntryLocalization;
 	}
 
 	/**
@@ -1507,101 +1518,6 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	@Override
 	public LVEntryLocalization fetchByPrimaryKey(long lvEntryLocalizationId) {
 		return fetchByPrimaryKey((Serializable)lvEntryLocalizationId);
-	}
-
-	@Override
-	public Map<Serializable, LVEntryLocalization> fetchByPrimaryKeys(
-		Set<Serializable> primaryKeys) {
-		if (primaryKeys.isEmpty()) {
-			return Collections.emptyMap();
-		}
-
-		Map<Serializable, LVEntryLocalization> map = new HashMap<Serializable, LVEntryLocalization>();
-
-		if (primaryKeys.size() == 1) {
-			Iterator<Serializable> iterator = primaryKeys.iterator();
-
-			Serializable primaryKey = iterator.next();
-
-			LVEntryLocalization lvEntryLocalization = fetchByPrimaryKey(primaryKey);
-
-			if (lvEntryLocalization != null) {
-				map.put(primaryKey, lvEntryLocalization);
-			}
-
-			return map;
-		}
-
-		Set<Serializable> uncachedPrimaryKeys = null;
-
-		for (Serializable primaryKey : primaryKeys) {
-			Serializable serializable = entityCache.getResult(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-					LVEntryLocalizationImpl.class, primaryKey);
-
-			if (serializable != nullModel) {
-				if (serializable == null) {
-					if (uncachedPrimaryKeys == null) {
-						uncachedPrimaryKeys = new HashSet<Serializable>();
-					}
-
-					uncachedPrimaryKeys.add(primaryKey);
-				}
-				else {
-					map.put(primaryKey, (LVEntryLocalization)serializable);
-				}
-			}
-		}
-
-		if (uncachedPrimaryKeys == null) {
-			return map;
-		}
-
-		StringBundler query = new StringBundler((uncachedPrimaryKeys.size() * 2) +
-				1);
-
-		query.append(_SQL_SELECT_LVENTRYLOCALIZATION_WHERE_PKS_IN);
-
-		for (Serializable primaryKey : uncachedPrimaryKeys) {
-			query.append((long)primaryKey);
-
-			query.append(",");
-		}
-
-		query.setIndex(query.index() - 1);
-
-		query.append(")");
-
-		String sql = query.toString();
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			Query q = session.createQuery(sql);
-
-			for (LVEntryLocalization lvEntryLocalization : (List<LVEntryLocalization>)q.list()) {
-				map.put(lvEntryLocalization.getPrimaryKeyObj(),
-					lvEntryLocalization);
-
-				cacheResult(lvEntryLocalization);
-
-				uncachedPrimaryKeys.remove(lvEntryLocalization.getPrimaryKeyObj());
-			}
-
-			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				entityCache.putResult(LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
-					LVEntryLocalizationImpl.class, primaryKey, nullModel);
-			}
-		}
-		catch (Exception e) {
-			throw processException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-
-		return map;
 	}
 
 	/**
@@ -1618,7 +1534,7 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * Returns a range of all the lv entry localizations.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link LVEntryLocalizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryLocalizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of lv entry localizations
@@ -1634,7 +1550,7 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * Returns an ordered range of all the lv entry localizations.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link LVEntryLocalizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryLocalizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of lv entry localizations
@@ -1643,8 +1559,10 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * @return the ordered range of lv entry localizations
 	 */
 	@Override
-	public List<LVEntryLocalization> findAll(int start, int end,
+	public List<LVEntryLocalization> findAll(
+		int start, int end,
 		OrderByComparator<LVEntryLocalization> orderByComparator) {
+
 		return findAll(start, end, orderByComparator, true);
 	}
 
@@ -1652,62 +1570,63 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * Returns an ordered range of all the lv entry localizations.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link LVEntryLocalizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LVEntryLocalizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of lv entry localizations
 	 * @param end the upper bound of the range of lv entry localizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of lv entry localizations
 	 */
 	@Override
-	public List<LVEntryLocalization> findAll(int start, int end,
+	public List<LVEntryLocalization> findAll(
+		int start, int end,
 		OrderByComparator<LVEntryLocalization> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+		boolean useFinderCache) {
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL;
-			finderArgs = FINDER_ARGS_EMPTY;
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_ALL;
-			finderArgs = new Object[] { start, end, orderByComparator };
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindAll;
+			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<LVEntryLocalization> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<LVEntryLocalization>)finderCache.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache) {
+			list = (List<LVEntryLocalization>)finderCache.getResult(
+				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(2 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_LVENTRYLOCALIZATION);
+				sb.append(_SQL_SELECT_LVENTRYLOCALIZATION);
 
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_LVENTRYLOCALIZATION;
 
-				if (pagination) {
-					sql = sql.concat(LVEntryLocalizationModelImpl.ORDER_BY_JPQL);
-				}
+				sql = sql.concat(LVEntryLocalizationModelImpl.ORDER_BY_JPQL);
 			}
 
 			Session session = null;
@@ -1715,29 +1634,23 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				if (!pagination) {
-					list = (List<LVEntryLocalization>)QueryUtil.list(q,
-							getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<LVEntryLocalization>)QueryUtil.list(q,
-							getDialect(), start, end);
-				}
+				list = (List<LVEntryLocalization>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					finderCache.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1765,8 +1678,8 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)finderCache.getResult(FINDER_PATH_COUNT_ALL,
-				FINDER_ARGS_EMPTY, this);
+		Long count = (Long)finderCache.getResult(
+			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
 			Session session = null;
@@ -1774,18 +1687,19 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_LVENTRYLOCALIZATION);
+				Query query = session.createQuery(
+					_SQL_COUNT_LVENTRYLOCALIZATION);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY,
-					count);
+				finderCache.putResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_COUNT_ALL,
-					FINDER_ARGS_EMPTY);
+			catch (Exception exception) {
+				finderCache.removeResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1793,6 +1707,21 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 		}
 
 		return count.intValue();
+	}
+
+	@Override
+	protected EntityCache getEntityCache() {
+		return entityCache;
+	}
+
+	@Override
+	protected String getPKDBName() {
+		return "lvEntryLocalizationId";
+	}
+
+	@Override
+	protected String getSelectSQL() {
+		return _SQL_SELECT_LVENTRYLOCALIZATION;
 	}
 
 	@Override
@@ -1804,6 +1733,77 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 	 * Initializes the lv entry localization persistence.
 	 */
 	public void afterPropertiesSet() {
+		_finderPathWithPaginationFindAll = new FinderPath(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
+			LVEntryLocalizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+
+		_finderPathWithoutPaginationFindAll = new FinderPath(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
+			LVEntryLocalizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
+			new String[0]);
+
+		_finderPathCountAll = new FinderPath(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
+			new String[0]);
+
+		_finderPathWithPaginationFindByLvEntryId = new FinderPath(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
+			LVEntryLocalizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByLvEntryId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByLvEntryId = new FinderPath(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
+			LVEntryLocalizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByLvEntryId",
+			new String[] {Long.class.getName()},
+			LVEntryLocalizationModelImpl.LVENTRYID_COLUMN_BITMASK);
+
+		_finderPathCountByLvEntryId = new FinderPath(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByLvEntryId",
+			new String[] {Long.class.getName()});
+
+		_finderPathFetchByLvEntryId_LanguageId = new FinderPath(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
+			LVEntryLocalizationImpl.class, FINDER_CLASS_NAME_ENTITY,
+			"fetchByLvEntryId_LanguageId",
+			new String[] {Long.class.getName(), String.class.getName()},
+			LVEntryLocalizationModelImpl.LVENTRYID_COLUMN_BITMASK |
+			LVEntryLocalizationModelImpl.LANGUAGEID_COLUMN_BITMASK);
+
+		_finderPathCountByLvEntryId_LanguageId = new FinderPath(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+			"countByLvEntryId_LanguageId",
+			new String[] {Long.class.getName(), String.class.getName()});
+
+		_finderPathFetchByHeadId = new FinderPath(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED,
+			LVEntryLocalizationImpl.class, FINDER_CLASS_NAME_ENTITY,
+			"fetchByHeadId", new String[] {Long.class.getName()},
+			LVEntryLocalizationModelImpl.HEADID_COLUMN_BITMASK);
+
+		_finderPathCountByHeadId = new FinderPath(
+			LVEntryLocalizationModelImpl.ENTITY_CACHE_ENABLED,
+			LVEntryLocalizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByHeadId",
+			new String[] {Long.class.getName()});
 	}
 
 	public void destroy() {
@@ -1815,15 +1815,31 @@ public class LVEntryLocalizationPersistenceImpl extends BasePersistenceImpl<LVEn
 
 	@ServiceReference(type = EntityCache.class)
 	protected EntityCache entityCache;
+
 	@ServiceReference(type = FinderCache.class)
 	protected FinderCache finderCache;
-	private static final String _SQL_SELECT_LVENTRYLOCALIZATION = "SELECT lvEntryLocalization FROM LVEntryLocalization lvEntryLocalization";
-	private static final String _SQL_SELECT_LVENTRYLOCALIZATION_WHERE_PKS_IN = "SELECT lvEntryLocalization FROM LVEntryLocalization lvEntryLocalization WHERE lvEntryLocalizationId IN (";
-	private static final String _SQL_SELECT_LVENTRYLOCALIZATION_WHERE = "SELECT lvEntryLocalization FROM LVEntryLocalization lvEntryLocalization WHERE ";
-	private static final String _SQL_COUNT_LVENTRYLOCALIZATION = "SELECT COUNT(lvEntryLocalization) FROM LVEntryLocalization lvEntryLocalization";
-	private static final String _SQL_COUNT_LVENTRYLOCALIZATION_WHERE = "SELECT COUNT(lvEntryLocalization) FROM LVEntryLocalization lvEntryLocalization WHERE ";
+
+	private static final String _SQL_SELECT_LVENTRYLOCALIZATION =
+		"SELECT lvEntryLocalization FROM LVEntryLocalization lvEntryLocalization";
+
+	private static final String _SQL_SELECT_LVENTRYLOCALIZATION_WHERE =
+		"SELECT lvEntryLocalization FROM LVEntryLocalization lvEntryLocalization WHERE ";
+
+	private static final String _SQL_COUNT_LVENTRYLOCALIZATION =
+		"SELECT COUNT(lvEntryLocalization) FROM LVEntryLocalization lvEntryLocalization";
+
+	private static final String _SQL_COUNT_LVENTRYLOCALIZATION_WHERE =
+		"SELECT COUNT(lvEntryLocalization) FROM LVEntryLocalization lvEntryLocalization WHERE ";
+
 	private static final String _ORDER_BY_ENTITY_ALIAS = "lvEntryLocalization.";
-	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY = "No LVEntryLocalization exists with the primary key ";
-	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No LVEntryLocalization exists with the key {";
-	private static final Log _log = LogFactoryUtil.getLog(LVEntryLocalizationPersistenceImpl.class);
+
+	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY =
+		"No LVEntryLocalization exists with the primary key ";
+
+	private static final String _NO_SUCH_ENTITY_WITH_KEY =
+		"No LVEntryLocalization exists with the key {";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LVEntryLocalizationPersistenceImpl.class);
+
 }

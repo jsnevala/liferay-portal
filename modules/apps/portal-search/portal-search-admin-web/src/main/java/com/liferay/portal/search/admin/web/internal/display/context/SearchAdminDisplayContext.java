@@ -14,28 +14,30 @@
 
 package com.liferay.portal.search.admin.web.internal.display.context;
 
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
+
 /**
  * @author Adam Brandizzi
  */
 public class SearchAdminDisplayContext {
 
-	public String getStatusString() {
-		return _statusString;
+	public NavigationItemList getNavigationItemList() {
+		return _navigationItemList;
 	}
 
-	public boolean isMissingSearchEngine() {
-		return _missingSearchEngine;
+	public String getSelectedTab() {
+		return _selectedTab;
 	}
 
-	public void setMissingSearchEngine(boolean missingSearchEngine) {
-		_missingSearchEngine = missingSearchEngine;
+	public void setNavigationItemList(NavigationItemList navigationItemList) {
+		_navigationItemList = navigationItemList;
 	}
 
-	public void setStatusString(String statusString) {
-		_statusString = statusString;
+	public void setSelectedTab(String selectedTab) {
+		_selectedTab = selectedTab;
 	}
 
-	private boolean _missingSearchEngine;
-	private String _statusString;
+	private NavigationItemList _navigationItemList;
+	private String _selectedTab;
 
 }

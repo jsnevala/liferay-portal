@@ -27,7 +27,7 @@ import javax.portlet.PortletPreferences;
 import javax.portlet.ReadOnlyException;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 
@@ -81,7 +81,7 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Display styles for languages are deprecated in favor of " +
-						"application display templates");
+						"widget templates");
 			}
 		}
 	}

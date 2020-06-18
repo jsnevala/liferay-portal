@@ -43,7 +43,7 @@ public class PropertiesCommentsCheck extends BaseFileCheck {
 			String comment = matcher.group(2);
 
 			String titleCaseComment = SourceUtil.getTitleCase(
-				comment, _BRAND_NAMES);
+				comment, true, _BRAND_NAMES);
 
 			titleCaseComment = titleCaseComment.replaceAll(
 				"(?i)(\\A|\\s)sf(\\Z|\\s)", "$1Source Formatter$2");
@@ -57,8 +57,9 @@ public class PropertiesCommentsCheck extends BaseFileCheck {
 		return content;
 	}
 
-	private static final String[] _BRAND_NAMES =
-		{"jQuery", "reCAPTCHA", "svg4everybody", "tc"};
+	private static final String[] _BRAND_NAMES = {
+		"jQuery", "reCAPTCHA", "svg4everybody", "tc"
+	};
 
 	private static final Pattern _commentPattern = Pattern.compile(
 		"([^#]\\s*)?\\n\\s*#+\\s+(\\w[\\s\\w]+)(\\n\\s*#+.*[\\w]+.*)?$",

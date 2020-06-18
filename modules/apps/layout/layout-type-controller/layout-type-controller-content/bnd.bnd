@@ -1,9 +1,5 @@
 Bundle-Name: Liferay Layout Type Controller Content
 Bundle-SymbolicName: com.liferay.layout.type.controller.content
-Bundle-Version: 2.0.0
-Require-Capability:\
-	osgi.extender;\
-		filter:="(&(osgi.extender=jsp.taglib)(uri=http://liferay.com/tld/soy))",\
-	soy;\
-		filter:="(type=layout-admin-web)"
+Bundle-Version: 3.0.8
 Web-ContextPath: /layout-type-controller-content
+-dsannotations-options: inherit

@@ -32,17 +32,14 @@ public interface AssetAutoTaggerSystemConfiguration {
 	/**
 	 * Enables asset auto tagging.
 	 */
-	@Meta.AD(
-		deflt = "false", description = "enabled-description", name = "enabled",
-		required = false
-	)
+	@Meta.AD(deflt = "true", name = "enabled", required = false)
 	public boolean enabled();
 
 	/**
 	 * Specifies the maximum number of tags that can be added for a given asset.
 	 */
 	@Meta.AD(
-		description = "maximum-number-of-tags-per-asset-description",
+		description = "system-maximum-number-of-tags-per-asset-description",
 		name = "maximum-number-of-tags-per-asset", required = false
 	)
 	public int maximumNumberOfTagsPerAsset();

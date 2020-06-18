@@ -68,10 +68,11 @@ PortletURL portletURL = userGroupItemSelectorViewDisplayContext.getPortletURL();
 		>
 
 			<%
-			Map<String, Object> data = new HashMap<>();
-
-			data.put("id", userGroup.getUserGroupId());
-			data.put("name", userGroup.getName());
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"id", userGroup.getUserGroupId()
+			).put(
+				"name", userGroup.getName()
+			).build();
 
 			row.setData(data);
 			%>
@@ -96,30 +97,27 @@ PortletURL portletURL = userGroupItemSelectorViewDisplayContext.getPortletURL();
 </div>
 
 <aui:script use="liferay-search-container">
-	var searchContainer = Liferay.SearchContainer.get('<portlet:namespace />userGroups');
-
-	searchContainer.on(
-		'rowToggled',
-		function(event) {
-			var allSelectedElements = event.elements.allSelectedElements;
-			var arr = [];
-
-			allSelectedElements.each(
-				function() {
-					var row = this.ancestor('tr');
-
-					var data = row.getDOM().dataset;
-
-					arr.push({id: data.id, name: data.name});
-				}
-			);
-
-			Liferay.Util.getOpener().Liferay.fire(
-				'<%= HtmlUtil.escapeJS(itemSelectedEventName) %>',
-				{
-					data: arr
-				}
-			);
-		}
+	var searchContainer = Liferay.SearchContainer.get(
+		'<portlet:namespace />userGroups'
 	);
+
+	searchContainer.on('rowToggled', function (event) {
+		var allSelectedElements = event.elements.allSelectedElements;
+		var arr = [];
+
+		allSelectedElements.each(function () {
+			var row = this.ancestor('tr');
+
+			var data = row.getDOM().dataset;
+
+			arr.push({id: data.id, name: data.name});
+		});
+
+		Liferay.Util.getOpener().Liferay.fire(
+			'<%= HtmlUtil.escapeJS(itemSelectedEventName) %>',
+			{
+				data: arr,
+			}
+		);
+	});
 </aui:script>

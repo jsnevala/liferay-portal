@@ -45,7 +45,6 @@ catch (NoSuchStructureException nsee) {
 
 long classNameId = PortalUtil.getClassNameId(DDMStructure.class);
 long classPK = BeanParamUtil.getLong(structure, request, "structureId");
-String structureKey = BeanParamUtil.getString(structure, request, "structureKey");
 
 String script = null;
 
@@ -188,7 +187,7 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 				</c:when>
 				<c:otherwise>
 					<liferay-ui:header
-						backURL="<%= PortalUtil.escapeRedirect(ddmDisplay.getViewTemplatesBackURL(liferayPortletRequest, liferayPortletResponse, classPK)) %>"
+						backURL="<%= ddmDisplay.getViewTemplatesBackURL(liferayPortletRequest, liferayPortletResponse, classPK) %>"
 						localizeTitle="<%= localizeTitle %>"
 						showBackURL="<%= showBackURL %>"
 						title="<%= title %>"
@@ -204,7 +203,7 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 
 			<div class="structure-history-toolbar" id="<portlet:namespace />structureHistoryToolbar"></div>
 
-			<aui:script use="aui-toolbar,aui-dialog-iframe-deprecated,liferay-util-window">
+			<aui:script use="aui-dialog-iframe-deprecated,aui-toolbar,liferay-util-window">
 				var toolbarChildren = [
 					<portlet:renderURL var="viewHistoryURL">
 						<portlet:param name="mvcPath" value="/view_structure_history.jsp" />
@@ -213,24 +212,21 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 					</portlet:renderURL>
 
 					{
-						icon: 'icon-time',
 						label: '<%= UnicodeLanguageUtil.get(request, "view-history") %>',
 						on: {
-							click: function(event) {
+							click: function (event) {
 								event.domEvent.preventDefault();
 
 								window.location.href = '<%= viewHistoryURL %>';
-							}
-						}
-					}
+							},
+						},
+					},
 				];
 
-				new A.Toolbar(
-					{
-						boundingBox: '#<portlet:namespace />structureHistoryToolbar',
-						children: toolbarChildren
-					}
-				).render();
+				new A.Toolbar({
+					boundingBox: '#<portlet:namespace />structureHistoryToolbar',
+					children: toolbarChildren,
+				}).render();
 			</aui:script>
 		</c:if>
 
@@ -273,10 +269,14 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 						persistState="<%= true %>"
 						title='<%= LanguageUtil.get(request, "details") %>'
 					>
-						<aui:row cssClass="lfr-ddm-types-form-column">
+						<clay:row
+							className="lfr-ddm-types-form-column"
+						>
 							<c:choose>
 								<c:when test="<%= Validator.isNull(storageTypeValue) %>">
-									<aui:col width="<%= 50 %>">
+									<clay:col
+										md="6"
+									>
 										<aui:field-wrapper>
 											<aui:select disabled="<%= structure != null %>" name="storageType">
 
@@ -292,13 +292,13 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 
 											</aui:select>
 										</aui:field-wrapper>
-									</aui:col>
+									</clay:col>
 								</c:when>
 								<c:otherwise>
 									<aui:input name="storageType" type="hidden" value="<%= storageTypeValue %>" />
 								</c:otherwise>
 							</c:choose>
-						</aui:row>
+						</clay:row>
 
 						<c:if test="<%= !ddmDisplayContext.autogenerateStructureKey() %>">
 							<aui:input disabled="<%= (structure != null) ? true : false %>" label='<%= LanguageUtil.format(request, "x-key", HtmlUtil.escape(ddmDisplay.getStructureName(locale)), false) %>' name="structureKey" />
@@ -350,50 +350,64 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 	function <portlet:namespace />openParentStructureSelector() {
 		Liferay.Util.openDDMPortlet(
 			{
-				basePortletURL: '<%= PortletURLFactoryUtil.create(request, DDMPortletKeys.DYNAMIC_DATA_MAPPING, PortletRequest.RENDER_PHASE) %>',
+				basePortletURL:
+					'<%= PortletURLFactoryUtil.create(request, DDMPortletKeys.DYNAMIC_DATA_MAPPING, PortletRequest.RENDER_PHASE) %>',
 				classPK: <%= (structure != null) ? structure.getPrimaryKey() : 0 %>,
 				dialog: {
-					destroyOnHide: true
+					destroyOnHide: true,
 				},
 				eventName: '<portlet:namespace />selectParentStructure',
 				mvcPath: '/select_structure.jsp',
 				showAncestorScopes: true,
 				showManageTemplates: false,
-				title: '<%= HtmlUtil.escapeJS(scopeTitle) %>'
+				title: '<%= HtmlUtil.escapeJS(scopeTitle) %>',
 			},
-			function(event) {
-				var form = AUI.$('#<portlet:namespace />fm');
+			function (event) {
+				var form = document.<portlet:namespace />fm;
 
-				form.fm('parentStructureId').val(event.ddmstructureid);
+				Liferay.Util.setFormValues(form, {
+					parentStructureId: event.ddmstructureid,
+					parentStructureName: Liferay.Util.unescape(event.name),
+				});
 
-				form.fm('parentStructureName').val(Liferay.Util.unescape(event.name));
+				var removeParentStructureButton = Liferay.Util.getFormElement(
+					form,
+					'removeParentStructureButton'
+				);
 
-				form.fm('removeParentStructureButton').attr('disabled', false).removeClass('disabled');
+				if (removeParentStructureButton) {
+					Liferay.Util.toggleDisabled(removeParentStructureButton, false);
+				}
 			}
 		);
 	}
 
 	function <portlet:namespace />removeParentStructure() {
-		var form = AUI.$('#<portlet:namespace />fm');
+		var form = document.<portlet:namespace />fm;
 
-		form.fm('parentStructureId').val('');
-		form.fm('parentStructureName').val('');
+		Liferay.Util.setFormValues(form, {
+			parentStructureId: '',
+			parentStructureName: '',
+		});
 
-		form.fm('removeParentStructureButton').attr('disabled', true).addClass('disabled');
+		var removeParentStructureButton = Liferay.Util.getFormElement(
+			form,
+			'removeParentStructureButton'
+		);
+
+		if (removeParentStructureButton) {
+			Liferay.Util.toggleDisabled(removeParentStructureButton, true);
+		}
 	}
 
 	function <portlet:namespace />saveStructure(draft) {
-		var form = AUI.$('#<portlet:namespace />fm');
-
-		form.fm('definition').val(<portlet:namespace />formBuilder.getContentValue());
-
-		if (draft) {
-			form.fm('status').val(<%= String.valueOf(WorkflowConstants.STATUS_DRAFT) %>);
-		}
-		else {
-			form.fm('status').val(<%= String.valueOf(WorkflowConstants.STATUS_APPROVED) %>);
-		}
-
-		submitForm(form);
+		Liferay.Util.postForm(document.<portlet:namespace />fm, {
+			data: {
+				definition: <portlet:namespace />formBuilder.getContentValue(),
+				status: draft
+					? <%= String.valueOf(WorkflowConstants.STATUS_DRAFT) %>
+					: <%= String.valueOf(WorkflowConstants.STATUS_APPROVED) %>,
+			},
+		});
 	}
 </aui:script>

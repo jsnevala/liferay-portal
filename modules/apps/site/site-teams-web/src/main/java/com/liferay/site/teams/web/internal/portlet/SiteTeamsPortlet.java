@@ -19,8 +19,6 @@ import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchTeamException;
 import com.liferay.portal.kernel.exception.TeamNameException;
 import com.liferay.portal.kernel.model.Team;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -67,8 +65,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + SiteTeamsPortletKeys.SITE_TEAMS,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=administrator"
 	},
 	service = Portlet.class
 )
@@ -95,21 +92,6 @@ public class SiteTeamsPortlet extends MVCPortlet {
 		long[] addUserIds = ParamUtil.getLongValues(actionRequest, "rowIds");
 
 		_userService.addTeamUsers(teamId, addUserIds);
-	}
-
-	public void changeDisplayStyle(
-		ActionRequest actionRequest, ActionResponse actionResponse) {
-
-		hideDefaultSuccessMessage(actionRequest);
-
-		String displayStyle = ParamUtil.getString(
-			actionRequest, "displayStyle");
-
-		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(actionRequest);
-
-		portalPreferences.setValue(
-			SiteTeamsPortletKeys.SITE_TEAMS, "display-style", displayStyle);
 	}
 
 	public void deleteTeam(

@@ -17,13 +17,13 @@
 <%@ include file="/document_library/init.jsp" %>
 
 <%
-DLSelectRestrictedFileEntryTypesDisplayContext selectRestrictedFileEntryTypesDisplayContext = new DLSelectRestrictedFileEntryTypesDisplayContext(renderRequest, renderResponse, request);
+DLSelectRestrictedFileEntryTypesDisplayContext selectRestrictedFileEntryTypesDisplayContext = new DLSelectRestrictedFileEntryTypesDisplayContext(request, renderRequest, renderResponse);
 
 String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectFileEntryType");
 %>
 
 <clay:navigation-bar
-	navigationItems="<%=
+	navigationItems='<%=
 		new JSPNavigationItemList(pageContext) {
 			{
 				add(
@@ -33,7 +33,7 @@ String eventName = ParamUtil.getString(request, "eventName", liferayPortletRespo
 					});
 			}
 		}
-	%>"
+	%>'
 />
 
 <aui:form action="<%= selectRestrictedFileEntryTypesDisplayContext.getFormActionURL() %>" cssClass="container-fluid-1280" method="post" name="selectFileEntryTypeFm">
@@ -62,10 +62,11 @@ String eventName = ParamUtil.getString(request, "eventName", liferayPortletRespo
 			<liferay-ui:search-container-column-text>
 
 				<%
-				Map<String, Object> data = new HashMap<String, Object>();
-
-				data.put("entityid", fileEntryType.getFileEntryTypeId());
-				data.put("entityname", fileEntryType.getName(locale));
+				Map<String, Object> data = HashMapBuilder.<String, Object>put(
+					"entityid", fileEntryType.getFileEntryTypeId()
+				).put(
+					"entityname", fileEntryType.getName(locale)
+				).build();
 				%>
 
 				<aui:button cssClass="selector-button" data="<%= data %>" value="choose" />
@@ -80,5 +81,8 @@ String eventName = ParamUtil.getString(request, "eventName", liferayPortletRespo
 </aui:form>
 
 <aui:script>
-	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectFileEntryTypeFm', '<%= HtmlUtil.escapeJS(eventName) %>');
+	Liferay.Util.selectEntityHandler(
+		'#<portlet:namespace />selectFileEntryTypeFm',
+		'<%= HtmlUtil.escapeJS(eventName) %>'
+	);
 </aui:script>

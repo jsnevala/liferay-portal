@@ -18,8 +18,10 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileVersion;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.test.util.search.FileEntryBlueprint;
 import com.liferay.document.library.test.util.search.FileEntrySearchFixture;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -32,8 +34,9 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,23 +66,23 @@ public class DLFileEntryIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE,
+			PermissionCheckerMethodTestRule.INSTANCE,
 			SynchronousDestinationTestRule.INSTANCE);
 
-	public FileEntry addFileEntry(String fileName1) throws IOException {
+	public FileEntry addFileEntry(String fileName) throws IOException {
 		Class<?> clazz = getClass();
 
-		try (InputStream inputStream1 = clazz.getResourceAsStream(
-				"dependencies/" + fileName1)) {
+		try (InputStream inputStream = clazz.getResourceAsStream(
+				"dependencies/" + fileName)) {
 
 			return fileEntrySearchFixture.addFileEntry(
 				new FileEntryBlueprint() {
 					{
-						fileName = fileName1;
-						groupId = dlFixture.getGroupId();
-						inputStream = inputStream1;
-						title = fileName1;
-						userId = dlFixture.getUserId();
+						setFileName(fileName);
+						setGroupId(dlFixture.getGroupId());
+						setInputStream(inputStream);
+						setTitle(fileName);
+						setUserId(dlFixture.getUserId());
 					}
 				});
 		}
@@ -131,7 +134,9 @@ public class DLFileEntryIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 
 	protected String getContents(FileEntry fileEntry) throws Exception {
 		String contents = FileUtil.extractText(
-			fileEntry.getContentStream(), fileEntry.getTitle());
+			_dlFileEntryLocalService.getFileAsStream(
+				fileEntry.getFileEntryId(), fileEntry.getVersion(), false),
+			fileEntry.getTitle());
 
 		return contents.trim();
 	}
@@ -197,9 +202,17 @@ public class DLFileEntryIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 			"dataRepositoryId", String.valueOf(fileEntry.getRepositoryId()));
 		map.put("ddmContent", "text/plain; charset=UTF-8 UTF-8");
 		map.put("extension", fileEntry.getExtension());
+		map.put("extension_String_sortable", fileEntry.getExtension());
 		map.put("fileEntryTypeId", "0");
 		map.put("hidden", "false");
-		map.put("mimeType", fileEntry.getMimeType().replaceAll("/", "_"));
+		map.put(
+			"mimeType",
+			StringUtil.replace(
+				fileEntry.getMimeType(), CharPool.SLASH, CharPool.UNDERLINE));
+		map.put(
+			"mimeType_String_sortable",
+			StringUtil.replace(
+				fileEntry.getMimeType(), CharPool.SLASH, CharPool.UNDERLINE));
 		map.put("path", fileEntry.getTitle());
 		map.put("readCount", String.valueOf(fileEntry.getReadCount()));
 		map.put("size", String.valueOf(fileEntry.getSize()));
@@ -209,6 +222,7 @@ public class DLFileEntryIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 		populateDates(fileEntry, map);
 		populateHttpHeaders(fileEntry, map);
 		populateLocalizedTitles(fileEntry, map);
+		populateViewCount(fileEntry, map);
 
 		indexedFieldsFixture.populatePriority("0.0", map);
 		indexedFieldsFixture.populateRoleIdFields(
@@ -220,11 +234,10 @@ public class DLFileEntryIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 
 	protected void populateHttpHeader(
 		String fieldName, String value, String ddmStructureId,
-		String languageId, Map<String, String> map) {
+		Map<String, String> map) {
 
 		String contentEncodingFieldName = StringBundler.concat(
-			"ddm__text__", ddmStructureId, "__HttpHeaders_", fieldName, "_",
-			languageId);
+			"ddm__text__", ddmStructureId, "__HttpHeaders_", fieldName);
 
 		map.put(contentEncodingFieldName, value);
 		map.put(
@@ -238,13 +251,9 @@ public class DLFileEntryIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 
 		String ddmStructureId = String.valueOf(getDDMStructureId(fileEntry));
 
-		String languageId = LocaleUtil.toLanguageId(LocaleUtil.getDefault());
-
+		populateHttpHeader("CONTENT_ENCODING", "UTF-8", ddmStructureId, map);
 		populateHttpHeader(
-			"CONTENT_ENCODING", "UTF-8", ddmStructureId, languageId, map);
-		populateHttpHeader(
-			"CONTENT_TYPE", "text/plain; charset=UTF-8", ddmStructureId,
-			languageId, map);
+			"CONTENT_TYPE", "text/plain; charset=UTF-8", ddmStructureId, map);
 	}
 
 	protected void populateLocalizedTitles(
@@ -264,6 +273,16 @@ public class DLFileEntryIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 		}
 	}
 
+	protected void populateViewCount(
+		FileEntry fileEntry, Map<String, String> map) {
+
+		map.put("viewCount", String.valueOf(fileEntry.getReadCount()));
+		map.put("viewCount_sortable", String.valueOf(fileEntry.getReadCount()));
+	}
+
 	protected FileEntrySearchFixture fileEntrySearchFixture;
+
+	@Inject
+	private DLFileEntryLocalService _dlFileEntryLocalService;
 
 }

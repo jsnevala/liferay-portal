@@ -22,7 +22,12 @@ import com.liferay.item.selector.ItemSelectorRendering;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.ItemSelectorViewRenderer;
+import com.liferay.item.selector.ItemSelectorViewRendererCustomizer;
 import com.liferay.item.selector.constants.ItemSelectorPortletKeys;
+import com.liferay.item.selector.web.internal.util.ItemSelectorKeyUtil;
+import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapperFactory;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -31,6 +36,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -48,7 +54,10 @@ import javax.portlet.PortletModeException;
 import javax.portlet.PortletURL;
 import javax.portlet.WindowStateException;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -91,14 +100,13 @@ public class ItemSelectorImpl implements ItemSelector {
 			itemSelectorCriterionClasses.size());
 
 		for (int i = 0; i < itemSelectorCriterionClasses.size(); i++) {
-			Class<? extends ItemSelectorCriterion> itemSelectorCriterionClass =
-				itemSelectorCriterionClasses.get(i);
+			String[] values = parameters.get(i + JSON);
 
-			String json = parameters.get(String.valueOf(i).concat(JSON))[0];
-
-			itemSelectorCriteria.add(
-				_itemSelectionCriterionSerializer.deserialize(
-					itemSelectorCriterionClass, json));
+			if (!ArrayUtil.isEmpty(values)) {
+				itemSelectorCriteria.add(
+					_itemSelectionCriterionSerializer.deserialize(
+						itemSelectorCriterionClasses.get(i), values[0]));
+			}
 		}
 
 		return itemSelectorCriteria;
@@ -146,8 +154,7 @@ public class ItemSelectorImpl implements ItemSelector {
 			getItemSelectorCriteria(parameters);
 
 		ItemSelectorCriterion[] itemSelectorCriteriaArray =
-			itemSelectorCriteria.toArray(
-				new ItemSelectorCriterion[itemSelectorCriteria.size()]);
+			itemSelectorCriteria.toArray(new ItemSelectorCriterion[0]);
 
 		for (ItemSelectorCriterion itemSelectorCriterion :
 				itemSelectorCriteria) {
@@ -167,7 +174,9 @@ public class ItemSelectorImpl implements ItemSelector {
 			for (ItemSelectorView<ItemSelectorCriterion> itemSelectorView :
 					itemSelectorViews) {
 
-				if (!itemSelectorView.isVisible(themeDisplay)) {
+				if (!itemSelectorView.isVisible(
+						itemSelectorCriterion, themeDisplay)) {
+
 					continue;
 				}
 
@@ -178,9 +187,10 @@ public class ItemSelectorImpl implements ItemSelector {
 					itemSelectorCriteriaArray, themeDisplay);
 
 				itemSelectorViewRenderers.add(
-					new ItemSelectorViewRendererImpl(
-						itemSelectorView, itemSelectorCriterion, portletURL,
-						itemSelectedEventName, isSearch(parameters)));
+					_applyCustomizations(
+						new ItemSelectorViewRendererImpl(
+							itemSelectorView, itemSelectorCriterion, portletURL,
+							itemSelectedEventName, isSearch(parameters))));
 			}
 		}
 
@@ -202,15 +212,15 @@ public class ItemSelectorImpl implements ItemSelector {
 		try {
 			portletURL.setPortletMode(PortletMode.VIEW);
 		}
-		catch (PortletModeException pme) {
-			throw new SystemException(pme);
+		catch (PortletModeException portletModeException) {
+			throw new SystemException(portletModeException);
 		}
 
 		try {
 			portletURL.setWindowState(LiferayWindowState.POP_UP);
 		}
-		catch (WindowStateException wse) {
-			throw new SystemException(wse);
+		catch (WindowStateException windowStateException) {
+			throw new SystemException(windowStateException);
 		}
 
 		Map<String, String[]> parameters = getItemSelectorParameters(
@@ -232,6 +242,28 @@ public class ItemSelectorImpl implements ItemSelector {
 		return getItemSelectorURL(
 			requestBackedPortletURLFactory, null, 0, itemSelectedEventName,
 			itemSelectorCriteria);
+	}
+
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
+			bundleContext, ItemSelectorViewRendererCustomizer.class, null,
+			ServiceReferenceMapperFactory.create(
+				bundleContext,
+				(itemSelectorViewRendererCustomizer, emitter) -> {
+					for (Class<? extends ItemSelectorCriterion>
+							itemSelectorCriterionClass :
+								itemSelectorViewRendererCustomizer.
+									getSupportedItemSelectorCriterionClasses()) {
+
+						emitter.emit(itemSelectorCriterionClass.getName());
+					}
+				}));
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerMap.close();
 	}
 
 	protected List<Class<? extends ItemSelectorCriterion>>
@@ -266,21 +298,14 @@ public class ItemSelectorImpl implements ItemSelector {
 		String itemSelectedEventName,
 		ItemSelectorCriterion... itemSelectorCriteria) {
 
-		Map<String, String[]> parameters = new HashMap<>();
-
-		parameters.put(
-			PARAMETER_ITEM_SELECTED_EVENT_NAME,
-			new String[] {itemSelectedEventName});
-
 		StringBundler sb = new StringBundler(itemSelectorCriteria.length * 2);
 
 		for (ItemSelectorCriterion itemSelectorCriterion :
 				itemSelectorCriteria) {
 
-			Class<?> clazz = itemSelectorCriterion.getClass();
-
-			sb.append(clazz.getName());
-
+			sb.append(
+				ItemSelectorKeyUtil.getItemSelectorCriterionKey(
+					itemSelectorCriterion.getClass()));
 			sb.append(StringPool.COMMA);
 		}
 
@@ -288,14 +313,21 @@ public class ItemSelectorImpl implements ItemSelector {
 			sb.setIndex(sb.index() - 1);
 		}
 
-		parameters.put(PARAMETER_CRITERIA, new String[] {sb.toString()});
+		Map<String, String[]> parameters = HashMapBuilder.put(
+			PARAMETER_CRITERIA, new String[] {sb.toString()}
+		).put(
+			PARAMETER_ITEM_SELECTED_EVENT_NAME,
+			new String[] {itemSelectedEventName}
+		).build();
 
 		for (int i = 0; i < itemSelectorCriteria.length; i++) {
 			ItemSelectorCriterion itemSelectorCriterion =
 				itemSelectorCriteria[i];
 
+			String countValue = String.valueOf(i);
+
 			parameters.put(
-				String.valueOf(i).concat(JSON),
+				countValue.concat(JSON),
 				new String[] {
 					_itemSelectionCriterionSerializer.serialize(
 						itemSelectorCriterion)
@@ -372,6 +404,10 @@ public class ItemSelectorImpl implements ItemSelector {
 		_itemSelectionCriterionHandlers.put(
 			itemSelectorCriterionClass.getName(),
 			(ItemSelectorCriterionHandler)itemSelectionCriterionHandler);
+		_itemSelectionCriterionHandlers.put(
+			ItemSelectorKeyUtil.getItemSelectorCriterionKey(
+				itemSelectorCriterionClass),
+			(ItemSelectorCriterionHandler)itemSelectionCriterionHandler);
 	}
 
 	@Reference(unbind = "-")
@@ -382,8 +418,8 @@ public class ItemSelectorImpl implements ItemSelector {
 	}
 
 	protected
-		<T extends ItemSelectorCriterion, S extends ItemSelectorReturnType>
-			void unsetItemSelectionCriterionHandler(
+		<T extends ItemSelectorCriterion, S extends ItemSelectorReturnType> void
+			unsetItemSelectionCriterionHandler(
 				ItemSelectorCriterionHandler<T> itemSelectionCriterionHandler) {
 
 		Class<T> itemSelectorCriterionClass =
@@ -391,6 +427,38 @@ public class ItemSelectorImpl implements ItemSelector {
 
 		_itemSelectionCriterionHandlers.remove(
 			itemSelectorCriterionClass.getName());
+		_itemSelectionCriterionHandlers.remove(
+			ItemSelectorKeyUtil.getItemSelectorCriterionKey(
+				itemSelectorCriterionClass));
+	}
+
+	private ItemSelectorViewRenderer _applyCustomizations(
+		ItemSelectorViewRenderer itemSelectorViewRenderer) {
+
+		ItemSelectorCriterion itemSelectorCriterion =
+			itemSelectorViewRenderer.getItemSelectorCriterion();
+
+		Class<? extends ItemSelectorCriterion> clazz =
+			itemSelectorCriterion.getClass();
+
+		List<ItemSelectorViewRendererCustomizer>
+			itemSelectorViewRendererCustomizers = _serviceTrackerMap.getService(
+				clazz.getName());
+
+		if (itemSelectorViewRendererCustomizers == null) {
+			return itemSelectorViewRenderer;
+		}
+
+		for (ItemSelectorViewRendererCustomizer
+				itemSelectorViewRendererCustomizer :
+					itemSelectorViewRendererCustomizers) {
+
+			itemSelectorViewRenderer =
+				itemSelectorViewRendererCustomizer.
+					customizeItemSelectorViewRenderer(itemSelectorViewRenderer);
+		}
+
+		return itemSelectorViewRenderer;
 	}
 
 	@Reference
@@ -403,5 +471,8 @@ public class ItemSelectorImpl implements ItemSelector {
 
 	@Reference
 	private Portal _portal;
+
+	private ServiceTrackerMap<String, List<ItemSelectorViewRendererCustomizer>>
+		_serviceTrackerMap;
 
 }

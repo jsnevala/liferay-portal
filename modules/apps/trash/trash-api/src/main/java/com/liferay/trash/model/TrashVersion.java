@@ -14,30 +14,31 @@
 
 package com.liferay.trash.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the TrashVersion service. Represents a row in the &quot;TrashVersion&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see TrashVersionModel
- * @see com.liferay.trash.model.impl.TrashVersionImpl
- * @see com.liferay.trash.model.impl.TrashVersionModelImpl
  * @generated
  */
 @ImplementationClassName("com.liferay.trash.model.impl.TrashVersionImpl")
 @ProviderType
-public interface TrashVersion extends TrashVersionModel, PersistedModel {
+public interface TrashVersion extends PersistedModel, TrashVersionModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.trash.model.impl.TrashVersionImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.trash.model.impl.TrashVersionImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<TrashVersion, Long> VERSION_ID_ACCESSOR = new Accessor<TrashVersion, Long>() {
+	public static final Accessor<TrashVersion, Long> VERSION_ID_ACCESSOR =
+		new Accessor<TrashVersion, Long>() {
+
 			@Override
 			public Long get(TrashVersion trashVersion) {
 				return trashVersion.getVersionId();
@@ -52,14 +53,18 @@ public interface TrashVersion extends TrashVersionModel, PersistedModel {
 			public Class<TrashVersion> getTypeClass() {
 				return TrashVersion.class;
 			}
+
 		};
 
-	public com.liferay.portal.kernel.util.UnicodeProperties getTypeSettingsProperties();
+	public com.liferay.portal.kernel.util.UnicodeProperties
+		getTypeSettingsProperties();
 
 	public String getTypeSettingsProperty(String key);
 
 	public String getTypeSettingsProperty(String key, String defaultValue);
 
 	public void setTypeSettingsProperties(
-		com.liferay.portal.kernel.util.UnicodeProperties typeSettingsProperties);
+		com.liferay.portal.kernel.util.UnicodeProperties
+			typeSettingsUnicodeProperties);
+
 }

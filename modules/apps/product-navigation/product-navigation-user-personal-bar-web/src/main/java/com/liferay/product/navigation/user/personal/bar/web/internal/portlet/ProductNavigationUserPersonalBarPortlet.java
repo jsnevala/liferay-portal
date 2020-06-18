@@ -16,14 +16,16 @@ package com.liferay.product.navigation.user.personal.bar.web.internal.portlet;
 
 import com.liferay.application.list.PanelAppRegistry;
 import com.liferay.application.list.PanelCategoryRegistry;
-import com.liferay.application.list.constants.PanelCategoryKeys;
-import com.liferay.application.list.display.context.logic.PanelCategoryHelper;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.product.navigation.user.personal.bar.web.internal.contants.ProductNavigationUserPersonalBarPortletKeys;
 import com.liferay.product.navigation.user.personal.bar.web.internal.contants.ProductNavigationUserPersonalBarWebKeys;
+import com.liferay.site.util.RecentGroupManager;
 
 import java.io.IOException;
 
@@ -42,6 +44,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"com.liferay.portlet.css-class-wrapper=portlet-user-personal-bar",
 		"com.liferay.portlet.display-category=category.hidden",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.layout-cacheable=true",
 		"com.liferay.portlet.preferences-owned-by-group=true",
 		"com.liferay.portlet.private-request-attributes=false",
@@ -76,16 +79,22 @@ public class ProductNavigationUserPersonalBarPortlet extends MVCPortlet {
 				getNotificationsCount(themeDisplay));
 		}
 
+		_recentGroupManager.addRecentGroup(
+			_portal.getHttpServletRequest(renderRequest),
+			themeDisplay.getScopeGroupId());
+
 		super.doDispatch(renderRequest, renderResponse);
 	}
 
 	protected int getNotificationsCount(ThemeDisplay themeDisplay) {
-		PanelCategoryHelper panelCategoryHelper = new PanelCategoryHelper(
-			_panelAppRegistry, _panelCategoryRegistry);
+		if (_userNotificationEventLocalService == null) {
+			return 0;
+		}
 
-		return panelCategoryHelper.getNotificationsCount(
-			PanelCategoryKeys.USER, themeDisplay.getPermissionChecker(),
-			themeDisplay.getScopeGroup(), themeDisplay.getUser());
+		return _userNotificationEventLocalService.
+			getUserNotificationEventsCount(
+				themeDisplay.getUserId(),
+				UserNotificationDeliveryConstants.TYPE_WEBSITE, true, false);
 	}
 
 	@Reference(unbind = "-")
@@ -102,5 +111,15 @@ public class ProductNavigationUserPersonalBarPortlet extends MVCPortlet {
 
 	private PanelAppRegistry _panelAppRegistry;
 	private PanelCategoryRegistry _panelCategoryRegistry;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private RecentGroupManager _recentGroupManager;
+
+	@Reference
+	private UserNotificationEventLocalService
+		_userNotificationEventLocalService;
 
 }

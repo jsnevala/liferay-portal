@@ -22,10 +22,12 @@
 taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/captcha" prefix="liferay-captcha" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
+taglib uri="http://liferay.com/tld/editor" prefix="liferay-editor" %><%@
 taglib uri="http://liferay.com/tld/expando" prefix="liferay-expando" %><%@
 taglib uri="http://liferay.com/tld/flags" prefix="liferay-flags" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
+taglib uri="http://liferay.com/tld/ratings" prefix="liferay-ratings" %><%@
 taglib uri="http://liferay.com/tld/rss" prefix="liferay-rss" %><%@
 taglib uri="http://liferay.com/tld/security" prefix="liferay-security" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
@@ -96,6 +98,7 @@ page import="com.liferay.message.boards.service.MBThreadFlagLocalServiceUtil" %>
 page import="com.liferay.message.boards.service.MBThreadLocalServiceUtil" %><%@
 page import="com.liferay.message.boards.service.MBThreadServiceUtil" %><%@
 page import="com.liferay.message.boards.settings.MBGroupServiceSettings" %><%@
+page import="com.liferay.message.boards.util.comparator.CategoryTitleComparator" %><%@
 page import="com.liferay.message.boards.util.comparator.ThreadModifiedDateComparator" %><%@
 page import="com.liferay.message.boards.web.internal.dao.search.MBResultRowSplitter" %><%@
 page import="com.liferay.message.boards.web.internal.display.MBCategoryDisplay" %><%@
@@ -103,6 +106,7 @@ page import="com.liferay.message.boards.web.internal.display.context.MBBannedUse
 page import="com.liferay.message.boards.web.internal.display.context.MBDisplayContextProvider" %><%@
 page import="com.liferay.message.boards.web.internal.display.context.MBEntriesManagementToolbarDisplayContext" %><%@
 page import="com.liferay.message.boards.web.internal.display.context.util.MBRequestHelper" %><%@
+page import="com.liferay.message.boards.web.internal.portlet.action.ActionUtil" %><%@
 page import="com.liferay.message.boards.web.internal.search.EntriesChecker" %><%@
 page import="com.liferay.message.boards.web.internal.security.permission.MBCategoryPermission" %><%@
 page import="com.liferay.message.boards.web.internal.security.permission.MBMessagePermission" %><%@
@@ -112,7 +116,6 @@ page import="com.liferay.message.boards.web.internal.util.MBMailUtil" %><%@
 page import="com.liferay.message.boards.web.internal.util.MBMessageIterator" %><%@
 page import="com.liferay.message.boards.web.internal.util.MBRSSUtil" %><%@
 page import="com.liferay.message.boards.web.internal.util.MBSubscriptionUtil" %><%@
-page import="com.liferay.message.boards.web.internal.util.MBUserRankUtil" %><%@
 page import="com.liferay.message.boards.web.internal.util.MBUtil" %><%@
 page import="com.liferay.message.boards.web.internal.util.MBWebComponentProvider" %><%@
 page import="com.liferay.petra.string.CharPool" %><%@
@@ -121,6 +124,7 @@ page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
 page import="com.liferay.portal.kernel.bean.BeanPropertiesUtil" %><%@
 page import="com.liferay.portal.kernel.captcha.CaptchaConfigurationException" %><%@
+page import="com.liferay.portal.kernel.captcha.CaptchaException" %><%@
 page import="com.liferay.portal.kernel.captcha.CaptchaTextException" %><%@
 page import="com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker" %><%@
 page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
@@ -134,6 +138,7 @@ page import="com.liferay.portal.kernel.model.User" %><%@
 page import="com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
 page import="com.liferay.portal.kernel.portlet.PortletURLFactoryUtil" %><%@
+page import="com.liferay.portal.kernel.portlet.PortletURLUtil" %><%@
 page import="com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil" %><%@
 page import="com.liferay.portal.kernel.repository.model.FileEntry" %><%@
 page import="com.liferay.portal.kernel.search.SearchResult" %><%@
@@ -149,14 +154,13 @@ page import="com.liferay.portal.kernel.upload.UploadServletRequestConfigurationH
 page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.FastDateFormatFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@
 page import="com.liferay.portal.kernel.util.LocaleUtil" %><%@
 page import="com.liferay.portal.kernel.util.OrderByComparator" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
-page import="com.liferay.portal.kernel.util.Portal" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
-page import="com.liferay.portal.kernel.util.PropsUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.TempFileEntryUtil" %><%@
 page import="com.liferay.portal.kernel.util.TextFormatter" %><%@
@@ -177,10 +181,10 @@ page import="java.text.NumberFormat" %>
 <%@ page import="java.util.ArrayList" %><%@
 page import="java.util.Collections" %><%@
 page import="java.util.Date" %><%@
-page import="java.util.HashMap" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Locale" %><%@
 page import="java.util.Map" %><%@
+page import="java.util.Objects" %><%@
 page import="java.util.Set" %>
 
 <%@ page import="javax.portlet.PortletRequest" %><%@
@@ -199,8 +203,10 @@ page import="javax.portlet.WindowState" %>
 AssetHelper assetHelper = (AssetHelper)request.getAttribute(AssetWebKeys.ASSET_HELPER);
 
 String currentLanguageId = LanguageUtil.getLanguageId(request);
+
 Locale currentLocale = LocaleUtil.fromLanguageId(currentLanguageId);
 Locale defaultLocale = themeDisplay.getSiteDefaultLocale();
+
 String defaultLanguageId = LocaleUtil.toLanguageId(defaultLocale);
 
 CaptchaConfiguration captchaConfiguration = (CaptchaConfiguration)ConfigurationProviderUtil.getSystemConfiguration(CaptchaConfiguration.class);

@@ -36,10 +36,10 @@ import com.liferay.portal.kernel.security.auth.HttpPrincipal;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portlet.exportimport.service.http.StagingServiceHttp;
 
 import java.io.File;
@@ -51,7 +51,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class LayoutRemoteStagingBackgroundTaskExecutor
 	extends BaseStagingBackgroundTaskExecutor {
@@ -94,7 +94,7 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 
 		try {
 			currentThread.setContextClassLoader(
-				ClassLoaderUtil.getPortalClassLoader());
+				PortalClassLoaderUtil.getClassLoader());
 
 			ExportImportThreadLocal.setLayoutStagingInProcess(true);
 
@@ -187,10 +187,11 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 					StagingServiceHttp.cleanUpStagingRequest(
 						httpPrincipal, stagingRequestId);
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
-							"Unable to clean up the remote live site", pe);
+							"Unable to clean up the remote live site",
+							portalException);
 					}
 				}
 			}
@@ -223,12 +224,13 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 						ExportImportHelperUtil.getLayoutOrCreateDummyRootLayout(
 							plid);
 				}
-				catch (NoSuchLayoutException nsle) {
+				catch (NoSuchLayoutException noSuchLayoutException) {
 
 					// See LPS-36174
 
 					if (_log.isDebugEnabled()) {
-						_log.debug(nsle, nsle);
+						_log.debug(
+							noSuchLayoutException, noSuchLayoutException);
 					}
 
 					entrySet.remove(plid);
@@ -302,11 +304,10 @@ public class LayoutRemoteStagingBackgroundTaskExecutor
 
 				break;
 			}
-			else {
-				missingRemoteParentLayouts.add(parentLayout);
 
-				parentLayoutId = parentLayout.getParentLayoutId();
-			}
+			missingRemoteParentLayouts.add(parentLayout);
+
+			parentLayoutId = parentLayout.getParentLayoutId();
 		}
 
 		return missingRemoteParentLayouts;

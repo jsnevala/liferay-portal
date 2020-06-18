@@ -45,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
 public class DDMFormInstanceRecordModelResourcePermissionRegistrar {
 
 	@Activate
-	public void activate(BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 		properties.put(
@@ -60,15 +60,15 @@ public class DDMFormInstanceRecordModelResourcePermissionRegistrar {
 				_portletResourcePermission,
 				(modelResourcePermission, consumer) -> {
 					consumer.accept(
-						new DDMFormInstanceRecordAutosavedPermissionLogic());
+						new DDMFormInstanceRecordAutosavedModelResourcePermissionLogic());
 					consumer.accept(
-						new DDMFormInstanceRecordInheritancePermissionLogic());
+						new DDMFormInstanceRecordInheritanceModelResourcePermissionLogic());
 				}),
 			properties);
 	}
 
 	@Deactivate
-	public void deactivate() {
+	protected void deactivate() {
 		_serviceRegistration.unregister();
 	}
 
@@ -90,7 +90,7 @@ public class DDMFormInstanceRecordModelResourcePermissionRegistrar {
 	@Reference
 	private StagingPermission _stagingPermission;
 
-	private class DDMFormInstanceRecordAutosavedPermissionLogic
+	private class DDMFormInstanceRecordAutosavedModelResourcePermissionLogic
 		implements ModelResourcePermissionLogic<DDMFormInstanceRecord> {
 
 		@Override
@@ -116,7 +116,7 @@ public class DDMFormInstanceRecordModelResourcePermissionRegistrar {
 
 	}
 
-	private class DDMFormInstanceRecordInheritancePermissionLogic
+	private class DDMFormInstanceRecordInheritanceModelResourcePermissionLogic
 		implements ModelResourcePermissionLogic<DDMFormInstanceRecord> {
 
 		@Override

@@ -14,12 +14,9 @@
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.tools.service.builder.test.model.LVEntryVersion;
 
 import java.io.Externalizable;
@@ -31,12 +28,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing LVEntryVersion in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see LVEntryVersion
  * @generated
  */
-@ProviderType
-public class LVEntryVersionCacheModel implements CacheModel<LVEntryVersion>,
-	Externalizable {
+public class LVEntryVersionCacheModel
+	implements CacheModel<LVEntryVersion>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -47,7 +43,8 @@ public class LVEntryVersionCacheModel implements CacheModel<LVEntryVersion>,
 			return false;
 		}
 
-		LVEntryVersionCacheModel lvEntryVersionCacheModel = (LVEntryVersionCacheModel)obj;
+		LVEntryVersionCacheModel lvEntryVersionCacheModel =
+			(LVEntryVersionCacheModel)obj;
 
 		if (lvEntryVersionId == lvEntryVersionCacheModel.lvEntryVersionId) {
 			return true;
@@ -63,18 +60,24 @@ public class LVEntryVersionCacheModel implements CacheModel<LVEntryVersion>,
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(11);
+		StringBundler sb = new StringBundler(17);
 
 		sb.append("{lvEntryVersionId=");
 		sb.append(lvEntryVersionId);
 		sb.append(", version=");
 		sb.append(version);
+		sb.append(", uuid=");
+		sb.append(uuid);
 		sb.append(", defaultLanguageId=");
 		sb.append(defaultLanguageId);
 		sb.append(", lvEntryId=");
 		sb.append(lvEntryId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 		sb.append(", groupId=");
 		sb.append(groupId);
+		sb.append(", uniqueGroupKey=");
+		sb.append(uniqueGroupKey);
 		sb.append("}");
 
 		return sb.toString();
@@ -87,6 +90,13 @@ public class LVEntryVersionCacheModel implements CacheModel<LVEntryVersion>,
 		lvEntryVersionImpl.setLvEntryVersionId(lvEntryVersionId);
 		lvEntryVersionImpl.setVersion(version);
 
+		if (uuid == null) {
+			lvEntryVersionImpl.setUuid("");
+		}
+		else {
+			lvEntryVersionImpl.setUuid(uuid);
+		}
+
 		if (defaultLanguageId == null) {
 			lvEntryVersionImpl.setDefaultLanguageId("");
 		}
@@ -95,7 +105,15 @@ public class LVEntryVersionCacheModel implements CacheModel<LVEntryVersion>,
 		}
 
 		lvEntryVersionImpl.setLvEntryId(lvEntryId);
+		lvEntryVersionImpl.setCompanyId(companyId);
 		lvEntryVersionImpl.setGroupId(groupId);
+
+		if (uniqueGroupKey == null) {
+			lvEntryVersionImpl.setUniqueGroupKey("");
+		}
+		else {
+			lvEntryVersionImpl.setUniqueGroupKey(uniqueGroupKey);
+		}
 
 		lvEntryVersionImpl.resetOriginalValues();
 
@@ -107,19 +125,29 @@ public class LVEntryVersionCacheModel implements CacheModel<LVEntryVersion>,
 		lvEntryVersionId = objectInput.readLong();
 
 		version = objectInput.readInt();
+		uuid = objectInput.readUTF();
 		defaultLanguageId = objectInput.readUTF();
 
 		lvEntryId = objectInput.readLong();
 
+		companyId = objectInput.readLong();
+
 		groupId = objectInput.readLong();
+		uniqueGroupKey = objectInput.readUTF();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(lvEntryVersionId);
 
 		objectOutput.writeInt(version);
+
+		if (uuid == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uuid);
+		}
 
 		if (defaultLanguageId == null) {
 			objectOutput.writeUTF("");
@@ -130,12 +158,25 @@ public class LVEntryVersionCacheModel implements CacheModel<LVEntryVersion>,
 
 		objectOutput.writeLong(lvEntryId);
 
+		objectOutput.writeLong(companyId);
+
 		objectOutput.writeLong(groupId);
+
+		if (uniqueGroupKey == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uniqueGroupKey);
+		}
 	}
 
 	public long lvEntryVersionId;
 	public int version;
+	public String uuid;
 	public String defaultLanguageId;
 	public long lvEntryId;
+	public long companyId;
 	public long groupId;
+	public String uniqueGroupKey;
+
 }

@@ -28,7 +28,36 @@ public class ModuleNameUtilTest {
 
 	@Before
 	public void setUp() {
-		new FileUtil().setFile(new FileImpl());
+		FileUtil fileUtil = new FileUtil();
+
+		fileUtil.setFile(new FileImpl());
+	}
+
+	@Test
+	public void testGetDependencyPath() {
+		Assert.assertEquals(
+			"dep", ModuleNameUtil.getDependencyPath("a-dir/a-module", "dep"));
+		Assert.assertEquals(
+			"dep",
+			ModuleNameUtil.getDependencyPath("a-dir/a-module", "../dep"));
+		Assert.assertEquals(
+			"a-dir/dep",
+			ModuleNameUtil.getDependencyPath("a-dir/a-module", "./dep"));
+		Assert.assertEquals(
+			"a-dir/dep",
+			ModuleNameUtil.getDependencyPath(
+				"a-dir/other-dir/a-module", "../dep"));
+		Assert.assertEquals(
+			"a-dir/other-dir",
+			ModuleNameUtil.getDependencyPath("a-dir/other-dir/a-module", "."));
+		Assert.assertEquals(
+			"a-dir",
+			ModuleNameUtil.getDependencyPath("a-dir/other-dir/a-module", ".."));
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testGetDependencyPathWithInvalidDependency() {
+		ModuleNameUtil.getDependencyPath("a-module", "../dep");
 	}
 
 	@Test

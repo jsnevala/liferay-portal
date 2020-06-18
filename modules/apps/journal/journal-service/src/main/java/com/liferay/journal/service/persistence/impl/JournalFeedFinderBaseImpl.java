@@ -16,71 +16,84 @@ package com.liferay.journal.service.persistence.impl;
 
 import com.liferay.journal.model.JournalFeed;
 import com.liferay.journal.service.persistence.JournalFeedPersistence;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.journal.service.persistence.impl.constants.JournalPersistenceConstants;
+import com.liferay.portal.kernel.configuration.Configuration;
+import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-
-import java.lang.reflect.Field;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Brian Wing Shun Chan
  * @generated
  */
-public class JournalFeedFinderBaseImpl extends BasePersistenceImpl<JournalFeed> {
+public abstract class JournalFeedFinderBaseImpl
+	extends BasePersistenceImpl<JournalFeed> {
+
 	public JournalFeedFinderBaseImpl() {
 		setModelClass(JournalFeed.class);
 
-		try {
-			Field field = BasePersistenceImpl.class.getDeclaredField(
-					"_dbColumnNames");
+		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
-			field.setAccessible(true);
+		dbColumnNames.put("uuid", "uuid_");
+		dbColumnNames.put("id", "id_");
 
-			Map<String, String> dbColumnNames = new HashMap<String, String>();
-
-			dbColumnNames.put("uuid", "uuid_");
-			dbColumnNames.put("id", "id_");
-
-			field.set(this, dbColumnNames);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-		}
+		setDBColumnNames(dbColumnNames);
 	}
 
 	@Override
 	public Set<String> getBadColumnNames() {
-		return getJournalFeedPersistence().getBadColumnNames();
+		return journalFeedPersistence.getBadColumnNames();
 	}
 
-	/**
-	 * Returns the journal feed persistence.
-	 *
-	 * @return the journal feed persistence
-	 */
-	public JournalFeedPersistence getJournalFeedPersistence() {
-		return journalFeedPersistence;
+	@Override
+	@Reference(
+		target = JournalPersistenceConstants.SERVICE_CONFIGURATION_FILTER,
+		unbind = "-"
+	)
+	public void setConfiguration(Configuration configuration) {
+		super.setConfiguration(configuration);
 	}
 
-	/**
-	 * Sets the journal feed persistence.
-	 *
-	 * @param journalFeedPersistence the journal feed persistence
-	 */
-	public void setJournalFeedPersistence(
-		JournalFeedPersistence journalFeedPersistence) {
-		this.journalFeedPersistence = journalFeedPersistence;
+	@Override
+	@Reference(
+		target = JournalPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
 	}
 
-	@BeanReference(type = JournalFeedPersistence.class)
+	@Override
+	@Reference(
+		target = JournalPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		super.setSessionFactory(sessionFactory);
+	}
+
+	@Reference
 	protected JournalFeedPersistence journalFeedPersistence;
-	private static final Log _log = LogFactoryUtil.getLog(JournalFeedFinderBaseImpl.class);
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalFeedFinderBaseImpl.class);
+
+	static {
+		try {
+			Class.forName(JournalPersistenceConstants.class.getName());
+		}
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new ExceptionInInitializerError(classNotFoundException);
+		}
+	}
+
 }

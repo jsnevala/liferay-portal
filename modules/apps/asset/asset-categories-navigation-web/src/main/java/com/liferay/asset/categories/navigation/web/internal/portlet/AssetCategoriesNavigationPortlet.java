@@ -15,11 +15,13 @@
 package com.liferay.asset.categories.navigation.web.internal.portlet;
 
 import com.liferay.asset.categories.navigation.constants.AssetCategoriesNavigationPortletKeys;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 
 import javax.portlet.Portlet;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eudaldo Alonso
@@ -45,10 +47,15 @@ import org.osgi.service.component.annotations.Component;
 		"javax.portlet.resource-bundle=content.Language",
 		"javax.portlet.security-role-ref=guest,power-user,user",
 		"javax.portlet.supported-public-render-parameter=categoryId",
-		"javax.portlet.supported-public-render-parameter=resetCur",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.supported-public-render-parameter=resetCur"
 	},
 	service = Portlet.class
 )
 public class AssetCategoriesNavigationPortlet extends MVCPortlet {
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.asset.categories.navigation.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
+	)
+	private Release _release;
+
 }

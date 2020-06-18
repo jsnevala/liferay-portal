@@ -15,11 +15,13 @@
 package com.liferay.asset.tags.compiler.web.internal.portlet;
 
 import com.liferay.asset.tags.compiler.web.internal.constants.AssetTagsCompilerPortletKeys;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 
 import javax.portlet.Portlet;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Jürgen Kappler
@@ -43,10 +45,15 @@ import org.osgi.service.component.annotations.Component;
 		"javax.portlet.info.title=Tags Compiler",
 		"javax.portlet.name=" + AssetTagsCompilerPortletKeys.ASSET_TAGS_COMPILER,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.supported-public-render-parameter=tags",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.supported-public-render-parameter=tags"
 	},
 	service = Portlet.class
 )
 public class AssetTagsCompilerPortlet extends MVCPortlet {
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.asset.tags.compiler.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
+	)
+	private Release _release;
+
 }

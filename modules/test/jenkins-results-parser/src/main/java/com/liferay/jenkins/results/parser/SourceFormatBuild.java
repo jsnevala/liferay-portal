@@ -24,7 +24,7 @@ import org.dom4j.Element;
 /**
  * @author Cesar Polanco
  */
-public class SourceFormatBuild extends TopLevelBuild {
+public class SourceFormatBuild extends DefaultTopLevelBuild {
 
 	@Override
 	public String getBaseGitRepositoryName() {
@@ -51,6 +51,11 @@ public class SourceFormatBuild extends TopLevelBuild {
 	}
 
 	@Override
+	public String getTestSuiteName() {
+		return _NAME_TEST_SUITE;
+	}
+
+	@Override
 	public Element getTopGitHubMessageElement() {
 		update();
 
@@ -63,7 +68,9 @@ public class SourceFormatBuild extends TopLevelBuild {
 			Dom4JUtil.getNewElement("h4", null, "Sender Branch:"),
 			getSenderBranchDetailsElement());
 
-		if (_pullRequest.getUpstreamBranchName().contains("-private")) {
+		String upstreamBranchName = _pullRequest.getUpstreamBranchName();
+
+		if (upstreamBranchName.contains("-private")) {
 			Dom4JUtil.addToElement(
 				detailsElement,
 				Dom4JUtil.getNewElement("h4", null, "Companion Branch:"),
@@ -114,6 +121,9 @@ public class SourceFormatBuild extends TopLevelBuild {
 
 	@Override
 	protected FailureMessageGenerator[] getFailureMessageGenerators() {
+
+		// Skip JavaParser
+
 		return new FailureMessageGenerator[] {
 			new RebaseFailureMessageGenerator(),
 			new SourceFormatFailureMessageGenerator(),
@@ -138,21 +148,14 @@ public class SourceFormatBuild extends TopLevelBuild {
 			"https://github.com/", senderUsername, "/",
 			gitHubRemoteGitRepositoryName, "/commit/", senderSHA);
 
-		Element senderBranchDetailsElement = Dom4JUtil.getNewElement(
+		return Dom4JUtil.getNewElement(
 			"p", null, "Branch Name: ",
 			Dom4JUtil.getNewAnchorElement(senderBranchURL, senderBranchName),
 			Dom4JUtil.getNewElement("br"), "Branch GIT ID: ",
 			Dom4JUtil.getNewAnchorElement(senderCommitURL, senderSHA));
-
-		return senderBranchDetailsElement;
 	}
 
-	@Override
-	protected String getTestSuiteName() {
-		return _TEST_SUITE_NAME;
-	}
-
-	private static final String _TEST_SUITE_NAME = "ci:test:sf";
+	private static final String _NAME_TEST_SUITE = "sf";
 
 	private PullRequest _pullRequest;
 

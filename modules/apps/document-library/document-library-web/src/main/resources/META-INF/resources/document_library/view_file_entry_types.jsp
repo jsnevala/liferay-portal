@@ -17,7 +17,7 @@
 <%@ include file="/document_library/init.jsp" %>
 
 <%
-DLViewFileEntryTypesDisplayContext dlViewFileEntryTypesDisplayContext = new DLViewFileEntryTypesDisplayContext(renderRequest, renderResponse, request);
+DLViewFileEntryTypesDisplayContext dlViewFileEntryTypesDisplayContext = new DLViewFileEntryTypesDisplayContext(request, renderRequest, renderResponse);
 %>
 
 <liferay-util:include page="/document_library/navigation.jsp" servletContext="<%= application %>" />
@@ -55,7 +55,7 @@ DLViewFileEntryTypesDisplayContext dlViewFileEntryTypesDisplayContext = new DLVi
 
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-expand table-cell-minw-200 table-title"
-				href="<%= rowURL %>"
+				href="<%= DLFileEntryTypePermission.contains(permissionChecker, fileEntryType, ActionKeys.UPDATE) ? rowURL : null %>"
 				name="name"
 				value="<%= fileEntryType.getName(locale) %>"
 			/>

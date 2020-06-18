@@ -27,4 +27,8 @@ public interface TopLevelBuildData extends BuildData {
 
 	public String getDistPath();
 
+	public List<BuildData> getDownstreamBuildDataList();
+
+	public void setDistNodes(List<String> distNodes);
+
 }

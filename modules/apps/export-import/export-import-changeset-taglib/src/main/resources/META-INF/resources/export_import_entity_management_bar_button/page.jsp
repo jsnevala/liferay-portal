@@ -45,12 +45,13 @@ scopeGroup = themeDisplay.getScopeGroup();
 	<aui:script use="liferay-export-import-management-bar-button">
 		var exportImportManagementBarButton = new Liferay.ExportImportManagementBarButton(
 			{
-				actionNamespace: '<%= PortalUtil.getPortletNamespace(ChangesetPortletKeys.CHANGESET) %>',
+				actionNamespace:
+					'<%= PortalUtil.getPortletNamespace(ChangesetPortletKeys.CHANGESET) %>',
 				cmd: '<%= cmd %>',
 				exportImportEntityUrl: '<%= portletURL.toString() %>',
 				namespace: '<portlet:namespace />',
 				searchContainerId: '<%= searchContainerId %>',
-				searchContainerMappingId: '<%= searchContainerMappingId %>'
+				searchContainerMappingId: '<%= searchContainerMappingId %>',
 			}
 		);
 	</aui:script>

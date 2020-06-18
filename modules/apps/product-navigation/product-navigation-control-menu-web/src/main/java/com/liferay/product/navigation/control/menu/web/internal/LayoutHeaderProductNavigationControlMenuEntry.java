@@ -16,6 +16,8 @@ package com.liferay.product.navigation.control.menu.web.internal;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.product.navigation.control.menu.BaseJSPProductNavigationControlMenuEntry;
@@ -49,9 +51,12 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 	}
 
 	@Override
-	public boolean isShow(HttpServletRequest request) throws PortalException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	public boolean isShow(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Layout layout = themeDisplay.getLayout();
 
@@ -60,12 +65,17 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 		}
 
 		if (!(themeDisplay.isShowLayoutTemplatesIcon() ||
-			  themeDisplay.isShowPageSettingsIcon())) {
+			  themeDisplay.isShowPageSettingsIcon() ||
+			  ((layout.isTypeAssetDisplay() || layout.isTypeContent()) &&
+			   LayoutPermissionUtil.contains(
+				   themeDisplay.getPermissionChecker(),
+				   themeDisplay.getLayout(),
+				   ActionKeys.UPDATE_LAYOUT_CONTENT)))) {
 
 			return false;
 		}
 
-		return super.isShow(request);
+		return super.isShow(httpServletRequest);
 	}
 
 	@Override

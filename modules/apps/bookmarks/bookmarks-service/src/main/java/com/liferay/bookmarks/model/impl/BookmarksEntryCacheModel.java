@@ -14,14 +14,11 @@
 
 package com.liferay.bookmarks.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.bookmarks.model.BookmarksEntry;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing BookmarksEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see BookmarksEntry
  * @generated
  */
-@ProviderType
-public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
-	Externalizable {
+public class BookmarksEntryCacheModel
+	implements CacheModel<BookmarksEntry>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,12 @@ public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
 			return false;
 		}
 
-		BookmarksEntryCacheModel bookmarksEntryCacheModel = (BookmarksEntryCacheModel)obj;
+		BookmarksEntryCacheModel bookmarksEntryCacheModel =
+			(BookmarksEntryCacheModel)obj;
 
-		if (entryId == bookmarksEntryCacheModel.entryId) {
+		if ((entryId == bookmarksEntryCacheModel.entryId) &&
+			(mvccVersion == bookmarksEntryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +60,28 @@ public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, entryId);
+		int hashCode = HashUtil.hash(0, entryId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
 		StringBundler sb = new StringBundler(41);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", entryId=");
 		sb.append(entryId);
@@ -94,8 +107,6 @@ public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
 		sb.append(url);
 		sb.append(", description=");
 		sb.append(description);
-		sb.append(", visits=");
-		sb.append(visits);
 		sb.append(", priority=");
 		sb.append(priority);
 		sb.append(", lastPublishDate=");
@@ -116,6 +127,8 @@ public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
 	@Override
 	public BookmarksEntry toEntityModel() {
 		BookmarksEntryImpl bookmarksEntryImpl = new BookmarksEntryImpl();
+
+		bookmarksEntryImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			bookmarksEntryImpl.setUuid("");
@@ -180,7 +193,6 @@ public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
 			bookmarksEntryImpl.setDescription(description);
 		}
 
-		bookmarksEntryImpl.setVisits(visits);
 		bookmarksEntryImpl.setPriority(priority);
 
 		if (lastPublishDate == Long.MIN_VALUE) {
@@ -214,6 +226,7 @@ public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		entryId = objectInput.readLong();
@@ -233,8 +246,6 @@ public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
 		url = objectInput.readUTF();
 		description = objectInput.readUTF();
 
-		visits = objectInput.readInt();
-
 		priority = objectInput.readInt();
 		lastPublishDate = objectInput.readLong();
 
@@ -246,8 +257,9 @@ public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -303,8 +315,6 @@ public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
 			objectOutput.writeUTF(description);
 		}
 
-		objectOutput.writeInt(visits);
-
 		objectOutput.writeInt(priority);
 		objectOutput.writeLong(lastPublishDate);
 
@@ -322,6 +332,7 @@ public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
 		objectOutput.writeLong(statusDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long entryId;
 	public long groupId;
@@ -335,11 +346,11 @@ public class BookmarksEntryCacheModel implements CacheModel<BookmarksEntry>,
 	public String name;
 	public String url;
 	public String description;
-	public int visits;
 	public int priority;
 	public long lastPublishDate;
 	public int status;
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

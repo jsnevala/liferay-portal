@@ -1,9 +1,23 @@
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins", version: "3.13.1"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins", version: "6.0.1"
 	}
 
 	repositories {
+		File dir = rootProject.projectDir
+
+		while (dir != null) {
+			File tmpMavenRepositoryDir = new File(dir, ".m2-tmp")
+
+			if (tmpMavenRepositoryDir.exists()) {
+				maven {
+					url tmpMavenRepositoryDir
+				}
+			}
+
+			dir = dir.getParentFile();
+		}
+
 		maven {
 			url "https://repository-cdn.liferay.com/nexus/content/groups/public"
 		}
@@ -18,7 +32,7 @@ task runGradleTest
 dependencies {
 	originalModule group: "com.liferay", name: "com.liferay.login.web"
 
-	targetPlatformBoms group: "com.liferay", name: "com.liferay.ce.portal.bom", version: "7.0.4"
+	targetPlatformBoms group: "com.liferay.portal", name: "release.portal.bom", version: "7.2.1"
 }
 
 repositories {
@@ -29,10 +43,6 @@ repositories {
 
 runGradleTest {
 	doLast {
-		ResolvedArtifact resolvedArtifact = configurations.originalModule.resolvedConfiguration.resolvedArtifacts.find {
-			it.name == "com.liferay.login.web"
-		}
-
-		assert resolvedArtifact.file.name.contains("2.0.4")
+		assert configurations.originalModule.singleFile.name.equals("com.liferay.login.web-4.0.20.jar")
 	}
 }

@@ -37,7 +37,7 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Shinn Lok
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = StagedModelDataHandler.class)
 public class PollsChoiceStagedModelDataHandler
@@ -114,6 +114,10 @@ public class PollsChoiceStagedModelDataHandler
 		throws Exception {
 
 		PollsChoice existingChoice = fetchMissingReference(uuid, groupId);
+
+		if (existingChoice == null) {
+			return;
+		}
 
 		Map<Long, Long> choiceIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(

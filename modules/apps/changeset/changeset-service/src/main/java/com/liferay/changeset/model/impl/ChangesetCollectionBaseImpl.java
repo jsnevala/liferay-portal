@@ -14,8 +14,6 @@
 
 package com.liferay.changeset.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.changeset.model.ChangesetCollection;
 import com.liferay.changeset.service.ChangesetCollectionLocalServiceUtil;
 
@@ -31,13 +29,13 @@ import com.liferay.changeset.service.ChangesetCollectionLocalServiceUtil;
  * @see ChangesetCollection
  * @generated
  */
-@ProviderType
 public abstract class ChangesetCollectionBaseImpl
 	extends ChangesetCollectionModelImpl implements ChangesetCollection {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a changeset collection model instance should use the {@link ChangesetCollection} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a changeset collection model instance should use the <code>ChangesetCollection</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +46,5 @@ public abstract class ChangesetCollectionBaseImpl
 			ChangesetCollectionLocalServiceUtil.updateChangesetCollection(this);
 		}
 	}
+
 }

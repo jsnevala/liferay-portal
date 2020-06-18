@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,15 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.dynamic.data.mapping.service.http.DDMTemplateVersionServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.dynamic.data.mapping.service.http.DDMTemplateVersionServiceSoap
  * @generated
  */
-@ProviderType
 public class DDMTemplateVersionSoap implements Serializable {
+
 	public static DDMTemplateVersionSoap toSoapModel(DDMTemplateVersion model) {
 		DDMTemplateVersionSoap soapModel = new DDMTemplateVersionSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setTemplateVersionId(model.getTemplateVersionId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -58,7 +57,9 @@ public class DDMTemplateVersionSoap implements Serializable {
 
 	public static DDMTemplateVersionSoap[] toSoapModels(
 		DDMTemplateVersion[] models) {
-		DDMTemplateVersionSoap[] soapModels = new DDMTemplateVersionSoap[models.length];
+
+		DDMTemplateVersionSoap[] soapModels =
+			new DDMTemplateVersionSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -69,10 +70,12 @@ public class DDMTemplateVersionSoap implements Serializable {
 
 	public static DDMTemplateVersionSoap[][] toSoapModels(
 		DDMTemplateVersion[][] models) {
+
 		DDMTemplateVersionSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new DDMTemplateVersionSoap[models.length][models[0].length];
+			soapModels =
+				new DDMTemplateVersionSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new DDMTemplateVersionSoap[0][0];
@@ -87,13 +90,16 @@ public class DDMTemplateVersionSoap implements Serializable {
 
 	public static DDMTemplateVersionSoap[] toSoapModels(
 		List<DDMTemplateVersion> models) {
-		List<DDMTemplateVersionSoap> soapModels = new ArrayList<DDMTemplateVersionSoap>(models.size());
+
+		List<DDMTemplateVersionSoap> soapModels =
+			new ArrayList<DDMTemplateVersionSoap>(models.size());
 
 		for (DDMTemplateVersion model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new DDMTemplateVersionSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new DDMTemplateVersionSoap[soapModels.size()]);
 	}
 
 	public DDMTemplateVersionSoap() {
@@ -105,6 +111,22 @@ public class DDMTemplateVersionSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setTemplateVersionId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public long getTemplateVersionId() {
@@ -251,6 +273,8 @@ public class DDMTemplateVersionSoap implements Serializable {
 		_statusDate = statusDate;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _templateVersionId;
 	private long _groupId;
 	private long _companyId;
@@ -269,4 +293,5 @@ public class DDMTemplateVersionSoap implements Serializable {
 	private long _statusByUserId;
 	private String _statusByUserName;
 	private Date _statusDate;
+
 }

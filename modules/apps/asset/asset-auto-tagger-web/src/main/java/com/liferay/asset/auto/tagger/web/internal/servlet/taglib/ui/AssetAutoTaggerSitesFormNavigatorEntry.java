@@ -69,24 +69,26 @@ public class AssetAutoTaggerSitesFormNavigatorEntry
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		Group liveGroup = (Group)request.getAttribute("site.liveGroup");
+		Group liveGroup = (Group)httpServletRequest.getAttribute(
+			"site.liveGroup");
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			AssetAutoTaggerConfiguration.class.getName(),
 			_assetAutoTaggerConfigurationFactory.
-				getAssetAutoTaggerConfiguration(liveGroup));
+				getGroupAssetAutoTaggerConfiguration(liveGroup));
 
-		super.include(request, response);
+		super.include(httpServletRequest, httpServletResponse);
 	}
 
 	@Override
 	public boolean isVisible(User user, Group group) {
 		AssetAutoTaggerConfiguration assetAutoTaggerConfiguration =
 			_assetAutoTaggerConfigurationFactory.
-				getAssetAutoTaggerConfiguration(group);
+				getGroupAssetAutoTaggerConfiguration(group);
 
 		return assetAutoTaggerConfiguration.isAvailable();
 	}

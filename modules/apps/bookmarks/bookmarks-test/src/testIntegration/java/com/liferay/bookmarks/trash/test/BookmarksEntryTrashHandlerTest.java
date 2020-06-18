@@ -32,8 +32,9 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.service.test.ServiceTestUtil;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.trash.exception.RestoreEntryException;
 import com.liferay.trash.exception.TrashEntryException;
@@ -152,7 +153,7 @@ public class BookmarksEntryTrashHandlerTest
 	@Before
 	@Override
 	public void setUp() throws Exception {
-		ServiceTestUtil.setUser(TestPropsValues.getUser());
+		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		super.setUp();
 	}
@@ -187,6 +188,9 @@ public class BookmarksEntryTrashHandlerTest
 
 		return entry;
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	@Override
 	protected BaseModel<?> addBaseModelWithWorkflow(
@@ -282,9 +286,7 @@ public class BookmarksEntryTrashHandlerTest
 	protected WorkflowedModel getWorkflowedModel(ClassedModel baseModel)
 		throws Exception {
 
-		BookmarksEntry entry = (BookmarksEntry)baseModel;
-
-		return entry;
+		return (BookmarksEntry)baseModel;
 	}
 
 	@Override

@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -74,7 +74,7 @@ public class EditImageMVCActionCommand extends BaseMVCActionCommand {
 			themeDisplay.getUserId(), themeDisplay.getScopeGroupId());
 
 		for (long deleteFileEntryId : deleteFileEntryIds) {
-			FileEntry fileEntry = PortletFileRepositoryUtil.getPortletFileEntry(
+			FileEntry fileEntry = _portletFileRepository.getPortletFileEntry(
 				deleteFileEntryId);
 
 			if (fileEntry.getFolderId() != folder.getFolderId()) {
@@ -86,7 +86,7 @@ public class EditImageMVCActionCommand extends BaseMVCActionCommand {
 					themeDisplay.getPermissionChecker(),
 					themeDisplay.getScopeGroup(), ActionKeys.UPDATE)) {
 
-				PortletFileRepositoryUtil.deletePortletFileEntry(
+				_portletFileRepository.deletePortletFileEntry(
 					deleteFileEntryId);
 			}
 		}
@@ -106,17 +106,17 @@ public class EditImageMVCActionCommand extends BaseMVCActionCommand {
 
 			sendRedirect(actionRequest, actionResponse);
 		}
-		catch (Exception e) {
-			if (e instanceof NoSuchEntryException ||
-				e instanceof PrincipalException) {
+		catch (Exception exception) {
+			if (exception instanceof NoSuchEntryException ||
+				exception instanceof PrincipalException) {
 
-				SessionErrors.add(actionRequest, e.getClass());
+				SessionErrors.add(actionRequest, exception.getClass());
 
 				actionResponse.setRenderParameter(
 					"mvcPath", "/blogs/error.jsp");
 			}
 			else {
-				throw e;
+				throw exception;
 			}
 		}
 		catch (Throwable t) {
@@ -126,17 +126,14 @@ public class EditImageMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setBlogsEntryLocalService(
-		BlogsEntryLocalService blogsEntryLocalService) {
-
-		_blogsEntryLocalService = blogsEntryLocalService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		EditImageMVCActionCommand.class);
 
+	@Reference
 	private BlogsEntryLocalService _blogsEntryLocalService;
+
+	@Reference
+	private PortletFileRepository _portletFileRepository;
 
 	@Reference(target = "(resource.name=" + BlogsConstants.RESOURCE_NAME + ")")
 	private PortletResourcePermission _portletResourcePermission;

@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
 import com.liferay.trash.kernel.model.TrashEntry;
-import com.liferay.trash.taglib.servlet.ServletContextUtil;
+import com.liferay.trash.taglib.internal.servlet.ServletContextUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +51,19 @@ public class UndoTag extends IncludeTag {
 
 	@Override
 	public int doStartTag() {
+		if (_getData() == null) {
+			return SKIP_BODY;
+		}
+
 		return EVAL_BODY_INCLUDE;
+	}
+
+	public String getPortletURL() {
+		return _portletURL;
+	}
+
+	public String getRedirect() {
+		return _redirect;
 	}
 
 	@Override
@@ -96,9 +108,10 @@ public class UndoTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		List<TrashedModel> trashedModels = _getTrashedModels();
 
@@ -117,17 +130,19 @@ public class UndoTag extends IncludeTag {
 				restoreTrashEntryIds.add(trashEntry.getEntryId());
 				titles.add(trashRenderer.getTitle(themeDisplay.getLocale()));
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
-		request.setAttribute("liferay-trash:undo:cmd", _getCmd());
-		request.setAttribute("liferay-trash:undo:portletURL", _portletURL);
-		request.setAttribute("liferay-trash:undo:redirect", _redirect);
-		request.setAttribute(
+		httpServletRequest.setAttribute("liferay-trash:undo:cmd", _getCmd());
+		httpServletRequest.setAttribute(
+			"liferay-trash:undo:portletURL", _portletURL);
+		httpServletRequest.setAttribute(
+			"liferay-trash:undo:redirect", _redirect);
+		httpServletRequest.setAttribute(
 			"liferay-trash:undo:restoreTrashEntryIds", restoreTrashEntryIds);
-		request.setAttribute("liferay-trash:undo:titles", titles);
-		request.setAttribute(
+		httpServletRequest.setAttribute("liferay-trash:undo:titles", titles);
+		httpServletRequest.setAttribute(
 			"liferay-trash:undo:trashedEntriesCount",
 			restoreTrashEntryIds.size());
 	}

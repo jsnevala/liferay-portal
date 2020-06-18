@@ -14,14 +14,11 @@
 
 package com.liferay.portlet.asset.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.kernel.model.AssetEntry;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing AssetEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see AssetEntry
  * @generated
  */
-@ProviderType
-public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
-	Externalizable {
+public class AssetEntryCacheModel
+	implements CacheModel<AssetEntry>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -52,7 +48,9 @@ public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
 
 		AssetEntryCacheModel assetEntryCacheModel = (AssetEntryCacheModel)obj;
 
-		if (entryId == assetEntryCacheModel.entryId) {
+		if ((entryId == assetEntryCacheModel.entryId) &&
+			(mvccVersion == assetEntryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +59,30 @@ public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, entryId);
+		int hashCode = HashUtil.hash(0, entryId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(55);
+		StringBundler sb = new StringBundler(57);
 
-		sb.append("{entryId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
+		sb.append(", entryId=");
 		sb.append(entryId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -120,8 +134,6 @@ public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
 		sb.append(width);
 		sb.append(", priority=");
 		sb.append(priority);
-		sb.append(", viewCount=");
-		sb.append(viewCount);
 		sb.append("}");
 
 		return sb.toString();
@@ -131,6 +143,8 @@ public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
 	public AssetEntry toEntityModel() {
 		AssetEntryImpl assetEntryImpl = new AssetEntryImpl();
 
+		assetEntryImpl.setMvccVersion(mvccVersion);
+		assetEntryImpl.setCtCollectionId(ctCollectionId);
 		assetEntryImpl.setEntryId(entryId);
 		assetEntryImpl.setGroupId(groupId);
 		assetEntryImpl.setCompanyId(companyId);
@@ -244,7 +258,6 @@ public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
 		assetEntryImpl.setHeight(height);
 		assetEntryImpl.setWidth(width);
 		assetEntryImpl.setPriority(priority);
-		assetEntryImpl.setViewCount(viewCount);
 
 		assetEntryImpl.resetOriginalValues();
 
@@ -252,7 +265,13 @@ public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
+
 		entryId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -280,8 +299,8 @@ public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
 		expirationDate = objectInput.readLong();
 		mimeType = objectInput.readUTF();
 		title = objectInput.readUTF();
-		description = objectInput.readUTF();
-		summary = objectInput.readUTF();
+		description = (String)objectInput.readObject();
+		summary = (String)objectInput.readObject();
 		url = objectInput.readUTF();
 		layoutUuid = objectInput.readUTF();
 
@@ -290,13 +309,14 @@ public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
 		width = objectInput.readInt();
 
 		priority = objectInput.readDouble();
-
-		viewCount = objectInput.readInt();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
+
 		objectOutput.writeLong(entryId);
 
 		objectOutput.writeLong(groupId);
@@ -351,17 +371,17 @@ public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
 		}
 
 		if (description == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(description);
+			objectOutput.writeObject(description);
 		}
 
 		if (summary == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(summary);
+			objectOutput.writeObject(summary);
 		}
 
 		if (url == null) {
@@ -383,10 +403,10 @@ public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
 		objectOutput.writeInt(width);
 
 		objectOutput.writeDouble(priority);
-
-		objectOutput.writeInt(viewCount);
 	}
 
+	public long mvccVersion;
+	public long ctCollectionId;
 	public long entryId;
 	public long groupId;
 	public long companyId;
@@ -413,5 +433,5 @@ public class AssetEntryCacheModel implements CacheModel<AssetEntry>,
 	public int height;
 	public int width;
 	public double priority;
-	public int viewCount;
+
 }

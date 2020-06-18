@@ -32,8 +32,9 @@ import org.osgi.service.component.annotations.Reference;
 public class SiteNavigationMenuStagedModelDataHandler
 	extends BaseStagedModelDataHandler<SiteNavigationMenu> {
 
-	public static final String[] CLASS_NAMES =
-		{SiteNavigationMenu.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		SiteNavigationMenu.class.getName()
+	};
 
 	@Override
 	public String[] getClassNames() {
@@ -84,6 +85,8 @@ public class SiteNavigationMenuStagedModelDataHandler
 				portletDataContext, importedSiteNavigationMenu);
 		}
 		else {
+			importedSiteNavigationMenu.setMvccVersion(
+				existingSiteNavigationMenu.getMvccVersion());
 			importedSiteNavigationMenu.setSiteNavigationMenuId(
 				existingSiteNavigationMenu.getSiteNavigationMenuId());
 

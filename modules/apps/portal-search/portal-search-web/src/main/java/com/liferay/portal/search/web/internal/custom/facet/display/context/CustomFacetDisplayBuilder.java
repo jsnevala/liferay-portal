@@ -15,6 +15,7 @@
 package com.liferay.portal.search.web.internal.custom.facet.display.context;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
@@ -28,15 +29,21 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * @author Wade Cao
  */
 public class CustomFacetDisplayBuilder {
 
-	public CustomFacetDisplayContext build() {
+	public CustomFacetDisplayBuilder(HttpServletRequest httpServletRequest) {
+		_httpServletRequest = httpServletRequest;
+	}
+
+	public CustomFacetDisplayContext build() throws ConfigurationException {
 		boolean nothingSelected = isNothingSelected();
 
-		List<TermCollector> termCollectors = getTermsCollectors();
+		List<TermCollector> termCollectors = getTermCollectors();
 
 		boolean renderNothing = false;
 
@@ -45,7 +52,7 @@ public class CustomFacetDisplayBuilder {
 		}
 
 		CustomFacetDisplayContext customFacetDisplayContext =
-			new CustomFacetDisplayContext();
+			new CustomFacetDisplayContext(_httpServletRequest);
 
 		customFacetDisplayContext.setDisplayCaption(getDisplayCaption());
 		customFacetDisplayContext.setNothingSelected(nothingSelected);
@@ -59,47 +66,76 @@ public class CustomFacetDisplayBuilder {
 		return customFacetDisplayContext;
 	}
 
-	public void setCustomDisplayCaption(String customDisplayCaption) {
-		_customDisplayCaption = customDisplayCaption;
+	public CustomFacetDisplayBuilder setCustomDisplayCaption(
+		Optional<String> customDisplayCaptionOptional) {
+
+		customDisplayCaptionOptional.ifPresent(
+			customDisplayCaption ->
+				_customDisplayCaption = customDisplayCaption);
+
+		return this;
 	}
 
-	public void setFacet(Facet facet) {
+	public CustomFacetDisplayBuilder setFacet(Facet facet) {
 		_facet = facet;
+
+		return this;
 	}
 
-	public void setFieldToAggregate(String fieldToAggregate) {
+	public CustomFacetDisplayBuilder setFieldToAggregate(
+		String fieldToAggregate) {
+
 		_fieldToAggregate = fieldToAggregate;
+
+		return this;
 	}
 
-	public void setFrequenciesVisible(boolean frequenciesVisible) {
+	public CustomFacetDisplayBuilder setFrequenciesVisible(
+		boolean frequenciesVisible) {
+
 		_frequenciesVisible = frequenciesVisible;
+
+		return this;
 	}
 
-	public void setFrequencyThreshold(int frequencyThreshold) {
+	public CustomFacetDisplayBuilder setFrequencyThreshold(
+		int frequencyThreshold) {
+
 		_frequencyThreshold = frequencyThreshold;
+
+		return this;
 	}
 
-	public void setMaxTerms(int maxTerms) {
+	public CustomFacetDisplayBuilder setMaxTerms(int maxTerms) {
 		_maxTerms = maxTerms;
+
+		return this;
 	}
 
-	public void setParameterName(String parameterName) {
+	public CustomFacetDisplayBuilder setParameterName(String parameterName) {
 		_parameterName = parameterName;
+
+		return this;
 	}
 
-	public void setParameterValue(String parameterValue) {
+	public CustomFacetDisplayBuilder setParameterValue(String parameterValue) {
 		parameterValue = StringUtil.trim(
 			Objects.requireNonNull(parameterValue));
 
-		if (parameterValue.isEmpty()) {
-			return;
+		if (!parameterValue.isEmpty()) {
+			_parameterValues = Collections.singletonList(parameterValue);
 		}
 
-		_parameterValues = Collections.singletonList(parameterValue);
+		return this;
 	}
 
-	public void setParameterValues(List<String> parameterValues) {
-		_parameterValues = parameterValues;
+	public CustomFacetDisplayBuilder setParameterValues(
+		Optional<List<String>> parameterValuesOptional) {
+
+		parameterValuesOptional.ifPresent(
+			parameterValues -> _parameterValues = parameterValues);
+
+		return this;
 	}
 
 	protected CustomFacetTermDisplayContext buildTermDisplayContext(
@@ -182,7 +218,7 @@ public class CustomFacetDisplayBuilder {
 		return _parameterValues.get(0);
 	}
 
-	protected List<TermCollector> getTermsCollectors() {
+	protected List<TermCollector> getTermCollectors() {
 		if (_facet != null) {
 			FacetCollector facetCollector = _facet.getFacetCollector();
 
@@ -215,6 +251,7 @@ public class CustomFacetDisplayBuilder {
 	private String _fieldToAggregate;
 	private boolean _frequenciesVisible;
 	private int _frequencyThreshold;
+	private final HttpServletRequest _httpServletRequest;
 	private int _maxTerms;
 	private String _parameterName;
 	private List<String> _parameterValues = Collections.emptyList();

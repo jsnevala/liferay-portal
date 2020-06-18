@@ -17,6 +17,7 @@ package com.liferay.configuration.admin.web.internal.display;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -45,8 +46,18 @@ public class ConfigurationCategorySectionDisplay {
 		return _configurationCategorySection;
 	}
 
+	public String getConfigurationCategorySectionLabel(Locale locale) {
+		for (ConfigurationCategoryDisplay configurationCategoryDisplay :
+				_configurationCategoryDisplays) {
+
+			return configurationCategoryDisplay.getSectionLabel(locale);
+		}
+
+		return "category-section." + _configurationCategorySection;
+	}
+
 	private Set<ConfigurationCategoryDisplay> _configurationCategoryDisplays =
-		new TreeSet(new ConfigurationCategoryDisplayComparator());
+		new TreeSet<>(new ConfigurationCategoryDisplayComparator());
 	private final String _configurationCategorySection;
 
 	private static class ConfigurationCategoryDisplayComparator

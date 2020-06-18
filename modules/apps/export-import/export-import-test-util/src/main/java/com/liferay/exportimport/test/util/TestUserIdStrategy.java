@@ -18,7 +18,7 @@ import com.liferay.exportimport.kernel.lar.UserIdStrategy;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class TestUserIdStrategy implements UserIdStrategy {
 
@@ -27,7 +27,7 @@ public class TestUserIdStrategy implements UserIdStrategy {
 		try {
 			return TestPropsValues.getUserId();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return 0;
 		}
 	}

@@ -19,7 +19,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.sanitizer.BaseSanitizer;
+import com.liferay.portal.kernel.sanitizer.Sanitizer;
 import com.liferay.portal.kernel.sanitizer.SanitizerException;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.Validator;
@@ -40,7 +40,7 @@ import org.owasp.validator.html.Policy;
  * @author Zsolt Balogh
  * @author Brian Wing Shun Chan
  */
-public class AntiSamySanitizerImpl extends BaseSanitizer {
+public class AntiSamySanitizerImpl implements Sanitizer {
 
 	public AntiSamySanitizerImpl(
 		String[] blacklist, URL url, String[] whitelist) {
@@ -48,8 +48,9 @@ public class AntiSamySanitizerImpl extends BaseSanitizer {
 		try (InputStream inputstream = url.openStream()) {
 			_policy = Policy.getInstance(inputstream);
 		}
-		catch (Exception e) {
-			throw new IllegalStateException("Unable to initialize policy", e);
+		catch (Exception exception) {
+			throw new IllegalStateException(
+				"Unable to initialize policy", exception);
 		}
 
 		if (blacklist != null) {
@@ -110,10 +111,10 @@ public class AntiSamySanitizerImpl extends BaseSanitizer {
 
 			return cleanResults.getCleanHTML();
 		}
-		catch (Exception e) {
-			_log.error("Unable to sanitize input", e);
+		catch (Exception exception) {
+			_log.error("Unable to sanitize input", exception);
 
-			throw new SanitizerException(e);
+			throw new SanitizerException(exception);
 		}
 	}
 

@@ -107,10 +107,9 @@ public class HttpAuthManagerImpl implements HttpAuthManager {
 			return 0;
 		}
 
-		String scheme = httpAuthorizationHeader.getScheme();
-
 		if (!StringUtil.equalsIgnoreCase(
-				scheme, HttpAuthorizationHeader.SCHEME_BASIC)) {
+				httpAuthorizationHeader.getScheme(),
+				HttpAuthorizationHeader.SCHEME_BASIC)) {
 
 			return 0;
 		}
@@ -129,10 +128,9 @@ public class HttpAuthManagerImpl implements HttpAuthManager {
 			return 0;
 		}
 
-		String scheme = httpAuthorizationHeader.getScheme();
-
 		if (!StringUtil.equalsIgnoreCase(
-				scheme, HttpAuthorizationHeader.SCHEME_DIGEST)) {
+				httpAuthorizationHeader.getScheme(),
+				HttpAuthorizationHeader.SCHEME_DIGEST)) {
 
 			return 0;
 		}
@@ -198,6 +196,12 @@ public class HttpAuthManagerImpl implements HttpAuthManager {
 
 			return parseBasic(
 				httpServletRequest, authorization, authorizationParts);
+		}
+		else if (StringUtil.equalsIgnoreCase(
+					scheme, HttpAuthorizationHeader.SCHEME_BEARER)) {
+
+			return new HttpAuthorizationHeader(
+				HttpAuthorizationHeader.SCHEME_BEARER);
 		}
 		else if (StringUtil.equalsIgnoreCase(
 					scheme, HttpAuthorizationHeader.SCHEME_DIGEST)) {
@@ -271,12 +275,12 @@ public class HttpAuthManagerImpl implements HttpAuthManager {
 			return AuthenticatedSessionManagerUtil.getAuthenticatedUserId(
 				httpServletRequest, login, password, null);
 		}
-		catch (AuthException ae) {
+		catch (AuthException authException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(ae, ae);
+				_log.debug(authException, authException);
 			}
 		}
 
@@ -313,8 +317,11 @@ public class HttpAuthManagerImpl implements HttpAuthManager {
 		String queryString = httpServletRequest.getQueryString();
 
 		if (Validator.isNotNull(queryString)) {
-			requestURI = requestURI.concat(StringPool.QUESTION).concat(
-				queryString);
+			requestURI = requestURI.concat(
+				StringPool.QUESTION
+			).concat(
+				queryString
+			);
 		}
 
 		if (!realm.equals(Portal.PORTAL_REALM) || !uri.equals(requestURI)) {
@@ -325,13 +332,9 @@ public class HttpAuthManagerImpl implements HttpAuthManager {
 			return userId;
 		}
 
-		long companyId = PortalInstances.getCompanyId(httpServletRequest);
-
-		userId = UserLocalServiceUtil.authenticateForDigest(
-			companyId, username, realm, nonce, httpServletRequest.getMethod(),
-			uri, response);
-
-		return userId;
+		return UserLocalServiceUtil.authenticateForDigest(
+			PortalInstances.getCompanyId(httpServletRequest), username, realm,
+			nonce, httpServletRequest.getMethod(), uri, response);
 	}
 
 	protected HttpAuthorizationHeader parseBasic(
@@ -340,15 +343,22 @@ public class HttpAuthManagerImpl implements HttpAuthManager {
 
 		String credentials = new String(Base64.decode(authorizationParts[1]));
 
-		String[] loginAndPassword = StringUtil.split(
-			credentials, CharPool.COLON);
-
-		String login = HttpUtil.decodeURL(loginAndPassword[0].trim());
-
+		String login = null;
 		String password = null;
 
-		if (loginAndPassword.length > 1) {
-			password = loginAndPassword[1].trim();
+		int index = credentials.indexOf(CharPool.COLON);
+
+		if (index > -1) {
+			login = credentials.substring(0, index);
+
+			login = HttpUtil.decodeURL(login.trim());
+
+			password = credentials.substring(index + 1);
+
+			password = password.trim();
+		}
+		else {
+			login = credentials.trim();
 		}
 
 		HttpAuthorizationHeader httpAuthorizationHeader =
@@ -376,17 +386,18 @@ public class HttpAuthManagerImpl implements HttpAuthManager {
 		authorization = StringUtil.replace(
 			authorization, CharPool.COMMA, CharPool.NEW_LINE);
 
-		UnicodeProperties authorizationProperties = new UnicodeProperties();
+		UnicodeProperties authorizationUnicodeProperties =
+			new UnicodeProperties();
 
-		authorizationProperties.fastLoad(authorization);
+		authorizationUnicodeProperties.fastLoad(authorization);
 
 		for (Map.Entry<String, String> authorizationProperty :
-				authorizationProperties.entrySet()) {
+				authorizationUnicodeProperties.entrySet()) {
 
 			String key = authorizationProperty.getKey();
 
 			String value = StringUtil.unquote(
-				authorizationProperties.getProperty(key));
+				authorizationUnicodeProperties.getProperty(key));
 
 			httpAuthorizationHeader.setAuthParameter(key, value);
 		}

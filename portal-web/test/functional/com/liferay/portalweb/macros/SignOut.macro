@@ -1,15 +1,16 @@
-<definition>
-	<command name="signOut" summary="Sign out of Liferay Portal">
-		<execute macro="Navigator#openURL" />
+definition {
 
-		<execute macro="UserBar#signOut" />
-	</command>
+	@summary = "Sign out of Liferay Portal"
+	macro signOut {
+		Navigator.openURL();
 
-	<command name="signOutOfSpecificURL">
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="${url}" />
-		</execute>
+		UserBar.signOut();
+	}
 
-		<execute macro="UserBar#signOut" />
-	</command>
-</definition>
+	macro signOutOfSpecificURL {
+		Navigator.openSpecificURL(url = "${url}");
+
+		UserBar.signOut();
+	}
+
+}

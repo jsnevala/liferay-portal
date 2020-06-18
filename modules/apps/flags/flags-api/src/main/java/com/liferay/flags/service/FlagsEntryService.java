@@ -14,17 +14,17 @@
 
 package com.liferay.flags.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
+import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceMode;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Transactional;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the remote service interface for FlagsEntry. Methods of this
@@ -33,32 +33,34 @@ import com.liferay.portal.kernel.transaction.Transactional;
  *
  * @author Brian Wing Shun Chan
  * @see FlagsEntryServiceUtil
- * @see com.liferay.flags.service.base.FlagsEntryServiceBaseImpl
- * @see com.liferay.flags.service.impl.FlagsEntryServiceImpl
  * @generated
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(property =  {
-	"json.web.service.context.name=flags", "json.web.service.context.path=FlagsEntry"}, service = FlagsEntryService.class)
 @ProviderType
-@Transactional(isolation = Isolation.PORTAL, rollbackFor =  {
-	PortalException.class, SystemException.class})
+@Transactional(
+	isolation = Isolation.PORTAL,
+	rollbackFor = {PortalException.class, SystemException.class}
+)
 public interface FlagsEntryService extends BaseService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link FlagsEntryServiceUtil} to access the flags entry remote service. Add custom service methods to {@link com.liferay.flags.service.impl.FlagsEntryServiceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify or reference this interface directly. Always use {@link FlagsEntryServiceUtil} to access the flags entry remote service. Add custom service methods to <code>com.liferay.flags.service.impl.FlagsEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public void addEntry(String className, long classPK,
-		String reporterEmailAddress, long reportedUserId, String contentTitle,
-		String contentURL, String reason, ServiceContext serviceContext)
+	@JSONWebService(mode = JSONWebServiceMode.IGNORE)
+	public void addEntry(
+			String className, long classPK, String reporterEmailAddress,
+			long reportedUserId, String contentTitle, String contentURL,
+			String reason, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	public String getOSGiServiceIdentifier();
+
 }

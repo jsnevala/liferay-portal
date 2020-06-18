@@ -121,14 +121,14 @@
 		<tag-class>com.liferay.asset.taglib.servlet.taglib.AssetCategoriesNavigationTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
-			<description>Whether to display the portlet to end users when there isn't a category to display.</description>
+			<description>Whether to display the portlet when there isn't a category to display.</description>
 			<name>hidePortletWhenEmpty</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 			<type>boolean</type>
 		</attribute>
 		<attribute>
-			<description>A comma delimited set of vocabularies to display. By default, all the vocabularies that are visible to the current scope are displayed.</description>
+			<description>A comma delimited set of vocabularies to display. By default, all vocabularies visible to the current scope are displayed.</description>
 			<name>vocabularyIds</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -170,7 +170,18 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>The component instance's ID.</description>
+			<name>id</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>ignoreRequestValue</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>showOnlyRequiredVocabularies</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -282,6 +293,21 @@
 		<attribute>
 			<name>viewURL</name>
 			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	<tag>
+		<name>asset-entry-usages</name>
+		<tag-class>com.liferay.asset.taglib.servlet.taglib.AssetEntryUsagesTag</tag-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>className</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>classPK</name>
+			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
@@ -400,7 +426,7 @@
 		<description>Creates a component to create and select tags to add to an asset, such as a blog entry, bookmark, or wiki page.</description>
 		<name>asset-tags-selector</name>
 		<tag-class>com.liferay.asset.taglib.servlet.taglib.AssetTagsSelectorTag</tag-class>
-		<body-content>JSP</body-content>
+		<body-content>empty</body-content>
 		<attribute>
 			<description>A function to call when a tag is added.</description>
 			<name>addCallback</name>
@@ -465,6 +491,13 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>Whether to show the Select button. The default value is <![CDATA[<code>false</code>]]>.</description>
+			<name>showSelectButton</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
+		</attribute>
+		<attribute>
 			<description>The currently selected tags.</description>
 			<name>tagNames</name>
 			<required>false</required>
@@ -514,6 +547,21 @@
 		</attribute>
 	</tag>
 	<tag>
+		<name>asset-view-usages</name>
+		<tag-class>com.liferay.asset.taglib.servlet.taglib.AssetViewUsagesTag</tag-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>className</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>classPK</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	<tag>
 		<name>categorization-filter</name>
 		<tag-class>com.liferay.asset.taglib.servlet.taglib.CategorizationFilterTag</tag-class>
 		<body-content>JSP</body-content>
@@ -544,6 +592,53 @@
 		</attribute>
 		<attribute>
 			<name>classPK</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+	<tag>
+		<name>select-asset-display-page</name>
+		<tag-class>com.liferay.asset.taglib.servlet.taglib.SelectAssetDisplayPageTag</tag-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<description>A class name ID of the asset type to select an asset display page for.</description>
+			<name>classNameId</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>A primary key of the asset entry to select an asset display page for.</description>
+			<name>classPK</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>A class type ID of the asset type to select an asset display page for.</description>
+			<name>classTypeId</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>The event name that fires when a user selects a display page using item selector.</description>
+			<name>eventName</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>A group ID of the entity to select an asset display page for.</description>
+			<name>groupId</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Whether to allow page selection for the page's default Asset Publisher.</description>
+			<name>showPortletLayouts</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Whether to show the asset view in a context link.</description>
+			<name>showViewInContextLink</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>

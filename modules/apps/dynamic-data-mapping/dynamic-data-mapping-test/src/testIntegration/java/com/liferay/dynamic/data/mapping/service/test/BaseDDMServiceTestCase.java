@@ -58,7 +58,7 @@ import java.util.Map;
 import org.junit.Before;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  * @author Rafael Praxedes
  */
 public abstract class BaseDDMServiceTestCase {
@@ -125,6 +125,19 @@ public abstract class BaseDDMServiceTestCase {
 			DDMTemplateConstants.TEMPLATE_TYPE_FORM,
 			DDMTemplateConstants.TEMPLATE_MODE_CREATE, "xsd", definition,
 			status);
+	}
+
+	protected DDMStructure addStructure(
+			Group group, long classNameId, String name)
+		throws Exception {
+
+		DDMForm ddmForm = toDDMForm(read("test-structure.xsd"));
+
+		return ddmStructureTestHelper.addStructure(
+			group, 0, classNameId, null, name, StringPool.BLANK, ddmForm,
+			DDMUtil.getDefaultDDMFormLayout(ddmForm),
+			StorageType.JSON.getValue(), DDMStructureConstants.TYPE_DEFAULT,
+			WorkflowConstants.STATUS_APPROVED);
 	}
 
 	protected DDMStructure addStructure(
@@ -288,10 +301,11 @@ public abstract class BaseDDMServiceTestCase {
 			clazz.getClassLoader(), getBasePath() + fileName);
 	}
 
-	protected void setUpDDMXML() throws Exception {
+	protected void setUpDDMXML() {
 		Registry registry = RegistryUtil.getRegistry();
 
-		ddmXML = registry.getService(DDMXML.class);
+		ddmXML = registry.getService(
+			registry.getServiceReference(DDMXML.class));
 	}
 
 	protected DDMForm toDDMForm(String definition) throws Exception {

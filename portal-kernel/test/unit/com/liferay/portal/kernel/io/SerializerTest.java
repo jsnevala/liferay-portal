@@ -93,9 +93,9 @@ public class SerializerTest {
 			bufferOutputStream.write(b);
 		}
 
-		byte[] result = serializer.toByteBuffer().array();
+		ByteBuffer byteBuffer = serializer.toByteBuffer();
 
-		Assert.assertArrayEquals(data, result);
+		Assert.assertArrayEquals(data, byteBuffer.array());
 
 		serializer = new Serializer();
 
@@ -103,9 +103,9 @@ public class SerializerTest {
 
 		bufferOutputStream.write(data);
 
-		result = serializer.toByteBuffer().array();
+		byteBuffer = serializer.toByteBuffer();
 
-		Assert.assertArrayEquals(data, result);
+		Assert.assertArrayEquals(data, byteBuffer.array());
 	}
 
 	@Test
@@ -418,7 +418,9 @@ public class SerializerTest {
 			serializer.writeBoolean(booleans[i]);
 		}
 
-		byte[] bytes = serializer.toByteBuffer().array();
+		ByteBuffer byteBuffer = serializer.toByteBuffer();
+
+		byte[] bytes = byteBuffer.array();
 
 		Assert.assertNull(serializer.buffer);
 
@@ -444,7 +446,9 @@ public class SerializerTest {
 			serializer.writeByte(bytes[i]);
 		}
 
-		Assert.assertArrayEquals(bytes, serializer.toByteBuffer().array());
+		ByteBuffer byteBuffer = serializer.toByteBuffer();
+
+		Assert.assertArrayEquals(bytes, byteBuffer.array());
 	}
 
 	@Test
@@ -467,9 +471,10 @@ public class SerializerTest {
 			charBuffer.put(chars[i]);
 		}
 
-		byte[] bytes = serializer.toByteBuffer().array();
+		ByteBuffer serializerByteBuffer = serializer.toByteBuffer();
 
-		Assert.assertArrayEquals(byteBuffer.array(), bytes);
+		Assert.assertArrayEquals(
+			byteBuffer.array(), serializerByteBuffer.array());
 	}
 
 	@Test
@@ -492,9 +497,10 @@ public class SerializerTest {
 			doubleBuffer.put(doubles[i]);
 		}
 
-		byte[] bytes = serializer.toByteBuffer().array();
+		ByteBuffer serializerByteBuffer = serializer.toByteBuffer();
 
-		Assert.assertArrayEquals(byteBuffer.array(), bytes);
+		Assert.assertArrayEquals(
+			byteBuffer.array(), serializerByteBuffer.array());
 	}
 
 	@Test
@@ -517,9 +523,10 @@ public class SerializerTest {
 			floatBuffer.put(floats[i]);
 		}
 
-		byte[] bytes = serializer.toByteBuffer().array();
+		ByteBuffer serializerByteBuffer = serializer.toByteBuffer();
 
-		Assert.assertArrayEquals(byteBuffer.array(), bytes);
+		Assert.assertArrayEquals(
+			byteBuffer.array(), serializerByteBuffer.array());
 	}
 
 	@Test
@@ -542,9 +549,10 @@ public class SerializerTest {
 			intBuffer.put(ints[i]);
 		}
 
-		byte[] bytes = serializer.toByteBuffer().array();
+		ByteBuffer serializerByteBuffer = serializer.toByteBuffer();
 
-		Assert.assertArrayEquals(byteBuffer.array(), bytes);
+		Assert.assertArrayEquals(
+			byteBuffer.array(), serializerByteBuffer.array());
 	}
 
 	@Test
@@ -567,9 +575,10 @@ public class SerializerTest {
 			longBuffer.put(longs[i]);
 		}
 
-		byte[] bytes = serializer.toByteBuffer().array();
+		ByteBuffer serializerByteBuffer = serializer.toByteBuffer();
 
-		Assert.assertArrayEquals(byteBuffer.array(), bytes);
+		Assert.assertArrayEquals(
+			byteBuffer.array(), serializerByteBuffer.array());
 	}
 
 	@Test
@@ -799,14 +808,14 @@ public class SerializerTest {
 
 			Assert.fail();
 		}
-		catch (RuntimeException re) {
-			String message = re.getMessage();
+		catch (RuntimeException runtimeException) {
+			String message = runtimeException.getMessage();
 
 			Assert.assertTrue(
 				message.startsWith(
 					"Unable to write ordinary serializable object "));
 
-			Throwable throwable = re.getCause();
+			Throwable throwable = runtimeException.getCause();
 
 			Assert.assertTrue(throwable instanceof IOException);
 			Assert.assertEquals("Forced IOException", throwable.getMessage());
@@ -845,22 +854,22 @@ public class SerializerTest {
 			Assert.assertEquals(asciiString.charAt(i), byteBuffer.get());
 		}
 
-		String nonAsciiString = "非ASCII Code中文测试";
+		String nonasciiString = "非ASCII Code中文测试";
 
 		serializer = new Serializer();
 
-		serializer.writeObject(nonAsciiString);
+		serializer.writeObject(nonasciiString);
 
 		byteBuffer = serializer.toByteBuffer();
 
 		Assert.assertEquals(
-			6 + nonAsciiString.length() * 2, byteBuffer.limit());
+			6 + nonasciiString.length() * 2, byteBuffer.limit());
 		Assert.assertEquals(SerializationConstants.TC_STRING, byteBuffer.get());
 		Assert.assertEquals(0, byteBuffer.get());
-		Assert.assertEquals(nonAsciiString.length(), byteBuffer.getInt());
+		Assert.assertEquals(nonasciiString.length(), byteBuffer.getInt());
 
-		for (int i = 0; i < nonAsciiString.length(); i++) {
-			Assert.assertEquals(nonAsciiString.charAt(i), byteBuffer.getChar());
+		for (int i = 0; i < nonasciiString.length(); i++) {
+			Assert.assertEquals(nonasciiString.charAt(i), byteBuffer.getChar());
 		}
 	}
 
@@ -884,9 +893,10 @@ public class SerializerTest {
 			shortBuffer.put(shorts[i]);
 		}
 
-		byte[] bytes = serializer.toByteBuffer().array();
+		ByteBuffer serializerByteBuffer = serializer.toByteBuffer();
 
-		Assert.assertArrayEquals(byteBuffer.array(), bytes);
+		Assert.assertArrayEquals(
+			byteBuffer.array(), serializerByteBuffer.array());
 	}
 
 	@Test
@@ -925,27 +935,27 @@ public class SerializerTest {
 			Assert.assertEquals(byteBuffer.get(), data[i]);
 		}
 
-		String nonAsciiString = "非ASCII Code中文测试";
+		String nonasciiString = "非ASCII Code中文测试";
 
 		serializer = new Serializer();
 
-		serializer.writeString(nonAsciiString);
+		serializer.writeString(nonasciiString);
 
-		Assert.assertEquals(serializer.index, 5 + nonAsciiString.length() * 2);
+		Assert.assertEquals(serializer.index, 5 + nonasciiString.length() * 2);
 		Assert.assertFalse(BigEndianCodec.getBoolean(serializer.buffer, 0));
 
 		length = BigEndianCodec.getInt(serializer.buffer, 1);
 
-		Assert.assertEquals(nonAsciiString.length(), length);
+		Assert.assertEquals(nonasciiString.length(), length);
 
-		byteBuffer = ByteBuffer.allocate(nonAsciiString.length() * 2);
+		byteBuffer = ByteBuffer.allocate(nonasciiString.length() * 2);
 
 		byteBuffer.order(ByteOrder.BIG_ENDIAN);
 
 		CharBuffer charBuffer = byteBuffer.asCharBuffer();
 
-		for (int i = 0; i < nonAsciiString.length(); i++) {
-			charBuffer.put(nonAsciiString.charAt(i));
+		for (int i = 0; i < nonasciiString.length(); i++) {
+			charBuffer.put(nonasciiString.charAt(i));
 		}
 
 		unsyncByteArrayOutputStream = new UnsyncByteArrayOutputStream();

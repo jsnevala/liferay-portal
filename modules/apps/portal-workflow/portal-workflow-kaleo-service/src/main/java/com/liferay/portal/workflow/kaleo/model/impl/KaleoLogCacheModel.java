@@ -14,12 +14,10 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.workflow.kaleo.model.KaleoLog;
 
 import java.io.Externalizable;
@@ -33,11 +31,11 @@ import java.util.Date;
  * The cache model class for representing KaleoLog in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see KaleoLog
  * @generated
  */
-@ProviderType
-public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable {
+public class KaleoLogCacheModel
+	implements CacheModel<KaleoLog>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,7 +48,9 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 
 		KaleoLogCacheModel kaleoLogCacheModel = (KaleoLogCacheModel)obj;
 
-		if (kaleoLogId == kaleoLogCacheModel.kaleoLogId) {
+		if ((kaleoLogId == kaleoLogCacheModel.kaleoLogId) &&
+			(mvccVersion == kaleoLogCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -59,14 +59,28 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, kaleoLogId);
+		int hashCode = HashUtil.hash(0, kaleoLogId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(61);
+		StringBundler sb = new StringBundler(65);
 
-		sb.append("{kaleoLogId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", kaleoLogId=");
 		sb.append(kaleoLogId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -84,6 +98,8 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 		sb.append(kaleoClassName);
 		sb.append(", kaleoClassPK=");
 		sb.append(kaleoClassPK);
+		sb.append(", kaleoDefinitionId=");
+		sb.append(kaleoDefinitionId);
 		sb.append(", kaleoDefinitionVersionId=");
 		sb.append(kaleoDefinitionVersionId);
 		sb.append(", kaleoInstanceId=");
@@ -135,6 +151,7 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 	public KaleoLog toEntityModel() {
 		KaleoLogImpl kaleoLogImpl = new KaleoLogImpl();
 
+		kaleoLogImpl.setMvccVersion(mvccVersion);
 		kaleoLogImpl.setKaleoLogId(kaleoLogId);
 		kaleoLogImpl.setGroupId(groupId);
 		kaleoLogImpl.setCompanyId(companyId);
@@ -169,6 +186,7 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 		}
 
 		kaleoLogImpl.setKaleoClassPK(kaleoClassPK);
+		kaleoLogImpl.setKaleoDefinitionId(kaleoDefinitionId);
 		kaleoLogImpl.setKaleoDefinitionVersionId(kaleoDefinitionVersionId);
 		kaleoLogImpl.setKaleoInstanceId(kaleoInstanceId);
 		kaleoLogImpl.setKaleoInstanceTokenId(kaleoInstanceTokenId);
@@ -211,7 +229,8 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 			kaleoLogImpl.setPreviousAssigneeClassName("");
 		}
 		else {
-			kaleoLogImpl.setPreviousAssigneeClassName(previousAssigneeClassName);
+			kaleoLogImpl.setPreviousAssigneeClassName(
+				previousAssigneeClassName);
 		}
 
 		kaleoLogImpl.setPreviousAssigneeClassPK(previousAssigneeClassPK);
@@ -268,7 +287,11 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
+
 		kaleoLogId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -282,6 +305,8 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 		kaleoClassName = objectInput.readUTF();
 
 		kaleoClassPK = objectInput.readLong();
+
+		kaleoDefinitionId = objectInput.readLong();
 
 		kaleoDefinitionVersionId = objectInput.readLong();
 
@@ -307,17 +332,18 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 
 		currentAssigneeClassPK = objectInput.readLong();
 		type = objectInput.readUTF();
-		comment = objectInput.readUTF();
+		comment = (String)objectInput.readObject();
 		startDate = objectInput.readLong();
 		endDate = objectInput.readLong();
 
 		duration = objectInput.readLong();
-		workflowContext = objectInput.readUTF();
+		workflowContext = (String)objectInput.readObject();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		objectOutput.writeLong(kaleoLogId);
 
 		objectOutput.writeLong(groupId);
@@ -344,6 +370,8 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 		}
 
 		objectOutput.writeLong(kaleoClassPK);
+
+		objectOutput.writeLong(kaleoDefinitionId);
 
 		objectOutput.writeLong(kaleoDefinitionVersionId);
 
@@ -413,10 +441,10 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 		}
 
 		if (comment == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(comment);
+			objectOutput.writeObject(comment);
 		}
 
 		objectOutput.writeLong(startDate);
@@ -425,13 +453,14 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 		objectOutput.writeLong(duration);
 
 		if (workflowContext == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(workflowContext);
+			objectOutput.writeObject(workflowContext);
 		}
 	}
 
+	public long mvccVersion;
 	public long kaleoLogId;
 	public long groupId;
 	public long companyId;
@@ -441,6 +470,7 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 	public long modifiedDate;
 	public String kaleoClassName;
 	public long kaleoClassPK;
+	public long kaleoDefinitionId;
 	public long kaleoDefinitionVersionId;
 	public long kaleoInstanceId;
 	public long kaleoInstanceTokenId;
@@ -462,4 +492,5 @@ public class KaleoLogCacheModel implements CacheModel<KaleoLog>, Externalizable 
 	public long endDate;
 	public long duration;
 	public String workflowContext;
+
 }

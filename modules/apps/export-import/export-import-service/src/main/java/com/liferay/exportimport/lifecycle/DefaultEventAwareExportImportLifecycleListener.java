@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.lifecycle;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lifecycle.EventAwareExportImportLifecycleListener;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants;
@@ -32,7 +30,6 @@ import java.util.List;
 /**
  * @author Daniel Kocsis
  */
-@ProviderType
 public class DefaultEventAwareExportImportLifecycleListener
 	implements ExportImportLifecycleListener {
 

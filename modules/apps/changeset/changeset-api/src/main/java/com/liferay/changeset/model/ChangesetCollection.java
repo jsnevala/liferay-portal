@@ -14,45 +14,50 @@
 
 package com.liferay.changeset.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the ChangesetCollection service. Represents a row in the &quot;ChangesetCollection&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see ChangesetCollectionModel
- * @see com.liferay.changeset.model.impl.ChangesetCollectionImpl
- * @see com.liferay.changeset.model.impl.ChangesetCollectionModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.changeset.model.impl.ChangesetCollectionImpl")
+@ImplementationClassName(
+	"com.liferay.changeset.model.impl.ChangesetCollectionImpl"
+)
 @ProviderType
-public interface ChangesetCollection extends ChangesetCollectionModel,
-	PersistedModel {
+public interface ChangesetCollection
+	extends ChangesetCollectionModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.changeset.model.impl.ChangesetCollectionImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.changeset.model.impl.ChangesetCollectionImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<ChangesetCollection, Long> CHANGESET_COLLECTION_ID_ACCESSOR =
-		new Accessor<ChangesetCollection, Long>() {
-			@Override
-			public Long get(ChangesetCollection changesetCollection) {
-				return changesetCollection.getChangesetCollectionId();
-			}
+	public static final Accessor<ChangesetCollection, Long>
+		CHANGESET_COLLECTION_ID_ACCESSOR =
+			new Accessor<ChangesetCollection, Long>() {
 
-			@Override
-			public Class<Long> getAttributeClass() {
-				return Long.class;
-			}
+				@Override
+				public Long get(ChangesetCollection changesetCollection) {
+					return changesetCollection.getChangesetCollectionId();
+				}
 
-			@Override
-			public Class<ChangesetCollection> getTypeClass() {
-				return ChangesetCollection.class;
-			}
-		};
+				@Override
+				public Class<Long> getAttributeClass() {
+					return Long.class;
+				}
+
+				@Override
+				public Class<ChangesetCollection> getTypeClass() {
+					return ChangesetCollection.class;
+				}
+
+			};
+
 }

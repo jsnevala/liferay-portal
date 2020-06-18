@@ -48,19 +48,20 @@ import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	configurationPid = "com.liferay.analytics.client.osgi.internal.configuration.AnalyticsClientConfiguration",
-	immediate = true, service = AnalyticsClient.class
+	service = AnalyticsClient.class
 )
 public class AnalyticsClientImpl implements AnalyticsClient {
 
+	@Override
 	public String sendAnalytics(AnalyticsEventsMessage analyticsEventsMessage)
 		throws Exception {
 
 		if (analyticsEventsMessage.getUserId() == null) {
-			String userId = getUserId(analyticsEventsMessage.getAnalyticsKey());
+			String userId = getUserId(analyticsEventsMessage.getDataSourceId());
 
 			AnalyticsEventsMessage.Builder builder =
 				AnalyticsEventsMessage.builder(analyticsEventsMessage);
@@ -98,7 +99,7 @@ public class AnalyticsClientImpl implements AnalyticsClient {
 		initializeJSONWebServiceClient();
 	}
 
-	protected String getUserId(String analyticsKey) throws Exception {
+	protected String getUserId(String dataSourceId) throws Exception {
 		HttpSession session = PortalSessionThreadLocal.getHttpSession();
 
 		if ((session != null) &&
@@ -110,7 +111,7 @@ public class AnalyticsClientImpl implements AnalyticsClient {
 		}
 
 		IdentityContextMessage.Builder identityContextMessageBuilder =
-			IdentityContextMessage.builder(analyticsKey);
+			IdentityContextMessage.builder(dataSourceId);
 
 		identityContextMessageBuilder.protocolVersion("1.0");
 
@@ -172,33 +173,6 @@ public class AnalyticsClientImpl implements AnalyticsClient {
 			(JSONWebServiceClient)componentInstance.getInstance();
 	}
 
-	@Reference(
-		target = "(component.factory=JSONWebServiceClient)", unbind = "-"
-	)
-	protected void setComponentFactory(ComponentFactory componentFactory) {
-		_componentFactory = componentFactory;
-	}
-
-	@Reference(unbind = "-")
-	protected void setIdentityClient(IdentityClient identityClient) {
-		_identityClient = identityClient;
-	}
-
-	@Reference(
-		target = "(model=com.liferay.analytics.model.AnalyticsEventsMessage)",
-		unbind = "-"
-	)
-	protected void setJSONObjectMapper(
-		JSONObjectMapper<AnalyticsEventsMessage> jsonObjectMapper) {
-
-		_jsonObjectMapper = jsonObjectMapper;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
 	private static final String _REQUEST_ATTRIBUTE_NAME_ANALYTICS_USER_ID =
 		"ANALYTICS_USER_ID";
 
@@ -206,10 +180,21 @@ public class AnalyticsClientImpl implements AnalyticsClient {
 		AnalyticsClientImpl.class);
 
 	private volatile AnalyticsClientConfiguration _analyticsClientConfiguration;
+
+	@Reference(target = "(component.factory=JSONWebServiceClient)")
 	private ComponentFactory _componentFactory;
+
+	@Reference
 	private IdentityClient _identityClient;
+
+	@Reference(
+		target = "(model=com.liferay.analytics.model.AnalyticsEventsMessage)"
+	)
 	private JSONObjectMapper<AnalyticsEventsMessage> _jsonObjectMapper;
+
 	private JSONWebServiceClient _jsonWebServiceClient;
+
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

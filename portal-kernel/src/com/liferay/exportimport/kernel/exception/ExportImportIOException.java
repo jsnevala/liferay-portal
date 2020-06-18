@@ -14,14 +14,11 @@
 
 package com.liferay.exportimport.kernel.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Gergely Mathe
  */
-@ProviderType
 public class ExportImportIOException extends PortalException {
 
 	public static final int ADD_ZIP_ENTRY_BYTES = 2;

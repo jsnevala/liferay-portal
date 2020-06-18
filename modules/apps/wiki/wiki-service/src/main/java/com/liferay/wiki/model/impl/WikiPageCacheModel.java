@@ -14,13 +14,10 @@
 
 package com.liferay.wiki.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.wiki.model.WikiPage;
 
 import java.io.Externalizable;
@@ -34,11 +31,11 @@ import java.util.Date;
  * The cache model class for representing WikiPage in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see WikiPage
  * @generated
  */
-@ProviderType
-public class WikiPageCacheModel implements CacheModel<WikiPage>, Externalizable {
+public class WikiPageCacheModel
+	implements CacheModel<WikiPage>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -51,7 +48,9 @@ public class WikiPageCacheModel implements CacheModel<WikiPage>, Externalizable 
 
 		WikiPageCacheModel wikiPageCacheModel = (WikiPageCacheModel)obj;
 
-		if (pageId == wikiPageCacheModel.pageId) {
+		if ((pageId == wikiPageCacheModel.pageId) &&
+			(mvccVersion == wikiPageCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -60,14 +59,28 @@ public class WikiPageCacheModel implements CacheModel<WikiPage>, Externalizable 
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, pageId);
+		int hashCode = HashUtil.hash(0, pageId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(49);
+		StringBundler sb = new StringBundler(51);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", pageId=");
 		sb.append(pageId);
@@ -123,6 +136,8 @@ public class WikiPageCacheModel implements CacheModel<WikiPage>, Externalizable 
 	@Override
 	public WikiPage toEntityModel() {
 		WikiPageImpl wikiPageImpl = new WikiPageImpl();
+
+		wikiPageImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			wikiPageImpl.setUuid("");
@@ -237,7 +252,10 @@ public class WikiPageCacheModel implements CacheModel<WikiPage>, Externalizable 
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		pageId = objectInput.readLong();
@@ -259,7 +277,7 @@ public class WikiPageCacheModel implements CacheModel<WikiPage>, Externalizable 
 		version = objectInput.readDouble();
 
 		minorEdit = objectInput.readBoolean();
-		content = objectInput.readUTF();
+		content = (String)objectInput.readObject();
 		summary = objectInput.readUTF();
 		format = objectInput.readUTF();
 
@@ -276,8 +294,9 @@ public class WikiPageCacheModel implements CacheModel<WikiPage>, Externalizable 
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -319,10 +338,10 @@ public class WikiPageCacheModel implements CacheModel<WikiPage>, Externalizable 
 		objectOutput.writeBoolean(minorEdit);
 
 		if (content == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(content);
+			objectOutput.writeObject(content);
 		}
 
 		if (summary == null) {
@@ -371,6 +390,7 @@ public class WikiPageCacheModel implements CacheModel<WikiPage>, Externalizable 
 		objectOutput.writeLong(statusDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long pageId;
 	public long resourcePrimKey;
@@ -395,4 +415,5 @@ public class WikiPageCacheModel implements CacheModel<WikiPage>, Externalizable 
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

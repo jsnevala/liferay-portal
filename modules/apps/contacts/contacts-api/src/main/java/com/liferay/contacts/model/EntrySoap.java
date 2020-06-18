@@ -14,8 +14,6 @@
 
 package com.liferay.contacts.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,8 +26,8 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class EntrySoap implements Serializable {
+
 	public static EntrySoap toSoapModel(Entry model) {
 		EntrySoap soapModel = new EntrySoap();
 
@@ -185,4 +183,5 @@ public class EntrySoap implements Serializable {
 	private String _fullName;
 	private String _emailAddress;
 	private String _comments;
+
 }

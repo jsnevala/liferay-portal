@@ -49,7 +49,7 @@ long[] classNameIdValues = StringUtil.split(ParamUtil.getString(request, "classN
 			List<KeyValuePair> leftList = new ArrayList<KeyValuePair>();
 
 			for (long classNameId : classNameIdValues) {
-				String value = (String)PortalClassInvoker.invoke(false, methodKey, request, PortalUtil.getClassName(classNameId));
+				String value = (String)PortalClassInvoker.invoke(methodKey, request, PortalUtil.getClassName(classNameId));
 
 				leftList.add(new KeyValuePair(String.valueOf(classNameId), value));
 			}
@@ -60,7 +60,7 @@ long[] classNameIdValues = StringUtil.split(ParamUtil.getString(request, "classN
 
 			for (long classNameId : AssetRendererFactoryRegistryUtil.getClassNameIds(company.getCompanyId())) {
 				if (!ArrayUtil.contains(classNameIdValues, classNameId)) {
-					String value = (String)PortalClassInvoker.invoke(false, methodKey, request, PortalUtil.getClassName(classNameId));
+					String value = (String)PortalClassInvoker.invoke(methodKey, request, PortalUtil.getClassName(classNameId));
 
 					rightList.add(new KeyValuePair(String.valueOf(classNameId), value));
 				}
@@ -90,11 +90,18 @@ long[] classNameIdValues = StringUtil.split(ParamUtil.getString(request, "classN
 		var form = document.getElementById('<portlet:namespace />fm');
 
 		if (form) {
-			var classNameIds = form.querySelector('#<portlet:namespace />classNameIds');
-			var currentClassNameIds = form.querySelector('#<portlet:namespace />currentClassNameIds');
+			var classNameIds = form.querySelector(
+				'#<portlet:namespace />classNameIds'
+			);
+			var currentClassNameIds = form.querySelector(
+				'#<portlet:namespace />currentClassNameIds'
+			);
 
 			if (classNameIds && currentClassNameIds) {
-				classNameIds.setAttribute('value', Liferay.Util.listSelect(currentClassNameIds));
+				classNameIds.setAttribute(
+					'value',
+					Liferay.Util.listSelect(currentClassNameIds)
+				);
 			}
 
 			submitForm(form);

@@ -1,17 +1,40 @@
-<definition>
-	<command name="addContent">
-		<execute function="SelectFrame" locator1="CKEditor#BODY_FIELD_IFRAME" />
+definition {
 
-		<execute function="KeyPress" locator1="CKEditor#BODY" value1="${content}" />
+	macro addContent {
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		if (isSet(kbArticleContentEdit)) {
+			Type(
+				locator1 = "CKEditor#BODY",
+				value1 = "${kbArticleContentEdit}");
+		}
+		else {
+			KeyPress.keyPressCKEditorWaitForCKEditor(
+				locator1 = "CKEditor#BODY",
+				value1 = "${content}");
+		}
 
-	<command name="assertEditorPresent">
-		<execute function="AssertElementPresent" locator1="CKEditor#BODY_FIELD" />
-	</command>
+		SelectFrame(value1 = "relative=top");
+	}
 
-	<command name="viewEntryContent">
-		<execute function="AssertTextEquals" locator1="CKEditor#BODY" value1="${content}" />
-	</command>
-</definition>
+	macro assertEditorPresent {
+		AssertElementPresent(locator1 = "CKEditor#BODY_FIELD");
+	}
+
+	macro viewEntryContent {
+		AssertTextEquals(
+			locator1 = "CKEditor#BODY",
+			value1 = "${content}");
+	}
+
+	macro viewEntryContentImage {
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+		AssertVisible(
+			key_contentImageName = "${contentImageName}",
+			locator1 = "Wiki#CONTENT_IMAGE_NAME");
+
+		SelectFrame(value1 = "relative=top");
+	}
+
+}

@@ -14,8 +14,6 @@
 
 package com.liferay.portlet.internal;
 
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -23,11 +21,7 @@ import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
-import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.struts.StrutsActionPortletURL;
-import com.liferay.portal.util.PropsValues;
 
 import java.lang.reflect.Constructor;
 
@@ -65,21 +59,21 @@ public class LiferayPortletURLPrivilegedAction {
 		_portletRequest = portletRequest;
 		_portletResponseImpl = portletResponseImpl;
 
-		_request = null;
+		_httpServletRequest = null;
 		_requestPlid = requestPlid;
 		_constructors = constructors;
 	}
 
 	public LiferayPortletURLPrivilegedAction(
 		String portletName, String lifecycle, MimeResponse.Copy copy,
-		Layout layout, Portlet portlet, HttpServletRequest request) {
+		Layout layout, Portlet portlet, HttpServletRequest httpServletRequest) {
 
 		_portletName = portletName;
 		_lifecycle = lifecycle;
 		_copy = copy;
 		_layout = layout;
 		_portlet = portlet;
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 
 		_constructors = null;
 		_includeLinkToLayoutUuid = false;
@@ -91,52 +85,12 @@ public class LiferayPortletURLPrivilegedAction {
 	}
 
 	public LiferayPortletURL run() {
-		if (_request != null) {
+		if (_httpServletRequest != null) {
 			return PortletURLFactoryUtil.create(
-				_request, _portlet, _layout, _lifecycle, _copy);
+				_httpServletRequest, _portlet, _layout, _lifecycle, _copy);
 		}
 
-		boolean includeLinkToLayoutUuid = _includeLinkToLayoutUuid;
 		long plid = _plid;
-
-		try {
-			String linkToLayoutUuid = GetterUtil.getString(
-				_portletPreferences.getValue(
-					"portletSetupLinkToLayoutUuid", null));
-
-			if (PropsValues.PORTLET_CROSS_LAYOUT_INVOCATION_MODE.equals(
-					"render") &&
-				!PortletRequest.RENDER_PHASE.equals(_lifecycle)) {
-
-				includeLinkToLayoutUuid = false;
-			}
-
-			if (Validator.isNotNull(linkToLayoutUuid) &&
-				includeLinkToLayoutUuid) {
-
-				try {
-					Layout linkedLayout =
-						LayoutLocalServiceUtil.getLayoutByUuidAndGroupId(
-							linkToLayoutUuid, _layout.getGroupId(),
-							_layout.isPrivateLayout());
-
-					plid = linkedLayout.getPlid();
-				}
-				catch (PortalException pe) {
-
-					// LPS-52675
-
-					if (_log.isDebugEnabled()) {
-						_log.debug(pe, pe);
-					}
-				}
-			}
-		}
-		catch (SystemException se) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(se, se);
-			}
-		}
 
 		if (plid == LayoutConstants.DEFAULT_PLID) {
 			plid = _requestPlid;
@@ -151,37 +105,30 @@ public class LiferayPortletURLPrivilegedAction {
 		if (portletId.equals(_portletName) &&
 			Validator.isNotNull(portletURLClass)) {
 
-			if (portletURLClass.equals(
-					StrutsActionPortletURL.class.getName())) {
+			try {
+				Constructor<? extends PortletURLImpl> constructor =
+					_constructors.get(portletURLClass);
 
-				portletURL = new StrutsActionPortletURL(
-					_portletResponseImpl, plid, _lifecycle);
-			}
-			else {
-				try {
-					Constructor<? extends PortletURLImpl> constructor =
-						_constructors.get(portletURLClass);
+				if (constructor == null) {
+					Class<?> portletURLClassObj = Class.forName(
+						portletURLClass);
 
-					if (constructor == null) {
-						Class<?> portletURLClassObj = Class.forName(
-							portletURLClass);
-
-						constructor = (Constructor<? extends PortletURLImpl>)
+					constructor =
+						(Constructor<? extends PortletURLImpl>)
 							portletURLClassObj.getConstructor(
 								new Class<?>[] {
 									PortletResponseImpl.class, long.class,
 									String.class
 								});
 
-						_constructors.put(portletURLClass, constructor);
-					}
+					_constructors.put(portletURLClass, constructor);
+				}
 
-					portletURL = constructor.newInstance(
-						new Object[] {_portletResponseImpl, plid, _lifecycle});
-				}
-				catch (Exception e) {
-					_log.error("Unable to create portlet URL", e);
-				}
+				portletURL = constructor.newInstance(
+					new Object[] {_portletResponseImpl, plid, _lifecycle});
+			}
+			catch (Exception exception) {
+				_log.error("Unable to create portlet URL", exception);
 			}
 		}
 
@@ -204,8 +151,8 @@ public class LiferayPortletURLPrivilegedAction {
 				portletURL.setWindowState(_portletRequest.getWindowState());
 			}
 		}
-		catch (WindowStateException wse) {
-			_log.error(wse.getMessage());
+		catch (WindowStateException windowStateException) {
+			_log.error(windowStateException.getMessage());
 		}
 
 		try {
@@ -216,8 +163,8 @@ public class LiferayPortletURLPrivilegedAction {
 				portletURL.setPortletMode(_portletRequest.getPortletMode());
 			}
 		}
-		catch (PortletModeException pme) {
-			_log.error(pme.getMessage());
+		catch (PortletModeException portletModeException) {
+			_log.error(portletModeException.getMessage());
 		}
 
 		return portletURL;
@@ -229,6 +176,7 @@ public class LiferayPortletURLPrivilegedAction {
 	private final Map<String, Constructor<? extends PortletURLImpl>>
 		_constructors;
 	private final MimeResponse.Copy _copy;
+	private final HttpServletRequest _httpServletRequest;
 	private final boolean _includeLinkToLayoutUuid;
 	private final Layout _layout;
 	private final String _lifecycle;
@@ -238,7 +186,6 @@ public class LiferayPortletURLPrivilegedAction {
 	private final PortletPreferences _portletPreferences;
 	private final PortletRequest _portletRequest;
 	private final PortletResponseImpl _portletResponseImpl;
-	private final HttpServletRequest _request;
 	private final long _requestPlid;
 
 }

@@ -14,7 +14,7 @@
 
 package com.liferay.asset.categories.admin.web.internal.portlet.configuration.icon;
 
-import com.liferay.asset.categories.admin.web.internal.constants.AssetCategoriesAdminPortletKeys;
+import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPortletKeys;
 import com.liferay.asset.categories.admin.web.internal.display.context.AssetCategoriesDisplayContext;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.petra.string.StringPool;
@@ -34,8 +34,6 @@ import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
 import javax.portlet.WindowState;
 import javax.portlet.WindowStateException;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -85,7 +83,7 @@ public class EditAssetCategoryPortletConfigurationIcon
 
 			return editCategoryURL.toString();
 		}
-		catch (WindowStateException wse) {
+		catch (WindowStateException windowStateException) {
 		}
 
 		return StringPool.BLANK;
@@ -98,11 +96,9 @@ public class EditAssetCategoryPortletConfigurationIcon
 
 	@Override
 	public boolean isShow(PortletRequest portletRequest) {
-		HttpServletRequest request = _portal.getHttpServletRequest(
-			portletRequest);
-
 		AssetCategoriesDisplayContext assetCategoriesDisplayContext =
-			new AssetCategoriesDisplayContext(null, null, request);
+			new AssetCategoriesDisplayContext(
+				_portal.getHttpServletRequest(portletRequest), null, null);
 
 		AssetCategory category = assetCategoriesDisplayContext.getCategory();
 
@@ -114,9 +110,9 @@ public class EditAssetCategoryPortletConfigurationIcon
 			return assetCategoriesDisplayContext.hasPermission(
 				category, ActionKeys.UPDATE);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 

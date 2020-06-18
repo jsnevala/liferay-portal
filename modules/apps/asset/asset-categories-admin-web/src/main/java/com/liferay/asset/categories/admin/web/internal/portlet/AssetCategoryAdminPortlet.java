@@ -14,8 +14,8 @@
 
 package com.liferay.asset.categories.admin.web.internal.portlet;
 
+import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPortletKeys;
 import com.liferay.asset.categories.admin.web.internal.configuration.AssetCategoriesAdminWebConfiguration;
-import com.liferay.asset.categories.admin.web.internal.constants.AssetCategoriesAdminPortletKeys;
 import com.liferay.asset.categories.admin.web.internal.constants.AssetCategoriesAdminWebKeys;
 import com.liferay.asset.category.property.model.AssetCategoryProperty;
 import com.liferay.asset.category.property.service.AssetCategoryPropertyLocalService;
@@ -27,6 +27,7 @@ import com.liferay.asset.kernel.exception.CategoryPropertyValueException;
 import com.liferay.asset.kernel.exception.DuplicateCategoryException;
 import com.liferay.asset.kernel.exception.DuplicateCategoryPropertyException;
 import com.liferay.asset.kernel.exception.DuplicateVocabularyException;
+import com.liferay.asset.kernel.exception.InvalidAssetCategoryException;
 import com.liferay.asset.kernel.exception.NoSuchCategoryException;
 import com.liferay.asset.kernel.exception.NoSuchEntryException;
 import com.liferay.asset.kernel.exception.NoSuchVocabularyException;
@@ -43,8 +44,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -97,28 +96,11 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=administrator"
 	},
 	service = Portlet.class
 )
 public class AssetCategoryAdminPortlet extends MVCPortlet {
-
-	public void changeDisplayStyle(
-		ActionRequest actionRequest, ActionResponse actionResponse) {
-
-		hideDefaultSuccessMessage(actionRequest);
-
-		String displayStyle = ParamUtil.getString(
-			actionRequest, "displayStyle");
-
-		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(actionRequest);
-
-		portalPreferences.setValue(
-			AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN,
-			"display-style", displayStyle);
-	}
 
 	public void deleteCategory(
 			ActionRequest actionRequest, ActionResponse actionResponse)
@@ -206,7 +188,7 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		long categoryId = ParamUtil.getLong(actionRequest, "categoryId", 0);
+		long categoryId = ParamUtil.getLong(actionRequest, "categoryId");
 
 		AssetCategory category = _assetCategoryService.fetchCategory(
 			categoryId);
@@ -400,8 +382,8 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 					classTypeReader.getClassType(
 						classTypePKs[i], themeDisplay.getLocale());
 				}
-				catch (NoSuchModelException nsme) {
-					throw new NoSuchClassTypeException(nsme);
+				catch (NoSuchModelException noSuchModelException) {
+					throw new NoSuchClassTypeException(noSuchModelException);
 				}
 			}
 
@@ -428,6 +410,7 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 			cause instanceof DuplicateCategoryException ||
 			cause instanceof DuplicateCategoryPropertyException ||
 			cause instanceof DuplicateVocabularyException ||
+			cause instanceof InvalidAssetCategoryException ||
 			cause instanceof NoSuchCategoryException ||
 			cause instanceof NoSuchClassTypeException ||
 			cause instanceof NoSuchEntryException ||
@@ -441,20 +424,6 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 		return false;
 	}
 
-	@Reference(unbind = "-")
-	protected void setAssetCategoryService(
-		AssetCategoryService assetCategoryService) {
-
-		_assetCategoryService = assetCategoryService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setAssetVocabularyService(
-		AssetVocabularyService assetVocabularyService) {
-
-		_assetVocabularyService = assetVocabularyService;
-	}
-
 	private AssetCategoriesAdminWebConfiguration
 		_assetCategoriesAdminWebConfiguration;
 
@@ -462,7 +431,10 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 	private AssetCategoryPropertyLocalService
 		_assetCategoryPropertyLocalService;
 
+	@Reference
 	private AssetCategoryService _assetCategoryService;
+
+	@Reference
 	private AssetVocabularyService _assetVocabularyService;
 
 }

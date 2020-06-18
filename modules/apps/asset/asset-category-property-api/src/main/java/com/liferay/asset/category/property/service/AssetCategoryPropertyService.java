@@ -14,21 +14,19 @@
 
 package com.liferay.asset.category.property.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.category.property.model.AssetCategoryProperty;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 
 import java.util.List;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the remote service interface for AssetCategoryProperty. Methods of this
@@ -37,25 +35,25 @@ import java.util.List;
  *
  * @author Brian Wing Shun Chan
  * @see AssetCategoryPropertyServiceUtil
- * @see com.liferay.asset.category.property.service.base.AssetCategoryPropertyServiceBaseImpl
- * @see com.liferay.asset.category.property.service.impl.AssetCategoryPropertyServiceImpl
  * @generated
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(property =  {
-	"json.web.service.context.name=asset", "json.web.service.context.path=AssetCategoryProperty"}, service = AssetCategoryPropertyService.class)
 @ProviderType
-@Transactional(isolation = Isolation.PORTAL, rollbackFor =  {
-	PortalException.class, SystemException.class})
+@Transactional(
+	isolation = Isolation.PORTAL,
+	rollbackFor = {PortalException.class, SystemException.class}
+)
 public interface AssetCategoryPropertyService extends BaseService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link AssetCategoryPropertyServiceUtil} to access the asset category property remote service. Add custom service methods to {@link com.liferay.asset.category.property.service.impl.AssetCategoryPropertyServiceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify or reference this interface directly. Always use {@link AssetCategoryPropertyServiceUtil} to access the asset category property remote service. Add custom service methods to <code>com.liferay.asset.category.property.service.impl.AssetCategoryPropertyServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public AssetCategoryProperty addCategoryProperty(long entryId, String key,
-		String value) throws PortalException;
+	public AssetCategoryProperty addCategoryProperty(
+			long entryId, String key, String value)
+		throws PortalException;
 
 	public void deleteCategoryProperty(long categoryPropertyId)
 		throws PortalException;
@@ -68,17 +66,18 @@ public interface AssetCategoryPropertyService extends BaseService {
 		long companyId, String key);
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	public String getOSGiServiceIdentifier();
 
-	public AssetCategoryProperty updateCategoryProperty(long userId,
-		long categoryPropertyId, String key, String value)
+	public AssetCategoryProperty updateCategoryProperty(
+			long userId, long categoryPropertyId, String key, String value)
 		throws PortalException;
 
 	public AssetCategoryProperty updateCategoryProperty(
-		long categoryPropertyId, String key, String value)
+			long categoryPropertyId, String key, String value)
 		throws PortalException;
+
 }

@@ -14,45 +14,50 @@
 
 package com.liferay.asset.list.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the AssetListEntryUsage service. Represents a row in the &quot;AssetListEntryUsage&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see AssetListEntryUsageModel
- * @see com.liferay.asset.list.model.impl.AssetListEntryUsageImpl
- * @see com.liferay.asset.list.model.impl.AssetListEntryUsageModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.asset.list.model.impl.AssetListEntryUsageImpl")
+@ImplementationClassName(
+	"com.liferay.asset.list.model.impl.AssetListEntryUsageImpl"
+)
 @ProviderType
-public interface AssetListEntryUsage extends AssetListEntryUsageModel,
-	PersistedModel {
+public interface AssetListEntryUsage
+	extends AssetListEntryUsageModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.asset.list.model.impl.AssetListEntryUsageImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.asset.list.model.impl.AssetListEntryUsageImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<AssetListEntryUsage, Long> ASSET_LIST_ENTRY_USAGE_ID_ACCESSOR =
-		new Accessor<AssetListEntryUsage, Long>() {
-			@Override
-			public Long get(AssetListEntryUsage assetListEntryUsage) {
-				return assetListEntryUsage.getAssetListEntryUsageId();
-			}
+	public static final Accessor<AssetListEntryUsage, Long>
+		ASSET_LIST_ENTRY_USAGE_ID_ACCESSOR =
+			new Accessor<AssetListEntryUsage, Long>() {
 
-			@Override
-			public Class<Long> getAttributeClass() {
-				return Long.class;
-			}
+				@Override
+				public Long get(AssetListEntryUsage assetListEntryUsage) {
+					return assetListEntryUsage.getAssetListEntryUsageId();
+				}
 
-			@Override
-			public Class<AssetListEntryUsage> getTypeClass() {
-				return AssetListEntryUsage.class;
-			}
-		};
+				@Override
+				public Class<Long> getAttributeClass() {
+					return Long.class;
+				}
+
+				@Override
+				public Class<AssetListEntryUsage> getTypeClass() {
+					return AssetListEntryUsage.class;
+				}
+
+			};
+
 }

@@ -27,6 +27,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.test.util.TestUserIdStrategy;
 import com.liferay.journal.constants.JournalPortletKeys;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -57,7 +58,6 @@ import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactoryUtil;
 import com.liferay.portal.model.impl.PortletImpl;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.test.LayoutTestUtil;
 
 import java.io.InputStream;
 
@@ -75,7 +75,7 @@ import org.junit.runner.RunWith;
 
 /**
  * @author Zsolt Berentey
- * @author Peter Borkuti
+ * @author Péter Borkuti
  * @author Balázs Sáfrány-Kovalik
  */
 @RunWith(Arquillian.class)
@@ -745,8 +745,9 @@ public class ExportImportHelperUtilTest {
 		Layout childLayout = LayoutTestUtil.addLayout(
 			_stagingGroup, layout.getPlid());
 
-		long[] selectedLayoutIds =
-			{layout.getLayoutId(), childLayout.getLayoutId()};
+		long[] selectedLayoutIds = {
+			layout.getLayoutId(), childLayout.getLayoutId()
+		};
 
 		String selectedLayoutsJSON =
 			ExportImportHelperUtil.getSelectedLayoutsJSON(
@@ -900,22 +901,18 @@ public class ExportImportHelperUtilTest {
 		ThumbnailCapability thumbnailCapability =
 			fileEntry.getRepositoryCapability(ThumbnailCapability.class);
 
-		fileEntry = thumbnailCapability.setLargeImageId(
+		return thumbnailCapability.setLargeImageId(
 			fileEntry, fileEntry.getFileEntryId());
-
-		return fileEntry;
 	}
 
 	protected String replaceParameters(String content, FileEntry fileEntry) {
-		content = StringUtil.replace(
+		return StringUtil.replace(
 			content,
 			new String[] {"[$GROUP_ID$]", "[$LIVE_GROUP_ID$]", "[$UUID$]"},
 			new String[] {
 				String.valueOf(fileEntry.getGroupId()),
 				String.valueOf(fileEntry.getGroupId()), fileEntry.getUuid()
 			});
-
-		return content;
 	}
 
 	private void _assertPortletControlsMap(

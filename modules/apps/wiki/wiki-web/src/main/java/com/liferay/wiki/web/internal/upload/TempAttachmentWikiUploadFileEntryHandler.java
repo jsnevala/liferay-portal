@@ -47,10 +47,11 @@ public class TempAttachmentWikiUploadFileEntryHandler
 			uploadPortletRequest.getFileName(_PARAMETER_NAME),
 			uploadPortletRequest.getSize(_PARAMETER_NAME));
 
-		long nodeId = ParamUtil.getLong(uploadPortletRequest, "nodeId");
+		long nodeId = ParamUtil.getLong(
+			uploadPortletRequest.getPortletRequest(), "nodeId");
 
-		try (InputStream inputStream =
-				uploadPortletRequest.getFileAsStream(_PARAMETER_NAME)) {
+		try (InputStream inputStream = uploadPortletRequest.getFileAsStream(
+				_PARAMETER_NAME)) {
 
 			String tempFileName = TempFileEntryUtil.getTempFileName(
 				uploadPortletRequest.getFileName(_PARAMETER_NAME));

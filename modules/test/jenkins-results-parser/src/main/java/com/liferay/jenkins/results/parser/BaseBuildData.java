@@ -17,8 +17,14 @@ package com.liferay.jenkins.results.parser;
 import java.io.File;
 import java.io.IOException;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,13 +51,99 @@ public abstract class BaseBuildData implements BuildData {
 	}
 
 	@Override
+	public File getArtifactDir() {
+		return new File(getWorkspaceDir(), getRunID());
+	}
+
+	@Override
 	public String getBuildDescription() {
 		return getString("build_description");
 	}
 
 	@Override
+	public Long getBuildDuration() {
+		return optLong("build_duration", Long.valueOf(0));
+	}
+
+	@Override
+	public String getBuildDurationString() {
+		return JenkinsResultsParserUtil.toDurationString(getBuildDuration());
+	}
+
+	@Override
 	public Integer getBuildNumber() {
 		return optInt("build_number");
+	}
+
+	@Override
+	public String getBuildParameter(String key) {
+		Map<String, String> buildParameters = getBuildParameters();
+
+		return buildParameters.get(key);
+	}
+
+	@Override
+	public Map<String, String> getBuildParameters() {
+		if (_buildParameters != null) {
+			return _buildParameters;
+		}
+
+		JSONObject buildURLJSONObject = _getBuildURLJSONObject();
+
+		if (buildURLJSONObject == null) {
+			throw new RuntimeException("Please set the build URL");
+		}
+
+		if (!buildURLJSONObject.has("actions")) {
+			return null;
+		}
+
+		JSONArray actionsJSONArray = buildURLJSONObject.getJSONArray("actions");
+
+		for (int i = 0; i < actionsJSONArray.length(); i++) {
+			JSONObject actionsJSONObject = actionsJSONArray.getJSONObject(i);
+
+			if ((actionsJSONObject == null) ||
+				!actionsJSONObject.has("parameters")) {
+
+				continue;
+			}
+
+			JSONArray parametersJSONArray = actionsJSONObject.getJSONArray(
+				"parameters");
+
+			_buildParameters = new HashMap<>();
+
+			for (int j = 0; j < parametersJSONArray.length(); j++) {
+				JSONObject parameterJSONObject =
+					parametersJSONArray.getJSONObject(j);
+
+				if ((parameterJSONObject == null) ||
+					!parameterJSONObject.has("name") ||
+					!parameterJSONObject.has("value")) {
+
+					continue;
+				}
+
+				_buildParameters.put(
+					parameterJSONObject.getString("name"),
+					parameterJSONObject.getString("value"));
+			}
+
+			return _buildParameters;
+		}
+
+		return null;
+	}
+
+	@Override
+	public String getBuildResult() {
+		return optString("build_result", "");
+	}
+
+	@Override
+	public String getBuildStatus() {
+		return optString("build_status", "");
 	}
 
 	@Override
@@ -65,8 +157,35 @@ public abstract class BaseBuildData implements BuildData {
 	}
 
 	@Override
+	public Host getHost() {
+		if (_host != null) {
+			return _host;
+		}
+
+		String hostname = getHostname();
+
+		if (hostname == null) {
+			return null;
+		}
+
+		_host = HostFactory.newHost(hostname);
+
+		return _host;
+	}
+
+	@Override
 	public String getHostname() {
 		return optString("hostname");
+	}
+
+	@Override
+	public String getJenkinsGitHubBranchName() {
+		return getGitHubBranchName(getJenkinsGitHubURL());
+	}
+
+	@Override
+	public String getJenkinsGitHubRepositoryName() {
+		return getGitHubRepositoryName(getJenkinsGitHubURL());
 	}
 
 	@Override
@@ -75,8 +194,18 @@ public abstract class BaseBuildData implements BuildData {
 	}
 
 	@Override
+	public String getJenkinsGitHubUsername() {
+		return getGitHubUsername(getJenkinsGitHubURL());
+	}
+
+	@Override
 	public String getJobName() {
 		return optString("job_name");
+	}
+
+	@Override
+	public String getJobURL() {
+		return optString("job_url");
 	}
 
 	@Override
@@ -92,6 +221,16 @@ public abstract class BaseBuildData implements BuildData {
 	@Override
 	public String getRunID() {
 		return getString("run_id");
+	}
+
+	@Override
+	public Long getStartTime() {
+		return getLong("start_time");
+	}
+
+	@Override
+	public String getStartTimeString() {
+		return getFormattedDate(getStartTime());
 	}
 
 	@Override
@@ -112,23 +251,49 @@ public abstract class BaseBuildData implements BuildData {
 	}
 
 	@Override
+	public void setBuildDuration(Long buildDuration) {
+		put("build_duration", buildDuration);
+	}
+
+	@Override
+	public void setBuildResult(String buildResult) {
+		put("build_result", buildResult);
+	}
+
+	@Override
+	public void setBuildStatus(String buildStatus) {
+		put("build_status", buildStatus);
+	}
+
+	@Override
 	public void setBuildURL(String buildURL) {
-		if (getBuildNumber() != null) {
-			throw new IllegalStateException("Build URL is already set");
+		String currentBuildURL = getBuildURL();
+
+		if ((currentBuildURL != null) && !currentBuildURL.isEmpty() &&
+			!currentBuildURL.equals(buildURL)) {
+
+			throw new IllegalStateException("Build URL may not be changed");
 		}
 
 		Matcher matcher = _buildURLPattern.matcher(buildURL);
 
 		if (!matcher.find()) {
-			throw new RuntimeException("Invalid build url " + buildURL);
+			throw new RuntimeException("Invalid build URL " + buildURL);
 		}
 
 		put("build_number", Integer.valueOf(matcher.group("buildNumber")));
 		put("build_url", buildURL);
 		put("cohort_name", matcher.group("cohortName"));
 		put("hostname", _getHostname());
+		put("job_url", matcher.group("jobURL"));
 		put("master_hostname", matcher.group("masterHostname"));
+		put("start_time", _getStartTime());
 		put("type", getType());
+	}
+
+	@Override
+	public void setInvocationTime(Long invocationTime) {
+		put("invocation_time", invocationTime);
 	}
 
 	@Override
@@ -138,12 +303,9 @@ public abstract class BaseBuildData implements BuildData {
 
 	@Override
 	public void setWorkspaceDir(File workspaceDir) {
-		try {
-			put("workspace_dir", workspaceDir.getCanonicalPath());
-		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
-		}
+		put(
+			"workspace_dir",
+			JenkinsResultsParserUtil.getCanonicalPath(workspaceDir));
 	}
 
 	protected static boolean isValidJSONObject(
@@ -157,17 +319,35 @@ public abstract class BaseBuildData implements BuildData {
 			return false;
 		}
 
-		if (jsonObject.has("type")) {
-			if (type.equals(jsonObject.getString("type"))) {
-				return true;
-			}
+		if (jsonObject.has("type") &&
+			type.equals(jsonObject.getString("type"))) {
+
+			return true;
 		}
 
 		return false;
 	}
 
 	protected BaseBuildData(String runID, String jobName, String buildURL) {
-		_jsonObject = buildDatabase.getBuildDataJSONObject(runID);
+		JSONObject jsonObject = buildDatabase.getBuildDataJSONObject(runID);
+
+		String json = jsonObject.toString();
+
+		if (json.equals("{}") && (buildURL != null)) {
+			try {
+				jsonObject = buildDatabase.getBuildDataJSONObject(
+					new URL(buildURL));
+
+				if (jsonObject.has("run_id")) {
+					runID = jsonObject.getString("run_id");
+				}
+			}
+			catch (MalformedURLException malformedURLException) {
+				throw new RuntimeException(malformedURLException);
+			}
+		}
+
+		_jsonObject = jsonObject;
 
 		put("run_id", runID);
 
@@ -187,14 +367,52 @@ public abstract class BaseBuildData implements BuildData {
 			setBuildDescription(_getDefaultBuildDescription());
 		}
 
-		setJenkinsGitHubURL(DEFAULT_JENKINS_GITHUB_URL);
-		setWorkspaceDir(DEFAULT_WORKSPACE_DIR);
+		setJenkinsGitHubURL(URL_JENKINS_GITHUB_DEFAULT);
+		setWorkspaceDir(DIR_WORKSPACE_DEFAULT);
 
-		validateKeys(_REQUIRED_KEYS);
+		validateKeys(_KEYS_REQUIRED);
 	}
 
 	protected File getFile(String key) {
 		return new File(getString(key));
+	}
+
+	protected String getFormattedDate(Long timestamp) {
+		return JenkinsResultsParserUtil.toDateString(
+			new Date(timestamp), "MMM dd, yyyy h:mm:ss a z", "US/Pacific");
+	}
+
+	protected String getGitHubBranchName(String gitHubBranchURL) {
+		Matcher matcher = _gitHubBranchURLPattern.matcher(gitHubBranchURL);
+
+		if (!matcher.find()) {
+			throw new RuntimeException(
+				"Invalid GitHub Branch URL " + gitHubBranchURL);
+		}
+
+		return matcher.group("branchName");
+	}
+
+	protected String getGitHubRepositoryName(String gitHubBranchURL) {
+		Matcher matcher = _gitHubBranchURLPattern.matcher(gitHubBranchURL);
+
+		if (!matcher.find()) {
+			throw new RuntimeException(
+				"Invalid GitHub Branch URL " + gitHubBranchURL);
+		}
+
+		return matcher.group("repositoryName");
+	}
+
+	protected String getGitHubUsername(String gitHubBranchURL) {
+		Matcher matcher = _gitHubBranchURLPattern.matcher(gitHubBranchURL);
+
+		if (!matcher.find()) {
+			throw new RuntimeException(
+				"Invalid GitHub Branch URL " + gitHubBranchURL);
+		}
+
+		return matcher.group("username");
 	}
 
 	protected JSONArray getJSONArray(String key) {
@@ -217,6 +435,10 @@ public abstract class BaseBuildData implements BuildData {
 		return list;
 	}
 
+	protected Long getLong(String key) {
+		return _jsonObject.getLong(key);
+	}
+
 	protected String getString(String key) {
 		return _jsonObject.getString(key);
 	}
@@ -229,6 +451,10 @@ public abstract class BaseBuildData implements BuildData {
 
 	protected Integer optInt(String key) {
 		return _jsonObject.optInt(key);
+	}
+
+	protected Long optLong(String key, Long defaultValue) {
+		return _jsonObject.optLong(key, defaultValue);
 	}
 
 	protected String optString(String key) {
@@ -269,8 +495,8 @@ public abstract class BaseBuildData implements BuildData {
 			return JenkinsResultsParserUtil.toJSONObject(
 				JenkinsResultsParserUtil.getLocalURL(buildURL + "/api/json"));
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 
@@ -285,13 +511,23 @@ public abstract class BaseBuildData implements BuildData {
 		JSONObject buildURLJSONObject = _getBuildURLJSONObject();
 
 		if (buildURLJSONObject == null) {
-			throw new RuntimeException("Please set the build url");
+			throw new RuntimeException("Please set the build URL");
 		}
 
 		return buildURLJSONObject.getString("builtOn");
 	}
 
-	private static final String[] _REQUIRED_KEYS = {
+	private long _getStartTime() {
+		JSONObject buildURLJSONObject = _getBuildURLJSONObject();
+
+		if (buildURLJSONObject == null) {
+			throw new RuntimeException("Please set the build URL");
+		}
+
+		return buildURLJSONObject.getLong("timestamp");
+	}
+
+	private static final String[] _KEYS_REQUIRED = {
 		"build_description", "build_number", "build_url", "cohort_name",
 		"hostname", "jenkins_github_url", "job_name", "master_hostname",
 		"run_id", "workspace_dir"
@@ -299,10 +535,15 @@ public abstract class BaseBuildData implements BuildData {
 
 	private static final Pattern _buildURLPattern = Pattern.compile(
 		JenkinsResultsParserUtil.combine(
-			"https?://(?<masterHostname>(?<cohortName>test-\\d+)-\\d+)",
-			"(\\.liferay\\.com)?/job/(?<jobName>[^/]+)/(.*/)?",
-			"(?<buildNumber>\\d+)/?"));
+			"(?<jobURL>https?://(?<masterHostname>",
+			"(?<cohortName>test-\\d+)-\\d+)(\\.liferay\\.com)?/job/",
+			"(?<jobName>[^/]+)/(.*/)?)(?<buildNumber>\\d+)/?"));
+	private static final Pattern _gitHubBranchURLPattern = Pattern.compile(
+		"https://github.com/(?<username>[^/]+)/(?<repositoryName>[^/]+)/tree/" +
+			"(?<branchName>.+)");
 
+	private Map<String, String> _buildParameters;
+	private Host _host;
 	private final JSONObject _jsonObject;
 
 }

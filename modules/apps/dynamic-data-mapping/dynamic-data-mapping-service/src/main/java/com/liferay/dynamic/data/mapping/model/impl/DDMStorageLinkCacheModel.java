@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMStorageLink;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -32,12 +29,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing DDMStorageLink in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see DDMStorageLink
  * @generated
  */
-@ProviderType
-public class DDMStorageLinkCacheModel implements CacheModel<DDMStorageLink>,
-	Externalizable {
+public class DDMStorageLinkCacheModel
+	implements CacheModel<DDMStorageLink>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -48,9 +44,12 @@ public class DDMStorageLinkCacheModel implements CacheModel<DDMStorageLink>,
 			return false;
 		}
 
-		DDMStorageLinkCacheModel ddmStorageLinkCacheModel = (DDMStorageLinkCacheModel)obj;
+		DDMStorageLinkCacheModel ddmStorageLinkCacheModel =
+			(DDMStorageLinkCacheModel)obj;
 
-		if (storageLinkId == ddmStorageLinkCacheModel.storageLinkId) {
+		if ((storageLinkId == ddmStorageLinkCacheModel.storageLinkId) &&
+			(mvccVersion == ddmStorageLinkCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -59,14 +58,28 @@ public class DDMStorageLinkCacheModel implements CacheModel<DDMStorageLink>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, storageLinkId);
+		int hashCode = HashUtil.hash(0, storageLinkId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(15);
+		StringBundler sb = new StringBundler(17);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", storageLinkId=");
 		sb.append(storageLinkId);
@@ -89,6 +102,8 @@ public class DDMStorageLinkCacheModel implements CacheModel<DDMStorageLink>,
 	public DDMStorageLink toEntityModel() {
 		DDMStorageLinkImpl ddmStorageLinkImpl = new DDMStorageLinkImpl();
 
+		ddmStorageLinkImpl.setMvccVersion(mvccVersion);
+
 		if (uuid == null) {
 			ddmStorageLinkImpl.setUuid("");
 		}
@@ -110,6 +125,7 @@ public class DDMStorageLinkCacheModel implements CacheModel<DDMStorageLink>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		storageLinkId = objectInput.readLong();
@@ -126,8 +142,9 @@ public class DDMStorageLinkCacheModel implements CacheModel<DDMStorageLink>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -148,6 +165,7 @@ public class DDMStorageLinkCacheModel implements CacheModel<DDMStorageLink>,
 		objectOutput.writeLong(structureVersionId);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long storageLinkId;
 	public long companyId;
@@ -155,4 +173,5 @@ public class DDMStorageLinkCacheModel implements CacheModel<DDMStorageLink>,
 	public long classPK;
 	public long structureId;
 	public long structureVersionId;
+
 }

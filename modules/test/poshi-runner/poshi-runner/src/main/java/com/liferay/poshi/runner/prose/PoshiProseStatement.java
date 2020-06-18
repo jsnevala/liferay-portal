@@ -154,10 +154,8 @@ public class PoshiProseStatement extends BasePoshiProse {
 	protected String formatProseStatement(String proseStatement) {
 		String formattedProseStatement = proseStatement.trim();
 
-		formattedProseStatement = formattedProseStatement.replaceAll(
+		return formattedProseStatement.replaceAll(
 			_LINE_SEPARATOR + "\t\t", _LINE_SEPARATOR);
-
-		return formattedProseStatement;
 	}
 
 	protected String getProseStatementMatchingString() {
@@ -175,8 +173,9 @@ public class PoshiProseStatement extends BasePoshiProse {
 		return proseStatementMatchingString;
 	}
 
-	protected static final String[] KEYWORDS =
-		{"*", "And", "Given", "Then", "When"};
+	protected static final String[] KEYWORDS = {
+		"*", "And", "Given", "Then", "When"
+	};
 
 	private static final String _LINE_SEPARATOR = System.lineSeparator();
 

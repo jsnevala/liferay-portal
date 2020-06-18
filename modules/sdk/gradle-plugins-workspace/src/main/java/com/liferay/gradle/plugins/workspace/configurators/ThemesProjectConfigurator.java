@@ -15,7 +15,6 @@
 package com.liferay.gradle.plugins.workspace.configurators;
 
 import com.liferay.gradle.plugins.LiferayThemePlugin;
-import com.liferay.gradle.plugins.extensions.LiferayExtension;
 import com.liferay.gradle.plugins.theme.builder.BuildThemeTask;
 import com.liferay.gradle.plugins.theme.builder.ThemeBuilderPlugin;
 import com.liferay.gradle.plugins.workspace.ProjectConfigurator;
@@ -39,6 +38,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -85,12 +85,29 @@ public class ThemesProjectConfigurator extends BaseProjectConfigurator {
 		else {
 			GradleUtil.applyPlugin(project, LiferayThemePlugin.class);
 
-			_configureLiferay(project, workspaceExtension);
+			configureLiferay(project, workspaceExtension);
 
-			Task assembleTask = GradleUtil.getTask(
+			final Task assembleTask = GradleUtil.getTask(
 				project, BasePlugin.ASSEMBLE_TASK_NAME);
 
 			_configureRootTaskDistBundle(assembleTask);
+
+			Callable<ConfigurableFileCollection> warSourcePath =
+				new Callable<ConfigurableFileCollection>() {
+
+					@Override
+					public ConfigurableFileCollection call() throws Exception {
+						Project project = assembleTask.getProject();
+
+						ConfigurableFileCollection configurableFileCollection =
+							project.files(_getWarFile(project));
+
+						return configurableFileCollection.builtBy(assembleTask);
+					}
+
+				};
+
+			addTaskDockerDeploy(project, warSourcePath, workspaceExtension);
 		}
 	}
 
@@ -126,7 +143,8 @@ public class ThemesProjectConfigurator extends BaseProjectConfigurator {
 
 					if (dirName.equals("build") ||
 						dirName.equals("build_gradle") ||
-						dirName.equals("node_modules")) {
+						dirName.equals("node_modules") ||
+						dirName.equals("node_modules_cache")) {
 
 						return FileVisitResult.SKIP_SUBTREE;
 					}
@@ -147,15 +165,7 @@ public class ThemesProjectConfigurator extends BaseProjectConfigurator {
 
 	protected static final String NAME = "themes";
 
-	private void _configureLiferay(
-		Project project, WorkspaceExtension workspaceExtension) {
-
-		LiferayExtension liferayExtension = GradleUtil.getExtension(
-			project, LiferayExtension.class);
-
-		liferayExtension.setAppServerParentDir(workspaceExtension.getHomeDir());
-	}
-
+	@SuppressWarnings({"serial", "unused"})
 	private void _configureRootTaskDistBundle(final Task assembleTask) {
 		Project project = assembleTask.getProject();
 
@@ -169,21 +179,23 @@ public class ThemesProjectConfigurator extends BaseProjectConfigurator {
 			"osgi/war",
 			new Closure<Void>(project) {
 
-				@SuppressWarnings("unused")
-				public void doCall(CopySpec copySpec) {
+				public void doCall(final CopySpec copySpec) {
 					Project project = assembleTask.getProject();
 
+					File warFile = _getWarFile(project);
+
 					ConfigurableFileCollection configurableFileCollection =
-						project.files(_getWarFile(project));
+						project.files(warFile);
 
 					configurableFileCollection.builtBy(assembleTask);
 
-					copySpec.from(_getWarFile(project));
+					copySpec.from(warFile);
 				}
 
 			});
 	}
 
+	@SuppressWarnings("unchecked")
 	private void _configureTaskBuildTheme(Project project) {
 		File packageJsonFile = project.file("package.json");
 

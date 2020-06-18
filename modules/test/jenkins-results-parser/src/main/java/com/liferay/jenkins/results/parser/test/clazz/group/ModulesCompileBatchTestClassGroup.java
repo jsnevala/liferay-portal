@@ -36,17 +36,29 @@ import java.util.List;
 public class ModulesCompileBatchTestClassGroup
 	extends ModulesBatchTestClassGroup {
 
+	@Override
+	public int getAxisCount() {
+		if (!isStableTestSuiteBatch() && testRelevantIntegrationUnitOnly) {
+			return 0;
+		}
+
+		return super.getAxisCount();
+	}
+
 	public static class ModulesCompileBatchTestClass
 		extends ModulesBatchTestClass {
 
 		protected static ModulesCompileBatchTestClass getInstance(
 			File moduleBaseDir, File modulesDir) {
 
-			return new ModulesCompileBatchTestClass(moduleBaseDir, modulesDir);
+			return new ModulesCompileBatchTestClass(
+				new TestClassFile(
+					JenkinsResultsParserUtil.getCanonicalPath(moduleBaseDir)),
+				modulesDir);
 		}
 
 		protected ModulesCompileBatchTestClass(
-			File moduleBaseDir, File modulesDir) {
+			TestClassFile moduleBaseDir, File modulesDir) {
 
 			super(moduleBaseDir);
 
@@ -96,12 +108,12 @@ public class ModulesCompileBatchTestClassGroup
 
 							buildFile = new File(currentDirectory, "build.xml");
 
-							if (directoryName.endsWith("-hook")) {
-								if (buildFile.exists()) {
-									modulesProjectDirs.add(currentDirectory);
+							if (directoryName.endsWith("-hook") &&
+								buildFile.exists()) {
 
-									return FileVisitResult.SKIP_SUBTREE;
-								}
+								modulesProjectDirs.add(currentDirectory);
+
+								return FileVisitResult.SKIP_SUBTREE;
 							}
 
 							if (directoryName.endsWith("-portlet")) {
@@ -120,22 +132,23 @@ public class ModulesCompileBatchTestClassGroup
 
 					});
 			}
-			catch (IOException ioe) {
+			catch (IOException ioException) {
 				throw new RuntimeException(
 					"Unable to get module marker files from " +
 						moduleBaseDir.getPath(),
-					ioe);
+					ioException);
 			}
 
-			initTestMethods(modulesProjectDirs, modulesDir, "assemble");
+			initTestClassMethods(modulesProjectDirs, modulesDir, "assemble");
 		}
 
 	}
 
 	protected ModulesCompileBatchTestClassGroup(
-		String batchName, PortalTestClassJob portalTestClassJob) {
+		String batchName, BuildProfile buildProfile,
+		PortalTestClassJob portalTestClassJob) {
 
-		super(batchName, portalTestClassJob);
+		super(batchName, buildProfile, portalTestClassJob);
 	}
 
 	@Override
@@ -143,7 +156,9 @@ public class ModulesCompileBatchTestClassGroup
 		PortalGitWorkingDirectory portalGitWorkingDirectory =
 			getPortalGitWorkingDirectory();
 
-		if (testRelevantChanges) {
+		if (testRelevantChanges &&
+			!(includeStableTestSuite && isStableTestSuiteBatch())) {
+
 			List<File> modifiedModuleDirsList =
 				portalGitWorkingDirectory.getModifiedModuleDirsList(
 					excludesPathMatchers, includesPathMatchers);
@@ -170,7 +185,9 @@ public class ModulesCompileBatchTestClassGroup
 		for (File moduleDir : moduleDirsList) {
 			testClasses.add(
 				ModulesCompileBatchTestClass.getInstance(
-					moduleDir, portalModulesBaseDir));
+					new TestClass.TestClassFile(
+						JenkinsResultsParserUtil.getCanonicalPath(moduleDir)),
+					portalModulesBaseDir));
 		}
 	}
 

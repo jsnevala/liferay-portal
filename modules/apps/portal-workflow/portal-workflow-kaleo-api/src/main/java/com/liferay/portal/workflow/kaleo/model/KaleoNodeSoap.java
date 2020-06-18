@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,11 +26,12 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class KaleoNodeSoap implements Serializable {
+
 	public static KaleoNodeSoap toSoapModel(KaleoNode model) {
 		KaleoNodeSoap soapModel = new KaleoNodeSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setKaleoNodeId(model.getKaleoNodeId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -40,7 +39,9 @@ public class KaleoNodeSoap implements Serializable {
 		soapModel.setUserName(model.getUserName());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
-		soapModel.setKaleoDefinitionVersionId(model.getKaleoDefinitionVersionId());
+		soapModel.setKaleoDefinitionId(model.getKaleoDefinitionId());
+		soapModel.setKaleoDefinitionVersionId(
+			model.getKaleoDefinitionVersionId());
 		soapModel.setName(model.getName());
 		soapModel.setMetadata(model.getMetadata());
 		soapModel.setDescription(model.getDescription());
@@ -79,7 +80,8 @@ public class KaleoNodeSoap implements Serializable {
 	}
 
 	public static KaleoNodeSoap[] toSoapModels(List<KaleoNode> models) {
-		List<KaleoNodeSoap> soapModels = new ArrayList<KaleoNodeSoap>(models.size());
+		List<KaleoNodeSoap> soapModels = new ArrayList<KaleoNodeSoap>(
+			models.size());
 
 		for (KaleoNode model : models) {
 			soapModels.add(toSoapModel(model));
@@ -97,6 +99,14 @@ public class KaleoNodeSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setKaleoNodeId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getKaleoNodeId() {
@@ -153,6 +163,14 @@ public class KaleoNodeSoap implements Serializable {
 
 	public void setModifiedDate(Date modifiedDate) {
 		_modifiedDate = modifiedDate;
+	}
+
+	public long getKaleoDefinitionId() {
+		return _kaleoDefinitionId;
+	}
+
+	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		_kaleoDefinitionId = kaleoDefinitionId;
 	}
 
 	public long getKaleoDefinitionVersionId() {
@@ -219,6 +237,7 @@ public class KaleoNodeSoap implements Serializable {
 		_terminal = terminal;
 	}
 
+	private long _mvccVersion;
 	private long _kaleoNodeId;
 	private long _groupId;
 	private long _companyId;
@@ -226,6 +245,7 @@ public class KaleoNodeSoap implements Serializable {
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
+	private long _kaleoDefinitionId;
 	private long _kaleoDefinitionVersionId;
 	private String _name;
 	private String _metadata;
@@ -233,4 +253,5 @@ public class KaleoNodeSoap implements Serializable {
 	private String _type;
 	private boolean _initial;
 	private boolean _terminal;
+
 }

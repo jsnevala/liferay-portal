@@ -14,14 +14,11 @@
 
 package com.liferay.trash.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class RestoreEntryException extends PortalException {
 
 	public static final int DUPLICATE = 1;

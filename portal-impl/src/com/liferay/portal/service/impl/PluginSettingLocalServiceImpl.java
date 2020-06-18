@@ -44,12 +44,12 @@ public class PluginSettingLocalServiceImpl
 
 	@Override
 	public PluginSetting getDefaultPluginSetting() {
-		PluginSettingImpl pluginSetting = new PluginSettingImpl();
+		PluginSettingImpl pluginSettingImpl = new PluginSettingImpl();
 
-		pluginSetting.setRoles(StringPool.BLANK);
-		pluginSetting.setActive(true);
+		pluginSettingImpl.setRoles(StringPool.BLANK);
+		pluginSettingImpl.setActive(true);
 
-		return pluginSetting;
+		return pluginSettingImpl;
 	}
 
 	@Override
@@ -101,9 +101,10 @@ public class PluginSettingLocalServiceImpl
 
 			return true;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Could not check permissions for " + pluginId, e);
+				_log.warn(
+					"Could not check permissions for " + pluginId, exception);
 			}
 
 			return false;
@@ -133,9 +134,7 @@ public class PluginSettingLocalServiceImpl
 		pluginSetting.setRoles(roles);
 		pluginSetting.setActive(active);
 
-		pluginSettingPersistence.update(pluginSetting);
-
-		return pluginSetting;
+		return pluginSettingPersistence.update(pluginSetting);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -17,7 +17,7 @@
 <%@ include file="/admin/init.jsp" %>
 
 <%
-KBTemplatesManagementToolbarDisplayContext kbTemplatesManagementToolbarDisplayContext = new KBTemplatesManagementToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request, templatePath);
+KBTemplatesManagementToolbarDisplayContext kbTemplatesManagementToolbarDisplayContext = new KBTemplatesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, templatePath);
 %>
 
 <liferay-util:include page="/admin/common/top_tabs.jsp" servletContext="<%= application %>" />
@@ -59,9 +59,9 @@ KBTemplatesManagementToolbarDisplayContext kbTemplatesManagementToolbarDisplayCo
 				>
 
 					<%
-					Map<String, Object> rowData = new HashMap<String, Object>();
-
-					rowData.put("actions", String.join(StringPool.COMMA, kbTemplatesManagementToolbarDisplayContext.getAvailableActionDropdownItems(kbTemplate)));
+					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(kbTemplatesManagementToolbarDisplayContext.getAvailableActions(kbTemplate))
+					).build();
 
 					row.setData(rowData);
 					%>
@@ -81,9 +81,9 @@ KBTemplatesManagementToolbarDisplayContext kbTemplatesManagementToolbarDisplayCo
 						String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true);
 						%>
 
-						<h5 class="text-default">
+						<span class="text-default">
 							<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(kbTemplate.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
-						</h5>
+						</span>
 
 						<liferay-portlet:renderURL var="editURL">
 							<portlet:param name="mvcPath" value='<%= templatePath + "edit_template.jsp" %>' />
@@ -91,11 +91,11 @@ KBTemplatesManagementToolbarDisplayContext kbTemplatesManagementToolbarDisplayCo
 							<portlet:param name="kbTemplateId" value="<%= String.valueOf(kbTemplate.getKbTemplateId()) %>" />
 						</liferay-portlet:renderURL>
 
-						<h4>
+						<h2 class="h5">
 							<aui:a href="<%= editURL.toString() %>">
 								<%= HtmlUtil.escape(kbTemplate.getTitle()) %>
 							</aui:a>
-						</h4>
+						</h2>
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-jsp
@@ -113,36 +113,45 @@ KBTemplatesManagementToolbarDisplayContext kbTemplatesManagementToolbarDisplayCo
 </div>
 
 <aui:script>
-	var deleteKBTemplates = function() {
-		if (confirm('<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-templates" />')) {
+	var deleteKBTemplates = function () {
+		if (
+			confirm(
+				'<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-templates" />'
+			)
+		) {
 			var form = document.querySelector('#<portlet:namespace />fm');
 
 			if (form) {
 				form.setAttribute('method', 'post');
 
-				form.querySelector('#<portlet:namespace />kbTemplateIds').value = Liferay.Util.listCheckedExcept(form, '<portlet:namespace />allRowIds');
+				form.querySelector(
+					'#<portlet:namespace />kbTemplateIds'
+				).value = Liferay.Util.listCheckedExcept(
+					form,
+					'<portlet:namespace />allRowIds'
+				);
 
-				submitForm(form, '<liferay-portlet:actionURL name="deleteKBTemplates"><portlet:param name="mvcPath" value="/admin/view_templates.jsp" /><portlet:param name="redirect" value="<%= currentURL %>" /></liferay-portlet:actionURL>');
+				submitForm(
+					form,
+					'<liferay-portlet:actionURL name="deleteKBTemplates"><portlet:param name="mvcPath" value="/admin/view_templates.jsp" /><portlet:param name="redirect" value="<%= currentURL %>" /></liferay-portlet:actionURL>'
+				);
 			}
 		}
-	}
-
-	var ACTIONS = {
-		'deleteKBTemplates': deleteKBTemplates
 	};
 
-	Liferay.componentReady('kbTemplatesManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				'actionItemClicked',
-				function(event) {
-					var itemData = event.data.item.data;
+	var ACTIONS = {
+		deleteKBTemplates: deleteKBTemplates,
+	};
 
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action]();
-					}
-				}
-			);
-		}
-	);
+	Liferay.componentReady('kbTemplatesManagementToolbar').then(function (
+		managementToolbar
+	) {
+		managementToolbar.on('actionItemClicked', function (event) {
+			var itemData = event.data.item.data;
+
+			if (itemData && itemData.action && ACTIONS[itemData.action]) {
+				ACTIONS[itemData.action]();
+			}
+		});
+	});
 </aui:script>

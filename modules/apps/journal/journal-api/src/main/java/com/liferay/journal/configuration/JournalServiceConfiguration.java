@@ -14,10 +14,11 @@
 
 package com.liferay.journal.configuration;
 
-import aQute.bnd.annotation.ProviderType;
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Pavel Savinov
@@ -113,19 +114,13 @@ public interface JournalServiceConfiguration {
 	public boolean indexAllArticleVersionsEnabled();
 
 	@Meta.AD(
-		deflt = "true", description = "journal-folder-icon-check-count",
-		name = "folder-icon-check-count-enabled", required = false
-	)
-	public boolean folderIconCheckCountEnabled();
-
-	@Meta.AD(
 		deflt = "true", description = "publish-to-live-by-default-help",
 		name = "publish-to-live-by-default", required = false
 	)
 	public boolean publishToLiveByDefaultEnabled();
 
 	@Meta.AD(
-		deflt = "true", description = "publish-version-history-by-default",
+		deflt = "true", description = "version-history-by-default-enabled-help",
 		name = "version-history-by-default-enabled", required = false
 	)
 	public boolean versionHistoryByDefaultEnabled();

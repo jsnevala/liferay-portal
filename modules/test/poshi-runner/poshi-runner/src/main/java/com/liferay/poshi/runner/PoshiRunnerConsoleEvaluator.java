@@ -14,7 +14,7 @@
 
 package com.liferay.poshi.runner;
 
-import com.liferay.poshi.runner.selenium.LiferaySeleniumHelper;
+import com.liferay.poshi.runner.selenium.LiferaySeleniumUtil;
 import com.liferay.poshi.runner.util.FileUtil;
 import com.liferay.poshi.runner.util.PropsValues;
 
@@ -51,12 +51,17 @@ public class PoshiRunnerConsoleEvaluator {
 		String line = null;
 
 		while ((line = bufferedReader.readLine()) != null) {
-			if (LiferaySeleniumHelper.isIgnorableErrorLine(line)) {
+			if (LiferaySeleniumUtil.isIgnorableErrorLine(line)) {
 				continue;
 			}
 
 			if (line.contains("ERROR") || line.contains("SEVERE")) {
 				sb.append("\n<value><![CDATA[SHUT_DOWN_ERROR: ");
+				sb.append(line.trim());
+				sb.append("]]></value>");
+			}
+			else if (line.contains("WARN")) {
+				sb.append("\n<value><![CDATA[SHUT_DOWN_WARNING: ");
 				sb.append(line.trim());
 				sb.append("]]></value>");
 			}

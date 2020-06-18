@@ -14,33 +14,26 @@
 
 package com.liferay.site.memberships.web.internal.display.context;
 
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.usersadmin.search.OrganizationSearch;
 import com.liferay.portlet.usersadmin.search.OrganizationSearchTerms;
-import com.liferay.site.memberships.web.internal.constants.SiteMembershipsPortletKeys;
+import com.liferay.site.memberships.web.internal.util.GroupUtil;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -53,36 +46,12 @@ import javax.servlet.http.HttpServletRequest;
 public class OrganizationsDisplayContext {
 
 	public OrganizationsDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
-	}
-
-	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData(
-							"action", "deleteSelectedOrganizations");
-						dropdownItem.setIcon("times-circle");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
-			}
-		};
-	}
-
-	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
 	}
 
 	public String getDisplayStyle() {
@@ -90,36 +59,10 @@ public class OrganizationsDisplayContext {
 			return _displayStyle;
 		}
 
-		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(_request);
-
-		_displayStyle = portalPreferences.getValue(
-			SiteMembershipsPortletKeys.SITE_MEMBERSHIPS_ADMIN, "display-style",
-			"icon");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
-	}
-
-	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
-			}
-		};
 	}
 
 	public long getGroupId() {
@@ -127,11 +70,13 @@ public class OrganizationsDisplayContext {
 			return _groupId;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		_groupId = ParamUtil.getLong(
-			_request, "groupId", themeDisplay.getSiteGroupIdOrLiveGroupId());
+			_httpServletRequest, "groupId",
+			themeDisplay.getSiteGroupIdOrLiveGroupId());
 
 		return _groupId;
 	}
@@ -172,14 +117,23 @@ public class OrganizationsDisplayContext {
 			return _organizationSearch;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		OrganizationSearch organizationSearch = new OrganizationSearch(
 			_renderRequest, getPortletURL());
 
 		organizationSearch.setEmptyResultsMessage(
-			"no-organization-was-found-that-is-a-member-of-this-site");
+			LanguageUtil.format(
+				ResourceBundleUtil.getBundle(
+					themeDisplay.getLocale(), getClass()),
+				"no-organization-was-found-that-is-a-member-of-this-x",
+				StringUtil.toLowerCase(
+					GroupUtil.getGroupTypeLabel(
+						_groupId, themeDisplay.getLocale())),
+				false));
+
 		organizationSearch.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
 
@@ -187,11 +141,11 @@ public class OrganizationsDisplayContext {
 			(OrganizationSearchTerms)organizationSearch.getSearchTerms();
 
 		LinkedHashMap<String, Object> organizationParams =
-			new LinkedHashMap<>();
-
-		organizationParams.put("groupOrganization", Long.valueOf(getGroupId()));
-		organizationParams.put(
-			"organizationsGroups", Long.valueOf(getGroupId()));
+			LinkedHashMapBuilder.<String, Object>put(
+				"groupOrganization", Long.valueOf(getGroupId())
+			).put(
+				"organizationsGroups", Long.valueOf(getGroupId())
+			).build();
 
 		int organizationsCount = OrganizationLocalServiceUtil.searchCount(
 			themeDisplay.getCompanyId(),
@@ -219,8 +173,9 @@ public class OrganizationsDisplayContext {
 	}
 
 	public PortletURL getPortletURL() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
@@ -256,113 +211,14 @@ public class OrganizationsDisplayContext {
 		return portletURL;
 	}
 
-	public String getSearchActionURL() {
-		PortletURL searchActionURL = getPortletURL();
-
-		return searchActionURL.toString();
-	}
-
-	public String getSortingURL() {
-		PortletURL sortingURL = getPortletURL();
-
-		sortingURL.setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL.toString();
-	}
-
-	public int getTotalItems() {
-		SearchContainer organizationSearchContainer =
-			getOrganizationSearchContainer();
-
-		return organizationSearchContainer.getTotal();
-	}
-
-	public List<ViewTypeItem> getViewTypeItems() {
-		PortletURL portletURL = _renderResponse.createActionURL();
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "changeDisplayStyle");
-		portletURL.setParameter("redirect", PortalUtil.getCurrentURL(_request));
-
-		return new ViewTypeItemList(portletURL, getDisplayStyle()) {
-			{
-				addCardViewTypeItem();
-				addListViewTypeItem();
-				addTableViewTypeItem();
-			}
-		};
-	}
-
-	public boolean isDisabledManagementBar() {
-		if (getTotalItems() <= 0) {
-			return true;
-		}
-
-		return false;
-	}
-
-	public boolean isShowSearch() {
-		if (getTotalItems() > 0) {
-			return true;
-		}
-
-		if (Validator.isNotNull(getKeywords())) {
-			return true;
-		}
-
-		return false;
-	}
-
-	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(getPortletURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
-			}
-		};
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "name"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "type"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "type");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "type"));
-					});
-			}
-		};
-	}
-
 	private String _displayStyle;
 	private Long _groupId;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private OrganizationSearch _organizationSearch;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

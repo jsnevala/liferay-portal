@@ -25,7 +25,7 @@ import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 /**
@@ -87,7 +88,8 @@ public class DDMFormLayoutFactoryHelper {
 
 		com.liferay.dynamic.data.mapping.model.DDMFormLayoutColumn
 			ddmFormLayoutColumn =
-				new com.liferay.dynamic.data.mapping.model.DDMFormLayoutColumn();
+				new com.liferay.dynamic.data.mapping.model.
+					DDMFormLayoutColumn();
 
 		ddmFormLayoutColumn.setDDMFormFieldNames(
 			ListUtil.fromArray(ddmFormLayoutColumnAnnotation.value()));
@@ -182,23 +184,21 @@ public class DDMFormLayoutFactoryHelper {
 	}
 
 	protected String getLocalizedValue(Locale locale, String value) {
-		ResourceBundle resourceBundle = getResourceBundle(locale);
-
-		return LanguageUtil.get(resourceBundle, value);
+		return LanguageUtil.get(getResourceBundle(locale), value);
 	}
 
 	protected ResourceBundle getResourceBundle(Locale locale) {
 		List<ResourceBundle> resourceBundles = new ArrayList<>();
 
-		ResourceBundle portalResourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", locale, PortalClassLoaderUtil.getClassLoader());
+		ResourceBundle portalResourceBundle = PortalUtil.getResourceBundle(
+			locale);
 
 		resourceBundles.add(portalResourceBundle);
 
 		collectResourceBundles(_clazz, resourceBundles, locale);
 
 		ResourceBundle[] resourceBundlesArray = resourceBundles.toArray(
-			new ResourceBundle[resourceBundles.size()]);
+			new ResourceBundle[0]);
 
 		return new AggregateResourceBundle(resourceBundlesArray);
 	}
@@ -212,13 +212,15 @@ public class DDMFormLayoutFactoryHelper {
 	}
 
 	protected void setDefaultLocale() {
-		Locale defaultLocale = LocaleThreadLocal.getThemeDisplayLocale();
-
-		if (defaultLocale == null) {
-			defaultLocale = LocaleUtil.getDefault();
-		}
-
-		_defaultLocale = defaultLocale;
+		_defaultLocale = Optional.ofNullable(
+			LocaleThreadLocal.getThemeDisplayLocale()
+		).orElse(
+			Optional.ofNullable(
+				LocaleThreadLocal.getSiteDefaultLocale()
+			).orElse(
+				LocaleUtil.getDefault()
+			)
+		);
 	}
 
 	private final Class<?> _clazz;

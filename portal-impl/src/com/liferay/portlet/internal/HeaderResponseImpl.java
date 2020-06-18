@@ -80,7 +80,9 @@ public class HeaderResponseImpl
 			throw new IllegalArgumentException();
 		}
 
-		if ("PortletHub".equals(name) && "javax.portlet".equals(scope)) {
+		if (Objects.equals(name, "PortletHub") &&
+			Objects.equals(scope, "javax.portlet")) {
+
 			return;
 		}
 
@@ -194,10 +196,11 @@ public class HeaderResponseImpl
 	}
 
 	public void init(
-		PortletRequestImpl portletRequestImpl, HttpServletResponse response,
+		PortletRequestImpl portletRequestImpl,
+		HttpServletResponse httpServletResponse,
 		List<PortletDependency> portletDependencies) {
 
-		super.init(portletRequestImpl, response);
+		super.init(portletRequestImpl, httpServletResponse);
 
 		if (portletDependencies != null) {
 			for (PortletDependency portletDependency : portletDependencies) {
@@ -272,8 +275,9 @@ public class HeaderResponseImpl
 
 		// See LEP-2188
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)
-			portletRequestImpl.getAttribute(WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)portletRequestImpl.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
@@ -326,7 +330,13 @@ public class HeaderResponseImpl
 					sb = new StringBundler();
 				}
 
-				sb.append(xml.substring(sbIndex, fromIndex));
+				if (xml.charAt(openingEnd - 1) == CharPool.FORWARD_SLASH) {
+					sb.append(xml.substring(sbIndex, fromIndex - 2));
+					sb.append(StringPool.GREATER_THAN);
+				}
+				else {
+					sb.append(xml.substring(sbIndex, fromIndex));
+				}
 
 				sbIndex = fromIndex;
 
@@ -388,9 +398,10 @@ public class HeaderResponseImpl
 			if (existingKeyParts.length == 3) {
 				String existingName = existingKeyParts[0];
 				String existingScope = existingKeyParts[1];
-				String existingVersion = existingKeyParts[2];
 
 				if (name.equals(existingName) && scope.equals(existingScope)) {
+					String existingVersion = existingKeyParts[2];
+
 					SemVer existingSemVer = new SemVer(existingVersion);
 
 					if (existingSemVer.compareTo(semVer) < 0) {
@@ -541,8 +552,8 @@ public class HeaderResponseImpl
 				}
 			}
 		}
-		catch (XMLStreamException xmlse) {
-			_log.error(xmlse, xmlse);
+		catch (XMLStreamException xmlStreamException) {
+			_log.error(xmlStreamException, xmlStreamException);
 
 			parsedElements.add(new ParsedElement(null, null, null, false));
 		}
@@ -551,8 +562,8 @@ public class HeaderResponseImpl
 				try {
 					xmlStreamReader.close();
 				}
-				catch (XMLStreamException xmlse) {
-					_log.error(xmlse, xmlse);
+				catch (XMLStreamException xmlStreamException) {
+					_log.error(xmlStreamException, xmlStreamException);
 				}
 			}
 		}
@@ -696,8 +707,9 @@ public class HeaderResponseImpl
 			try {
 				return toString(getCharacterEncoding());
 			}
-			catch (UnsupportedEncodingException uee) {
-				_log.error(uee, uee);
+			catch (UnsupportedEncodingException unsupportedEncodingException) {
+				_log.error(
+					unsupportedEncodingException, unsupportedEncodingException);
 			}
 
 			return StringPool.BLANK;

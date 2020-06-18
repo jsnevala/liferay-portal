@@ -43,7 +43,6 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 	<liferay-ui:tabs
 		names='<%= (selRecordSet == null) ? "lists" : "lists,optional-configuration" %>'
 		refresh="<%= false %>"
-		type="tabs nav-tabs-default"
 	>
 		<aui:form action="<%= configurationRenderURL %>" method="post" name="fm1">
 			<aui:input name="redirect" type="hidden" value="<%= configurationRenderURL.toString() %>" />
@@ -244,14 +243,11 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 	var submitButton = A.one('#<portlet:namespace />fm_submit');
 
 	if (submitButton) {
-		submitButton.on(
-			'click',
-			function(event) {
-				if (form) {
-					form.submit();
-				}
+		submitButton.on('click', function (event) {
+			if (form) {
+				form.submit();
 			}
-		);
+		});
 	}
 </aui:script>
 
@@ -259,7 +255,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectRecordSet',
-		function(recordSetId, recordSetName) {
+		function (recordSetId, recordSetName) {
 			var A = AUI();
 
 			document.<portlet:namespace />fm.<portlet:namespace />recordSetId.value = recordSetId;
@@ -269,7 +265,10 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 
 			var displayRecordSetId = A.one('.displaying-record-set-id');
 
-			displayRecordSetId.set('innerHTML', recordSetName + ' (<liferay-ui:message key="modified" />)');
+			displayRecordSetId.set(
+				'innerHTML',
+				recordSetName + ' (<liferay-ui:message key="modified" />)'
+			);
 			displayRecordSetId.addClass('modified');
 		},
 		['aui-base']

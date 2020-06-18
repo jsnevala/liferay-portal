@@ -21,24 +21,7 @@ import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoActionTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoConditionTable;
 import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoDefinitionTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoInstanceTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoInstanceTokenTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoLogTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoNodeTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoNotificationRecipientTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoNotificationTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoTaskAssignmentInstanceTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoTaskAssignmentTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoTaskFormInstanceTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoTaskFormTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoTaskInstanceTokenTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoTaskTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoTimerInstanceTokenTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoTimerTable;
-import com.liferay.portal.workflow.kaleo.internal.upgrade.v1_4_1.util.KaleoTransitionTable;
 
 import java.io.IOException;
 
@@ -71,7 +54,6 @@ public class UpgradeKaleoDefinitionVersion extends UpgradeProcess {
 		upgradeKaleoDefinitionVersion();
 
 		removeDuplicateKaleoDefinitions();
-		removeKaleoDefinitionId();
 		removeStartKaleoNodeId();
 	}
 
@@ -84,132 +66,28 @@ public class UpgradeKaleoDefinitionVersion extends UpgradeProcess {
 
 		try (LoggingTimer loggingTimer = new LoggingTimer();
 			PreparedStatement ps1 = connection.prepareStatement(
-				"select name, MAX(version) as version from KaleoDefinition " +
-					"group by name");
+				"select companyId, name, MAX(version) as version from " +
+					"KaleoDefinition group by companyId, name");
 			PreparedStatement ps2 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
-					"delete from KaleoDefinition where name = ? and version " +
-						"< ?");
+					"delete from KaleoDefinition where companyId = ? and " +
+						"name = ? and version < ?");
 			ResultSet rs = ps1.executeQuery()) {
 
 			while (rs.next()) {
+				long companyId = rs.getLong("companyId");
 				String name = rs.getString("name");
 				int version = rs.getInt("version");
 
-				ps2.setString(1, name);
-				ps2.setInt(2, version);
+				ps2.setLong(1, companyId);
+				ps2.setString(2, name);
+				ps2.setInt(3, version);
 
 				ps2.addBatch();
 			}
 
 			ps2.executeBatch();
-		}
-	}
-
-	protected void removeKaleoDefinitionId() throws Exception {
-		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			if (hasColumn("KaleoAction", "kaleoDefinitionId")) {
-				alter(
-					KaleoActionTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoCondition", "kaleoDefinitionId")) {
-				alter(
-					KaleoConditionTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoInstance", "kaleoDefinitionId")) {
-				alter(
-					KaleoInstanceTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoInstanceToken", "kaleoDefinitionId")) {
-				alter(
-					KaleoInstanceTokenTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoLog", "kaleoDefinitionId")) {
-				alter(
-					KaleoLogTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoNode", "kaleoDefinitionId")) {
-				alter(
-					KaleoNodeTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoNotification", "kaleoDefinitionId")) {
-				alter(
-					KaleoNotificationTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoNotificationRecipient", "kaleoDefinitionId")) {
-				alter(
-					KaleoNotificationRecipientTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoTask", "kaleoDefinitionId")) {
-				alter(
-					KaleoTaskTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoTaskAssignment", "kaleoDefinitionId")) {
-				alter(
-					KaleoTaskAssignmentTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoTaskAssignmentInstance", "kaleoDefinitionId")) {
-				alter(
-					KaleoTaskAssignmentInstanceTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoTaskForm", "kaleoDefinitionId")) {
-				alter(
-					KaleoTaskFormTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoTaskFormInstance", "kaleoDefinitionId")) {
-				alter(
-					KaleoTaskFormInstanceTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoTaskInstanceToken", "kaleoDefinitionId")) {
-				alter(
-					KaleoTaskInstanceTokenTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoTimer", "kaleoDefinitionId")) {
-				alter(
-					KaleoTimerTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoTimerInstanceToken", "kaleoDefinitionId")) {
-				alter(
-					KaleoTimerInstanceTokenTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
-
-			if (hasColumn("KaleoTransition", "kaleoDefinitionId")) {
-				alter(
-					KaleoTransitionTable.class,
-					new AlterTableDropColumn("kaleoDefinitionId"));
-			}
 		}
 	}
 

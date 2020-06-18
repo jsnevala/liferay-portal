@@ -16,12 +16,12 @@ package com.liferay.javadoc.formatter;
 
 import com.liferay.javadoc.formatter.util.JavadocFormatterUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.xml.Dom4jUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
@@ -94,8 +94,8 @@ public class JavadocFormatter {
 		try {
 			new JavadocFormatter(arguments);
 		}
-		catch (Exception e) {
-			ArgumentsUtil.processMainException(arguments, e);
+		catch (Exception exception) {
+			ArgumentsUtil.processMainException(arguments, exception);
 		}
 	}
 
@@ -163,8 +163,8 @@ public class JavadocFormatter {
 
 		String[] excludes = {
 			"**/.git/**", "**/.gradle/**", "**/bin/**", "**/build/**",
-			"**/classes/**", "**/node_modules/**", "**/portal-client/**",
-			"**/tmp/**"
+			"**/classes/**", "**/node_modules/**", "**/node_modules_cache/**",
+			"**/portal-client/**", "**/tmp/**"
 		};
 
 		for (String limit : limits) {
@@ -187,8 +187,7 @@ public class JavadocFormatter {
 			}
 
 			List<String> fileNames = JavadocFormatterUtil.scanForFiles(
-				_inputDirName, excludes,
-				includes.toArray(new String[includes.size()]));
+				_inputDirName, excludes, includes.toArray(new String[0]));
 
 			if (fileNames.isEmpty() && Validator.isNotNull(limit) &&
 				!limit.startsWith("$")) {
@@ -211,9 +210,9 @@ public class JavadocFormatter {
 				try {
 					_format(fileName);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					throw new RuntimeException(
-						"Unable to format file " + fileName, e);
+						"Unable to format file " + fileName, exception);
 				}
 			}
 		}
@@ -366,6 +365,10 @@ public class JavadocFormatter {
 
 		int lineNumber = _getJavaModelLineNumber(javaClass, content);
 
+		if (lineNumber == -1) {
+			return commentsMap;
+		}
+
 		String indent = _getIndent(lines, lineNumber);
 
 		String javaClassComment = _getJavaClassComment(
@@ -393,7 +396,7 @@ public class JavadocFormatter {
 		for (JavaConstructor javaConstructor : javaConstructors) {
 			lineNumber = _getJavaModelLineNumber(javaConstructor, content);
 
-			if (commentsMap.containsKey(lineNumber)) {
+			if ((lineNumber == -1) || commentsMap.containsKey(lineNumber)) {
 				continue;
 			}
 
@@ -423,7 +426,7 @@ public class JavadocFormatter {
 		for (JavaMethod javaMethod : javaMethods) {
 			lineNumber = _getJavaModelLineNumber(javaMethod, content);
 
-			if (commentsMap.containsKey(lineNumber)) {
+			if ((lineNumber == -1) || commentsMap.containsKey(lineNumber)) {
 				continue;
 			}
 
@@ -453,7 +456,7 @@ public class JavadocFormatter {
 		for (JavaField javaField : javaFields) {
 			lineNumber = _getJavaModelLineNumber(javaField, content);
 
-			if (commentsMap.containsKey(lineNumber)) {
+			if ((lineNumber == -1) || commentsMap.containsKey(lineNumber)) {
 				continue;
 			}
 
@@ -779,6 +782,10 @@ public class JavadocFormatter {
 	private void _addFieldElement(Element parentElement, JavaField javaField)
 		throws Exception {
 
+		if (javaField == null) {
+			return;
+		}
+
 		Element fieldElement = parentElement.addElement("field");
 
 		Dom4jDocUtil.add(fieldElement, "name", javaField.getName());
@@ -956,11 +963,10 @@ public class JavadocFormatter {
 			if (!curValue.startsWith(name)) {
 				continue;
 			}
-			else {
-				value = curValue;
 
-				break;
-			}
+			value = curValue;
+
+			break;
 		}
 
 		Element throwsElement = executableElement.addElement("throws");
@@ -1073,6 +1079,7 @@ public class JavadocFormatter {
 	private void _format(String fileName) throws Exception {
 		if (fileName.endsWith("JavadocFormatter.java") ||
 			fileName.endsWith("Mojo.java") ||
+			fileName.endsWith("package-info.java") ||
 			fileName.endsWith("SourceFormatter.java") ||
 			fileName.endsWith("WebProxyPortlet.java")) {
 
@@ -1101,7 +1108,7 @@ public class JavadocFormatter {
 			javaClass = _getJavaClass(
 				fileName, new UnsyncStringReader(originalContent));
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (!fileName.contains("__")) {
 				System.out.println(
 					"Qdox parsing error while formatting file " + fileName);
@@ -1170,7 +1177,7 @@ public class JavadocFormatter {
 
 		// Capitalize ID
 
-		text = text.replaceAll("[?@param id](?i)\\bid(s)?\\b", " ID$1");
+		text = text.replaceAll("(?i)(?<!@link) id(s)?\\b", " ID$1");
 
 		// Wrap special constants in code tags
 
@@ -1348,7 +1355,7 @@ public class JavadocFormatter {
 				JavadocFormatterUtil.getDeprecationsDocument(
 					_deprecationSyncDirName);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_deprecationsDocument = DocumentHelper.createDocument();
 		}
 
@@ -1746,6 +1753,10 @@ public class JavadocFormatter {
 	}
 
 	private int _getJavaModelLineNumber(JavaModel javaModel, String content) {
+		if ((javaModel == null) || (javaModel.getLineNumber() == 0)) {
+			return -1;
+		}
+
 		String[] lines = StringUtil.splitLines(content);
 
 		if (javaModel instanceof JavaClass) {
@@ -1778,7 +1789,9 @@ public class JavadocFormatter {
 				for (int i = javaModel.getLineNumber(); i < lines.length; i++) {
 					String line = lines[i - 1];
 
-					if (line.matches(
+					if (!StringUtil.startsWith(
+							StringUtil.trim(line), CharPool.STAR) &&
+						line.matches(
 							".*\\W" + javaField.getName() + "(\\W.*)?")) {
 
 						return _getAdjustedLineNumber(i, javaModel);
@@ -1802,7 +1815,9 @@ public class JavadocFormatter {
 		for (int i = javaModel.getLineNumber(); i > 0; i--) {
 			String line = StringUtil.trim(lines[i - 1]);
 
-			if (line.startsWith(modifier + StringPool.SPACE)) {
+			if (line.equals(modifier) ||
+				line.startsWith(modifier + StringPool.SPACE)) {
+
 				return _getAdjustedLineNumber(i, javaModel);
 			}
 		}
@@ -1874,11 +1889,9 @@ public class JavadocFormatter {
 
 		_updateLanguageProperties(document, javaClass.getName());
 
-		Element rootElement = document.getRootElement();
-
 		Map<Integer, String> commentsMap = _addComments(
-			new TreeMap<Integer, String>(), rootElement, javaClass,
-			javadocLessContent, lines);
+			new TreeMap<Integer, String>(), document.getRootElement(),
+			javaClass, javadocLessContent, lines);
 
 		StringBundler sb = new StringBundler(javadocLessContent.length());
 
@@ -2052,13 +2065,13 @@ public class JavadocFormatter {
 			Element curElement = elements.get(i);
 
 			if (!foundLastElementWithElementName) {
-				if (elementName.equals(curElement.getName())) {
-					if ((i + 1) < elements.size()) {
-						Element nextElement = elements.get(i + 1);
+				if (elementName.equals(curElement.getName()) &&
+					((i + 1) < elements.size())) {
 
-						if (!elementName.equals(nextElement.getName())) {
-							foundLastElementWithElementName = true;
-						}
+					Element nextElement = elements.get(i + 1);
+
+					if (!elementName.equals(nextElement.getName())) {
+						foundLastElementWithElementName = true;
 					}
 				}
 			}
@@ -2245,8 +2258,7 @@ public class JavadocFormatter {
 
 		System.out.println(
 			StringBundler.concat(
-				"Updating ", String.valueOf(_languagePropertiesFile), " key ",
-				key));
+				"Updating ", _languagePropertiesFile, " key ", key));
 	}
 
 	private String _wrap(String text, int width) {

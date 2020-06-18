@@ -15,6 +15,7 @@
 package com.liferay.portal.cluster.multiple.internal;
 
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.cluster.multiple.configuration.ClusterExecutorConfiguration;
 import com.liferay.portal.kernel.cluster.Address;
 import com.liferay.portal.kernel.cluster.ClusterEvent;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.cluster.ClusterNode;
 import com.liferay.portal.kernel.cluster.ClusterRequest;
 import com.liferay.portal.kernel.cluster.FutureClusterResponses;
 import com.liferay.portal.kernel.concurrent.NoticeableFuture;
-import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.test.CaptureHandler;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
@@ -33,9 +33,9 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.MethodKey;
-import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.test.rule.AdviseWith;
 import com.liferay.portal.test.rule.AspectJNewEnvTestRule;
@@ -47,7 +47,6 @@ import java.net.InetAddress;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Exchanger;
@@ -292,8 +291,8 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 
 				Assert.fail();
 			}
-			catch (SystemException se) {
-				Throwable throwable = se.getCause();
+			catch (SystemException systemException) {
+				Throwable throwable = systemException.getCause();
 
 				Assert.assertSame(
 					NullPointerException.class, throwable.getClass());
@@ -344,11 +343,11 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 
 			Assert.fail();
 		}
-		catch (SystemException se) {
+		catch (SystemException systemException) {
 			Assert.assertEquals(
 				"Unable to execute on master " +
 					mockClusterExecutor.getLocalClusterNodeId(),
-				se.getMessage());
+				systemException.getMessage());
 		}
 	}
 
@@ -450,9 +449,10 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 					LogRecord logRecord = logRecords.get(0);
 
 					Assert.assertEquals(
-						"Unable to get cluster node information for " +
-							"coordinator address " + _TEST_ADDRESS +
-								". Trying again.",
+						StringBundler.concat(
+							"Unable to get cluster node information for ",
+							"coordinator address ", _TEST_ADDRESS,
+							". Trying again."),
 						logRecord.getMessage());
 				}
 			}
@@ -579,7 +579,6 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 		Assert.assertFalse(clusterMasterExecutorImpl.isMaster());
 	}
 
-	@AdviseWith(adviceClasses = SPIUtilAdvice.class)
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testMisc() {
@@ -657,7 +656,7 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 				return _clusterNodeIdExchanger.exchange(
 					null, 1000, TimeUnit.MILLISECONDS);
 			}
-			catch (TimeoutException te) {
+			catch (TimeoutException timeoutException) {
 				return "null";
 			}
 		}
@@ -696,21 +695,6 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 
 	}
 
-	@Aspect
-	public static class SPIUtilAdvice {
-
-		@Around(
-			"execution(public static boolean com.liferay.portal.kernel." +
-				"resiliency.spi.SPIUtil.isSPI())"
-		)
-		public boolean isSPI(ProceedingJoinPoint proceedingJoinPoint)
-			throws Throwable {
-
-			return true;
-		}
-
-	}
-
 	private static final MethodHandler _BAD_METHOD_HANDLER = new MethodHandler(
 		new MethodKey());
 
@@ -733,11 +717,24 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 
 		@Override
 		public FutureClusterResponses execute(ClusterRequest clusterRequest) {
+			if (!_enabled) {
+				return null;
+			}
+
 			if (clusterRequest.getPayload() == _BAD_METHOD_HANDLER) {
 				throw new RuntimeException();
 			}
 
 			return super.execute(clusterRequest);
+		}
+
+		@Override
+		public List<ClusterNode> getClusterNodes() {
+			if (!isEnabled()) {
+				return Collections.emptyList();
+			}
+
+			return super.getClusterNodes();
 		}
 
 		public Address getCoordinatorAddress() {
@@ -747,6 +744,15 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 				clusterChannel.getClusterReceiver();
 
 			return clusterReceiver.getCoordinatorAddress();
+		}
+
+		@Override
+		public ClusterNode getLocalClusterNode() {
+			if (!_enabled) {
+				return null;
+			}
+
+			return super.getLocalClusterNode();
 		}
 
 		public String getLocalClusterNodeId() {
@@ -759,6 +765,10 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 		public boolean isClusterNodeAlive(String clusterNodeId) {
 			if (Validator.isNull(clusterNodeId)) {
 				throw new NullPointerException();
+			}
+
+			if (!_enabled) {
+				return false;
 			}
 
 			return super.isClusterNodeAlive(clusterNodeId);
@@ -819,62 +829,25 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 
 				@Override
 				public String[] excludedPropertyKeys() {
-					return new String[] {"access_key", "secret_access_key"};
+					return new String[] {
+						"access_key", "connection_password",
+						"connection_username", "secret_access_key"
+					};
 				}
 
 			};
 
 			setPortalExecutorManager(new MockPortalExecutorManager());
 
-			setProps(
-				new Props() {
-
-					@Override
-					public boolean contains(String key) {
-						return false;
-					}
-
-					@Override
-					public String get(String key) {
-						return null;
-					}
-
-					@Override
-					public String get(String key, Filter filter) {
-						return null;
-					}
-
-					@Override
-					public String[] getArray(String key) {
-						return null;
-					}
-
-					@Override
-					public String[] getArray(String key, Filter filter) {
-						return null;
-					}
-
-					@Override
-					public Properties getProperties() {
-						return null;
-					}
-
-					@Override
-					public Properties getProperties(
-						String prefix, boolean removePrefix) {
-
-						return null;
-					}
-
-				});
-
-			initialize(
-				"test-channel-logic-name-mock", "test-channel-properties-mock",
-				"test-channel-name-mock");
+			setProps(PropsTestUtil.setProps(Collections.emptyMap()));
 
 			_clusterNodes = new ConcurrentHashMap<>();
 
 			if (enabled) {
+				initialize(
+					"test-channel-logic-name-mock",
+					"test-channel-properties-mock", "test-channel-name-mock");
+
 				ClusterChannel clusterChannel = getClusterChannel();
 
 				_clusterNodes.put(

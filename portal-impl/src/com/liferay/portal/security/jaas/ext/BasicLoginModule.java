@@ -83,8 +83,8 @@ public class BasicLoginModule implements LoginModule {
 		try {
 			credentials = authenticate();
 		}
-		catch (Exception e) {
-			_log.error(e.getMessage());
+		catch (Exception exception) {
+			_log.error(exception.getMessage());
 
 			throw new LoginException();
 		}
@@ -95,9 +95,8 @@ public class BasicLoginModule implements LoginModule {
 
 			return true;
 		}
-		else {
-			throw new LoginException();
-		}
+
+		throw new LoginException();
 	}
 
 	@Override
@@ -152,8 +151,8 @@ public class BasicLoginModule implements LoginModule {
 				}
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return null;

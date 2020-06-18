@@ -14,9 +14,9 @@
 
 package com.liferay.portal.tools.service.builder;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.TextFormatter;
+import com.liferay.portal.kernel.util.GetterUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,13 +28,18 @@ import java.util.List;
 public class EntityFinder {
 
 	public EntityFinder(
-		String name, String returnType, boolean unique, String where,
+		ServiceBuilder serviceBuilder, String name, String pluralName,
+		String returnType, boolean unique, String where, String dbWhere,
 		boolean dbIndex, List<EntityColumn> entityColumns) {
 
+		_serviceBuilder = serviceBuilder;
 		_name = name;
+		_pluralName = GetterUtil.getString(
+			pluralName, serviceBuilder.formatPlural(name));
 		_returnType = returnType;
 		_unique = unique;
 		_where = where;
+		_dbWhere = dbWhere;
 		_dbIndex = dbIndex;
 		_entityColumns = entityColumns;
 
@@ -61,6 +66,10 @@ public class EntityFinder {
 
 	public List<EntityColumn> getArrayableColumns() {
 		return _arrayableColumns;
+	}
+
+	public String getDBWhere() {
+		return _dbWhere;
 	}
 
 	public EntityColumn getEntityColumn(String name) {
@@ -102,8 +111,8 @@ public class EntityFinder {
 		return _name;
 	}
 
-	public String getNames() {
-		return TextFormatter.formatPlural(_name);
+	public String getPluralName() {
+		return _pluralName;
 	}
 
 	public String getReturnType() {
@@ -147,7 +156,7 @@ public class EntityFinder {
 	}
 
 	public boolean hasEntityColumn(String name) {
-		return Entity.hasEntityColumn(name, _entityColumns);
+		return Entity.hasEntityColumn(_serviceBuilder, name, _entityColumns);
 	}
 
 	public boolean isCollection() {
@@ -168,9 +177,12 @@ public class EntityFinder {
 
 	private final List<EntityColumn> _arrayableColumns;
 	private final boolean _dbIndex;
+	private final String _dbWhere;
 	private final List<EntityColumn> _entityColumns;
 	private final String _name;
+	private final String _pluralName;
 	private final String _returnType;
+	private final ServiceBuilder _serviceBuilder;
 	private final boolean _unique;
 	private final String _where;
 

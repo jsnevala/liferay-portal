@@ -31,53 +31,6 @@ portletURL.setParameter("articleId", articleId);
 portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
 %>
 
-<clay:navigation-bar
-	navigationItems="<%=
-		new JSPNavigationItemList(pageContext) {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(true);
-						navigationItem.setHref(StringPool.BLANK);
-						navigationItem.setLabel(LanguageUtil.get(request, "versions"));
-					});
-			}
-		}
-	%>"
-/>
-
-<%
-List<DropdownItem> dropdownItems = new JSPDropdownItemList(pageContext) {
-	{
-		add(
-			dropdownItem -> {
-				dropdownItem.setActive(true);
-				dropdownItem.setHref(StringPool.BLANK);
-				dropdownItem.setLabel(LanguageUtil.get(request, "all"));
-			});
-	}
-};
-%>
-
-<clay:management-toolbar
-	componentId="journalSelectVersionsManagementToolbar"
-	filterDropdownItems="<%=
-		new JSPDropdownItemList(pageContext) {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(dropdownItems);
-						dropdownGroupItem.setLabel(LanguageUtil.get(request, "filter-by-navigation"));
-					}
-				);
-			}
-		}
-	%>"
-	searchContainerId="articleVersions"
-	selectable="<%= false %>"
-	showSearch="<%= false %>"
-/>
-
 <aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid-1280" method="post" name="selectVersionFm">
 	<liferay-ui:search-container
 		iteratorURL="<%= portletURL %>"
@@ -106,10 +59,11 @@ List<DropdownItem> dropdownItems = new JSPDropdownItemList(pageContext) {
 					curSourceVersion = tempVersion;
 				}
 
-				Map<String, Object> data = new HashMap<String, Object>();
-
-				data.put("sourceversion", curSourceVersion);
-				data.put("targetversion", curTargetVersion);
+				Map<String, Object> data = HashMapBuilder.<String, Object>put(
+					"sourceversion", curSourceVersion
+				).put(
+					"targetversion", curTargetVersion
+				).build();
 				%>
 
 				<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
@@ -131,5 +85,8 @@ List<DropdownItem> dropdownItems = new JSPDropdownItemList(pageContext) {
 </aui:form>
 
 <aui:script>
-	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectVersionFm', '<%= HtmlUtil.escapeJS(eventName) %>');
+	Liferay.Util.selectEntityHandler(
+		'#<portlet:namespace />selectVersionFm',
+		'<%= HtmlUtil.escapeJS(eventName) %>'
+	);
 </aui:script>

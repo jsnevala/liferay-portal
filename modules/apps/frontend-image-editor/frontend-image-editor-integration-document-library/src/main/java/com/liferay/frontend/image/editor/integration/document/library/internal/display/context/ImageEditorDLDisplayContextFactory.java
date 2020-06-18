@@ -19,6 +19,7 @@ import com.liferay.document.library.display.context.DLEditFileEntryDisplayContex
 import com.liferay.document.library.display.context.DLViewFileVersionDisplayContext;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.service.DLAppService;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.FileVersion;
@@ -33,7 +34,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Ambrin Chaudhary
+ * @author Ambrín Chaudhary
  */
 @Component(immediate = true, service = DLDisplayContextFactory.class)
 public class ImageEditorDLDisplayContextFactory
@@ -42,7 +43,8 @@ public class ImageEditorDLDisplayContextFactory
 	@Override
 	public DLEditFileEntryDisplayContext getDLEditFileEntryDisplayContext(
 		DLEditFileEntryDisplayContext parentDLEditFileEntryDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse,
 		DLFileEntryType dlFileEntryType) {
 
 		return parentDLEditFileEntryDisplayContext;
@@ -51,8 +53,8 @@ public class ImageEditorDLDisplayContextFactory
 	@Override
 	public DLEditFileEntryDisplayContext getDLEditFileEntryDisplayContext(
 		DLEditFileEntryDisplayContext parentDLEditFileEntryDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileEntry fileEntry) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileEntry fileEntry) {
 
 		return parentDLEditFileEntryDisplayContext;
 	}
@@ -60,8 +62,8 @@ public class ImageEditorDLDisplayContextFactory
 	@Override
 	public DLViewFileVersionDisplayContext getDLViewFileVersionDisplayContext(
 		DLViewFileVersionDisplayContext parentDLViewFileVersionDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileShortcut fileShortcut) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileShortcut fileShortcut) {
 
 		return parentDLViewFileVersionDisplayContext;
 	}
@@ -69,18 +71,20 @@ public class ImageEditorDLDisplayContextFactory
 	@Override
 	public DLViewFileVersionDisplayContext getDLViewFileVersionDisplayContext(
 		DLViewFileVersionDisplayContext parentDLViewFileVersionDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileVersion fileVersion) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileVersion fileVersion) {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return new ImageEditorDLViewFileVersionDisplayContext(
-			parentDLViewFileVersionDisplayContext, request, response,
-			fileVersion,
+			parentDLViewFileVersionDisplayContext, httpServletRequest,
+			httpServletResponse, fileVersion,
 			ResourceBundleUtil.getBundle(
 				themeDisplay.getLocale(),
-				ImageEditorDLDisplayContextFactory.class));
+				ImageEditorDLDisplayContextFactory.class),
+			_dlURLHelper);
 	}
 
 	@Reference(unbind = "-")
@@ -89,5 +93,8 @@ public class ImageEditorDLDisplayContextFactory
 	}
 
 	private DLAppService _dlAppService;
+
+	@Reference
+	private DLURLHelper _dlURLHelper;
 
 }

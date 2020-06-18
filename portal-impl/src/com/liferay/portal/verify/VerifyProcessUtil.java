@@ -23,18 +23,19 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.VerifyThreadLocal;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.util.PropsUtil;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.exportimport.staging.StagingAdvicesThreadLocal;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Alexander Chow
  * @author Raymond Augé
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
+@Deprecated
 public class VerifyProcessUtil {
 
 	public static boolean verifyProcess(
-			boolean ranUpgradeProcess, boolean newBuildNumber, boolean verified)
+			boolean ranUpgradeProcess, boolean verified)
 		throws VerifyException {
 
 		int verifyFrequency = GetterUtil.getInteger(
@@ -42,24 +43,16 @@ public class VerifyProcessUtil {
 
 		if ((verifyFrequency == VerifyProcess.ALWAYS) ||
 			((verifyFrequency == VerifyProcess.ONCE) && !verified) ||
-			ranUpgradeProcess || newBuildNumber) {
+			ranUpgradeProcess) {
 
-			return _verifyProcess(ranUpgradeProcess);
+			return _verifyProcess();
 		}
 
 		return false;
 	}
 
-	private static boolean _verifyProcess(boolean ranUpgradeProcess)
-		throws VerifyException {
-
+	private static boolean _verifyProcess() throws VerifyException {
 		boolean ranVerifyProcess = false;
-
-		if (ranUpgradeProcess && PropsValues.INDEX_ON_UPGRADE) {
-			PropsUtil.set(PropsKeys.INDEX_ON_STARTUP, Boolean.TRUE.toString());
-
-			PropsValues.INDEX_ON_STARTUP = true;
-		}
 
 		boolean tempIndexReadOnly = IndexWriterHelperUtil.isIndexReadOnly();
 
@@ -118,13 +111,13 @@ public class VerifyProcessUtil {
 
 			return true;
 		}
-		catch (ClassNotFoundException cnfe) {
+		catch (ClassNotFoundException classNotFoundException) {
 			_log.error(verifyProcessClassName + " cannot be found");
 		}
-		catch (IllegalAccessException iae) {
+		catch (IllegalAccessException illegalAccessException) {
 			_log.error(verifyProcessClassName + " cannot be accessed");
 		}
-		catch (InstantiationException ie) {
+		catch (InstantiationException instantiationException) {
 			_log.error(verifyProcessClassName + " cannot be initiated");
 		}
 

@@ -31,12 +31,12 @@ import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.DefaultLayoutPrototypesUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.language.LanguageResources;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -96,12 +96,12 @@ public class AddLayoutPrototypePortalInstanceLifecycleListener
 			layout, AssetTagsNavigationPortletKeys.ASSET_TAGS_CLOUD,
 			"column-2");
 
-		Map<String, String> preferences = new HashMap<>();
-
-		preferences.put(
+		Map<String, String> preferences = HashMapBuilder.put(
 			"classNameId",
-			String.valueOf(_portal.getClassNameId(BlogsEntry.class)));
-		preferences.put("showAssetCount", Boolean.TRUE.toString());
+			String.valueOf(_portal.getClassNameId(BlogsEntry.class))
+		).put(
+			"showAssetCount", Boolean.TRUE.toString()
+		).build();
 
 		DefaultLayoutPrototypesUtil.updatePortletSetup(
 			layout, portletId, preferences);
@@ -111,48 +111,28 @@ public class AddLayoutPrototypePortalInstanceLifecycleListener
 	}
 
 	@Reference(
-		target = "(javax.portlet.name=" + AssetTagsNavigationPortletKeys.ASSET_TAGS_CLOUD + ")",
-		unbind = "-"
+		target = "(javax.portlet.name=" + AssetTagsNavigationPortletKeys.ASSET_TAGS_CLOUD + ")"
 	)
-	protected void setAssetTagsCloudPortlet(Portlet portlet) {
-	}
+	private Portlet _assetTagsCloudPortlet;
 
-	@Reference(
-		target = "(javax.portlet.name=" + BlogsPortletKeys.BLOGS + ")",
-		unbind = "-"
-	)
-	protected void setBlogsPortlet(Portlet portlet) {
-	}
+	@Reference(target = "(javax.portlet.name=" + BlogsPortletKeys.BLOGS + ")")
+	private Portlet _blogsPortlet;
 
-	@Reference(unbind = "-")
-	protected void setLayoutPrototypeLocalService(
-		LayoutPrototypeLocalService layoutPrototypeLocalService) {
-
-		_layoutPrototypeLocalService = layoutPrototypeLocalService;
-	}
-
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
-	}
-
-	@Reference(
-		target = "(javax.portlet.name=" + RecentBloggersPortletKeys.RECENT_BLOGGERS + ")",
-		unbind = "-"
-	)
-	protected void setRecentBloggersPortlet(Portlet portlet) {
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
+	@Reference
 	private LayoutPrototypeLocalService _layoutPrototypeLocalService;
+
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference(
+		target = "(javax.portlet.name=" + RecentBloggersPortletKeys.RECENT_BLOGGERS + ")"
+	)
+	private Portlet _recentBloggersPortlet;
+
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

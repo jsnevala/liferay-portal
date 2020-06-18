@@ -32,6 +32,10 @@ definition {
 		/*This is a multiline
 			comment.*/
 
+		// End with a ;
+
+		// End with a }
+
 		property portal.release = "false";
 		var specialCharacters = "&quot;\&quot;";
 		var userEmailAddress = "userea@liferay.com";
@@ -176,6 +180,10 @@ definition {
 			echo("String contains substring");
 		}
 
+		if (((isSet(A)) && (isSet(B))) || ((!(isSet(B))) && (!(isSet(A))))) {
+			fail("${failMessage}");
+		}
+
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		var testCDATA = ''''alert(0)'"alert(0)"><img src=x onerror=alert(0)><script>alert(0)</script>''';
@@ -279,5 +287,9 @@ definition {
 	@ignore = "true"
 	test GotoLinkToPageChildPages {
 		var key_pageName = "${parentPage}";
+
+		if (!(("true" == "true") || ("true" == "false"))) {
+			fail("Allowed values are 'true' or 'false'.");
+		}
 	}
 }

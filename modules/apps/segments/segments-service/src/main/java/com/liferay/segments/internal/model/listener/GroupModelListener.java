@@ -26,7 +26,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(immediate = true, service = ModelListener.class)
 public class GroupModelListener extends BaseModelListener<Group> {
@@ -37,9 +37,9 @@ public class GroupModelListener extends BaseModelListener<Group> {
 			_segmentsEntryLocalService.deleteSegmentsEntries(
 				group.getGroupId());
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(pe, pe);
+				_log.warn(portalException, portalException);
 			}
 		}
 	}

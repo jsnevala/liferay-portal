@@ -29,6 +29,7 @@ import java.net.ConnectException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -49,7 +50,7 @@ public class SecureXMLFactoryProviderImplTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_secureXMLFactoryProvider = new SecureXMLFactoryProviderImpl();
+		_secureXMLFactoryProviderImpl = new SecureXMLFactoryProviderImpl();
 
 		_xmlBombBillionLaughsXML = readDependency(
 			"xml-bomb-billion-laughs.xml");
@@ -70,7 +71,7 @@ public class SecureXMLFactoryProviderImplTest {
 			@Override
 			public void run(String xml) throws Exception {
 				DocumentBuilderFactory documentBuilderFactory =
-					_secureXMLFactoryProvider.newDocumentBuilderFactory();
+					_secureXMLFactoryProviderImpl.newDocumentBuilderFactory();
 
 				DocumentBuilder documentBuilder =
 					documentBuilderFactory.newDocumentBuilder();
@@ -123,9 +124,11 @@ public class SecureXMLFactoryProviderImplTest {
 
 			@Override
 			public void run(String xml) throws Exception {
+				XMLInputFactory xmlInputFactory =
+					_secureXMLFactoryProviderImpl.newXMLInputFactory();
+
 				XMLEventReader xmlEventReader =
-					_secureXMLFactoryProvider.newXMLInputFactory().
-						createXMLEventReader(new StringReader(xml));
+					xmlInputFactory.createXMLEventReader(new StringReader(xml));
 
 				while (xmlEventReader.hasNext()) {
 					xmlEventReader.next();
@@ -174,11 +177,14 @@ public class SecureXMLFactoryProviderImplTest {
 
 			@Override
 			public void run(String xml) throws Exception {
-				XMLReader xmlReader = _secureXMLFactoryProvider.newXMLReader();
+				XMLReader xmlReader =
+					_secureXMLFactoryProviderImpl.newXMLReader();
 
 				if (xmlReader instanceof StripDoctypeXMLReader) {
-					xmlReader =
-						((StripDoctypeXMLReader)xmlReader).getXmlReader();
+					StripDoctypeXMLReader stripDoctypeXMLReader =
+						(StripDoctypeXMLReader)xmlReader;
+
+					xmlReader = stripDoctypeXMLReader.getXmlReader();
 				}
 
 				xmlReader.setContentHandler(
@@ -314,7 +320,7 @@ public class SecureXMLFactoryProviderImplTest {
 	private static String _xxeParameterEntitiesXML1;
 	private static String _xxeParameterEntitiesXML2;
 
-	private SecureXMLFactoryProviderImpl _secureXMLFactoryProvider;
+	private SecureXMLFactoryProviderImpl _secureXMLFactoryProviderImpl;
 
 	private abstract class XMLSecurityTest {
 

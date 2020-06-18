@@ -14,8 +14,6 @@
 
 package com.liferay.portal.tools.service.builder.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,16 +25,19 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class LVEntrySoap implements Serializable {
+
 	public static LVEntrySoap toSoapModel(LVEntry model) {
 		LVEntrySoap soapModel = new LVEntrySoap();
 
 		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setUuid(model.getUuid());
 		soapModel.setHeadId(model.getHeadId());
 		soapModel.setDefaultLanguageId(model.getDefaultLanguageId());
 		soapModel.setLvEntryId(model.getLvEntryId());
+		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setGroupId(model.getGroupId());
+		soapModel.setUniqueGroupKey(model.getUniqueGroupKey());
 
 		return soapModel;
 	}
@@ -69,7 +70,8 @@ public class LVEntrySoap implements Serializable {
 	}
 
 	public static LVEntrySoap[] toSoapModels(List<LVEntry> models) {
-		List<LVEntrySoap> soapModels = new ArrayList<LVEntrySoap>(models.size());
+		List<LVEntrySoap> soapModels = new ArrayList<LVEntrySoap>(
+			models.size());
 
 		for (LVEntry model : models) {
 			soapModels.add(toSoapModel(model));
@@ -97,6 +99,14 @@ public class LVEntrySoap implements Serializable {
 		_mvccVersion = mvccVersion;
 	}
 
+	public String getUuid() {
+		return _uuid;
+	}
+
+	public void setUuid(String uuid) {
+		_uuid = uuid;
+	}
+
 	public long getHeadId() {
 		return _headId;
 	}
@@ -121,6 +131,14 @@ public class LVEntrySoap implements Serializable {
 		_lvEntryId = lvEntryId;
 	}
 
+	public long getCompanyId() {
+		return _companyId;
+	}
+
+	public void setCompanyId(long companyId) {
+		_companyId = companyId;
+	}
+
 	public long getGroupId() {
 		return _groupId;
 	}
@@ -129,9 +147,21 @@ public class LVEntrySoap implements Serializable {
 		_groupId = groupId;
 	}
 
+	public String getUniqueGroupKey() {
+		return _uniqueGroupKey;
+	}
+
+	public void setUniqueGroupKey(String uniqueGroupKey) {
+		_uniqueGroupKey = uniqueGroupKey;
+	}
+
 	private long _mvccVersion;
+	private String _uuid;
 	private long _headId;
 	private String _defaultLanguageId;
 	private long _lvEntryId;
+	private long _companyId;
 	private long _groupId;
+	private String _uniqueGroupKey;
+
 }

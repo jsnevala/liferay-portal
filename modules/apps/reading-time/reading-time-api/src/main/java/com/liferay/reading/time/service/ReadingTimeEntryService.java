@@ -14,16 +14,15 @@
 
 package com.liferay.reading.time.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Transactional;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the remote service interface for ReadingTimeEntry. Methods of this
@@ -32,28 +31,28 @@ import com.liferay.portal.kernel.transaction.Transactional;
  *
  * @author Brian Wing Shun Chan
  * @see ReadingTimeEntryServiceUtil
- * @see com.liferay.reading.time.service.base.ReadingTimeEntryServiceBaseImpl
- * @see com.liferay.reading.time.service.impl.ReadingTimeEntryServiceImpl
  * @generated
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(property =  {
-	"json.web.service.context.name=readingtime", "json.web.service.context.path=ReadingTimeEntry"}, service = ReadingTimeEntryService.class)
 @ProviderType
-@Transactional(isolation = Isolation.PORTAL, rollbackFor =  {
-	PortalException.class, SystemException.class})
+@Transactional(
+	isolation = Isolation.PORTAL,
+	rollbackFor = {PortalException.class, SystemException.class}
+)
 public interface ReadingTimeEntryService extends BaseService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link ReadingTimeEntryServiceUtil} to access the reading time entry remote service. Add custom service methods to {@link com.liferay.reading.time.service.impl.ReadingTimeEntryServiceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify or reference this interface directly. Always use {@link ReadingTimeEntryServiceUtil} to access the reading time entry remote service. Add custom service methods to <code>com.liferay.reading.time.service.impl.ReadingTimeEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	public String getOSGiServiceIdentifier();
+
 }

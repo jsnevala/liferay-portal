@@ -33,10 +33,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
-	immediate = true,
 	property = {
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
 		"mvc.command.name=/document_library/publish_file_entry"
@@ -67,9 +66,10 @@ public class PublishFileEntryMVCActionCommand extends BaseMVCActionCommand {
 		try {
 			return _dlAppLocalService.getFileEntry(fileEntryId);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("Unable to get file entry " + fileEntryId, pe);
+				_log.debug(
+					"Unable to get file entry " + fileEntryId, portalException);
 			}
 		}
 

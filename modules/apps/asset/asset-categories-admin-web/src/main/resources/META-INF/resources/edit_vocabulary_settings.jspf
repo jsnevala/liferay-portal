@@ -15,27 +15,9 @@
 --%>
 
 <%
-List<AssetRendererFactory<?>> availableAssetRendererFactories = ListUtil.filter(
-	AssetRendererFactoryRegistryUtil.getAssetRendererFactories(company.getCompanyId()),
-	new PredicateFilter<AssetRendererFactory<?>>() {
+List<AssetRendererFactory<?>> availableAssetRendererFactories = ListUtil.filter(AssetRendererFactoryRegistryUtil.getAssetRendererFactories(company.getCompanyId()), AssetRendererFactory::isCategorizable);
 
-		@Override
-		public boolean filter(AssetRendererFactory<?> assetRendererFactory) {
-			return assetRendererFactory.isCategorizable();
-		}
-
-	});
-
-List<AssetRendererFactory<?>> classTypedAssetRendererFactories = ListUtil.filter(
-	availableAssetRendererFactories,
-	new PredicateFilter<AssetRendererFactory<?>>() {
-
-		@Override
-		public boolean filter(AssetRendererFactory<?> assetRendererFactory) {
-			return assetRendererFactory.isSupportsClassTypes();
-		}
-
-	});
+List<AssetRendererFactory<?>> classTypedAssetRendererFactories = ListUtil.filter(availableAssetRendererFactories, AssetRendererFactory::isSupportsClassTypes);
 
 long[] selectedClassNameIds = AssetVocabularySettingsHelper.DEFAULT_SELECTED_CLASSNAME_IDS;
 long[] selectedClassTypePKs = AssetVocabularySettingsHelper.DEFAULT_SELECTED_CLASSTYPE_PKS;
@@ -74,20 +56,7 @@ if (vocabulary != null) {
 			List<ClassType> classTypes = classTypeReader.getAvailableClassTypes(new long[] {themeDisplay.getCompanyGroupId(), scopeGroupId}, themeDisplay.getLocale());
 
 			if (!classTypes.isEmpty()) {
-				exist = ListUtil.exists(
-					classTypes,
-					new PredicateFilter<ClassType>() {
-
-						@Override
-						public boolean filter(ClassType classType) {
-							if (classType.getClassTypeId() == classTypePK) {
-								return true;
-							}
-
-							return false;
-						}
-
-					});
+				exist = ListUtil.exists(classTypes, classType -> classType.getClassTypeId() == classTypePK);
 			}
 		}
 	%>
@@ -145,7 +114,7 @@ if (vocabulary != null) {
 
 				<c:if test="<%= !exist %>">
 					<div class="has-warning">
-						<div class="help-block">
+						<div class="form-feedback-item">
 							<liferay-ui:message key="the-asset-subtype-no-longer-exists" />
 						</div>
 					</div>
@@ -165,18 +134,17 @@ if (vocabulary != null) {
 <aui:script use="liferay-auto-fields">
 	var extraFields = A.one('#<portlet:namespace />extraFields');
 
-	var autoFields = new Liferay.AutoFields(
-		{
-			contentBox: '#<portlet:namespace />extraFields',
-			fieldIndexes: '<portlet:namespace />indexes',
-			namespace: '<portlet:namespace />',
-			on: {
-				clone: function(event) {
-					event.row.all('.subtype-select').hide();
-				}
-			}
-		}
-	).render();
+	var autoFields = new Liferay.AutoFields({
+		contentBox: '#<portlet:namespace />extraFields',
+		fieldIndexes: '<portlet:namespace />indexes',
+		minimumRows: 1,
+		namespace: '<portlet:namespace />',
+		on: {
+			clone: function (event) {
+				event.row.all('.subtype-select').hide();
+			},
+		},
+	}).render();
 
 	extraFields.setData('autoFieldsInstance', autoFields);
 
@@ -184,7 +152,7 @@ if (vocabulary != null) {
 
 	form.delegate(
 		'change',
-		function(event) {
+		function (event) {
 			var target = event.currentTarget;
 
 			var row = target.ancestor('.lfr-form-row');

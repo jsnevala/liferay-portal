@@ -45,6 +45,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -86,7 +87,7 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			WebDAVEnvironmentConfigTestRule.INSTANCE);
+			WebDAVEnvironmentConfigClassTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -205,7 +206,10 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 				tuple = serviceGet(_TEST_META_NAME);
 
 				assertCode(HttpServletResponse.SC_OK, tuple);
-				Assert.assertTrue(getResponseBody(tuple).length == 0);
+
+				byte[] responseBody = getResponseBody(tuple);
+
+				Assert.assertTrue(responseBody.length == 0);
 			}
 
 			unlock(_TEST_META_NAME);
@@ -232,8 +236,6 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 
 	@Test
 	public void testMSOffice2Open() throws Exception {
-		Tuple tuple = null;
-
 		assertCode(
 			WebDAVUtil.SC_MULTI_STATUS, servicePropFind(_TEST_FILE_NAME));
 		assertCode(
@@ -241,7 +243,7 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 
 		lock(HttpServletResponse.SC_OK, _TEST_FILE_NAME);
 
-		tuple = serviceGet(_TEST_FILE_NAME);
+		Tuple tuple = serviceGet(_TEST_FILE_NAME);
 
 		assertCode(HttpServletResponse.SC_OK, tuple);
 		Assert.assertArrayEquals(_testFileBytes, getResponseBody(tuple));
@@ -257,8 +259,6 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 
 	@Test
 	public void testMSOffice3Modify() throws Exception {
-		Tuple tuple = null;
-
 		assertCode(
 			HttpServletResponse.SC_NOT_FOUND,
 			servicePropFind(_TEMP_FILE_NAME_1));
@@ -306,7 +306,7 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 		unlock(_TEST_FILE_NAME);
 		lock(HttpServletResponse.SC_OK, _TEST_FILE_NAME);
 
-		tuple = serviceGet(_TEST_FILE_NAME);
+		Tuple tuple = serviceGet(_TEST_FILE_NAME);
 
 		assertCode(HttpServletResponse.SC_OK, tuple);
 		Assert.assertArrayEquals(_testFileBytes, getResponseBody(tuple));
@@ -380,7 +380,10 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 		tuple = serviceGet(_TEST_META_NAME);
 
 		assertCode(HttpServletResponse.SC_OK, tuple);
-		Assert.assertTrue(getResponseBody(tuple).length == 0);
+
+		byte[] responseBody = getResponseBody(tuple);
+
+		Assert.assertTrue(responseBody.length == 0);
 
 		assertCode(
 			HttpServletResponse.SC_CREATED,
@@ -568,11 +571,11 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 
 		Set<Locale> availableLocales = new LinkedHashSet<>();
 
-		availableLocales.add(Locale.US);
+		availableLocales.add(LocaleUtil.US);
 
 		ddmForm.setAvailableLocales(availableLocales);
 
-		ddmForm.setDefaultLocale(Locale.US);
+		ddmForm.setDefaultLocale(LocaleUtil.US);
 
 		return ddmForm;
 	}
@@ -586,9 +589,9 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 
 		ddmForm.addDDMFormField(ddmFormField);
 
-		Map<Locale, String> nameMap = new HashMap<>();
-
-		nameMap.put(ddmForm.getDefaultLocale(), "Test Structure");
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			ddmForm.getDefaultLocale(), "Test Structure"
+		).build();
 
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(group.getGroupId());

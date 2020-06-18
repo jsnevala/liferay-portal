@@ -18,6 +18,7 @@ import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
 import com.liferay.portal.kernel.search.facet.util.RangeParserUtil;
@@ -53,18 +54,7 @@ public class ModifiedFacetBuilderTest {
 		dateFormatFactory = new DateFormatFactoryImpl();
 		filterBuilders = new FilterBuildersImpl();
 		jsonFactory = new JSONFactoryImpl();
-	}
-
-	@Test
-	public void testBoundedRange() {
-		ModifiedFacetBuilder modifiedFacetBuilder =
-			createModifiedFacetBuilder();
-
-		modifiedFacetBuilder.setCustomRangeFrom("20180131");
-		modifiedFacetBuilder.setCustomRangeTo("20180228");
-
-		assertRange(
-			"20180131000000", "20180228235959", modifiedFacetBuilder.build());
+		searchContext = new SearchContext();
 	}
 
 	@Test
@@ -82,6 +72,31 @@ public class ModifiedFacetBuilderTest {
 
 		assertRange(
 			"20180228151923", "20180301151923", modifiedFacetBuilder.build());
+	}
+
+	@Test
+	public void testCustomRange() {
+		ModifiedFacetBuilder modifiedFacetBuilder =
+			createModifiedFacetBuilder();
+
+		modifiedFacetBuilder.setCustomRangeFrom("20180131");
+		modifiedFacetBuilder.setCustomRangeTo("20180228");
+
+		assertRange(
+			"20180131000000", "20180228235959", modifiedFacetBuilder.build());
+	}
+
+	@Test
+	public void testCustomRangeSetsSearchContextAttribute() {
+		ModifiedFacetBuilder modifiedFacetBuilder =
+			createModifiedFacetBuilder();
+
+		modifiedFacetBuilder.setCustomRangeFrom("20180131");
+		modifiedFacetBuilder.setCustomRangeTo("20180228");
+
+		modifiedFacetBuilder.build();
+
+		assertRange("20180131000000", "20180228235959", searchContext);
 	}
 
 	@Test
@@ -122,14 +137,28 @@ public class ModifiedFacetBuilderTest {
 
 		JSONObject jsonObject = jsonFactory.createJSONObject();
 
-		jsonObject.put("label", StringUtil.trim(label));
-		jsonObject.put("range", StringUtil.trim(range));
+		jsonObject.put(
+			"label", StringUtil.trim(label)
+		).put(
+			"range", StringUtil.trim(range)
+		);
 
 		jsonArray.put(jsonObject);
 	}
 
 	protected void assertRange(String from, String to, Facet facet) {
-		List<String> calendars = getRangeBounds(facet);
+		assertRange(from, to, facet.getSelections()[0]);
+	}
+
+	protected void assertRange(
+		String from, String to, SearchContext searchContext) {
+
+		assertRange(
+			from, to, (String)searchContext.getAttribute(Field.MODIFIED_DATE));
+	}
+
+	protected void assertRange(String from, String to, String range) {
+		List<String> calendars = getRangeBounds(range);
 
 		Assert.assertEquals(from, calendars.get(0));
 		Assert.assertEquals(to, calendars.get(1));
@@ -176,8 +205,6 @@ public class ModifiedFacetBuilderTest {
 	}
 
 	protected ModifiedFacetBuilder createModifiedFacetBuilder() {
-		SearchContext searchContext = new SearchContext();
-
 		ModifiedFacetFactory modifiedFacetFactory = createModifiedFacetFactory(
 			searchContext);
 
@@ -215,9 +242,7 @@ public class ModifiedFacetBuilderTest {
 		return jsonArray;
 	}
 
-	protected List<String> getRangeBounds(Facet facet) {
-		String range = facet.getSelections()[0];
-
+	protected List<String> getRangeBounds(String range) {
 		String[] dateStrings = RangeParserUtil.parserRange(range);
 
 		return Arrays.asList(dateStrings);
@@ -227,5 +252,6 @@ public class ModifiedFacetBuilderTest {
 	protected DateFormatFactory dateFormatFactory;
 	protected FilterBuilders filterBuilders;
 	protected JSONFactory jsonFactory;
+	protected SearchContext searchContext;
 
 }

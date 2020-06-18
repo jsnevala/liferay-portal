@@ -14,29 +14,66 @@
 
 package com.liferay.oauth2.provider.service.impl;
 
+import com.liferay.oauth2.provider.configuration.OAuth2ProviderConfiguration;
 import com.liferay.oauth2.provider.exception.NoSuchOAuth2AuthorizationException;
 import com.liferay.oauth2.provider.model.OAuth2Authorization;
 import com.liferay.oauth2.provider.model.OAuth2ScopeGrant;
 import com.liferay.oauth2.provider.service.base.OAuth2AuthorizationLocalServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.Time;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * @author Brian Wing Shun Chan
  */
+@Component(
+	configurationPid = "com.liferay.oauth2.provider.configuration.OAuth2ProviderConfiguration",
+	property = "model.class.name=com.liferay.oauth2.provider.model.OAuth2Authorization",
+	service = AopService.class
+)
 public class OAuth2AuthorizationLocalServiceImpl
 	extends OAuth2AuthorizationLocalServiceBaseImpl {
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             #addOAuth2Authorization(long, long, String, long,long,
+	 *             String, Date, Date, String, String, String, Date, Date)}
+	 */
+	@Deprecated
 	@Override
 	public OAuth2Authorization addOAuth2Authorization(
 		long companyId, long userId, String userName, long oAuth2ApplicationId,
 		long oAuth2ApplicationScopeAliasesId, String accessTokenContent,
 		Date accessTokenCreateDate, Date accessTokenExpirationDate,
 		String remoteIPInfo, String refreshTokenContent,
+		Date refreshTokenCreateDate, Date refreshTokenExpirationDate) {
+
+		return addOAuth2Authorization(
+			companyId, userId, userName, oAuth2ApplicationId,
+			oAuth2ApplicationScopeAliasesId, accessTokenContent,
+			accessTokenCreateDate, accessTokenExpirationDate, null,
+			remoteIPInfo, refreshTokenContent, refreshTokenCreateDate,
+			refreshTokenExpirationDate);
+	}
+
+	@Override
+	public OAuth2Authorization addOAuth2Authorization(
+		long companyId, long userId, String userName, long oAuth2ApplicationId,
+		long oAuth2ApplicationScopeAliasesId, String accessTokenContent,
+		Date accessTokenCreateDate, Date accessTokenExpirationDate,
+		String remoteHostInfo, String remoteIPInfo, String refreshTokenContent,
 		Date refreshTokenCreateDate, Date refreshTokenExpirationDate) {
 
 		long oAuth2AuthorizationId = counterLocalService.increment(
@@ -56,6 +93,7 @@ public class OAuth2AuthorizationLocalServiceImpl
 		oAuth2Authorization.setAccessTokenCreateDate(accessTokenCreateDate);
 		oAuth2Authorization.setAccessTokenExpirationDate(
 			accessTokenExpirationDate);
+		oAuth2Authorization.setRemoteHostInfo(remoteHostInfo);
 		oAuth2Authorization.setRemoteIPInfo(remoteIPInfo);
 		oAuth2Authorization.setRefreshTokenContent(refreshTokenContent);
 		oAuth2Authorization.setRefreshTokenCreateDate(refreshTokenCreateDate);
@@ -66,18 +104,25 @@ public class OAuth2AuthorizationLocalServiceImpl
 	}
 
 	@Override
+	public void deleteExpiredOAuth2Authorizations() {
+		Date purgeDate = new Date();
+
+		purgeDate.setTime(
+			purgeDate.getTime() +
+				_expiredAuthorizationsAfterlifeDurationMillis);
+
+		for (OAuth2Authorization oAuth2Authorization :
+				oAuth2AuthorizationFinder.findByPurgeDate(
+					purgeDate, QueryUtil.ALL_POS, QueryUtil.ALL_POS)) {
+
+			oAuth2AuthorizationPersistence.remove(oAuth2Authorization);
+		}
+	}
+
+	@Override
 	public OAuth2Authorization deleteOAuth2Authorization(
 			long oAuth2AuthorizationId)
 		throws PortalException {
-
-		Collection<OAuth2ScopeGrant> oAuth2ScopeGrants =
-			oAuth2AuthorizationLocalService.getOAuth2ScopeGrants(
-				oAuth2AuthorizationId);
-
-		for (OAuth2ScopeGrant oAuth2ScopeGrant : oAuth2ScopeGrants) {
-			oAuth2ScopeGrantLocalService.deleteOAuth2ScopeGrant(
-				oAuth2ScopeGrant);
-		}
 
 		return oAuth2AuthorizationPersistence.remove(oAuth2AuthorizationId);
 	}
@@ -88,6 +133,7 @@ public class OAuth2AuthorizationLocalServiceImpl
 
 		List<OAuth2Authorization> oAuth2Authorizations =
 			oAuth2AuthorizationPersistence.findByAccessTokenContentHash(
+				CompanyThreadLocal.getCompanyId(),
 				accessTokenContent.hashCode());
 
 		for (OAuth2Authorization oAuth2Authorization : oAuth2Authorizations) {
@@ -107,6 +153,7 @@ public class OAuth2AuthorizationLocalServiceImpl
 
 		List<OAuth2Authorization> oAuth2Authorizations =
 			oAuth2AuthorizationPersistence.findByRefreshTokenContentHash(
+				CompanyThreadLocal.getCompanyId(),
 				refreshTokenContent.hashCode());
 
 		for (OAuth2Authorization oAuth2Authorization : oAuth2Authorizations) {
@@ -173,8 +220,8 @@ public class OAuth2AuthorizationLocalServiceImpl
 	public Collection<OAuth2ScopeGrant> getOAuth2ScopeGrants(
 		long oAuth2AuthorizationId) {
 
-		return oAuth2AuthorizationPersistence.getOAuth2ScopeGrants(
-			oAuth2AuthorizationId);
+		return oAuth2ScopeGrantPersistence.
+			getOAuth2AuthorizationOAuth2ScopeGrants(oAuth2AuthorizationId);
 	}
 
 	@Override
@@ -190,5 +237,21 @@ public class OAuth2AuthorizationLocalServiceImpl
 	public int getUserOAuth2AuthorizationsCount(long userId) {
 		return oAuth2AuthorizationPersistence.countByUserId(userId);
 	}
+
+	@Activate
+	protected void activate(Map<String, Object> properties) {
+		OAuth2ProviderConfiguration oAuth2ProviderConfiguration =
+			ConfigurableUtil.createConfigurable(
+				OAuth2ProviderConfiguration.class, properties);
+
+		int expiredAuthorizationsAfterlifeDuration =
+			oAuth2ProviderConfiguration.
+				expiredAuthorizationsAfterlifeDuration();
+
+		_expiredAuthorizationsAfterlifeDurationMillis =
+			expiredAuthorizationsAfterlifeDuration * Time.SECOND;
+	}
+
+	private long _expiredAuthorizationsAfterlifeDurationMillis;
 
 }

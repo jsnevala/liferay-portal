@@ -14,14 +14,11 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing User in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see User
  * @generated
  */
-@ProviderType
-public class UserCacheModel implements CacheModel<User>, Externalizable,
-	MVCCModel {
+public class UserCacheModel
+	implements CacheModel<User>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -53,7 +49,8 @@ public class UserCacheModel implements CacheModel<User>, Externalizable,
 		UserCacheModel userCacheModel = (UserCacheModel)obj;
 
 		if ((userId == userCacheModel.userId) &&
-				(mvccVersion == userCacheModel.mvccVersion)) {
+			(mvccVersion == userCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -79,10 +76,12 @@ public class UserCacheModel implements CacheModel<User>, Externalizable,
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(87);
+		StringBundler sb = new StringBundler(89);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", externalReferenceCode=");
@@ -177,6 +176,7 @@ public class UserCacheModel implements CacheModel<User>, Externalizable,
 		UserImpl userImpl = new UserImpl();
 
 		userImpl.setMvccVersion(mvccVersion);
+		userImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			userImpl.setUuid("");
@@ -399,6 +399,8 @@ public class UserCacheModel implements CacheModel<User>, Externalizable,
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 		externalReferenceCode = objectInput.readUTF();
 
@@ -459,9 +461,10 @@ public class UserCacheModel implements CacheModel<User>, Externalizable,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		if (uuid == null) {
 			objectOutput.writeUTF("");
@@ -645,6 +648,7 @@ public class UserCacheModel implements CacheModel<User>, Externalizable,
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public String externalReferenceCode;
 	public long userId;
@@ -687,4 +691,5 @@ public class UserCacheModel implements CacheModel<User>, Externalizable,
 	public boolean agreedToTermsOfUse;
 	public boolean emailAddressVerified;
 	public int status;
+
 }

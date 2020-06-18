@@ -53,12 +53,20 @@
 			<matches></matches>
 		</ignore-error>
 		<ignore-error description="">
+			<contains>Do NOT use embedded Elasticsearch in production</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="">
+			<contains>Do NOT use Hypersonic in production</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="">
 			<contains>INFO:</contains>
 			<matches></matches>
 		</ignore-error>
-		<ignore-error description="APIO-202 temporary workaround">
-			<contains></contains>
-			<matches>.*Failed to install artifact.*com.liferay.apio.architect.impl.internal.application.ApioApplication-default.config[\s\S]*</matches>
+		<ignore-error description="">
+			<contains>No theme found for specified theme id userdashboard_WAR_userdashboardtheme</contains>
+			<matches></matches>
 		</ignore-error>
 		<ignore-error description="LPS-22821">
 			<contains>Exception sending context destroyed event to listener instance of class com.liferay.portal.spring.context.PortalContextLoaderListener</contains>
@@ -168,16 +176,76 @@
 			<contains>The addSearchEngineConfigurator method has thrown an exception</contains>
 			<matches></matches>
 		</ignore-error>
+		<ignore-error description="LPS-68846 and LPS-66321">
+			<contains>Unable to call .* of /documents</contains>
+			<matches></matches>
+		</ignore-error>
 		<ignore-error description="LPS-81732">
 			<contains>There are no actions associated with the resource com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88391, LPS-88417">
+			<contains></contains>
+			<matches>Attempting to upgrade table .* by recreating the table [\s\S]*</matches>
+		</ignore-error>
+		<ignore-error description="LPS-88391, LPS-88417">
+			<contains></contains>
+			<matches>Successfully recreated and upgraded table .*</matches>
+		</ignore-error>
+		<ignore-error description="LPS-88395 - temporarily ignore until fixed">
+			<contains>IX_CED31606</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88412 - temporarily ignore until fixed">
+			<contains>drop table if exists Kaleo</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88418 - temporarily ignore until fixed">
+			<contains>There is already an index on table</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88418 - temporarily ignore until fixed">
+			<contains>SQLSTATE=42710</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88431">
+			<contains></contains>
+			<matches>.*Unable to find class loader for com.liferay.portal.cluster.multiple_.* class loader com.liferay.portal.cluster.multiple_.*</matches>
+		</ignore-error>
+		<ignore-error description="LPS-88431">
+			<contains></contains>
+			<matches>.*Unable to find class loader for com.liferay.portal.scheduler.quartz_.* class loader com.liferay.portal.scheduler.quartz_.*</matches>
+		</ignore-error>
+		<ignore-error description="LPS-88522 - temporarily ignore until fixed">
+			<contains>already has the column lastPublishDate</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88523 - temporarily ignore until fixed">
+			<contains>Implicit conversion from datatype 'VARCHAR' to 'DECIMAL' is not allowed.  Use the CONVERT function to run this query.</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88523 - temporarily ignore until fixed">
+			<contains>IX_717B97E1</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-88553 - temporarily ignore until fixed">
+			<contains>Returning the default theme</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-97522 - temporarily ignore until fixed">
+			<contains>IX_14E638B0</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-111433 - temporarily ignore until fixed">
+			<contains>IX_EE41CBEB</contains>
 			<matches></matches>
 		</ignore-error>
 		<ignore-error description="LRQA-24859">
 			<contains>No binary licenses found</contains>
 			<matches></matches>
 		</ignore-error>
-		<ignore-error description="LRQA-34199, temporarily ignore SAMLBootstrap error">
-			<contains>The activate method has thrown an exception</contains>
+		<ignore-error description="LRQA-46637, temporarily ignore metadata errors">
+			<contains>Unable to save metadata for file version</contains>
 			<matches></matches>
 		</ignore-error>
 		<ignore-error description="WCM-202">

@@ -38,6 +38,18 @@ public class ManagementBarDisplayButtonsTag
 		return super.doStartTag();
 	}
 
+	public String[] getDisplayViews() {
+		return _displayViews;
+	}
+
+	public PortletURL getPortletURL() {
+		return _portletURL;
+	}
+
+	public String getSelectedDisplayStyle() {
+		return _selectedDisplayStyle;
+	}
+
 	public void setDisabled(boolean disabled) {
 		_disabled = disabled;
 	}
@@ -104,20 +116,20 @@ public class ManagementBarDisplayButtonsTag
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-frontend:management-bar-display-buttons:defaultViews",
 			_DEFAULT_VIEWS);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:management-bar-display-buttons:disabled",
 			isDisabled());
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:management-bar-display-buttons:displayViews",
 			_displayViews);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:management-bar-display-buttons:portletURL",
 			_portletURL);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:management-bar-display-buttons:" +
 				"selectedDisplayStyle",
 			_selectedDisplayStyle);
@@ -128,8 +140,9 @@ public class ManagementBarDisplayButtonsTag
 
 	private static final boolean _CLEAN_UP_SET_ATTRIBUTES = true;
 
-	private static final String[] _DEFAULT_VIEWS =
-		{"icon", "descriptive", "list"};
+	private static final String[] _DEFAULT_VIEWS = {
+		"icon", "descriptive", "list"
+	};
 
 	private static final String _PAGE =
 		"/management_bar_display_buttons/page.jsp";

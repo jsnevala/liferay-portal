@@ -37,7 +37,9 @@ import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -91,9 +93,11 @@ public class DDMFormContextToDDMFormValuesTest extends PowerMockito {
 		Assert.assertEquals(
 			ddmFormValues.getDefaultLocale(), LocaleUtil.BRAZIL);
 
-		Assert.assertEquals(1, ddmFormValues.getAvailableLocales().size());
-		Assert.assertTrue(
-			ddmFormValues.getAvailableLocales().contains(LocaleUtil.BRAZIL));
+		Set<Locale> availableLocales = ddmFormValues.getAvailableLocales();
+
+		Assert.assertEquals(
+			availableLocales.toString(), 1, availableLocales.size());
+		Assert.assertTrue(availableLocales.contains(LocaleUtil.BRAZIL));
 	}
 
 	@Test
@@ -147,8 +151,11 @@ public class DDMFormContextToDDMFormValuesTest extends PowerMockito {
 		String enValue = StringUtil.randomString();
 		String ptValue = StringUtil.randomString();
 
-		jsonObject.put("en_US", enValue);
-		jsonObject.put("pt_BR", ptValue);
+		jsonObject.put(
+			"en_US", enValue
+		).put(
+			"pt_BR", ptValue
+		);
 
 		Value value1 = DDMFormValuesTestUtil.createLocalizedValue(
 			enValue, ptValue, LocaleUtil.US);

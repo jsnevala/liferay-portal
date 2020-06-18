@@ -31,11 +31,24 @@ public class FilePropagator {
 		String[] fileNames, String sourceDirName, String targetDirName,
 		List<String> targetSlaves) {
 
+		this(fileNames, sourceDirName, targetDirName, null, targetSlaves);
+	}
+
+	public FilePropagator(
+		String[] fileNames, String sourceDirName, String targetDirName,
+		String primaryTargetSlave, List<String> targetSlaves) {
+
 		for (String fileName : fileNames) {
 			_filePropagatorTasks.add(
 				new FilePropagatorTask(
 					sourceDirName + "/" + fileName,
 					targetDirName + "/" + fileName));
+		}
+
+		if (primaryTargetSlave != null) {
+			targetSlaves.remove(primaryTargetSlave);
+
+			_targetSlaves.add(primaryTargetSlave);
 		}
 
 		_targetSlaves.addAll(targetSlaves);
@@ -47,6 +60,10 @@ public class FilePropagator {
 		}
 
 		return _threadsDurationTotal / _threadsCompletedCount;
+	}
+
+	public List<String> getErrorSlaves() {
+		return _errorSlaves;
 	}
 
 	public void setCleanUpCommand(String cleanUpCommand) {
@@ -126,11 +143,7 @@ public class FilePropagator {
 
 		List<String> commands = new ArrayList<>();
 
-		String targetSlave = null;
-
 		for (FilePropagatorTask filePropagatorTask : _filePropagatorTasks) {
-			targetSlave = _targetSlaves.get(0);
-
 			String sourceFileName = filePropagatorTask._sourceFileName;
 
 			System.out.println("Copying from source " + sourceFileName);
@@ -154,25 +167,21 @@ public class FilePropagator {
 			commands.add("ls -al " + targetDirName);
 		}
 
+		String targetSlave = _targetSlaves.remove(0);
+
 		try {
 			if (_executeBashCommands(commands, targetSlave) != 0) {
 				_errorSlaves.add(targetSlave);
-				_targetSlaves.remove(targetSlave);
 
 				_copyFromSource();
-
-				targetSlave = null;
+			}
+			else {
+				_mirrorSlaves.add(targetSlave);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new RuntimeException(
-				"Unable to copy from source. Executed: " + commands, e);
-		}
-
-		if (targetSlave != null) {
-			_mirrorSlaves.add(targetSlave);
-
-			_targetSlaves.remove(targetSlave);
+				"Unable to copy from source. Executed: " + commands, exception);
 		}
 
 		System.out.println("Finished copying from source.");
@@ -268,10 +277,12 @@ public class FilePropagator {
 			}
 
 			try {
-				_successful = _filePropagator._executeBashCommands(
-					commands, _targetSlave) == 0;
+				int value = _filePropagator._executeBashCommands(
+					commands, _targetSlave);
+
+				_successful = value == 0;
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				_successful = false;
 			}
 

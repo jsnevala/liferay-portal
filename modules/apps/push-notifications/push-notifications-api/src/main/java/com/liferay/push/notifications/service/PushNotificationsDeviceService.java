@@ -14,20 +14,18 @@
 
 package com.liferay.push.notifications.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Transactional;
-
 import com.liferay.push.notifications.model.PushNotificationsDevice;
 
 import java.util.List;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Provides the remote service interface for PushNotificationsDevice. Methods of this
@@ -36,44 +34,47 @@ import java.util.List;
  *
  * @author Bruno Farache
  * @see PushNotificationsDeviceServiceUtil
- * @see com.liferay.push.notifications.service.base.PushNotificationsDeviceServiceBaseImpl
- * @see com.liferay.push.notifications.service.impl.PushNotificationsDeviceServiceImpl
  * @generated
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(property =  {
-	"json.web.service.context.name=pushnotifications", "json.web.service.context.path=PushNotificationsDevice"}, service = PushNotificationsDeviceService.class)
 @ProviderType
-@Transactional(isolation = Isolation.PORTAL, rollbackFor =  {
-	PortalException.class, SystemException.class})
+@Transactional(
+	isolation = Isolation.PORTAL,
+	rollbackFor = {PortalException.class, SystemException.class}
+)
 public interface PushNotificationsDeviceService extends BaseService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link PushNotificationsDeviceServiceUtil} to access the push notifications device remote service. Add custom service methods to {@link com.liferay.push.notifications.service.impl.PushNotificationsDeviceServiceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify or reference this interface directly. Always use {@link PushNotificationsDeviceServiceUtil} to access the push notifications device remote service. Add custom service methods to <code>com.liferay.push.notifications.service.impl.PushNotificationsDeviceServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
 	@AccessControlled(guestAccessEnabled = true)
-	public PushNotificationsDevice addPushNotificationsDevice(String token,
-		String platform) throws PortalException;
+	public PushNotificationsDevice addPushNotificationsDevice(
+			String token, String platform)
+		throws PortalException;
 
 	public PushNotificationsDevice deletePushNotificationsDevice(
-		long pushNotificationsDeviceId) throws PortalException;
+			long pushNotificationsDeviceId)
+		throws PortalException;
 
 	@AccessControlled(guestAccessEnabled = true)
 	public PushNotificationsDevice deletePushNotificationsDevice(String token)
 		throws PortalException;
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	public String getOSGiServiceIdentifier();
 
 	public void sendPushNotification(long[] toUserIds, String payload)
 		throws PortalException;
 
-	public void sendPushNotification(String platform, List<String> tokens,
-		String payload) throws PortalException;
+	public void sendPushNotification(
+			String platform, List<String> tokens, String payload)
+		throws PortalException;
+
 }

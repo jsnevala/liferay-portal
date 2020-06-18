@@ -16,21 +16,12 @@
 
 <%@ include file="/init.jsp" %>
 
+<%
+AssetTagsManagementToolbarDisplayContext assetTagsManagementToolbarDisplayContext = new AssetTagsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetTagsDisplayContext);
+%>
+
 <clay:management-toolbar
-	actionDropdownItems="<%= assetTagsDisplayContext.getActionDropdownItems() %>"
-	clearResultsURL="<%= assetTagsDisplayContext.getClearResultsURL() %>"
-	componentId="assetTagsManagementToolbar"
-	creationMenu="<%= assetTagsDisplayContext.isShowAddButton() ? assetTagsDisplayContext.getCreationMenu() : null %>"
-	disabled="<%= assetTagsDisplayContext.getTotalItems() == 0 %>"
-	filterDropdownItems="<%= assetTagsDisplayContext.getFilterDropdownItems() %>"
-	itemsTotal="<%= assetTagsDisplayContext.getTotalItems() %>"
-	searchActionURL="<%= assetTagsDisplayContext.getSearchActionURL() %>"
-	searchContainerId="assetTags"
-	searchFormName="searchFm"
-	showSearch="<%= assetTagsDisplayContext.isShowSearch() %>"
-	sortingOrder="<%= assetTagsDisplayContext.getOrderByType() %>"
-	sortingURL="<%= assetTagsDisplayContext.getSortingURL() %>"
-	viewTypeItems="<%= assetTagsDisplayContext.getViewTypeItems() %>"
+	displayContext="<%= assetTagsManagementToolbarDisplayContext %>"
 />
 
 <portlet:actionURL name="deleteTag" var="deleteTagURL">
@@ -62,20 +53,18 @@
 					<liferay-ui:search-container-column-text
 						colspan="<%= 2 %>"
 					>
-						<h5>
+						<h2 class="h5">
 							<%= tag.getName() %>
-						</h5>
+						</h2>
 
-						<h6 class="text-default">
+						<span class="text-default">
 							<strong><liferay-ui:message key="usages" /></strong>: <span><%= String.valueOf(fullTagsCount) %></span>
-						</h6>
+						</span>
 					</liferay-ui:search-container-column-text>
 
-					<c:if test="<%= assetTagsDisplayContext.isShowTagsActionMenu() %>">
-						<liferay-ui:search-container-column-jsp
-							path="/tag_action.jsp"
-						/>
-					</c:if>
+					<liferay-ui:search-container-column-jsp
+						path="/tag_action.jsp"
+					/>
 				</c:when>
 				<c:when test='<%= Objects.equals(assetTagsDisplayContext.getDisplayStyle(), "list") %>'>
 					<liferay-ui:search-container-column-text
@@ -90,11 +79,9 @@
 						value="<%= String.valueOf(fullTagsCount) %>"
 					/>
 
-					<c:if test="<%= assetTagsDisplayContext.isShowTagsActionMenu() %>">
-						<liferay-ui:search-container-column-jsp
-							path="/tag_action.jsp"
-						/>
-					</c:if>
+					<liferay-ui:search-container-column-jsp
+						path="/tag_action.jsp"
+					/>
 				</c:when>
 			</c:choose>
 		</liferay-ui:search-container-row>
@@ -106,46 +93,7 @@
 	</liferay-ui:search-container>
 </aui:form>
 
-<aui:script>
-	var form = document.querySelector('#<portlet:namespace />fm');
-
-	var mergeTags = function() {
-		<portlet:renderURL var="mergeURL">
-			<portlet:param name="mvcPath" value="/merge_tag.jsp" />
-			<portlet:param name="mergeTagIds" value="[$MERGE_TAGS_IDS$]" />
-		</portlet:renderURL>
-
-		let mergeURL = '<%= mergeURL %>';
-
-		location.href = mergeURL.replace(
-			escape('[$MERGE_TAGS_IDS$]'),
-			Liferay.Util.listCheckedExcept(form, '<portlet:namespace />allRowIds')
-		);
-	}
-
-	var deleteTags = function() {
-		if (confirm('<liferay-ui:message key="are-you-sure-you-want-to-delete-this" />')) {
-			submitForm(form);
-		}
-	}
-
-	var ACTIONS = {
-		'deleteTags': deleteTags,
-		'mergeTags': mergeTags
-	};
-
-	Liferay.componentReady('assetTagsManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				['actionItemClicked'],
-				function(event) {
-					var itemData = event.data.item.data;
-
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action]();
-					}
-				}
-			);
-		}
-	);
-</aui:script>
+<liferay-frontend:component
+	componentId="<%= assetTagsManagementToolbarDisplayContext.getDefaultEventHandler() %>"
+	module="js/ManagementToolbarDefaultEventHandler.es"
+/>

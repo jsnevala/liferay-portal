@@ -44,7 +44,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -56,12 +56,12 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 
 	@Override
 	public List<Capability> getExportCapabilities() {
-		return ListUtil.toList(new Capability[] {_exportCapability});
+		return ListUtil.fromArray(_exportCapability);
 	}
 
 	@Override
 	public List<Capability> getImportCapabilities() {
-		return ListUtil.toList(new Capability[] {_importCapability});
+		return ListUtil.fromArray(_importCapability);
 	}
 
 	@Override
@@ -75,11 +75,11 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 				portletDataContext, portletPreferences,
 				portletDataContext.getPortletId());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new PortletDataException(
 				"Unable to update asset categories navigation portlet " +
 					"preferences during export",
-				e);
+				exception);
 		}
 	}
 
@@ -93,11 +93,11 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 			return updateImportPortletPreferences(
 				portletDataContext, portletPreferences);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new PortletDataException(
 				"Unable to update asset categories navigation portlet " +
 					"preferences during import",
-				e);
+				exception);
 		}
 	}
 
@@ -177,27 +177,6 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 		return null;
 	}
 
-	@Reference(unbind = "-")
-	protected void setAssetVocabularyLocalService(
-		AssetVocabularyLocalService assetVocabularyLocalService) {
-
-		_assetVocabularyLocalService = assetVocabularyLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setCompanyLocalService(
-		CompanyLocalService companyLocalService) {
-
-		_companyLocalService = companyLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortletLocalService(
-		PortletLocalService portletLocalService) {
-
-		_portletLocalService = portletLocalService;
-	}
-
 	protected PortletPreferences updateExportPortletPreferences(
 			PortletDataContext portletDataContext,
 			PortletPreferences portletPreferences, String portletId)
@@ -246,7 +225,10 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 		return portletPreferences;
 	}
 
+	@Reference
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@Reference
 	private CompanyLocalService _companyLocalService;
 
 	@Reference(target = "(name=PortletDisplayTemplateExporter)")
@@ -255,6 +237,7 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 	@Reference(target = "(name=PortletDisplayTemplateImporter)")
 	private Capability _importCapability;
 
+	@Reference
 	private PortletLocalService _portletLocalService;
 
 }

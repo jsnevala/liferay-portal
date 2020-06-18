@@ -27,10 +27,11 @@ import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
@@ -41,13 +42,15 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,6 +67,17 @@ public class OrganizationLocalServiceTest {
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
+
+	@Before
+	public void setUp() throws Exception {
+		_originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		PermissionThreadLocal.setPermissionChecker(_originalPermissionChecker);
+	}
 
 	@Test
 	public void testAddOrganization() throws Exception {
@@ -202,7 +216,7 @@ public class OrganizationLocalServiceTest {
 
 		_organizations.add(organizationA);
 
-		organizationA = OrganizationTestUtil.addSite(organizationA);
+		OrganizationTestUtil.addSite(organizationA);
 
 		Group groupB = organizationB.getGroup();
 
@@ -836,53 +850,8 @@ public class OrganizationLocalServiceTest {
 		Assert.assertEquals(hits.toString(), 0, hits.getLength());
 	}
 
-	@Test
-	public void testSearchOrganizationsWithOrganizationsTreeParameter()
-		throws Exception {
-
-		Organization organization = OrganizationTestUtil.addOrganization();
-
-		Organization suborganization = OrganizationTestUtil.addOrganization(
-			organization.getOrganizationId(), RandomTestUtil.randomString(),
-			false);
-
-		_organizations.add(suborganization);
-
-		_organizations.add(organization);
-
-		_user = UserTestUtil.addUser();
-
-		UserLocalServiceUtil.addOrganizationUsers(
-			organization.getOrganizationId(), new long[] {_user.getUserId()});
-
-		LinkedHashMap<String, Object> organizationParams =
-			new LinkedHashMap<>();
-
-		organizationParams.put(
-			"organizationsTree", _user.getOrganizations(true));
-
-		BaseModelSearchResult<Organization> baseModelSearchResult =
-			OrganizationLocalServiceUtil.searchOrganizations(
-				_user.getCompanyId(),
-				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, null,
-				organizationParams, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-		Assert.assertEquals(1, baseModelSearchResult.getLength());
-
-		List<Organization> indexerSearchResults =
-			baseModelSearchResult.getBaseModels();
-
-		Assert.assertEquals(organization, indexerSearchResults.get(0));
-
-		List<Organization> finderSearchResults =
-			OrganizationLocalServiceUtil.search(
-				_user.getCompanyId(),
-				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, null, null,
-				null, null, organizationParams, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null);
-
-		Assert.assertEquals(indexerSearchResults, finderSearchResults);
-	}
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected List<Object> getOrganizationsAndUsers(Organization organization) {
 		return OrganizationLocalServiceUtil.getOrganizationsAndUsers(
@@ -937,6 +906,8 @@ public class OrganizationLocalServiceTest {
 
 	@DeleteAfterTestRun
 	private final List<Organization> _organizations = new ArrayList<>();
+
+	private PermissionChecker _originalPermissionChecker;
 
 	@DeleteAfterTestRun
 	private User _user;

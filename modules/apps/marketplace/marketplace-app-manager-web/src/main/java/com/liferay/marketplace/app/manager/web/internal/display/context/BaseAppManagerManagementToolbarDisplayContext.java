@@ -39,8 +39,6 @@ import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.osgi.framework.Bundle;
-
 /**
  * @author Pei-Jung Lan
  */
@@ -48,11 +46,12 @@ public abstract class BaseAppManagerManagementToolbarDisplayContext
 	extends BaseManagementToolbarDisplayContext {
 
 	public BaseAppManagerManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request) {
+		LiferayPortletResponse liferayPortletResponse) {
 
-		super(liferayPortletRequest, liferayPortletResponse, request);
+		super(
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse);
 	}
 
 	public String getCategory() {
@@ -67,10 +66,9 @@ public abstract class BaseAppManagerManagementToolbarDisplayContext
 	public List<DropdownItem> getCategoryDropdownItems() {
 		List<App> apps = AppLocalServiceUtil.getApps(
 			QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-		List<Bundle> bundles = BundleManagerUtil.getBundles();
 
 		String[] categories = MarketplaceAppManagerUtil.getCategories(
-			apps, bundles);
+			apps, BundleManagerUtil.getBundles());
 
 		Map<String, String> categoriesMap = new LinkedHashMap<>();
 
@@ -93,12 +91,15 @@ public abstract class BaseAppManagerManagementToolbarDisplayContext
 			categoriesMap, portletURL, "category", getCategory());
 	}
 
+	@Override
 	public String getOrderByCol() {
 		return ParamUtil.getString(request, "orderByCol", "title");
 	}
 
+	@Override
 	public abstract PortletURL getPortletURL();
 
+	@Override
 	public String getSearchActionURL() {
 		PortletURL searchActionURL = liferayPortletResponse.createRenderURL();
 
@@ -132,6 +133,7 @@ public abstract class BaseAppManagerManagementToolbarDisplayContext
 			getDefaultEntriesMap(states), portletURL, "state", getState());
 	}
 
+	@Override
 	protected String[] getOrderByKeys() {
 		return new String[] {"title"};
 	}

@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,30 +44,33 @@ public class AssetRendererSharingEntryViewRenderer
 
 	@Override
 	public void render(
-			SharingEntry sharingEntry, HttpServletRequest request,
-			HttpServletResponse response)
+			SharingEntry sharingEntry, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, PortalException {
 
-		RequestDispatcher requestDispatcher =
-			_servletContext.getRequestDispatcher(_JSP_PATH);
-
-		AssetRenderer assetRenderer = AssetRendererSharingUtil.getAssetRenderer(
-			sharingEntry);
-
-		request.setAttribute(AssetRenderer.class.getName(), assetRenderer);
-
 		try {
-			requestDispatcher.include(request, response);
-		}
-		catch (Exception e) {
-			_log.error("Unable to include JSP " + _JSP_PATH, e);
+			RequestDispatcher requestDispatcher =
+				_servletContext.getRequestDispatcher(_JSP_PATH);
 
-			throw new IOException("Unable to include JSP " + _JSP_PATH, e);
+			httpServletRequest.setAttribute(
+				AssetRenderer.class.getName(),
+				AssetRendererSharingUtil.getAssetRenderer(sharingEntry));
+
+			httpServletRequest.setAttribute(
+				SharingEntry.class.getName(), sharingEntry);
+
+			requestDispatcher.include(httpServletRequest, httpServletResponse);
+		}
+		catch (IOException | ServletException exception) {
+			_log.error("Unable to include JSP " + _JSP_PATH, exception);
+
+			throw new IOException(
+				"Unable to include JSP " + _JSP_PATH, exception);
 		}
 	}
 
 	private static final String _JSP_PATH =
-		"/shared_with_me/view_asset_entry_sharing_entry.jsp";
+		"/shared_assets/view_asset_entry_sharing_entry.jsp";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetRendererSharingEntryViewRenderer.class);

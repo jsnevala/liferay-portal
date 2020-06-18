@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTemplate;
 import com.liferay.portal.kernel.model.LayoutTemplateConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortletConstants;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
@@ -101,9 +102,9 @@ public class NestedPortletsPortlet extends MVCPortlet {
 			layoutTemplateId =
 				nestedPortletsDisplayContext.getLayoutTemplateId();
 		}
-		catch (ConfigurationException ce) {
+		catch (ConfigurationException configurationException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ce, ce);
+				_log.warn(configurationException, configurationException);
 			}
 		}
 
@@ -146,12 +147,13 @@ public class NestedPortletsPortlet extends MVCPortlet {
 
 			templateId = sb.toString();
 
-			content = processColumnMatcher.replaceAll("$1\\${$2}$3");
+			content = processColumnMatcher.replaceAll(
+				"$1" + renderResponse.getNamespace() + "_$2$3");
 
 			Matcher columnIdMatcher = _columnIdPattern.matcher(content);
 
 			templateContent = columnIdMatcher.replaceAll(
-				"$1" + renderResponse.getNamespace() + "$2$3");
+				"$1" + renderResponse.getNamespace() + "_$2$3");
 		}
 
 		checkLayout(themeDisplay.getLayout(), columnIds.values());
@@ -167,31 +169,32 @@ public class NestedPortletsPortlet extends MVCPortlet {
 
 		Map<String, Object> vmVariables =
 			(Map<String, Object>)renderRequest.getAttribute(
-				WebKeys.VM_VARIABLES + portletDisplay.getId());
+				WebKeys.FTL_VARIABLES + portletDisplay.getId());
 
 		if (vmVariables != null) {
 			vmVariables.putAll(columnIds);
 		}
 		else {
 			renderRequest.setAttribute(
-				WebKeys.VM_VARIABLES + portletDisplay.getId(), columnIds);
+				WebKeys.FTL_VARIABLES + portletDisplay.getId(), columnIds);
 		}
 
 		super.include(viewTemplate, renderRequest, renderResponse);
 	}
 
 	protected void checkLayout(Layout layout, Collection<String> columnIds) {
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			layout.getTypeSettingsProperties();
 
 		String[] layoutColumnIds = StringUtil.split(
-			typeSettingsProperties.get(
+			typeSettingsUnicodeProperties.get(
 				LayoutTypePortletConstants.NESTED_COLUMN_IDS));
 
 		boolean updateColumnIds = false;
 
 		for (String columnId : columnIds) {
-			String portletIds = typeSettingsProperties.getProperty(columnId);
+			String portletIds = typeSettingsUnicodeProperties.getProperty(
+				columnId);
 
 			if (Validator.isNotNull(portletIds) &&
 				!ArrayUtil.contains(layoutColumnIds, columnId)) {
@@ -203,20 +206,20 @@ public class NestedPortletsPortlet extends MVCPortlet {
 		}
 
 		if (updateColumnIds) {
-			typeSettingsProperties.setProperty(
+			typeSettingsUnicodeProperties.setProperty(
 				LayoutTypePortletConstants.NESTED_COLUMN_IDS,
 				StringUtil.merge(layoutColumnIds));
 
-			layout.setTypeSettingsProperties(typeSettingsProperties);
+			layout.setTypeSettingsProperties(typeSettingsUnicodeProperties);
 
 			try {
 				_layoutLocalService.updateLayout(
 					layout.getGroupId(), layout.isPrivateLayout(),
 					layout.getLayoutId(), layout.getTypeSettings());
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(e, e);
+					_log.warn(exception, exception);
 				}
 			}
 		}
@@ -234,6 +237,13 @@ public class NestedPortletsPortlet extends MVCPortlet {
 		LayoutTemplateLocalService layoutTemplateLocalService) {
 
 		_layoutTemplateLocalService = layoutTemplateLocalService;
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.nested.portlets.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

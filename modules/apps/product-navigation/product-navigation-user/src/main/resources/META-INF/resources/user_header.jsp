@@ -26,12 +26,12 @@ int notificationsCount = panelCategoryHelper.getNotificationsCount(userPanelCate
 ProductMenuDisplayContext productMenuDisplayContext = new ProductMenuDisplayContext(liferayPortletRequest, liferayPortletResponse);
 %>
 
-<a aria-controls="<portlet:namespace /><%= AUIUtil.normalizeId(userPanelCategory.getKey()) %>Collapse" aria-expanded="<%= Objects.equals(userPanelCategory.getKey(), productMenuDisplayContext.getRootPanelCategoryKey()) %>" class="collapse-icon collapse-icon-middle <%= Objects.equals(userPanelCategory.getKey(), productMenuDisplayContext.getRootPanelCategoryKey()) ? StringPool.BLANK : "collapsed" %> panel-toggler" data-parent="#<portlet:namespace />Accordion" data-qa-id="productMenuUserPanelCategory" data-toggle="collapse" href="#<portlet:namespace /><%= AUIUtil.normalizeId(userPanelCategory.getKey()) %>Collapse" role="button">
+<a aria-controls="<portlet:namespace /><%= AUIUtil.normalizeId(userPanelCategory.getKey()) %>Collapse" aria-expanded="<%= Objects.equals(userPanelCategory.getKey(), productMenuDisplayContext.getRootPanelCategoryKey()) %>" class="collapse-icon collapse-icon-middle <%= Objects.equals(userPanelCategory.getKey(), productMenuDisplayContext.getRootPanelCategoryKey()) ? StringPool.BLANK : "collapsed" %> panel-toggler" data-parent="#<portlet:namespace />Accordion" data-qa-id="productMenuUserPanelCategory" data-toggle="liferay-collapse" href="#<portlet:namespace /><%= AUIUtil.normalizeId(userPanelCategory.getKey()) %>Collapse" role="button">
 	<liferay-ui:user-portrait
 		user="<%= user %>"
 	/>
 
-	<span class="truncate-text user-name">
+	<span class="text-truncate user-name">
 		<%= HtmlUtil.escape(user.getFirstName()) %>
 
 		<c:if test="<%= themeDisplay.isImpersonated() %>">
@@ -49,7 +49,9 @@ ProductMenuDisplayContext productMenuDisplayContext = new ProductMenuDisplayCont
 	</span>
 
 	<c:if test="<%= notificationsCount > 0 %>">
-		<span class="panel-notifications-count sticker sticker-right sticker-rounded sticker-sm sticker-warning"><%= notificationsCount %></span>
+		<span class="badge badge-danger panel-notifications-count sticker-top-right">
+			<span class="badge-item badge-item-expand"><%= notificationsCount %></span>
+		</span>
 	</c:if>
 
 	<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />

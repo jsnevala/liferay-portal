@@ -28,12 +28,13 @@ public class AssetListEntryUsagesManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public AssetListEntryUsagesManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request, SearchContainer searchContainer) {
+		SearchContainer searchContainer) {
 
 		super(
-			liferayPortletRequest, liferayPortletResponse, request,
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			searchContainer);
 	}
 

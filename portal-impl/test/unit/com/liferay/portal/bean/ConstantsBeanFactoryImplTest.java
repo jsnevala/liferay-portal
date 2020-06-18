@@ -84,8 +84,8 @@ public class ConstantsBeanFactoryImplTest {
 
 			Assert.fail();
 		}
-		catch (RuntimeException re) {
-			Throwable throwable = re.getCause();
+		catch (RuntimeException runtimeException) {
+			Throwable throwable = runtimeException.getCause();
 
 			Assert.assertSame(NullPointerException.class, throwable.getClass());
 		}
@@ -336,8 +336,8 @@ public class ConstantsBeanFactoryImplTest {
 		try {
 			urls = ClassPathUtil.getClassPathURLs(jvmClassPath);
 		}
-		catch (MalformedURLException murle) {
-			throw new RuntimeException(murle);
+		catch (MalformedURLException malformedURLException) {
+			throw new RuntimeException(malformedURLException);
 		}
 
 		ClassLoader classLoader1 = new URLClassLoader(urls, null);
@@ -345,10 +345,10 @@ public class ConstantsBeanFactoryImplTest {
 		Class<?> constantsClass1 = classLoader1.loadClass(
 			Constants.class.getName());
 
-		ConstantsBeanFactoryImpl constantsBeanImpl =
+		ConstantsBeanFactoryImpl constantsBeanFactoryImpl =
 			new ConstantsBeanFactoryImpl();
 
-		Object constantsBean1 = constantsBeanImpl.getConstantsBean(
+		Object constantsBean1 = constantsBeanFactoryImpl.getConstantsBean(
 			constantsClass1);
 
 		Class<?> constantsBeanClass1 = constantsBean1.getClass();
@@ -365,7 +365,7 @@ public class ConstantsBeanFactoryImplTest {
 
 		Assert.assertSame(
 			constantsBean1,
-			constantsBeanImpl.getConstantsBean(constantsClass1));
+			constantsBeanFactoryImpl.getConstantsBean(constantsClass1));
 		Assert.assertEquals(
 			constantsBeans.toString(), 1, constantsBeans.size());
 
@@ -376,7 +376,7 @@ public class ConstantsBeanFactoryImplTest {
 		Class<?> constantsClass2 = classLoader2.loadClass(
 			Constants.class.getName());
 
-		Object constantsBean2 = constantsBeanImpl.getConstantsBean(
+		Object constantsBean2 = constantsBeanFactoryImpl.getConstantsBean(
 			constantsClass2);
 
 		Assert.assertNotSame(constantsBean1, constantsBean2);
@@ -389,7 +389,7 @@ public class ConstantsBeanFactoryImplTest {
 
 		Assert.assertSame(
 			constantsBean2,
-			constantsBeanImpl.getConstantsBean(constantsClass2));
+			constantsBeanFactoryImpl.getConstantsBean(constantsClass2));
 		Assert.assertEquals(
 			constantsBeans.toString(), 2, constantsBeans.size());
 
@@ -406,7 +406,7 @@ public class ConstantsBeanFactoryImplTest {
 
 		Assert.assertSame(
 			constantsBean2,
-			constantsBeanImpl.getConstantsBean(constantsClass2));
+			constantsBeanFactoryImpl.getConstantsBean(constantsClass2));
 		Assert.assertEquals(
 			constantsBeans.toString(), 1, constantsBeans.size());
 
@@ -452,9 +452,9 @@ public class ConstantsBeanFactoryImplTest {
 		public static void get_Void() {
 		}
 
-		public Object NON_STATIC_VALUE = new Object();
+		public Object NONSTATIC_VALUE = new Object();
 
-		protected static Object NON_PUBLIC_VALUE = new Object();
+		protected static Object NONPUBLIC_VALUE = new Object();
 
 	}
 

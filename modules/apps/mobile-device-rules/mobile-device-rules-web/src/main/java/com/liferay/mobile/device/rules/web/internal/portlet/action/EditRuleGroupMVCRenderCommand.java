@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -57,8 +57,8 @@ public class EditRuleGroupMVCRenderCommand implements MVCRenderCommand {
 
 			return "/edit_rule_group.jsp";
 		}
-		catch (PortalException pe) {
-			SessionErrors.add(renderRequest, pe.getClass());
+		catch (PortalException portalException) {
+			SessionErrors.add(renderRequest, portalException.getClass());
 
 			return "/error.jsp";
 		}

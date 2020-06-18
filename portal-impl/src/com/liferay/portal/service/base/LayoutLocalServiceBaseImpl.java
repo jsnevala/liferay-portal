@@ -14,33 +14,38 @@
 
 package com.liferay.portal.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.kernel.service.persistence.AssetEntryFinder;
 import com.liferay.asset.kernel.service.persistence.AssetEntryPersistence;
-
 import com.liferay.expando.kernel.service.persistence.ExpandoRowPersistence;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
+import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.exportimport.kernel.service.persistence.ExportImportConfigurationFinder;
 import com.liferay.exportimport.kernel.service.persistence.ExportImportConfigurationPersistence;
-
+import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Conjunction;
+import com.liferay.portal.kernel.dao.orm.Criterion;
 import com.liferay.portal.kernel.dao.orm.DefaultActionableDynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.Layout;
@@ -51,6 +56,7 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.ClassNamePersistence;
 import com.liferay.portal.kernel.service.persistence.GroupFinder;
 import com.liferay.portal.kernel.service.persistence.GroupPersistence;
@@ -62,6 +68,7 @@ import com.liferay.portal.kernel.service.persistence.LayoutPrototypePersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutSetPersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutSetPrototypePersistence;
 import com.liferay.portal.kernel.service.persistence.PluginSettingPersistence;
+import com.liferay.portal.kernel.service.persistence.PortalPreferencesPersistence;
 import com.liferay.portal.kernel.service.persistence.PortletPreferencesFinder;
 import com.liferay.portal.kernel.service.persistence.PortletPreferencesPersistence;
 import com.liferay.portal.kernel.service.persistence.ResourcePermissionFinder;
@@ -70,11 +77,12 @@ import com.liferay.portal.kernel.service.persistence.UserFinder;
 import com.liferay.portal.kernel.service.persistence.UserGroupFinder;
 import com.liferay.portal.kernel.service.persistence.UserGroupPersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.service.persistence.WorkflowDefinitionLinkPersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-
-import com.liferay.ratings.kernel.service.persistence.RatingsStatsFinder;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.ratings.kernel.service.persistence.RatingsStatsPersistence;
 
 import java.io.Serializable;
@@ -92,16 +100,16 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.portal.service.impl.LayoutLocalServiceImpl
- * @see com.liferay.portal.kernel.service.LayoutLocalServiceUtil
  * @generated
  */
-@ProviderType
-public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
-	implements LayoutLocalService, IdentifiableOSGiService {
+public abstract class LayoutLocalServiceBaseImpl
+	extends BaseLocalServiceImpl
+	implements IdentifiableOSGiService, LayoutLocalService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.portal.kernel.service.LayoutLocalServiceUtil} to access the layout local service.
+	 * Never modify or reference this class directly. Use <code>LayoutLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.LayoutLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -157,11 +165,16 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	}
 
 	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return layoutPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(Layout.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			Layout.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -179,7 +192,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.LayoutModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.LayoutModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -188,8 +201,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
 		return layoutPersistence.findWithDynamicQuery(dynamicQuery, start, end);
 	}
 
@@ -197,7 +211,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.LayoutModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.LayoutModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -207,10 +221,12 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return layoutPersistence.findWithDynamicQuery(dynamicQuery, start, end,
-			orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return layoutPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -232,9 +248,11 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return layoutPersistence.countWithDynamicQuery(dynamicQuery, projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return layoutPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
@@ -251,8 +269,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the matching layout, or <code>null</code> if a matching layout could not be found
 	 */
 	@Override
-	public Layout fetchLayoutByUuidAndGroupId(String uuid, long groupId,
-		boolean privateLayout) {
+	public Layout fetchLayoutByUuidAndGroupId(
+		String uuid, long groupId, boolean privateLayout) {
+
 		return layoutPersistence.fetchByUUID_G_P(uuid, groupId, privateLayout);
 	}
 
@@ -270,7 +289,8 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
 		actionableDynamicQuery.setBaseLocalService(layoutLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
@@ -282,8 +302,11 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
+
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
 
 		indexableActionableDynamicQuery.setBaseLocalService(layoutLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
@@ -296,6 +319,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
+
 		actionableDynamicQuery.setBaseLocalService(layoutLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(Layout.class);
@@ -306,54 +330,162 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
-		final ExportActionableDynamicQuery exportActionableDynamicQuery = new ExportActionableDynamicQuery() {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
 				@Override
 				public long performCount() throws PortalException {
-					ManifestSummary manifestSummary = portletDataContext.getManifestSummary();
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
 
 					StagedModelType stagedModelType = getStagedModelType();
 
 					long modelAdditionCount = super.performCount();
 
-					manifestSummary.addModelAdditionCount(stagedModelType,
-						modelAdditionCount);
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
 
-					long modelDeletionCount = ExportImportHelperUtil.getModelDeletionCount(portletDataContext,
-							stagedModelType);
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
 
-					manifestSummary.addModelDeletionCount(stagedModelType,
-						modelDeletionCount);
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
 
 					return modelAdditionCount;
 				}
+
 			};
 
 		initActionableDynamicQuery(exportActionableDynamicQuery);
 
-		exportActionableDynamicQuery.setAddCriteriaMethod(new ActionableDynamicQuery.AddCriteriaMethod() {
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
 				@Override
 				public void addCriteria(DynamicQuery dynamicQuery) {
-					portletDataContext.addDateRangeCriteria(dynamicQuery,
-						"modifiedDate");
+					Criterion modifiedDateCriterion =
+						portletDataContext.getDateRangeCriteria("modifiedDate");
+
+					if (modifiedDateCriterion != null) {
+						Conjunction conjunction =
+							RestrictionsFactoryUtil.conjunction();
+
+						conjunction.add(modifiedDateCriterion);
+
+						Disjunction disjunction =
+							RestrictionsFactoryUtil.disjunction();
+
+						disjunction.add(
+							RestrictionsFactoryUtil.gtProperty(
+								"modifiedDate", "lastPublishDate"));
+
+						Property lastPublishDateProperty =
+							PropertyFactoryUtil.forName("lastPublishDate");
+
+						disjunction.add(lastPublishDateProperty.isNull());
+
+						conjunction.add(disjunction);
+
+						modifiedDateCriterion = conjunction;
+					}
+
+					Criterion statusDateCriterion =
+						portletDataContext.getDateRangeCriteria("statusDate");
+
+					if ((modifiedDateCriterion != null) &&
+						(statusDateCriterion != null)) {
+
+						Disjunction disjunction =
+							RestrictionsFactoryUtil.disjunction();
+
+						disjunction.add(modifiedDateCriterion);
+						disjunction.add(statusDateCriterion);
+
+						dynamicQuery.add(disjunction);
+					}
+
+					StagedModelType stagedModelType =
+						exportActionableDynamicQuery.getStagedModelType();
+
+					long referrerClassNameId =
+						stagedModelType.getReferrerClassNameId();
+
+					Property classNameIdProperty = PropertyFactoryUtil.forName(
+						"classNameId");
+
+					if ((referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
+						(referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
+
+						dynamicQuery.add(
+							classNameIdProperty.eq(
+								stagedModelType.getReferrerClassNameId()));
+					}
+					else if (referrerClassNameId ==
+								StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
+
+						dynamicQuery.add(classNameIdProperty.isNotNull());
+					}
+
+					Property workflowStatusProperty =
+						PropertyFactoryUtil.forName("status");
+
+					if (portletDataContext.isInitialPublication()) {
+						dynamicQuery.add(
+							workflowStatusProperty.ne(
+								WorkflowConstants.STATUS_IN_TRASH));
+					}
+					else {
+						StagedModelDataHandler<?> stagedModelDataHandler =
+							StagedModelDataHandlerRegistryUtil.
+								getStagedModelDataHandler(
+									Layout.class.getName());
+
+						dynamicQuery.add(
+							workflowStatusProperty.in(
+								stagedModelDataHandler.
+									getExportableStatuses()));
+					}
 				}
+
 			});
 
-		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setGroupId(portletDataContext.getScopeGroupId());
+		exportActionableDynamicQuery.setGroupId(
+			portletDataContext.getScopeGroupId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<Layout>() {
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<Layout>() {
+
 				@Override
 				public void performAction(Layout layout)
 					throws PortalException {
-					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
-						layout);
+
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, layout);
 				}
+
 			});
-		exportActionableDynamicQuery.setStagedModelType(new StagedModelType(
-				PortalUtil.getClassNameId(Layout.class.getName())));
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
+				PortalUtil.getClassNameId(Layout.class.getName()),
+				StagedModelType.REFERRER_CLASS_NAME_ID_ALL));
 
 		return exportActionableDynamicQuery;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return layoutPersistence.create(((Long)primaryKeyObj).longValue());
 	}
 
 	/**
@@ -362,12 +494,21 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
+
 		return layoutLocalService.deleteLayout((Layout)persistedModel);
 	}
 
+	public BasePersistence<Layout> getBasePersistence() {
+		return layoutPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return layoutPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -379,7 +520,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the matching layouts, or an empty list if no matches were found
 	 */
 	@Override
-	public List<Layout> getLayoutsByUuidAndCompanyId(String uuid, long companyId) {
+	public List<Layout> getLayoutsByUuidAndCompanyId(
+		String uuid, long companyId) {
+
 		return layoutPersistence.findByUuid_C(uuid, companyId);
 	}
 
@@ -394,11 +537,12 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the range of matching layouts, or an empty list if no matches were found
 	 */
 	@Override
-	public List<Layout> getLayoutsByUuidAndCompanyId(String uuid,
-		long companyId, int start, int end,
+	public List<Layout> getLayoutsByUuidAndCompanyId(
+		String uuid, long companyId, int start, int end,
 		OrderByComparator<Layout> orderByComparator) {
-		return layoutPersistence.findByUuid_C(uuid, companyId, start, end,
-			orderByComparator);
+
+		return layoutPersistence.findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -411,8 +555,10 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @throws PortalException if a matching layout could not be found
 	 */
 	@Override
-	public Layout getLayoutByUuidAndGroupId(String uuid, long groupId,
-		boolean privateLayout) throws PortalException {
+	public Layout getLayoutByUuidAndGroupId(
+			String uuid, long groupId, boolean privateLayout)
+		throws PortalException {
+
 		return layoutPersistence.findByUUID_G_P(uuid, groupId, privateLayout);
 	}
 
@@ -420,7 +566,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Returns a range of all the layouts.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.LayoutModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.LayoutModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of layouts
@@ -513,7 +659,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the counter local service
 	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
+	public com.liferay.counter.kernel.service.CounterLocalService
+		getCounterLocalService() {
+
 		return counterLocalService;
 	}
 
@@ -523,7 +671,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param counterLocalService the counter local service
 	 */
 	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
+		com.liferay.counter.kernel.service.CounterLocalService
+			counterLocalService) {
+
 		this.counterLocalService = counterLocalService;
 	}
 
@@ -532,7 +682,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the class name local service
 	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService getClassNameLocalService() {
+	public com.liferay.portal.kernel.service.ClassNameLocalService
+		getClassNameLocalService() {
+
 		return classNameLocalService;
 	}
 
@@ -542,7 +694,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param classNameLocalService the class name local service
 	 */
 	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService) {
+		com.liferay.portal.kernel.service.ClassNameLocalService
+			classNameLocalService) {
+
 		this.classNameLocalService = classNameLocalService;
 	}
 
@@ -562,6 +716,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setClassNamePersistence(
 		ClassNamePersistence classNamePersistence) {
+
 		this.classNamePersistence = classNamePersistence;
 	}
 
@@ -570,7 +725,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the group local service
 	 */
-	public com.liferay.portal.kernel.service.GroupLocalService getGroupLocalService() {
+	public com.liferay.portal.kernel.service.GroupLocalService
+		getGroupLocalService() {
+
 		return groupLocalService;
 	}
 
@@ -581,6 +738,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setGroupLocalService(
 		com.liferay.portal.kernel.service.GroupLocalService groupLocalService) {
+
 		this.groupLocalService = groupLocalService;
 	}
 
@@ -625,7 +783,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the image local service
 	 */
-	public com.liferay.portal.kernel.service.ImageLocalService getImageLocalService() {
+	public com.liferay.portal.kernel.service.ImageLocalService
+		getImageLocalService() {
+
 		return imageLocalService;
 	}
 
@@ -636,6 +796,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setImageLocalService(
 		com.liferay.portal.kernel.service.ImageLocalService imageLocalService) {
+
 		this.imageLocalService = imageLocalService;
 	}
 
@@ -662,7 +823,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the asset entry local service
 	 */
-	public com.liferay.asset.kernel.service.AssetEntryLocalService getAssetEntryLocalService() {
+	public com.liferay.asset.kernel.service.AssetEntryLocalService
+		getAssetEntryLocalService() {
+
 		return assetEntryLocalService;
 	}
 
@@ -672,7 +835,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param assetEntryLocalService the asset entry local service
 	 */
 	public void setAssetEntryLocalService(
-		com.liferay.asset.kernel.service.AssetEntryLocalService assetEntryLocalService) {
+		com.liferay.asset.kernel.service.AssetEntryLocalService
+			assetEntryLocalService) {
+
 		this.assetEntryLocalService = assetEntryLocalService;
 	}
 
@@ -692,6 +857,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setAssetEntryPersistence(
 		AssetEntryPersistence assetEntryPersistence) {
+
 		this.assetEntryPersistence = assetEntryPersistence;
 	}
 
@@ -718,7 +884,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the expando row local service
 	 */
-	public com.liferay.expando.kernel.service.ExpandoRowLocalService getExpandoRowLocalService() {
+	public com.liferay.expando.kernel.service.ExpandoRowLocalService
+		getExpandoRowLocalService() {
+
 		return expandoRowLocalService;
 	}
 
@@ -728,7 +896,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param expandoRowLocalService the expando row local service
 	 */
 	public void setExpandoRowLocalService(
-		com.liferay.expando.kernel.service.ExpandoRowLocalService expandoRowLocalService) {
+		com.liferay.expando.kernel.service.ExpandoRowLocalService
+			expandoRowLocalService) {
+
 		this.expandoRowLocalService = expandoRowLocalService;
 	}
 
@@ -748,6 +918,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setExpandoRowPersistence(
 		ExpandoRowPersistence expandoRowPersistence) {
+
 		this.expandoRowPersistence = expandoRowPersistence;
 	}
 
@@ -756,7 +927,10 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the export import configuration local service
 	 */
-	public com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService getExportImportConfigurationLocalService() {
+	public com.liferay.exportimport.kernel.service.
+		ExportImportConfigurationLocalService
+			getExportImportConfigurationLocalService() {
+
 		return exportImportConfigurationLocalService;
 	}
 
@@ -766,8 +940,12 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param exportImportConfigurationLocalService the export import configuration local service
 	 */
 	public void setExportImportConfigurationLocalService(
-		com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService exportImportConfigurationLocalService) {
-		this.exportImportConfigurationLocalService = exportImportConfigurationLocalService;
+		com.liferay.exportimport.kernel.service.
+			ExportImportConfigurationLocalService
+				exportImportConfigurationLocalService) {
+
+		this.exportImportConfigurationLocalService =
+			exportImportConfigurationLocalService;
 	}
 
 	/**
@@ -775,7 +953,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the export import configuration persistence
 	 */
-	public ExportImportConfigurationPersistence getExportImportConfigurationPersistence() {
+	public ExportImportConfigurationPersistence
+		getExportImportConfigurationPersistence() {
+
 		return exportImportConfigurationPersistence;
 	}
 
@@ -785,8 +965,11 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param exportImportConfigurationPersistence the export import configuration persistence
 	 */
 	public void setExportImportConfigurationPersistence(
-		ExportImportConfigurationPersistence exportImportConfigurationPersistence) {
-		this.exportImportConfigurationPersistence = exportImportConfigurationPersistence;
+		ExportImportConfigurationPersistence
+			exportImportConfigurationPersistence) {
+
+		this.exportImportConfigurationPersistence =
+			exportImportConfigurationPersistence;
 	}
 
 	/**
@@ -794,7 +977,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the export import configuration finder
 	 */
-	public ExportImportConfigurationFinder getExportImportConfigurationFinder() {
+	public ExportImportConfigurationFinder
+		getExportImportConfigurationFinder() {
+
 		return exportImportConfigurationFinder;
 	}
 
@@ -805,6 +990,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setExportImportConfigurationFinder(
 		ExportImportConfigurationFinder exportImportConfigurationFinder) {
+
 		this.exportImportConfigurationFinder = exportImportConfigurationFinder;
 	}
 
@@ -813,7 +999,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the ratings stats local service
 	 */
-	public com.liferay.ratings.kernel.service.RatingsStatsLocalService getRatingsStatsLocalService() {
+	public com.liferay.ratings.kernel.service.RatingsStatsLocalService
+		getRatingsStatsLocalService() {
+
 		return ratingsStatsLocalService;
 	}
 
@@ -823,7 +1011,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param ratingsStatsLocalService the ratings stats local service
 	 */
 	public void setRatingsStatsLocalService(
-		com.liferay.ratings.kernel.service.RatingsStatsLocalService ratingsStatsLocalService) {
+		com.liferay.ratings.kernel.service.RatingsStatsLocalService
+			ratingsStatsLocalService) {
+
 		this.ratingsStatsLocalService = ratingsStatsLocalService;
 	}
 
@@ -843,25 +1033,8 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setRatingsStatsPersistence(
 		RatingsStatsPersistence ratingsStatsPersistence) {
+
 		this.ratingsStatsPersistence = ratingsStatsPersistence;
-	}
-
-	/**
-	 * Returns the ratings stats finder.
-	 *
-	 * @return the ratings stats finder
-	 */
-	public RatingsStatsFinder getRatingsStatsFinder() {
-		return ratingsStatsFinder;
-	}
-
-	/**
-	 * Sets the ratings stats finder.
-	 *
-	 * @param ratingsStatsFinder the ratings stats finder
-	 */
-	public void setRatingsStatsFinder(RatingsStatsFinder ratingsStatsFinder) {
-		this.ratingsStatsFinder = ratingsStatsFinder;
 	}
 
 	/**
@@ -869,7 +1042,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the layout friendly url local service
 	 */
-	public com.liferay.portal.kernel.service.LayoutFriendlyURLLocalService getLayoutFriendlyURLLocalService() {
+	public com.liferay.portal.kernel.service.LayoutFriendlyURLLocalService
+		getLayoutFriendlyURLLocalService() {
+
 		return layoutFriendlyURLLocalService;
 	}
 
@@ -879,7 +1054,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param layoutFriendlyURLLocalService the layout friendly url local service
 	 */
 	public void setLayoutFriendlyURLLocalService(
-		com.liferay.portal.kernel.service.LayoutFriendlyURLLocalService layoutFriendlyURLLocalService) {
+		com.liferay.portal.kernel.service.LayoutFriendlyURLLocalService
+			layoutFriendlyURLLocalService) {
+
 		this.layoutFriendlyURLLocalService = layoutFriendlyURLLocalService;
 	}
 
@@ -899,6 +1076,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setLayoutFriendlyURLPersistence(
 		LayoutFriendlyURLPersistence layoutFriendlyURLPersistence) {
+
 		this.layoutFriendlyURLPersistence = layoutFriendlyURLPersistence;
 	}
 
@@ -907,7 +1085,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the layout prototype local service
 	 */
-	public com.liferay.portal.kernel.service.LayoutPrototypeLocalService getLayoutPrototypeLocalService() {
+	public com.liferay.portal.kernel.service.LayoutPrototypeLocalService
+		getLayoutPrototypeLocalService() {
+
 		return layoutPrototypeLocalService;
 	}
 
@@ -917,7 +1097,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param layoutPrototypeLocalService the layout prototype local service
 	 */
 	public void setLayoutPrototypeLocalService(
-		com.liferay.portal.kernel.service.LayoutPrototypeLocalService layoutPrototypeLocalService) {
+		com.liferay.portal.kernel.service.LayoutPrototypeLocalService
+			layoutPrototypeLocalService) {
+
 		this.layoutPrototypeLocalService = layoutPrototypeLocalService;
 	}
 
@@ -937,6 +1119,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setLayoutPrototypePersistence(
 		LayoutPrototypePersistence layoutPrototypePersistence) {
+
 		this.layoutPrototypePersistence = layoutPrototypePersistence;
 	}
 
@@ -945,7 +1128,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the layout set local service
 	 */
-	public com.liferay.portal.kernel.service.LayoutSetLocalService getLayoutSetLocalService() {
+	public com.liferay.portal.kernel.service.LayoutSetLocalService
+		getLayoutSetLocalService() {
+
 		return layoutSetLocalService;
 	}
 
@@ -955,7 +1140,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param layoutSetLocalService the layout set local service
 	 */
 	public void setLayoutSetLocalService(
-		com.liferay.portal.kernel.service.LayoutSetLocalService layoutSetLocalService) {
+		com.liferay.portal.kernel.service.LayoutSetLocalService
+			layoutSetLocalService) {
+
 		this.layoutSetLocalService = layoutSetLocalService;
 	}
 
@@ -975,6 +1162,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setLayoutSetPersistence(
 		LayoutSetPersistence layoutSetPersistence) {
+
 		this.layoutSetPersistence = layoutSetPersistence;
 	}
 
@@ -983,7 +1171,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the layout set prototype local service
 	 */
-	public com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService getLayoutSetPrototypeLocalService() {
+	public com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService
+		getLayoutSetPrototypeLocalService() {
+
 		return layoutSetPrototypeLocalService;
 	}
 
@@ -993,7 +1183,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param layoutSetPrototypeLocalService the layout set prototype local service
 	 */
 	public void setLayoutSetPrototypeLocalService(
-		com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService layoutSetPrototypeLocalService) {
+		com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService
+			layoutSetPrototypeLocalService) {
+
 		this.layoutSetPrototypeLocalService = layoutSetPrototypeLocalService;
 	}
 
@@ -1013,6 +1205,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setLayoutSetPrototypePersistence(
 		LayoutSetPrototypePersistence layoutSetPrototypePersistence) {
+
 		this.layoutSetPrototypePersistence = layoutSetPrototypePersistence;
 	}
 
@@ -1021,7 +1214,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the plugin setting local service
 	 */
-	public com.liferay.portal.kernel.service.PluginSettingLocalService getPluginSettingLocalService() {
+	public com.liferay.portal.kernel.service.PluginSettingLocalService
+		getPluginSettingLocalService() {
+
 		return pluginSettingLocalService;
 	}
 
@@ -1031,7 +1226,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param pluginSettingLocalService the plugin setting local service
 	 */
 	public void setPluginSettingLocalService(
-		com.liferay.portal.kernel.service.PluginSettingLocalService pluginSettingLocalService) {
+		com.liferay.portal.kernel.service.PluginSettingLocalService
+			pluginSettingLocalService) {
+
 		this.pluginSettingLocalService = pluginSettingLocalService;
 	}
 
@@ -1051,7 +1248,51 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setPluginSettingPersistence(
 		PluginSettingPersistence pluginSettingPersistence) {
+
 		this.pluginSettingPersistence = pluginSettingPersistence;
+	}
+
+	/**
+	 * Returns the portal preferences local service.
+	 *
+	 * @return the portal preferences local service
+	 */
+	public com.liferay.portal.kernel.service.PortalPreferencesLocalService
+		getPortalPreferencesLocalService() {
+
+		return portalPreferencesLocalService;
+	}
+
+	/**
+	 * Sets the portal preferences local service.
+	 *
+	 * @param portalPreferencesLocalService the portal preferences local service
+	 */
+	public void setPortalPreferencesLocalService(
+		com.liferay.portal.kernel.service.PortalPreferencesLocalService
+			portalPreferencesLocalService) {
+
+		this.portalPreferencesLocalService = portalPreferencesLocalService;
+	}
+
+	/**
+	 * Returns the portal preferences persistence.
+	 *
+	 * @return the portal preferences persistence
+	 */
+	public PortalPreferencesPersistence getPortalPreferencesPersistence() {
+		return portalPreferencesPersistence;
+	}
+
+	/**
+	 * Sets the portal preferences persistence.
+	 *
+	 * @param portalPreferencesPersistence the portal preferences persistence
+	 */
+	public void setPortalPreferencesPersistence(
+		PortalPreferencesPersistence portalPreferencesPersistence) {
+
+		this.portalPreferencesPersistence = portalPreferencesPersistence;
 	}
 
 	/**
@@ -1059,7 +1300,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the portlet preferences local service
 	 */
-	public com.liferay.portal.kernel.service.PortletPreferencesLocalService getPortletPreferencesLocalService() {
+	public com.liferay.portal.kernel.service.PortletPreferencesLocalService
+		getPortletPreferencesLocalService() {
+
 		return portletPreferencesLocalService;
 	}
 
@@ -1069,7 +1312,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param portletPreferencesLocalService the portlet preferences local service
 	 */
 	public void setPortletPreferencesLocalService(
-		com.liferay.portal.kernel.service.PortletPreferencesLocalService portletPreferencesLocalService) {
+		com.liferay.portal.kernel.service.PortletPreferencesLocalService
+			portletPreferencesLocalService) {
+
 		this.portletPreferencesLocalService = portletPreferencesLocalService;
 	}
 
@@ -1089,6 +1334,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setPortletPreferencesPersistence(
 		PortletPreferencesPersistence portletPreferencesPersistence) {
+
 		this.portletPreferencesPersistence = portletPreferencesPersistence;
 	}
 
@@ -1108,6 +1354,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setPortletPreferencesFinder(
 		PortletPreferencesFinder portletPreferencesFinder) {
+
 		this.portletPreferencesFinder = portletPreferencesFinder;
 	}
 
@@ -1116,7 +1363,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the resource local service
 	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService getResourceLocalService() {
+	public com.liferay.portal.kernel.service.ResourceLocalService
+		getResourceLocalService() {
+
 		return resourceLocalService;
 	}
 
@@ -1126,7 +1375,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param resourceLocalService the resource local service
 	 */
 	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService) {
+		com.liferay.portal.kernel.service.ResourceLocalService
+			resourceLocalService) {
+
 		this.resourceLocalService = resourceLocalService;
 	}
 
@@ -1135,7 +1386,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the resource permission local service
 	 */
-	public com.liferay.portal.kernel.service.ResourcePermissionLocalService getResourcePermissionLocalService() {
+	public com.liferay.portal.kernel.service.ResourcePermissionLocalService
+		getResourcePermissionLocalService() {
+
 		return resourcePermissionLocalService;
 	}
 
@@ -1145,7 +1398,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param resourcePermissionLocalService the resource permission local service
 	 */
 	public void setResourcePermissionLocalService(
-		com.liferay.portal.kernel.service.ResourcePermissionLocalService resourcePermissionLocalService) {
+		com.liferay.portal.kernel.service.ResourcePermissionLocalService
+			resourcePermissionLocalService) {
+
 		this.resourcePermissionLocalService = resourcePermissionLocalService;
 	}
 
@@ -1165,6 +1420,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setResourcePermissionPersistence(
 		ResourcePermissionPersistence resourcePermissionPersistence) {
+
 		this.resourcePermissionPersistence = resourcePermissionPersistence;
 	}
 
@@ -1184,6 +1440,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setResourcePermissionFinder(
 		ResourcePermissionFinder resourcePermissionFinder) {
+
 		this.resourcePermissionFinder = resourcePermissionFinder;
 	}
 
@@ -1192,7 +1449,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the user local service
 	 */
-	public com.liferay.portal.kernel.service.UserLocalService getUserLocalService() {
+	public com.liferay.portal.kernel.service.UserLocalService
+		getUserLocalService() {
+
 		return userLocalService;
 	}
 
@@ -1203,6 +1462,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setUserLocalService(
 		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
+
 		this.userLocalService = userLocalService;
 	}
 
@@ -1247,7 +1507,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the user group local service
 	 */
-	public com.liferay.portal.kernel.service.UserGroupLocalService getUserGroupLocalService() {
+	public com.liferay.portal.kernel.service.UserGroupLocalService
+		getUserGroupLocalService() {
+
 		return userGroupLocalService;
 	}
 
@@ -1257,7 +1519,9 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param userGroupLocalService the user group local service
 	 */
 	public void setUserGroupLocalService(
-		com.liferay.portal.kernel.service.UserGroupLocalService userGroupLocalService) {
+		com.liferay.portal.kernel.service.UserGroupLocalService
+			userGroupLocalService) {
+
 		this.userGroupLocalService = userGroupLocalService;
 	}
 
@@ -1277,6 +1541,7 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setUserGroupPersistence(
 		UserGroupPersistence userGroupPersistence) {
+
 		this.userGroupPersistence = userGroupPersistence;
 	}
 
@@ -1298,9 +1563,56 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 		this.userGroupFinder = userGroupFinder;
 	}
 
+	/**
+	 * Returns the workflow definition link local service.
+	 *
+	 * @return the workflow definition link local service
+	 */
+	public com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService
+		getWorkflowDefinitionLinkLocalService() {
+
+		return workflowDefinitionLinkLocalService;
+	}
+
+	/**
+	 * Sets the workflow definition link local service.
+	 *
+	 * @param workflowDefinitionLinkLocalService the workflow definition link local service
+	 */
+	public void setWorkflowDefinitionLinkLocalService(
+		com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService
+			workflowDefinitionLinkLocalService) {
+
+		this.workflowDefinitionLinkLocalService =
+			workflowDefinitionLinkLocalService;
+	}
+
+	/**
+	 * Returns the workflow definition link persistence.
+	 *
+	 * @return the workflow definition link persistence
+	 */
+	public WorkflowDefinitionLinkPersistence
+		getWorkflowDefinitionLinkPersistence() {
+
+		return workflowDefinitionLinkPersistence;
+	}
+
+	/**
+	 * Sets the workflow definition link persistence.
+	 *
+	 * @param workflowDefinitionLinkPersistence the workflow definition link persistence
+	 */
+	public void setWorkflowDefinitionLinkPersistence(
+		WorkflowDefinitionLinkPersistence workflowDefinitionLinkPersistence) {
+
+		this.workflowDefinitionLinkPersistence =
+			workflowDefinitionLinkPersistence;
+	}
+
 	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.portal.kernel.model.Layout",
-			layoutLocalService);
+		persistedModelLocalServiceRegistry.register(
+			"com.liferay.portal.kernel.model.Layout", layoutLocalService);
 	}
 
 	public void destroy() {
@@ -1318,8 +1630,22 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 		return LayoutLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<Layout> getCTPersistence() {
+		return layoutPersistence;
+	}
+
+	@Override
+	public Class<Layout> getModelClass() {
 		return Layout.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<Layout>, R, E> updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(layoutPersistence);
 	}
 
 	protected String getModelClassName() {
@@ -1340,106 +1666,226 @@ public abstract class LayoutLocalServiceBaseImpl extends BaseLocalServiceImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
 	@BeanReference(type = LayoutLocalService.class)
 	protected LayoutLocalService layoutLocalService;
+
 	@BeanReference(type = LayoutPersistence.class)
 	protected LayoutPersistence layoutPersistence;
+
 	@BeanReference(type = LayoutFinder.class)
 	protected LayoutFinder layoutFinder;
-	@BeanReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@BeanReference(type = com.liferay.portal.kernel.service.ClassNameLocalService.class)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService;
+
+	@BeanReference(
+		type = com.liferay.counter.kernel.service.CounterLocalService.class
+	)
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ClassNameLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ClassNameLocalService
+		classNameLocalService;
+
 	@BeanReference(type = ClassNamePersistence.class)
 	protected ClassNamePersistence classNamePersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.GroupLocalService.class)
-	protected com.liferay.portal.kernel.service.GroupLocalService groupLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.GroupLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.GroupLocalService
+		groupLocalService;
+
 	@BeanReference(type = GroupPersistence.class)
 	protected GroupPersistence groupPersistence;
+
 	@BeanReference(type = GroupFinder.class)
 	protected GroupFinder groupFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.ImageLocalService.class)
-	protected com.liferay.portal.kernel.service.ImageLocalService imageLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ImageLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ImageLocalService
+		imageLocalService;
+
 	@BeanReference(type = ImagePersistence.class)
 	protected ImagePersistence imagePersistence;
-	@BeanReference(type = com.liferay.asset.kernel.service.AssetEntryLocalService.class)
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService assetEntryLocalService;
+
+	@BeanReference(
+		type = com.liferay.asset.kernel.service.AssetEntryLocalService.class
+	)
+	protected com.liferay.asset.kernel.service.AssetEntryLocalService
+		assetEntryLocalService;
+
 	@BeanReference(type = AssetEntryPersistence.class)
 	protected AssetEntryPersistence assetEntryPersistence;
+
 	@BeanReference(type = AssetEntryFinder.class)
 	protected AssetEntryFinder assetEntryFinder;
-	@BeanReference(type = com.liferay.expando.kernel.service.ExpandoRowLocalService.class)
-	protected com.liferay.expando.kernel.service.ExpandoRowLocalService expandoRowLocalService;
+
+	@BeanReference(
+		type = com.liferay.expando.kernel.service.ExpandoRowLocalService.class
+	)
+	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
+		expandoRowLocalService;
+
 	@BeanReference(type = ExpandoRowPersistence.class)
 	protected ExpandoRowPersistence expandoRowPersistence;
-	@BeanReference(type = com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService.class)
-	protected com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService exportImportConfigurationLocalService;
+
+	@BeanReference(
+		type = com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService.class
+	)
+	protected com.liferay.exportimport.kernel.service.
+		ExportImportConfigurationLocalService
+			exportImportConfigurationLocalService;
+
 	@BeanReference(type = ExportImportConfigurationPersistence.class)
-	protected ExportImportConfigurationPersistence exportImportConfigurationPersistence;
+	protected ExportImportConfigurationPersistence
+		exportImportConfigurationPersistence;
+
 	@BeanReference(type = ExportImportConfigurationFinder.class)
 	protected ExportImportConfigurationFinder exportImportConfigurationFinder;
-	@BeanReference(type = com.liferay.ratings.kernel.service.RatingsStatsLocalService.class)
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService ratingsStatsLocalService;
+
+	@BeanReference(
+		type = com.liferay.ratings.kernel.service.RatingsStatsLocalService.class
+	)
+	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
+		ratingsStatsLocalService;
+
 	@BeanReference(type = RatingsStatsPersistence.class)
 	protected RatingsStatsPersistence ratingsStatsPersistence;
-	@BeanReference(type = RatingsStatsFinder.class)
-	protected RatingsStatsFinder ratingsStatsFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.LayoutFriendlyURLLocalService.class)
-	protected com.liferay.portal.kernel.service.LayoutFriendlyURLLocalService layoutFriendlyURLLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.LayoutFriendlyURLLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.LayoutFriendlyURLLocalService
+		layoutFriendlyURLLocalService;
+
 	@BeanReference(type = LayoutFriendlyURLPersistence.class)
 	protected LayoutFriendlyURLPersistence layoutFriendlyURLPersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.LayoutPrototypeLocalService.class)
-	protected com.liferay.portal.kernel.service.LayoutPrototypeLocalService layoutPrototypeLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.LayoutPrototypeLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.LayoutPrototypeLocalService
+		layoutPrototypeLocalService;
+
 	@BeanReference(type = LayoutPrototypePersistence.class)
 	protected LayoutPrototypePersistence layoutPrototypePersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.LayoutSetLocalService.class)
-	protected com.liferay.portal.kernel.service.LayoutSetLocalService layoutSetLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.LayoutSetLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.LayoutSetLocalService
+		layoutSetLocalService;
+
 	@BeanReference(type = LayoutSetPersistence.class)
 	protected LayoutSetPersistence layoutSetPersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService.class)
-	protected com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService layoutSetPrototypeLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService
+		layoutSetPrototypeLocalService;
+
 	@BeanReference(type = LayoutSetPrototypePersistence.class)
 	protected LayoutSetPrototypePersistence layoutSetPrototypePersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.PluginSettingLocalService.class)
-	protected com.liferay.portal.kernel.service.PluginSettingLocalService pluginSettingLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.PluginSettingLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.PluginSettingLocalService
+		pluginSettingLocalService;
+
 	@BeanReference(type = PluginSettingPersistence.class)
 	protected PluginSettingPersistence pluginSettingPersistence;
-	@BeanReference(type = com.liferay.portal.kernel.service.PortletPreferencesLocalService.class)
-	protected com.liferay.portal.kernel.service.PortletPreferencesLocalService portletPreferencesLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.PortalPreferencesLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.PortalPreferencesLocalService
+		portalPreferencesLocalService;
+
+	@BeanReference(type = PortalPreferencesPersistence.class)
+	protected PortalPreferencesPersistence portalPreferencesPersistence;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.PortletPreferencesLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.PortletPreferencesLocalService
+		portletPreferencesLocalService;
+
 	@BeanReference(type = PortletPreferencesPersistence.class)
 	protected PortletPreferencesPersistence portletPreferencesPersistence;
+
 	@BeanReference(type = PortletPreferencesFinder.class)
 	protected PortletPreferencesFinder portletPreferencesFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.ResourceLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService;
-	@BeanReference(type = com.liferay.portal.kernel.service.ResourcePermissionLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourcePermissionLocalService resourcePermissionLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ResourceLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ResourceLocalService
+		resourceLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ResourcePermissionLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ResourcePermissionLocalService
+		resourcePermissionLocalService;
+
 	@BeanReference(type = ResourcePermissionPersistence.class)
 	protected ResourcePermissionPersistence resourcePermissionPersistence;
+
 	@BeanReference(type = ResourcePermissionFinder.class)
 	protected ResourcePermissionFinder resourcePermissionFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.UserLocalService.class)
-	protected com.liferay.portal.kernel.service.UserLocalService userLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.UserLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.UserLocalService
+		userLocalService;
+
 	@BeanReference(type = UserPersistence.class)
 	protected UserPersistence userPersistence;
+
 	@BeanReference(type = UserFinder.class)
 	protected UserFinder userFinder;
-	@BeanReference(type = com.liferay.portal.kernel.service.UserGroupLocalService.class)
-	protected com.liferay.portal.kernel.service.UserGroupLocalService userGroupLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.UserGroupLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.UserGroupLocalService
+		userGroupLocalService;
+
 	@BeanReference(type = UserGroupPersistence.class)
 	protected UserGroupPersistence userGroupPersistence;
+
 	@BeanReference(type = UserGroupFinder.class)
 	protected UserGroupFinder userGroupFinder;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService.class
+	)
+	protected
+		com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService
+			workflowDefinitionLinkLocalService;
+
+	@BeanReference(type = WorkflowDefinitionLinkPersistence.class)
+	protected WorkflowDefinitionLinkPersistence
+		workflowDefinitionLinkPersistence;
+
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+	protected PersistedModelLocalServiceRegistry
+		persistedModelLocalServiceRegistry;
+
 }

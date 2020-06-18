@@ -36,6 +36,10 @@ public class PortalTools {
 
 	public static final String PORTAL_VERSION_7_0_X = "7.0.x";
 
+	public static final String PORTAL_VERSION_7_1_X = "7.1.x";
+
+	public static final String PORTAL_VERSION_7_2_X = "7.2.x";
+
 	public static final String PORTAL_VERSION_PROPERTY_NAME = "portal.version";
 
 	public static String getPortalVersion(Project project) {
@@ -142,8 +146,9 @@ public class PortalTools {
 		return properties;
 	}
 
-	private static final String[] _PORTAL_VERSION_PROPERTY_NAMES =
-		{"git.working.branch.name", PORTAL_VERSION_PROPERTY_NAME};
+	private static final String[] _PORTAL_VERSION_PROPERTY_NAMES = {
+		"git.working.branch.name", PORTAL_VERSION_PROPERTY_NAME
+	};
 
 	private static final Map<String, Properties> _versionsMap;
 
@@ -155,8 +160,8 @@ public class PortalTools {
 		try {
 			_populateVersionsMap(classLoader, null, null);
 		}
-		catch (IOException ioe) {
-			throw new ExceptionInInitializerError(ioe);
+		catch (IOException ioException) {
+			throw new ExceptionInInitializerError(ioException);
 		}
 	}
 

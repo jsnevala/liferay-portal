@@ -73,8 +73,10 @@ public class MaximizePortletConfigurationIcon
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
 		return "submitForm(document.hrefFm, '".concat(
-			HtmlUtil.escapeJS(portletDisplay.getURLMax())).concat(
-				"'); return false;");
+			HtmlUtil.escapeJS(portletDisplay.getURLMax())
+		).concat(
+			"'); return false;"
+		);
 	}
 
 	@Override
@@ -134,13 +136,12 @@ public class MaximizePortletConfigurationIcon
 
 		Group group = themeDisplay.getScopeGroup();
 
-		if (!themeDisplay.isSignedIn() ||
-			(group.hasStagingGroup() && !group.isStagingGroup()) ||
-			!hasUpdateLayoutPermission(themeDisplay)) {
+		if ((!themeDisplay.isSignedIn() ||
+			 (group.hasStagingGroup() && !group.isStagingGroup()) ||
+			 !hasUpdateLayoutPermission(themeDisplay)) &&
+			!PropsValues.LAYOUT_GUEST_SHOW_MAX_ICON) {
 
-			if (!PropsValues.LAYOUT_GUEST_SHOW_MAX_ICON) {
-				return false;
-			}
+			return false;
 		}
 
 		return true;
@@ -157,8 +158,8 @@ public class MaximizePortletConfigurationIcon
 				themeDisplay.getPermissionChecker(), themeDisplay.getLayout(),
 				ActionKeys.UPDATE);
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 
 			return false;
 		}

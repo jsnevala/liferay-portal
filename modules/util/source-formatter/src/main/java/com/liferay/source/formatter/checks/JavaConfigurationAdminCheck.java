@@ -14,8 +14,8 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.source.formatter.checks.util.JavaSourceUtil;
 
 import java.util.List;
@@ -40,11 +40,11 @@ public class JavaConfigurationAdminCheck extends BaseFileCheck {
 		Matcher matcher = _getConfigurationPattern.matcher(content);
 
 		while (matcher.find()) {
-			List<String> parametersList = JavaSourceUtil.getParameterList(
+			List<String> parameterList = JavaSourceUtil.getParameterList(
 				content.substring(matcher.start()));
 
-			if (parametersList.size() == 2) {
-				String parameterName = parametersList.get(1);
+			if (parameterList.size() == 2) {
+				String parameterName = parameterList.get(1);
 
 				if (parameterName.equals("StringPool.QUESTION") ||
 					parameterName.equals("\"?\"")) {
@@ -62,7 +62,7 @@ public class JavaConfigurationAdminCheck extends BaseFileCheck {
 			sb.append(StringPool.APOSTROPHE);
 
 			addMessage(
-				fileName, sb.toString(), "configuration_admin.markdown",
+				fileName, sb.toString(),
 				getLineNumber(content, matcher.start()));
 		}
 

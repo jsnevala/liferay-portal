@@ -46,7 +46,9 @@ import javax.servlet.http.HttpServletResponse;
 public class TunnelServlet extends HttpServlet {
 
 	@Override
-	public void doPost(HttpServletRequest request, HttpServletResponse response)
+	public void doPost(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
 		PermissionChecker permissionChecker =
@@ -57,7 +59,7 @@ public class TunnelServlet extends HttpServlet {
 				_log.warn("Unauthenticated access is forbidden");
 			}
 
-			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
 			return;
 		}
@@ -68,11 +70,12 @@ public class TunnelServlet extends HttpServlet {
 
 		try {
 			ois = new ProtectedClassLoaderObjectInputStream(
-				request.getInputStream(), thread.getContextClassLoader());
+				httpServletRequest.getInputStream(),
+				thread.getContextClassLoader());
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioe, ioe);
+				_log.warn(ioException, ioException);
 			}
 
 			return;
@@ -100,11 +103,12 @@ public class TunnelServlet extends HttpServlet {
 				returnObj = methodHandler.invoke();
 			}
 		}
-		catch (InvocationTargetException ite) {
-			returnObj = ite.getCause();
+		catch (InvocationTargetException invocationTargetException) {
+			returnObj = invocationTargetException.getCause();
 
 			if (!(returnObj instanceof PortalException)) {
-				_log.error(ite, ite);
+				_log.error(
+					invocationTargetException, invocationTargetException);
 
 				if (returnObj != null) {
 					Throwable throwable = (Throwable)returnObj;
@@ -116,8 +120,8 @@ public class TunnelServlet extends HttpServlet {
 				}
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 		finally {
 			AccessControlThreadLocal.setRemoteAccess(remoteAccess);
@@ -125,27 +129,28 @@ public class TunnelServlet extends HttpServlet {
 
 		if (returnObj != null) {
 			try (ObjectOutputStream oos = new ObjectOutputStream(
-					response.getOutputStream())) {
+					httpServletResponse.getOutputStream())) {
 
 				oos.writeObject(returnObj);
 			}
-			catch (IOException ioe) {
-				_log.error(ioe, ioe);
+			catch (IOException ioException) {
+				_log.error(ioException, ioException);
 
-				throw ioe;
+				throw ioException;
 			}
 		}
 	}
 
 	@Override
 	protected void doGet(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		PortalUtil.sendError(
 			HttpServletResponse.SC_NOT_FOUND,
 			new IllegalArgumentException("The GET method is not supported"),
-			request, response);
+			httpServletRequest, httpServletResponse);
 	}
 
 	protected boolean isValidRequest(Class<?> clazz) {

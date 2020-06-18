@@ -59,8 +59,6 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * @author Julio Camarero
  */
@@ -148,16 +146,12 @@ public class SiteAdministrationPanelCategoryDisplayContext {
 
 		_groupURL = StringPool.BLANK;
 
-		Group group = getGroup();
-
-		return _groupURLProvider.getGroupURL(group, _portletRequest);
+		return _groupURLProvider.getGroupURL(getGroup(), _portletRequest);
 	}
 
 	public String getGroupURL(boolean privateLayout) {
-		Group group = getGroup();
-
 		return _groupURLProvider.getGroupLayoutsURL(
-			group, privateLayout, _portletRequest);
+			getGroup(), privateLayout, _portletRequest);
 	}
 
 	public String getLiveGroupLabel() {
@@ -186,24 +180,28 @@ public class SiteAdministrationPanelCategoryDisplayContext {
 				_liveGroupURL = StagingUtil.getRemoteSiteURL(
 					group, layout.isPrivateLayout());
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug("Unable to get live group URL", pe);
+					_log.debug("Unable to get live group URL", portalException);
 				}
 
-				_log.error("Unable to get live group URL: " + pe.getMessage());
+				_log.error(
+					"Unable to get live group URL: " +
+						portalException.getMessage());
 			}
-			catch (SystemException se) {
-				Throwable cause = se.getCause();
+			catch (SystemException systemException) {
+				Throwable cause = systemException.getCause();
 
 				if (!(cause instanceof ConnectException)) {
-					throw se;
+					throw systemException;
 				}
 
-				if (_log.isWarnEnabled()) {
-					_log.warn(
-						"Unable to connect to remote live: " +
-							cause.getMessage());
+				_log.error(
+					"Unable to connect to remote live: " +
+						systemException.getMessage());
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(systemException, systemException);
 				}
 
 				throw new RemoteExportException(
@@ -355,15 +353,16 @@ public class SiteAdministrationPanelCategoryDisplayContext {
 		Group group = getGroup();
 
 		Layout layout = LayoutLocalServiceUtil.fetchFirstLayout(
-			group.getGroupId(), false,
-			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+			group.getGroupId(), false, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
+			false);
 
 		if ((layout != null) && !layout.isHidden()) {
 			return true;
 		}
 
 		layout = LayoutLocalServiceUtil.fetchFirstLayout(
-			group.getGroupId(), true, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+			group.getGroupId(), true, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
+			false);
 
 		if ((layout != null) && !layout.isHidden()) {
 			return true;
@@ -390,11 +389,9 @@ public class SiteAdministrationPanelCategoryDisplayContext {
 	}
 
 	public boolean isShowSiteSelector() throws PortalException {
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			_portletRequest);
-
 		List<Group> mySites = getMySites();
-		List<Group> recentSites = _recentGroupManager.getRecentGroups(request);
+		List<Group> recentSites = _recentGroupManager.getRecentGroups(
+			PortalUtil.getHttpServletRequest(_portletRequest));
 
 		if (mySites.isEmpty() && recentSites.isEmpty()) {
 			return false;
@@ -458,28 +455,20 @@ public class SiteAdministrationPanelCategoryDisplayContext {
 	}
 
 	protected boolean hasStagingPermission() throws PortalException {
-		if (!GroupPermissionUtil.contains(
+		if (GroupPermissionUtil.contains(
 				_themeDisplay.getPermissionChecker(), getGroup(),
-				ActionKeys.MANAGE_STAGING)) {
-
-			return false;
-		}
-
-		if (!GroupPermissionUtil.contains(
+				ActionKeys.MANAGE_STAGING) ||
+			GroupPermissionUtil.contains(
 				_themeDisplay.getPermissionChecker(), getGroup(),
-				ActionKeys.PUBLISH_STAGING)) {
-
-			return false;
-		}
-
-		if (!GroupPermissionUtil.contains(
+				ActionKeys.PUBLISH_STAGING) ||
+			GroupPermissionUtil.contains(
 				_themeDisplay.getPermissionChecker(), getGroup(),
 				ActionKeys.VIEW_STAGING)) {
 
-			return false;
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected void updateLatentGroup(long groupId) {
@@ -487,12 +476,8 @@ public class SiteAdministrationPanelCategoryDisplayContext {
 			return;
 		}
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			_portletRequest);
-
-		_recentGroupManager.addRecentGroup(request, groupId);
-
-		_groupProvider.setGroup(request, _group);
+		_groupProvider.setGroup(
+			PortalUtil.getHttpServletRequest(_portletRequest), _group);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -21,8 +21,6 @@ int delta = ParamUtil.getInteger(request, SearchContainer.DEFAULT_DELTA_PARAM);
 String orderByCol = ParamUtil.getString(request, "orderByCol", "title");
 String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 
-DLMimeTypeDisplayContext dlMimeTypeDisplayContext = (DLMimeTypeDisplayContext)request.getAttribute(BlogsWebKeys.DL_MIME_TYPE_DISPLAY_CONTEXT);
-
 PortletURL portletURL = renderResponse.createRenderURL();
 
 portletURL.setParameter("mvcRenderCommandName", "/blogs/view");
@@ -47,7 +45,7 @@ BlogImagesDisplayContext blogImagesDisplayContext = new BlogImagesDisplayContext
 
 blogImagesDisplayContext.populateResults(blogImagesSearchContainer);
 
-BlogImagesManagementToolbarDisplayContext blogImagesManagementToolbarDisplayContext = new BlogImagesManagementToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request, currentURLObj);
+BlogImagesManagementToolbarDisplayContext blogImagesManagementToolbarDisplayContext = new BlogImagesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, currentURLObj);
 
 String displayStyle = blogImagesManagementToolbarDisplayContext.getDisplayStyle();
 %>
@@ -92,9 +90,9 @@ String displayStyle = blogImagesManagementToolbarDisplayContext.getDisplayStyle(
 				</liferay-portlet:renderURL>
 
 				<%
-				Map<String, Object> rowData = new HashMap<>();
-
-				rowData.put("actions", String.join(StringPool.COMMA, blogImagesManagementToolbarDisplayContext.getAvailableActionDropdownItems(fileEntry)));
+				Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+					"actions", StringUtil.merge(blogImagesManagementToolbarDisplayContext.getAvailableActions(fileEntry))
+				).build();
 
 				row.setData(rowData);
 				%>
@@ -111,21 +109,35 @@ String displayStyle = blogImagesManagementToolbarDisplayContext.getDisplayStyle(
 </div>
 
 <aui:script>
-	var deleteImages = function() {
-		if (confirm('<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-images" />')) {
+	var deleteImages = function () {
+		if (
+			confirm(
+				'<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-images" />'
+			)
+		) {
 			var form = document.getElementById('<portlet:namespace />fm');
 
 			if (form) {
-				var cmd = form.querySelector('#<portlet:namespace /><%= Constants.CMD %>');
+				var cmd = form.querySelector(
+					'#<portlet:namespace /><%= Constants.CMD %>'
+				);
 
 				if (cmd) {
 					cmd.setAttribute('value', '<%= Constants.DELETE %>');
 				}
 
-				var deleteFileEntryIds = form.querySelector('#<portlet:namespace />deleteFileEntryIds');
+				var deleteFileEntryIds = form.querySelector(
+					'#<portlet:namespace />deleteFileEntryIds'
+				);
 
 				if (deleteFileEntryIds) {
-					deleteFileEntryIds.setAttribute('value', Liferay.Util.listCheckedExcept(form, '<portlet:namespace />allRowIds'));
+					deleteFileEntryIds.setAttribute(
+						'value',
+						Liferay.Util.listCheckedExcept(
+							form,
+							'<portlet:namespace />allRowIds'
+						)
+					);
 				}
 
 				submitForm(form);
@@ -134,21 +146,18 @@ String displayStyle = blogImagesManagementToolbarDisplayContext.getDisplayStyle(
 	};
 
 	var ACTIONS = {
-		'deleteImages': deleteImages
+		deleteImages: deleteImages,
 	};
 
-	Liferay.componentReady('blogImagesManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				'actionItemClicked',
-				function(event) {
-					var itemData = event.data.item.data;
+	Liferay.componentReady('blogImagesManagementToolbar').then(function (
+		managementToolbar
+	) {
+		managementToolbar.on('actionItemClicked', function (event) {
+			var itemData = event.data.item.data;
 
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action]();
-					}
-				}
-			);
-		}
-	);
+			if (itemData && itemData.action && ACTIONS[itemData.action]) {
+				ACTIONS[itemData.action]();
+			}
+		});
+	});
 </aui:script>

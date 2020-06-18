@@ -32,16 +32,19 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Eduardo Lundgren
  * @author Fabio Pezzutto
  */
+@Component(service = CalendarResourceFinder.class)
 public class CalendarResourceFinderImpl
 	extends CalendarResourceFinderBaseImpl implements CalendarResourceFinder {
 
@@ -289,25 +292,25 @@ public class CalendarResourceFinderImpl
 				sql, "description", StringPool.LIKE, true, descriptions);
 			sql = _customSQL.replaceAndOperator(sql, andOperator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
-			qPos.add(groupIds);
+			queryPos.add(companyId);
+			queryPos.add(groupIds);
 
 			if (ArrayUtil.isNotEmpty(classNameIds)) {
-				qPos.add(classNameIds);
+				queryPos.add(classNameIds);
 			}
 
-			qPos.add(codes, 2);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
-			qPos.add(active);
+			queryPos.add(codes, 2);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
+			queryPos.add(active);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -319,8 +322,8 @@ public class CalendarResourceFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -372,29 +375,29 @@ public class CalendarResourceFinderImpl
 
 			sql = StringUtil.replace(sql, "[$ORDER_BY$]", sb.toString());
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("CalendarResource", CalendarResourceImpl.class);
+			sqlQuery.addEntity("CalendarResource", CalendarResourceImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
-			qPos.add(groupIds);
+			queryPos.add(companyId);
+			queryPos.add(groupIds);
 
 			if (ArrayUtil.isNotEmpty(classNameIds)) {
-				qPos.add(classNameIds);
+				queryPos.add(classNameIds);
 			}
 
-			qPos.add(codes, 2);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
-			qPos.add(active);
+			queryPos.add(codes, 2);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
+			queryPos.add(active);
 
 			return (List<CalendarResource>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -410,7 +413,7 @@ public class CalendarResourceFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < classNameIds.length - 1; i++) {
+		for (int i = 0; i < (classNameIds.length - 1); i++) {
 			sb.append("classNameId = ? OR ");
 		}
 
@@ -428,7 +431,7 @@ public class CalendarResourceFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < groupIds.length - 1; i++) {
+		for (int i = 0; i < (groupIds.length - 1); i++) {
 			sb.append("groupId = ? OR ");
 		}
 
@@ -442,7 +445,7 @@ public class CalendarResourceFinderImpl
 		return CalendarResourceModelImpl.TABLE_COLUMNS_MAP;
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

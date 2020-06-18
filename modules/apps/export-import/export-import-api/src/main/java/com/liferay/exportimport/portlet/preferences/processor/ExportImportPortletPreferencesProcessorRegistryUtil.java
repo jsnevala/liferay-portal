@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.portlet.preferences.processor;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -33,22 +31,22 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
-@ProviderType
 public class ExportImportPortletPreferencesProcessorRegistryUtil {
 
 	public static ExportImportPortletPreferencesProcessor
 		getExportImportPortletPreferencesProcessor(String portletName) {
 
-		return _instance._getExportImportPortletPreferencesProcessor(
-			portletName);
+		return _exportImportPortletPreferencesProcessorRegistryUtil.
+			_getExportImportPortletPreferencesProcessor(portletName);
 	}
 
 	public static List<ExportImportPortletPreferencesProcessor>
 		getExportImportPortletPreferencesProcessors() {
 
-		return _instance._getExportImportPortletPreferencesProcessors();
+		return _exportImportPortletPreferencesProcessorRegistryUtil.
+			_getExportImportPortletPreferencesProcessors();
 	}
 
 	private ExportImportPortletPreferencesProcessorRegistryUtil() {
@@ -78,20 +76,21 @@ public class ExportImportPortletPreferencesProcessorRegistryUtil {
 	}
 
 	private static final ExportImportPortletPreferencesProcessorRegistryUtil
-		_instance = new ExportImportPortletPreferencesProcessorRegistryUtil();
+		_exportImportPortletPreferencesProcessorRegistryUtil =
+			new ExportImportPortletPreferencesProcessorRegistryUtil();
 
 	private final BundleContext _bundleContext;
 	private final Map<String, ExportImportPortletPreferencesProcessor>
 		_exportImportPortletPreferencesProcessors = new ConcurrentHashMap<>();
-	private final
-		ServiceTracker
-			<ExportImportPortletPreferencesProcessor,
-			 ExportImportPortletPreferencesProcessor> _serviceTracker;
+	private final ServiceTracker
+		<ExportImportPortletPreferencesProcessor,
+		 ExportImportPortletPreferencesProcessor> _serviceTracker;
 
-	private class ExportImportPortletPreferencesProcessorServiceTrackerCustomizer
-		implements ServiceTrackerCustomizer
-			<ExportImportPortletPreferencesProcessor,
-			 ExportImportPortletPreferencesProcessor> {
+	private class
+		ExportImportPortletPreferencesProcessorServiceTrackerCustomizer
+			implements ServiceTrackerCustomizer
+				<ExportImportPortletPreferencesProcessor,
+				 ExportImportPortletPreferencesProcessor> {
 
 		@Override
 		public ExportImportPortletPreferencesProcessor addingService(

@@ -30,7 +30,9 @@ import java.util.Locale;
 
 /**
  * @author Adolfo Pérez
+ * @deprecated As of Wilberforce (7.0.x)
  */
+@Deprecated
 public class DLFileEntryClassTypeReader implements ClassTypeReader {
 
 	@Override

@@ -27,6 +27,7 @@ import java.io.ObjectOutput;
 import java.io.Writer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,6 +38,10 @@ public class JSONArrayImpl implements JSONArray {
 
 	public JSONArrayImpl() {
 		_jsonArray = new org.json.JSONArray();
+	}
+
+	public JSONArrayImpl(Collection<?> collection) {
+		_jsonArray = new org.json.JSONArray(collection);
 	}
 
 	public JSONArrayImpl(org.json.JSONArray jsonArray) {
@@ -51,8 +56,8 @@ public class JSONArrayImpl implements JSONArray {
 
 			_jsonArray = new org.json.JSONArray(json);
 		}
-		catch (Exception e) {
-			throw new JSONException(e);
+		catch (Exception exception) {
+			throw new JSONException(exception);
 		}
 	}
 
@@ -143,8 +148,8 @@ public class JSONArrayImpl implements JSONArray {
 		try {
 			return _jsonArray.join(separator);
 		}
-		catch (Exception e) {
-			throw new JSONException(e);
+		catch (Exception exception) {
+			throw new JSONException(exception);
 		}
 	}
 
@@ -165,9 +170,9 @@ public class JSONArrayImpl implements JSONArray {
 		try {
 			_jsonArray.put(value);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 
@@ -183,14 +188,18 @@ public class JSONArrayImpl implements JSONArray {
 
 	@Override
 	public JSONArray put(JSONArray value) {
-		_jsonArray.put(((JSONArrayImpl)value).getJSONArray());
+		JSONArrayImpl jsonArrayImpl = (JSONArrayImpl)value;
+
+		_jsonArray.put(jsonArrayImpl.getJSONArray());
 
 		return this;
 	}
 
 	@Override
 	public JSONArray put(JSONObject value) {
-		_jsonArray.put(((JSONObjectImpl)value).getJSONObject());
+		JSONObjectImpl jsonObjectImpl = (JSONObjectImpl)value;
+
+		_jsonArray.put(jsonObjectImpl.getJSONObject());
 
 		return this;
 	}
@@ -204,7 +213,15 @@ public class JSONArrayImpl implements JSONArray {
 
 	@Override
 	public JSONArray put(Object value) {
-		_jsonArray.put(value);
+		if (value instanceof JSONArray) {
+			put((JSONArray)value);
+		}
+		else if (value instanceof JSONObject) {
+			put((JSONObject)value);
+		}
+		else {
+			_jsonArray.put(value);
+		}
 
 		return this;
 	}
@@ -222,8 +239,8 @@ public class JSONArrayImpl implements JSONArray {
 			_jsonArray = new org.json.JSONArray(
 				(String)objectInput.readObject());
 		}
-		catch (Exception e) {
-			throw new IOException(e);
+		catch (Exception exception) {
+			throw new IOException(exception);
 		}
 	}
 
@@ -242,8 +259,8 @@ public class JSONArrayImpl implements JSONArray {
 		try {
 			return _jsonArray.toString(indentFactor);
 		}
-		catch (Exception e) {
-			throw new JSONException(e);
+		catch (Exception exception) {
+			throw new JSONException(exception);
 		}
 	}
 
@@ -252,8 +269,8 @@ public class JSONArrayImpl implements JSONArray {
 		try {
 			return _jsonArray.write(writer);
 		}
-		catch (Exception e) {
-			throw new JSONException(e);
+		catch (Exception exception) {
+			throw new JSONException(exception);
 		}
 	}
 

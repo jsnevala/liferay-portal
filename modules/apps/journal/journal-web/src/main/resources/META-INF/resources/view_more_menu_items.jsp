@@ -43,15 +43,7 @@ JournalViewMoreMenuItemsDisplayContext journalViewMoreMenuItemsDisplayContext = 
 />
 
 <clay:management-toolbar
-	clearResultsURL="<%= journalViewMoreMenuItemsDisplayContext.getClearResultsURL() %>"
-	componentId="journalViewMoreMenuItemsManagementToolbar"
-	filterDropdownItems="<%= journalViewMoreMenuItemsDisplayContext.getFilterItemsDropdownItems() %>"
-	itemsTotal="<%= journalViewMoreMenuItemsDisplayContext.getTotalItems() %>"
-	searchActionURL="<%= journalViewMoreMenuItemsDisplayContext.getSearchActionURL() %>"
-	searchFormName="searchFm"
-	selectable="<%= false %>"
-	sortingOrder="<%= journalViewMoreMenuItemsDisplayContext.getOrderByType() %>"
-	sortingURL="<%= journalViewMoreMenuItemsDisplayContext.getSortingURL() %>"
+	displayContext="<%= new JournalViewMoreMenuItemsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalViewMoreMenuItemsDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid-1280" name="addMenuItemFm">
@@ -66,9 +58,9 @@ JournalViewMoreMenuItemsDisplayContext journalViewMoreMenuItemsDisplayContext = 
 		>
 
 			<%
-			Map<String, Object> data = new HashMap<>();
-
-			data.put("ddmStructureKey", ddmStructure.getStructureKey());
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"ddmStructureKey", ddmStructure.getStructureKey()
+			).build();
 			%>
 
 			<liferay-ui:search-container-column-text
@@ -103,21 +95,23 @@ JournalViewMoreMenuItemsDisplayContext journalViewMoreMenuItemsDisplayContext = 
 	</liferay-ui:search-container>
 </aui:form>
 
-<aui:script use="aui-base">
+<aui:script require="metal-dom/src/all/dom as dom">
 	var Util = Liferay.Util;
 
-	A.one('#<portlet:namespace />addMenuItemFm').delegate(
-		'click',
-		function(event) {
-			Util.getOpener().Liferay.fire(
-				'<%= HtmlUtil.escapeJS(journalViewMoreMenuItemsDisplayContext.getEventName()) %>',
-				{
-					ddmStructureKey: event.currentTarget.attr('data-ddmStructureKey')
-				}
-			);
-
-			Util.getWindow().destroy();
-		},
-		'.selector-button'
+	var addMenuItemFm = document.getElementById(
+		'<portlet:namespace />addMenuItemFm'
 	);
+
+	dom.delegate(addMenuItemFm, 'click', '.selector-button', function (event) {
+		Util.getOpener().Liferay.fire(
+			'<%= HtmlUtil.escapeJS(journalViewMoreMenuItemsDisplayContext.getEventName()) %>',
+			{
+				ddmStructureKey: event.delegateTarget.getAttribute(
+					'data-ddmStructureKey'
+				),
+			}
+		);
+
+		Util.getWindow().destroy();
+	});
 </aui:script>

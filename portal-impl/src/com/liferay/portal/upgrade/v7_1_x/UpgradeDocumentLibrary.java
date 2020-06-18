@@ -18,15 +18,14 @@ import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.upgrade.v7_1_x.util.DLFileEntryTypeTable;
 
 /**
- * @author Jose Maria Munoz
+ * @author José María Muñoz
  */
 public class UpgradeDocumentLibrary extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
 		if (!hasColumnType(
-				DLFileEntryTypeTable.class, "fileEntryTypeKey",
-				"VARCHAR(75) null")) {
+				"DLFileEntryType", "fileEntryTypeKey", "VARCHAR(75) null")) {
 
 			alter(
 				DLFileEntryTypeTable.class,

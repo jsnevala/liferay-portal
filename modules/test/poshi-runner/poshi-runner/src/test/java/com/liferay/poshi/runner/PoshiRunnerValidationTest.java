@@ -14,8 +14,10 @@
 
 package com.liferay.poshi.runner;
 
+import com.liferay.poshi.runner.util.FileUtil;
 import com.liferay.poshi.runner.util.OSDetector;
 import com.liferay.poshi.runner.util.PropsValues;
+import com.liferay.poshi.runner.util.StringUtil;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -1159,21 +1161,6 @@ public class PoshiRunnerValidationTest extends TestCase {
 
 		Assert.assertEquals(
 			"validatePropertyElement is failing", "", getExceptionMessage());
-
-		document = DocumentHelper.createDocument();
-
-		element = document.addElement("property");
-
-		element.addAttribute("line-number", "1");
-		element.addAttribute("name", "property.name");
-		element.addAttribute("value", "Tools");
-
-		PoshiRunnerValidation.validatePropertyElement(
-			element, "ValidatePossibleAttributeNames.macro");
-
-		Assert.assertEquals(
-			"validatePropertyElement is failing",
-			"Invalid property name property.name", getExceptionMessage());
 	}
 
 	@Test
@@ -1501,13 +1488,13 @@ public class PoshiRunnerValidationTest extends TestCase {
 	}
 
 	protected String getFilePath(String fileName) {
-		String filePath = PoshiRunnerGetterUtil.getCanonicalPath(
+		String filePath = FileUtil.getCanonicalPath(
 			PropsValues.TEST_BASE_DIR_NAME +
 				"resources/com/liferay/poshi/runner/dependencies/validation/" +
 					fileName);
 
 		if (OSDetector.isWindows()) {
-			filePath = filePath.replace("/", "\\");
+			filePath = StringUtil.replace(filePath, "/", "\\");
 		}
 
 		return filePath;

@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
@@ -70,8 +69,8 @@ public class PermissionsPortletConfigurationIcon
 
 			PortletURL portletURL = PortletProviderUtil.getPortletURL(
 				portletRequest,
-				PortletConfigurationApplicationType.
-					PortletConfiguration.CLASS_NAME,
+				PortletConfigurationApplicationType.PortletConfiguration.
+					CLASS_NAME,
 				PortletProvider.Action.VIEW);
 
 			portletURL.setParameter("mvcPath", "/edit_permissions.jsp");
@@ -95,7 +94,7 @@ public class PermissionsPortletConfigurationIcon
 
 			return portletURL.toString();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return StringPool.BLANK;
@@ -113,15 +112,10 @@ public class PermissionsPortletConfigurationIcon
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
-		String rootPortletId = portletDisplay.getRootPortletId();
+		String portletId = portletDisplay.getId();
 
 		if (Validator.isNotNull(portletDisplay.getPortletResource())) {
-			String portletResource = portletDisplay.getPortletResource();
-
-			Portlet portlet = _portletLocalService.getPortletById(
-				themeDisplay.getCompanyId(), portletResource);
-
-			rootPortletId = portlet.getRootPortletId();
+			portletId = portletDisplay.getPortletResource();
 		}
 
 		boolean showPermissionsIcon = false;
@@ -133,18 +127,18 @@ public class PermissionsPortletConfigurationIcon
 		if (_STAGING_LIVE_GROUP_LOCKING_ENABLED || !group.hasStagingGroup()) {
 			try {
 				if (PortletPermissionUtil.contains(
-						themeDisplay.getPermissionChecker(), layout,
-						rootPortletId, ActionKeys.PERMISSIONS)) {
+						themeDisplay.getPermissionChecker(), layout, portletId,
+						ActionKeys.PERMISSIONS)) {
 
 					showPermissionsIcon = true;
 				}
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(pe, pe);
+					_log.debug(portalException, portalException);
 				}
 
 				showPermissionsIcon = false;
@@ -156,6 +150,10 @@ public class PermissionsPortletConfigurationIcon
 		}
 
 		if (layout.isTypeControlPanel()) {
+			showPermissionsIcon = false;
+		}
+
+		if (isEmbeddedPersonalApplicationLayout(layout)) {
 			showPermissionsIcon = false;
 		}
 

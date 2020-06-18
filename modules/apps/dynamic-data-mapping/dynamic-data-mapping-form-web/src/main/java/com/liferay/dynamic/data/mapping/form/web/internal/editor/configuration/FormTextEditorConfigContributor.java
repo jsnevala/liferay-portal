@@ -32,8 +32,7 @@ import org.osgi.service.component.annotations.Component;
 @Component(
 	property = {
 		"editor.config.key=descriptionEditor", "editor.config.key=nameEditor",
-		"javax.portlet.name=" +
-			DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN
+		"javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN
 	},
 	service = EditorConfigContributor.class
 )
@@ -46,11 +45,15 @@ public class FormTextEditorConfigContributor
 		ThemeDisplay themeDisplay,
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory) {
 
-		jsonObject.put("allowedContent", "p");
-		jsonObject.put("disallowedContent", "br");
 		jsonObject.put(
-			"extraPlugins", "ae_placeholder,ae_selectionregion,ae_uicore");
-		jsonObject.put("toolbars", JSONFactoryUtil.createJSONObject());
+			"allowedContent", "p"
+		).put(
+			"disallowedContent", "br"
+		).put(
+			"extraPlugins", "ae_placeholder,ae_selectionregion,ae_uicore"
+		).put(
+			"toolbars", JSONFactoryUtil.createJSONObject()
+		);
 	}
 
 }

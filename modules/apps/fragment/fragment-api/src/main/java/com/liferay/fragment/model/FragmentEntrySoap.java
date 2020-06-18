@@ -14,8 +14,6 @@
 
 package com.liferay.fragment.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,14 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.fragment.service.http.FragmentEntryServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.fragment.service.http.FragmentEntryServiceSoap
  * @generated
  */
-@ProviderType
 public class FragmentEntrySoap implements Serializable {
+
 	public static FragmentEntrySoap toSoapModel(FragmentEntry model) {
 		FragmentEntrySoap soapModel = new FragmentEntrySoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setFragmentEntryId(model.getFragmentEntryId());
 		soapModel.setGroupId(model.getGroupId());
@@ -48,7 +46,11 @@ public class FragmentEntrySoap implements Serializable {
 		soapModel.setCss(model.getCss());
 		soapModel.setHtml(model.getHtml());
 		soapModel.setJs(model.getJs());
+		soapModel.setCacheable(model.isCacheable());
+		soapModel.setConfiguration(model.getConfiguration());
 		soapModel.setPreviewFileEntryId(model.getPreviewFileEntryId());
+		soapModel.setReadOnly(model.isReadOnly());
+		soapModel.setType(model.getType());
 		soapModel.setLastPublishDate(model.getLastPublishDate());
 		soapModel.setStatus(model.getStatus());
 		soapModel.setStatusByUserId(model.getStatusByUserId());
@@ -86,7 +88,8 @@ public class FragmentEntrySoap implements Serializable {
 	}
 
 	public static FragmentEntrySoap[] toSoapModels(List<FragmentEntry> models) {
-		List<FragmentEntrySoap> soapModels = new ArrayList<FragmentEntrySoap>(models.size());
+		List<FragmentEntrySoap> soapModels = new ArrayList<FragmentEntrySoap>(
+			models.size());
 
 		for (FragmentEntry model : models) {
 			soapModels.add(toSoapModel(model));
@@ -104,6 +107,14 @@ public class FragmentEntrySoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setFragmentEntryId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -218,12 +229,52 @@ public class FragmentEntrySoap implements Serializable {
 		_js = js;
 	}
 
+	public boolean getCacheable() {
+		return _cacheable;
+	}
+
+	public boolean isCacheable() {
+		return _cacheable;
+	}
+
+	public void setCacheable(boolean cacheable) {
+		_cacheable = cacheable;
+	}
+
+	public String getConfiguration() {
+		return _configuration;
+	}
+
+	public void setConfiguration(String configuration) {
+		_configuration = configuration;
+	}
+
 	public long getPreviewFileEntryId() {
 		return _previewFileEntryId;
 	}
 
 	public void setPreviewFileEntryId(long previewFileEntryId) {
 		_previewFileEntryId = previewFileEntryId;
+	}
+
+	public boolean getReadOnly() {
+		return _readOnly;
+	}
+
+	public boolean isReadOnly() {
+		return _readOnly;
+	}
+
+	public void setReadOnly(boolean readOnly) {
+		_readOnly = readOnly;
+	}
+
+	public int getType() {
+		return _type;
+	}
+
+	public void setType(int type) {
+		_type = type;
 	}
 
 	public Date getLastPublishDate() {
@@ -266,6 +317,7 @@ public class FragmentEntrySoap implements Serializable {
 		_statusDate = statusDate;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _fragmentEntryId;
 	private long _groupId;
@@ -280,10 +332,15 @@ public class FragmentEntrySoap implements Serializable {
 	private String _css;
 	private String _html;
 	private String _js;
+	private boolean _cacheable;
+	private String _configuration;
 	private long _previewFileEntryId;
+	private boolean _readOnly;
+	private int _type;
 	private Date _lastPublishDate;
 	private int _status;
 	private long _statusByUserId;
 	private String _statusByUserName;
 	private Date _statusDate;
+
 }

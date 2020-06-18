@@ -14,16 +14,20 @@
 
 package com.liferay.portal.template.freemarker.internal;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.template.StringTemplateResource;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.template.TemplateException;
 import com.liferay.portal.kernel.template.TemplateResource;
-import com.liferay.portal.template.AbstractSingleResourceTemplate;
+import com.liferay.portal.kernel.template.TemplateResourceCache;
+import com.liferay.portal.template.BaseTemplate;
 import com.liferay.portal.template.TemplateContextHelper;
 import com.liferay.portal.template.TemplateResourceThreadLocal;
 
 import freemarker.core.ParseException;
 
+import freemarker.ext.beans.BeansWrapper;
 import freemarker.ext.util.WrapperTemplateModel;
 
 import freemarker.template.AdapterTemplateModel;
@@ -32,6 +36,7 @@ import freemarker.template.ObjectWrapper;
 import freemarker.template.SimpleCollection;
 import freemarker.template.Template;
 import freemarker.template.TemplateCollectionModel;
+import freemarker.template.TemplateHashModel;
 import freemarker.template.TemplateHashModelEx;
 import freemarker.template.TemplateModel;
 import freemarker.template.TemplateModelException;
@@ -42,38 +47,62 @@ import freemarker.template.utility.ObjectWrapperWithAPISupport;
 import java.io.Serializable;
 import java.io.Writer;
 
-import java.security.PrivilegedExceptionAction;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Mika Koivisto
  * @author Tina Tian
  */
-public class FreeMarkerTemplate extends AbstractSingleResourceTemplate {
+public class FreeMarkerTemplate extends BaseTemplate {
 
 	public FreeMarkerTemplate(
-		TemplateResource templateResource,
-		TemplateResource errorTemplateResource, Map<String, Object> context,
+		TemplateResource templateResource, Map<String, Object> context,
 		Configuration configuration,
-		TemplateContextHelper templateContextHelper, long interval) {
+		TemplateContextHelper templateContextHelper,
+		TemplateResourceCache templateResourceCache, boolean restricted,
+		BeansWrapper beansWrapper, FreeMarkerManager freeMarkerManager) {
 
-		super(
-			templateResource, errorTemplateResource, context,
-			templateContextHelper, TemplateConstants.LANG_TYPE_FTL, interval);
+		super(templateResource, context, templateContextHelper, restricted);
 
 		_configuration = configuration;
+		_templateResourceCache = templateResourceCache;
+		_beansWrapper = beansWrapper;
+		_freeMarkerManager = freeMarkerManager;
+
+		if (templateResourceCache.isEnabled()) {
+			cacheTemplateResource(templateResourceCache, templateResource);
+		}
 	}
 
 	@Override
-	protected void handleException(Exception exception, Writer writer)
+	public void prepareTaglib(
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
+
+		_freeMarkerManager.addTaglibSupport(
+			context, httpServletRequest, httpServletResponse, _beansWrapper);
+	}
+
+	@Override
+	protected void handleException(
+			TemplateResource templateResource,
+			TemplateResource errorTemplateResource, Exception exception1,
+			Writer writer)
 		throws TemplateException {
 
-		if ((exception instanceof ParseException) ||
-			(exception instanceof freemarker.template.TemplateException)) {
+		if (_templateResourceCache.isEnabled()) {
+			cacheTemplateResource(
+				_templateResourceCache, errorTemplateResource);
+		}
 
-			put("exception", exception.getMessage());
+		if (exception1 instanceof freemarker.template.TemplateException ||
+			exception1 instanceof ParseException) {
+
+			put("exception", exception1.getMessage());
 
 			if (templateResource instanceof StringTemplateResource) {
 				StringTemplateResource stringTemplateResource =
@@ -82,28 +111,28 @@ public class FreeMarkerTemplate extends AbstractSingleResourceTemplate {
 				put("script", stringTemplateResource.getContent());
 			}
 
-			if (exception instanceof ParseException) {
-				ParseException pe = (ParseException)exception;
+			if (exception1 instanceof ParseException) {
+				ParseException parseException = (ParseException)exception1;
 
-				put("column", pe.getColumnNumber());
-				put("line", pe.getLineNumber());
+				put("column", parseException.getColumnNumber());
+				put("line", parseException.getLineNumber());
 			}
 
 			try {
 				processTemplate(errorTemplateResource, writer);
 			}
-			catch (Exception e) {
+			catch (Exception exception2) {
 				throw new TemplateException(
 					"Unable to process FreeMarker template " +
 						errorTemplateResource.getTemplateId(),
-					e);
+					exception2);
 			}
 		}
 		else {
 			throw new TemplateException(
 				"Unable to process FreeMarker template " +
 					templateResource.getTemplateId(),
-				exception);
+				exception1);
 		}
 	}
 
@@ -120,10 +149,10 @@ public class FreeMarkerTemplate extends AbstractSingleResourceTemplate {
 				getTemplateResourceUUID(templateResource),
 				TemplateConstants.DEFAUT_ENCODING);
 
+			template.setObjectWrapper(_beansWrapper);
+
 			template.process(
-				new CachableDefaultMapAdapter(
-					context, template.getObjectWrapper()),
-				writer);
+				new CachableDefaultMapAdapter(context, _beansWrapper), writer);
 		}
 		finally {
 			TemplateResourceThreadLocal.setTemplateResource(
@@ -131,10 +160,36 @@ public class FreeMarkerTemplate extends AbstractSingleResourceTemplate {
 		}
 	}
 
-	private static final TemplateModel _NULL_TEMPLATE_MODEL =
-		new TemplateModel() {};
+	@Override
+	protected Object putClass(String key, Class<?> clazz) {
+		try {
+			TemplateHashModel templateHashModel =
+				_beansWrapper.getStaticModels();
 
+			return context.put(key, templateHashModel.get(clazz.getName()));
+		}
+		catch (TemplateModelException templateModelException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Variable " + key + " registration fail",
+					templateModelException);
+			}
+
+			return null;
+		}
+	}
+
+	private static final TemplateModel _NULL_TEMPLATE_MODEL =
+		new TemplateModel() {
+		};
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FreeMarkerTemplate.class);
+
+	private final BeansWrapper _beansWrapper;
 	private final Configuration _configuration;
+	private final FreeMarkerManager _freeMarkerManager;
+	private final TemplateResourceCache _templateResourceCache;
 
 	private class CachableDefaultMapAdapter
 		extends WrappingTemplateModel
@@ -177,8 +232,10 @@ public class FreeMarkerTemplate extends AbstractSingleResourceTemplate {
 
 		@Override
 		public TemplateModel getAPI() throws TemplateModelException {
-			return ((ObjectWrapperWithAPISupport)_objectWrapper).wrapAsAPI(
-				_map);
+			ObjectWrapperWithAPISupport objectWrapperWithAPISupport =
+				(ObjectWrapperWithAPISupport)_objectWrapper;
+
+			return objectWrapperWithAPISupport.wrapAsAPI(_map);
 		}
 
 		@Override
@@ -219,26 +276,6 @@ public class FreeMarkerTemplate extends AbstractSingleResourceTemplate {
 		private final Map<String, Object> _map;
 		private final ObjectWrapper _objectWrapper;
 		private final Map<String, TemplateModel> _wrappedValueMap;
-
-	}
-
-	private class TemplatePrivilegedExceptionAction
-		implements PrivilegedExceptionAction<Template> {
-
-		public TemplatePrivilegedExceptionAction(
-			TemplateResource templateResource) {
-
-			_templateResource = templateResource;
-		}
-
-		@Override
-		public Template run() throws Exception {
-			return _configuration.getTemplate(
-				getTemplateResourceUUID(_templateResource),
-				TemplateConstants.DEFAUT_ENCODING);
-		}
-
-		private final TemplateResource _templateResource;
 
 	}
 

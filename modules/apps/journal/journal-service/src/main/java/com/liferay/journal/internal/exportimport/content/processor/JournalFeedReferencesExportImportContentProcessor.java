@@ -14,6 +14,7 @@
 
 package com.liferay.journal.internal.exportimport.content.processor;
 
+import com.liferay.exportimport.configuration.ExportImportServiceConfiguration;
 import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.kernel.exception.ExportImportContentProcessorException;
 import com.liferay.exportimport.kernel.exception.ExportImportContentValidationException;
@@ -33,9 +34,12 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -43,7 +47,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Element;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,7 +88,9 @@ public class JournalFeedReferencesExportImportContentProcessor
 	public void validateContentReferences(long groupId, String content)
 		throws PortalException {
 
-		validateJournalFeedReferences(groupId, content);
+		if (isValidateJournalFeedReferences()) {
+			validateJournalFeedReferences(groupId, content);
+		}
 	}
 
 	protected JournalFeed getJournalFeed(Map<String, String> map) {
@@ -104,12 +109,12 @@ public class JournalFeedReferencesExportImportContentProcessor
 				journalFeed = _journalFeedLocalService.getFeed(groupId, feedId);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
+				_log.debug(exception, exception);
 			}
 			else if (_log.isWarnEnabled()) {
-				_log.warn(e.getMessage());
+				_log.warn(exception.getMessage());
 			}
 		}
 
@@ -135,11 +140,13 @@ public class JournalFeedReferencesExportImportContentProcessor
 			return null;
 		}
 
-		Map<String, String> map = new HashMap<>();
-
-		map.put("endPos", String.valueOf(endPos));
-		map.put("feedId", pathArray[1]);
-		map.put("groupId", pathArray[0]);
+		Map<String, String> map = HashMapBuilder.put(
+			"endPos", String.valueOf(endPos)
+		).put(
+			"feedId", pathArray[1]
+		).put(
+			"groupId", pathArray[0]
+		).build();
 
 		String groupIdString = MapUtil.getString(map, "groupId");
 
@@ -150,6 +157,22 @@ public class JournalFeedReferencesExportImportContentProcessor
 		}
 
 		return map;
+	}
+
+	protected boolean isValidateJournalFeedReferences() {
+		try {
+			ExportImportServiceConfiguration configuration =
+				_configurationProvider.getCompanyConfiguration(
+					ExportImportServiceConfiguration.class,
+					CompanyThreadLocal.getCompanyId());
+
+			return configuration.validateJournalFeedReferences();
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+		}
+
+		return true;
 	}
 
 	protected String replaceExportJournalFeedReferences(
@@ -230,7 +253,7 @@ public class JournalFeedReferencesExportImportContentProcessor
 
 				sb.replace(beginPos, endPos, exportedReferenceSB.toString());
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				StringBundler exceptionSB = new StringBundler(6);
 
 				exceptionSB.append("Unable to process journal feed ");
@@ -240,12 +263,15 @@ public class JournalFeedReferencesExportImportContentProcessor
 				exceptionSB.append(" with primary key ");
 				exceptionSB.append(stagedModel.getPrimaryKeyObj());
 
-				ExportImportContentProcessorException eicpe =
-					new ExportImportContentProcessorException(
-						exceptionSB.toString(), e);
+				ExportImportContentProcessorException
+					exportImportContentProcessorException =
+						new ExportImportContentProcessorException(
+							exceptionSB.toString(), exception);
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(exceptionSB.toString(), eicpe);
+					_log.debug(
+						exceptionSB.toString(),
+						exportImportContentProcessorException);
 				}
 				else if (_log.isWarnEnabled()) {
 					_log.warn(exceptionSB.toString());
@@ -304,7 +330,7 @@ public class JournalFeedReferencesExportImportContentProcessor
 					portletDataContext, stagedModel, JournalFeed.class,
 					classPK);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				StringBundler exceptionSB = new StringBundler(6);
 
 				exceptionSB.append("Unable to process journal feed ");
@@ -314,12 +340,15 @@ public class JournalFeedReferencesExportImportContentProcessor
 				exceptionSB.append(" with primary key ");
 				exceptionSB.append(stagedModel.getPrimaryKeyObj());
 
-				ExportImportContentProcessorException eicpe =
-					new ExportImportContentProcessorException(
-						exceptionSB.toString(), e);
+				ExportImportContentProcessorException
+					exportImportContentProcessorException =
+						new ExportImportContentProcessorException(
+							exceptionSB.toString(), exception);
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(exceptionSB.toString(), eicpe);
+					_log.debug(
+						exceptionSB.toString(),
+						exportImportContentProcessorException);
 				}
 				else if (_log.isWarnEnabled()) {
 					_log.warn(exceptionSB.toString());
@@ -339,12 +368,12 @@ public class JournalFeedReferencesExportImportContentProcessor
 				importedJournalFeed = _journalFeedLocalService.getFeed(
 					journalFeedId);
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(pe, pe);
+					_log.debug(portalException, portalException);
 				}
 				else if (_log.isWarnEnabled()) {
-					_log.warn(pe.getMessage());
+					_log.warn(portalException.getMessage());
 				}
 
 				continue;
@@ -358,6 +387,13 @@ public class JournalFeedReferencesExportImportContentProcessor
 		}
 
 		return content;
+	}
+
+	@Reference(unbind = "-")
+	protected void setConfigurationProvider(
+		ConfigurationProvider configurationProvider) {
+
+		_configurationProvider = configurationProvider;
 	}
 
 	protected void validateJournalFeedReferences(long groupId, String content)
@@ -383,15 +419,17 @@ public class JournalFeedReferencesExportImportContentProcessor
 				journalFeedReferenceParameters);
 
 			if (journalFeed == null) {
-				ExportImportContentValidationException eicve =
-					new ExportImportContentValidationException(
-						JournalFeedReferencesExportImportContentProcessor.
-							class.getName(),
-						new NoSuchFeedException());
+				ExportImportContentValidationException
+					exportImportContentValidationException =
+						new ExportImportContentValidationException(
+							JournalFeedReferencesExportImportContentProcessor.
+								class.getName(),
+							new NoSuchFeedException());
 
-				eicve.setStagedModelClassName(JournalFeed.class.getName());
+				exportImportContentValidationException.setStagedModelClassName(
+					JournalFeed.class.getName());
 
-				throw eicve;
+				throw exportImportContentValidationException;
 			}
 
 			endPos = beginPos - 1;
@@ -412,6 +450,8 @@ public class JournalFeedReferencesExportImportContentProcessor
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

@@ -24,11 +24,11 @@ import com.liferay.adaptive.media.image.service.base.AMImageEntryLocalServiceBas
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileVersion;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.InputStream;
 
@@ -37,9 +37,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the local service for accessing, adding, and deleting adaptive media
@@ -59,6 +61,10 @@ import org.osgi.framework.FrameworkUtil;
  *
  * @author Sergio González
  */
+@Component(
+	property = "model.class.name=com.liferay.adaptive.media.image.model.AMImageEntry",
+	service = AopService.class
+)
 public class AMImageEntryLocalServiceImpl
 	extends AMImageEntryLocalServiceBaseImpl {
 
@@ -105,23 +111,10 @@ public class AMImageEntryLocalServiceImpl
 		amImageEntry.setWidth(width);
 		amImageEntry.setSize(size);
 
-		imageStorage.save(
+		_imageStorage.save(
 			fileVersion, amImageConfigurationEntry.getUUID(), inputStream);
 
 		return amImageEntryPersistence.update(amImageEntry);
-	}
-
-	@Override
-	public void afterPropertiesSet() {
-		super.afterPropertiesSet();
-
-		Bundle bundle = FrameworkUtil.getBundle(
-			AMImageEntryLocalServiceImpl.class);
-
-		BundleContext bundleContext = bundle.getBundleContext();
-
-		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
-			bundleContext, AMImageCounter.class, "adaptive.media.key");
 	}
 
 	/**
@@ -140,7 +133,7 @@ public class AMImageEntryLocalServiceImpl
 		amImageEntryPersistence.removeByC_C(
 			companyId, amImageConfigurationEntry.getUUID());
 
-		imageStorage.delete(companyId, amImageConfigurationEntry.getUUID());
+		_imageStorage.delete(companyId, amImageConfigurationEntry.getUUID());
 	}
 
 	/**
@@ -163,11 +156,11 @@ public class AMImageEntryLocalServiceImpl
 			try {
 				amImageEntryPersistence.remove(amImageEntry);
 
-				imageStorage.delete(
+				_imageStorage.delete(
 					fileVersion, amImageEntry.getConfigurationUuid());
 			}
-			catch (AMRuntimeException.IOException amreioe) {
-				_log.error(amreioe, amreioe);
+			catch (AMRuntimeException.IOException ioException) {
+				_log.error(ioException, ioException);
 			}
 		}
 	}
@@ -186,7 +179,7 @@ public class AMImageEntryLocalServiceImpl
 			String configurationUuid, long fileVersionId)
 		throws PortalException {
 
-		FileVersion fileVersion = dlAppLocalService.getFileVersion(
+		FileVersion fileVersion = _dlAppLocalService.getFileVersion(
 			fileVersionId);
 
 		AMImageEntry amImageEntry = amImageEntryPersistence.findByC_F(
@@ -194,14 +187,7 @@ public class AMImageEntryLocalServiceImpl
 
 		amImageEntryPersistence.remove(amImageEntry);
 
-		imageStorage.delete(fileVersion, amImageEntry.getConfigurationUuid());
-	}
-
-	@Override
-	public void destroy() {
-		super.destroy();
-
-		_serviceTrackerMap.close();
+		_imageStorage.delete(fileVersion, amImageEntry.getConfigurationUuid());
 	}
 
 	/**
@@ -255,7 +241,7 @@ public class AMImageEntryLocalServiceImpl
 		AMImageConfigurationEntry amImageConfigurationEntry,
 		FileVersion fileVersion) {
 
-		return imageStorage.getContentStream(
+		return _imageStorage.getContentStream(
 			fileVersion, amImageConfigurationEntry.getUUID());
 	}
 
@@ -276,8 +262,8 @@ public class AMImageEntryLocalServiceImpl
 		Stream<AMImageCounter> amImageCounterStream = amImageCounters.stream();
 
 		return amImageCounterStream.mapToInt(
-			amImageCounter ->
-				amImageCounter.countExpectedAMImageEntries(companyId)
+			amImageCounter -> amImageCounter.countExpectedAMImageEntries(
+				companyId)
 		).sum();
 	}
 
@@ -310,11 +296,16 @@ public class AMImageEntryLocalServiceImpl
 		return Math.min(percentage, 100);
 	}
 
-	@ServiceReference(type = DLAppLocalService.class)
-	protected DLAppLocalService dlAppLocalService;
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, AMImageCounter.class, "adaptive.media.key");
+	}
 
-	@ServiceReference(type = ImageStorage.class)
-	protected ImageStorage imageStorage;
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerMap.close();
+	}
 
 	private void _checkDuplicateAMImageEntry(
 			String configurationUuid, long fileVersionId)
@@ -330,6 +321,12 @@ public class AMImageEntryLocalServiceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AMImageEntryLocalServiceImpl.class);
+
+	@Reference
+	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private ImageStorage _imageStorage;
 
 	private ServiceTrackerMap<String, AMImageCounter> _serviceTrackerMap;
 

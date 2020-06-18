@@ -39,8 +39,9 @@ import org.osgi.service.component.annotations.Reference;
 public class FriendlyURLEntryStagedModelDataHandler
 	extends BaseStagedModelDataHandler<FriendlyURLEntry> {
 
-	public static final String[] CLASS_NAMES =
-		{FriendlyURLEntry.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		FriendlyURLEntry.class.getName()
+	};
 
 	@Override
 	public FriendlyURLEntry fetchStagedModelByUuidAndGroupId(
@@ -74,6 +75,12 @@ public class FriendlyURLEntryStagedModelDataHandler
 
 		friendlyURLEntryElement.addAttribute(
 			"resource-class-name", friendlyURLEntry.getClassName());
+
+		String modelPath = ExportImportPathUtil.getModelPath(
+			friendlyURLEntry, friendlyURLEntry.getUuid());
+
+		portletDataContext.addZipEntry(
+			modelPath, friendlyURLEntry.getUrlTitleMapAsXML());
 
 		if (friendlyURLEntry.isMain()) {
 			friendlyURLEntryElement.addAttribute(
@@ -109,10 +116,12 @@ public class FriendlyURLEntryStagedModelDataHandler
 				friendlyURLEntry.getUuid(),
 				portletDataContext.getScopeGroupId());
 
+		FriendlyURLEntry importedFriendlyURLEntry = null;
+
 		if ((existingFriendlyURLEntry == null) ||
 			!portletDataContext.isDataStrategyMirror()) {
 
-			FriendlyURLEntry importedFriendlyURLEntry =
+			importedFriendlyURLEntry =
 				(FriendlyURLEntry)friendlyURLEntry.clone();
 
 			importedFriendlyURLEntry.setGroupId(
@@ -127,11 +136,14 @@ public class FriendlyURLEntryStagedModelDataHandler
 
 			importedFriendlyURLEntry.setClassPK(classPK);
 
-			_stagedModelRepository.addStagedModel(
+			importedFriendlyURLEntry.setDefaultLanguageId(
+				friendlyURLEntry.getDefaultLanguageId());
+
+			importedFriendlyURLEntry = _stagedModelRepository.addStagedModel(
 				portletDataContext, importedFriendlyURLEntry);
 		}
 		else {
-			_stagedModelRepository.updateStagedModel(
+			importedFriendlyURLEntry = _stagedModelRepository.updateStagedModel(
 				portletDataContext, existingFriendlyURLEntry);
 
 			boolean mainEntry = GetterUtil.getBoolean(
@@ -142,6 +154,9 @@ public class FriendlyURLEntryStagedModelDataHandler
 					existingFriendlyURLEntry);
 			}
 		}
+
+		portletDataContext.importClassedModel(
+			friendlyURLEntry, importedFriendlyURLEntry);
 	}
 
 	@Override
@@ -151,16 +166,10 @@ public class FriendlyURLEntryStagedModelDataHandler
 		return _stagedModelRepository;
 	}
 
-	@Reference(unbind = "-")
-	protected void setFriendlyURLEntryLocalService(
-		FriendlyURLEntryLocalService friendlyURLEntryLocalService) {
-
-		_friendlyURLEntryLocalService = friendlyURLEntryLocalService;
-	}
-
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
+	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
 
 	@Reference(

@@ -1,195 +1,129 @@
-import 'frontend-taglib/cards_treeview/CardsTreeview.es';
-import 'metal';
-import 'metal-component';
-import PortletBase from 'frontend-js-web/liferay/PortletBase.es';
-import Soy from 'metal-soy';
-import {Config} from 'metal-state';
-
-import templates from './SelectCategory.soy';
-
 /**
- * KeyBoardEvent enter key
- * @review
- * @type {!string}
- */
-
-const ENTER_KEY = 'Enter';
-
-/**
- * SelectCategory
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
- * This component shows a list of available categories to move content in and
- * allows to filter them by searching.
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  */
 
-class SelectCategory extends PortletBase {
+import ClayIcon from '@clayui/icon';
+import {Treeview} from 'frontend-js-components-web';
+import React, {useCallback, useRef, useState} from 'react';
 
-	/**
-	 * Filters deep nested nodes based on a filtering value
-	 *
-	 * @type {Array.<Object>} nodes
-	 * @type {String} filterVAlue
-	 * @protected
-	 */
+function visit(nodes, callback) {
+	nodes.forEach((node) => {
+		callback(node);
 
-	filterSiblingNodes_(nodes, filterValue) {
-		let filteredNodes = [];
-
-		nodes.forEach(
-			(node) => {
-				if (node.name.toLowerCase().indexOf(filterValue) !== -1) {
-					filteredNodes.push(node);
-				}
-
-				if (node.children) {
-					filteredNodes = filteredNodes.concat(this.filterSiblingNodes_(node.children, filterValue));
-				}
-			}
-		);
-
-		return filteredNodes;
-	}
-
-	/**
-	 * When the search form is submitted, nothing should happend,
-	 * as filtering is performed on keypress.
-	 * @param {KeyboardEvent} event
-	 * @private
-	 * @review
-	 */
-
-	_handleSearchFormKeyDown(event) {
-		if (event.key === ENTER_KEY) {
-			event.preventDefault();
-			event.stopImmediatePropagation();
+		if (node.children) {
+			visit(node.children, callback);
 		}
-	}
-
-	/**
-	 * Searchs for nodes by name based on a filtering value
-	 *
-	 * @param {!Event} event
-	 * @protected
-	 */
-
-	_searchNodes(event) {
-		if (!this.originalNodes) {
-			this.originalNodes = this.nodes;
-		}
-		else {
-			this.nodes = this.originalNodes;
-		}
-
-		let filterValue = event.delegateTarget.value.toLowerCase();
-
-		if (filterValue !== '') {
-			this.viewType = 'flat';
-			this.nodes = this.filterSiblingNodes_(this.nodes, filterValue);
-		}
-		else {
-			this.viewType = 'tree';
-		}
-	}
-
-	/**
-	 * Fires item selector save event on selected node change
-	 *
-	 * @param {!Event} event
-	 * @protected
-	 */
-
-	_selectedNodeChange(event) {
-		let newVal = event.newVal;
-		let selectedNodes = this.selectedNodes_;
-
-		if (!selectedNodes) {
-			selectedNodes = [];
-		}
-
-		if (newVal) {
-			let data = {};
-
-			newVal.forEach(
-				(node) => {
-					data[node.name] = {
-						categoryId: node.vocabulary ? 0 : node.id,
-						value: node.name,
-						vocabularyId: node.vocabulary ? node.id : 0
-					};
-				}
-			);
-
-			selectedNodes.forEach(
-				(node) => {
-					if (newVal.indexOf(node) === -1) {
-						data[node.name] = {
-							categoryId: node.vocabulary ? 0 : node.id,
-							unchecked: true,
-							value: node.name,
-							vocabularyId: node.vocabulary ? node.id : 0
-						};
-					}
-				}
-			);
-
-			selectedNodes = [];
-
-			newVal.forEach(
-				(node) => {
-					selectedNodes.push(node);
-				}
-			);
-
-			this.selectedNodes_ = selectedNodes;
-
-			Liferay.Util.getOpener().Liferay.fire(
-				this.itemSelectorSaveEvent,
-				{
-					data: data
-				}
-			);
-		}
-	}
+	});
 }
 
-SelectCategory.STATE = {
+function SelectCategory({
+	itemSelectorSaveEvent,
+	multiSelection,
+	namespace,
+	nodes,
+}) {
+	const [filterQuery, setFilterQuery] = useState('');
 
-	/**
-	 * Event name to fire on node selection
-	 * @type {String}
-	 */
+	const selectedNodesRef = useRef(null);
 
-	itemSelectorSaveEvent: Config.string(),
+	const handleQueryChange = useCallback((event) => {
+		const value = event.target.value;
 
-	/**
-	 * List of nodes
-	 * @type {Array.<Object>}
-	 */
+		setFilterQuery(value);
+	}, []);
 
-	nodes: Config.array().required(),
+	const handleSelectionChange = (selectedNodes) => {
+		const data = {};
 
-	/**
-	 * Enables multiple selection of tree elements
-	 * @type {boolean}
-	 */
+		// Mark newly selected nodes as selected.
 
-	multiSelection: Config.bool().value(false),
+		visit(nodes, (node) => {
+			if (selectedNodes.has(node.id)) {
+				data[node.id] = {
+					categoryId: node.vocabulary ? 0 : node.id,
+					nodePath: node.nodePath,
+					value: node.name,
+					vocabularyId: node.vocabulary ? node.id : 0,
+				};
+			}
+		});
 
-	/**
-	 * Theme images root path
-	 * @type {String}
-	 */
+		// Mark unselected nodes as unchecked.
 
-	pathThemeImages: Config.string().required(),
+		if (selectedNodesRef.current) {
+			Object.entries(selectedNodesRef.current).forEach(([id, node]) => {
+				if (!selectedNodes.has(id)) {
+					data[id] = {
+						...node,
+						unchecked: true,
+					};
+				}
+			});
+		}
 
-	/**
-	 * Type of view to render. Accepted values are 'tree' and 'flat'
-	 * @type {String}
-	 */
+		selectedNodesRef.current = data;
 
-	viewType: Config.string().value('tree')
-};
+		Liferay.Util.getOpener().Liferay.fire(itemSelectorSaveEvent, {data});
+	};
 
-Soy.register(SelectCategory, templates);
+	const initialSelectedNodeIds = [];
+
+	visit(nodes, (node) => {
+		if (node.selected) {
+			initialSelectedNodeIds.push(node.id);
+		}
+	});
+
+	return (
+		<div className="select-category">
+			<form className="select-category-filter" role="search">
+				<div className="container-fluid-1280">
+					<div className="input-group">
+						<div className="input-group-item">
+							<input
+								className="form-control input-group-inset input-group-inset-after"
+								onChange={handleQueryChange}
+								placeholder={Liferay.Language.get('search')}
+								type="text"
+							/>
+
+							<div className="input-group-inset-item input-group-inset-item-after pr-3">
+								<ClayIcon symbol="search" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</form>
+
+			<form name={`${namespace}selectCategoryFm`}>
+				<fieldset className="container-fluid-1280">
+					<div
+						className="category-tree"
+						id={`${namespace}categoryContainer`}
+					>
+						<Treeview
+							filterQuery={filterQuery}
+							initialSelectedNodeIds={initialSelectedNodeIds}
+							multiSelection={multiSelection}
+							NodeComponent={Treeview.Card}
+							nodes={nodes}
+							onSelectedNodesChange={handleSelectionChange}
+						/>
+					</div>
+				</fieldset>
+			</form>
+		</div>
+	);
+}
 
 export default SelectCategory;

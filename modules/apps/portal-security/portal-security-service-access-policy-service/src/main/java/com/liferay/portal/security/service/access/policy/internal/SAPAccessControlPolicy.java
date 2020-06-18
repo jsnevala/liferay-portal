@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.security.access.control.BaseAccessControlPolicy
 import com.liferay.portal.kernel.security.auth.AccessControlContext;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.verifier.AuthVerifierResult;
+import com.liferay.portal.kernel.security.service.access.policy.ServiceAccessPolicy;
 import com.liferay.portal.kernel.security.service.access.policy.ServiceAccessPolicyThreadLocal;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.util.Validator;
@@ -94,7 +95,10 @@ public class SAPAccessControlPolicy extends BaseAccessControlPolicy {
 		}
 
 		String classNameAndMethodName = className.concat(
-			StringPool.POUND).concat(methodName);
+			StringPool.POUND
+		).concat(
+			methodName
+		);
 
 		if (allowedServiceSignatures.contains(classNameAndMethodName)) {
 			return;
@@ -119,6 +123,29 @@ public class SAPAccessControlPolicy extends BaseAccessControlPolicy {
 
 			ServiceAccessPolicyThreadLocal.setActiveServiceAccessPolicyNames(
 				activeServiceAccessPolicyNames);
+		}
+
+		AccessControlContext accessControlContext =
+			AccessControlUtil.getAccessControlContext();
+
+		if (accessControlContext == null) {
+			return activeServiceAccessPolicyNames;
+		}
+
+		AuthVerifierResult authVerifierResult =
+			accessControlContext.getAuthVerifierResult();
+
+		if (authVerifierResult == null) {
+			return activeServiceAccessPolicyNames;
+		}
+
+		Map<String, Object> settings = authVerifierResult.getSettings();
+
+		List<String> serviceAccessPolicyNames = (List<String>)settings.get(
+			ServiceAccessPolicy.SERVICE_ACCESS_POLICY_NAMES);
+
+		if (serviceAccessPolicyNames != null) {
+			activeServiceAccessPolicyNames.addAll(serviceAccessPolicyNames);
 		}
 
 		return activeServiceAccessPolicyNames;
@@ -149,9 +176,10 @@ public class SAPAccessControlPolicy extends BaseAccessControlPolicy {
 				new CompanyServiceSettingsLocator(
 					companyId, SAPConstants.SERVICE_NAME));
 		}
-		catch (ConfigurationException ce) {
+		catch (ConfigurationException configurationException) {
 			throw new SystemException(
-				"Unable to get service access policy configuration", ce);
+				"Unable to get service access policy configuration",
+				configurationException);
 		}
 
 		if (!sapConfiguration.useSystemSAPEntries()) {
@@ -219,8 +247,8 @@ public class SAPAccessControlPolicy extends BaseAccessControlPolicy {
 				allowedServiceSignatures.addAll(
 					sapEntry.getAllowedServiceSignaturesList());
 			}
-			catch (PortalException pe) {
-				throw new SystemException(pe);
+			catch (PortalException portalException) {
+				throw new SystemException(portalException);
 			}
 		}
 

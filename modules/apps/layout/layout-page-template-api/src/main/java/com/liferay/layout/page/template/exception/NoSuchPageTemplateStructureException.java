@@ -14,14 +14,11 @@
 
 package com.liferay.layout.page.template.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchPageTemplateStructureException extends NoSuchModelException {
 
 	public NoSuchPageTemplateStructureException() {

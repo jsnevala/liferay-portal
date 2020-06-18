@@ -16,11 +16,11 @@
 
 <%@ include file="/init.jsp" %>
 
-<h3><liferay-ui:message key="mentions" /></h3>
-
 <%
 boolean companyMentionsEnabled = GetterUtil.getBoolean(request.getAttribute(MentionsWebKeys.COMPANY_MENTIONS_ENABLED));
 %>
+
+<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 
 <aui:input checked="<%= companyMentionsEnabled %>" id="mentionsEnabled" label='<%= LanguageUtil.get(resourceBundle, "allow-users-to-mention-other-users") %>' name="settings--mentionsEnabled--" type="checkbox" value="<%= companyMentionsEnabled %>" />
 
@@ -43,8 +43,19 @@ SocialInteractionsConfiguration mentionsSocialInteractionsConfiguration = Social
 <aui:script sandbox="<%= true %>">
 	var Util = Liferay.Util;
 
-	Util.toggleBoxes('<portlet:namespace />mentionsEnabled', '<portlet:namespace />socialInteractionsSettings');
+	Util.toggleBoxes(
+		'<portlet:namespace />mentionsEnabled',
+		'<portlet:namespace />socialInteractionsSettings'
+	);
 
-	Util.toggleRadio('<portlet:namespace />socialInteractionsAnyUser', '', '<portlet:namespace />socialInteractionsUsersWrapper');
-	Util.toggleRadio('<portlet:namespace />socialInteractionsChooseUsers', '<portlet:namespace />socialInteractionsUsersWrapper', '');
+	Util.toggleRadio(
+		'<portlet:namespace />socialInteractionsAnyUser',
+		'',
+		'<portlet:namespace />socialInteractionsUsersWrapper'
+	);
+	Util.toggleRadio(
+		'<portlet:namespace />socialInteractionsChooseUsers',
+		'<portlet:namespace />socialInteractionsUsersWrapper',
+		''
+	);
 </aui:script>

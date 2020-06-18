@@ -14,20 +14,16 @@
 
 package com.liferay.dynamic.data.mapping.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -37,6 +33,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Provides the remote service interface for DDMFormInstance. Methods of this
  * service are expected to have security checks based on the propagated JAAS
@@ -44,32 +42,33 @@ import java.util.Map;
  *
  * @author Brian Wing Shun Chan
  * @see DDMFormInstanceServiceUtil
- * @see com.liferay.dynamic.data.mapping.service.base.DDMFormInstanceServiceBaseImpl
- * @see com.liferay.dynamic.data.mapping.service.impl.DDMFormInstanceServiceImpl
  * @generated
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(property =  {
-	"json.web.service.context.name=ddm", "json.web.service.context.path=DDMFormInstance"}, service = DDMFormInstanceService.class)
 @ProviderType
-@Transactional(isolation = Isolation.PORTAL, rollbackFor =  {
-	PortalException.class, SystemException.class})
+@Transactional(
+	isolation = Isolation.PORTAL,
+	rollbackFor = {PortalException.class, SystemException.class}
+)
 public interface DDMFormInstanceService extends BaseService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link DDMFormInstanceServiceUtil} to access the ddm form instance remote service. Add custom service methods to {@link com.liferay.dynamic.data.mapping.service.impl.DDMFormInstanceServiceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify or reference this interface directly. Always use {@link DDMFormInstanceServiceUtil} to access the ddm form instance remote service. Add custom service methods to <code>com.liferay.dynamic.data.mapping.service.impl.DDMFormInstanceServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public DDMFormInstance addFormInstance(long groupId, long ddmStructureId,
-		Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-		DDMFormValues settingsDDMFormValues, ServiceContext serviceContext)
+	public DDMFormInstance addFormInstance(
+			long groupId, long ddmStructureId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap,
+			DDMFormValues settingsDDMFormValues, ServiceContext serviceContext)
 		throws PortalException;
 
-	public DDMFormInstance addFormInstance(long groupId,
-		Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-		DDMForm ddmForm, DDMFormLayout ddmFormLayout,
-		DDMFormValues settingsDDMFormValues, ServiceContext serviceContext)
+	public DDMFormInstance addFormInstance(
+			long groupId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, DDMForm ddmForm,
+			DDMFormLayout ddmFormLayout, DDMFormValues settingsDDMFormValues,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public void deleteFormInstance(long ddmFormInstanceId)
@@ -84,52 +83,60 @@ public interface DDMFormInstanceService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<DDMFormInstance> getFormInstances(long companyId, long groupId,
-		int start, int end);
+	public List<DDMFormInstance> getFormInstances(
+		long companyId, long groupId, int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getFormInstancesCount(long companyId, long groupId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getFormInstancesCount(String uuid) throws PortalException;
+
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	public String getOSGiServiceIdentifier();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<DDMFormInstance> search(long companyId, long groupId,
-		String keywords, int start, int end,
+	public List<DDMFormInstance> search(
+		long companyId, long groupId, String keywords, int start, int end,
 		OrderByComparator<DDMFormInstance> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<DDMFormInstance> search(long companyId, long groupId,
-		String[] names, String[] descriptions, boolean andOperator, int start,
-		int end, OrderByComparator<DDMFormInstance> orderByComparator);
+	public List<DDMFormInstance> search(
+		long companyId, long groupId, String[] names, String[] descriptions,
+		boolean andOperator, int start, int end,
+		OrderByComparator<DDMFormInstance> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int searchCount(long companyId, long groupId, String keywords);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int searchCount(long companyId, long groupId, String[] names,
-		String[] descriptions, boolean andOperator);
+	public int searchCount(
+		long companyId, long groupId, String[] names, String[] descriptions,
+		boolean andOperator);
 
 	/**
-	* Updates the the record set's settings.
-	*
-	* @param formInstanceId the primary key of the form instance
-	* @param settingsDDMFormValues the record set's settings. For more
-	information see <code>DDMFormValues</code> in the
-	<code>dynamic.data.mapping.api</code> module.
-	* @return the record set
-	* @throws PortalException if a portal exception occurred
-	*/
-	public DDMFormInstance updateFormInstance(long formInstanceId,
-		DDMFormValues settingsDDMFormValues) throws PortalException;
-
-	public DDMFormInstance updateFormInstance(long ddmFormInstanceId,
-		Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-		DDMForm ddmForm, DDMFormLayout ddmFormLayout,
-		DDMFormValues settingsDDMFormValues, ServiceContext serviceContext)
+	 * Updates the the record set's settings.
+	 *
+	 * @param formInstanceId the primary key of the form instance
+	 * @param settingsDDMFormValues the record set's settings. For more
+	 information see <code>DDMFormValues</code> in the
+	 <code>dynamic.data.mapping.api</code> module.
+	 * @return the record set
+	 * @throws PortalException if a portal exception occurred
+	 */
+	public DDMFormInstance updateFormInstance(
+			long formInstanceId, DDMFormValues settingsDDMFormValues)
 		throws PortalException;
+
+	public DDMFormInstance updateFormInstance(
+			long ddmFormInstanceId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, DDMForm ddmForm,
+			DDMFormLayout ddmFormLayout, DDMFormValues settingsDDMFormValues,
+			ServiceContext serviceContext)
+		throws PortalException;
+
 }

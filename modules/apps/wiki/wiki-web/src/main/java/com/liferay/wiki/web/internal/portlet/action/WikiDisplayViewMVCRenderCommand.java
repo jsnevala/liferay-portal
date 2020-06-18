@@ -104,14 +104,14 @@ public class WikiDisplayViewMVCRenderCommand implements MVCRenderCommand {
 
 			return "/wiki_display/view.jsp";
 		}
-		catch (NoSuchNodeException nsne) {
+		catch (NoSuchNodeException noSuchNodeException) {
 			return "/wiki_display/portlet_not_setup.jsp";
 		}
-		catch (NoSuchPageException nspe) {
+		catch (NoSuchPageException noSuchPageException) {
 			return "/wiki_display/portlet_not_setup.jsp";
 		}
-		catch (PortalException pe) {
-			SessionErrors.add(renderRequest, pe.getClass());
+		catch (PortalException portalException) {
+			SessionErrors.add(renderRequest, portalException.getClass());
 
 			return "/wiki/error.jsp";
 		}
@@ -131,12 +131,11 @@ public class WikiDisplayViewMVCRenderCommand implements MVCRenderCommand {
 			return _wikiNodeService.getNode(
 				themeDisplay.getScopeGroupId(), nodeName);
 		}
-		else {
-			long nodeId = GetterUtil.getLong(
-				portletPreferences.getValue("nodeId", StringPool.BLANK));
 
-			return _wikiNodeService.getNode(nodeId);
-		}
+		long nodeId = GetterUtil.getLong(
+			portletPreferences.getValue("nodeId", StringPool.BLANK));
+
+		return _wikiNodeService.getNode(nodeId);
 	}
 
 	@Reference(unbind = "-")

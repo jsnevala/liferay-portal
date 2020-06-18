@@ -16,9 +16,9 @@ package com.liferay.taglib.util;
 
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.servlet.taglib.util.OutputData;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -135,15 +135,15 @@ public class HtmlTopTagTest {
 						return new OutputData() {
 
 							@Override
-							public void addData(
+							public void addDataSB(
 								String outputKey, String webKey,
 								StringBundler sb) {
 
 								try {
 									jspWriter.write(sb.toString());
 								}
-								catch (IOException ioe) {
-									ReflectionUtil.throwException(ioe);
+								catch (IOException ioException) {
+									ReflectionUtil.throwException(ioException);
 								}
 							}
 
@@ -194,9 +194,9 @@ public class HtmlTopTagTest {
 		String dataSennaTrackAttributeName = "data-senna-track";
 
 		if (expectedDataSennaTrackValue != null) {
-			String dataSennaTrackAttribute =
-				dataSennaTrackAttributeName + "=\"" +
-					expectedDataSennaTrackValue + "\"";
+			String dataSennaTrackAttribute = StringBundler.concat(
+				dataSennaTrackAttributeName, "=\"", expectedDataSennaTrackValue,
+				"\"");
 
 			String dataSennaTrackAttributeRegex =
 				elementBeginRegex + dataSennaTrackAttribute + "[\\s>]";

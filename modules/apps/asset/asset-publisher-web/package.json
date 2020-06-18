@@ -1,19 +1,12 @@
 {
 	"dependencies": {
-		"metal-component": "^2.4.5",
-		"metal-soy": "^2.4.5",
-		"metal-state": "^2.13.2"
-	},
-	"devDependencies": {
-		"check-source-formatting": "^2.0.12",
-		"liferay-module-config-generator": "^1.2.1",
-		"metal-cli": "^4.0.1"
+		"metal-dom": "2.16.8"
 	},
 	"name": "asset-publisher-web",
 	"scripts": {
-		"checkFormat": "npm run csf",
-		"csf": "csf src/**/*.js src/**/*.jsp",
-		"format": "npm run csf -- -i"
+		"build": "liferay-npm-scripts build",
+		"checkFormat": "liferay-npm-scripts check",
+		"format": "liferay-npm-scripts fix"
 	},
-	"version": "3.0.0"
+	"version": "4.0.20"
 }

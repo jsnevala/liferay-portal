@@ -14,8 +14,6 @@
 
 package com.liferay.portal.spring.extender.internal.context;
 
-import com.liferay.portal.spring.bean.LiferayBeanFactory;
-
 import java.net.URL;
 
 import java.util.ArrayList;
@@ -25,7 +23,10 @@ import java.util.List;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.config.SmartInstantiationAwareBeanPostProcessor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -52,7 +53,7 @@ public class ModuleApplicationContext extends ClassPathXmlApplicationContext {
 	@Override
 	public Resource[] getResources(String locationPattern) {
 		Enumeration<URL> enumeration = bundle.findEntries(
-			locationPattern, "*.xml", false);
+			locationPattern, "*.xml", true);
 
 		List<Resource> resources = new ArrayList<>();
 
@@ -60,12 +61,56 @@ public class ModuleApplicationContext extends ClassPathXmlApplicationContext {
 			resources.add(new UrlResource(enumeration.nextElement()));
 		}
 
-		return resources.toArray(new Resource[resources.size()]);
+		return resources.toArray(new Resource[0]);
 	}
 
 	@Override
 	protected DefaultListableBeanFactory createBeanFactory() {
-		return new LiferayBeanFactory(getInternalParentBeanFactory());
+		return new DefaultListableBeanFactory(getInternalParentBeanFactory()) {
+
+			@Override
+			protected Object getEarlyBeanReference(
+				String beanName, RootBeanDefinition rootBeanDefinition,
+				Object bean) {
+
+				if ((bean == null) || rootBeanDefinition.isSynthetic()) {
+					return bean;
+				}
+
+				Object exposedObject = bean;
+
+				for (BeanPostProcessor beanPostProcessor :
+						getBeanPostProcessors()) {
+
+					if (!(beanPostProcessor instanceof
+							SmartInstantiationAwareBeanPostProcessor)) {
+
+						continue;
+					}
+
+					SmartInstantiationAwareBeanPostProcessor
+						smartInstantiationAwareBeanPostProcessor =
+							(SmartInstantiationAwareBeanPostProcessor)
+								beanPostProcessor;
+
+					exposedObject =
+						smartInstantiationAwareBeanPostProcessor.
+							getEarlyBeanReference(exposedObject, beanName);
+
+					if (exposedObject == null) {
+						return exposedObject;
+					}
+				}
+
+				return exposedObject;
+			}
+
+			@Override
+			protected boolean hasInstantiationAwareBeanPostProcessors() {
+				return false;
+			}
+
+		};
 	}
 
 	protected final Bundle bundle;

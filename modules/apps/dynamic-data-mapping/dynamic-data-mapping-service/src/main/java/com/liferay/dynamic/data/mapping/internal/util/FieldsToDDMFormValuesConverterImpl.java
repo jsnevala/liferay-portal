@@ -24,12 +24,15 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
+import com.liferay.dynamic.data.mapping.util.DDMFieldsCounter;
 import com.liferay.dynamic.data.mapping.util.FieldsToDDMFormValuesConverter;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
+
+import java.text.NumberFormat;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -191,11 +194,10 @@ public class FieldsToDDMFormValuesConverterImpl
 				}
 			}
 
-			return fieldsDisplayValues.toArray(
-				new String[fieldsDisplayValues.size()]);
+			return fieldsDisplayValues.toArray(new String[0]);
 		}
-		catch (Exception e) {
-			throw new PortalException(e);
+		catch (Exception exception) {
+			throw new PortalException(exception);
 		}
 	}
 
@@ -208,6 +210,20 @@ public class FieldsToDDMFormValuesConverterImpl
 			Date valueDate = (Date)fieldValue;
 
 			fieldValue = valueDate.getTime();
+		}
+		else if (fieldValue instanceof Number) {
+			NumberFormat numberFormat = NumberFormat.getInstance(locale);
+
+			Number number = (Number)fieldValue;
+
+			if (number instanceof Double || number instanceof Float) {
+				numberFormat.setMinimumFractionDigits(1);
+
+				return numberFormat.format(number.doubleValue());
+			}
+			else if (fieldValue instanceof Integer) {
+				return numberFormat.format(number.intValue());
+			}
 		}
 
 		return String.valueOf(fieldValue);

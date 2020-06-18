@@ -20,9 +20,11 @@ import com.liferay.portal.kernel.model.StagedGroupedModel;
 import java.util.Optional;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
-public interface StagedLayoutSet extends LayoutSet, StagedGroupedModel {
+public interface StagedLayoutSet extends StagedGroupedModel {
+
+	public LayoutSet getLayoutSet();
 
 	public Optional<String> getLayoutSetPrototypeName();
 

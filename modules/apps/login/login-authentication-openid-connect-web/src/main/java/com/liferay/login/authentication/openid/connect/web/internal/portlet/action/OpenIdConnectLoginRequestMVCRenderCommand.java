@@ -14,6 +14,7 @@
 
 package com.liferay.login.authentication.openid.connect.web.internal.portlet.action;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
@@ -24,8 +25,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnect;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectProviderRegistry;
 import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectWebKeys;
-
-import java.util.Collection;
 
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
@@ -40,6 +39,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
+ * Enables the Sign In portlet to render a prompt for users to enter their
+ * OpenID Connect IDs.
+ *
  * @author Michael C. Han
  */
 @Component(
@@ -72,26 +74,28 @@ public class OpenIdConnectLoginRequestMVCRenderCommand
 			return "/login.jsp";
 		}
 
-		HttpServletResponse httpServletResponse =
-			_portal.getHttpServletResponse(renderResponse);
-
-		Collection<String> openIdConnectProviderNames =
-			_openIdConnectProviderRegistry.getOpenIdConnectProviderNames();
-
 		httpServletRequest.setAttribute(
 			OpenIdConnectWebKeys.OPEN_ID_CONNECT_PROVIDER_NAMES,
-			openIdConnectProviderNames);
+			_openIdConnectProviderRegistry.getOpenIdConnectProviderNames());
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher(_JSP_PATH);
 
+		HttpServletResponse httpServletResponse =
+			_portal.getHttpServletResponse(renderResponse);
+
 		try {
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}
-		catch (Exception e) {
-			_log.error("Unable to include JSP " + _JSP_PATH, e);
+		catch (Exception exception) {
+			_log.error(
+				StringBundler.concat(
+					"Unable to include JSP ", _JSP_PATH, ": ",
+					exception.getMessage()),
+				exception);
 
-			throw new PortletException("Unable to include JSP " + _JSP_PATH, e);
+			throw new PortletException(
+				"Unable to include JSP " + _JSP_PATH, exception);
 		}
 
 		return "/navigation.jsp";

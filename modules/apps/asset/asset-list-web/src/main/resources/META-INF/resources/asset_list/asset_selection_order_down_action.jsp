@@ -25,7 +25,7 @@ AssetListEntryAssetEntryRel assetListEntryAssetEntryRel = (AssetListEntryAssetEn
 
 int position = assetListEntryAssetEntryRel.getPosition();
 
-boolean last = (position == (searchContainer.getTotal() - 1));
+boolean last = position == (searchContainer.getTotal() - 1);
 %>
 
 <c:choose>
@@ -33,6 +33,7 @@ boolean last = (position == (searchContainer.getTotal() - 1));
 		<portlet:actionURL name="/asset_list/move_asset_entry_selection" var="moveAssetEntrySelectionDownURL">
 			<portlet:param name="redirect" value="<%= currentURL %>" />
 			<portlet:param name="assetListEntryId" value="<%= String.valueOf(assetListEntryAssetEntryRel.getAssetListEntryId()) %>" />
+			<portlet:param name="segmentsEntryId" value="<%= String.valueOf(assetListEntryAssetEntryRel.getSegmentsEntryId()) %>" />
 			<portlet:param name="position" value="<%= String.valueOf(position) %>" />
 			<portlet:param name="newPosition" value="<%= String.valueOf(position + 1) %>" />
 		</portlet:actionURL>
@@ -44,10 +45,11 @@ boolean last = (position == (searchContainer.getTotal() - 1));
 			url="<%= moveAssetEntrySelectionDownURL %>"
 		/>
 	</c:when>
-	<c:when test="<%= position == 0 %>">
+	<c:when test="<%= (position == 0) && (searchContainer.getTotal() > 1) %>">
 		<portlet:actionURL name="/asset_list/move_asset_entry_selection" var="moveAssetEntrySelectionDownURL">
 			<portlet:param name="redirect" value="<%= currentURL %>" />
 			<portlet:param name="assetListEntryId" value="<%= String.valueOf(assetListEntryAssetEntryRel.getAssetListEntryId()) %>" />
+			<portlet:param name="segmentsEntryId" value="<%= String.valueOf(assetListEntryAssetEntryRel.getSegmentsEntryId()) %>" />
 			<portlet:param name="position" value="<%= String.valueOf(position) %>" />
 			<portlet:param name="newPosition" value="<%= String.valueOf(position + 1) %>" />
 		</portlet:actionURL>
@@ -59,10 +61,11 @@ boolean last = (position == (searchContainer.getTotal() - 1));
 			url="<%= moveAssetEntrySelectionDownURL %>"
 		/>
 	</c:when>
-	<c:when test="<%= last %>">
+	<c:when test="<%= last && (searchContainer.getTotal() > 1) %>">
 		<portlet:actionURL name="/asset_list/move_asset_entry_selection" var="moveAssetEntrySelectionUpURL">
 			<portlet:param name="redirect" value="<%= currentURL %>" />
 			<portlet:param name="assetListEntryId" value="<%= String.valueOf(assetListEntryAssetEntryRel.getAssetListEntryId()) %>" />
+			<portlet:param name="segmentsEntryId" value="<%= String.valueOf(assetListEntryAssetEntryRel.getSegmentsEntryId()) %>" />
 			<portlet:param name="position" value="<%= String.valueOf(position) %>" />
 			<portlet:param name="newPosition" value="<%= String.valueOf(position - 1) %>" />
 		</portlet:actionURL>

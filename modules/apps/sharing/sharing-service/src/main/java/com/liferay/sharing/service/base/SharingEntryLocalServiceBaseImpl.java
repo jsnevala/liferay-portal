@@ -14,15 +14,13 @@
 
 package com.liferay.sharing.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -43,12 +41,11 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
-
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.service.SharingEntryLocalService;
 import com.liferay.sharing.service.persistence.SharingEntryFinder;
@@ -60,6 +57,8 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * Provides the base implementation for the sharing entry local service.
  *
@@ -69,17 +68,16 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.sharing.service.impl.SharingEntryLocalServiceImpl
- * @see com.liferay.sharing.service.SharingEntryLocalServiceUtil
  * @generated
  */
-@ProviderType
 public abstract class SharingEntryLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements SharingEntryLocalService,
-		IdentifiableOSGiService {
+	extends BaseLocalServiceImpl
+	implements AopService, IdentifiableOSGiService, SharingEntryLocalService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.sharing.service.SharingEntryLocalServiceUtil} to access the sharing entry local service.
+	 * Never modify or reference this class directly. Use <code>SharingEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.sharing.service.SharingEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -119,6 +117,7 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	@Override
 	public SharingEntry deleteSharingEntry(long sharingEntryId)
 		throws PortalException {
+
 		return sharingEntryPersistence.remove(sharingEntryId);
 	}
 
@@ -135,11 +134,16 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	}
 
 	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return sharingEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(SharingEntry.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			SharingEntry.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -157,7 +161,7 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.sharing.model.impl.SharingEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.sharing.model.impl.SharingEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -166,17 +170,18 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return sharingEntryPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return sharingEntryPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.sharing.model.impl.SharingEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.sharing.model.impl.SharingEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -186,10 +191,12 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return sharingEntryPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return sharingEntryPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -211,10 +218,11 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return sharingEntryPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return sharingEntryPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
@@ -230,8 +238,9 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	 * @return the matching sharing entry, or <code>null</code> if a matching sharing entry could not be found
 	 */
 	@Override
-	public SharingEntry fetchSharingEntryByUuidAndGroupId(String uuid,
-		long groupId) {
+	public SharingEntry fetchSharingEntryByUuidAndGroupId(
+		String uuid, long groupId) {
+
 		return sharingEntryPersistence.fetchByUUID_G(uuid, groupId);
 	}
 
@@ -245,12 +254,14 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	@Override
 	public SharingEntry getSharingEntry(long sharingEntryId)
 		throws PortalException {
+
 		return sharingEntryPersistence.findByPrimaryKey(sharingEntryId);
 	}
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
 		actionableDynamicQuery.setBaseLocalService(sharingEntryLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
@@ -262,10 +273,14 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(sharingEntryLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			sharingEntryLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(SharingEntry.class);
 
@@ -277,6 +292,7 @@ public abstract class SharingEntryLocalServiceBaseImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
+
 		actionableDynamicQuery.setBaseLocalService(sharingEntryLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(SharingEntry.class);
@@ -287,65 +303,88 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
-		final ExportActionableDynamicQuery exportActionableDynamicQuery = new ExportActionableDynamicQuery() {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
 				@Override
 				public long performCount() throws PortalException {
-					ManifestSummary manifestSummary = portletDataContext.getManifestSummary();
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
 
 					StagedModelType stagedModelType = getStagedModelType();
 
 					long modelAdditionCount = super.performCount();
 
-					manifestSummary.addModelAdditionCount(stagedModelType,
-						modelAdditionCount);
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
 
-					long modelDeletionCount = ExportImportHelperUtil.getModelDeletionCount(portletDataContext,
-							stagedModelType);
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
 
-					manifestSummary.addModelDeletionCount(stagedModelType,
-						modelDeletionCount);
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
 
 					return modelAdditionCount;
 				}
+
 			};
 
 		initActionableDynamicQuery(exportActionableDynamicQuery);
 
-		exportActionableDynamicQuery.setAddCriteriaMethod(new ActionableDynamicQuery.AddCriteriaMethod() {
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
 				@Override
 				public void addCriteria(DynamicQuery dynamicQuery) {
-					portletDataContext.addDateRangeCriteria(dynamicQuery,
-						"modifiedDate");
+					portletDataContext.addDateRangeCriteria(
+						dynamicQuery, "modifiedDate");
 
-					StagedModelType stagedModelType = exportActionableDynamicQuery.getStagedModelType();
+					StagedModelType stagedModelType =
+						exportActionableDynamicQuery.getStagedModelType();
 
-					long referrerClassNameId = stagedModelType.getReferrerClassNameId();
+					long referrerClassNameId =
+						stagedModelType.getReferrerClassNameId();
 
 					Property classNameIdProperty = PropertyFactoryUtil.forName(
-							"classNameId");
+						"classNameId");
 
-					if ((referrerClassNameId != StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
-							(referrerClassNameId != StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
-						dynamicQuery.add(classNameIdProperty.eq(
+					if ((referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
+						(referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
+
+						dynamicQuery.add(
+							classNameIdProperty.eq(
 								stagedModelType.getReferrerClassNameId()));
 					}
-					else if (referrerClassNameId == StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
+					else if (referrerClassNameId ==
+								StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
+
 						dynamicQuery.add(classNameIdProperty.isNotNull());
 					}
 				}
+
 			});
 
-		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<SharingEntry>() {
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<SharingEntry>() {
+
 				@Override
 				public void performAction(SharingEntry sharingEntry)
 					throws PortalException {
-					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
-						sharingEntry);
+
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, sharingEntry);
 				}
+
 			});
-		exportActionableDynamicQuery.setStagedModelType(new StagedModelType(
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
 				PortalUtil.getClassNameId(SharingEntry.class.getName()),
 				StagedModelType.REFERRER_CLASS_NAME_ID_ALL));
 
@@ -355,15 +394,35 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return sharingEntryPersistence.create(
+			((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
-		return sharingEntryLocalService.deleteSharingEntry((SharingEntry)persistedModel);
+
+		return sharingEntryLocalService.deleteSharingEntry(
+			(SharingEntry)persistedModel);
 	}
 
+	public BasePersistence<SharingEntry> getBasePersistence() {
+		return sharingEntryPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return sharingEntryPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -375,8 +434,9 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	 * @return the matching sharing entries, or an empty list if no matches were found
 	 */
 	@Override
-	public List<SharingEntry> getSharingEntriesByUuidAndCompanyId(String uuid,
-		long companyId) {
+	public List<SharingEntry> getSharingEntriesByUuidAndCompanyId(
+		String uuid, long companyId) {
+
 		return sharingEntryPersistence.findByUuid_C(uuid, companyId);
 	}
 
@@ -391,11 +451,12 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	 * @return the range of matching sharing entries, or an empty list if no matches were found
 	 */
 	@Override
-	public List<SharingEntry> getSharingEntriesByUuidAndCompanyId(String uuid,
-		long companyId, int start, int end,
+	public List<SharingEntry> getSharingEntriesByUuidAndCompanyId(
+		String uuid, long companyId, int start, int end,
 		OrderByComparator<SharingEntry> orderByComparator) {
-		return sharingEntryPersistence.findByUuid_C(uuid, companyId, start,
-			end, orderByComparator);
+
+		return sharingEntryPersistence.findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -407,8 +468,10 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	 * @throws PortalException if a matching sharing entry could not be found
 	 */
 	@Override
-	public SharingEntry getSharingEntryByUuidAndGroupId(String uuid,
-		long groupId) throws PortalException {
+	public SharingEntry getSharingEntryByUuidAndGroupId(
+			String uuid, long groupId)
+		throws PortalException {
+
 		return sharingEntryPersistence.findByUUID_G(uuid, groupId);
 	}
 
@@ -416,7 +479,7 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	 * Returns a range of all the sharing entries.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.sharing.model.impl.SharingEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.sharing.model.impl.SharingEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of sharing entries
@@ -450,89 +513,17 @@ public abstract class SharingEntryLocalServiceBaseImpl
 		return sharingEntryPersistence.update(sharingEntry);
 	}
 
-	/**
-	 * Returns the sharing entry local service.
-	 *
-	 * @return the sharing entry local service
-	 */
-	public SharingEntryLocalService getSharingEntryLocalService() {
-		return sharingEntryLocalService;
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			SharingEntryLocalService.class, IdentifiableOSGiService.class,
+			PersistedModelLocalService.class
+		};
 	}
 
-	/**
-	 * Sets the sharing entry local service.
-	 *
-	 * @param sharingEntryLocalService the sharing entry local service
-	 */
-	public void setSharingEntryLocalService(
-		SharingEntryLocalService sharingEntryLocalService) {
-		this.sharingEntryLocalService = sharingEntryLocalService;
-	}
-
-	/**
-	 * Returns the sharing entry persistence.
-	 *
-	 * @return the sharing entry persistence
-	 */
-	public SharingEntryPersistence getSharingEntryPersistence() {
-		return sharingEntryPersistence;
-	}
-
-	/**
-	 * Sets the sharing entry persistence.
-	 *
-	 * @param sharingEntryPersistence the sharing entry persistence
-	 */
-	public void setSharingEntryPersistence(
-		SharingEntryPersistence sharingEntryPersistence) {
-		this.sharingEntryPersistence = sharingEntryPersistence;
-	}
-
-	/**
-	 * Returns the sharing entry finder.
-	 *
-	 * @return the sharing entry finder
-	 */
-	public SharingEntryFinder getSharingEntryFinder() {
-		return sharingEntryFinder;
-	}
-
-	/**
-	 * Sets the sharing entry finder.
-	 *
-	 * @param sharingEntryFinder the sharing entry finder
-	 */
-	public void setSharingEntryFinder(SharingEntryFinder sharingEntryFinder) {
-		this.sharingEntryFinder = sharingEntryFinder;
-	}
-
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
-		return counterLocalService;
-	}
-
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
-		this.counterLocalService = counterLocalService;
-	}
-
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.sharing.model.SharingEntry",
-			sharingEntryLocalService);
-	}
-
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.sharing.model.SharingEntry");
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		sharingEntryLocalService = (SharingEntryLocalService)aopProxy;
 	}
 
 	/**
@@ -567,24 +558,26 @@ public abstract class SharingEntryLocalServiceBaseImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = SharingEntryLocalService.class)
 	protected SharingEntryLocalService sharingEntryLocalService;
-	@BeanReference(type = SharingEntryPersistence.class)
+
+	@Reference
 	protected SharingEntryPersistence sharingEntryPersistence;
-	@BeanReference(type = SharingEntryFinder.class)
+
+	@Reference
 	protected SharingEntryFinder sharingEntryFinder;
-	@ServiceReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+
+	@Reference
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
 }

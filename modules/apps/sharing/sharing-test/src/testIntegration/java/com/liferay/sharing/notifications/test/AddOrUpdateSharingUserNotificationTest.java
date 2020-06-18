@@ -26,11 +26,11 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.notifications.test.util.BaseUserNotificationTestCase;
 import com.liferay.portal.test.mail.MailServiceTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
-import com.liferay.portlet.notifications.test.BaseUserNotificationTestCase;
 import com.liferay.sharing.constants.SharingPortletKeys;
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.security.permission.SharingEntryAction;
@@ -104,7 +104,7 @@ public class AddOrUpdateSharingUserNotificationTest
 				group.getGroupId(), TestPropsValues.getUserId());
 
 		return _sharingEntryLocalService.addOrUpdateSharingEntry(
-			sharingEntry.getFromUserId(), sharingEntry.getToUserId(),
+			sharingEntry.getUserId(), sharingEntry.getToUserId(),
 			sharingEntry.getClassNameId(), sharingEntry.getClassPK(),
 			sharingEntry.getGroupId(), sharingEntry.isShareable(),
 			Arrays.asList(SharingEntryAction.VIEW, SharingEntryAction.UPDATE),

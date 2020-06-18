@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -37,10 +37,10 @@ import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -117,9 +117,9 @@ public class AddDefaultSharedFormLayoutPortalInstanceLifecycleListener
 	protected Group addFormsGroup(long companyId) throws PortalException {
 		long defaultUserId = _userLocalService.getDefaultUserId(companyId);
 
-		Map<Locale, String> nameMap = new HashMap<>();
-
-		nameMap.put(LocaleUtil.getDefault(), GroupConstants.FORMS);
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.getDefault(), GroupConstants.FORMS
+		).build();
 
 		return _groupLocalService.addGroup(
 			defaultUserId, GroupConstants.DEFAULT_PARENT_GROUP_ID, null, 0,
@@ -229,7 +229,7 @@ public class AddDefaultSharedFormLayoutPortalInstanceLifecycleListener
 			role.getRoleId(), ActionKeys.VIEW);
 	}
 
-	protected void verifyLayout(Layout layout) {
+	protected void verifyLayout(Layout layout) throws PortalException {
 		if (StringUtil.equals(
 				layout.getType(),
 				DDMFormPortletLayoutTypeConstants.LAYOUT_TYPE)) {

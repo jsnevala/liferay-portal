@@ -14,8 +14,8 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.parser.JavaTerm;
@@ -126,7 +126,6 @@ public class JavaForLoopCheck extends BaseJavaTermCheck {
 			if (!matcher2.find() || (varNameCount > 1)) {
 				addMessage(
 					fileName, "Use Enhanced For-Loop",
-					"enhanced_for_loop.markdown",
 					lineNumber - 1 +
 						getLineNumber(javaTermContent, matcher1.start()));
 

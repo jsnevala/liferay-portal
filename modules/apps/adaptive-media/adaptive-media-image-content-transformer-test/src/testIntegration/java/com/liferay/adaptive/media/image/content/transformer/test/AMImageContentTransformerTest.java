@@ -21,7 +21,8 @@ import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.document.library.util.DLURLHelper;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -34,11 +35,11 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.After;
@@ -64,10 +65,11 @@ public class AMImageContentTransformerTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
-		Map<String, String> properties = new HashMap<>();
-
-		properties.put("max-height", "600");
-		properties.put("max-width", "800");
+		Map<String, String> properties = HashMapBuilder.put(
+			"max-height", "600"
+		).put(
+			"max-width", "800"
+		).build();
 
 		_amImageConfigurationEntry =
 			_amImageConfigurationHelper.addAMImageConfigurationEntry(
@@ -93,17 +95,16 @@ public class AMImageContentTransformerTest {
 		String rawHTML = String.format(
 			"<img data-fileentryid=\"%s\" src=\"%s\" />",
 			fileEntry.getFileEntryId(),
-			DLUtil.getPreviewURL(
+			_dlURLHelper.getPreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false));
 
-		String regex =
-			"<picture data-fileentryid=\".+\">" +
-				"<source media=\"\\(max-width:.+px\\)\" srcset=\".+\" \\/>" +
-					"<source media=\"\\(max-width:.+px\\) and " +
-						"\\(min-width:.+px\\)\" srcset=\".+\" \\/>" +
-							"<img data-fileentryid=\".+\" src=\".+\" \\/>" +
-								"<\\/picture>";
+		String regex = StringBundler.concat(
+			"<picture data-fileentryid=\".+\">",
+			"<source media=\"\\(max-width:.+px\\)\" srcset=\".+\" \\/>",
+			"<source media=\"\\(max-width:.+px\\) and \\(min-width:.+px\\)\" ",
+			"srcset=\".+\" \\/><img data-fileentryid=\".+\" src=\".+\" \\/>",
+			"<\\/picture>");
 
 		String transformedHTML = _contentTransformerHandler.transform(
 			ContentTransformerContentTypes.HTML, rawHTML);
@@ -132,6 +133,9 @@ public class AMImageContentTransformerTest {
 
 	@Inject
 	private DLAppLocalService _dlAppLocalService;
+
+	@Inject
+	private DLURLHelper _dlURLHelper;
 
 	@DeleteAfterTestRun
 	private Group _group;

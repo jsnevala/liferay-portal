@@ -1,799 +1,821 @@
-<definition>
-	<command name="_editFieldLabel">
-		<execute macro="DynamicDataMapping#editFieldSettings">
-			<var name="fieldFieldLabel" value="${field}" />
-		</execute>
+definition {
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_FIELD_LABEL" />
+	macro _editFieldLabel {
+		DynamicDataMapping.editFieldSettings(fieldFieldLabel = "${field}");
 
-		<execute function="Type" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD" value1="${fieldFieldLabel}" />
+		DoubleClick(locator1 = "DDMEditStructure#SETTINGS_FIELD_LABEL");
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
-	</command>
+		Type(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD",
+			value1 = "${fieldFieldLabel}");
 
-	<command name="addField">
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+			value1 = "Save");
+	}
 
-		<var name="key_field" value="${field}" />
+	macro addField {
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<execute function="DragAndDrop" locator1="DDMEditStructure#FIELDS_FIELD" locator2="DDMEditStructure#FORM_BUILDER" value1="${field}" />
+		var key_field = "${field}";
 
-		<execute macro="DynamicDataMapping#_editFieldLabel">
-			<var name="field" value="${field}" />
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+		DragAndDrop(
+			locator1 = "DDMEditStructure#FIELDS_FIELD",
+			locator2 = "DDMEditStructure#FORM_BUILDER",
+			value1 = "${field}");
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_FIELD_LABEL" value1="${fieldFieldLabel}" />
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+		DynamicDataMapping._editFieldLabel(
+			field = "${field}",
+			fieldFieldLabel = "${fieldFieldLabel}");
 
-		<execute macro="DynamicDataMapping#editFieldNameCmd">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-			<var name="fieldName" value="${fieldName}" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_FIELD_LABEL",
+			value1 = "${fieldFieldLabel}");
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_NAME" value1="${fieldName}" />
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
-	</command>
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-	<command name="addFieldFormTemplateSpecific">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		DynamicDataMapping.editFieldNameCmd(
+			fieldFieldLabel = "${fieldFieldLabel}",
+			fieldName = "${fieldName}");
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_NAME",
+			value1 = "${fieldName}");
 
-		<var name="key_field" value="${field}" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
+	}
 
-		<execute function="DragAndDrop" locator1="DDMEditStructure#FIELDS_FIELD" locator2="DDMEditStructure#FORM_BUILDER" value1="${field}" />
+	macro addFieldFormTemplateSpecific {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<var name="key_fieldFieldLabel" value="${field}" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<if>
-			<equals arg1="${field}" arg2="Fieldset" />
-			<then>
-				<execute function="Click" locator1="DDMEditStructure#FORM_FIELDSET" />
+		var key_field = "${field}";
 
-				<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_FIELD_LABEL" />
+		DragAndDrop(
+			locator1 = "DDMEditStructure#FIELDS_FIELD",
+			locator2 = "DDMEditStructure#FORM_BUILDER",
+			value1 = "${field}");
 
-				<execute function="Type" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD" value1="${fieldFieldLabel}" />
+		var key_fieldFieldLabel = "${field}";
 
-				<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
+		if ("${field}" == "Fieldset") {
+			Click(locator1 = "DDMEditStructure#FORM_FIELDSET");
 
-				<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_FIELD_LABEL" value1="${fieldFieldLabel}" />
-			</then>
-			<elseif>
-				<equals arg1="${field}" arg2="Paragraph" />
-				<then>
-					<execute function="DoubleClick" locator1="DDMEditStructure#FORM_FIELD" />
-				</then>
-			</elseif>
-			<elseif>
-				<equals arg1="${field}" arg2="Separator" />
-				<then>
-					<execute function="Click" locator1="DDMEditStructure#FORM_SEPARATOR" />
-				</then>
-			</elseif>
-		</if>
+			DoubleClick(locator1 = "DDMEditStructure#SETTINGS_FIELD_LABEL");
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+			Type(
+				locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD",
+				value1 = "${fieldFieldLabel}");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+			AssertClick(
+				locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+				value1 = "Save");
 
-	<command name="addFieldNested">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+			AssertTextEquals(
+				locator1 = "DDMEditStructure#SETTINGS_FIELD_LABEL",
+				value1 = "${fieldFieldLabel}");
+		}
+		else if ("${field}" == "Paragraph") {
+			DoubleClick(locator1 = "DDMEditStructure#FORM_FIELD");
+		}
+		else if ("${field}" == "Separator") {
+			Click(locator1 = "DDMEditStructure#FORM_SEPARATOR");
+		}
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<execute function="ScrollWebElementIntoView" locator1="DDMEditStructure#FIELDS_LINK" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<var name="key_field" value="${field}" />
+	macro addFieldNested {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="DragAndDrop" locator1="DDMEditStructure#FIELDS_FIELD" locator2="DDMEditStructure#FORM_BUILDER_FIELD" value1="${field}" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<execute macro="DynamicDataMapping#_editFieldLabel">
-			<var name="field" value="${field}" />
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+		ScrollWebElementIntoView(locator1 = "DDMEditStructure#FIELDS_LINK");
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_FIELD_LABEL" value1="${fieldFieldLabel}" />
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+		var key_field = "${field}";
 
-		<execute macro="DynamicDataMapping#editFieldNameCmd">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-			<var name="fieldName" value="${fieldName}" />
-		</execute>
+		DragAndDrop(
+			locator1 = "DDMEditStructure#FIELDS_FIELD",
+			locator2 = "DDMEditStructure#FORM_BUILDER_FIELD",
+			value1 = "${field}");
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_NAME" value1="${fieldName}" />
+		DynamicDataMapping._editFieldLabel(
+			field = "${field}",
+			fieldFieldLabel = "${fieldFieldLabel}");
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_FIELD_LABEL",
+			value1 = "${fieldFieldLabel}");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-	<command name="addFieldViaJSON">
-		<execute function="Click" locator1="NavTab#SOURCE" value1="Source" />
+		DynamicDataMapping.editFieldNameCmd(
+			fieldFieldLabel = "${fieldFieldLabel}",
+			fieldName = "${fieldName}");
 
-		<var method="JSONUtil#formatJSONString('${sourceJSON}')" name="sourceJSON" />
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_NAME",
+			value1 = "${fieldName}");
 
-		<execute function="Type#typeNotVisibleNoMouseOver" locator1="DDMEditStructure#SOURCE_EDITOR_CONTENT" value1="${sourceJSON} " />
-	</command>
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-	<command name="addFieldWithoutRename">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+	macro addFieldViaJSON {
+		Navigator.gotoNavTab(navTab = "Source");
 
-		<var name="key_field" value="${field}" />
+		var sourceJSON = JSONUtil.formatJSONString("${sourceJSON}");
 
-		<execute function="DragAndDrop" locator1="DDMEditStructure#FIELDS_FIELD" locator2="DDMEditStructure#FORM_BUILDER" value1="${field}" />
+		Type.typeNotVisibleNoMouseOver(
+			locator1 = "DDMEditStructure#SOURCE_EDITOR_CONTENT",
+			value1 = "${sourceJSON} ");
+	}
 
-		<execute macro="DynamicDataMapping#_editFieldLabel">
-			<var name="field" value="${field}" />
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+	macro addFieldWithoutRename {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_FIELD_LABEL" value1="${fieldFieldLabel}" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		var key_field = "${field}";
 
-	<command name="assertFieldNameErrorMessage">
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD_ALERT" value1="Please enter a unique field name." />
-	</command>
+		DragAndDrop(
+			locator1 = "DDMEditStructure#FIELDS_FIELD",
+			locator2 = "DDMEditStructure#FORM_BUILDER",
+			value1 = "${field}");
 
-	<command name="deleteField">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		DynamicDataMapping._editFieldLabel(
+			field = "${field}",
+			fieldFieldLabel = "${fieldFieldLabel}");
 
-		<var name="key_fieldFieldLabel" value="${fieldFieldLabel}" />
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_FIELD_LABEL",
+			value1 = "${fieldFieldLabel}");
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#FORM_FIELD" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute function="MouseOver" locator1="DDMEditStructure#FORM_FIELD" />
+	macro assertFieldNameErrorMessage {
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD_ALERT",
+			value1 = "Please enter a unique field name.");
+	}
 
-		<execute function="ClickNoError" locator1="DDMEditStructure#FORM_FIELD_DELETE_ICON" />
+	macro deleteField {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#ARE_YOU_SURE_DIALOG_BOX_HEADER" value1="${fieldFieldLabel}" />
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#ARE_YOU_SURE_DIALOG_BOX_BODY" value1="Are you sure you want to delete the selected entries? They will be deleted immediately." />
+		var key_fieldFieldLabel = "${fieldFieldLabel}";
 
-		<execute function="AssertClick" locator1="Button#OK" value1="OK" />
+		DoubleClick(locator1 = "DDMEditStructure#FORM_FIELD");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		MouseOver(locator1 = "DDMEditStructure#FORM_FIELD");
 
-	<command name="editField">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		SikuliClick(locator1 = "DDMEditStructure#FORM_FIELD_DELETE_BUTTON");
 
-		<execute macro="DynamicDataMapping#editFieldSettings">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "IFrame#DIALOG_BOX",
+			value1 = "${fieldFieldLabel}");
 
-		<if>
-			<isset var="fieldFieldLabelEdit" />
-			<then>
-				<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_FIELD_LABEL" />
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#ARE_YOU_SURE_DIALOG_BOX_BODY",
+			value1 = "Are you sure you want to delete the selected entries? They will be deleted immediately.");
 
-				<execute function="Type" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD" value1="${fieldFieldLabelEdit}" />
+		AssertClick(
+			locator1 = "Button#OK",
+			value1 = "OK");
 
-				<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-				<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_FIELD_LABEL" value1="${fieldFieldLabelEdit}" />
-			</then>
-		</if>
+	macro editField {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<if>
-			<isset var="fieldNameEdit" />
-			<then>
-				<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_NAME" />
+		DynamicDataMapping.editFieldSettings(fieldFieldLabel = "${fieldFieldLabel}");
 
-				<execute function="Type" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD" value1="${fieldNameEdit}" />
+		if (isSet(fieldFieldLabelEdit)) {
+			DoubleClick(locator1 = "DDMEditStructure#SETTINGS_FIELD_LABEL");
 
-				<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
+			Type(
+				locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD",
+				value1 = "${fieldFieldLabelEdit}");
 
-				<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_NAME" value1="${fieldNameEdit}" />
-			</then>
-		</if>
+			AssertClick(
+				locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+				value1 = "Save");
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+			AssertTextEquals(
+				locator1 = "DDMEditStructure#SETTINGS_FIELD_LABEL",
+				value1 = "${fieldFieldLabelEdit}");
+		}
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		if (isSet(fieldNameEdit)) {
+			DoubleClick(locator1 = "DDMEditStructure#SETTINGS_NAME");
 
-	<command name="editFieldIndexable">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+			Type(
+				locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD",
+				value1 = "${fieldNameEdit}");
 
-		<execute macro="DynamicDataMapping#editFieldSettings">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+			AssertClick(
+				locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+				value1 = "Save");
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_INDEXABLE" />
+			AssertTextEquals(
+				locator1 = "DDMEditStructure#SETTINGS_NAME",
+				value1 = "${fieldNameEdit}");
+		}
 
-		<execute function="Click" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_NOT_INDEXABLE_RADIO" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+	macro editFieldIndexable {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		DynamicDataMapping.editFieldSettings(fieldFieldLabel = "${fieldFieldLabel}");
 
-	<command name="editFieldLabel">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		DoubleClick(locator1 = "DDMEditStructure#SETTINGS_INDEXABLE");
 
-		<execute macro="DynamicDataMapping#_editFieldLabel">
-			<var name="field" value="${field}" />
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+		Click(locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_NOT_INDEXABLE_RADIO");
 
-		<execute function="SelectFrame" value1="relative=top" />
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+			value1 = "Save");
 
-		<execute macro="DynamicDataMapping#viewField">
-			<var name="field" value="${field}" />
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-			<var name="fieldName" value="${fieldName}" />
-		</execute>
-	</command>
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-	<command name="editFieldLocalizable">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute macro="DynamicDataMapping#editFieldSettings">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+	macro editFieldLabel {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_LOCALIZABLE" />
+		DynamicDataMapping._editFieldLabel(
+			field = "${field}",
+			fieldFieldLabel = "${fieldFieldLabel}");
 
-		<execute function="Click" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_NO_RADIO" />
+		SelectFrame(value1 = "relative=top");
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
+		DynamicDataMapping.viewField(
+			field = "${field}",
+			fieldFieldLabel = "${fieldFieldLabel}",
+			fieldName = "${fieldName}");
+	}
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+	macro editFieldLocalizable {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		DynamicDataMapping.editFieldSettings(fieldFieldLabel = "${fieldFieldLabel}");
 
-	<command name="editFieldNameCmd">
-		<execute macro="DynamicDataMapping#editFieldSettings">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+		DoubleClick(locator1 = "DDMEditStructure#SETTINGS_LOCALIZABLE");
 
-		<if>
-			<not>
-				<isset var="fieldName" />
-			</not>
-			<then>
-				<var method="StringUtil#replace('${fieldFieldLabel}', ' ', '')" name="fieldName" />
-			</then>
-		</if>
+		Click(locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_NO_RADIO");
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_NAME" />
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+			value1 = "Save");
 
-		<execute function="Type" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD" value1="${fieldName}" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
-	</command>
+		SelectFrame(value1 = "relative=top");
+	}
 
-	<command name="editFieldNameInvalidCharacter">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+	macro editFieldNameCmd {
+		DynamicDataMapping.editFieldSettings(fieldFieldLabel = "${fieldFieldLabel}");
 
-		<var name="key_fieldFieldLabel" value="${field}" />
+		if (!(isSet(fieldName))) {
+			var fieldName = StringUtil.replace("${fieldFieldLabel}", " ", "");
+		}
 
-		<execute macro="DynamicDataMapping#editFieldNameCmd">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-			<var name="fieldName" value="${fieldName}" />
-		</execute>
+		DoubleClick(locator1 = "DDMEditStructure#SETTINGS_NAME");
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD_ALERT" value1="Please enter only alphanumeric characters or underscore." />
+		Type(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD",
+			value1 = "${fieldName}");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+			value1 = "Save");
+	}
 
-	<command name="editFieldNameNested">
-		<execute macro="DynamicDataMapping#editFieldSettingsNested" />
+	macro editFieldNameInvalidCharacter {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_NAME" />
+		var key_fieldFieldLabel = "${field}";
 
-		<execute function="Type" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD" value1="${fieldName}" />
+		DynamicDataMapping.editFieldNameCmd(
+			fieldFieldLabel = "${fieldFieldLabel}",
+			fieldName = "${fieldName}");
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
-	</command>
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD_ALERT",
+			value1 = "Please enter only alphanumeric characters or underscore.");
 
-	<command name="editFieldNestedWithDuplicateName">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute macro="DynamicDataMapping#editFieldNameNested">
-			<var name="fieldName" value="${fieldName}" />
-		</execute>
+	macro editFieldNameNested {
+		DynamicDataMapping.editFieldSettingsNested();
 
-		<execute macro="DynamicDataMapping#assertFieldNameErrorMessage" />
+		DoubleClick(locator1 = "DDMEditStructure#SETTINGS_NAME");
 
-		<execute macro="DynamicDataMapping#editFieldNameNested">
-			<var name="fieldName" value="${fieldNameEdit}" />
-		</execute>
+		Type(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD",
+			value1 = "${fieldName}");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+			value1 = "Save");
+	}
 
-	<command name="editFieldOptions">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+	macro editFieldNestedWithDuplicateName {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute macro="DynamicDataMapping#editFieldSettings">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+		DynamicDataMapping.editFieldNameNested(fieldName = "${fieldName}");
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_OPTIONS" />
+		DynamicDataMapping.assertFieldNameErrorMessage();
 
-		<var name="i" value="0" />
+		DynamicDataMapping.editFieldNameNested(fieldName = "${fieldNameEdit}");
 
-		<for list="${fieldOptionsNames}" param="fieldOptionsName">
-			<var method="MathUtil#sum('${i}', '1')" name="i" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-			<execute function="Type" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_OPTIONS_NAME_${i}" value1="${fieldOptionsName}" />
-		</for>
+	macro editFieldOptions {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<var name="j" value="0" />
+		DynamicDataMapping.editFieldSettings(fieldFieldLabel = "${fieldFieldLabel}");
 
-		<for list="${fieldOptionsValues}" param="fieldOptionsValue">
-			<var method="MathUtil#sum('${j}', '1')" name="j" />
+		DoubleClick(locator1 = "DDMEditStructure#SETTINGS_OPTIONS");
 
-			<execute function="Type" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_OPTIONS_VALUE_${j}" value1="${fieldOptionsValue}" />
-		</for>
+		var i = "0";
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
+		for (var fieldOptionsName : list "${fieldOptionsNames}") {
+			var i = ${i} + 1;
 
-		<execute macro="DynamicDataMapping#viewFieldOptionsCmd">
-			<var name="field" value="${field}" />
-			<var name="fieldEditable" value="${fieldEditable}" />
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-			<var name="fieldName" value="${fieldName}" />
-			<var name="fieldOptionsName" value="${fieldOptionsName}" />
-			<var name="fieldOptionsNames" value="${fieldOptionsNames}" />
-			<var name="fieldOptionsValue" value="${fieldOptionsValue}" />
-			<var name="fieldOptionsValues" value="${fieldOptionsValues}" />
-			<var name="i" value="${i}" />
-			<var name="j" value="${j}" />
-		</execute>
+			Type(
+				locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_OPTIONS_NAME_${i}",
+				value1 = "${fieldOptionsName}");
+		}
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
-	</command>
+		var j = "0";
 
-	<command name="editFieldPredefinedValue">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		for (var fieldOptionsValue : list "${fieldOptionsValues}") {
+			var j = ${j} + 1;
 
-		<execute macro="DynamicDataMapping#editFieldSettings">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+			Type(
+				locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_OPTIONS_VALUE_${j}",
+				value1 = "${fieldOptionsValue}");
+		}
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_PREDEFINED_VALUE" />
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+			value1 = "Save");
 
-		<if>
-			<equals arg1="${field}" arg2="Boolean" />
-			<then>
-				<if>
-					<equals arg1="${fieldPredefinedValue}" arg2="Yes" />
-					<then>
-						<execute function="Click" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_YES_RADIO" />
-					</then>
-					<elseif>
-						<equals arg1="${fieldPredefinedValue}" arg2="No" />
-						<then>
-							<execute function="Click" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_NO_RADIO" />
-						</then>
-					</elseif>
-					<else>
-						<fail message="Invalid var fieldPredefinedValue. Must be (true|false)." />
-					</else>
-				</if>
-			</then>
-		</if>
+		DynamicDataMapping.viewFieldOptionsCmd(
+			field = "${field}",
+			fieldEditable = "${fieldEditable}",
+			fieldFieldLabel = "${fieldFieldLabel}",
+			fieldName = "${fieldName}",
+			fieldOptionsName = "${fieldOptionsName}",
+			fieldOptionsNames = "${fieldOptionsNames}",
+			fieldOptionsValue = "${fieldOptionsValue}",
+			fieldOptionsValues = "${fieldOptionsValues}",
+			i = "${i}",
+			j = "${j}");
 
-		<if>
-			<equals arg1="${field}" arg2="Date" />
-			<then>
-				<execute macro="YUICalendarwidget#addDate">
-					<var name="day" value="${fieldPredefinedValueDay}" />
-					<var name="month" value="${fieldPredefinedValueMonth}" />
-					<var name="year" value="${fieldPredefinedValueYear}" />
-				</execute>
-			</then>
-		</if>
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
+	}
 
-		<if>
-			<or>
-				<equals arg1="${field}" arg2="Decimal" />
-				<equals arg1="${field}" arg2="HTML" />
-				<equals arg1="${field}" arg2="Integer" />
-				<equals arg1="${field}" arg2="Number" />
-				<equals arg1="${field}" arg2="Text" />
-			</or>
-			<then>
-				<execute function="Type" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD" value1="${fieldPredefinedValue}" />
-			</then>
-		</if>
+	macro editFieldPredefinedValue {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<if>
-			<equals arg1="${field}" arg2="Text Box" />
-			<then>
-				<execute function="Type" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_TEXT_AREA" value1="${fieldPredefinedValue}" />
-			</then>
-		</if>
+		DynamicDataMapping.editFieldSettings(fieldFieldLabel = "${fieldFieldLabel}");
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
+		DoubleClick(locator1 = "DDMEditStructure#SETTINGS_PREDEFINED_VALUE");
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_PREDEFINED_VALUE" value1="${fieldPredefinedValue}" />
+		if ("${field}" == "Boolean") {
+			if ("${fieldPredefinedValue}" == "Yes") {
+				Click(locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_YES_RADIO");
+			}
+			else if ("${fieldPredefinedValue}" == "No") {
+				Click(locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_NO_RADIO");
+			}
+			else {
+				fail("Invalid var fieldPredefinedValue. Must be (true|false).");
+			}
+		}
 
-		<execute macro="DynamicDataMapping#viewFieldPredefinedValueCmd">
-			<var name="field" value="${field}" />
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-			<var name="fieldName" value="${fieldName}" />
-			<var name="fieldPredefinedValue" value="${fieldPredefinedValue}" />
-		</execute>
+		if ("${field}" == "Date") {
+			YUICalendarwidget.addDate(
+				day = "${fieldPredefinedValueDay}",
+				month = "${fieldPredefinedValueMonth}",
+				year = "${fieldPredefinedValueYear}");
+		}
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+		if (("${field}" == "Decimal") || ("${field}" == "HTML") || ("${field}" == "Integer") || ("${field}" == "Number") || ("${field}" == "Text")) {
+			Type(
+				locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_FIELD",
+				value1 = "${fieldPredefinedValue}");
+		}
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		if ("${field}" == "Text Box") {
+			Type(
+				locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_TEXT_AREA",
+				value1 = "${fieldPredefinedValue}");
+		}
 
-	<command name="editFieldRepeatable">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+			value1 = "Save");
 
-		<execute macro="DynamicDataMapping#editFieldSettings">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_PREDEFINED_VALUE",
+			value1 = "${fieldPredefinedValue}");
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_REPEATABLE" />
+		DynamicDataMapping.viewFieldPredefinedValueCmd(
+			field = "${field}",
+			fieldFieldLabel = "${fieldFieldLabel}",
+			fieldName = "${fieldName}",
+			fieldPredefinedValue = "${fieldPredefinedValue}");
 
-		<execute function="Click" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_YES_RADIO" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+	macro editFieldRepeatable {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		DynamicDataMapping.editFieldSettings(fieldFieldLabel = "${fieldFieldLabel}");
 
-	<command name="editFieldRequired">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		DoubleClick(locator1 = "DDMEditStructure#SETTINGS_REPEATABLE");
 
-		<execute macro="DynamicDataMapping#editFieldSettings">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+		Click(locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_YES_RADIO");
 
-		<execute macro="DynamicDataMapping#makeFieldRequired" />
-	</command>
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+			value1 = "Save");
 
-	<command name="editFieldSettings">
-		<var name="key_fieldFieldLabel" value="${fieldFieldLabel}" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#FORM_FIELD" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_LINK" value1="Settings" />
-	</command>
+	macro editFieldRequired {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-	<command name="editFieldSettingsNested">
-		<execute function="DoubleClick" locator1="DDMEditStructure#FORM_FIELD_NESTED" />
+		DynamicDataMapping.editFieldSettings(fieldFieldLabel = "${fieldFieldLabel}");
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_LINK" value1="Settings" />
-	</command>
+		DynamicDataMapping.makeFieldRequired();
+	}
 
-	<command name="editFieldShowLabel">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+	macro editFieldSettings {
+		var key_fieldFieldLabel = "${fieldFieldLabel}";
 
-		<execute macro="DynamicDataMapping#editFieldSettings">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+		DoubleClick(locator1 = "DDMEditStructure#FORM_FIELD");
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_SHOW_LABEL" />
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_LINK",
+			value1 = "Settings");
+	}
 
-		<if>
-			<equals arg1="${fieldShowLabel}" arg2="Yes" />
-			<then>
-				<execute function="Click" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_YES_RADIO" />
-			</then>
-			<elseif>
-				<equals arg1="${fieldShowLabel}" arg2="No" />
-				<then>
-					<execute function="Click" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_NO_RADIO" />
-				</then>
-			</elseif>
-			<else>
-				<fail message="Invalid var fieldShowLabel. Must be (Yes|No)." />
-			</else>
-		</if>
+	macro editFieldSettingsNested {
+		DoubleClick(locator1 = "DDMEditStructure#FORM_FIELD_NESTED");
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_LINK",
+			value1 = "Settings");
+	}
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_SHOW_LABEL" value1="${fieldShowLabel}" />
+	macro editFieldShowLabel {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+		DynamicDataMapping.editFieldSettings(fieldFieldLabel = "${fieldFieldLabel}");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		DoubleClick(locator1 = "DDMEditStructure#SETTINGS_SHOW_LABEL");
 
-	<command name="editFieldTip">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		if ("${fieldShowLabel}" == "Yes") {
+			Click(locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_YES_RADIO");
+		}
+		else if ("${fieldShowLabel}" == "No") {
+			Click(locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_NO_RADIO");
+		}
+		else {
+			fail("Invalid var fieldShowLabel. Must be (Yes|No).");
+		}
 
-		<execute macro="DynamicDataMapping#editFieldSettings">
-			<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-		</execute>
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+			value1 = "Save");
 
-		<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_TIP" />
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_SHOW_LABEL",
+			value1 = "${fieldShowLabel}");
 
-		<execute function="Type" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_TEXT_AREA" value1="${fieldTip}" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_TIP" value1="${fieldTip}" />
+	macro editFieldTip {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+		DynamicDataMapping.editFieldSettings(fieldFieldLabel = "${fieldFieldLabel}");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		DoubleClick(locator1 = "DDMEditStructure#SETTINGS_TIP");
 
-	<command name="makeFieldRequired">
-		<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_REQUIRED" />
+		Type(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_TEXT_AREA",
+			value1 = "${fieldTip}");
 
-		<execute function="Click" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_YES_RADIO" />
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+			value1 = "Save");
 
-		<execute function="AssertClick" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON" value1="Save" />
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_TIP",
+			value1 = "${fieldTip}");
 
-		<execute function="AssertClick#pauseAssertTextClickAt" locator1="DDMEditStructure#FIELDS_LINK" value1="Fields" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		SelectFrame(value1 = "relative=top");
+	}
 
-	<command name="selectDynamicDataMappingFrame">
-		<if>
-			<condition function="IsElementPresent" locator1="DDMEditStructure#IFRAME" />
-			<then>
-				<execute function="SelectFrame" locator1="DDMEditStructure#IFRAME" />
-			</then>
-			<elseif>
-				<condition function="IsElementPresent" locator1="IFrame#DIALOG" />
-				<then>
-					<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-				</then>
-			</elseif>
-		</if>
-	</command>
+	macro makeFieldRequired {
+		DoubleClick(locator1 = "DDMEditStructure#SETTINGS_REQUIRED");
 
-	<command name="viewCanAddField">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		Click(locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_YES_RADIO");
 
-		<var name="key_field" value="${field}" />
+		AssertClick(
+			locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_SAVE_BUTTON",
+			value1 = "Save");
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#FIELDS_FIELD" value1="${field}" />
+		AssertClick.pauseAssertTextClickAt(
+			locator1 = "DDMEditStructure#FIELDS_LINK",
+			value1 = "Fields");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		SelectFrame(value1 = "relative=top");
+	}
 
-	<command name="viewCannotAddField">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+	macro selectDynamicDataMappingFrame {
+		if (IsElementPresent(locator1 = "DDMEditStructure#IFRAME")) {
+			SelectFrame(locator1 = "DDMEditStructure#IFRAME");
+		}
+		else if (IsElementPresent(locator1 = "IFrame#DIALOG")) {
+			SelectFrame(locator1 = "IFrame#DIALOG");
+		}
+	}
 
-		<var name="key_field" value="${field}" />
+	macro viewCanAddField {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#FIELDS_FIELD_UNSELECTABLE" value1="${field}" />
+		var key_field = "${field}";
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#FIELDS_FIELD",
+			value1 = "${field}");
 
-	<command name="viewField">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<var name="key_fieldFieldLabel" value="${fieldFieldLabel}" />
+	macro viewCannotAddField {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<if>
-			<equals arg1="${fieldShowLabel}" arg2="No" />
-			<then>
-				<execute function="Click" locator1="DDMEditStructure#FORM_FIELD_1_NO_LABEL" />
-			</then>
-			<else>
-				<execute function="AssertClick#assertPartialTextClickAt" locator1="DDMEditStructure#FORM_FIELD" value1="${fieldFieldLabel}" />
-			</else>
-		</if>
+		var key_field = "${field}";
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_NAME" value1="${fieldName}" />
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_FIELD_LABEL" value1="${fieldFieldLabel}" />
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#FIELDS_FIELD_UNSELECTABLE",
+			value1 = "${field}");
 
-		<if>
-			<isset var="fieldShowLabel" />
-			<then>
-				<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_SHOW_LABEL" value1="${fieldShowLabel}" />
-			</then>
-		</if>
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<if>
-			<isset var="fieldReadOnly" />
-			<then>
-				<execute macro="DynamicDataMapping#viewFieldReadOnlyCmd">
-					<var name="ddlFormTemplateMode" value="${ddlFormTemplateMode}" />
-					<var name="fieldReadOnly" value="${fieldReadOnly}" />
-				</execute>
-			</then>
-		</if>
+	macro viewField {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<if>
-			<isset var="fieldPredefinedValue" />
-			<then>
-				<execute macro="DynamicDataMapping#viewFieldPredefinedValueCmd">
-					<var name="field" value="${field}" />
-					<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-					<var name="fieldName" value="${fieldName}" />
-					<var name="fieldPredefinedValue" value="${fieldPredefinedValue}" />
-				</execute>
-			</then>
-		</if>
+		var key_fieldFieldLabel = "${fieldFieldLabel}";
 
-		<if>
-			<isset var="fieldTip" />
-			<then>
-				<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_TIP" value1="${fieldTip}" />
-			</then>
-		</if>
+		if ("${fieldShowLabel}" == "No") {
+			Click(locator1 = "DDMEditStructure#FORM_FIELD_1_NO_LABEL");
+		}
+		else {
+			AssertClick.assertPartialTextClickAt(
+				locator1 = "DDMEditStructure#FORM_FIELD",
+				value1 = "${fieldFieldLabel}");
+		}
 
-		<if>
-			<isset var="fieldOptionsNames" />
-			<then>
-				<execute macro="DynamicDataMapping#viewFieldOptionsCmd">
-					<var name="field" value="${field}" />
-					<var name="fieldEditable" value="${fieldEditable}" />
-					<var name="fieldFieldLabel" value="${fieldFieldLabel}" />
-					<var name="fieldName" value="${fieldName}" />
-					<var name="fieldOptionsName" value="${fieldOptionsName}" />
-					<var name="fieldOptionsNames" value="${fieldOptionsNames}" />
-					<var name="fieldOptionsValue" value="${fieldOptionsValue}" />
-					<var name="fieldOptionsValues" value="${fieldOptionsValues}" />
-					<var name="i" value="${i}" />
-					<var name="j" value="${j}" />
-				</execute>
-			</then>
-		</if>
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_NAME",
+			value1 = "${fieldName}");
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_FIELD_LABEL",
+			value1 = "${fieldFieldLabel}");
 
-	<command name="viewFieldFormTemplateSpecific">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		if (isSet(fieldShowLabel)) {
+			AssertTextEquals(
+				locator1 = "DDMEditStructure#SETTINGS_SHOW_LABEL",
+				value1 = "${fieldShowLabel}");
+		}
 
-		<var name="key_fieldFieldLabel" value="${fieldFieldLabel}" />
+		if (isSet(fieldReadOnly)) {
+			DynamicDataMapping.viewFieldReadOnlyCmd(
+				ddlFormTemplateMode = "${ddlFormTemplateMode}",
+				fieldReadOnly = "${fieldReadOnly}");
+		}
 
-		<if>
-			<equals arg1="${field}" arg2="Fieldset" />
-			<then>
-				<execute function="Click" locator1="DDMEditStructure#FORM_FIELDSET" />
+		if (isSet(fieldPredefinedValue)) {
+			DynamicDataMapping.viewFieldPredefinedValueCmd(
+				field = "${field}",
+				fieldFieldLabel = "${fieldFieldLabel}",
+				fieldName = "${fieldName}",
+				fieldPredefinedValue = "${fieldPredefinedValue}");
+		}
 
-				<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_FIELD_LABEL" value1="${fieldFieldLabel}" />
-			</then>
-			<elseif>
-				<equals arg1="${field}" arg2="Paragraph" />
-				<then>
-					<execute function="AssertTextEquals#assertPartialText" locator1="DDMEditStructure#FORM_FIELD" value1="${field}" />
-				</then>
-			</elseif>
-			<elseif>
-				<equals arg1="${field}" arg2="Separator" />
-				<then>
-					<execute function="AssertElementPresent" locator1="DDMEditStructure#FORM_SEPARATOR" />
-				</then>
-			</elseif>
-		</if>
+		if (isSet(fieldTip)) {
+			AssertTextEquals(
+				locator1 = "DDMEditStructure#SETTINGS_TIP",
+				value1 = "${fieldTip}");
+		}
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		if (isSet(fieldOptionsNames)) {
+			DynamicDataMapping.viewFieldOptionsCmd(
+				field = "${field}",
+				fieldEditable = "${fieldEditable}",
+				fieldFieldLabel = "${fieldFieldLabel}",
+				fieldName = "${fieldName}",
+				fieldOptionsName = "${fieldOptionsName}",
+				fieldOptionsNames = "${fieldOptionsNames}",
+				fieldOptionsValue = "${fieldOptionsValue}",
+				fieldOptionsValues = "${fieldOptionsValues}",
+				i = "${i}",
+				j = "${j}");
+		}
 
-	<command name="viewFieldNameNested">
-		<execute macro="DynamicDataMapping#selectDynamicDataMappingFrame" />
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<execute macro="DynamicDataMapping#editFieldSettingsNested" />
+	macro viewFieldFormTemplateSpecific {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_NAME" value1="${fieldNameNested}" />
+		var key_fieldFieldLabel = "${fieldFieldLabel}";
 
-		<execute function="SelectFrame" value1="relative=top" />
-	</command>
+		if ("${field}" == "Fieldset") {
+			Click(locator1 = "DDMEditStructure#FORM_FIELDSET");
 
-	<command name="viewFieldOptionsCmd">
-		<var name="key_fieldFieldLabel" value="${fieldFieldLabel}" />
-		<var name="key_fieldName" value="${fieldName}" />
+			AssertTextEquals(
+				locator1 = "DDMEditStructure#SETTINGS_FIELD_LABEL",
+				value1 = "${fieldFieldLabel}");
+		}
+		else if ("${field}" == "Paragraph") {
+			AssertTextEquals.assertPartialText(
+				locator1 = "DDMEditStructure#FORM_FIELD",
+				value1 = "${field}");
+		}
+		else if ("${field}" == "Separator") {
+			AssertElementPresent(locator1 = "DDMEditStructure#FORM_SEPARATOR");
+		}
 
-		<for list="${fieldOptionsNames}" param="fieldOptionsName">
-			<execute function="AssertTextEquals#assertPartialText" locator1="DDMEditStructure#SETTINGS_OPTIONS" value1="${fieldOptionsName}" />
-		</for>
+		SelectFrame(value1 = "relative=top");
+	}
 
-		<if>
-			<not>
-				<equals arg1="${fieldEditable}" arg2="false" />
-			</not>
-			<then>
-				<execute function="DoubleClick" locator1="DDMEditStructure#SETTINGS_OPTIONS" />
+	macro viewFieldNameNested {
+		DynamicDataMapping.selectDynamicDataMappingFrame();
 
-				<var name="i" value="0" />
+		DynamicDataMapping.editFieldSettingsNested();
 
-				<for list="${fieldOptionsNames}" param="fieldOptionsName">
-					<var method="MathUtil#sum('${i}', '1')" name="i" />
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_NAME",
+			value1 = "${fieldNameNested}");
 
-					<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_OPTIONS_NAME_${i}" value1="${fieldOptionsName}" />
-				</for>
+		SelectFrame(value1 = "relative=top");
+	}
 
-				<var name="j" value="0" />
+	macro viewFieldOptionsCmd {
+		var key_fieldFieldLabel = "${fieldFieldLabel}";
+		var key_fieldName = "${fieldName}";
 
-				<for list="${fieldOptionsValues}" param="fieldOptionsValue">
-					<var method="MathUtil#sum('${j}', '1')" name="j" />
+		for (var fieldOptionsName : list "${fieldOptionsNames}") {
+			AssertTextEquals.assertPartialText(
+				locator1 = "DDMEditStructure#SETTINGS_OPTIONS",
+				value1 = "${fieldOptionsName}");
+		}
 
-					<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_CELL_EDITOR_OPTIONS_VALUE_${j}" value1="${fieldOptionsValue}" />
-				</for>
-			</then>
-		</if>
+		if ("${fieldEditable}" != "false") {
+			DoubleClick(locator1 = "DDMEditStructure#SETTINGS_OPTIONS");
 
-		<if>
-			<equals arg1="${field}" arg2="Radio" />
-			<then>
-				<for list="${fieldOptionsNames}" param="fieldOptionsName">
-					<var name="key_fieldOptionsName" value="${fieldOptionsName}" />
+			var i = "0";
 
-					<execute function="AssertTextEquals" locator1="DDMEditStructure#FORM_FIELD_RADIO_LABEL" value1="${fieldOptionsName}" />
-				</for>
-			</then>
-		</if>
+			for (var fieldOptionsName : list "${fieldOptionsNames}") {
+				var i = ${i} + 1;
 
-		<if>
-			<equals arg1="${field}" arg2="Select" />
-			<then>
-				<for list="${fieldOptionsNames}" param="fieldOptionsName">
-					<var name="key_fieldOptionsName" value="${fieldOptionsName}" />
+				AssertTextEquals(
+					locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_OPTIONS_NAME_${i}",
+					value1 = "${fieldOptionsName}");
+			}
 
-					<execute function="Select" locator1="DDMEditStructure#FORM_FIELD_SELECT" value1="${fieldOptionsName}" />
-				</for>
-			</then>
-		</if>
-	</command>
+			var j = "0";
 
-	<command name="viewFieldPredefinedValueCmd">
-		<var name="key_fieldFieldLabel" value="${fieldFieldLabel}" />
-		<var name="key_fieldName" value="${fieldName}" />
+			for (var fieldOptionsValue : list "${fieldOptionsValues}") {
+				var j = ${j} + 1;
 
-		<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_PREDEFINED_VALUE" value1="${fieldPredefinedValue}" />
+				AssertTextEquals(
+					locator1 = "DDMEditStructure#SETTINGS_CELL_EDITOR_OPTIONS_VALUE_${j}",
+					value1 = "${fieldOptionsValue}");
+			}
+		}
 
-		<if>
-			<equals arg1="${field}" arg2="Boolean" />
-			<then>
-				<if>
-					<equals arg1="${fieldPredefinedValue}" arg2="Yes" />
-					<then>
-						<execute function="AssertChecked" locator1="DDMEditStructure#FORM_FIELD_FIELD" />
-					</then>
-					<elseif>
-						<equals arg1="${fieldPredefinedValue}" arg2="No" />
-						<then>
-							<execute function="AssertNotChecked" locator1="DDMEditStructure#FORM_FIELD_FIELD" />
-						</then>
-					</elseif>
-				</if>
-			</then>
-		</if>
+		if ("${field}" == "Radio") {
+			for (var fieldOptionsName : list "${fieldOptionsNames}") {
+				var key_fieldOptionsName = "${fieldOptionsName}";
 
-		<if>
-			<or>
-				<equals arg1="${field}" arg2="Decimal" />
-				<equals arg1="${field}" arg2="Integer" />
-				<equals arg1="${field}" arg2="Number" />
-				<equals arg1="${field}" arg2="Text" />
-			</or>
-			<then>
-				<execute function="AssertTextEquals" locator1="DDMEditStructure#FORM_FIELD_FIELD" value1="${fieldPredefinedValue}" />
-			</then>
-		</if>
-	</command>
+				AssertTextEquals(
+					locator1 = "DDMEditStructure#FORM_FIELD_RADIO_LABEL",
+					value1 = "${fieldOptionsName}");
+			}
+		}
 
-	<command name="viewFieldReadOnlyCmd">
-		<if>
-			<equals arg1="${ddlFormTemplateMode}" arg2="Create" />
-			<then>
-				<execute function="AssertElementNotPresent" locator1="DDMEditStructure#SETTINGS_READ_ONLY" />
-			</then>
-			<elseif>
-				<equals arg1="${ddlFormTemplateMode}" arg2="Edit" />
-				<then>
-					<execute function="AssertTextEquals" locator1="DDMEditStructure#SETTINGS_READ_ONLY" value1="${fieldReadOnly}" />
-				</then>
-			</elseif>
-		</if>
-	</command>
-</definition>
+		if ("${field}" == "Select") {
+			for (var fieldOptionsName : list "${fieldOptionsNames}") {
+				var key_fieldOptionsName = "${fieldOptionsName}";
+
+				Select(
+					locator1 = "DDMEditStructure#FORM_FIELD_SELECT",
+					value1 = "${fieldOptionsName}");
+			}
+		}
+	}
+
+	macro viewFieldPredefinedValueCmd {
+		var key_fieldFieldLabel = "${fieldFieldLabel}";
+		var key_fieldName = "${fieldName}";
+
+		AssertTextEquals(
+			locator1 = "DDMEditStructure#SETTINGS_PREDEFINED_VALUE",
+			value1 = "${fieldPredefinedValue}");
+
+		if ("${field}" == "Boolean") {
+			if ("${fieldPredefinedValue}" == "Yes") {
+				AssertChecked(locator1 = "DDMEditStructure#FORM_FIELD_FIELD");
+			}
+			else if ("${fieldPredefinedValue}" == "No") {
+				AssertNotChecked(locator1 = "DDMEditStructure#FORM_FIELD_FIELD");
+			}
+		}
+
+		if (("${field}" == "Decimal") || ("${field}" == "Integer") || ("${field}" == "Number") || ("${field}" == "Text")) {
+			AssertTextEquals(
+				locator1 = "DDMEditStructure#FORM_FIELD_FIELD",
+				value1 = "${fieldPredefinedValue}");
+		}
+	}
+
+	macro viewFieldReadOnlyCmd {
+		if ("${ddlFormTemplateMode}" == "Create") {
+			AssertElementNotPresent(locator1 = "DDMEditStructure#SETTINGS_READ_ONLY");
+		}
+		else if ("${ddlFormTemplateMode}" == "Edit") {
+			AssertTextEquals(
+				locator1 = "DDMEditStructure#SETTINGS_READ_ONLY",
+				value1 = "${fieldReadOnly}");
+		}
+	}
+
+}

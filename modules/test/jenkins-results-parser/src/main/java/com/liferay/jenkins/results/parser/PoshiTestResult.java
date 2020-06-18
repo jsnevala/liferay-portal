@@ -82,7 +82,7 @@ public class PoshiTestResult extends BaseTestResult {
 
 		sb.append(getTestrayLogsURL());
 		sb.append("/");
-		sb.append(name.replace("#", "_"));
+		sb.append(name.replace('#', '_'));
 		sb.append("/liferay-log.txt.gz");
 
 		return sb.toString();
@@ -95,7 +95,7 @@ public class PoshiTestResult extends BaseTestResult {
 
 		sb.append(getTestrayLogsURL());
 		sb.append("/");
-		sb.append(name.replace("#", "_"));
+		sb.append(name.replace('#', '_'));
 		sb.append("/index.html.gz");
 
 		return sb.toString();
@@ -108,7 +108,7 @@ public class PoshiTestResult extends BaseTestResult {
 
 		sb.append(getTestrayLogsURL());
 		sb.append("/");
-		sb.append(name.replace("#", "_"));
+		sb.append(name.replace('#', '_'));
 		sb.append("/summary.html.gz");
 
 		return sb.toString();
@@ -121,7 +121,7 @@ public class PoshiTestResult extends BaseTestResult {
 			liferayLog = JenkinsResultsParserUtil.toString(
 				getLiferayLogURL(), false, 0, 0, 0);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			return false;
 		}
 

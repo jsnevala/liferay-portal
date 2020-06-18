@@ -21,18 +21,7 @@ SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayCont
 %>
 
 <clay:management-toolbar
-	clearResultsURL="<%= selectUsersDisplayContext.getClearResultsURL() %>"
-	componentId="usersManagementToolbar"
-	disabled="<%= selectUsersDisplayContext.isDisabledManagementBar() %>"
-	filterDropdownItems="<%= selectUsersDisplayContext.getFilterDropdownItems() %>"
-	itemsTotal="<%= selectUsersDisplayContext.getTotalItems() %>"
-	searchActionURL="<%= selectUsersDisplayContext.getSearchActionURL() %>"
-	searchContainerId="users"
-	searchFormName="searchFm"
-	showSearch="<%= selectUsersDisplayContext.isShowSearch() %>"
-	sortingOrder="<%= selectUsersDisplayContext.getOrderByType() %>"
-	sortingURL="<%= selectUsersDisplayContext.getSortingURL() %>"
-	viewTypeItems="<%= selectUsersDisplayContext.getViewTypeItems() %>"
+	displayContext="<%= new SelectUsersManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectUsersDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid-1280 portlet-site-memberships-select-users" name="fm">
@@ -69,22 +58,20 @@ SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayCont
 <aui:script use="liferay-search-container">
 	var searchContainer = Liferay.SearchContainer.get('<portlet:namespace />users');
 
-	searchContainer.on(
-		'rowToggled',
-		function(event) {
-			var result = {};
+	searchContainer.on('rowToggled', function (event) {
+		var result = {};
 
-			var data = event.elements.allSelectedElements.getDOMNodes();
+		var data = event.elements.allSelectedElements.getDOMNodes();
 
-			if (data.length) {
-				result = {
-					data: data
-				};
-			}
-
-			Liferay.Util.getOpener().Liferay.fire(
-				'<%= HtmlUtil.escapeJS(selectUsersDisplayContext.getEventName()) %>',
-				result);
+		if (data.length) {
+			result = {
+				data: data,
+			};
 		}
-	);
+
+		Liferay.Util.getOpener().Liferay.fire(
+			'<%= HtmlUtil.escapeJS(selectUsersDisplayContext.getEventName()) %>',
+			result
+		);
+	});
 </aui:script>

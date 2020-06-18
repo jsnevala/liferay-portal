@@ -16,13 +16,20 @@ package com.liferay.dynamic.data.mapping.service.impl;
 
 import com.liferay.dynamic.data.mapping.model.DDMTemplateLink;
 import com.liferay.dynamic.data.mapping.service.base.DDMTemplateLinkLocalServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+
 /**
  * @author Marcellus Tavares
  */
+@Component(
+	property = "model.class.name=com.liferay.dynamic.data.mapping.model.DDMTemplateLink",
+	service = AopService.class
+)
 public class DDMTemplateLinkLocalServiceImpl
 	extends DDMTemplateLinkLocalServiceBaseImpl {
 
@@ -70,6 +77,11 @@ public class DDMTemplateLinkLocalServiceImpl
 	}
 
 	@Override
+	public void deleteTemplateLinks(long templateId) {
+		ddmTemplateLinkPersistence.removeByTemplateId(templateId);
+	}
+
+	@Override
 	public DDMTemplateLink getTemplateLink(long templateLinkId)
 		throws PortalException {
 
@@ -86,6 +98,11 @@ public class DDMTemplateLinkLocalServiceImpl
 	@Override
 	public List<DDMTemplateLink> getTemplateLinks(long classNameId) {
 		return ddmTemplateLinkPersistence.findByClassNameId(classNameId);
+	}
+
+	@Override
+	public List<DDMTemplateLink> getTemplateLinksByTemplateId(long templateId) {
+		return ddmTemplateLinkPersistence.findByTemplateId(templateId);
 	}
 
 	@Override

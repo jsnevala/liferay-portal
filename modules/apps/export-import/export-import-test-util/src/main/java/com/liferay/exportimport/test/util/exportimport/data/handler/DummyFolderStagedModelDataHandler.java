@@ -35,8 +35,9 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	service =
-		{DummyFolderStagedModelDataHandler.class, StagedModelDataHandler.class}
+	service = {
+		DummyFolderStagedModelDataHandler.class, StagedModelDataHandler.class
+	}
 )
 public class DummyFolderStagedModelDataHandler
 	extends BaseStagedModelDataHandler<DummyFolder> {
@@ -56,9 +57,11 @@ public class DummyFolderStagedModelDataHandler
 		Element dummyFolderElement = portletDataContext.getExportDataElement(
 			dummyFolder);
 
-		List<Dummy> dummies =
-			((DummyStagedModelRepository)_dummyStagedModelRepository).
-				fetchDummiesByFolderId(dummyFolder.getId());
+		DummyStagedModelRepository dummyStagedModelRepository =
+			(DummyStagedModelRepository)_dummyStagedModelRepository;
+
+		List<Dummy> dummies = dummyStagedModelRepository.fetchDummiesByFolderId(
+			dummyFolder.getId());
 
 		for (Dummy dummy : dummies) {
 			StagedModelDataHandlerUtil.exportReferenceStagedModel(

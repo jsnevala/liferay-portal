@@ -99,10 +99,6 @@ public class JSONCurlUtil {
 		return _getParsedResponse(request, jsonPath);
 	}
 
-	protected Request getRequest(String requestString, String requestMethod) {
-		return new Request(requestString, requestMethod);
-	}
-
 	private static String _getParsedResponse(Request request, String jsonPath)
 		throws IOException, TimeoutException {
 
@@ -171,8 +167,8 @@ public class JSONCurlUtil {
 
 				_curlDataMap.put(key, matcher.group(1));
 
-				encodedRequestString = encodedRequestString.replace(
-					matcher.group(0), key);
+				encodedRequestString = StringUtil.replace(
+					encodedRequestString, matcher.group(0), key);
 			}
 
 			return encodedRequestString;
@@ -321,11 +317,20 @@ public class JSONCurlUtil {
 			StringBuilder sb = new StringBuilder();
 
 			if (OSDetector.isWindows()) {
+				if (_isValidJSON(optionValue)) {
+					JSONObject jsonObject = new JSONObject(optionValue);
+
+					optionValue = jsonObject.toString();
+				}
+
 				sb.append("\"");
 
 				optionValue = optionValue.replaceAll(
 					"\\\\\"", "\\\\\\\\\\\\\\\"");
+
 				optionValue = optionValue.replaceAll("(?<!\\\\)\"", "\\\\\\\"");
+
+				optionValue = StringUtil.replace(optionValue, "&", "^&");
 
 				sb.append(optionValue);
 
@@ -358,13 +363,24 @@ public class JSONCurlUtil {
 
 					optionValue = jsonObject.toString();
 				}
-				catch (JSONException jsone) {
+				catch (JSONException jsonException) {
 					throw new RuntimeException(
 						"Invalid JSON: '" + optionValue + "'");
 				}
 			}
 
 			return optionValue;
+		}
+
+		private boolean _isValidJSON(String jsonTestString) {
+			try {
+				new JSONObject(jsonTestString);
+
+				return true;
+			}
+			catch (JSONException jsonException) {
+				return false;
+			}
 		}
 
 		private static Map<String, String> _customOptionsMap =

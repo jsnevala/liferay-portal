@@ -25,15 +25,16 @@ import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.service.BookmarksEntryService;
 import com.liferay.bookmarks.service.BookmarksFolderService;
 import com.liferay.portal.kernel.model.TrashedModel;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -43,13 +44,11 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.trash.service.TrashEntryService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.WindowState;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -115,9 +114,9 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		if (moveToTrash && !trashedModels.isEmpty()) {
-			Map<String, Object> data = new HashMap<>();
-
-			data.put("trashedModels", trashedModels);
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"trashedModels", trashedModels
+			).build();
 
 			addDeleteSuccessData(actionRequest, data);
 		}
@@ -155,20 +154,27 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 				unsubscribeEntry(actionRequest);
 			}
 
-			WindowState windowState = actionRequest.getWindowState();
+			String portletResource = ParamUtil.getString(
+				actionRequest, "portletResource");
 
-			if (windowState.equals(LiferayWindowState.POP_UP)) {
-				String redirect = _portal.escapeRedirect(
-					ParamUtil.getString(actionRequest, "redirect"));
+			if (Validator.isNotNull(portletResource)) {
+				hideDefaultSuccessMessage(actionRequest);
 
-				if (Validator.isNotNull(redirect)) {
-					if (cmd.equals(Constants.ADD) && (entry != null)) {
-						String portletId = _http.getParameter(
-							redirect, "p_p_id", false);
+				MultiSessionMessages.add(
+					actionRequest, portletResource + "requestProcessed");
+			}
 
-						String namespace = _portal.getPortletNamespace(
-							portletId);
+			String redirect = _portal.escapeRedirect(
+				ParamUtil.getString(actionRequest, "redirect"));
 
+			if (Validator.isNotNull(redirect)) {
+				if (cmd.equals(Constants.ADD) && (entry != null)) {
+					String portletId = _http.getParameter(
+						redirect, "portletResource", false);
+
+					String namespace = _portal.getPortletNamespace(portletId);
+
+					if (Validator.isNotNull(portletId)) {
 						redirect = _http.addParameter(
 							redirect, namespace + "className",
 							BookmarksEntry.class.getName());
@@ -176,32 +182,33 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 							redirect, namespace + "classPK",
 							entry.getEntryId());
 					}
-
-					actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
 				}
+
+				actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
 			}
 		}
-		catch (Exception e) {
-			if (e instanceof NoSuchEntryException ||
-				e instanceof PrincipalException) {
+		catch (Exception exception) {
+			if (exception instanceof NoSuchEntryException ||
+				exception instanceof PrincipalException) {
 
-				SessionErrors.add(actionRequest, e.getClass());
+				SessionErrors.add(actionRequest, exception.getClass());
 
 				actionResponse.setRenderParameter(
 					"mvcPath", "/bookmarks/error.jsp");
 			}
-			else if (e instanceof EntryURLException ||
-					 e instanceof NoSuchFolderException) {
+			else if (exception instanceof EntryURLException ||
+					 exception instanceof NoSuchFolderException) {
 
-				SessionErrors.add(actionRequest, e.getClass());
+				SessionErrors.add(actionRequest, exception.getClass());
 			}
-			else if (e instanceof AssetCategoryException ||
-					 e instanceof AssetTagException) {
+			else if (exception instanceof AssetCategoryException ||
+					 exception instanceof AssetTagException) {
 
-				SessionErrors.add(actionRequest, e.getClass(), e);
+				SessionErrors.add(
+					actionRequest, exception.getClass(), exception);
 			}
 			else {
-				throw e;
+				throw exception;
 			}
 		}
 	}
@@ -233,25 +240,6 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 		for (long restoreTrashEntryId : restoreTrashEntryIds) {
 			_trashEntryService.restoreEntry(restoreTrashEntryId);
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setBookmarksEntryService(
-		BookmarksEntryService bookmarksEntryService) {
-
-		_bookmarksEntryService = bookmarksEntryService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setBookmarksFolderService(
-		BookmarksFolderService bookmarksFolderService) {
-
-		_bookmarksFolderService = bookmarksFolderService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setTrashEntryService(TrashEntryService trashEntryService) {
-		_trashEntryService = trashEntryService;
 	}
 
 	protected void subscribeEntry(ActionRequest actionRequest)
@@ -308,7 +296,10 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 		return entry;
 	}
 
+	@Reference
 	private BookmarksEntryService _bookmarksEntryService;
+
+	@Reference
 	private BookmarksFolderService _bookmarksFolderService;
 
 	@Reference
@@ -317,6 +308,7 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private TrashEntryService _trashEntryService;
 
 }

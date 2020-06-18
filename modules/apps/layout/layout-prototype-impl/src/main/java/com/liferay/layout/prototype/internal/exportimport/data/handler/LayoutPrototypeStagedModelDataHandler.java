@@ -17,6 +17,7 @@ package com.liferay.layout.prototype.internal.exportimport.data.handler;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -28,10 +29,16 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Element;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -43,8 +50,9 @@ import org.osgi.service.component.annotations.Reference;
 public class LayoutPrototypeStagedModelDataHandler
 	extends BaseStagedModelDataHandler<LayoutPrototype> {
 
-	public static final String[] CLASS_NAMES =
-		{LayoutPrototype.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		LayoutPrototype.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(LayoutPrototype layoutPrototype)
@@ -73,13 +81,9 @@ public class LayoutPrototypeStagedModelDataHandler
 	public List<LayoutPrototype> fetchStagedModelsByUuidAndCompanyId(
 		String uuid, long companyId) {
 
-		List<LayoutPrototype> layoutPrototypes = new ArrayList<>();
-
-		layoutPrototypes.add(
+		return ListUtil.fromArray(
 			_layoutPrototypeLocalService.fetchLayoutPrototypeByUuidAndCompanyId(
 				uuid, companyId));
-
-		return layoutPrototypes;
 	}
 
 	@Override
@@ -102,6 +106,13 @@ public class LayoutPrototypeStagedModelDataHandler
 
 		Element layoutPrototypeElement =
 			portletDataContext.getExportDataElement(layoutPrototype);
+
+		long defaultUserId = _userLocalService.getDefaultUserId(
+			layoutPrototype.getCompanyId());
+
+		if (defaultUserId == layoutPrototype.getUserId()) {
+			layoutPrototypeElement.addAttribute("preloaded", "true");
+		}
 
 		portletDataContext.addClassedModel(
 			layoutPrototypeElement,
@@ -126,11 +137,20 @@ public class LayoutPrototypeStagedModelDataHandler
 		LayoutPrototype importedLayoutPrototype = null;
 
 		if (portletDataContext.isDataStrategyMirror()) {
+			Element element =
+				portletDataContext.getImportDataStagedModelElement(
+					layoutPrototype);
+
+			boolean preloaded = GetterUtil.getBoolean(
+				element.attributeValue("preloaded"));
+
 			LayoutPrototype existingLayoutPrototype =
-				_layoutPrototypeLocalService.
-					fetchLayoutPrototypeByUuidAndCompanyId(
-						layoutPrototype.getUuid(),
-						portletDataContext.getCompanyId());
+				fetchExistingLayoutPrototype(
+					layoutPrototype.getUuid(),
+					portletDataContext.getCompanyId(),
+					layoutPrototype.getName(
+						layoutPrototype.getDefaultLanguageId()),
+					layoutPrototype.getDefaultLanguageId(), preloaded);
 
 			if (existingLayoutPrototype == null) {
 				serviceContext.setUuid(layoutPrototype.getUuid());
@@ -174,6 +194,7 @@ public class LayoutPrototypeStagedModelDataHandler
 		throws Exception {
 
 		long groupId = portletDataContext.getGroupId();
+		String portletId = portletDataContext.getPortletId();
 		boolean privateLayout = portletDataContext.isPrivateLayout();
 		long scopeGroupId = portletDataContext.getScopeGroupId();
 
@@ -194,9 +215,23 @@ public class LayoutPrototypeStagedModelDataHandler
 		}
 		finally {
 			portletDataContext.setGroupId(groupId);
+			portletDataContext.setPortletId(portletId);
 			portletDataContext.setPrivateLayout(privateLayout);
 			portletDataContext.setScopeGroupId(scopeGroupId);
 		}
+	}
+
+	protected LayoutPrototype fetchExistingLayoutPrototype(
+		String uuid, long companyId, String name, String languageId,
+		boolean preloaded) {
+
+		if (preloaded) {
+			return _layoutPrototypeLocalService.fetchLayoutPrototype(
+				companyId, name, LocaleUtil.fromLanguageId(languageId));
+		}
+
+		return _layoutPrototypeLocalService.
+			fetchLayoutPrototypeByUuidAndCompanyId(uuid, companyId);
 	}
 
 	protected void importLayouts(
@@ -208,10 +243,25 @@ public class LayoutPrototypeStagedModelDataHandler
 		boolean privateLayout = portletDataContext.isPrivateLayout();
 		long scopeGroupId = portletDataContext.getScopeGroupId();
 
+		Map<String, String[]> parameterMap =
+			portletDataContext.getParameterMap();
+
+		String layoutsImportMode = MapUtil.getString(
+			parameterMap, PortletDataHandlerKeys.LAYOUTS_IMPORT_MODE);
+
 		try {
 			portletDataContext.setGroupId(importedGroupId);
 			portletDataContext.setPrivateLayout(true);
 			portletDataContext.setScopeGroupId(importedGroupId);
+
+			if (!portletDataContext.isDataStrategyMirror()) {
+				parameterMap.put(
+					PortletDataHandlerKeys.LAYOUTS_IMPORT_MODE,
+					new String[] {
+						PortletDataHandlerKeys.
+							LAYOUTS_IMPORT_MODE_ADD_AS_NEW_PROTOTYPE
+					});
+			}
 
 			StagedModelDataHandlerUtil.importReferenceStagedModels(
 				portletDataContext, layoutPrototype, Layout.class);
@@ -220,6 +270,20 @@ public class LayoutPrototypeStagedModelDataHandler
 			portletDataContext.setGroupId(groupId);
 			portletDataContext.setPrivateLayout(privateLayout);
 			portletDataContext.setScopeGroupId(scopeGroupId);
+
+			if (Validator.isNull(layoutsImportMode)) {
+				if (parameterMap.containsKey(
+						PortletDataHandlerKeys.LAYOUTS_IMPORT_MODE)) {
+
+					parameterMap.remove(
+						PortletDataHandlerKeys.LAYOUTS_IMPORT_MODE);
+				}
+			}
+			else {
+				parameterMap.put(
+					PortletDataHandlerKeys.LAYOUTS_IMPORT_MODE,
+					new String[] {layoutsImportMode});
+			}
 		}
 	}
 
@@ -247,8 +311,14 @@ public class LayoutPrototypeStagedModelDataHandler
 		_layoutPrototypeLocalService = layoutPrototypeLocalService;
 	}
 
+	@Reference(unbind = "-")
+	protected void setUserLocalService(UserLocalService userLocalService) {
+		_userLocalService = userLocalService;
+	}
+
 	private GroupLocalService _groupLocalService;
 	private LayoutLocalService _layoutLocalService;
 	private LayoutPrototypeLocalService _layoutPrototypeLocalService;
+	private UserLocalService _userLocalService;
 
 }

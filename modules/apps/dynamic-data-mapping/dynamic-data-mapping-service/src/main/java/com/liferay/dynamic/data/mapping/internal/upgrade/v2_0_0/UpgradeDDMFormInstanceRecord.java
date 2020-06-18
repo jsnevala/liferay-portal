@@ -24,8 +24,7 @@ import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.sql.PreparedStatement;
@@ -62,7 +61,7 @@ public class UpgradeDDMFormInstanceRecord extends UpgradeProcess {
 			localizationMap.containsKey(defautLocale)) {
 
 			String title = LanguageUtil.format(
-				getResourceBundle(defautLocale), "new-entry-for-form-x",
+				getResourceBundle(defautLocale), "form-record-for-form-x",
 				localizationMap.get(defautLocale), false);
 
 			_assetEntryLocalService.updateEntry(
@@ -150,10 +149,7 @@ public class UpgradeDDMFormInstanceRecord extends UpgradeProcess {
 	}
 
 	protected ResourceBundle getResourceBundle(Locale defaultLocale) {
-		ResourceBundleLoader portalResourceBundleLoader =
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
-
-		return portalResourceBundleLoader.loadResourceBundle(defaultLocale);
+		return PortalUtil.getResourceBundle(defaultLocale);
 	}
 
 	private final AssetEntryLocalService _assetEntryLocalService;

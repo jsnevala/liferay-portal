@@ -14,46 +14,53 @@
 
 package com.liferay.asset.entry.rel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the AssetEntryAssetCategoryRel service. Represents a row in the &quot;AssetEntryAssetCategoryRel&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see AssetEntryAssetCategoryRelModel
- * @see com.liferay.asset.entry.rel.model.impl.AssetEntryAssetCategoryRelImpl
- * @see com.liferay.asset.entry.rel.model.impl.AssetEntryAssetCategoryRelModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.asset.entry.rel.model.impl.AssetEntryAssetCategoryRelImpl")
+@ImplementationClassName(
+	"com.liferay.asset.entry.rel.model.impl.AssetEntryAssetCategoryRelImpl"
+)
 @ProviderType
 public interface AssetEntryAssetCategoryRel
 	extends AssetEntryAssetCategoryRelModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.asset.entry.rel.model.impl.AssetEntryAssetCategoryRelImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.asset.entry.rel.model.impl.AssetEntryAssetCategoryRelImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<AssetEntryAssetCategoryRel, Long> ASSET_ENTRY_ASSET_CATEGORY_REL_ID_ACCESSOR =
-		new Accessor<AssetEntryAssetCategoryRel, Long>() {
-			@Override
-			public Long get(
-				AssetEntryAssetCategoryRel assetEntryAssetCategoryRel) {
-				return assetEntryAssetCategoryRel.getAssetEntryAssetCategoryRelId();
-			}
+	public static final Accessor<AssetEntryAssetCategoryRel, Long>
+		ASSET_ENTRY_ASSET_CATEGORY_REL_ID_ACCESSOR =
+			new Accessor<AssetEntryAssetCategoryRel, Long>() {
 
-			@Override
-			public Class<Long> getAttributeClass() {
-				return Long.class;
-			}
+				@Override
+				public Long get(
+					AssetEntryAssetCategoryRel assetEntryAssetCategoryRel) {
 
-			@Override
-			public Class<AssetEntryAssetCategoryRel> getTypeClass() {
-				return AssetEntryAssetCategoryRel.class;
-			}
-		};
+					return assetEntryAssetCategoryRel.
+						getAssetEntryAssetCategoryRelId();
+				}
+
+				@Override
+				public Class<Long> getAttributeClass() {
+					return Long.class;
+				}
+
+				@Override
+				public Class<AssetEntryAssetCategoryRel> getTypeClass() {
+					return AssetEntryAssetCategoryRel.class;
+				}
+
+			};
+
 }

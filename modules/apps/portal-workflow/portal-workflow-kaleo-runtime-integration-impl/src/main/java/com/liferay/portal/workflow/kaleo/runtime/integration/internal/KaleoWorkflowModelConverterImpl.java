@@ -81,6 +81,7 @@ public class KaleoWorkflowModelConverterImpl
 			new DefaultWorkflowDefinition();
 
 		defaultWorkflowDefinition.setActive(kaleoDefinition.isActive());
+		defaultWorkflowDefinition.setCompanyId(kaleoDefinition.getCompanyId());
 
 		String content = kaleoDefinition.getContent();
 
@@ -94,15 +95,15 @@ public class KaleoWorkflowModelConverterImpl
 				_kaleoDefinitionLocalService.updateKaleoDefinition(
 					kaleoDefinition);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Unable to export definition to string", e);
+					_log.warn(
+						"Unable to export definition to string", exception);
 				}
 			}
 		}
 
 		defaultWorkflowDefinition.setContent(content);
-
 		defaultWorkflowDefinition.setDescription(
 			kaleoDefinition.getDescription());
 		defaultWorkflowDefinition.setModifiedDate(
@@ -111,6 +112,8 @@ public class KaleoWorkflowModelConverterImpl
 		defaultWorkflowDefinition.setTitle(kaleoDefinition.getTitle());
 		defaultWorkflowDefinition.setUserId(kaleoDefinition.getUserId());
 		defaultWorkflowDefinition.setVersion(kaleoDefinition.getVersion());
+		defaultWorkflowDefinition.setWorkflowDefinitionId(
+			kaleoDefinition.getKaleoDefinitionId());
 
 		return defaultWorkflowDefinition;
 	}
@@ -129,7 +132,7 @@ public class KaleoWorkflowModelConverterImpl
 
 			defaultWorkflowDefinition.setActive(kaleoDefinition.isActive());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			defaultWorkflowDefinition.setActive(false);
 		}
 
@@ -145,9 +148,10 @@ public class KaleoWorkflowModelConverterImpl
 				_kaleoDefinitionVersionLocalService.
 					updateKaleoDefinitionVersion(kaleoDefinitionVersion);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Unable to export definition to string", e);
+					_log.warn(
+						"Unable to export definition to string", exception);
 				}
 			}
 		}
@@ -286,13 +290,21 @@ public class KaleoWorkflowModelConverterImpl
 					kaleoTaskInstanceToken.getWorkflowContext()));
 		}
 
+		KaleoDefinitionVersion kaleoDefinitionVersion =
+			_kaleoDefinitionVersionLocalService.getKaleoDefinitionVersion(
+				kaleoTaskInstanceToken.getKaleoDefinitionVersionId());
+
+		KaleoDefinition kaleoDefinition =
+			kaleoDefinitionVersion.getKaleoDefinition();
+
+		defaultWorkflowTask.setWorkflowDefinitionId(
+			kaleoDefinition.getKaleoDefinitionId());
+
 		KaleoInstanceToken kaleoInstanceToken =
 			kaleoTaskInstanceToken.getKaleoInstanceToken();
 
 		KaleoInstance kaleoInstance = kaleoInstanceToken.getKaleoInstance();
 
-		defaultWorkflowTask.setWorkflowDefinitionId(
-			kaleoInstance.getKaleoDefinitionVersionId());
 		defaultWorkflowTask.setWorkflowDefinitionName(
 			kaleoInstance.getKaleoDefinitionName());
 		defaultWorkflowTask.setWorkflowDefinitionVersion(

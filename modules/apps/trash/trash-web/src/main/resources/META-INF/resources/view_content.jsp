@@ -17,54 +17,15 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String redirect = trashDisplayContext.getViewContentRedirectURL();
-
-long classPK = trashDisplayContext.getClassPK();
-
-PortletURL portletURL = renderResponse.createRenderURL();
-
-PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "recycle-bin"), portletURL.toString());
-
-PortletURL containerModelURL = renderResponse.createRenderURL();
-
 TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
-
-String trashHandlerContainerModelClassName = trashHandler.getContainerModelClassName(classPK);
-
-containerModelURL.setParameter("mvcPath", "/view_content.jsp");
-containerModelURL.setParameter("classNameId", String.valueOf(PortalUtil.getClassNameId(trashHandlerContainerModelClassName)));
-
-trashUtil.addBaseModelBreadcrumbEntries(request, liferayPortletResponse, trashDisplayContext.getClassName(), classPK, containerModelURL);
-
-portletDisplay.setShowBackIcon(true);
-portletDisplay.setURLBack(redirect);
-
-TrashRenderer trashRenderer = trashDisplayContext.getTrashRenderer();
-
-renderResponse.setTitle(trashRenderer.getTitle(locale));
 %>
 
 <liferay-util:include page="/restore_path.jsp" servletContext="<%= application %>" />
 
 <c:choose>
 	<c:when test="<%= trashHandler.isContainerModel() %>">
-		<clay:navigation-bar
-			inverted="<%= true %>"
-			navigationItems="<%= trashDisplayContext.getNavigationItems() %>"
-		/>
-
 		<clay:management-toolbar
-			clearResultsURL="<%= trashDisplayContext.getContentClearResultsURL() %>"
-			componentId="trashContentWebManagementToolbar"
-			disabled="<%= (trashHandler.getTrashModelsCount(classPK) <= 0) && Validator.isNull(trashDisplayContext.getKeywords()) %>"
-			filterDropdownItems="<%= trashDisplayContext.getContentFilterDropdownItems() %>"
-			infoPanelId="infoPanelId"
-			itemsTotal="<%= trashHandler.getTrashModelsCount(classPK) %>"
-			searchActionURL="<%= trashDisplayContext.getContentSearchActionURL() %>"
-			searchFormName="searchFm"
-			selectable="<%= false %>"
-			showInfoButton="<%= true %>"
-			viewTypeItems="<%= trashDisplayContext.getViewTypeItems() %>"
+			displayContext="<%= new TrashContainerManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, trashDisplayContext) %>"
 		/>
 
 		<div class="closed container-fluid-1280 sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
@@ -77,34 +38,14 @@ renderResponse.setTitle(trashRenderer.getTitle(locale));
 			</liferay-frontend:sidebar-panel>
 
 			<div class="sidenav-content">
-				<liferay-ui:breadcrumb
-					showCurrentGroup="<%= false %>"
-					showGuestGroup="<%= false %>"
-					showLayout="<%= false %>"
-					showParentGroups="<%= false %>"
+				<liferay-site-navigation:breadcrumb
+					breadcrumbEntries="<%= trashDisplayContext.getBaseModelBreadcrumbEntries() %>"
 				/>
 
-				<%
-				PortletURL iteratorURL = renderResponse.createRenderURL();
-
-				iteratorURL.setParameter("mvcPath", "/view_content.jsp");
-				iteratorURL.setParameter("classNameId", String.valueOf(trashDisplayContext.getClassNameId()));
-				iteratorURL.setParameter("classPK", String.valueOf(classPK));
-
-				String emptyResultsMessage = LanguageUtil.format(request, "this-x-does-not-contain-an-entry", ResourceActionsUtil.getModelResource(locale, trashDisplayContext.getClassName()), false);
-				%>
-
 				<liferay-ui:search-container
-					deltaConfigurable="<%= false %>"
-					emptyResultsMessage="<%= emptyResultsMessage %>"
 					id="trash"
-					iteratorURL="<%= iteratorURL %>"
-					total="<%= trashHandler.getTrashModelsCount(classPK) %>"
+					searchContainer="<%= trashDisplayContext.getTrashContainerSearchContainer() %>"
 				>
-					<liferay-ui:search-container-results
-						results="<%= trashHandler.getTrashModelTrashedModels(classPK, searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator()) %>"
-					/>
-
 					<liferay-ui:search-container-row
 						className="com.liferay.portal.kernel.model.TrashedModel"
 						modelVar="curTrashedModel"
@@ -145,9 +86,12 @@ renderResponse.setTitle(trashRenderer.getTitle(locale));
 									</h6>
 								</liferay-ui:search-container-column-text>
 
-								<liferay-ui:search-container-column-jsp
-									path="/view_content_action.jsp"
-								/>
+								<liferay-ui:search-container-column-text>
+									<clay:dropdown-actions
+										defaultEventHandler="<%= TrashWebKeys.TRASH_ENTRIES_DEFAULT_EVENT_HANDLER %>"
+										dropdownItems="<%= trashDisplayContext.getTrashViewContentActionDropdownItems(modelClassName, curTrashedModel.getTrashEntryClassPK()) %>"
+									/>
+								</liferay-ui:search-container-column-text>
 							</c:when>
 							<c:when test="<%= trashDisplayContext.isIconView() %>">
 
@@ -158,28 +102,14 @@ renderResponse.setTitle(trashRenderer.getTitle(locale));
 								<liferay-ui:search-container-column-text>
 									<c:choose>
 										<c:when test="<%= !curTrashHandler.isContainerModel() %>">
-											<liferay-frontend:icon-vertical-card
-												actionJsp="/view_content_action.jsp"
-												actionJspServletContext="<%= application %>"
-												icon="<%= curTrashRenderer.getIconCssClass() %>"
-												resultRow="<%= row %>"
-												title="<%= HtmlUtil.escape(curTrashRenderer.getTitle(locale)) %>"
-												url="<%= rowURL.toString() %>"
-											>
-												<liferay-frontend:vertical-card-footer>
-													<%= ResourceActionsUtil.getModelResource(locale, curTrashRenderer.getClassName()) %>
-												</liferay-frontend:vertical-card-footer>
-											</liferay-frontend:icon-vertical-card>
+											<clay:vertical-card
+												verticalCard="<%= new TrashContentVerticalCard(curTrashedModel, curTrashRenderer, liferayPortletResponse, renderRequest, rowURL.toString()) %>"
+											/>
 										</c:when>
 										<c:otherwise>
-											<liferay-frontend:horizontal-card
-												actionJsp="/view_content_action.jsp"
-												actionJspServletContext="<%= application %>"
-												resultRow="<%= row %>"
-												text="<%= curTrashRenderer.getTitle(locale) %>"
-												url="<%= rowURL.toString() %>"
-											>
-											</liferay-frontend:horizontal-card>
+											<clay:horizontal-card
+												horizontalCard="<%= new TrashContentHorizontalCard(curTrashedModel, curTrashRenderer, liferayPortletResponse, renderRequest, rowURL.toString()) %>"
+											/>
 										</c:otherwise>
 									</c:choose>
 								</liferay-ui:search-container-column-text>
@@ -194,9 +124,12 @@ renderResponse.setTitle(trashRenderer.getTitle(locale));
 									</aui:a>
 								</liferay-ui:search-container-column-text>
 
-								<liferay-ui:search-container-column-jsp
-									path="/view_content_action.jsp"
-								/>
+								<liferay-ui:search-container-column-text>
+									<clay:dropdown-actions
+										defaultEventHandler="<%= TrashWebKeys.TRASH_ENTRIES_DEFAULT_EVENT_HANDLER %>"
+										dropdownItems="<%= trashDisplayContext.getTrashViewContentActionDropdownItems(modelClassName, curTrashedModel.getTrashEntryClassPK()) %>"
+									/>
+								</liferay-ui:search-container-column-text>
 							</c:when>
 						</c:choose>
 					</liferay-ui:search-container-row>
@@ -211,6 +144,16 @@ renderResponse.setTitle(trashRenderer.getTitle(locale));
 		</div>
 	</c:when>
 	<c:otherwise>
+
+		<%
+		portletDisplay.setShowBackIcon(true);
+		portletDisplay.setURLBack(trashDisplayContext.getViewContentRedirectURL());
+
+		TrashRenderer trashRenderer = trashDisplayContext.getTrashRenderer();
+
+		renderResponse.setTitle(trashRenderer.getTitle(locale));
+		%>
+
 		<div class="container-fluid-1280">
 			<aui:fieldset-group markupView="lexicon">
 				<aui:fieldset>
@@ -222,3 +165,8 @@ renderResponse.setTitle(trashRenderer.getTitle(locale));
 		</div>
 	</c:otherwise>
 </c:choose>
+
+<liferay-frontend:component
+	componentId="<%= TrashWebKeys.TRASH_ENTRIES_DEFAULT_EVENT_HANDLER %>"
+	module="js/EntriesDefaultEventHandler.es"
+/>

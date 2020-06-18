@@ -33,38 +33,44 @@ import java.util.Collections;
  */
 public class TCKJunitBatchTestClassGroup extends BatchTestClassGroup {
 
+	@Override
+	public int getAxisCount() {
+		if (!isStableTestSuiteBatch() && testRelevantIntegrationUnitOnly) {
+			return 0;
+		}
+
+		return super.getAxisCount();
+	}
+
 	public static class TCKBatchTestClass extends BaseTestClass {
 
 		protected static TCKBatchTestClass getInstance(
 			String batchName, File warFile) {
 
-			return new TCKBatchTestClass(batchName, warFile);
+			return new TCKBatchTestClass(
+				batchName,
+				new TestClassFile(
+					JenkinsResultsParserUtil.getCanonicalPath(warFile)));
 		}
 
-		protected TCKBatchTestClass(String batchName, File file) {
-			super(file);
+		protected TCKBatchTestClass(
+			String batchName, TestClassFile testClassFile) {
 
-			addTestMethod(batchName);
+			super(testClassFile);
+
+			addTestClassMethod(batchName);
 		}
 
 	}
 
 	protected TCKJunitBatchTestClassGroup(
-		String batchName, PortalTestClassJob portalTestClassJob) {
+		String batchName, BuildProfile buildProfile,
+		PortalTestClassJob portalTestClassJob) {
 
-		super(batchName, portalTestClassJob);
+		super(batchName, buildProfile, portalTestClassJob);
 
-		File workingDirectory = portalGitWorkingDirectory.getWorkingDirectory();
-
-		File tckHomeDirectory = new File(workingDirectory, "tools/tck");
-
-		if (!tckHomeDirectory.exists()) {
-			tckHomeDirectory = new File(
-				JenkinsResultsParserUtil.getProperty(
-					jobProperties, "tck.home"));
-		}
-
-		_tckHomeDirectory = tckHomeDirectory;
+		_tckHomeDirectory = new File(
+			JenkinsResultsParserUtil.getProperty(jobProperties, "tck.home"));
 
 		excludesPathMatchers.addAll(
 			getPathMatchers(
@@ -75,6 +81,22 @@ public class TCKJunitBatchTestClassGroup extends BatchTestClassGroup {
 			getPathMatchers(
 				getFirstPropertyValue("test.batch.class.names.includes"),
 				_tckHomeDirectory));
+
+		if (includeStableTestSuite && isStableTestSuiteBatch()) {
+			excludesPathMatchers.addAll(
+				getPathMatchers(
+					getFirstPropertyValue(
+						"test.batch.class.names.excludes", batchName,
+						NAME_STABLE_TEST_SUITE),
+					_tckHomeDirectory));
+
+			includesPathMatchers.addAll(
+				getPathMatchers(
+					getFirstPropertyValue(
+						"test.batch.class.names.includes", batchName,
+						NAME_STABLE_TEST_SUITE),
+					_tckHomeDirectory));
+		}
 
 		setTestClasses();
 
@@ -112,11 +134,11 @@ public class TCKJunitBatchTestClassGroup extends BatchTestClassGroup {
 
 				});
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			throw new RuntimeException(
 				"Unable to search for test file names in " +
 					_tckHomeDirectory.getPath(),
-				ioe);
+				ioException);
 		}
 
 		Collections.sort(testClasses);

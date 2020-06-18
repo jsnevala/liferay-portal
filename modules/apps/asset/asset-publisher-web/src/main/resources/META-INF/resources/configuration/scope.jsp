@@ -62,11 +62,11 @@ List<Group> selectedGroups = GroupLocalServiceUtil.getGroups(assetPublisherDispl
 			<liferay-portlet:actionURL portletConfiguration="<%= true %>" var="deleteURL">
 				<portlet:param name="<%= Constants.CMD %>" value="remove-scope" />
 				<portlet:param name="redirect" value="<%= currentURL %>" />
-				<portlet:param name="scopeId" value="<%= AssetPublisherUtil.getScopeId(group, scopeGroupId) %>" />
+				<portlet:param name="scopeId" value="<%= assetPublisherHelper.getScopeId(group, scopeGroupId) %>" />
 			</liferay-portlet:actionURL>
 
 			<liferay-ui:icon
-				icon="times"
+				icon="times-circle"
 				markupView="lexicon"
 				url="<%= deleteURL %>"
 			/>
@@ -114,7 +114,7 @@ List<Group> selectedGroups = GroupLocalServiceUtil.getGroups(assetPublisherDispl
 	<liferay-ui:icon
 		cssClass="highlited scope-selector"
 		id="selectManageableGroup"
-		message='<%= LanguageUtil.get(request, "other-site") + StringPool.TRIPLE_PERIOD %>'
+		message='<%= LanguageUtil.get(request, "other-site-or-asset-library") + StringPool.TRIPLE_PERIOD %>'
 		method="get"
 		url="javascript:;"
 	/>
@@ -123,35 +123,31 @@ List<Group> selectedGroups = GroupLocalServiceUtil.getGroups(assetPublisherDispl
 <%
 ItemSelector itemSelector = (ItemSelector)request.getAttribute(AssetPublisherWebKeys.ITEM_SELECTOR);
 
-SiteItemSelectorCriterion siteItemSelectorCriterion = new SiteItemSelectorCriterion();
+ItemSelectorCriterion itemSelectorCriterion = new GroupItemSelectorCriterion(layout.isPrivateLayout());
 
-List<ItemSelectorReturnType> desiredItemSelectorReturnTypes = new ArrayList<ItemSelectorReturnType>();
+itemSelectorCriterion.setDesiredItemSelectorReturnTypes(new GroupItemSelectorReturnType());
 
-desiredItemSelectorReturnTypes.add(new SiteItemSelectorReturnType());
-
-siteItemSelectorCriterion.setDesiredItemSelectorReturnTypes(desiredItemSelectorReturnTypes);
-
-PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(renderRequest), eventName, siteItemSelectorCriterion);
+PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(renderRequest), eventName, itemSelectorCriterion);
 
 itemSelectorURL.setParameter("plid", String.valueOf(layout.getPlid()));
 itemSelectorURL.setParameter("groupId", String.valueOf(layout.getGroupId()));
-itemSelectorURL.setParameter("privateLayout", String.valueOf(layout.isPrivateLayout()));
 itemSelectorURL.setParameter("portletResource", assetPublisherDisplayContext.getPortletResource());
 %>
 
 <aui:script sandbox="<%= true %>">
 	var form = document.<portlet:namespace />fm;
 
-	$('#<portlet:namespace />selectManageableGroup').on(
-		'click',
-		function(event) {
+	var scopeSelect = document.getElementById(
+		'<portlet:namespace />selectManageableGroup'
+	);
+
+	if (scopeSelect) {
+		scopeSelect.addEventListener('click', function (event) {
 			event.preventDefault();
 
-			var currentTarget = $(event.currentTarget);
-
-			var searchContainerName = '<portlet:namespace />groupsSearchContainer';
-
-			var searchContainer = Liferay.SearchContainer.get(searchContainerName);
+			var searchContainer = Liferay.SearchContainer.get(
+				'<portlet:namespace />groupsSearchContainer'
+			);
 
 			var searchContainerData = searchContainer.getData();
 
@@ -167,21 +163,23 @@ itemSelectorURL.setParameter("portletResource", assetPublisherDisplayContext.get
 					dialog: {
 						constrain: true,
 						destroyOnHide: true,
-						modal: true
+						modal: true,
 					},
 					eventName: '<%= eventName %>',
-					id: '<%= eventName %>' + currentTarget.attr('id'),
+					id: '<%= eventName %>' + event.currentTarget.id,
 					selectedData: searchContainerData,
 					title: '<liferay-ui:message key="scopes" />',
-					uri: '<%= itemSelectorURL.toString() %>'
+					uri: '<%= itemSelectorURL.toString() %>',
 				},
-				function(event) {
-					form.<portlet:namespace /><%= Constants.CMD %>.value = 'add-scope';
-					form.<portlet:namespace />groupId.value = event.groupid;
-
-					submitForm(form);
+				function (event) {
+					Liferay.Util.postForm(form, {
+						data: {
+							cmd: 'add-scope',
+							groupId: event.groupid,
+						},
+					});
 				}
 			);
-		}
-	);
+		});
+	}
 </aui:script>

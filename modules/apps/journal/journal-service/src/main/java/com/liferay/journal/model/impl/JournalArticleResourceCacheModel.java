@@ -14,14 +14,11 @@
 
 package com.liferay.journal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.journal.model.JournalArticleResource;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -32,12 +29,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing JournalArticleResource in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see JournalArticleResource
  * @generated
  */
-@ProviderType
-public class JournalArticleResourceCacheModel implements CacheModel<JournalArticleResource>,
-	Externalizable {
+public class JournalArticleResourceCacheModel
+	implements CacheModel<JournalArticleResource>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -48,9 +44,13 @@ public class JournalArticleResourceCacheModel implements CacheModel<JournalArtic
 			return false;
 		}
 
-		JournalArticleResourceCacheModel journalArticleResourceCacheModel = (JournalArticleResourceCacheModel)obj;
+		JournalArticleResourceCacheModel journalArticleResourceCacheModel =
+			(JournalArticleResourceCacheModel)obj;
 
-		if (resourcePrimKey == journalArticleResourceCacheModel.resourcePrimKey) {
+		if ((resourcePrimKey ==
+				journalArticleResourceCacheModel.resourcePrimKey) &&
+			(mvccVersion == journalArticleResourceCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -59,14 +59,30 @@ public class JournalArticleResourceCacheModel implements CacheModel<JournalArtic
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, resourcePrimKey);
+		int hashCode = HashUtil.hash(0, resourcePrimKey);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(11);
+		StringBundler sb = new StringBundler(15);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", resourcePrimKey=");
 		sb.append(resourcePrimKey);
@@ -83,7 +99,11 @@ public class JournalArticleResourceCacheModel implements CacheModel<JournalArtic
 
 	@Override
 	public JournalArticleResource toEntityModel() {
-		JournalArticleResourceImpl journalArticleResourceImpl = new JournalArticleResourceImpl();
+		JournalArticleResourceImpl journalArticleResourceImpl =
+			new JournalArticleResourceImpl();
+
+		journalArticleResourceImpl.setMvccVersion(mvccVersion);
+		journalArticleResourceImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			journalArticleResourceImpl.setUuid("");
@@ -110,6 +130,9 @@ public class JournalArticleResourceCacheModel implements CacheModel<JournalArtic
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		resourcePrimKey = objectInput.readLong();
@@ -121,8 +144,11 @@ public class JournalArticleResourceCacheModel implements CacheModel<JournalArtic
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -144,9 +170,12 @@ public class JournalArticleResourceCacheModel implements CacheModel<JournalArtic
 		}
 	}
 
+	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long resourcePrimKey;
 	public long groupId;
 	public long companyId;
 	public String articleId;
+
 }

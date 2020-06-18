@@ -30,14 +30,15 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = StagedModelDataHandler.class)
 public class StagedAssetLinkStagedModelDataHandler
 	extends BaseStagedModelDataHandler<StagedAssetLink> {
 
-	public static final String[] CLASS_NAMES =
-		{StagedAssetLink.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		StagedAssetLink.class.getName()
+	};
 
 	@Override
 	public String[] getClassNames() {
@@ -104,26 +105,12 @@ public class StagedAssetLinkStagedModelDataHandler
 		return _stagedAssetLinkStagedModelRepository;
 	}
 
-	@Reference(unbind = "-")
-	protected void setAssetEntryLocalService(
-		AssetEntryLocalService assetEntryLocalService) {
-
-		_assetEntryLocalService = assetEntryLocalService;
-	}
+	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference(
-		target = "(model.class.name=com.liferay.asset.kernel.model.adapter.StagedAssetLink)",
-		unbind = "-"
+		target = "(model.class.name=com.liferay.asset.kernel.model.adapter.StagedAssetLink)"
 	)
-	protected void setStagedAssetLinkStagedModelRepository(
-		StagedAssetLinkStagedModelRepository
-			stagedAssetLinkStagedModelRepository) {
-
-		_stagedAssetLinkStagedModelRepository =
-			stagedAssetLinkStagedModelRepository;
-	}
-
-	private AssetEntryLocalService _assetEntryLocalService;
 	private StagedAssetLinkStagedModelRepository
 		_stagedAssetLinkStagedModelRepository;
 

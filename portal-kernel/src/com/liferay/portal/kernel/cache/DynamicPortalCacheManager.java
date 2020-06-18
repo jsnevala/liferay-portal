@@ -49,6 +49,23 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 		_dynamicPortalCaches.clear();
 	}
 
+	public PortalCache<K, V> fetchPortalCache(String portalCacheName) {
+		return _dynamicPortalCaches.computeIfAbsent(
+			portalCacheName,
+			key -> {
+				PortalCache<K, V> portalCache =
+					_portalCacheManager.fetchPortalCache(portalCacheName);
+
+				if (portalCache == null) {
+					return null;
+				}
+
+				return new DynamicPortalCache<>(
+					this, portalCache, key, portalCache.isBlocking(),
+					portalCache.isMVCC());
+			});
+	}
+
 	@Override
 	public PortalCache<K, V> getPortalCache(String portalCacheName)
 		throws PortalCacheException {
@@ -97,8 +114,20 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 		return _portalCacheManager.isClusterAware();
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             #reconfigurePortalCaches(URL, ClassLoader)}
+	 */
+	@Deprecated
 	@Override
 	public void reconfigurePortalCaches(URL configurationURL) {
+		reconfigurePortalCaches(configurationURL, null);
+	}
+
+	@Override
+	public void reconfigurePortalCaches(
+		URL configurationURL, ClassLoader classLoader) {
+
 		PortalCacheManager<K, V> portalCacheManager = _portalCacheManager;
 
 		if (portalCacheManager == _DUMMY_PORTAL_CACHE_MANAGER) {
@@ -107,7 +136,8 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 					"manager is missing now, please retry later");
 		}
 
-		portalCacheManager.reconfigurePortalCaches(configurationURL);
+		portalCacheManager.reconfigurePortalCaches(
+			configurationURL, classLoader);
 	}
 
 	@Override

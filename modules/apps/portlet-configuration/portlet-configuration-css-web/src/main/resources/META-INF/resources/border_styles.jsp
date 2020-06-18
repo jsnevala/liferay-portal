@@ -16,24 +16,13 @@
 
 <%@ include file="/init.jsp" %>
 
-<aui:row>
-	<aui:col cssClass="lfr-border-width use-for-all-column" width="<%= 33 %>">
+<clay:row>
+	<clay:col
+		className="lfr-border-width use-for-all-column"
+		md="4"
+	>
 		<aui:fieldset label="border-width">
-
-			<%
-			Map<String, Object> contextUseForAllWidth = new HashMap<>();
-
-			contextUseForAllWidth.put("checked", portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderWidth"));
-			contextUseForAllWidth.put("inputSelector", ".same-border-width");
-			contextUseForAllWidth.put("label", LanguageUtil.get(request, "same-for-all"));
-			contextUseForAllWidth.put("name", renderResponse.getNamespace() + "useForAllWidth");
-			%>
-
-			<soy:component-renderer
-				context="<%= contextUseForAllWidth %>"
-				module="portlet-configuration-css-web/js/ToggleDisableInputs.es"
-				templateNamespace="com.liferay.portlet.configuration.css.web.ToggleDisableInputs.render"
-			/>
+			<aui:input checked='<%= portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderWidth") %>' data-inputselector=".same-border-width" label="same-for-all" name="useForAllWidth" type="toggle-switch" />
 
 			<span class="field-row">
 				<aui:input inlineField="<%= true %>" label="top" name="borderWidthTop" value='<%= portletConfigurationCSSPortletDisplayContext.getBorderWidthProperty("top", "value") %>' />
@@ -72,25 +61,14 @@
 				</aui:select>
 			</span>
 		</aui:fieldset>
-	</aui:col>
+	</clay:col>
 
-	<aui:col cssClass="lfr-border-style" width="<%= 33 %>">
+	<clay:col
+		className="lfr-border-style"
+		md="4"
+	>
 		<aui:fieldset label="border-style">
-
-			<%
-			Map<String, Object> contextUseForAllStyle = new HashMap<>();
-
-			contextUseForAllStyle.put("checked", portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderStyle"));
-			contextUseForAllStyle.put("inputSelector", ".same-border-style");
-			contextUseForAllStyle.put("label", LanguageUtil.get(request, "same-for-all"));
-			contextUseForAllStyle.put("name", renderResponse.getNamespace() + "useForAllStyle");
-			%>
-
-			<soy:component-renderer
-				context="<%= contextUseForAllStyle %>"
-				module="portlet-configuration-css-web/js/ToggleDisableInputs.es"
-				templateNamespace="com.liferay.portlet.configuration.css.web.ToggleDisableInputs.render"
-			/>
+			<aui:input checked='<%= portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderStyle") %>' data-inputselector=".same-border-style" label="same-for-all" name="useForAllStyle" type="toggle-switch" />
 
 			<aui:select label="top" name="borderStyleTop" showEmptyOption="<%= true %>" wrapperCssClass="field-row">
 				<aui:option label="dashed" selected='<%= Objects.equals(portletConfigurationCSSPortletDisplayContext.getBorderProperty("top", "borderStyle"), "dashed") %>' />
@@ -140,95 +118,40 @@
 				<aui:option label="solid" selected='<%= Objects.equals(portletConfigurationCSSPortletDisplayContext.getBorderProperty("left", "borderStyle"), "solid") %>' />
 			</aui:select>
 		</aui:fieldset>
-	</aui:col>
+	</clay:col>
 
-	<aui:col cssClass="lfr-border-color" last="<%= true %>" width="<%= 33 %>">
+	<clay:col
+		className="lfr-border-color"
+		md="4"
+	>
 		<aui:fieldset label="border-color">
+			<aui:input checked='<%= portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderColor") %>' data-inputselector=".same-border-color" label="same-for-all" name="useForAllColor" type="toggle-switch" />
 
-			<%
-			Map<String, Object> contextUseForAllColor = new HashMap<>();
+			<liferay-util:include page="/color_picker_input.jsp" servletContext="<%= application %>">
+				<liferay-util:param name="color" value='<%= portletConfigurationCSSPortletDisplayContext.getBorderProperty("top", "borderColor") %>' />
+				<liferay-util:param name="label" value='<%= LanguageUtil.get(request, "top") %>' />
+				<liferay-util:param name="name" value='<%= renderResponse.getNamespace() + "borderColorTop" %>' />
+			</liferay-util:include>
 
-			contextUseForAllColor.put("checked", portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderColor"));
-			contextUseForAllColor.put("inputSelector", ".same-border-color");
-			contextUseForAllColor.put("label", LanguageUtil.get(request, "same-for-all"));
-			contextUseForAllColor.put("name", renderResponse.getNamespace() + "useForAllColor");
-			%>
+			<fieldset class="same-border-color" <%= portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderColor") ? "disabled" : StringPool.BLANK %>>
+				<liferay-util:include page="/color_picker_input.jsp" servletContext="<%= application %>">
+					<liferay-util:param name="color" value='<%= portletConfigurationCSSPortletDisplayContext.getBorderProperty("right", "borderColor") %>' />
+					<liferay-util:param name="label" value='<%= LanguageUtil.get(request, "right") %>' />
+					<liferay-util:param name="name" value='<%= renderResponse.getNamespace() + "borderColorRight" %>' />
+				</liferay-util:include>
 
-			<soy:component-renderer
-				context="<%= contextUseForAllColor %>"
-				module="portlet-configuration-css-web/js/ToggleDisableInputs.es"
-				templateNamespace="com.liferay.portlet.configuration.css.web.ToggleDisableInputs.render"
-			/>
+				<liferay-util:include page="/color_picker_input.jsp" servletContext="<%= application %>">
+					<liferay-util:param name="color" value='<%= portletConfigurationCSSPortletDisplayContext.getBorderProperty("bottom", "borderColor") %>' />
+					<liferay-util:param name="label" value='<%= LanguageUtil.get(request, "bottom") %>' />
+					<liferay-util:param name="name" value='<%= renderResponse.getNamespace() + "borderColorBottom" %>' />
+				</liferay-util:include>
 
-			<%
-			Map<String, Object> contextBorderTop = new HashMap<>();
-
-			contextBorderTop.put("color", portletConfigurationCSSPortletDisplayContext.getBorderProperty("top", "borderColor"));
-			contextBorderTop.put("elementClasses", "field-row");
-			contextBorderTop.put("id", renderResponse.getNamespace() + "borderColorTop");
-			contextBorderTop.put("label", LanguageUtil.get(request, "top"));
-			contextBorderTop.put("name", renderResponse.getNamespace() + "borderColorTop");
-			%>
-
-			<soy:component-renderer
-				context="<%= contextBorderTop %>"
-				module="portlet-configuration-css-web/js/ColorPickerInput.es"
-				templateNamespace="com.liferay.portlet.configuration.css.web.ColorPickerInput.render"
-			/>
-
-			<%
-			Map<String, Object> contextBorderRight = new HashMap<>();
-
-			contextBorderRight.put("color", portletConfigurationCSSPortletDisplayContext.getBorderProperty("right", "borderColor"));
-			contextBorderRight.put("disabled", portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderColor"));
-			contextBorderRight.put("elementClasses", "field-row");
-			contextBorderRight.put("id", renderResponse.getNamespace() + "borderColorRight");
-			contextBorderRight.put("inputClasses", "same-border-color");
-			contextBorderRight.put("label", LanguageUtil.get(request, "right"));
-			contextBorderRight.put("name", renderResponse.getNamespace() + "borderColorRight");
-			%>
-
-			<soy:component-renderer
-				context="<%= contextBorderRight %>"
-				module="portlet-configuration-css-web/js/ColorPickerInput.es"
-				templateNamespace="com.liferay.portlet.configuration.css.web.ColorPickerInput.render"
-			/>
-
-			<%
-			Map<String, Object> contextBorderBottom = new HashMap<>();
-
-			contextBorderBottom.put("color", portletConfigurationCSSPortletDisplayContext.getBorderProperty("bottom", "borderColor"));
-			contextBorderBottom.put("disabled", portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderColor"));
-			contextBorderBottom.put("elementClasses", "field-row");
-			contextBorderBottom.put("id", renderResponse.getNamespace() + "borderColorBottom");
-			contextBorderBottom.put("inputClasses", "same-border-color");
-			contextBorderBottom.put("label", LanguageUtil.get(request, "bottom"));
-			contextBorderBottom.put("name", renderResponse.getNamespace() + "borderColorBottom");
-			%>
-
-			<soy:component-renderer
-				context="<%= contextBorderBottom %>"
-				module="portlet-configuration-css-web/js/ColorPickerInput.es"
-				templateNamespace="com.liferay.portlet.configuration.css.web.ColorPickerInput.render"
-			/>
-
-			<%
-			Map<String, Object> contextBorderLeft = new HashMap<>();
-
-			contextBorderLeft.put("color", portletConfigurationCSSPortletDisplayContext.getBorderProperty("left", "borderColor"));
-			contextBorderLeft.put("disabled", portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderColor"));
-			contextBorderLeft.put("elementClasses", "field-row");
-			contextBorderLeft.put("id", renderResponse.getNamespace() + "borderColorLeft");
-			contextBorderLeft.put("inputClasses", "same-border-color");
-			contextBorderLeft.put("label", LanguageUtil.get(request, "left"));
-			contextBorderLeft.put("name", renderResponse.getNamespace() + "borderColorLeft");
-			%>
-
-			<soy:component-renderer
-				context="<%= contextBorderLeft %>"
-				module="portlet-configuration-css-web/js/ColorPickerInput.es"
-				templateNamespace="com.liferay.portlet.configuration.css.web.ColorPickerInput.render"
-			/>
+				<liferay-util:include page="/color_picker_input.jsp" servletContext="<%= application %>">
+					<liferay-util:param name="color" value='<%= portletConfigurationCSSPortletDisplayContext.getBorderProperty("left", "borderColor") %>' />
+					<liferay-util:param name="label" value='<%= LanguageUtil.get(request, "left") %>' />
+					<liferay-util:param name="name" value='<%= renderResponse.getNamespace() + "borderColorLeft" %>' />
+				</liferay-util:include>
+			</fieldset>
 		</aui:fieldset>
-	</aui:col>
-</aui:row>
+	</clay:col>
+</clay:row>

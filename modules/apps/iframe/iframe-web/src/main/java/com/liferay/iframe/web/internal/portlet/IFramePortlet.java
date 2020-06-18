@@ -14,15 +14,14 @@
 
 package com.liferay.iframe.web.internal.portlet;
 
-import com.liferay.iframe.web.configuration.IFramePortletInstanceConfiguration;
+import com.liferay.iframe.web.internal.configuration.IFramePortletInstanceConfiguration;
 import com.liferay.iframe.web.internal.constants.IFramePortletKeys;
 import com.liferay.iframe.web.internal.constants.IFrameWebKeys;
 import com.liferay.iframe.web.internal.display.context.IFrameDisplayContext;
-import com.liferay.iframe.web.internal.util.IFrameUtil;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -37,6 +36,7 @@ import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -76,8 +76,8 @@ public class IFramePortlet extends MVCPortlet {
 		try {
 			src = transformSrc(renderRequest, renderResponse);
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 		}
 
 		renderRequest.setAttribute(IFrameWebKeys.IFRAME_SRC, src);
@@ -90,6 +90,13 @@ public class IFramePortlet extends MVCPortlet {
 		else {
 			super.doView(renderRequest, renderResponse);
 		}
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.iframe.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
 	}
 
 	protected String transformSrc(
@@ -111,23 +118,7 @@ public class IFramePortlet extends MVCPortlet {
 
 		String authType = iFrameDisplayContext.getAuthType();
 
-		if (authType.equals("basic")) {
-			String userName = IFrameUtil.getUserName(
-				renderRequest,
-				iFramePortletInstanceConfiguration.basicUserName());
-			String password = IFrameUtil.getPassword(
-				renderRequest,
-				iFramePortletInstanceConfiguration.basicPassword());
-
-			int pos = src.indexOf("://");
-
-			String protocol = src.substring(0, pos + 3);
-			String url = src.substring(pos + 3);
-
-			src = StringBundler.concat(
-				protocol, userName, ":", password, "@", url);
-		}
-		else {
+		if (authType.equals("form")) {
 			PortletURL proxyURL = renderResponse.createRenderURL();
 
 			proxyURL.setParameter("mvcPath", "/proxy.jsp");

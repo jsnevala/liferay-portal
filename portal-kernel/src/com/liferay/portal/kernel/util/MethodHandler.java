@@ -14,6 +14,8 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.string.StringBundler;
+
 import java.io.Serializable;
 
 import java.lang.reflect.Method;
@@ -59,14 +61,6 @@ public class MethodHandler implements Serializable {
 		}
 
 		return method.invoke(targetObject, _arguments);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #invoke}
-	 */
-	@Deprecated
-	public Object invoke(boolean newInstance) throws Exception {
-		return invoke();
 	}
 
 	public Object invoke(Object target) throws Exception {

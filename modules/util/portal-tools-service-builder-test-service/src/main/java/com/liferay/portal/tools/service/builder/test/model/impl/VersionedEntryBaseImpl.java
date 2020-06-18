@@ -14,8 +14,6 @@
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.tools.service.builder.test.model.VersionedEntry;
@@ -33,13 +31,13 @@ import com.liferay.portal.tools.service.builder.test.service.VersionedEntryLocal
  * @see VersionedEntry
  * @generated
  */
-@ProviderType
-public abstract class VersionedEntryBaseImpl extends VersionedEntryModelImpl
-	implements VersionedEntry {
+public abstract class VersionedEntryBaseImpl
+	extends VersionedEntryModelImpl implements VersionedEntry {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a versioned entry model instance should use the {@link VersionedEntry} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a versioned entry model instance should use the <code>VersionedEntry</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -50,9 +48,10 @@ public abstract class VersionedEntryBaseImpl extends VersionedEntryModelImpl
 			try {
 				VersionedEntryLocalServiceUtil.updateVersionedEntry(this);
 			}
-			catch (PortalException pe) {
-				throw new SystemException(pe);
+			catch (PortalException portalException) {
+				throw new SystemException(portalException);
 			}
 		}
 	}
+
 }

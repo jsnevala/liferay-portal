@@ -16,7 +16,7 @@ package com.liferay.fragment.taglib.servlet.taglib;
 
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryServiceUtil;
-import com.liferay.fragment.taglib.servlet.ServletContextUtil;
+import com.liferay.fragment.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -37,15 +37,19 @@ public class FragmentEntryRendererTag extends IncludeTag {
 			_fragmentEntry = FragmentEntryServiceUtil.fetchFragmentEntry(
 				_fragmentEntryId);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("Unable to get fragment entry", pe);
+				_log.debug("Unable to get fragment entry", portalException);
 			}
 
 			return SKIP_BODY;
 		}
 
 		return super.doStartTag();
+	}
+
+	public long getFragmentEntryId() {
+		return _fragmentEntryId;
 	}
 
 	public void setFragmentEntryId(long fragmentEntryId) {
@@ -73,8 +77,8 @@ public class FragmentEntryRendererTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-fragment:fragment-entry-renderer:fragmentEntry",
 			_fragmentEntry);
 	}

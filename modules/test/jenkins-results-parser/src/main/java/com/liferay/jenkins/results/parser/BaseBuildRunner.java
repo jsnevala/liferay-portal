@@ -17,16 +17,27 @@ package com.liferay.jenkins.results.parser;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
  */
-public abstract class BaseBuildRunner<T extends BuildData>
-	implements BuildRunner<T> {
+public abstract class BaseBuildRunner<T extends BuildData, S extends Workspace>
+	implements BuildRunner<T, S> {
 
+	@Override
 	public T getBuildData() {
 		return _buildData;
+	}
+
+	@Override
+	public S getWorkspace() {
+		return _workspace;
 	}
 
 	@Override
@@ -42,6 +53,8 @@ public abstract class BaseBuildRunner<T extends BuildData>
 
 	@Override
 	public void tearDown() {
+		cleanUpHostServices();
+
 		tearDownWorkspace();
 	}
 
@@ -53,11 +66,55 @@ public abstract class BaseBuildRunner<T extends BuildData>
 		_job.readJobProperties();
 	}
 
+	protected void cleanUpHostServices() {
+		Host host = _buildData.getHost();
+
+		host.cleanUpServices();
+	}
+
 	protected Job getJob() {
 		return _job;
 	}
 
+	protected List<JSONObject> getPreviousBuildJSONObjects() {
+		if (_previousBuildJSONObjects != null) {
+			return _previousBuildJSONObjects;
+		}
+
+		_previousBuildJSONObjects = new ArrayList<>();
+
+		BuildData buildData = getBuildData();
+
+		try {
+			JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
+				JenkinsResultsParserUtil.getLocalURL(buildData.getJobURL()) +
+					"api/json");
+
+			JSONArray buildsJSONArray = jsonObject.getJSONArray("builds");
+
+			for (int i = 0; i < buildsJSONArray.length(); i++) {
+				JSONObject buildJSONObject = buildsJSONArray.getJSONObject(i);
+
+				_previousBuildJSONObjects.add(
+					JenkinsResultsParserUtil.toJSONObject(
+						JenkinsResultsParserUtil.getLocalURL(
+							buildJSONObject.getString("url") + "api/json")));
+			}
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		return _previousBuildJSONObjects;
+	}
+
 	protected abstract void initWorkspace();
+
+	protected void keepJenkinsBuild(boolean keepLogs) {
+		JenkinsResultsParserUtil.keepJenkinsBuild(
+			keepLogs, _buildData.getBuildNumber(), _buildData.getJobName(),
+			_buildData.getMasterHostname());
+	}
 
 	protected void publishToUserContentDir(File file) {
 		if (!JenkinsResultsParserUtil.isCINode()) {
@@ -75,7 +132,7 @@ public abstract class BaseBuildRunner<T extends BuildData>
 		int returnCode = remoteExecutor.execute(
 			1, new String[] {_buildData.getMasterHostname()},
 			new String[] {
-				"mkdir -p /opt/java/jenkins/userContent" +
+				"mkdir -p /opt/java/jenkins/userContent/" +
 					userContentRelativePath
 			});
 
@@ -92,7 +149,7 @@ public abstract class BaseBuildRunner<T extends BuildData>
 
 				String command = JenkinsResultsParserUtil.combine(
 					"time rsync -Ipqrs --chmod=go=rx --timeout=1200 ",
-					file.getCanonicalPath(), " ",
+					JenkinsResultsParserUtil.getCanonicalPath(file), " ",
 					_buildData.getTopLevelMasterHostname(), "::usercontent/",
 					userContentRelativePath);
 
@@ -100,65 +157,105 @@ public abstract class BaseBuildRunner<T extends BuildData>
 
 				break;
 			}
-			catch (IOException | TimeoutException e) {
+			catch (IOException | TimeoutException exception) {
 				if (retries == maxRetries) {
 					throw new RuntimeException(
-						"Unable to send the jenkins-report.html", e);
+						"Unable to send " + file.getName(), exception);
 				}
 
 				System.out.println(
 					"Unable to execute bash commands, retrying... ");
 
-				e.printStackTrace();
+				exception.printStackTrace();
 
 				JenkinsResultsParserUtil.sleep(3000);
 			}
 		}
 	}
 
+	protected void retirePreviousBuilds() {
+		long allowedBuildAge = 7 * _MILLISECONDS_PER_DAY;
+
+		String allowedBuildAgeInDays = System.getenv(
+			"ALLOWED_BUILD_AGE_IN_DAYS");
+
+		if ((allowedBuildAgeInDays != null) &&
+			!allowedBuildAgeInDays.isEmpty()) {
+
+			allowedBuildAge =
+				Integer.parseInt(allowedBuildAgeInDays) * _MILLISECONDS_PER_DAY;
+		}
+
+		long allowedBuildStartTime =
+			System.currentTimeMillis() - allowedBuildAge;
+
+		for (JSONObject previousBuildJSONObject :
+				getPreviousBuildJSONObjects()) {
+
+			long previousBuildStartTime = previousBuildJSONObject.getLong(
+				"timestamp");
+
+			if (previousBuildStartTime > allowedBuildStartTime) {
+				continue;
+			}
+
+			try {
+				JSONObject injectedEnvVarsJSONObject =
+					JenkinsResultsParserUtil.toJSONObject(
+						JenkinsResultsParserUtil.getLocalURL(
+							previousBuildJSONObject.getString("url") +
+								"/injectedEnvVars/api/json"));
+
+				JSONObject envMapJSONObject =
+					injectedEnvVarsJSONObject.getJSONObject("envMap");
+
+				JenkinsResultsParserUtil.keepJenkinsBuild(
+					false,
+					Integer.valueOf(envMapJSONObject.getString("BUILD_NUMBER")),
+					envMapJSONObject.getString("JOB_NAME"),
+					envMapJSONObject.getString("HOSTNAME"));
+			}
+			catch (IOException ioException) {
+				throw new RuntimeException(ioException);
+			}
+		}
+	}
+
 	protected void setUpWorkspace() {
-		if (workspace == null) {
+		if (_workspace == null) {
 			initWorkspace();
 		}
 
-		workspace.setUp(getJob());
+		_workspace.setBuildData(getBuildData());
+
+		_workspace.setJob(getJob());
+
+		_workspace.setUp();
+	}
+
+	protected void setWorkspace(S workspace) {
+		_workspace = workspace;
 	}
 
 	protected void tearDownWorkspace() {
-		if (workspace == null) {
+		if (_workspace == null) {
 			initWorkspace();
 		}
 
-		workspace.tearDown();
+		_workspace.tearDown();
 	}
 
 	protected void updateBuildDescription() {
-		String buildDescription = _buildData.getBuildDescription();
-
-		buildDescription = buildDescription.replaceAll("\"", "\\\\\"");
-		buildDescription = buildDescription.replaceAll("\'", "\\\\\'");
-
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("def job = Jenkins.instance.getItemByFullName(\"");
-		sb.append(_buildData.getJobName());
-		sb.append("\"); ");
-
-		sb.append("def build = job.getBuildByNumber(");
-		sb.append(_buildData.getBuildNumber());
-		sb.append("); ");
-
-		sb.append("build.description = \"");
-		sb.append(buildDescription);
-		sb.append("\";");
-
-		JenkinsResultsParserUtil.executeJenkinsScript(
-			_buildData.getMasterHostname(), "script=" + sb.toString());
+		JenkinsResultsParserUtil.updateBuildDescription(
+			_buildData.getBuildDescription(), _buildData.getBuildNumber(),
+			_buildData.getJobName(), _buildData.getMasterHostname());
 	}
 
-	protected Workspace workspace;
+	private static final long _MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 	private final T _buildData;
 	private final Job _job;
+	private List<JSONObject> _previousBuildJSONObjects;
+	private S _workspace;
 
 }

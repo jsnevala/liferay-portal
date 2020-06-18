@@ -16,12 +16,12 @@ package com.liferay.portal.zip;
 
 import com.liferay.petra.memory.DeleteFileFinalizeAction;
 import com.liferay.petra.memory.FinalizeManager;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.kernel.zip.ZipWriter;
@@ -115,9 +115,7 @@ public class ZipWriterImpl implements ZipWriter {
 
 	@Override
 	public byte[] finish() throws IOException {
-		java.io.File file = getFile();
-
-		return FileUtil.getBytes(file);
+		return FileUtil.getBytes(getFile());
 	}
 
 	@Override
@@ -125,8 +123,8 @@ public class ZipWriterImpl implements ZipWriter {
 		try {
 			File.umount(_file);
 		}
-		catch (ArchiveException ae) {
-			_log.error(ae, ae);
+		catch (ArchiveException archiveException) {
+			_log.error(archiveException, archiveException);
 		}
 
 		return _file.getDelegate();
@@ -142,9 +140,9 @@ public class ZipWriterImpl implements ZipWriter {
 		try {
 			File.umount(_file);
 		}
-		catch (ArchiveException ae) {
+		catch (ArchiveException archiveException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to unmount file entry", ae);
+				_log.warn("Unable to unmount file entry", archiveException);
 			}
 		}
 	}

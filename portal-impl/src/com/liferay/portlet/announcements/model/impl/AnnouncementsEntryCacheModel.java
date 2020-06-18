@@ -14,14 +14,11 @@
 
 package com.liferay.portlet.announcements.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.announcements.kernel.model.AnnouncementsEntry;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing AnnouncementsEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see AnnouncementsEntry
  * @generated
  */
-@ProviderType
-public class AnnouncementsEntryCacheModel implements CacheModel<AnnouncementsEntry>,
-	Externalizable {
+public class AnnouncementsEntryCacheModel
+	implements CacheModel<AnnouncementsEntry>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,12 @@ public class AnnouncementsEntryCacheModel implements CacheModel<AnnouncementsEnt
 			return false;
 		}
 
-		AnnouncementsEntryCacheModel announcementsEntryCacheModel = (AnnouncementsEntryCacheModel)obj;
+		AnnouncementsEntryCacheModel announcementsEntryCacheModel =
+			(AnnouncementsEntryCacheModel)obj;
 
-		if (entryId == announcementsEntryCacheModel.entryId) {
+		if ((entryId == announcementsEntryCacheModel.entryId) &&
+			(mvccVersion == announcementsEntryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +60,28 @@ public class AnnouncementsEntryCacheModel implements CacheModel<AnnouncementsEnt
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, entryId);
+		int hashCode = HashUtil.hash(0, entryId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(35);
+		StringBundler sb = new StringBundler(37);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", entryId=");
 		sb.append(entryId);
@@ -109,7 +122,10 @@ public class AnnouncementsEntryCacheModel implements CacheModel<AnnouncementsEnt
 
 	@Override
 	public AnnouncementsEntry toEntityModel() {
-		AnnouncementsEntryImpl announcementsEntryImpl = new AnnouncementsEntryImpl();
+		AnnouncementsEntryImpl announcementsEntryImpl =
+			new AnnouncementsEntryImpl();
+
+		announcementsEntryImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			announcementsEntryImpl.setUuid("");
@@ -197,7 +213,10 @@ public class AnnouncementsEntryCacheModel implements CacheModel<AnnouncementsEnt
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		entryId = objectInput.readLong();
@@ -213,7 +232,7 @@ public class AnnouncementsEntryCacheModel implements CacheModel<AnnouncementsEnt
 
 		classPK = objectInput.readLong();
 		title = objectInput.readUTF();
-		content = objectInput.readUTF();
+		content = (String)objectInput.readObject();
 		url = objectInput.readUTF();
 		type = objectInput.readUTF();
 		displayDate = objectInput.readLong();
@@ -225,8 +244,9 @@ public class AnnouncementsEntryCacheModel implements CacheModel<AnnouncementsEnt
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -262,10 +282,10 @@ public class AnnouncementsEntryCacheModel implements CacheModel<AnnouncementsEnt
 		}
 
 		if (content == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(content);
+			objectOutput.writeObject(content);
 		}
 
 		if (url == null) {
@@ -290,6 +310,7 @@ public class AnnouncementsEntryCacheModel implements CacheModel<AnnouncementsEnt
 		objectOutput.writeBoolean(alert);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long entryId;
 	public long companyId;
@@ -307,4 +328,5 @@ public class AnnouncementsEntryCacheModel implements CacheModel<AnnouncementsEnt
 	public long expirationDate;
 	public int priority;
 	public boolean alert;
+
 }

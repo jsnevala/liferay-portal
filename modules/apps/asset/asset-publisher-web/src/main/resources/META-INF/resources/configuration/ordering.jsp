@@ -16,8 +16,12 @@
 
 <%@ include file="/init.jsp" %>
 
-<aui:row id="ordering">
-	<aui:col width="<%= 50 %>">
+<clay:row
+	id='<%= renderResponse.getNamespace() + "ordering" %>'
+>
+	<clay:col
+		md="6"
+	>
 
 		<%
 		String orderByColumn1 = assetPublisherDisplayContext.getOrderByColumn1();
@@ -34,7 +38,7 @@
 			<aui:option label="expiration-date" value="expirationDate" />
 			<aui:option label="priority" value="priority" />
 
-			<c:if test="<%= !assetPublisherWebConfiguration.searchWithIndex() %>">
+			<c:if test="<%= !assetPublisherDisplayContext.isSearchWithIndex() %>">
 				<aui:option label="view-count" value="viewCount" />
 				<aui:option label="ratings" value="ratings" />
 			</c:if>
@@ -46,26 +50,30 @@
 
 		<aui:field-wrapper cssClass="field-label-inline order-by-type-container">
 			<liferay-ui:icon
-				cssClass='<%= StringUtil.equalsIgnoreCase(orderByType1, "DESC") ? "hide icon" : "icon" %>'
-				icon="angle-up"
-				markupView="lexicon"
-				message="ascending"
-				url="javascript:;"
-			/>
-
-			<liferay-ui:icon
-				cssClass='<%= StringUtil.equalsIgnoreCase(orderByType1, "ASC") ? "hide icon" : "icon" %>'
-				icon="angle-down"
+				cssClass='<%= StringUtil.equalsIgnoreCase(orderByType1, "DESC") ? "hide icon order-arrow-up-active" : "icon order-arrow-up-active" %>'
+				icon="order-arrow"
+				linkCssClass="btn btn-outline-borderless btn-outline-secondary"
 				markupView="lexicon"
 				message="descending"
 				url="javascript:;"
 			/>
 
+			<liferay-ui:icon
+				cssClass='<%= StringUtil.equalsIgnoreCase(orderByType1, "ASC") ? "hide icon order-arrow-down-active" : "icon order-arrow-down-active" %>'
+				icon="order-arrow"
+				linkCssClass="btn btn-outline-borderless btn-outline-secondary"
+				markupView="lexicon"
+				message="ascending"
+				url="javascript:;"
+			/>
+
 			<aui:input cssClass="order-by-type-field" name="preferences--orderByType1--" type="hidden" value="<%= orderByType1 %>" />
 		</aui:field-wrapper>
-	</aui:col>
+	</clay:col>
 
-	<aui:col width="<%= 50 %>">
+	<clay:col
+		md="6"
+	>
 
 		<%
 		String orderByColumn2 = assetPublisherDisplayContext.getOrderByColumn2();
@@ -79,7 +87,7 @@
 			<aui:option label="expiration-date" selected='<%= orderByColumn2.equals("expirationDate") %>' value="expirationDate" />
 			<aui:option label="priority" selected='<%= orderByColumn2.equals("priority") %>' value="priority" />
 
-			<c:if test="<%= !assetPublisherWebConfiguration.searchWithIndex() %>">
+			<c:if test="<%= !assetPublisherDisplayContext.isSearchWithIndex() %>">
 				<aui:option label="view-count" selected='<%= orderByColumn2.equals("viewCount") %>' value="viewCount" />
 				<aui:option label="ratings" selected='<%= orderByColumn2.equals("ratings") %>' value="ratings" />
 			</c:if>
@@ -91,33 +99,37 @@
 
 		<aui:field-wrapper cssClass="field-label-inline order-by-type-container">
 			<liferay-ui:icon
-				cssClass='<%= StringUtil.equalsIgnoreCase(orderByType2, "DESC") ? "hide icon" : "icon" %>'
-				icon="angle-up"
-				markupView="lexicon"
-				message="ascending"
-				url="javascript:;"
-			/>
-
-			<liferay-ui:icon
-				cssClass='<%= StringUtil.equalsIgnoreCase(orderByType2, "ASC") ? "hide icon" : "icon" %>'
-				icon="angle-down"
+				cssClass='<%= StringUtil.equalsIgnoreCase(orderByType2, "DESC") ? "hide icon order-arrow-up-active" : "icon order-arrow-up-active" %>'
+				icon="order-arrow"
+				linkCssClass="btn btn-outline-borderless btn-outline-secondary"
 				markupView="lexicon"
 				message="descending"
 				url="javascript:;"
 			/>
 
+			<liferay-ui:icon
+				cssClass='<%= StringUtil.equalsIgnoreCase(orderByType2, "ASC") ? "hide icon order-arrow-down-active" : "icon order-arrow-down-active" %>'
+				icon="order-arrow"
+				linkCssClass="btn btn-outline-borderless btn-outline-secondary"
+				markupView="lexicon"
+				message="ascending"
+				url="javascript:;"
+			/>
+
 			<aui:input cssClass="order-by-type-field" name="preferences--orderByType2--" type="hidden" value="<%= orderByType2 %>" />
 		</aui:field-wrapper>
-	</aui:col>
-</aui:row>
+	</clay:col>
+</clay:row>
 
 <aui:script use="aui-base">
 	A.one('#<portlet:namespace />ordering').delegate(
 		'click',
-		function(event) {
+		function (event) {
 			var currentTarget = event.currentTarget;
 
-			var orderByTypeContainer = currentTarget.ancestor('.order-by-type-container');
+			var orderByTypeContainer = currentTarget.ancestor(
+				'.order-by-type-container'
+			);
 
 			orderByTypeContainer.all('.icon').toggleClass('hide');
 

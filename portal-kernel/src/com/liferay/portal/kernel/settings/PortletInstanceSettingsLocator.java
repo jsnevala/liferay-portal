@@ -21,7 +21,7 @@ import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 
 /**
- * @author Ivan Zaera
+ * @author Iván Zaera
  * @author Jorge Ferrer
  */
 public class PortletInstanceSettingsLocator implements SettingsLocator {
@@ -79,14 +79,6 @@ public class PortletInstanceSettingsLocator implements SettingsLocator {
 	@Override
 	public String getSettingsId() {
 		return _portletInstanceKey;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	protected long getCompanyId(long groupId) {
-		return _layout.getCompanyId();
 	}
 
 	protected boolean isEmbeddedPortlet() {

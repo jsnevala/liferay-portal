@@ -14,17 +14,17 @@
 
 package com.liferay.portal.kernel.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import javax.portlet.Event;
 import javax.portlet.EventRequest;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Neil Griffin
  */
 @ProviderType
 public interface LiferayEventRequest
-	extends LiferayPortletRequest, EventRequest {
+	extends EventRequest, LiferayPortletRequest {
 
 	public void setEvent(Event event);
 

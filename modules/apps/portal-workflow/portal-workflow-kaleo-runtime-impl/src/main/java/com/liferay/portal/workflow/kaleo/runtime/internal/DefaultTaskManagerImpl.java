@@ -16,6 +16,7 @@ package com.liferay.portal.workflow.kaleo.runtime.internal;
 
 import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -29,7 +30,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
-import com.liferay.portal.spring.extender.service.ServiceReference;
+import com.liferay.portal.kernel.workflow.WorkflowTaskDueDateException;
 import com.liferay.portal.workflow.kaleo.KaleoWorkflowModelConverter;
 import com.liferay.portal.workflow.kaleo.definition.ExecutionType;
 import com.liferay.portal.workflow.kaleo.model.KaleoInstance;
@@ -53,83 +54,86 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * @author Michael C. Han
  */
+@Component(immediate = true, service = AopService.class)
 @Transactional(
 	isolation = Isolation.PORTAL, propagation = Propagation.REQUIRED,
 	rollbackFor = Exception.class
 )
 public class DefaultTaskManagerImpl
-	extends BaseKaleoBean implements TaskManager {
+	extends BaseKaleoBean implements AopService, TaskManager {
 
 	@Override
 	public WorkflowTask assignWorkflowTaskToRole(
-			long workflowTaskInstanceId, long roleId, String comment,
-			Date dueDate, Map<String, Serializable> workflowContext,
+			long workflowTaskId, long roleId, String comment, Date dueDate,
+			Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws WorkflowException {
 
 		try {
 			return assignWorkflowTask(
-				workflowTaskInstanceId, Role.class.getName(), roleId, comment,
-				dueDate, workflowContext, serviceContext);
+				workflowTaskId, Role.class.getName(), roleId, comment, dueDate,
+				workflowContext, serviceContext);
 		}
-		catch (Exception e) {
-			throw new WorkflowException(e);
+		catch (Exception exception) {
+			throw new WorkflowException(exception);
 		}
 	}
 
 	@Override
 	public WorkflowTask assignWorkflowTaskToUser(
-			long workflowTaskInstanceId, long assigneeUserId, String comment,
+			long workflowTaskId, long assigneeUserId, String comment,
 			Date dueDate, Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws WorkflowException {
 
 		try {
 			return assignWorkflowTask(
-				workflowTaskInstanceId, User.class.getName(), assigneeUserId,
-				comment, dueDate, workflowContext, serviceContext);
+				workflowTaskId, User.class.getName(), assigneeUserId, comment,
+				dueDate, workflowContext, serviceContext);
 		}
-		catch (Exception e) {
-			throw new WorkflowException(e);
+		catch (Exception exception) {
+			throw new WorkflowException(exception);
 		}
 	}
 
 	@Override
 	public WorkflowTask completeWorkflowTask(
-			long workflowTaskInstanceId, long workflowTaskFormId,
-			String formValues, Map<String, Serializable> workflowContext,
+			long workflowTaskId, long workflowTaskFormId, String formValues,
+			Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws WorkflowException {
 
 		return completeWorkflowTask(
-			workflowTaskInstanceId, workflowTaskFormId, formValues, null,
+			workflowTaskId, workflowTaskFormId, formValues, null,
 			workflowContext, serviceContext);
 	}
 
 	@Override
 	public WorkflowTask completeWorkflowTask(
-			long workflowTaskInstanceId, long workflowTaskFormId,
-			String formValues, String transitionName,
-			Map<String, Serializable> workflowContext,
+			long workflowTaskId, long workflowTaskFormId, String formValues,
+			String transitionName, Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws WorkflowException {
 
 		try {
 			KaleoTaskInstanceToken kaleoTaskInstanceToken =
 				kaleoTaskInstanceTokenLocalService.getKaleoTaskInstanceToken(
-					workflowTaskInstanceId);
+					workflowTaskId);
 
 			kaleoTaskFormInstanceLocalService.addKaleoTaskFormInstance(
 				kaleoTaskInstanceToken.getGroupId(), workflowTaskFormId,
 				formValues, kaleoTaskInstanceToken, serviceContext);
 
 			if (kaleoTaskInstanceTokenLocalService.hasPendingKaleoTaskForms(
-					workflowTaskInstanceId)) {
+					workflowTaskId)) {
 
 				return _kaleoWorkflowModelConverter.toWorkflowTask(
 					kaleoTaskInstanceToken, workflowContext);
@@ -158,40 +162,40 @@ public class DefaultTaskManagerImpl
 			}
 
 			return doCompleteWorkflowTask(
-				workflowTaskInstanceId, transitionName, null, workflowContext,
+				workflowTaskId, transitionName, null, workflowContext,
 				serviceContext);
 		}
-		catch (Exception e) {
-			throw new WorkflowException(e);
+		catch (Exception exception) {
+			throw new WorkflowException(exception);
 		}
 	}
 
 	@Override
 	public WorkflowTask completeWorkflowTask(
-			long workflowTaskInstanceId, String transitionName, String comment,
+			long workflowTaskId, String transitionName, String comment,
 			Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws WorkflowException {
 
 		try {
 			return doCompleteWorkflowTask(
-				workflowTaskInstanceId, transitionName, comment,
-				workflowContext, serviceContext);
+				workflowTaskId, transitionName, comment, workflowContext,
+				serviceContext);
 		}
-		catch (Exception e) {
-			throw new WorkflowException(e);
+		catch (Exception exception) {
+			throw new WorkflowException(exception);
 		}
 	}
 
 	@Override
 	public List<String> getWorkflowTaskFormDefinitions(
-			long workflowTaskInstanceId, ServiceContext serviceContext)
+			long workflowTaskId, ServiceContext serviceContext)
 		throws WorkflowException {
 
 		try {
 			KaleoTaskInstanceToken kaleoTaskInstanceToken =
 				kaleoTaskInstanceTokenLocalService.getKaleoTaskInstanceToken(
-					workflowTaskInstanceId);
+					workflowTaskId);
 
 			List<KaleoTaskForm> kaleoTaskForms =
 				kaleoTaskFormLocalService.getKaleoTaskForms(
@@ -226,31 +230,38 @@ public class DefaultTaskManagerImpl
 
 			return kaleoTaskFormDefinitions;
 		}
-		catch (PortalException pe) {
-			throw new WorkflowException(pe);
+		catch (PortalException portalException) {
+			throw new WorkflowException(portalException);
 		}
 	}
 
 	@Override
 	public WorkflowTask updateDueDate(
-			long workflowTaskInstanceId, String comment, Date dueDate,
+			long workflowTaskId, String comment, Date dueDate,
 			ServiceContext serviceContext)
 		throws WorkflowException {
 
 		try {
 			KaleoTaskInstanceToken kaleoTaskInstanceToken =
 				kaleoTaskInstanceTokenLocalService.getKaleoTaskInstanceToken(
-					workflowTaskInstanceId);
+					workflowTaskId);
 
 			if (kaleoTaskInstanceToken.isCompleted()) {
 				throw new WorkflowException(
 					"Cannot update due date for completed task " +
-						workflowTaskInstanceId);
+						workflowTaskId);
 			}
 
 			if (dueDate != null) {
-				kaleoTaskInstanceTokenLocalService.updateDueDate(
-					workflowTaskInstanceId, dueDate, serviceContext);
+				Date createDate = kaleoTaskInstanceToken.getCreateDate();
+
+				if (createDate.after(dueDate)) {
+					throw new WorkflowTaskDueDateException();
+				}
+
+				kaleoTaskInstanceToken =
+					kaleoTaskInstanceTokenLocalService.updateDueDate(
+						workflowTaskId, dueDate, serviceContext);
 			}
 
 			Map<String, Serializable> workflowContext =
@@ -264,21 +275,21 @@ public class DefaultTaskManagerImpl
 			return _kaleoWorkflowModelConverter.toWorkflowTask(
 				kaleoTaskInstanceToken, workflowContext);
 		}
-		catch (Exception e) {
-			throw new WorkflowException(e);
+		catch (Exception exception) {
+			throw new WorkflowException(exception);
 		}
 	}
 
 	protected WorkflowTask assignWorkflowTask(
-			long workflowTaskInstanceId, String assigneeClassName,
-			long assigneeClassPK, String comment, Date dueDate,
+			long workflowTaskId, String assigneeClassName, long assigneeClassPK,
+			String comment, Date dueDate,
 			Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws Exception {
 
 		KaleoTaskInstanceToken kaleoTaskInstanceToken =
 			kaleoTaskInstanceTokenLocalService.getKaleoTaskInstanceToken(
-				workflowTaskInstanceId);
+				workflowTaskId);
 
 		List<KaleoTaskAssignmentInstance> previousTaskAssignmentInstances =
 			kaleoTaskInstanceToken.getKaleoTaskAssignmentInstances();
@@ -288,12 +299,13 @@ public class DefaultTaskManagerImpl
 
 		if (kaleoTaskInstanceToken.isCompleted()) {
 			throw new WorkflowException(
-				"Cannot reassign a completed task " + workflowTaskInstanceId);
+				"Cannot reassign a completed task " + workflowTaskId);
 		}
 
 		if (dueDate != null) {
-			kaleoTaskInstanceTokenLocalService.updateDueDate(
-				workflowTaskInstanceId, dueDate, serviceContext);
+			kaleoTaskInstanceToken =
+				kaleoTaskInstanceTokenLocalService.updateDueDate(
+					workflowTaskId, dueDate, serviceContext);
 		}
 
 		kaleoTaskInstanceToken =
@@ -337,14 +349,14 @@ public class DefaultTaskManagerImpl
 	}
 
 	protected WorkflowTask doCompleteWorkflowTask(
-			long workflowTaskInstanceId, String transitionName, String comment,
+			long workflowTaskId, String transitionName, String comment,
 			Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws Exception {
 
 		KaleoTaskInstanceToken kaleoTaskInstanceToken =
 			kaleoTaskInstanceTokenLocalService.getKaleoTaskInstanceToken(
-				workflowTaskInstanceId);
+				workflowTaskId);
 
 		if (Validator.isNotNull(transitionName)) {
 
@@ -365,8 +377,7 @@ public class DefaultTaskManagerImpl
 			throw new WorkflowException(
 				StringBundler.concat(
 					"Cannot complete an already completed task ",
-					workflowTaskInstanceId, " for user ",
-					serviceContext.getUserId()));
+					workflowTaskId, " for user ", serviceContext.getUserId()));
 		}
 
 		serviceContext.setScopeGroupId(kaleoTaskInstanceToken.getGroupId());
@@ -423,15 +434,17 @@ public class DefaultTaskManagerImpl
 
 	private static final ServiceTracker
 		<FormDefinitionRetriever, FormDefinitionRetriever> _serviceTracker =
-			ServiceTrackerFactory.open(FormDefinitionRetriever.class);
+			ServiceTrackerFactory.open(
+				FrameworkUtil.getBundle(DefaultTaskManagerImpl.class),
+				FormDefinitionRetriever.class);
 
-	@ServiceReference(type = KaleoActionExecutor.class)
+	@Reference
 	private KaleoActionExecutor _kaleoActionExecutor;
 
-	@ServiceReference(type = KaleoWorkflowModelConverter.class)
+	@Reference
 	private KaleoWorkflowModelConverter _kaleoWorkflowModelConverter;
 
-	@ServiceReference(type = NotificationHelper.class)
+	@Reference
 	private NotificationHelper _notificationHelper;
 
 }

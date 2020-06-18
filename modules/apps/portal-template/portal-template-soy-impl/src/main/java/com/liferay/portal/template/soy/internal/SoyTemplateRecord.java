@@ -32,7 +32,7 @@ import com.google.template.soy.data.restricted.StringData;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.template.soy.utils.SoyRawData;
+import com.liferay.portal.template.soy.util.SoyRawData;
 
 import java.io.IOException;
 
@@ -58,11 +58,24 @@ import org.apache.commons.lang3.ClassUtils;
  * sub-elements to Soy types as late as possible.
  *
  * @author Raymond Augé
+ * @see    SoyContextImpl
  */
 public class SoyTemplateRecord extends SoyAbstractValue implements SoyRecord {
 
-	public Object add(String key, Object value) {
-		return _map.put(key, value);
+	/**
+	 * Create a record with initial values.
+	 *
+	 * @param  map initial values
+	 * @review
+	 */
+	public SoyTemplateRecord(Map<String, Object> map) {
+		_map = new ConcurrentHashMap<>();
+
+		for (Map.Entry<String, Object> entry : map.entrySet()) {
+			if (entry.getValue() != null) {
+				_map.put(entry.getKey(), entry.getValue());
+			}
+		}
 	}
 
 	@Override
@@ -78,8 +91,8 @@ public class SoyTemplateRecord extends SoyAbstractValue implements SoyRecord {
 		try {
 			render(appendable);
 		}
-		catch (IOException ioe) {
-			throw new AssertionError(ioe);
+		catch (IOException ioException) {
+			throw new AssertionError(ioException);
 		}
 
 		return appendable.toString();
@@ -172,9 +185,7 @@ public class SoyTemplateRecord extends SoyAbstractValue implements SoyRecord {
 				appendable.append(", ");
 			}
 
-			String key = entry.getKey();
-
-			StringData stringData = StringData.forValue(key);
+			StringData stringData = StringData.forValue(entry.getKey());
 
 			stringData.render(appendable);
 
@@ -198,22 +209,62 @@ public class SoyTemplateRecord extends SoyAbstractValue implements SoyRecord {
 		if (object == null) {
 			return NullData.INSTANCE;
 		}
-		else if (object instanceof SoyData) {
-			return (SoyData)object;
+		else if (object == org.json.JSONObject.NULL) {
+			return NullData.INSTANCE;
 		}
-		else if (object instanceof SoyRawData) {
-			SoyRawData soyRawData = (SoyRawData)object;
-
-			return _toSoyValue(soyRawData.getValue());
+		else if (object instanceof BigDecimal) {
+			return StringData.forValue(object.toString());
 		}
-		else if (object instanceof String) {
-			return StringData.forValue((String)object);
+		else if (object instanceof BigInteger) {
+			return StringData.forValue(object.toString());
 		}
 		else if (object instanceof Boolean) {
 			return BooleanData.forValue((Boolean)object);
 		}
+		else if (object instanceof Double) {
+			return FloatData.forValue((Double)object);
+		}
+		else if (object instanceof Enum) {
+			return StringData.forValue(object.toString());
+		}
+		else if (object instanceof Float) {
+			return FloatData.forValue((Float)object);
+		}
 		else if (object instanceof Integer) {
 			return IntegerData.forValue((Integer)object);
+		}
+		else if (object instanceof Iterable<?>) {
+			SoyListData soyListData = new SoyListData();
+
+			Iterable<?> iterable = (Iterable<?>)object;
+
+			iterable.forEach(entry -> soyListData.add(_toSoyValue(entry)));
+
+			return soyListData;
+		}
+		else if (object instanceof JSONArray) {
+			JSONArray jsonArray = (JSONArray)object;
+
+			SoyListData soyListData = new SoyListData();
+
+			Iterator<JSONObject> iterator = jsonArray.iterator();
+
+			iterator.forEachRemaining(
+				value -> soyListData.add(_toSoyValue(value)));
+
+			return soyListData;
+		}
+		else if (object instanceof JSONObject) {
+			JSONObject jsonObject = (JSONObject)object;
+
+			SoyMapData soyMapData = new SoyMapData();
+
+			Iterator<String> iterator = jsonObject.keys();
+
+			iterator.forEachRemaining(
+				key -> soyMapData.put(key, _toSoyValue(jsonObject.get(key))));
+
+			return soyMapData;
 		}
 		else if (object instanceof Long) {
 			return IntegerData.forValue((Long)object);
@@ -232,49 +283,16 @@ public class SoyTemplateRecord extends SoyAbstractValue implements SoyRecord {
 
 			return soyMapData;
 		}
-		else if (object instanceof JSONObject) {
-			JSONObject jsonObject = (JSONObject)object;
-
-			SoyMapData soyMapData = new SoyMapData();
-
-			Iterator<String> it = jsonObject.keys();
-
-			it.forEachRemaining(
-				key -> soyMapData.put(key, _toSoyValue(jsonObject.get(key))));
-
-			return soyMapData;
+		else if (object instanceof SoyData) {
+			return (SoyData)object;
 		}
-		else if (object instanceof JSONArray) {
-			JSONArray jsonArray = (JSONArray)object;
+		else if (object instanceof SoyRawData) {
+			SoyRawData soyRawData = (SoyRawData)object;
 
-			SoyListData soyListData = new SoyListData();
-
-			Iterator it = jsonArray.iterator();
-
-			it.forEachRemaining(value -> soyListData.add(_toSoyValue(value)));
-
-			return soyListData;
+			return _toSoyValue(soyRawData.getValue());
 		}
-		else if (object instanceof Iterable<?>) {
-			SoyListData soyListData = new SoyListData();
-
-			Iterable<?> iterable = (Iterable<?>)object;
-
-			iterable.forEach(entry -> soyListData.add(_toSoyValue(entry)));
-
-			return soyListData;
-		}
-		else if (object instanceof Double) {
-			return FloatData.forValue((Double)object);
-		}
-		else if (object instanceof Float) {
-			return FloatData.forValue((Float)object);
-		}
-		else if (object instanceof BigDecimal) {
-			return StringData.forValue(object.toString());
-		}
-		else if (object instanceof BigInteger) {
-			return StringData.forValue(object.toString());
+		else if (object instanceof String) {
+			return StringData.forValue((String)object);
 		}
 
 		SoyMapData soyMapData = new SoyMapData();
@@ -323,11 +341,11 @@ public class SoyTemplateRecord extends SoyAbstractValue implements SoyRecord {
 				}
 			}
 		}
-		catch (RuntimeException re) {
-			throw re;
+		catch (RuntimeException runtimeException) {
+			throw runtimeException;
 		}
-		catch (Exception e) {
-			throw new SoyDataException(e.getMessage(), e);
+		catch (Exception exception) {
+			throw new SoyDataException(exception.getMessage(), exception);
 		}
 
 		return soyMapData;
@@ -335,6 +353,6 @@ public class SoyTemplateRecord extends SoyAbstractValue implements SoyRecord {
 
 	private final Map<String, SoyValueProvider> _computedValues =
 		new ConcurrentHashMap<>();
-	private final Map<String, Object> _map = new ConcurrentHashMap<>();
+	private final Map<String, Object> _map;
 
 }

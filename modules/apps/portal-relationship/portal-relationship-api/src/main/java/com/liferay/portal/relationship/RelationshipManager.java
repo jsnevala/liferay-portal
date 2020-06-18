@@ -14,14 +14,14 @@
 
 package com.liferay.portal.relationship;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ClassedModel;
 
 import java.util.Collection;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @ProviderType
 public interface RelationshipManager {

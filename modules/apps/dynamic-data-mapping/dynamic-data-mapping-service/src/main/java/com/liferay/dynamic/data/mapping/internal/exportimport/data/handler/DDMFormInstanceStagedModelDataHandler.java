@@ -17,7 +17,6 @@ package com.liferay.dynamic.data.mapping.internal.exportimport.data.handler;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeResponse;
-import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerTracker;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
@@ -48,8 +47,9 @@ import org.osgi.service.component.annotations.Reference;
 public class DDMFormInstanceStagedModelDataHandler
 	extends BaseStagedModelDataHandler<DDMFormInstance> {
 
-	public static final String[] CLASS_NAMES =
-		{DDMFormInstance.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		DDMFormInstance.class.getName()
+	};
 
 	@Override
 	public String[] getClassNames() {
@@ -62,17 +62,13 @@ public class DDMFormInstanceStagedModelDataHandler
 	}
 
 	protected DDMFormValues deserialize(String content, DDMForm ddmForm) {
-		DDMFormValuesDeserializer ddmFormValuesDeserializer =
-			_ddmFormValuesDeserializerTracker.getDDMFormValuesDeserializer(
-				"json");
-
 		DDMFormValuesDeserializerDeserializeRequest.Builder builder =
 			DDMFormValuesDeserializerDeserializeRequest.Builder.newBuilder(
 				content, ddmForm);
 
 		DDMFormValuesDeserializerDeserializeResponse
 			ddmFormValuesDeserializerDeserializeResponse =
-				ddmFormValuesDeserializer.deserialize(builder.build());
+				_jsonDDMFormValuesDeserializer.deserialize(builder.build());
 
 		return ddmFormValuesDeserializerDeserializeResponse.getDDMFormValues();
 	}
@@ -116,6 +112,10 @@ public class DDMFormInstanceStagedModelDataHandler
 		DDMFormInstance existingFormInstance = fetchMissingReference(
 			uuid, groupId);
 
+		if (existingFormInstance == null) {
+			return;
+		}
+
 		Map<Long, Long> formInstanceIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
 				DDMFormInstance.class);
@@ -154,6 +154,8 @@ public class DDMFormInstanceStagedModelDataHandler
 				portletDataContext, importedFormInstance);
 		}
 		else {
+			importedFormInstance.setMvccVersion(
+				existingFormInstance.getMvccVersion());
 			importedFormInstance.setFormInstanceId(
 				existingFormInstance.getFormInstanceId());
 
@@ -221,13 +223,6 @@ public class DDMFormInstanceStagedModelDataHandler
 		_ddmFormInstanceLocalService = ddmFormInstanceLocalService;
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMFormValuesDeserializerTracker(
-		DDMFormValuesDeserializerTracker ddmFormValuesDeserializerTracker) {
-
-		_ddmFormValuesDeserializerTracker = ddmFormValuesDeserializerTracker;
-	}
-
 	@Reference(
 		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMFormInstance)",
 		unbind = "-"
@@ -239,7 +234,10 @@ public class DDMFormInstanceStagedModelDataHandler
 	}
 
 	private DDMFormInstanceLocalService _ddmFormInstanceLocalService;
-	private DDMFormValuesDeserializerTracker _ddmFormValuesDeserializerTracker;
+
+	@Reference(target = "(ddm.form.values.deserializer.type=json)")
+	private DDMFormValuesDeserializer _jsonDDMFormValuesDeserializer;
+
 	private StagedModelRepository<DDMFormInstance> _stagedModelRepository;
 
 }

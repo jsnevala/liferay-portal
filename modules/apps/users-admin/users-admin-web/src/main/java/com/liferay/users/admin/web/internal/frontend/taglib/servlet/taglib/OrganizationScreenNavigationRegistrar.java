@@ -14,7 +14,6 @@
 
 package com.liferay.users.admin.web.internal.frontend.taglib.servlet.taglib;
 
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
@@ -24,7 +23,7 @@ import com.liferay.portal.kernel.portlet.PortletURLFactory;
 import com.liferay.portal.kernel.service.OrganizationService;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.users.admin.constants.UserFormConstants;
+import com.liferay.users.admin.constants.UserScreenNavigationEntryConstants;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -45,7 +44,7 @@ import org.osgi.service.component.annotations.Reference;
 public class OrganizationScreenNavigationRegistrar {
 
 	@Activate
-	public void activate(BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
 
 		registerScreenNavigationCategories();
@@ -54,7 +53,7 @@ public class OrganizationScreenNavigationRegistrar {
 	}
 
 	@Deactivate
-	public void deactivate() {
+	protected void deactivate() {
 		_screenNavigationEntryServiceRegistrations.forEach(
 			ServiceRegistration::unregister);
 
@@ -86,7 +85,8 @@ public class OrganizationScreenNavigationRegistrar {
 			_createUpdateOnlyScreenNavigationEntry(
 				"organization-site", _CATEGORY_GENERAL,
 				"/organization/organization_site.jsp",
-				"/users_admin/update_organization_organization_site"),
+				"/users_admin/update_organization_organization_site", false,
+				true),
 			20);
 
 		_registerScreenNavigationEntry(
@@ -99,24 +99,21 @@ public class OrganizationScreenNavigationRegistrar {
 		_registerScreenNavigationEntry(
 			_createUpdateOnlyScreenNavigationEntry(
 				"addresses", _CATEGORY_CONTACT, "/organization/addresses.jsp",
-				"/users_admin/update_organization_contact_information", false,
-				false),
+				"/users_admin/update_contact_information", false, false),
 			10);
 
 		_registerScreenNavigationEntry(
 			_createUpdateOnlyScreenNavigationEntry(
 				"contact-information", _CATEGORY_CONTACT,
 				"/organization/contact_information.jsp",
-				"/users_admin/update_organization_contact_information", false,
-				true),
+				"/users_admin/update_contact_information", false, true),
 			20);
 
 		_registerScreenNavigationEntry(
 			_createUpdateOnlyScreenNavigationEntry(
 				"opening-hours", _CATEGORY_CONTACT,
 				"/organization/opening_hours.jsp",
-				"/users_admin/update_organization_contact_information", false,
-				false),
+				"/users_admin/update_contact_information", false, false),
 			30);
 	}
 
@@ -135,9 +132,9 @@ public class OrganizationScreenNavigationRegistrar {
 		BiFunction<User, Organization, Boolean> isVisibleBiFunction) {
 
 		return new OrganizationScreenNavigationEntry(
-			_jspRenderer, _npmResolver, _organizationService, _portal,
-			_portletURLFactory, entryKey, categoryKey, jspPath,
-			mvcActionCommandName, showControls, showTitle, isVisibleBiFunction);
+			_jspRenderer, _organizationService, _portal, _portletURLFactory,
+			entryKey, categoryKey, jspPath, mvcActionCommandName, showControls,
+			showTitle, isVisibleBiFunction);
 	}
 
 	private ScreenNavigationEntry<Organization>
@@ -214,18 +211,15 @@ public class OrganizationScreenNavigationRegistrar {
 	}
 
 	private static final String _CATEGORY_CONTACT =
-		UserFormConstants.CATEGORY_KEY_CONTACT;
+		UserScreenNavigationEntryConstants.CATEGORY_KEY_CONTACT;
 
 	private static final String _CATEGORY_GENERAL =
-		UserFormConstants.CATEGORY_KEY_GENERAL;
+		UserScreenNavigationEntryConstants.CATEGORY_KEY_GENERAL;
 
 	private BundleContext _bundleContext;
 
 	@Reference
 	private JSPRenderer _jspRenderer;
-
-	@Reference
-	private NPMResolver _npmResolver;
 
 	@Reference
 	private OrganizationService _organizationService;

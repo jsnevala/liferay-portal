@@ -40,42 +40,16 @@ Group group = layoutsAdminDisplayContext.getGroup();
 		<liferay-ui:message arguments='<%= new String[] {LanguageUtil.get(request, "inherit-changes"), "General"} %>' key="some-page-settings-are-unavailable-because-x-is-enabled" translateArguments="<%= false %>" />
 	</div>
 
-	<%
-	String queryString = GetterUtil.getString(layoutTypeSettings.getProperty("query-string"));
-	%>
-
-	<aui:input cssClass="propagatable-field" disabled="<%= selLayout.isLayoutPrototypeLinkActive() %>" helpMessage="query-string-help" label="query-string" name="TypeSettingsProperties--query-string--" size="30" type="text" value="<%= queryString %>" />
+	<aui:input cssClass="propagatable-field" disabled="<%= selLayout.isLayoutPrototypeLinkActive() %>" helpMessage="query-string-help" label="query-string" name="TypeSettingsProperties--query-string--" size="30" type="text" value='<%= GetterUtil.getString(layoutTypeSettings.getProperty("query-string")) %>' />
 </c:if>
 
-<%
-String curTarget = GetterUtil.getString(layoutTypeSettings.getProperty("target"));
-%>
-
-<aui:input cssClass="propagatable-field" disabled="<%= selLayout.isLayoutPrototypeLinkActive() %>" label="target" name="TypeSettingsProperties--target--" size="15" type="text" value="<%= curTarget %>" />
+<aui:input cssClass="propagatable-field" disabled="<%= selLayout.isLayoutPrototypeLinkActive() %>" label="target" name="TypeSettingsProperties--target--" size="15" type="text" value='<%= GetterUtil.getString(layoutTypeSettings.getProperty("target")) %>' />
 
 <aui:field-wrapper helpMessage="this-icon-will-be-shown-in-the-navigation-menu" label="icon" name="iconFileName">
 	<liferay-ui:logo-selector
 		currentLogoURL='<%= (selLayout.getIconImageId() == 0) ? themeDisplay.getPathThemeImages() + "/spacer.png" : themeDisplay.getPathImage() + "/logo?img_id=" + selLayout.getIconImageId() + "&t=" + WebServerServletTokenUtil.getToken(selLayout.getIconImageId()) %>'
 		defaultLogo="<%= selLayout.getIconImageId() == 0 %>"
 		defaultLogoURL='<%= themeDisplay.getPathThemeImages() + "/spacer.png" %>'
-		editLogoFn='<%= liferayPortletResponse.getNamespace() + "editLayoutLogo" %>'
-		logoDisplaySelector='<%= ".layout-logo-" + selLayout.getPlid() %>'
 		tempImageFileName="<%= String.valueOf(selLayout.getPlid()) %>"
 	/>
 </aui:field-wrapper>
-
-<aui:script>
-	function <portlet:namespace />editLayoutLogo(logoURL, deleteLogo) {
-		var $ = AUI.$;
-
-		var layoutLogo = $('.layout-logo-<%= selLayout.getPlid() %>');
-
-		if (!layoutLogo.length) {
-			layoutLogo = $('<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="logo" />" class="layout-logo-<%= selLayout.getPlid() %>" src="' + logoURL + '" />');
-
-			$('#layout_<%= selLayout.getLayoutId() %> span').prepend(layoutLogo);
-		}
-
-		layoutLogo.toggleClass('hide', deleteLogo);
-	}
-</aui:script>

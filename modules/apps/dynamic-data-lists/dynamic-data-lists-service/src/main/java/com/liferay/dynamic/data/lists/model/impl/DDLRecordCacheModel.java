@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.lists.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.lists.model.DDLRecord;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing DDLRecord in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see DDLRecord
  * @generated
  */
-@ProviderType
-public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
-	Externalizable {
+public class DDLRecordCacheModel
+	implements CacheModel<DDLRecord>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -52,7 +48,9 @@ public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
 
 		DDLRecordCacheModel ddlRecordCacheModel = (DDLRecordCacheModel)obj;
 
-		if (recordId == ddlRecordCacheModel.recordId) {
+		if ((recordId == ddlRecordCacheModel.recordId) &&
+			(mvccVersion == ddlRecordCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +59,28 @@ public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, recordId);
+		int hashCode = HashUtil.hash(0, recordId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(33);
+		StringBundler sb = new StringBundler(39);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", recordId=");
 		sb.append(recordId);
@@ -94,6 +106,10 @@ public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
 		sb.append(recordSetId);
 		sb.append(", recordSetVersion=");
 		sb.append(recordSetVersion);
+		sb.append(", className=");
+		sb.append(className);
+		sb.append(", classPK=");
+		sb.append(classPK);
 		sb.append(", version=");
 		sb.append(version);
 		sb.append(", displayIndex=");
@@ -108,6 +124,8 @@ public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
 	@Override
 	public DDLRecord toEntityModel() {
 		DDLRecordImpl ddlRecordImpl = new DDLRecordImpl();
+
+		ddlRecordImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			ddlRecordImpl.setUuid("");
@@ -161,6 +179,15 @@ public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
 			ddlRecordImpl.setRecordSetVersion(recordSetVersion);
 		}
 
+		if (className == null) {
+			ddlRecordImpl.setClassName("");
+		}
+		else {
+			ddlRecordImpl.setClassName(className);
+		}
+
+		ddlRecordImpl.setClassPK(classPK);
+
 		if (version == null) {
 			ddlRecordImpl.setVersion("");
 		}
@@ -184,6 +211,7 @@ public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		recordId = objectInput.readLong();
@@ -204,6 +232,9 @@ public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
 
 		recordSetId = objectInput.readLong();
 		recordSetVersion = objectInput.readUTF();
+		className = objectInput.readUTF();
+
+		classPK = objectInput.readLong();
 		version = objectInput.readUTF();
 
 		displayIndex = objectInput.readInt();
@@ -211,8 +242,9 @@ public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -258,6 +290,15 @@ public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
 			objectOutput.writeUTF(recordSetVersion);
 		}
 
+		if (className == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(className);
+		}
+
+		objectOutput.writeLong(classPK);
+
 		if (version == null) {
 			objectOutput.writeUTF("");
 		}
@@ -269,6 +310,7 @@ public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
 		objectOutput.writeLong(lastPublishDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long recordId;
 	public long groupId;
@@ -282,7 +324,10 @@ public class DDLRecordCacheModel implements CacheModel<DDLRecord>,
 	public long DDMStorageId;
 	public long recordSetId;
 	public String recordSetVersion;
+	public String className;
+	public long classPK;
 	public String version;
 	public int displayIndex;
 	public long lastPublishDate;
+
 }

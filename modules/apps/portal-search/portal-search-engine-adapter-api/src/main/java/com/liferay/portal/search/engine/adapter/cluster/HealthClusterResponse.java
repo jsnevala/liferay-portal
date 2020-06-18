@@ -14,12 +14,11 @@
 
 package com.liferay.portal.search.engine.adapter.cluster;
 
-import aQute.bnd.annotation.ProviderType;
+import com.liferay.petra.string.StringBundler;
 
 /**
  * @author Dylan Rebelak
  */
-@ProviderType
 public class HealthClusterResponse implements ClusterResponse {
 
 	public HealthClusterResponse(
@@ -35,6 +34,19 @@ public class HealthClusterResponse implements ClusterResponse {
 
 	public String getHealthStatusMessage() {
 		return _healthStatusMessage;
+	}
+
+	@Override
+	public String toString() {
+		StringBundler sb = new StringBundler(5);
+
+		sb.append("{_clusterHealthStatus=");
+		sb.append(_clusterHealthStatus);
+		sb.append(", _healthStatusMessage='");
+		sb.append(_healthStatusMessage);
+		sb.append("'}");
+
+		return sb.toString();
 	}
 
 	private final ClusterHealthStatus _clusterHealthStatus;

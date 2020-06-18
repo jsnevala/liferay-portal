@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -23,17 +21,17 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * This class is used by SOAP remote services, specifically {@link com.liferay.portal.workflow.kaleo.service.http.KaleoDefinitionServiceSoap}.
+ * This class is used by SOAP remote services.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.portal.workflow.kaleo.service.http.KaleoDefinitionServiceSoap
  * @generated
  */
-@ProviderType
 public class KaleoDefinitionSoap implements Serializable {
+
 	public static KaleoDefinitionSoap toSoapModel(KaleoDefinition model) {
 		KaleoDefinitionSoap soapModel = new KaleoDefinitionSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setKaleoDefinitionId(model.getKaleoDefinitionId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -52,7 +50,8 @@ public class KaleoDefinitionSoap implements Serializable {
 	}
 
 	public static KaleoDefinitionSoap[] toSoapModels(KaleoDefinition[] models) {
-		KaleoDefinitionSoap[] soapModels = new KaleoDefinitionSoap[models.length];
+		KaleoDefinitionSoap[] soapModels =
+			new KaleoDefinitionSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -63,10 +62,12 @@ public class KaleoDefinitionSoap implements Serializable {
 
 	public static KaleoDefinitionSoap[][] toSoapModels(
 		KaleoDefinition[][] models) {
+
 		KaleoDefinitionSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new KaleoDefinitionSoap[models.length][models[0].length];
+			soapModels =
+				new KaleoDefinitionSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new KaleoDefinitionSoap[0][0];
@@ -81,7 +82,9 @@ public class KaleoDefinitionSoap implements Serializable {
 
 	public static KaleoDefinitionSoap[] toSoapModels(
 		List<KaleoDefinition> models) {
-		List<KaleoDefinitionSoap> soapModels = new ArrayList<KaleoDefinitionSoap>(models.size());
+
+		List<KaleoDefinitionSoap> soapModels =
+			new ArrayList<KaleoDefinitionSoap>(models.size());
 
 		for (KaleoDefinition model : models) {
 			soapModels.add(toSoapModel(model));
@@ -99,6 +102,14 @@ public class KaleoDefinitionSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setKaleoDefinitionId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getKaleoDefinitionId() {
@@ -209,6 +220,7 @@ public class KaleoDefinitionSoap implements Serializable {
 		_active = active;
 	}
 
+	private long _mvccVersion;
 	private long _kaleoDefinitionId;
 	private long _groupId;
 	private long _companyId;
@@ -222,4 +234,5 @@ public class KaleoDefinitionSoap implements Serializable {
 	private String _content;
 	private int _version;
 	private boolean _active;
+
 }

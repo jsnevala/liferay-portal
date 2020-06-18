@@ -14,14 +14,15 @@
 
 package com.liferay.portlet.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.InvokerFilterContainer;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
 import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.model.impl.PortletFilterImpl;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.PortletFilterFactory;
@@ -81,10 +82,11 @@ public class InvokerFilterContainerImpl
 
 		_serviceTracker.open();
 
-		Map<String, Object> properties = new HashMap<>();
-
-		properties.put("javax.portlet.name", rootPortletId);
-		properties.put("preinitialized.filter", Boolean.TRUE);
+		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+			"javax.portlet.name", rootPortletId
+		).put(
+			"preinitialized.filter", Boolean.TRUE
+		).build();
 
 		Map<String, com.liferay.portal.kernel.model.PortletFilter>
 			portletFilters = portlet.getPortletFilters();
@@ -98,12 +100,12 @@ public class InvokerFilterContainerImpl
 			PortletFilter portletFilter = PortletFilterFactory.create(
 				portletFilterModel, portletContext);
 
-			Map<String, Object> portletFilterProperties = new HashMap<>();
-
-			portletFilterProperties.putAll(properties);
-
-			portletFilterProperties.put(
-				"filter.lifecycles", portletFilterModel.getLifecycles());
+			Map<String, Object> portletFilterProperties =
+				HashMapBuilder.<String, Object>putAll(
+					properties
+				).put(
+					"filter.lifecycles", portletFilterModel.getLifecycles()
+				).build();
 
 			ServiceRegistration<PortletFilter> serviceRegistration =
 				registry.registerService(
@@ -117,11 +119,13 @@ public class InvokerFilterContainerImpl
 			_serviceRegistrationTuples.add(serviceRegistrationTuple);
 		}
 
-		ClassLoader classLoader = ClassLoaderUtil.getContextClassLoader();
+		Thread currentThread = Thread.currentThread();
+
+		ClassLoader classLoader = currentThread.getContextClassLoader();
 
 		try {
-			ClassLoaderUtil.setContextClassLoader(
-				ClassLoaderUtil.getPortalClassLoader());
+			currentThread.setContextClassLoader(
+				PortalClassLoaderUtil.getClassLoader());
 
 			for (String portletFilterClassName :
 					PropsValues.PORTLET_FILTERS_SYSTEM) {
@@ -146,7 +150,7 @@ public class InvokerFilterContainerImpl
 			}
 		}
 		finally {
-			ClassLoaderUtil.setContextClassLoader(classLoader);
+			currentThread.setContextClassLoader(classLoader);
 		}
 	}
 
@@ -321,8 +325,8 @@ public class InvokerFilterContainerImpl
 				try {
 					portletFilter.init(filterConfig);
 				}
-				catch (PortletException pe) {
-					_log.error(pe, pe);
+				catch (PortletException portletException) {
+					_log.error(portletException, portletException);
 
 					registry.ungetService(serviceReference);
 

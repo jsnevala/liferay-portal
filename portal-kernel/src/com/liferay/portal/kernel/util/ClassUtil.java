@@ -94,12 +94,6 @@ public class ClassUtil {
 
 		while (st.nextToken() != StreamTokenizer.TT_EOF) {
 			if (st.ttype == StreamTokenizer.TT_WORD) {
-				Matcher matcher = _fullyQualifiedNamePattern.matcher(st.sval);
-
-				if (matcher.find()) {
-					continue;
-				}
-
 				int firstIndex = st.sval.indexOf('.');
 
 				if (firstIndex >= 0) {
@@ -182,18 +176,18 @@ public class ClassUtil {
 				}
 			}
 		}
-		catch (URISyntaxException urise) {
+		catch (URISyntaxException uriSyntaxException) {
 			path = url.getFile();
 		}
 
-		if (ServerDetector.isJBoss() || ServerDetector.isWildfly()) {
-			if (path.startsWith("file:") && !path.startsWith("file:/")) {
-				path = path.substring(5);
+		if ((ServerDetector.isJBoss() || ServerDetector.isWildfly()) &&
+			path.startsWith("file:") && !path.startsWith("file:/")) {
 
-				path = "file:/".concat(path);
+			path = path.substring(5);
 
-				path = StringUtil.replace(path, "%5C", StringPool.SLASH);
-			}
+			path = "file:/".concat(path);
+
+			path = StringUtil.replace(path, "%5C", StringPool.SLASH);
 		}
 
 		if (_log.isDebugEnabled()) {
@@ -331,7 +325,7 @@ public class ClassUtil {
 			tokens = _processAnnotationParameters(annotationParameters, tokens);
 		}
 
-		return tokens.toArray(new String[tokens.size()]);
+		return tokens.toArray(new String[0]);
 	}
 
 	private static List<String> _processAnnotationParameters(
@@ -400,7 +394,5 @@ public class ClassUtil {
 		"@(\\w+)\\.?(\\w*)$");
 	private static final Pattern _annotationParametersPattern = Pattern.compile(
 		"@(\\w+)\\.?(\\w*)\\({0,1}\\{{0,1}([^)}]+)\\}{0,1}\\){0,1}");
-	private static final Pattern _fullyQualifiedNamePattern = Pattern.compile(
-		"^([a-z]\\w*\\.){2,}([A-Z]\\w*)(\\.|\\Z)");
 
 }

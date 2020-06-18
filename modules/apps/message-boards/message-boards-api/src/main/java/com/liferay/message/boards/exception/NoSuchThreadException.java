@@ -14,14 +14,11 @@
 
 package com.liferay.message.boards.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchThreadException extends NoSuchModelException {
 
 	public NoSuchThreadException() {

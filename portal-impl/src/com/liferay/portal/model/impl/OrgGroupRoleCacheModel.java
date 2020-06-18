@@ -14,15 +14,12 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.OrgGroupRole;
 import com.liferay.portal.kernel.service.persistence.OrgGroupRolePK;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -33,12 +30,13 @@ import java.io.ObjectOutput;
  * The cache model class for representing OrgGroupRole in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see OrgGroupRole
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
-@ProviderType
-public class OrgGroupRoleCacheModel implements CacheModel<OrgGroupRole>,
-	Externalizable, MVCCModel {
+@Deprecated
+public class OrgGroupRoleCacheModel
+	implements CacheModel<OrgGroupRole>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -49,10 +47,12 @@ public class OrgGroupRoleCacheModel implements CacheModel<OrgGroupRole>,
 			return false;
 		}
 
-		OrgGroupRoleCacheModel orgGroupRoleCacheModel = (OrgGroupRoleCacheModel)obj;
+		OrgGroupRoleCacheModel orgGroupRoleCacheModel =
+			(OrgGroupRoleCacheModel)obj;
 
 		if (orgGroupRolePK.equals(orgGroupRoleCacheModel.orgGroupRolePK) &&
-				(mvccVersion == orgGroupRoleCacheModel.mvccVersion)) {
+			(mvccVersion == orgGroupRoleCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -126,8 +126,7 @@ public class OrgGroupRoleCacheModel implements CacheModel<OrgGroupRole>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
 		objectOutput.writeLong(organizationId);
@@ -145,4 +144,5 @@ public class OrgGroupRoleCacheModel implements CacheModel<OrgGroupRole>,
 	public long roleId;
 	public long companyId;
 	public transient OrgGroupRolePK orgGroupRolePK;
+
 }

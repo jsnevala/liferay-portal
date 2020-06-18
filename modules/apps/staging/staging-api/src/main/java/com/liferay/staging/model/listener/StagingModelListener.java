@@ -14,13 +14,13 @@
 
 package com.liferay.staging.model.listener;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.BaseModel;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @ProviderType
 public interface StagingModelListener<T extends BaseModel<T>> {

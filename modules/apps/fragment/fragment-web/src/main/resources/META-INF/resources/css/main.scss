@@ -1,15 +1,11 @@
-@import "AceEditor";
+@import 'CodeMirrorEditor';
 
-@import "FragmentEditor";
+@import 'FragmentEditor';
 
-@import "FragmentNameEditor";
+@import 'FragmentPreview';
 
-@import "FragmentPreview";
+@import 'Fragments';
 
-@import "SourceEditor";
+@import 'SourceEditor';
 
-@import "SourceEditorToolbar";
-
-.dialog-iframe-popup .portlet-fragment-web .lfr-dynamic-uploader {
-	top: 0;
-}
+@import 'SourceEditorToolbar';

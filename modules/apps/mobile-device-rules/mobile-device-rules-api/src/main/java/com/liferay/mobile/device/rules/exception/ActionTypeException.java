@@ -14,14 +14,11 @@
 
 package com.liferay.mobile.device.rules.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Edward C. Han
  */
-@ProviderType
 public class ActionTypeException extends PortalException {
 
 	public ActionTypeException() {

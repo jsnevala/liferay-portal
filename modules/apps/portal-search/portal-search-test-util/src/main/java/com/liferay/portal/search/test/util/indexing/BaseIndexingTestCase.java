@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.test.util.indexing;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Document;
@@ -31,9 +32,38 @@ import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.search.generic.TermQueryImpl;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.search.aggregation.Aggregation;
+import com.liferay.portal.search.aggregation.AggregationResult;
+import com.liferay.portal.search.aggregation.Aggregations;
+import com.liferay.portal.search.aggregation.HierarchicalAggregationResult;
+import com.liferay.portal.search.aggregation.bucket.Bucket;
+import com.liferay.portal.search.aggregation.pipeline.PipelineAggregation;
+import com.liferay.portal.search.document.DocumentBuilder;
+import com.liferay.portal.search.document.DocumentBuilderFactory;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
+import com.liferay.portal.search.geolocation.GeoBuilders;
+import com.liferay.portal.search.highlight.Highlights;
+import com.liferay.portal.search.internal.aggregation.AggregationsImpl;
+import com.liferay.portal.search.internal.document.DocumentBuilderFactoryImpl;
+import com.liferay.portal.search.internal.geolocation.GeoBuildersImpl;
+import com.liferay.portal.search.internal.highlight.HighlightsImpl;
+import com.liferay.portal.search.internal.legacy.searcher.SearchRequestBuilderImpl;
+import com.liferay.portal.search.internal.legacy.searcher.SearchResponseBuilderImpl;
+import com.liferay.portal.search.internal.query.QueriesImpl;
+import com.liferay.portal.search.internal.rescore.RescoreBuilderFactoryImpl;
+import com.liferay.portal.search.internal.script.ScriptsImpl;
+import com.liferay.portal.search.internal.sort.SortsImpl;
+import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.rescore.RescoreBuilderFactory;
+import com.liferay.portal.search.script.Scripts;
+import com.liferay.portal.search.searcher.SearchRequestBuilder;
+import com.liferay.portal.search.searcher.SearchResponse;
+import com.liferay.portal.search.searcher.SearchResponseBuilder;
+import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.search.test.util.DocumentsAssert;
 import com.liferay.portal.search.test.util.IdempotentRetryAssert;
 import com.liferay.portal.search.test.util.SearchMapUtil;
+import com.liferay.portal.search.test.util.document.DocumentTranslator;
 
 import java.io.Serializable;
 
@@ -45,32 +75,48 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 
 /**
  * @author Miguel Angelo Caldas Gallindo
  */
 public abstract class BaseIndexingTestCase {
 
-	public BaseIndexingTestCase() {
-		Class<?> clazz = getClass();
+	@BeforeClass
+	public static void setUpClassBaseIndexingTestCase() {
+		_indexingFixture = null;
 
-		_entryClassName = StringUtil.toLowerCase(clazz.getSimpleName());
+		_documentFixture.setUp();
+	}
+
+	@AfterClass
+	public static void tearDownClassBaseIndexingTestCase() throws Exception {
+		_documentFixture.tearDown();
+
+		if (_indexingFixture.isSearchEngineAvailable()) {
+			_indexingFixture.tearDown();
+		}
+
+		_indexingFixture = null;
 	}
 
 	@Before
 	public void setUp() throws Exception {
-		_documentFixture.setUp();
+		setUpIndexingFixture();
 
-		_indexingFixture = createIndexingFixture();
+		Class<?> clazz = getClass();
 
-		Assume.assumeTrue(_indexingFixture.isSearchEngineAvailable());
-
-		_indexingFixture.setUp();
+		_entryClassName = StringUtil.toLowerCase(
+			clazz.getSimpleName() + CharPool.PERIOD + testName.getMethodName());
 
 		_indexSearcher = _indexingFixture.getIndexSearcher();
 		_indexWriter = _indexingFixture.getIndexWriter();
@@ -82,22 +128,83 @@ public abstract class BaseIndexingTestCase {
 			return;
 		}
 
-		try {
-			_indexWriter.deleteEntityDocuments(
-				createSearchContext(), _entryClassName);
-		}
-		catch (SearchException se) {
-		}
-
-		_documentFixture.tearDown();
-
-		_indexingFixture.tearDown();
+		_indexWriter.deleteEntityDocuments(
+			createSearchContext(), _entryClassName);
 	}
 
-	protected static SearchContext createSearchContext() {
+	@Rule
+	public TestName testName = new TestName();
+
+	protected static <K, V> Map<K, V> toMap(K key, V value) {
+		return Collections.singletonMap(key, value);
+	}
+
+	protected void addDocument(Document document) {
+		try {
+			_indexWriter.addDocument(createSearchContext(), document);
+		}
+		catch (SearchException searchException) {
+			_handle(searchException);
+
+			throw new RuntimeException(searchException);
+		}
+	}
+
+	protected void addDocument(DocumentBuilder documentBuilder) {
+		addDocument(
+			new DocumentTranslator().toLegacyDocument(documentBuilder.build()));
+	}
+
+	protected void addDocument(DocumentCreationHelper documentCreationHelper) {
+		Document document = DocumentFixture.newDocument(
+			getCompanyId(), GROUP_ID, _entryClassName);
+
+		documentCreationHelper.populate(document);
+
+		addDocument(document);
+	}
+
+	protected void addDocuments(
+		Function<String, DocumentCreationHelper> function,
+		Collection<String> values) {
+
+		addDocuments(function, values.stream());
+	}
+
+	protected void addDocuments(
+		Function<String, DocumentCreationHelper> function,
+		Stream<String> stream) {
+
+		stream.map(
+			function
+		).forEach(
+			this::addDocument
+		);
+	}
+
+	protected void assertSearch(
+		Consumer<IndexingTestHelper> indexingTestHelperConsumer) {
+
+		try {
+			IdempotentRetryAssert.retryAssert(
+				10, TimeUnit.SECONDS,
+				() -> indexingTestHelperConsumer.accept(
+					new IndexingTestHelper()));
+		}
+		catch (RuntimeException runtimeException) {
+			throw runtimeException;
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
+	protected abstract IndexingFixture createIndexingFixture() throws Exception;
+
+	protected SearchContext createSearchContext() {
 		SearchContext searchContext = new SearchContext();
 
-		searchContext.setCompanyId(COMPANY_ID);
+		searchContext.setCompanyId(getCompanyId());
 		searchContext.setGroupIds(new long[] {GROUP_ID});
 
 		QueryConfig queryConfig = searchContext.getQueryConfig();
@@ -111,48 +218,13 @@ public abstract class BaseIndexingTestCase {
 		return searchContext;
 	}
 
-	protected static <K, V> Map<K, V> toMap(K key, V value) {
-		return Collections.singletonMap(key, value);
+	protected long getCompanyId() {
+		return _indexingFixture.getCompanyId();
 	}
-
-	protected void addDocument(DocumentCreationHelper documentCreationHelper)
-		throws Exception {
-
-		Document document = DocumentFixture.newDocument(
-			COMPANY_ID, GROUP_ID, _entryClassName);
-
-		documentCreationHelper.populate(document);
-
-		_indexWriter.addDocument(createSearchContext(), document);
-	}
-
-	protected void addDocuments(
-			Function<String, DocumentCreationHelper> function,
-			Collection<String> values)
-		throws Exception {
-
-		for (String value : values) {
-			addDocument(function.apply(value));
-		}
-	}
-
-	protected void assertSearch(Consumer<IndexingTestHelper> consumer)
-		throws Exception {
-
-		IdempotentRetryAssert.retryAssert(
-			10, TimeUnit.SECONDS,
-			() -> {
-				consumer.accept(new IndexingTestHelper());
-
-				return null;
-			});
-	}
-
-	protected abstract IndexingFixture createIndexingFixture() throws Exception;
 
 	protected Query getDefaultQuery() {
 		Map<String, String> map = SearchMapUtil.join(
-			toMap(Field.COMPANY_ID, String.valueOf(COMPANY_ID)),
+			toMap(Field.COMPANY_ID, String.valueOf(getCompanyId())),
 			toMap(Field.ENTRY_CLASS_NAME, _entryClassName));
 
 		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
@@ -168,12 +240,31 @@ public abstract class BaseIndexingTestCase {
 		return _entryClassName;
 	}
 
+	protected long getGroupId() {
+		return GROUP_ID;
+	}
+
 	protected IndexSearcher getIndexSearcher() {
 		return _indexSearcher;
 	}
 
 	protected IndexWriter getIndexWriter() {
 		return _indexWriter;
+	}
+
+	protected SearchEngineAdapter getSearchEngineAdapter() {
+		return _indexingFixture.getSearchEngineAdapter();
+	}
+
+	protected DocumentBuilder newDocumentBuilder() {
+		return documentBuilderFactory.builder(
+		).setLong(
+			Field.COMPANY_ID, getCompanyId()
+		).setString(
+			Field.ENTRY_CLASS_NAME, getEntryClassName()
+		).setLong(
+			Field.GROUP_ID, getGroupId()
+		);
 	}
 
 	protected Hits search(SearchContext searchContext) {
@@ -184,14 +275,21 @@ public abstract class BaseIndexingTestCase {
 		try {
 			return _indexSearcher.search(searchContext, query);
 		}
-		catch (SearchException se) {
-			Throwable t = se.getCause();
+		catch (SearchException searchException) {
+			_handle(searchException);
 
-			if (t instanceof RuntimeException) {
-				throw (RuntimeException)t;
-			}
+			throw new RuntimeException(searchException);
+		}
+	}
 
-			throw new RuntimeException(se);
+	protected long searchCount(SearchContext searchContext, Query query) {
+		try {
+			return _indexSearcher.searchCount(searchContext, query);
+		}
+		catch (SearchException searchException) {
+			_handle(searchException);
+
+			throw new RuntimeException(searchException);
 		}
 	}
 
@@ -203,21 +301,51 @@ public abstract class BaseIndexingTestCase {
 		query.setPreBooleanFilter(booleanFilter);
 	}
 
-	protected static final long COMPANY_ID = RandomTestUtil.randomLong();
+	protected void setUpIndexingFixture() throws Exception {
+		if (_indexingFixture != null) {
+			Assume.assumeTrue(_indexingFixture.isSearchEngineAvailable());
+
+			return;
+		}
+
+		_indexingFixture = createIndexingFixture();
+
+		Assume.assumeTrue(_indexingFixture.isSearchEngineAvailable());
+
+		_indexingFixture.setUp();
+	}
 
 	protected static final long GROUP_ID = RandomTestUtil.randomLong();
+
+	protected final AggregationFixture aggregationFixture =
+		new AggregationFixture();
+	protected final Aggregations aggregations = new AggregationsImpl();
+	protected DocumentBuilderFactory documentBuilderFactory =
+		new DocumentBuilderFactoryImpl();
+	protected final GeoBuilders geoBuilders = new GeoBuildersImpl();
+	protected final Highlights highlights = new HighlightsImpl();
+	protected final Queries queries = new QueriesImpl();
+	protected final RescoreBuilderFactory rescoreBuilderFactory =
+		new RescoreBuilderFactoryImpl();
+	protected final Scripts scripts = new ScriptsImpl();
+	protected final Sorts sorts = new SortsImpl();
 
 	protected class IndexingTestHelper {
 
 		public IndexingTestHelper() {
 			_searchContext = createSearchContext();
+
+			_searchRequestBuilder = new SearchRequestBuilderImpl(
+				null, _searchContext);
 		}
 
 		public void assertResultCount(int expected) {
 			Document[] documents = _hits.getDocs();
 
 			Assert.assertEquals(
-				Arrays.toString(documents), expected, documents.length);
+				(String)_searchContext.getAttribute("queryString") + "->" +
+					Arrays.toString(documents),
+				expected, documents.length);
 		}
 
 		public void assertValues(
@@ -228,11 +356,43 @@ public abstract class BaseIndexingTestCase {
 				_hits.getDocs(), fieldName, expectedValues);
 		}
 
-		public void define(Consumer<SearchContext> consumer) {
-			consumer.accept(_searchContext);
+		public void define(Consumer<SearchContext> searchContextConsumer) {
+			searchContextConsumer.accept(_searchContext);
 		}
 
-		public String getQueryString() {
+		public void defineRequest(
+			Consumer<SearchRequestBuilder> searchRequestBuilderConsumer) {
+
+			searchRequestBuilderConsumer.accept(_searchRequestBuilder);
+		}
+
+		public <AR extends AggregationResult> AR getAggregationResult(
+			Aggregation aggregation) {
+
+			return getAggregationResult(aggregation.getName());
+		}
+
+		public <AR extends AggregationResult> AR getAggregationResult(
+			PipelineAggregation pipelineAggregation) {
+
+			return getAggregationResult(pipelineAggregation.getName());
+		}
+
+		public <AR extends AggregationResult> AR getChildAggregationResult(
+			Bucket bucket, Aggregation aggregation) {
+
+			return (AR)bucket.getChildAggregationResult(aggregation.getName());
+		}
+
+		public <AR extends AggregationResult> AR getChildAggregationResult(
+			HierarchicalAggregationResult aggregationResult,
+			Aggregation aggregation) {
+
+			return (AR)aggregationResult.getChildAggregationResult(
+				aggregation.getName());
+		}
+
+		public String getRequestString() {
 			return (String)_searchContext.getAttribute("queryString");
 		}
 
@@ -241,25 +401,25 @@ public abstract class BaseIndexingTestCase {
 		}
 
 		public void search() {
-			Query query = _query;
+			_hits = BaseIndexingTestCase.this.search(
+				_searchContext, getQuery());
 
-			if (query == null) {
-				query = getDefaultQuery();
-			}
+			SearchResponseBuilder searchResponseBuilder =
+				new SearchResponseBuilderImpl(_searchContext);
 
-			if (_queryContributor != null) {
-				_queryContributor.contribute(query);
-			}
+			_searchResponse = searchResponseBuilder.build();
+		}
 
-			if (_filter != null) {
-				setPreBooleanFilter(_filter, query);
-			}
+		public long searchCount() {
+			long count = BaseIndexingTestCase.this.searchCount(
+				_searchContext, getQuery());
 
-			if (_postFilter != null) {
-				query.setPostFilter(_postFilter);
-			}
+			SearchResponseBuilder searchResponseBuilder =
+				new SearchResponseBuilderImpl(_searchContext);
 
-			_hits = BaseIndexingTestCase.this.search(_searchContext, query);
+			_searchResponse = searchResponseBuilder.build();
+
+			return count;
 		}
 
 		public void setFilter(Filter filter) {
@@ -282,8 +442,53 @@ public abstract class BaseIndexingTestCase {
 			_searchContext.setAttribute(name, value);
 		}
 
-		public void verify(Consumer<Hits> consumer) {
-			consumer.accept(_hits);
+		public void verify(Consumer<Hits> hitsConsumer) {
+			hitsConsumer.accept(_hits);
+		}
+
+		public void verifyContext(
+			Consumer<SearchContext> searchContextConsumer) {
+
+			searchContextConsumer.accept(_searchContext);
+		}
+
+		public void verifyResponse(
+			Consumer<SearchResponse> searchResponseConsumer) {
+
+			searchResponseConsumer.accept(_searchResponse);
+		}
+
+		protected <AR extends AggregationResult> AR getAggregationResult(
+			String name) {
+
+			AggregationResult aggregationResult =
+				_searchResponse.getAggregationResult(name);
+
+			Assert.assertNotNull(aggregationResult);
+
+			return (AR)aggregationResult;
+		}
+
+		protected Query getQuery() {
+			Query query = _query;
+
+			if (query == null) {
+				query = getDefaultQuery();
+			}
+
+			if (_queryContributor != null) {
+				_queryContributor.contribute(query);
+			}
+
+			if (_filter != null) {
+				setPreBooleanFilter(_filter, query);
+			}
+
+			if (_postFilter != null) {
+				query.setPostFilter(_postFilter);
+			}
+
+			return query;
 		}
 
 		private Filter _filter;
@@ -292,12 +497,28 @@ public abstract class BaseIndexingTestCase {
 		private Query _query;
 		private QueryContributor _queryContributor;
 		private final SearchContext _searchContext;
+		private final SearchRequestBuilder _searchRequestBuilder;
+		private SearchResponse _searchResponse;
 
 	}
 
-	private final DocumentFixture _documentFixture = new DocumentFixture();
-	private final String _entryClassName;
-	private IndexingFixture _indexingFixture;
+	private void _handle(SearchException searchException) {
+		Throwable t = searchException.getCause();
+
+		if (t instanceof RuntimeException) {
+			throw (RuntimeException)t;
+		}
+
+		if (t != null) {
+			throw new RuntimeException(t);
+		}
+	}
+
+	private static final DocumentFixture _documentFixture =
+		new DocumentFixture();
+	private static IndexingFixture _indexingFixture;
+
+	private String _entryClassName;
 	private IndexSearcher _indexSearcher;
 	private IndexWriter _indexWriter;
 

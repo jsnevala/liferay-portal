@@ -14,14 +14,11 @@
 
 package com.liferay.wiki.web.internal.item.selector.view;
 
-import com.liferay.document.library.display.context.DLMimeTypeDisplayContext;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolverHandler;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
-import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.wiki.item.selector.constants.WikiItemSelectorViewConstants;
 import com.liferay.wiki.item.selector.criterion.WikiAttachmentItemSelectorCriterion;
 import com.liferay.wiki.web.internal.item.selector.constants.WikiItemSelectorWebKeys;
@@ -40,12 +37,10 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Iván Zaera
@@ -76,17 +71,12 @@ public class WikiAttachmentItemSelectorView
 
 	@Override
 	public String getTitle(Locale locale) {
-		return LanguageUtil.get(locale, "page-attachments");
-	}
-
-	@Override
-	public boolean isVisible(ThemeDisplay themeDisplay) {
-		return true;
+		return _language.get(locale, "page-attachments");
 	}
 
 	@Override
 	public void renderHTML(
-			ServletRequest request, ServletResponse response,
+			ServletRequest servletRequest, ServletResponse servletResponse,
 			WikiAttachmentItemSelectorCriterion
 				wikiAttachmentItemSelectorCriterion,
 			PortletURL portletURL, String itemSelectedEventName, boolean search)
@@ -95,18 +85,14 @@ public class WikiAttachmentItemSelectorView
 		WikiAttachmentItemSelectorViewDisplayContext
 			wikiAttachmentItemSelectorViewDisplayContext =
 				new WikiAttachmentItemSelectorViewDisplayContext(
-					wikiAttachmentItemSelectorCriterion, this,
-					_itemSelectorReturnTypeResolverHandler,
-					itemSelectedEventName, search, portletURL);
+					(HttpServletRequest)servletRequest, itemSelectedEventName,
+					_itemSelectorReturnTypeResolverHandler, portletURL, search,
+					wikiAttachmentItemSelectorCriterion, this);
 
-		request.setAttribute(
+		servletRequest.setAttribute(
 			WikiItemSelectorWebKeys.
 				WIKI_ATTACHMENT_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT,
 			wikiAttachmentItemSelectorViewDisplayContext);
-
-		request.setAttribute(
-			WikiItemSelectorWebKeys.DL_MIME_TYPE_DISPLAY_CONTEXT,
-			_dlMimeTypeDisplayContext);
 
 		ServletContext servletContext = getServletContext();
 
@@ -114,41 +100,21 @@ public class WikiAttachmentItemSelectorView
 			servletContext.getRequestDispatcher(
 				"/item/selector/wiki_page_attachments.jsp");
 
-		requestDispatcher.include(request, response);
-	}
-
-	@Reference(unbind = "-")
-	public void setItemSelectorReturnTypeResolverHandler(
-		ItemSelectorReturnTypeResolverHandler
-			itemSelectorReturnTypeResolverHandler) {
-
-		_itemSelectorReturnTypeResolverHandler =
-			itemSelectorReturnTypeResolverHandler;
-	}
-
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.wiki.web)", unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
+		requestDispatcher.include(servletRequest, servletResponse);
 	}
 
 	private static final List<ItemSelectorReturnType>
-		_supportedItemSelectorReturnTypes = Collections.unmodifiableList(
-			ListUtil.fromArray(
-				new ItemSelectorReturnType[] {
-					new FileEntryItemSelectorReturnType()
-				}));
+		_supportedItemSelectorReturnTypes = Collections.singletonList(
+			new FileEntryItemSelectorReturnType());
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private volatile DLMimeTypeDisplayContext _dlMimeTypeDisplayContext;
-
+	@Reference
 	private ItemSelectorReturnTypeResolverHandler
 		_itemSelectorReturnTypeResolverHandler;
+
+	@Reference
+	private Language _language;
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.wiki.web)")
 	private ServletContext _servletContext;
 
 }

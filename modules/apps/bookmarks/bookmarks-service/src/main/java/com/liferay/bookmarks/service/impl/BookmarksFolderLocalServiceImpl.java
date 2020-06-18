@@ -20,14 +20,16 @@ import com.liferay.bookmarks.exception.FolderNameException;
 import com.liferay.bookmarks.model.BookmarksEntry;
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.model.BookmarksFolderConstants;
+import com.liferay.bookmarks.service.BookmarksEntryLocalService;
 import com.liferay.bookmarks.service.base.BookmarksFolderLocalServiceBaseImpl;
 import com.liferay.bookmarks.util.comparator.FolderIdComparator;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
@@ -43,7 +45,6 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.social.kernel.model.SocialActivityConstants;
 import com.liferay.subscription.service.SubscriptionLocalService;
 import com.liferay.trash.exception.RestoreEntryException;
@@ -57,10 +58,17 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Brian Wing Shun Chan
  * @author Wesley Gong
  */
+@Component(
+	property = "model.class.name=com.liferay.bookmarks.model.BookmarksFolder",
+	service = AopService.class
+)
 public class BookmarksFolderLocalServiceImpl
 	extends BookmarksFolderLocalServiceBaseImpl {
 
@@ -95,7 +103,7 @@ public class BookmarksFolderLocalServiceImpl
 		folder.setDescription(description);
 		folder.setExpandoBridgeAttributes(serviceContext);
 
-		bookmarksFolderPersistence.update(folder);
+		folder = bookmarksFolderPersistence.update(folder);
 
 		// Resources
 
@@ -156,7 +164,7 @@ public class BookmarksFolderLocalServiceImpl
 
 		// Entries
 
-		bookmarksEntryLocalService.deleteEntries(
+		_bookmarksEntryLocalService.deleteEntries(
 			folder.getGroupId(), folder.getFolderId(), includeTrashedEntries);
 
 		// Asset
@@ -175,18 +183,18 @@ public class BookmarksFolderLocalServiceImpl
 
 		// Subscriptions
 
-		subscriptionLocalService.deleteSubscriptions(
+		_subscriptionLocalService.deleteSubscriptions(
 			folder.getCompanyId(), BookmarksFolder.class.getName(),
 			folder.getFolderId());
 
 		// Trash
 
 		if (folder.isInTrashExplicitly()) {
-			trashEntryLocalService.deleteEntry(
+			_trashEntryLocalService.deleteEntry(
 				BookmarksFolder.class.getName(), folder.getFolderId());
 		}
 		else {
-			trashVersionLocalService.deleteTrashVersion(
+			_trashVersionLocalService.deleteTrashVersion(
 				BookmarksFolder.class.getName(), folder.getFolderId());
 		}
 
@@ -377,7 +385,7 @@ public class BookmarksFolderLocalServiceImpl
 		folder.setParentFolderId(parentFolderId);
 		folder.setTreePath(folder.buildTreePath());
 
-		bookmarksFolderPersistence.update(folder);
+		folder = bookmarksFolderPersistence.update(folder);
 
 		rebuildTree(
 			folder.getCompanyId(), folderId, folder.getTreePath(), true);
@@ -405,7 +413,7 @@ public class BookmarksFolderLocalServiceImpl
 
 			// Folder
 
-			TrashVersion trashVersion = trashVersionLocalService.fetchVersion(
+			TrashVersion trashVersion = _trashVersionLocalService.fetchVersion(
 				BookmarksFolder.class.getName(), folderId);
 
 			int status = WorkflowConstants.STATUS_APPROVED;
@@ -419,7 +427,7 @@ public class BookmarksFolderLocalServiceImpl
 			// Trash
 
 			if (trashVersion != null) {
-				trashVersionLocalService.deleteTrashVersion(trashVersion);
+				_trashVersionLocalService.deleteTrashVersion(trashVersion);
 			}
 
 			// Folders and entries
@@ -456,7 +464,7 @@ public class BookmarksFolderLocalServiceImpl
 
 		// Trash
 
-		TrashEntry trashEntry = trashEntryLocalService.addTrashEntry(
+		TrashEntry trashEntry = _trashEntryLocalService.addTrashEntry(
 			userId, folder.getGroupId(), BookmarksFolder.class.getName(),
 			folder.getFolderId(), folder.getUuid(), null, oldStatus, null,
 			null);
@@ -471,9 +479,8 @@ public class BookmarksFolderLocalServiceImpl
 
 		// Social
 
-		JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
-
-		extraDataJSONObject.put("title", folder.getName());
+		JSONObject extraDataJSONObject = JSONUtil.put(
+			"title", folder.getName());
 
 		socialActivityLocalService.addActivity(
 			userId, folder.getGroupId(), BookmarksFolder.class.getName(),
@@ -516,7 +523,7 @@ public class BookmarksFolderLocalServiceImpl
 						long parentPrimaryKey, String treePath)
 					throws PortalException {
 
-					bookmarksEntryLocalService.setTreePaths(
+					_bookmarksEntryLocalService.setTreePaths(
 						parentPrimaryKey, treePath, false);
 				}
 
@@ -538,7 +545,7 @@ public class BookmarksFolderLocalServiceImpl
 				RestoreEntryException.INVALID_STATUS);
 		}
 
-		TrashEntry trashEntry = trashEntryLocalService.getEntry(
+		TrashEntry trashEntry = _trashEntryLocalService.getEntry(
 			BookmarksFolder.class.getName(), folderId);
 
 		updateStatus(userId, folder, trashEntry.getStatus());
@@ -554,13 +561,12 @@ public class BookmarksFolderLocalServiceImpl
 
 		// Trash
 
-		trashEntryLocalService.deleteEntry(trashEntry.getEntryId());
+		_trashEntryLocalService.deleteEntry(trashEntry.getEntryId());
 
 		// Social
 
-		JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
-
-		extraDataJSONObject.put("title", folder.getName());
+		JSONObject extraDataJSONObject = JSONUtil.put(
+			"title", folder.getName());
 
 		socialActivityLocalService.addActivity(
 			userId, folder.getGroupId(), BookmarksFolder.class.getName(),
@@ -579,7 +585,7 @@ public class BookmarksFolderLocalServiceImpl
 			folderId = groupId;
 		}
 
-		subscriptionLocalService.addSubscription(
+		_subscriptionLocalService.addSubscription(
 			userId, groupId, BookmarksFolder.class.getName(), folderId);
 	}
 
@@ -591,7 +597,7 @@ public class BookmarksFolderLocalServiceImpl
 			folderId = groupId;
 		}
 
-		subscriptionLocalService.deleteSubscription(
+		_subscriptionLocalService.deleteSubscription(
 			userId, BookmarksFolder.class.getName(), folderId);
 	}
 
@@ -612,40 +618,6 @@ public class BookmarksFolderLocalServiceImpl
 		assetLinkLocalService.updateLinks(
 			userId, assetEntry.getEntryId(), assetLinkEntryIds,
 			AssetLinkConstants.TYPE_RELATED);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #updateFolder(long, long, long, String, String,
-	 *             ServiceContext)} and {@link #mergeFolders(long, long)}
-	 */
-	@Deprecated
-	@Indexable(type = IndexableType.REINDEX)
-	@Override
-	public BookmarksFolder updateFolder(
-			long userId, long folderId, long parentFolderId, String name,
-			String description, boolean mergeWithParentFolder,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		// Merge folders
-
-		BookmarksFolder folder = bookmarksFolderPersistence.findByPrimaryKey(
-			folderId);
-
-		parentFolderId = getParentFolderId(folder, parentFolderId);
-
-		if (mergeWithParentFolder && (folderId != parentFolderId)) {
-			mergeFolders(folder, parentFolderId);
-
-			return folder;
-		}
-
-		// Folder
-
-		return updateFolder(
-			userId, folderId, parentFolderId, name, description,
-			serviceContext);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -673,7 +645,7 @@ public class BookmarksFolderLocalServiceImpl
 		folder.setDescription(description);
 		folder.setExpandoBridgeAttributes(serviceContext);
 
-		bookmarksFolderPersistence.update(folder);
+		folder = bookmarksFolderPersistence.update(folder);
 
 		// Asset
 
@@ -705,7 +677,7 @@ public class BookmarksFolderLocalServiceImpl
 		folder.setStatusByUserName(user.getFullName());
 		folder.setStatusDate(new Date());
 
-		bookmarksFolderPersistence.update(folder);
+		folder = bookmarksFolderPersistence.update(folder);
 
 		// Asset
 
@@ -797,7 +769,7 @@ public class BookmarksFolderLocalServiceImpl
 			entry.setFolderId(toFolderId);
 			entry.setTreePath(entry.buildTreePath());
 
-			bookmarksEntryPersistence.update(entry);
+			entry = bookmarksEntryPersistence.update(entry);
 
 			Indexer<BookmarksEntry> indexer =
 				IndexerRegistryUtil.nullSafeGetIndexer(BookmarksEntry.class);
@@ -827,7 +799,7 @@ public class BookmarksFolderLocalServiceImpl
 
 				entry.setStatus(WorkflowConstants.STATUS_IN_TRASH);
 
-				bookmarksEntryPersistence.update(entry);
+				entry = bookmarksEntryPersistence.update(entry);
 
 				// Trash
 
@@ -838,7 +810,7 @@ public class BookmarksFolderLocalServiceImpl
 				}
 
 				if (oldStatus != WorkflowConstants.STATUS_APPROVED) {
-					trashVersionLocalService.addTrashVersion(
+					_trashVersionLocalService.addTrashVersion(
 						trashEntryId, BookmarksEntry.class.getName(),
 						entry.getEntryId(), status, null);
 				}
@@ -870,12 +842,12 @@ public class BookmarksFolderLocalServiceImpl
 
 				folder.setStatus(WorkflowConstants.STATUS_IN_TRASH);
 
-				bookmarksFolderPersistence.update(folder);
+				folder = bookmarksFolderPersistence.update(folder);
 
 				// Trash
 
 				if (oldStatus != WorkflowConstants.STATUS_APPROVED) {
-					trashVersionLocalService.addTrashVersion(
+					_trashVersionLocalService.addTrashVersion(
 						trashEntryId, BookmarksFolder.class.getName(),
 						folder.getFolderId(), oldStatus, null);
 				}
@@ -919,7 +891,7 @@ public class BookmarksFolderLocalServiceImpl
 				}
 
 				TrashVersion trashVersion =
-					trashVersionLocalService.fetchVersion(
+					_trashVersionLocalService.fetchVersion(
 						BookmarksEntry.class.getName(), entry.getEntryId());
 
 				int oldStatus = WorkflowConstants.STATUS_APPROVED;
@@ -930,12 +902,12 @@ public class BookmarksFolderLocalServiceImpl
 
 				entry.setStatus(oldStatus);
 
-				bookmarksEntryPersistence.update(entry);
+				entry = bookmarksEntryPersistence.update(entry);
 
 				// Trash
 
 				if (trashVersion != null) {
-					trashVersionLocalService.deleteTrashVersion(trashVersion);
+					_trashVersionLocalService.deleteTrashVersion(trashVersion);
 				}
 
 				// Asset
@@ -965,7 +937,7 @@ public class BookmarksFolderLocalServiceImpl
 				}
 
 				TrashVersion trashVersion =
-					trashVersionLocalService.fetchVersion(
+					_trashVersionLocalService.fetchVersion(
 						BookmarksFolder.class.getName(), folder.getFolderId());
 
 				int oldStatus = WorkflowConstants.STATUS_APPROVED;
@@ -976,7 +948,7 @@ public class BookmarksFolderLocalServiceImpl
 
 				folder.setStatus(oldStatus);
 
-				bookmarksFolderPersistence.update(folder);
+				folder = bookmarksFolderPersistence.update(folder);
 
 				// Folders and entries
 
@@ -989,7 +961,7 @@ public class BookmarksFolderLocalServiceImpl
 				// Trash
 
 				if (trashVersion != null) {
-					trashVersionLocalService.deleteTrashVersion(trashVersion);
+					_trashVersionLocalService.deleteTrashVersion(trashVersion);
 				}
 
 				// Asset
@@ -1017,13 +989,16 @@ public class BookmarksFolderLocalServiceImpl
 		}
 	}
 
-	@ServiceReference(type = SubscriptionLocalService.class)
-	protected SubscriptionLocalService subscriptionLocalService;
+	@Reference
+	private BookmarksEntryLocalService _bookmarksEntryLocalService;
 
-	@ServiceReference(type = TrashEntryLocalService.class)
-	protected TrashEntryLocalService trashEntryLocalService;
+	@Reference
+	private SubscriptionLocalService _subscriptionLocalService;
 
-	@ServiceReference(type = TrashVersionLocalService.class)
-	protected TrashVersionLocalService trashVersionLocalService;
+	@Reference
+	private TrashEntryLocalService _trashEntryLocalService;
+
+	@Reference
+	private TrashVersionLocalService _trashVersionLocalService;
 
 }

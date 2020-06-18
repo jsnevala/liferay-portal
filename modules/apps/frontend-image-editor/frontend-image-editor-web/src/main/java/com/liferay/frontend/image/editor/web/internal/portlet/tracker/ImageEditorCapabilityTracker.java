@@ -102,9 +102,8 @@ public class ImageEditorCapabilityTracker {
 	}
 
 	private String _getJavaScriptFileName(String fileName) {
-		String shortFileName = FileUtil.getShortFileName(fileName);
-
-		return StringUtil.replace(shortFileName, ".js", StringPool.BLANK);
+		return StringUtil.removeSubstring(
+			FileUtil.getShortFileName(fileName), ".js");
 	}
 
 	private Set<String> _rebuildImageEditorCapabilitiesRequirements(
@@ -137,12 +136,15 @@ public class ImageEditorCapabilityTracker {
 							resourceURL.getFile());
 
 						requiredModules.add(
-							moduleName.concat(StringPool.SLASH).concat(
-								fileName));
+							moduleName.concat(
+								StringPool.SLASH
+							).concat(
+								fileName
+							));
 					}
 				}
-				catch (Exception e) {
-					_log.error(e, e);
+				catch (Exception exception) {
+					_log.error(exception, exception);
 				}
 			}
 		}
@@ -183,7 +185,7 @@ public class ImageEditorCapabilityTracker {
 				return new ImageEditorCapabilityDescriptor(
 					imageEditorCapability, properties);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				_bundleContext.ungetService(serviceReference);
 
 				return null;

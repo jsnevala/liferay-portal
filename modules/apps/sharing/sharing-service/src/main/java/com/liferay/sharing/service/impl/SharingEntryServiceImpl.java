@@ -14,30 +14,19 @@
 
 package com.liferay.sharing.service.impl;
 
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
-import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceMode;
-import com.liferay.portal.kernel.model.ClassName;
-import com.liferay.portal.kernel.security.auth.PrincipalException;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.security.permission.SharingEntryAction;
-import com.liferay.sharing.security.permission.SharingPermissionChecker;
+import com.liferay.sharing.security.permission.SharingPermission;
 import com.liferay.sharing.service.base.SharingEntryServiceBaseImpl;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.stream.Stream;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the remote service for adding and updating sharing entries. This
@@ -49,6 +38,13 @@ import org.osgi.framework.FrameworkUtil;
  *
  * @author Sergio González
  */
+@Component(
+	property = {
+		"json.web.service.context.name=sharing",
+		"json.web.service.context.path=SharingEntry"
+	},
+	service = AopService.class
+)
 public class SharingEntryServiceImpl extends SharingEntryServiceBaseImpl {
 
 	/**
@@ -78,12 +74,18 @@ public class SharingEntryServiceImpl extends SharingEntryServiceBaseImpl {
 			Date expirationDate, ServiceContext serviceContext)
 		throws PortalException {
 
-		_checkSharingPermission(
-			getUserId(), classNameId, classPK, groupId, sharingEntryActions);
+		SharingEntry sharingEntry = sharingEntryPersistence.fetchByTU_C_C(
+			toUserId, classNameId, classPK);
 
-		return sharingEntryLocalService.addOrUpdateSharingEntry(
-			getUserId(), toUserId, classNameId, classPK, groupId, shareable,
-			sharingEntryActions, expirationDate, serviceContext);
+		if (sharingEntry == null) {
+			return sharingEntryService.addSharingEntry(
+				toUserId, classNameId, classPK, groupId, shareable,
+				sharingEntryActions, expirationDate, serviceContext);
+		}
+
+		return sharingEntryService.updateSharingEntry(
+			sharingEntry.getSharingEntryId(), sharingEntryActions, shareable,
+			expirationDate, serviceContext);
 	}
 
 	/**
@@ -114,32 +116,13 @@ public class SharingEntryServiceImpl extends SharingEntryServiceBaseImpl {
 			Date expirationDate, ServiceContext serviceContext)
 		throws PortalException {
 
-		_checkSharingPermission(
-			getUserId(), classNameId, classPK, groupId, sharingEntryActions);
+		sharingPermission.check(
+			getPermissionChecker(), classNameId, classPK, groupId,
+			sharingEntryActions);
 
 		return sharingEntryLocalService.addSharingEntry(
 			getUserId(), toUserId, classNameId, classPK, groupId, shareable,
 			sharingEntryActions, expirationDate, serviceContext);
-	}
-
-	@JSONWebService(mode = JSONWebServiceMode.IGNORE)
-	@Override
-	public void afterPropertiesSet() {
-		super.afterPropertiesSet();
-
-		Bundle bundle = FrameworkUtil.getBundle(SharingEntryServiceImpl.class);
-
-		BundleContext bundleContext = bundle.getBundleContext();
-
-		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
-			bundleContext, SharingPermissionChecker.class,
-			"(model.class.name=*)",
-			(serviceReference, emitter) -> {
-				emitter.emit(
-					classNameLocalService.getClassNameId(
-						(String)serviceReference.getProperty(
-							"model.class.name")));
-			});
 	}
 
 	@Override
@@ -150,21 +133,11 @@ public class SharingEntryServiceImpl extends SharingEntryServiceBaseImpl {
 		SharingEntry sharingEntry = sharingEntryLocalService.getSharingEntry(
 			sharingEntryId);
 
-		if (getUserId() != sharingEntry.getFromUserId()) {
-			throw new PrincipalException.MustHavePermission(
-				getUserId(), sharingEntry.getModelClassName(), sharingEntryId,
-				ActionKeys.DELETE);
-		}
+		sharingPermission.checkManageCollaboratorsPermission(
+			getPermissionChecker(), sharingEntry.getClassNameId(),
+			sharingEntry.getClassPK(), sharingEntry.getGroupId());
 
 		return sharingEntryLocalService.deleteSharingEntry(sharingEntry);
-	}
-
-	@JSONWebService(mode = JSONWebServiceMode.IGNORE)
-	@Override
-	public void destroy() {
-		super.destroy();
-
-		_serviceTrackerMap.close();
 	}
 
 	/**
@@ -193,75 +166,16 @@ public class SharingEntryServiceImpl extends SharingEntryServiceBaseImpl {
 		SharingEntry sharingEntry = sharingEntryPersistence.findByPrimaryKey(
 			sharingEntryId);
 
-		_checkSharingPermission(
-			getUserId(), sharingEntry.getClassNameId(),
-			sharingEntry.getClassPK(), sharingEntry.getGroupId(),
-			sharingEntryActions);
+		sharingPermission.checkManageCollaboratorsPermission(
+			getPermissionChecker(), sharingEntry.getClassNameId(),
+			sharingEntry.getClassPK(), sharingEntry.getGroupId());
 
 		return sharingEntryLocalService.updateSharingEntry(
-			sharingEntryId, sharingEntryActions, shareable, expirationDate,
-			serviceContext);
+			getUserId(), sharingEntryId, sharingEntryActions, shareable,
+			expirationDate, serviceContext);
 	}
 
-	@ServiceReference(type = ClassNameLocalService.class)
-	protected ClassNameLocalService classNameLocalService;
-
-	private void _checkSharingPermission(
-			long fromUserId, long classNameId, long classPK, long groupId,
-			Collection<SharingEntryAction> sharingEntryActions)
-		throws PortalException {
-
-		SharingPermissionChecker sharingPermissionChecker =
-			_serviceTrackerMap.getService(classNameId);
-
-		if (sharingPermissionChecker == null) {
-			throw new PrincipalException(
-				"sharing permission checker is null for class name ID " +
-					classNameId);
-		}
-
-		PermissionChecker permissionChecker = getPermissionChecker();
-
-		if (sharingPermissionChecker.hasPermission(
-				permissionChecker, classPK, groupId, sharingEntryActions)) {
-
-			return;
-		}
-
-		Stream<SharingEntryAction> sharingEntryActionStream =
-			sharingEntryActions.stream();
-
-		if (sharingEntryActionStream.allMatch(
-				sharingEntryAction ->
-					sharingEntryLocalService.hasShareableSharingPermission(
-						permissionChecker.getUserId(), classNameId, classPK,
-						sharingEntryAction))) {
-
-			return;
-		}
-
-		ClassName className = classNameLocalService.fetchByClassNameId(
-			classNameId);
-
-		String resourceName = String.valueOf(classNameId);
-
-		if (className != null) {
-			resourceName = className.getClassName();
-		}
-
-		sharingEntryActionStream = sharingEntryActions.stream();
-
-		String[] actionIds = sharingEntryActionStream.map(
-			SharingEntryAction::getActionId
-		).toArray(
-			String[]::new
-		);
-
-		throw new PrincipalException.MustHavePermission(
-			fromUserId, resourceName, classPK, actionIds);
-	}
-
-	private ServiceTrackerMap<Long, SharingPermissionChecker>
-		_serviceTrackerMap;
+	@Reference
+	protected SharingPermission sharingPermission;
 
 }

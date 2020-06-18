@@ -29,12 +29,12 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
-import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -44,6 +44,7 @@ import com.liferay.portal.search.facet.site.SiteFacetFactory;
 import com.liferay.portal.search.facet.type.AssetEntriesFacetFactory;
 import com.liferay.portal.search.facet.user.UserFacetFactory;
 import com.liferay.portal.search.test.blogs.util.BlogsEntrySearchFixture;
+import com.liferay.portal.search.test.util.FacetsAssert;
 import com.liferay.portal.search.test.util.SearchMapUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -86,26 +87,12 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 		setUpBlogsEntrySearchFixture();
 		setUpFileEntrySearchFixture();
 
-		_group1 = addGroup();
-		_group2 = addGroup();
+		_group1 = userSearchFixture.addGroup();
+		_group2 = userSearchFixture.addGroup();
 
 		_user1 = addUser();
 		_user2 = addUser();
 		_user3 = addUser();
-
-		_keyword = RandomTestUtil.randomString();
-
-		addBlogsEntry(_group1, _user1, _keyword);
-		addBlogsEntry(_group1, _user2, _keyword);
-		addBlogsEntry(_group2, _user2, _keyword);
-
-		addFileEntry(_group1, _user1, _keyword);
-		addFileEntry(_group2, _user2, _keyword);
-		addFileEntry(_group2, _user3, _keyword);
-
-		addJournalArticle(_group1, _user1, _keyword);
-		addJournalArticle(_group2, _user1, _keyword);
-		addJournalArticle(_group1, _user3, _keyword);
 	}
 
 	@After
@@ -113,12 +100,40 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 	public void tearDown() throws Exception {
 		super.tearDown();
 
-		blogsEntrySearchFixture.tearDown();
-		fileEntrySearchFixture.tearDown();
+		_blogsEntrySearchFixture.tearDown();
+		_fileEntrySearchFixture.tearDown();
+	}
+
+	@Test
+	public void testAvoidResidualDataFromDDMStructureLocalServiceTest()
+		throws Exception {
+
+		// See LPS-58543
+
+		String keyword = "To Do";
+
+		index(keyword);
+
+		assertSearch(
+			new Expectations() {
+				{
+					groupFrequencies = SearchMapUtil.join(
+						toMap(_group1, 5), toMap(_group2, 4));
+					typeFrequencies = SearchMapUtil.join(
+						toMap(BlogsEntry.class, 3), toMap(DLFileEntry.class, 3),
+						toMap(JournalArticle.class, 3));
+					userFrequencies = SearchMapUtil.join(
+						toMap(_user1, 4), toMap(_user2, 3), toMap(_user3, 2));
+				}
+			});
 	}
 
 	@Test
 	public void testSelectNone() throws Exception {
+		String keyword = RandomTestUtil.randomString();
+
+		index(keyword);
+
 		assertSearch(
 			new Expectations() {
 				{
@@ -135,14 +150,17 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 
 	@Test
 	public void testSelectOneGroupOneUser() throws Exception {
+		String keyword = RandomTestUtil.randomString();
+
+		index(keyword);
+
 		assertSearch(
 			new Expectations() {
 				{
-					selectGroups = new Group[] {_group2};
-					selectUsers = new User[] {_user1};
-
 					groupFrequencies = SearchMapUtil.join(
 						toMap(_group1, 3), toMap(_group2, 1));
+					selectGroups = new Group[] {_group2};
+					selectUsers = new User[] {_user1};
 					typeFrequencies = toMap(JournalArticle.class, 1);
 					userFrequencies = SearchMapUtil.join(
 						toMap(_user1, 1), toMap(_user2, 2), toMap(_user3, 1));
@@ -152,15 +170,18 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 
 	@Test
 	public void testSelectOneGroupOneUserOneType() throws Exception {
+		String keyword = RandomTestUtil.randomString();
+
+		index(keyword);
+
 		assertSearch(
 			new Expectations() {
 				{
+					groupFrequencies = SearchMapUtil.join(
+						toMap(_group1, 1), toMap(_group2, 1));
 					selectGroups = new Group[] {_group2};
 					selectTypes = new Class<?>[] {JournalArticle.class};
 					selectUsers = new User[] {_user1};
-
-					groupFrequencies = SearchMapUtil.join(
-						toMap(_group1, 1), toMap(_group2, 1));
 					typeFrequencies = toMap(JournalArticle.class, 1);
 					userFrequencies = toMap(_user1, 1);
 				}
@@ -169,13 +190,17 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 
 	@Test
 	public void testSelectOneUser() throws Exception {
+		String keyword = RandomTestUtil.randomString();
+
+		index(keyword);
+
 		assertSearch(
 			new Expectations() {
 				{
-					selectUsers = new User[] {_user1};
-
 					groupFrequencies = SearchMapUtil.join(
 						toMap(_group1, 3), toMap(_group2, 1));
+
+					selectUsers = new User[] {_user1};
 					typeFrequencies = SearchMapUtil.join(
 						toMap(BlogsEntry.class, 1), toMap(DLFileEntry.class, 1),
 						toMap(JournalArticle.class, 2));
@@ -187,14 +212,18 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 
 	@Test
 	public void testSelectOneUserOneType() throws Exception {
+		String keyword = RandomTestUtil.randomString();
+
+		index(keyword);
+
 		assertSearch(
 			new Expectations() {
 				{
-					selectUsers = new User[] {_user1};
-					selectTypes = new Class<?>[] {JournalArticle.class};
-
 					groupFrequencies = SearchMapUtil.join(
 						toMap(_group1, 1), toMap(_group2, 1));
+
+					selectTypes = new Class<?>[] {JournalArticle.class};
+					selectUsers = new User[] {_user1};
 					typeFrequencies = SearchMapUtil.join(
 						toMap(BlogsEntry.class, 1), toMap(DLFileEntry.class, 1),
 						toMap(JournalArticle.class, 2));
@@ -206,16 +235,20 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 
 	@Test
 	public void testSelectOneUserTwoTypes() throws Exception {
+		String keyword = RandomTestUtil.randomString();
+
+		index(keyword);
+
 		assertSearch(
 			new Expectations() {
 				{
+					groupFrequencies = SearchMapUtil.join(
+						toMap(_group1, 2), toMap(_group2, 1));
 					selectTypes = new Class<?>[] {
 						DLFileEntry.class, JournalArticle.class
 					};
-					selectUsers = new User[] {_user1};
 
-					groupFrequencies = SearchMapUtil.join(
-						toMap(_group1, 2), toMap(_group2, 1));
+					selectUsers = new User[] {_user1};
 					typeFrequencies = SearchMapUtil.join(
 						toMap(BlogsEntry.class, 1), toMap(DLFileEntry.class, 1),
 						toMap(JournalArticle.class, 2));
@@ -266,49 +299,45 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 	protected void addBlogsEntry(Group group, User user, String keyword)
 		throws Exception {
 
-		blogsEntrySearchFixture.addBlogsEntry(group, user, keyword);
+		_blogsEntrySearchFixture.addBlogsEntry(group, user, keyword);
 	}
 
 	protected void addFileEntry(Group group, User user, String keyword) {
-		fileEntrySearchFixture.addFileEntry(
+		_fileEntrySearchFixture.addFileEntry(
 			new FileEntryBlueprint() {
 				{
-					groupId = group.getGroupId();
-					title =
+					setGroupId(group.getGroupId());
+					setTitle(
 						keyword + StringPool.SPACE +
-							RandomTestUtil.randomString();
-					userId = user.getUserId();
+							RandomTestUtil.randomString());
+					setUserId(user.getUserId());
 				}
 			});
-	}
-
-	protected Group addGroup() throws Exception {
-		Group group = GroupTestUtil.addGroup();
-
-		_groups.add(group);
-
-		return group;
 	}
 
 	protected void addJournalArticle(Group group, User user, String keyword) {
 		journalArticleSearchFixture.addArticle(
 			new JournalArticleBlueprint() {
 				{
-					groupId = group.getGroupId();
-					journalArticleContent = new JournalArticleContent() {
-						{
-							defaultLocale = LocaleUtil.US;
-							name = "content";
+					setGroupId(group.getGroupId());
+					setJournalArticleContent(
+						new JournalArticleContent() {
+							{
+								put(
+									LocaleUtil.US,
+									RandomTestUtil.randomString());
 
-							put(LocaleUtil.US, RandomTestUtil.randomString());
-						}
-					};
-					journalArticleTitle = new JournalArticleTitle() {
-						{
-							put(LocaleUtil.US, keyword);
-						}
-					};
-					userId = user.getUserId();
+								setDefaultLocale(LocaleUtil.US);
+								setName("content");
+							}
+						});
+					setJournalArticleTitle(
+						new JournalArticleTitle() {
+							{
+								put(LocaleUtil.US, keyword);
+							}
+						});
+					setUserId(user.getUserId());
 				}
 			});
 	}
@@ -331,47 +360,70 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 		searchContext.addFacet(
 			createUserFacet(expectations.selectUsers, searchContext));
 
-		search(searchContext);
+		Hits hits = search(searchContext);
 
 		Set<Map.Entry<Group, Integer>> groupFrequenciesEntrySet =
 			expectations.groupFrequencies.entrySet();
 
+		Stream<Map.Entry<Group, Integer>> groupFrequenciesEntryStream =
+			groupFrequenciesEntrySet.stream();
+
 		Map<String, Integer> groupFrequencies =
-			groupFrequenciesEntrySet.stream().collect(
+			groupFrequenciesEntryStream.collect(
 				Collectors.toMap(
-					entry -> String.valueOf(entry.getKey().getGroupId()),
+					entry -> {
+						Group group = entry.getKey();
+
+						return String.valueOf(group.getGroupId());
+					},
 					Map.Entry::getValue));
 
-		assertFrequencies(Field.GROUP_ID, searchContext, groupFrequencies);
+		FacetsAssert.assertFrequencies(
+			Field.GROUP_ID, searchContext, hits, groupFrequencies);
 
 		Set<Map.Entry<Class<?>, Integer>> typeFrequenciesEntrySet =
 			expectations.typeFrequencies.entrySet();
 
-		Map<String, Integer> typeFrequencies =
-			typeFrequenciesEntrySet.stream().collect(
-				Collectors.toMap(
-					entry -> entry.getKey().getName(), Map.Entry::getValue));
+		Stream<Map.Entry<Class<?>, Integer>> typeFrequenciesEntryStream =
+			typeFrequenciesEntrySet.stream();
 
-		assertFrequencies(
-			Field.ENTRY_CLASS_NAME, searchContext, typeFrequencies);
+		Map<String, Integer> typeFrequencies =
+			typeFrequenciesEntryStream.collect(
+				Collectors.toMap(
+					entry -> {
+						Class<?> clazz = entry.getKey();
+
+						return clazz.getName();
+					},
+					Map.Entry::getValue));
+
+		FacetsAssert.assertFrequencies(
+			Field.ENTRY_CLASS_NAME, searchContext, hits, typeFrequencies);
 
 		Set<Map.Entry<User, Integer>> userFrequenciesEntrySet =
 			expectations.userFrequencies.entrySet();
 
+		Stream<Map.Entry<User, Integer>> userFrequenciesEntryStream =
+			userFrequenciesEntrySet.stream();
+
 		Map<String, Integer> userFrequencies =
-			userFrequenciesEntrySet.stream().collect(
+			userFrequenciesEntryStream.collect(
 				Collectors.toMap(
-					entry -> StringUtil.toLowerCase(
-						entry.getKey().getFullName()),
+					entry -> {
+						User user = entry.getKey();
+
+						return StringUtil.toLowerCase(user.getFullName());
+					},
 					Map.Entry::getValue));
 
-		assertFrequencies(Field.USER_NAME, searchContext, userFrequencies);
+		FacetsAssert.assertFrequencies(
+			Field.USER_NAME, searchContext, hits, userFrequencies);
 	}
 
 	protected Facet createSiteFacet(
 		Group[] groups, SearchContext searchContext) {
 
-		Facet facet = siteFacetFactory.newInstance(searchContext);
+		Facet facet = _siteFacetFactory.newInstance(searchContext);
 
 		facet.select(getGroupIdStrings(groups));
 
@@ -381,7 +433,7 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 	protected Facet createTypeFacet(
 		Class[] classes, SearchContext searchContext) {
 
-		Facet facet = assetEntriesFacetFactory.newInstance(searchContext);
+		Facet facet = _assetEntriesFacetFactory.newInstance(searchContext);
 
 		facet.select(getClassNames(classes));
 
@@ -389,46 +441,44 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 	}
 
 	protected Facet createUserFacet(User[] users, SearchContext searchContext) {
-		Facet facet = userFacetFactory.newInstance(searchContext);
+		Facet facet = _userFacetFactory.newInstance(searchContext);
 
 		facet.select(getUserFullNames(users));
 
 		return facet;
 	}
 
+	protected void index(String keyword) throws Exception {
+		_keyword = keyword;
+
+		addBlogsEntry(_group1, _user1, keyword);
+		addBlogsEntry(_group1, _user2, keyword);
+		addBlogsEntry(_group2, _user2, keyword);
+
+		addFileEntry(_group1, _user1, keyword);
+		addFileEntry(_group2, _user2, keyword);
+		addFileEntry(_group2, _user3, keyword);
+
+		addJournalArticle(_group1, _user1, keyword);
+		addJournalArticle(_group2, _user1, keyword);
+		addJournalArticle(_group1, _user3, keyword);
+	}
+
 	protected void setUpBlogsEntrySearchFixture() {
-		blogsEntrySearchFixture = new BlogsEntrySearchFixture(
-			blogsEntryLocalService);
+		_blogsEntrySearchFixture = new BlogsEntrySearchFixture(
+			_blogsEntryLocalService);
 
-		blogsEntrySearchFixture.setUp();
+		_blogsEntrySearchFixture.setUp();
 
-		_blogsEntries = blogsEntrySearchFixture.getBlogsEntries();
+		_blogsEntries = _blogsEntrySearchFixture.getBlogsEntries();
 	}
 
 	protected void setUpFileEntrySearchFixture() {
-		fileEntrySearchFixture = new FileEntrySearchFixture(dlAppLocalService);
+		_fileEntrySearchFixture = new FileEntrySearchFixture(
+			_dlAppLocalService);
 
-		fileEntrySearchFixture.setUp();
+		_fileEntrySearchFixture.setUp();
 	}
-
-	@Inject
-	protected AssetEntriesFacetFactory assetEntriesFacetFactory;
-
-	@Inject
-	protected BlogsEntryLocalService blogsEntryLocalService;
-
-	protected BlogsEntrySearchFixture blogsEntrySearchFixture;
-
-	@Inject
-	protected DLAppLocalService dlAppLocalService;
-
-	protected FileEntrySearchFixture fileEntrySearchFixture;
-
-	@Inject
-	protected SiteFacetFactory siteFacetFactory;
-
-	@Inject
-	protected UserFacetFactory userFacetFactory;
 
 	protected static class Expectations {
 
@@ -441,19 +491,34 @@ public class AggregationFilteringTest extends BaseFacetedSearcherTestCase {
 
 	}
 
+	@Inject
+	private AssetEntriesFacetFactory _assetEntriesFacetFactory;
+
 	@DeleteAfterTestRun
 	private List<BlogsEntry> _blogsEntries;
 
+	@Inject
+	private BlogsEntryLocalService _blogsEntryLocalService;
+
+	private BlogsEntrySearchFixture _blogsEntrySearchFixture;
+
+	@Inject
+	private DLAppLocalService _dlAppLocalService;
+
+	private FileEntrySearchFixture _fileEntrySearchFixture;
 	private Group _group1;
 	private Group _group2;
-
-	@DeleteAfterTestRun
-	private final List<Group> _groups = new ArrayList<>();
-
 	private String _keyword;
+
+	@Inject
+	private SiteFacetFactory _siteFacetFactory;
+
 	private User _user1;
 	private User _user2;
 	private User _user3;
+
+	@Inject
+	private UserFacetFactory _userFacetFactory;
 
 	@DeleteAfterTestRun
 	private final List<User> _users = new ArrayList<>();

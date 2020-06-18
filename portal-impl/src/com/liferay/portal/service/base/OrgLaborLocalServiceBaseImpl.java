@@ -14,8 +14,7 @@
 
 package com.liferay.portal.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -37,6 +36,7 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.OrgLaborLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.ListTypePersistence;
 import com.liferay.portal.kernel.service.persistence.OrgLaborPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -58,16 +58,16 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.portal.service.impl.OrgLaborLocalServiceImpl
- * @see com.liferay.portal.kernel.service.OrgLaborLocalServiceUtil
  * @generated
  */
-@ProviderType
-public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
-	implements OrgLaborLocalService, IdentifiableOSGiService {
+public abstract class OrgLaborLocalServiceBaseImpl
+	extends BaseLocalServiceImpl
+	implements IdentifiableOSGiService, OrgLaborLocalService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.portal.kernel.service.OrgLaborLocalServiceUtil} to access the org labor local service.
+	 * Never modify or reference this class directly. Use <code>OrgLaborLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.OrgLaborLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -122,11 +122,16 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	}
 
 	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return orgLaborPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(OrgLabor.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			OrgLabor.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -144,7 +149,7 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.OrgLaborModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.OrgLaborModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -153,16 +158,18 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return orgLaborPersistence.findWithDynamicQuery(dynamicQuery, start, end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return orgLaborPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.OrgLaborModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.OrgLaborModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -172,10 +179,12 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return orgLaborPersistence.findWithDynamicQuery(dynamicQuery, start,
-			end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return orgLaborPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -197,10 +206,11 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return orgLaborPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return orgLaborPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
@@ -222,7 +232,8 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
 		actionableDynamicQuery.setBaseLocalService(orgLaborLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
@@ -234,10 +245,14 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(orgLaborLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			orgLaborLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(OrgLabor.class);
 
@@ -248,6 +263,7 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
+
 		actionableDynamicQuery.setBaseLocalService(orgLaborLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(OrgLabor.class);
@@ -258,15 +274,33 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return orgLaborPersistence.create(((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
+
 		return orgLaborLocalService.deleteOrgLabor((OrgLabor)persistedModel);
 	}
 
+	public BasePersistence<OrgLabor> getBasePersistence() {
+		return orgLaborPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return orgLaborPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -274,7 +308,7 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Returns a range of all the org labors.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.OrgLaborModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.OrgLaborModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of org labors
@@ -324,6 +358,7 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 */
 	public void setOrgLaborLocalService(
 		OrgLaborLocalService orgLaborLocalService) {
+
 		this.orgLaborLocalService = orgLaborLocalService;
 	}
 
@@ -341,7 +376,9 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @param orgLaborPersistence the org labor persistence
 	 */
-	public void setOrgLaborPersistence(OrgLaborPersistence orgLaborPersistence) {
+	public void setOrgLaborPersistence(
+		OrgLaborPersistence orgLaborPersistence) {
+
 		this.orgLaborPersistence = orgLaborPersistence;
 	}
 
@@ -350,7 +387,9 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the counter local service
 	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
+	public com.liferay.counter.kernel.service.CounterLocalService
+		getCounterLocalService() {
+
 		return counterLocalService;
 	}
 
@@ -360,7 +399,9 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param counterLocalService the counter local service
 	 */
 	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
+		com.liferay.counter.kernel.service.CounterLocalService
+			counterLocalService) {
+
 		this.counterLocalService = counterLocalService;
 	}
 
@@ -369,7 +410,9 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @return the list type local service
 	 */
-	public com.liferay.portal.kernel.service.ListTypeLocalService getListTypeLocalService() {
+	public com.liferay.portal.kernel.service.ListTypeLocalService
+		getListTypeLocalService() {
+
 		return listTypeLocalService;
 	}
 
@@ -379,7 +422,9 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @param listTypeLocalService the list type local service
 	 */
 	public void setListTypeLocalService(
-		com.liferay.portal.kernel.service.ListTypeLocalService listTypeLocalService) {
+		com.liferay.portal.kernel.service.ListTypeLocalService
+			listTypeLocalService) {
+
 		this.listTypeLocalService = listTypeLocalService;
 	}
 
@@ -397,13 +442,15 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 *
 	 * @param listTypePersistence the list type persistence
 	 */
-	public void setListTypePersistence(ListTypePersistence listTypePersistence) {
+	public void setListTypePersistence(
+		ListTypePersistence listTypePersistence) {
+
 		this.listTypePersistence = listTypePersistence;
 	}
 
 	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.portal.kernel.model.OrgLabor",
-			orgLaborLocalService);
+		persistedModelLocalServiceRegistry.register(
+			"com.liferay.portal.kernel.model.OrgLabor", orgLaborLocalService);
 	}
 
 	public void destroy() {
@@ -443,26 +490,39 @@ public abstract class OrgLaborLocalServiceBaseImpl extends BaseLocalServiceImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
 	@BeanReference(type = OrgLaborLocalService.class)
 	protected OrgLaborLocalService orgLaborLocalService;
+
 	@BeanReference(type = OrgLaborPersistence.class)
 	protected OrgLaborPersistence orgLaborPersistence;
-	@BeanReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@BeanReference(type = com.liferay.portal.kernel.service.ListTypeLocalService.class)
-	protected com.liferay.portal.kernel.service.ListTypeLocalService listTypeLocalService;
+
+	@BeanReference(
+		type = com.liferay.counter.kernel.service.CounterLocalService.class
+	)
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@BeanReference(
+		type = com.liferay.portal.kernel.service.ListTypeLocalService.class
+	)
+	protected com.liferay.portal.kernel.service.ListTypeLocalService
+		listTypeLocalService;
+
 	@BeanReference(type = ListTypePersistence.class)
 	protected ListTypePersistence listTypePersistence;
+
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+	protected PersistedModelLocalServiceRegistry
+		persistedModelLocalServiceRegistry;
+
 }

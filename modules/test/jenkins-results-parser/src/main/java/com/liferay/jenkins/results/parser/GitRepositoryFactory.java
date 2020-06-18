@@ -14,6 +14,9 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.json.JSONObject;
 
 /**
@@ -86,6 +89,28 @@ public class GitRepositoryFactory {
 		return new DefaultRemoteGitRepository(gitRemote);
 	}
 
+	public static RemoteGitRepository getRemoteGitRepository(String remoteURL) {
+		Matcher matcher = GitRemote.getRemoteURLMatcher(remoteURL);
+
+		if ((matcher == null) || !matcher.find()) {
+			throw new RuntimeException("Invalid remote URL " + remoteURL);
+		}
+
+		Pattern pattern = matcher.pattern();
+
+		String patternString = pattern.toString();
+
+		String username = "liferay";
+
+		if (patternString.contains("(?<username>")) {
+			username = matcher.group("username");
+		}
+
+		return getRemoteGitRepository(
+			matcher.group("hostname"), matcher.group("gitRepositoryName"),
+			username);
+	}
+
 	public static RemoteGitRepository getRemoteGitRepository(
 		String hostname, String gitRepositoryName, String username) {
 
@@ -112,6 +137,10 @@ public class GitRepositoryFactory {
 
 		if (jsonObjectType.equals(JenkinsWorkspaceGitRepository.TYPE)) {
 			return new JenkinsWorkspaceGitRepository(jsonObject);
+		}
+
+		if (jsonObjectType.equals(LegacyWorkspaceGitRepository.TYPE)) {
+			return new LegacyWorkspaceGitRepository(jsonObject);
 		}
 
 		if (jsonObjectType.equals(OtherPortalWorkspaceGitRepository.TYPE)) {
@@ -147,6 +176,11 @@ public class GitRepositoryFactory {
 				pullRequest, upstreamBranchName);
 		}
 
+		if (gitHubURL.contains("/liferay-qa-portal-legacy-ee")) {
+			return new LegacyWorkspaceGitRepository(
+				pullRequest, upstreamBranchName);
+		}
+
 		throw new RuntimeException("Unsupported workspace Git repository");
 	}
 
@@ -166,6 +200,11 @@ public class GitRepositoryFactory {
 
 		if (gitHubURL.contains("/liferay-portal")) {
 			return new PrimaryPortalWorkspaceGitRepository(
+				remoteGitRef, upstreamBranchName);
+		}
+
+		if (gitHubURL.contains("/liferay-qa-portal-legacy-ee")) {
+			return new LegacyWorkspaceGitRepository(
 				remoteGitRef, upstreamBranchName);
 		}
 

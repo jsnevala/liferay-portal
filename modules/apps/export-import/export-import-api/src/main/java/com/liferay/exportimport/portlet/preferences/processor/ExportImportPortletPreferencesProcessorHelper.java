@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.portlet.preferences.processor;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.portal.kernel.model.Portlet;
 
@@ -23,8 +21,10 @@ import java.util.function.Function;
 
 import javax.portlet.PortletPreferences;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @ProviderType
 public interface ExportImportPortletPreferencesProcessorHelper {

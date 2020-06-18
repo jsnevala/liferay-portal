@@ -14,12 +14,12 @@
 
 package com.liferay.portal.kernel.upgrade.v6_2_0;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.sql.PreparedStatement;
@@ -63,6 +63,7 @@ public abstract class BaseUpgradePortletPreferences
 		runSQL(sb.toString());
 	}
 
+	@Override
 	protected void updatePortletPreferences() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
 			String whereClause = getUpdatePortletPreferencesWhereClause();
@@ -158,9 +159,6 @@ public abstract class BaseUpgradePortletPreferences
 				ResultSet rs = ps1.executeQuery()) {
 
 				while (rs.next()) {
-					long portletPreferencesId = rs.getLong(
-						"portletPreferencesId");
-
 					long companyId = rs.getLong("companyId");
 					long ownerId = rs.getLong("ownerId");
 					long plid = rs.getLong("plid");
@@ -174,7 +172,7 @@ public abstract class BaseUpgradePortletPreferences
 
 					if (!preferences.equals(newPreferences)) {
 						ps2.setString(1, newPreferences);
-						ps2.setLong(2, portletPreferencesId);
+						ps2.setLong(2, rs.getLong("portletPreferencesId"));
 
 						ps2.addBatch();
 					}

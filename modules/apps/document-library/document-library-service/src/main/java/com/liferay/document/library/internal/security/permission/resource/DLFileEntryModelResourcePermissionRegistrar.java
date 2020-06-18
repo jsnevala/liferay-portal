@@ -41,6 +41,7 @@ import com.liferay.portal.kernel.workflow.WorkflowInstanceManager;
 import com.liferay.portal.kernel.workflow.permission.WorkflowPermission;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
+import com.liferay.sharing.security.permission.resource.SharingModelResourcePermissionConfigurator;
 
 import java.util.Dictionary;
 
@@ -50,15 +51,17 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Preston Crary
  */
-@Component(immediate = true, service = {})
+@Component(service = {})
 public class DLFileEntryModelResourcePermissionRegistrar {
 
 	@Activate
-	public void activate(BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 		properties.put("model.class.name", DLFileEntry.class.getName());
@@ -75,8 +78,14 @@ public class DLFileEntryModelResourcePermissionRegistrar {
 							_stagingPermission, DLPortletKeys.DOCUMENT_LIBRARY,
 							DLFileEntry::getFileEntryId));
 					consumer.accept(
-						new DLFileEntryWorkflowedModelPermissionLogic(
+						new DLFileEntryWorkflowedModelResourcePermissionLogic(
 							modelResourcePermission));
+
+					if (_sharingModelResourcePermissionConfigurator != null) {
+						_sharingModelResourcePermissionConfigurator.configure(
+							modelResourcePermission, consumer);
+					}
+
 					consumer.accept(
 						(permissionChecker, name, fileEntry, actionId) -> {
 							String className = fileEntry.getClassName();
@@ -125,7 +134,7 @@ public class DLFileEntryModelResourcePermissionRegistrar {
 	}
 
 	@Deactivate
-	public void deactivate() {
+	protected void deactivate() {
 		_serviceRegistration.unregister();
 	}
 
@@ -163,6 +172,13 @@ public class DLFileEntryModelResourcePermissionRegistrar {
 
 	private ServiceRegistration<ModelResourcePermission> _serviceRegistration;
 
+	@Reference(
+		cardinality = ReferenceCardinality.OPTIONAL,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private SharingModelResourcePermissionConfigurator
+		_sharingModelResourcePermissionConfigurator;
+
 	@Reference
 	private StagingPermission _stagingPermission;
 
@@ -175,7 +191,7 @@ public class DLFileEntryModelResourcePermissionRegistrar {
 	@Reference
 	private WorkflowPermission _workflowPermission;
 
-	private class DLFileEntryWorkflowedModelPermissionLogic
+	private class DLFileEntryWorkflowedModelResourcePermissionLogic
 		implements ModelResourcePermissionLogic<DLFileEntry> {
 
 		@Override
@@ -195,15 +211,29 @@ public class DLFileEntryModelResourcePermissionRegistrar {
 				}
 			}
 			else if (fileVersion.isPending()) {
-				return _workflowPermission.hasPermission(
+				Boolean hasPermission = _workflowPermission.hasPermission(
 					permissionChecker, fileVersion.getGroupId(), name,
 					fileVersion.getFileVersionId(), actionId);
+
+				if (hasPermission != null) {
+					return hasPermission.booleanValue();
+				}
+
+				boolean hasOwnerPermission =
+					permissionChecker.hasOwnerPermission(
+						dlFileEntry.getCompanyId(), name,
+						dlFileEntry.getFileEntryId(), dlFileEntry.getUserId(),
+						actionId);
+
+				if (!hasOwnerPermission) {
+					return false;
+				}
 			}
 
 			return null;
 		}
 
-		private DLFileEntryWorkflowedModelPermissionLogic(
+		private DLFileEntryWorkflowedModelResourcePermissionLogic(
 			ModelResourcePermission<DLFileEntry> modelResourcePermission) {
 
 			_modelResourcePermission = modelResourcePermission;

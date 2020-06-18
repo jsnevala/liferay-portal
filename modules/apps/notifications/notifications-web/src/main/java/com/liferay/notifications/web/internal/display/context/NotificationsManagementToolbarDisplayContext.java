@@ -15,15 +15,19 @@
 package com.liferay.notifications.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.SafeConsumer;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.UserNotificationEvent;
+import com.liferay.portal.kernel.notifications.UserNotificationFeedEntry;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,92 +42,125 @@ import javax.servlet.http.HttpServletRequest;
 public class NotificationsManagementToolbarDisplayContext {
 
 	public NotificationsManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request, PortletURL currentURLObj) {
+		PortletURL currentURLObj) {
 
+		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
-		_request = request;
 		_currentURLObj = currentURLObj;
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		boolean actionRequired = ParamUtil.getBoolean(
-			_request, "actionRequired");
-
-		return new DropdownItemList() {
-			{
-				if (!actionRequired) {
-					add(
-						SafeConsumer.ignore(
-							dropdownItem -> {
-								dropdownItem.putData(
-									"action", "markNotificationsAsRead");
-								dropdownItem.setIcon("envelope-open");
-								dropdownItem.setLabel(
-									LanguageUtil.get(_request, "mark-as-read"));
-								dropdownItem.setQuickAction(true);
-							}));
-
-					add(
-						SafeConsumer.ignore(
-							dropdownItem -> {
-								dropdownItem.putData(
-									"action", "markNotificationsAsUnread");
-								dropdownItem.setIcon("envelope-closed");
-								dropdownItem.setLabel(
-									LanguageUtil.get(
-										_request, "mark-as-unread"));
-								dropdownItem.setQuickAction(true);
-							}));
-				}
-
-				add(
-					SafeConsumer.ignore(
-						dropdownItem -> {
-							dropdownItem.putData(
-								"action", "deleteAllNotifications");
-							dropdownItem.setIcon("times");
-							dropdownItem.setLabel(
-								LanguageUtil.get(_request, "delete"));
-							dropdownItem.setQuickAction(true);
-						}));
+		return DropdownItemListBuilder.add(
+			() -> !_isActionRequired(),
+			dropdownItem -> {
+				dropdownItem.putData("action", "markNotificationsAsRead");
+				dropdownItem.setIcon("envelope-open");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "mark-as-read"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).add(
+			() -> !_isActionRequired(),
+			dropdownItem -> {
+				dropdownItem.putData("action", "markNotificationsAsUnread");
+				dropdownItem.setIcon("envelope-closed");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "mark-as-unread"));
+				dropdownItem.setQuickAction(true);
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "deleteNotifications");
+				dropdownItem.setIcon("times-circle");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "delete"));
+				dropdownItem.setQuickAction(true);
+			}
+		).build();
+	}
+
+	public List<String> getAvailableActions(
+		UserNotificationEvent userNotificationEvent,
+		UserNotificationFeedEntry userNotificationFeedEntry) {
+
+		List<String> availableActions = new ArrayList<>();
+
+		if ((userNotificationFeedEntry == null) ||
+			!userNotificationFeedEntry.isApplicable()) {
+
+			return availableActions;
+		}
+
+		if (!userNotificationFeedEntry.isActionable()) {
+			availableActions.add("deleteNotifications");
+		}
+
+		if (!userNotificationEvent.isActionRequired()) {
+			if (!userNotificationEvent.isArchived()) {
+				availableActions.add("markNotificationsAsRead");
+			}
+			else {
+				availableActions.add("markNotificationsAsUnread");
+			}
+		}
+
+		return availableActions;
+	}
+
+	public String getClearResultsURL() {
+		PortletURL clearResultsURL = _liferayPortletResponse.createRenderURL();
+
+		clearResultsURL.setParameter(
+			"actionRequired", String.valueOf(_isActionRequired()));
+
+		return clearResultsURL.toString();
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				boolean actionRequired = ParamUtil.getBoolean(
-					_request, "actionRequired");
-
-				if (!actionRequired) {
-					addGroup(
-						SafeConsumer.ignore(
-							dropdownGroupItem -> {
-								dropdownGroupItem.setDropdownItems(
-									_getFilterNavigationDropdownItems());
-								dropdownGroupItem.setLabel(
-									LanguageUtil.get(
-										_request, "filter-by-navigation"));
-							}));
-				}
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			() -> !_isActionRequired(),
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					_getFilterNavigationDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "filter-by-navigation"));
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
+			}
+		).build();
+	}
+
+	public List<LabelItem> getFilterLabelItems() {
+		String navigation = _getNavigation();
+
+		return LabelItemListBuilder.add(
+			() -> navigation.equals("read") || navigation.equals("unread"),
+			labelItem -> {
+				PortletURL removeLabelURL = PortletURLUtil.clone(
+					_currentURLObj, _liferayPortletResponse);
+
+				removeLabelURL.setParameter("navigation", (String)null);
+
+				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+
+				labelItem.setCloseable(true);
+				labelItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, navigation));
+			}
+		).build();
 	}
 
 	public String getOrderByType() {
-		return ParamUtil.getString(_request, "orderByType", "desc");
+		return ParamUtil.getString(_httpServletRequest, "orderByType", "desc");
 	}
 
 	public PortletURL getSortingURL() throws PortletException {
@@ -140,68 +177,66 @@ public class NotificationsManagementToolbarDisplayContext {
 	}
 
 	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		String navigation = ParamUtil.getString(_request, "navigation", "all");
+		String navigation = _getNavigation();
 
-		return new DropdownItemList() {
-			{
-				add(
-					SafeConsumer.ignore(
-						dropdownItem -> {
-							dropdownItem.setHref(
-								PortletURLUtil.clone(
-									_currentURLObj, _liferayPortletResponse),
-								SearchContainer.DEFAULT_CUR_PARAM, "0",
-								"navigation", "all");
-							dropdownItem.setActive(navigation.equals("all"));
-							dropdownItem.setLabel(
-								LanguageUtil.get(_request, "all"));
-						}));
-				add(
-					SafeConsumer.ignore(
-						dropdownItem -> {
-							dropdownItem.setHref(
-								PortletURLUtil.clone(
-									_currentURLObj, _liferayPortletResponse),
-								SearchContainer.DEFAULT_CUR_PARAM, "0",
-								"navigation", "unread");
-							dropdownItem.setActive(navigation.equals("unread"));
-							dropdownItem.setLabel(
-								LanguageUtil.get(_request, "unread"));
-						}));
-				add(
-					SafeConsumer.ignore(
-						dropdownItem -> {
-							dropdownItem.setHref(
-								PortletURLUtil.clone(
-									_currentURLObj, _liferayPortletResponse),
-								SearchContainer.DEFAULT_CUR_PARAM, "0",
-								"navigation", "read");
-							dropdownItem.setActive(navigation.equals("read"));
-							dropdownItem.setLabel(
-								LanguageUtil.get(_request, "read"));
-						}));
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					PortletURLUtil.clone(
+						_currentURLObj, _liferayPortletResponse),
+					SearchContainer.DEFAULT_CUR_PARAM, "0", "navigation",
+					"all");
+				dropdownItem.setActive(navigation.equals("all"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "all"));
 			}
-		};
+		).add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					PortletURLUtil.clone(
+						_currentURLObj, _liferayPortletResponse),
+					SearchContainer.DEFAULT_CUR_PARAM, "0", "navigation",
+					"unread");
+				dropdownItem.setActive(navigation.equals("unread"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "unread"));
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					PortletURLUtil.clone(
+						_currentURLObj, _liferayPortletResponse),
+					SearchContainer.DEFAULT_CUR_PARAM, "0", "navigation",
+					"read");
+				dropdownItem.setActive(navigation.equals("read"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "read"));
+			}
+		).build();
+	}
+
+	private String _getNavigation() {
+		return ParamUtil.getString(_httpServletRequest, "navigation", "all");
 	}
 
 	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					SafeConsumer.ignore(
-						dropdownItem -> {
-							dropdownItem.setActive(true);
-							dropdownItem.setHref(getSortingURL());
-							dropdownItem.setLabel(
-								LanguageUtil.get(_request, "date"));
-						}));
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(true);
+				dropdownItem.setHref(getSortingURL());
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "date"));
 			}
-		};
+		).build();
+	}
+
+	private boolean _isActionRequired() {
+		return ParamUtil.getBoolean(_httpServletRequest, "actionRequired");
 	}
 
 	private final PortletURL _currentURLObj;
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
-	private final HttpServletRequest _request;
 
 }

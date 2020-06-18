@@ -14,10 +14,14 @@
 
 package com.liferay.talend;
 
+import com.liferay.talend.tliferaybatchfile.TLiferayBatchFileDefinition;
+import com.liferay.talend.tliferaybatchoutput.TLiferayBatchOutputDefinition;
 import com.liferay.talend.tliferayconnection.TLiferayConnectionDefinition;
 import com.liferay.talend.tliferayinput.TLiferayInputDefinition;
 import com.liferay.talend.tliferayoutput.TLiferayOutputDefinition;
+import com.liferay.talend.wizard.LiferayConnectionEditWizardDefinition;
 import com.liferay.talend.wizard.LiferayConnectionWizardDefinition;
+import com.liferay.talend.wizard.LiferaySchemaWizardDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,9 +51,13 @@ public class LiferayFamilyDefinitionTest {
 	public void testAllComponentsDefinitionsCreated() {
 		List<Class> expectedDefinitions = new ArrayList<>();
 
+		expectedDefinitions.add(TLiferayBatchFileDefinition.class);
+		expectedDefinitions.add(TLiferayBatchOutputDefinition.class);
 		expectedDefinitions.add(TLiferayConnectionDefinition.class);
 		expectedDefinitions.add(TLiferayInputDefinition.class);
 		expectedDefinitions.add(TLiferayOutputDefinition.class);
+		expectedDefinitions.add(LiferayConnectionEditWizardDefinition.class);
+		expectedDefinitions.add(LiferaySchemaWizardDefinition.class);
 		expectedDefinitions.add(LiferayConnectionWizardDefinition.class);
 
 		List<Class> actualDefinitionsNames = new ArrayList<>();

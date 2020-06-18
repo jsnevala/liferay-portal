@@ -17,7 +17,6 @@ package com.liferay.document.library.asset.auto.tagger.tensorflow.internal;
 import com.liferay.asset.auto.tagger.AssetAutoTagProvider;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.configuration.TensorFlowImageAssetAutoTagProviderCompanyConfiguration;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.configuration.TensorFlowImageAssetAutoTagProviderProcessConfiguration;
-import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.constants.TensorflowAssetAutoTagProviderConstants;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.petra.process.GetLabelProbabilitiesProcessCallable;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util.TensorflowProcessHolder;
 import com.liferay.petra.process.ProcessExecutor;
@@ -28,7 +27,6 @@ import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.repository.capabilities.TemporaryFileEntriesCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
-import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -39,6 +37,7 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -67,17 +66,14 @@ public class TensorFlowImageAssetAutoTagProvider
 	implements AssetAutoTagProvider<FileEntry> {
 
 	@Override
-	public List<String> getTagNames(FileEntry fileEntry) {
+	public Collection<String> getTagNames(FileEntry fileEntry) {
 		try {
 			TensorFlowImageAssetAutoTagProviderCompanyConfiguration
 				tensorFlowImageAssetAutoTagProviderCompanyConfiguration =
-					_configurationProvider.getConfiguration(
+					_configurationProvider.getCompanyConfiguration(
 						TensorFlowImageAssetAutoTagProviderCompanyConfiguration.
 							class,
-						new CompanyServiceSettingsLocator(
-							fileEntry.getCompanyId(),
-							TensorflowAssetAutoTagProviderConstants.
-								SERVICE_NAME));
+						fileEntry.getCompanyId());
 
 			if (tensorFlowImageAssetAutoTagProviderCompanyConfiguration.
 					enabled() &&
@@ -94,8 +90,10 @@ public class TensorFlowImageAssetAutoTagProvider
 				}
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(exception, exception);
+			}
 		}
 
 		return Collections.emptyList();
@@ -160,12 +158,16 @@ public class TensorFlowImageAssetAutoTagProvider
 	private List<String> _label(
 		byte[] imageBytes, String mimeType, float confidenceThreshold) {
 
+		int maximumNumberOfRelaunches =
+			_tensorFlowImageAssetAutoTagProviderProcessConfiguration.
+				maximumNumberOfRelaunches();
+		long maximumNumberOfRelaunchesTimeout =
+			_tensorFlowImageAssetAutoTagProviderProcessConfiguration.
+				maximumNumberOfRelaunchesTimeout();
+
 		float[] labelProbabilities = _tensorflowProcessHolder.execute(
 			new GetLabelProbabilitiesProcessCallable(imageBytes, mimeType),
-			_tensorFlowImageAssetAutoTagProviderProcessConfiguration.
-				maximumNumberOfRelaunches(),
-			_tensorFlowImageAssetAutoTagProviderProcessConfiguration.
-				maximumNumberOfRelaunchesTimeout() * 1000);
+			maximumNumberOfRelaunches, maximumNumberOfRelaunchesTimeout * 1000);
 
 		Stream<Integer> stream = _getBestIndexesStream(
 			labelProbabilities, confidenceThreshold);

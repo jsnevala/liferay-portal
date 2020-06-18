@@ -14,12 +14,9 @@
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.tools.service.builder.test.model.LocalizedEntry;
 
 import java.io.Externalizable;
@@ -31,12 +28,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing LocalizedEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see LocalizedEntry
  * @generated
  */
-@ProviderType
-public class LocalizedEntryCacheModel implements CacheModel<LocalizedEntry>,
-	Externalizable {
+public class LocalizedEntryCacheModel
+	implements CacheModel<LocalizedEntry>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -47,7 +43,8 @@ public class LocalizedEntryCacheModel implements CacheModel<LocalizedEntry>,
 			return false;
 		}
 
-		LocalizedEntryCacheModel localizedEntryCacheModel = (LocalizedEntryCacheModel)obj;
+		LocalizedEntryCacheModel localizedEntryCacheModel =
+			(LocalizedEntryCacheModel)obj;
 
 		if (localizedEntryId == localizedEntryCacheModel.localizedEntryId) {
 			return true;
@@ -100,8 +97,7 @@ public class LocalizedEntryCacheModel implements CacheModel<LocalizedEntry>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		if (defaultLanguageId == null) {
 			objectOutput.writeUTF("");
 		}
@@ -114,4 +110,5 @@ public class LocalizedEntryCacheModel implements CacheModel<LocalizedEntry>,
 
 	public String defaultLanguageId;
 	public long localizedEntryId;
+
 }

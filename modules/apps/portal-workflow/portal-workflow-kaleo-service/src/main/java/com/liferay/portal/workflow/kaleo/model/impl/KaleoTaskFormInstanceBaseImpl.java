@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskFormInstance;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskFormInstanceLocalServiceUtil;
 
@@ -31,21 +29,24 @@ import com.liferay.portal.workflow.kaleo.service.KaleoTaskFormInstanceLocalServi
  * @see KaleoTaskFormInstance
  * @generated
  */
-@ProviderType
 public abstract class KaleoTaskFormInstanceBaseImpl
 	extends KaleoTaskFormInstanceModelImpl implements KaleoTaskFormInstance {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a kaleo task form instance model instance should use the {@link KaleoTaskFormInstance} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a kaleo task form instance model instance should use the <code>KaleoTaskFormInstance</code> interface instead.
 	 */
 	@Override
 	public void persist() {
 		if (this.isNew()) {
-			KaleoTaskFormInstanceLocalServiceUtil.addKaleoTaskFormInstance(this);
+			KaleoTaskFormInstanceLocalServiceUtil.addKaleoTaskFormInstance(
+				this);
 		}
 		else {
-			KaleoTaskFormInstanceLocalServiceUtil.updateKaleoTaskFormInstance(this);
+			KaleoTaskFormInstanceLocalServiceUtil.updateKaleoTaskFormInstance(
+				this);
 		}
 	}
+
 }

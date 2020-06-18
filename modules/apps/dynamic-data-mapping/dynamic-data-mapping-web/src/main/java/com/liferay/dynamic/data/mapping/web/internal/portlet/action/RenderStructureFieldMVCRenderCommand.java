@@ -18,7 +18,6 @@ import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
-import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerTracker;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderer;
@@ -60,25 +59,29 @@ public class RenderStructureFieldMVCRenderCommand
 	extends BaseMVCResourceCommand {
 
 	protected DDMFormFieldRenderingContext createDDMFormFieldRenderingContext(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		String mode = ParamUtil.getString(request, "mode");
-		String namespace = ParamUtil.getString(request, "namespace");
+		String mode = ParamUtil.getString(httpServletRequest, "mode");
+		String namespace = ParamUtil.getString(httpServletRequest, "namespace");
 		String portletNamespace = ParamUtil.getString(
-			request, "portletNamespace");
-		boolean readOnly = ParamUtil.getBoolean(request, "readOnly");
+			httpServletRequest, "portletNamespace");
+		boolean readOnly = ParamUtil.getBoolean(httpServletRequest, "readOnly");
 
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext =
 			new DDMFormFieldRenderingContext();
 
-		request.setAttribute("aui:form:portletNamespace", portletNamespace);
+		httpServletRequest.setAttribute(
+			"aui:form:portletNamespace", portletNamespace);
 
 		ddmFormFieldRenderingContext.setHttpServletRequest(
-			_portal.getOriginalServletRequest(request));
-		ddmFormFieldRenderingContext.setHttpServletResponse(response);
+			_portal.getOriginalServletRequest(httpServletRequest));
+		ddmFormFieldRenderingContext.setHttpServletResponse(
+			httpServletResponse);
 		ddmFormFieldRenderingContext.setLocale(themeDisplay.getLocale());
 		ddmFormFieldRenderingContext.setMode(mode);
 		ddmFormFieldRenderingContext.setNamespace(namespace);
@@ -117,12 +120,12 @@ public class RenderStructureFieldMVCRenderCommand
 		ServletResponseUtil.write(httpServletResponse, ddmFormFieldHTML);
 	}
 
-	protected DDMFormField getDDMFormField(HttpServletRequest request) {
-		String definition = ParamUtil.getString(request, "definition");
-		String fieldName = ParamUtil.getString(request, "fieldName");
+	protected DDMFormField getDDMFormField(
+		HttpServletRequest httpServletRequest) {
 
-		DDMFormDeserializer ddmFormDeserializer =
-			_ddmFormDeserializerTracker.getDDMFormDeserializer("json");
+		String definition = ParamUtil.getString(
+			httpServletRequest, "definition");
+		String fieldName = ParamUtil.getString(httpServletRequest, "fieldName");
 
 		DDMFormDeserializerDeserializeRequest.Builder builder =
 			DDMFormDeserializerDeserializeRequest.Builder.newBuilder(
@@ -130,7 +133,7 @@ public class RenderStructureFieldMVCRenderCommand
 
 		DDMFormDeserializerDeserializeResponse
 			ddmFormDeserializerDeserializeResponse =
-				ddmFormDeserializer.deserialize(builder.build());
+				_jsonDDMFormDeserializer.deserialize(builder.build());
 
 		DDMForm ddmForm = ddmFormDeserializerDeserializeResponse.getDDMForm();
 
@@ -141,21 +144,16 @@ public class RenderStructureFieldMVCRenderCommand
 	}
 
 	@Reference(unbind = "-")
-	protected void setDDMFormDeserializerTracker(
-		DDMFormDeserializerTracker ddmFormDeserializerTracker) {
-
-		_ddmFormDeserializerTracker = ddmFormDeserializerTracker;
-	}
-
-	@Reference(unbind = "-")
 	protected void setDDMFormFieldRendererRegistry(
 		DDMFormFieldRendererRegistry ddmFormFieldRendererRegistry) {
 
 		_ddmFormFieldRendererRegistry = ddmFormFieldRendererRegistry;
 	}
 
-	private DDMFormDeserializerTracker _ddmFormDeserializerTracker;
 	private DDMFormFieldRendererRegistry _ddmFormFieldRendererRegistry;
+
+	@Reference(target = "(ddm.form.deserializer.type=json)")
+	private DDMFormDeserializer _jsonDDMFormDeserializer;
 
 	@Reference
 	private Portal _portal;

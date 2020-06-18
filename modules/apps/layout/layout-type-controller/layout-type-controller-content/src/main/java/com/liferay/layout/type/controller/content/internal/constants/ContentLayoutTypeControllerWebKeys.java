@@ -21,6 +21,4 @@ public class ContentLayoutTypeControllerWebKeys {
 
 	public static final String ITEM_SELECTOR = "ITEM_SELECTOR";
 
-	public static final String LAYOUT_FRAGMENTS = "LAYOUT_FRAGMENTS";
-
 }

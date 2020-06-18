@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.capabilities.RelatedModelCapability;
@@ -28,6 +29,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.BaseRelatedEntryIndexer;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
+import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
@@ -35,6 +37,7 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.RelatedEntryIndexer;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
@@ -44,7 +47,11 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.trash.TrashHelper;
 import com.liferay.wiki.engine.WikiEngineRenderer;
 import com.liferay.wiki.exception.WikiFormatException;
@@ -54,6 +61,7 @@ import com.liferay.wiki.service.WikiNodeLocalService;
 import com.liferay.wiki.service.WikiNodeService;
 import com.liferay.wiki.service.WikiPageLocalService;
 
+import java.util.List;
 import java.util.Locale;
 
 import javax.portlet.PortletRequest;
@@ -83,6 +91,7 @@ public class WikiPageIndexer
 			Field.ASSET_TAG_NAMES, Field.COMPANY_ID, Field.CONTENT,
 			Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK, Field.GROUP_ID,
 			Field.MODIFIED_DATE, Field.SCOPE_GROUP_ID, Field.TITLE, Field.UID);
+		setDefaultSelectedLocalizedFieldNames(Field.CONTENT, Field.TITLE);
 		setFilterSearch(true);
 		setPermissionAware(true);
 	}
@@ -121,7 +130,7 @@ public class WikiPageIndexer
 		try {
 			page = _wikiPageLocalService.getPage(classPK);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return;
 		}
 
@@ -139,10 +148,9 @@ public class WikiPageIndexer
 			long entryClassPK, String actionId)
 		throws Exception {
 
-		WikiPage page = _wikiPageLocalService.getPage(entryClassPK);
-
 		return _wikiPageModelResourcePermission.contains(
-			permissionChecker, page, ActionKeys.VIEW);
+			permissionChecker, _wikiPageLocalService.getPage(entryClassPK),
+			ActionKeys.VIEW);
 	}
 
 	@Override
@@ -150,6 +158,11 @@ public class WikiPageIndexer
 		WikiPage page = _wikiPageLocalService.getPage(classPK);
 
 		return isVisible(page.getStatus(), status);
+	}
+
+	@Override
+	public boolean isVisibleRelatedEntry(long classPK, int status) {
+		return true;
 	}
 
 	@Override
@@ -168,9 +181,10 @@ public class WikiPageIndexer
 				try {
 					_wikiNodeService.getNode(nodeId);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isDebugEnabled()) {
-						_log.debug("Unable to get wiki node " + nodeId, e);
+						_log.debug(
+							"Unable to get wiki node " + nodeId, exception);
 					}
 
 					continue;
@@ -187,25 +201,40 @@ public class WikiPageIndexer
 	}
 
 	@Override
+	public void postProcessSearchQuery(
+			BooleanQuery searchQuery, BooleanFilter fullQueryBooleanFilter,
+			SearchContext searchContext)
+		throws Exception {
+
+		addSearchLocalizedTerm(
+			searchQuery, searchContext, Field.CONTENT, false);
+		addSearchLocalizedTerm(searchQuery, searchContext, Field.TITLE, false);
+	}
+
+	@Override
 	public void updateFullQuery(SearchContext searchContext) {
 	}
 
 	@Override
 	protected void doDelete(WikiPage wikiPage) throws Exception {
-		deleteDocument(wikiPage.getCompanyId(), wikiPage.getResourcePrimKey());
+		deleteDocument(wikiPage.getCompanyId(), wikiPage.getPrimaryKey());
 	}
 
 	@Override
 	protected Document doGetDocument(WikiPage wikiPage) throws Exception {
 		Document document = getBaseModelDocument(CLASS_NAME, wikiPage);
 
+		uidFactory.setUID(wikiPage, document);
+
+		String content = null;
+
 		try {
-			String content = HtmlUtil.extractText(
+			content = HtmlUtil.extractText(
 				_wikiEngineRenderer.convert(wikiPage, null, null, null));
 
 			document.addText(Field.CONTENT, content);
 		}
-		catch (WikiFormatException wfe) {
+		catch (WikiFormatException wikiFormatException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					"Unable to get wiki engine for " + wikiPage.getFormat());
@@ -222,6 +251,19 @@ public class WikiPageIndexer
 
 		document.addText(Field.TITLE, title);
 
+		for (Locale locale :
+				LanguageUtil.getAvailableLocales(wikiPage.getGroupId())) {
+
+			String languageId = LocaleUtil.toLanguageId(locale);
+
+			document.addText(
+				LocalizationUtil.getLocalizedName(Field.CONTENT, languageId),
+				content);
+			document.addText(
+				LocalizationUtil.getLocalizedName(Field.TITLE, languageId),
+				title);
+		}
+
 		return document;
 	}
 
@@ -230,7 +272,14 @@ public class WikiPageIndexer
 		Document document, Locale locale, String snippet,
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		Summary summary = createSummary(document, Field.TITLE, Field.CONTENT);
+		String languageId = LocaleUtil.toLanguageId(locale);
+
+		String content = LocalizationUtil.getLocalizedName(
+			Field.CONTENT, languageId);
+		String title = LocalizationUtil.getLocalizedName(
+			Field.TITLE, languageId);
+
+		Summary summary = createSummary(document, title, content);
 
 		summary.setMaxContentLength(200);
 
@@ -239,13 +288,18 @@ public class WikiPageIndexer
 
 	@Override
 	protected void doReindex(String className, long classPK) throws Exception {
-		WikiPage page = _wikiPageLocalService.fetchWikiPage(classPK);
+		WikiPage wikiPage = _wikiPageLocalService.fetchWikiPage(classPK);
 
-		if (page == null) {
-			page = _wikiPageLocalService.getPage(classPK, (Boolean)null);
+		if (wikiPage != null) {
+			_reindexEveryVersionOfResourcePrimKey(
+				wikiPage.getResourcePrimKey());
+
+			return;
 		}
 
-		doReindex(page);
+		long resourcePrimKey = classPK;
+
+		_reindexEveryVersionOfResourcePrimKey(resourcePrimKey);
 	}
 
 	@Override
@@ -267,10 +321,8 @@ public class WikiPageIndexer
 			return;
 		}
 
-		Document document = getDocument(wikiPage);
-
 		_indexWriterHelper.updateDocument(
-			getSearchEngineId(), wikiPage.getCompanyId(), document,
+			getSearchEngineId(), wikiPage.getCompanyId(), getDocument(wikiPage),
 			isCommitImmediately());
 
 		reindexAttachments(wikiPage);
@@ -295,9 +347,8 @@ public class WikiPageIndexer
 
 		actionableDynamicQuery.setCompanyId(companyId);
 		actionableDynamicQuery.setPerformActionMethod(
-			(WikiNode node) -> {
-				reindexPages(companyId, node.getGroupId(), node.getNodeId());
-			});
+			(WikiNode node) -> reindexPages(
+				companyId, node.getGroupId(), node.getNodeId()));
 
 		actionableDynamicQuery.performActions();
 	}
@@ -323,15 +374,14 @@ public class WikiPageIndexer
 		indexableActionableDynamicQuery.setPerformActionMethod(
 			(WikiPage page) -> {
 				try {
-					Document document = getDocument(page);
-
-					indexableActionableDynamicQuery.addDocuments(document);
+					indexableActionableDynamicQuery.addDocuments(
+						getDocument(page));
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to index wiki page " + page.getPageId(),
-							pe);
+							portalException);
 					}
 				}
 			});
@@ -364,6 +414,44 @@ public class WikiPageIndexer
 		WikiPageLocalService wikiPageLocalService) {
 
 		_wikiPageLocalService = wikiPageLocalService;
+	}
+
+	@Reference
+	protected UIDFactory uidFactory;
+
+	private void _deleteDocument(WikiPage wikiPage) {
+		try {
+			_indexWriterHelper.deleteDocument(
+				getSearchEngineId(), wikiPage.getCompanyId(),
+				uidFactory.getUID(wikiPage), isCommitImmediately());
+		}
+		catch (SearchException searchException) {
+			throw new RuntimeException(searchException);
+		}
+	}
+
+	private void _reindexEveryVersionOfResourcePrimKey(long resourcePrimKey)
+		throws Exception {
+
+		List<WikiPage> wikiPages =
+			(List<WikiPage>)_wikiPageLocalService.getPersistedModel(
+				resourcePrimKey);
+
+		if (ListUtil.isEmpty(wikiPages)) {
+			return;
+		}
+
+		WikiPage latestWikiPage = _wikiPageLocalService.getPage(
+			resourcePrimKey, (Boolean)null);
+
+		for (WikiPage wikiPage : wikiPages) {
+			if (wikiPage.getPrimaryKey() == latestWikiPage.getPrimaryKey()) {
+				doReindex(wikiPage);
+			}
+			else {
+				_deleteDocument(wikiPage);
+			}
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

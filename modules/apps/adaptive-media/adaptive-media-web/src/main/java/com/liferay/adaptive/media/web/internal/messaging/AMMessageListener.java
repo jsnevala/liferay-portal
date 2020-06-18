@@ -17,6 +17,7 @@ package com.liferay.adaptive.media.web.internal.messaging;
 import com.liferay.adaptive.media.processor.AMProcessor;
 import com.liferay.adaptive.media.web.internal.constants.AMDestinationNames;
 import com.liferay.adaptive.media.web.internal.processor.AMAsyncProcessorImpl;
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.kernel.log.Log;
@@ -43,7 +44,7 @@ import org.osgi.service.component.annotations.Deactivate;
 public class AMMessageListener extends BaseMessageListener {
 
 	@Activate
-	public void activate(BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
 			bundleContext, AMProcessor.class, "(model.class.name=*)",
 			(serviceReference, emitter) -> emitter.emit(
@@ -51,7 +52,7 @@ public class AMMessageListener extends BaseMessageListener {
 	}
 
 	@Deactivate
-	public void deactivate() {
+	protected void deactivate() {
 		_serviceTrackerMap.close();
 	}
 
@@ -76,9 +77,15 @@ public class AMMessageListener extends BaseMessageListener {
 			try {
 				amProcessorCommand.execute(amProcessor, model, modelId);
 			}
-			catch (Exception e) {
+			catch (NoSuchFileEntryException noSuchFileEntryException) {
+				if (_log.isInfoEnabled()) {
+					_log.info(
+						noSuchFileEntryException, noSuchFileEntryException);
+				}
+			}
+			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(e, e);
+					_log.warn(exception, exception);
 				}
 			}
 		}

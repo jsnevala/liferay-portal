@@ -26,21 +26,21 @@ import javax.servlet.http.HttpServletResponse;
  * Renders file previews in conjunction with {@link DLPreviewRendererProvider}.
  *
  * @author Alejandro Tardín
- * @review
  */
 public interface DLPreviewRenderer {
 
 	/**
 	 * Renders content to the response.
 	 *
-	 * See {@link DLPreviewRendererProvider#getPreviewDLPreviewRendererOptional(FileVersion)}
-	 * and {@link DLPreviewRendererProvider#getThumbnailDLPreviewRendererOptional(FileVersion)}
-	 *
-	 * @param request the request
-	 * @param response the response
-	 * @review
+	 * @param httpServletRequest the request
+	 * @param httpServletResponse the response
+	 * @see   DLPreviewRendererProvider#getPreviewDLPreviewRenderer(FileVersion)
+	 * @see   DLPreviewRendererProvider#getThumbnailDLPreviewRenderer(
+	 *        FileVersion)
 	 */
-	public void render(HttpServletRequest request, HttpServletResponse response)
+	public void render(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, PortalException, ServletException;
 
 }

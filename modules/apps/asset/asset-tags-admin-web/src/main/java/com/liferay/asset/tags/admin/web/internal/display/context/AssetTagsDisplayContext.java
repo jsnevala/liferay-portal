@@ -18,43 +18,32 @@ import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetTagLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetTagServiceUtil;
-import com.liferay.asset.tags.constants.AssetTagsAdminPortletKeys;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.SortFactoryUtil;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portlet.asset.service.permission.AssetTagsPermission;
 import com.liferay.portlet.asset.util.comparator.AssetTagAssetCountComparator;
 import com.liferay.portlet.asset.util.comparator.AssetTagNameComparator;
+import com.liferay.staging.StagingGroupHelper;
+import com.liferay.staging.StagingGroupHelperUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -66,70 +55,25 @@ import javax.servlet.http.HttpServletRequest;
 public class AssetTagsDisplayContext {
 
 	public AssetTagsDisplayContext(
-		RenderRequest renderRequest, RenderResponse renderResponse,
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
+		RenderResponse renderResponse) {
 
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
-		_request = request;
-	}
 
-	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData("action", "mergeTags");
-						dropdownItem.setIcon("merge");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "merge"));
-						dropdownItem.setQuickAction(true);
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.putData("action", "deleteTags");
-						dropdownItem.setIcon("times-circle");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
-			}
-		};
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 	}
 
 	public String getAssetTitle() {
 		AssetTag tag = getTag();
 
 		if (tag == null) {
-			return LanguageUtil.get(_request, "new-tag");
+			return LanguageUtil.get(_httpServletRequest, "new-tag");
 		}
 
 		return tag.getName();
-	}
-
-	public String getClearResultsURL() {
-		PortletURL clearResultsURL = _renderResponse.createRenderURL();
-
-		clearResultsURL.setParameter("orderByCol", getOrderByCol());
-		clearResultsURL.setParameter("orderByType", getOrderByType());
-
-		return clearResultsURL.toString();
-	}
-
-	public CreationMenu getCreationMenu() {
-		return new CreationMenu() {
-			{
-				addPrimaryDropdownItem(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							_renderResponse.createRenderURL(), "mvcPath",
-							"/edit_tag.jsp");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "add-tag"));
-					});
-			}
-		};
 	}
 
 	public String getDisplayStyle() {
@@ -137,36 +81,10 @@ public class AssetTagsDisplayContext {
 			return _displayStyle;
 		}
 
-		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(_request);
-
-		_displayStyle = portalPreferences.getValue(
-			AssetTagsAdminPortletKeys.ASSET_TAGS_ADMIN, "display-style",
-			"list");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
-	}
-
-	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
-			}
-		};
 	}
 
 	public long getFullTagsCount(AssetTag tag) {
@@ -175,13 +93,12 @@ public class AssetTagsDisplayContext {
 			WorkflowConstants.STATUS_SCHEDULED
 		};
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		Hits hits = AssetEntryLocalServiceUtil.search(
+			tag.getCompanyId(), new long[] {_themeDisplay.getScopeGroupId()},
+			_themeDisplay.getUserId(), null, 0, null, null, null, null,
+			tag.getName(), true, statuses, false, 0, 1);
 
-		return AssetEntryLocalServiceUtil.searchCount(
-			tag.getCompanyId(), new long[] {themeDisplay.getScopeGroupId()},
-			themeDisplay.getUserId(), null, 0, null, null, null, null,
-			tag.getName(), true, true, statuses, false);
+		return hits.getLength();
 	}
 
 	public String getKeywords() {
@@ -189,7 +106,7 @@ public class AssetTagsDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords", null);
+		_keywords = ParamUtil.getString(_httpServletRequest, "keywords", null);
 
 		return _keywords;
 	}
@@ -202,7 +119,7 @@ public class AssetTagsDisplayContext {
 		long[] mergeTagIds = StringUtil.split(
 			ParamUtil.getString(_renderRequest, "mergeTagIds"), 0L);
 
-		List<String> mergeTagNames = new ArrayList();
+		List<String> mergeTagNames = new ArrayList<>();
 
 		for (long mergeTagId : mergeTagIds) {
 			AssetTag tag = AssetTagLocalServiceUtil.fetchAssetTag(mergeTagId);
@@ -224,7 +141,8 @@ public class AssetTagsDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol", "name");
+		_orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol", "name");
 
 		return _orderByCol;
 	}
@@ -234,30 +152,10 @@ public class AssetTagsDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
-	}
-
-	public String getSearchActionURL() {
-		PortletURL searchTagURL = _renderResponse.createRenderURL();
-
-		searchTagURL.setParameter("orderByCol", getOrderByCol());
-		searchTagURL.setParameter("orderByType", getOrderByType());
-
-		return searchTagURL.toString();
-	}
-
-	public String getSortingURL() {
-		PortletURL sortingURL = _renderResponse.createRenderURL();
-
-		sortingURL.setParameter("keywords", getKeywords());
-		sortingURL.setParameter("orderByCol", getOrderByCol());
-		sortingURL.setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL.toString();
 	}
 
 	public AssetTag getTag() {
@@ -283,7 +181,7 @@ public class AssetTagsDisplayContext {
 			return _tagId;
 		}
 
-		_tagId = ParamUtil.getLong(_request, "tagId");
+		_tagId = ParamUtil.getLong(_httpServletRequest, "tagId");
 
 		return _tagId;
 	}
@@ -299,9 +197,6 @@ public class AssetTagsDisplayContext {
 
 		tagsSearchContainer.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
 
 		String keywords = getKeywords();
 
@@ -323,7 +218,7 @@ public class AssetTagsDisplayContext {
 
 			BaseModelSearchResult<AssetTag> baseModelSearchResult =
 				AssetTagLocalServiceUtil.searchTags(
-					new long[] {themeDisplay.getScopeGroupId()}, keywords,
+					new long[] {_themeDisplay.getScopeGroupId()}, keywords,
 					tagsSearchContainer.getStart(),
 					tagsSearchContainer.getEnd(), sort);
 
@@ -358,7 +253,7 @@ public class AssetTagsDisplayContext {
 
 			tagsSearchContainer.setOrderByType(orderByType);
 
-			long scopeGroupId = themeDisplay.getScopeGroupId();
+			long scopeGroupId = _themeDisplay.getScopeGroupId();
 
 			int tagsCount = AssetTagServiceUtil.getTagsCount(
 				scopeGroupId, keywords);
@@ -378,130 +273,41 @@ public class AssetTagsDisplayContext {
 		return _tagsSearchContainer;
 	}
 
-	public int getTotalItems() throws PortalException {
-		SearchContainer tagsSearchContainer = getTagsSearchContainer();
-
-		return tagsSearchContainer.getTotal();
-	}
-
-	public List<ViewTypeItem> getViewTypeItems() {
-		PortletURL portletURL = _renderResponse.createActionURL();
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "changeDisplayStyle");
-		portletURL.setParameter("redirect", PortalUtil.getCurrentURL(_request));
-
-		return new ViewTypeItemList(portletURL, getDisplayStyle()) {
-			{
-				addListViewTypeItem();
-				addTableViewTypeItem();
-			}
-		};
-	}
-
-	public boolean isShowAddButton() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		if (AssetTagsPermission.contains(
-				themeDisplay.getPermissionChecker(),
-				AssetTagsPermission.RESOURCE_NAME,
-				AssetTagsAdminPortletKeys.ASSET_TAGS_ADMIN,
-				themeDisplay.getSiteGroupId(), ActionKeys.MANAGE_TAG)) {
-
-			return isShowTagsActionMenu();
+	public boolean isShowTagsActions() {
+		if (_showTagsActions != null) {
+			return _showTagsActions;
 		}
 
-		return false;
-	}
+		boolean showTagsActions = true;
 
-	public boolean isShowSearch() throws PortalException {
-		if (Validator.isNotNull(getKeywords())) {
-			return true;
+		StagingGroupHelper stagingGroupHelper =
+			StagingGroupHelperUtil.getStagingGroupHelper();
+
+		Group group = _themeDisplay.getScopeGroup();
+
+		if (stagingGroupHelper.isLocalLiveGroup(group) ||
+			stagingGroupHelper.isRemoteLiveGroup(group)) {
+
+			showTagsActions = false;
 		}
 
-		SearchContainer tagsSearchContainer = getTagsSearchContainer();
+		_showTagsActions = showTagsActions;
 
-		if (tagsSearchContainer.getTotal() > 0) {
-			return true;
-		}
-
-		return false;
-	}
-
-	public boolean isShowTagsActionMenu() {
-		if (_showTagsActionMenu != null) {
-			return _showTagsActionMenu;
-		}
-
-		boolean showTagsActionMenu = true;
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		Group group = themeDisplay.getScopeGroup();
-
-		if (group.isStaged() && !group.isStagingGroup() &&
-			!group.isStagedRemotely()) {
-
-			showTagsActionMenu = false;
-		}
-
-		_showTagsActionMenu = showTagsActionMenu;
-
-		return _showTagsActionMenu;
-	}
-
-	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(_renderResponse.createRenderURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
-			}
-		};
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							_renderResponse.createRenderURL(), "keywords",
-							getKeywords(), "orderByCol", "name", "orderByType",
-							getOrderByType());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "name"));
-					});
-				add(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							_renderResponse.createRenderURL(), "keywords",
-							getKeywords(), "orderByCol", "usages",
-							"orderByType", getOrderByType());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "usages"));
-					});
-			}
-		};
+		return _showTagsActions;
 	}
 
 	private String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private List<String> _mergeTagNames;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
-	private Boolean _showTagsActionMenu;
+	private Boolean _showTagsActions;
 	private AssetTag _tag;
 	private Long _tagId;
 	private SearchContainer _tagsSearchContainer;
+	private final ThemeDisplay _themeDisplay;
 
 }

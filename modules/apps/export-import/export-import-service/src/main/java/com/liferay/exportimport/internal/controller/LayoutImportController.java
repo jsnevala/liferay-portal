@@ -14,9 +14,8 @@
 
 package com.liferay.exportimport.internal.controller;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.kernel.model.adapter.StagedAssetLink;
+import com.liferay.exportimport.configuration.ExportImportServiceConfiguration;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.controller.PortletImportController;
 import com.liferay.exportimport.internal.lar.DeletionSystemEventImporter;
@@ -42,6 +41,7 @@ import com.liferay.exportimport.kernel.lar.UserIdStrategy;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleManager;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
+import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.exportimport.lar.PermissionImporter;
 import com.liferay.exportimport.portlet.data.handler.provider.PortletDataHandlerProvider;
 import com.liferay.layout.set.model.adapter.StagedLayoutSet;
@@ -51,6 +51,7 @@ import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutPrototypeException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutSetPrototypeException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -61,7 +62,9 @@ import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.plugin.Version;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
@@ -85,6 +88,7 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.XPath;
 import com.liferay.portal.kernel.zip.ZipReader;
 import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
+import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.site.model.adapter.StagedGroup;
 import com.liferay.sites.kernel.util.SitesUtil;
 
@@ -125,7 +129,6 @@ import org.osgi.service.component.annotations.Reference;
 	property = "model.class.name=com.liferay.portal.kernel.model.Layout",
 	service = {ExportImportController.class, LayoutImportController.class}
 )
-@ProviderType
 public class LayoutImportController implements ImportController {
 
 	@Override
@@ -212,10 +215,8 @@ public class LayoutImportController implements ImportController {
 				_portletDataContextFactory.clonePortletDataContext(
 					portletDataContext));
 
-			Map<String, Serializable> settingsMap =
-				exportImportConfiguration.getSettingsMap();
-
-			long userId = MapUtil.getLong(settingsMap, "userId");
+			long userId = MapUtil.getLong(
+				exportImportConfiguration.getSettingsMap(), "userId");
 
 			doImportFile(portletDataContext, userId);
 
@@ -287,7 +288,25 @@ public class LayoutImportController implements ImportController {
 				missingReferences.getDependencyMissingReferences();
 
 			if (!dependencyMissingReferences.isEmpty()) {
-				throw new MissingReferenceException(missingReferences);
+				if (isValidateMissingReferences()) {
+					throw new MissingReferenceException(missingReferences);
+				}
+
+				if (_log.isWarnEnabled()) {
+					try {
+						JSONArray errorMessagesJSONArray =
+							_staging.getErrorMessagesJSONArray(
+								LocaleUtil.getDefault(),
+								dependencyMissingReferences);
+
+						_log.warn(
+							"Missing reference validation errors ignored: " +
+								errorMessagesJSONArray);
+					}
+					catch (Exception exception) {
+						_log.warn(exception, exception);
+					}
+				}
 			}
 
 			return missingReferences;
@@ -301,17 +320,6 @@ public class LayoutImportController implements ImportController {
 		}
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void deleteMissingLayouts(
-			PortletDataContext portletDataContext,
-			List<String> sourceLayoutUuids, List<Layout> previousLayouts,
-			ServiceContext serviceContext)
-		throws Exception {
-	}
-
 	protected void deletePortletData(PortletDataContext portletDataContext)
 		throws Exception {
 
@@ -322,10 +330,8 @@ public class LayoutImportController implements ImportController {
 			(Map<Long, Layout>)portletDataContext.getNewPrimaryKeysMap(
 				Layout.class + ".layout");
 
-		if (_log.isDebugEnabled()) {
-			if (!portletElements.isEmpty()) {
-				_log.debug("Deleting portlet data");
-			}
+		if (_log.isDebugEnabled() && !portletElements.isEmpty()) {
+			_log.debug("Deleting portlet data");
 		}
 
 		for (Element portletElement : portletElements) {
@@ -448,12 +454,15 @@ public class LayoutImportController implements ImportController {
 							getLayoutPrototypeByUuidAndCompanyId(
 								layoutPrototypeUuid, companyId);
 				}
-				catch (NoSuchLayoutPrototypeException nslpe) {
+				catch (NoSuchLayoutPrototypeException
+							noSuchLayoutPrototypeException) {
 
 					// LPS-52675
 
 					if (_log.isDebugEnabled()) {
-						_log.debug(nslpe, nslpe);
+						_log.debug(
+							noSuchLayoutPrototypeException,
+							noSuchLayoutPrototypeException);
 					}
 				}
 			}
@@ -498,12 +507,15 @@ public class LayoutImportController implements ImportController {
 							getLayoutSetPrototypeByUuidAndCompanyId(
 								importedLayoutSetPrototypeUuid, companyId);
 				}
-				catch (NoSuchLayoutSetPrototypeException nslspe) {
+				catch (NoSuchLayoutSetPrototypeException
+							noSuchLayoutSetPrototypeException) {
 
 					// LPS-52675
 
 					if (_log.isDebugEnabled()) {
-						_log.debug(nslspe, nslspe);
+						_log.debug(
+							noSuchLayoutSetPrototypeException,
+							noSuchLayoutSetPrototypeException);
 					}
 				}
 			}
@@ -690,19 +702,6 @@ public class LayoutImportController implements ImportController {
 			PROCESS_FLAG_LAYOUT_IMPORT_IN_PROCESS;
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void importLayout(
-			PortletDataContext portletDataContext,
-			List<String> sourceLayoutsUuids, Element layoutElement)
-		throws Exception {
-
-		StagedModelDataHandlerUtil.importStagedModel(
-			portletDataContext, layoutElement);
-	}
-
 	protected void importLayoutsFromLegacyLar(
 			PortletDataContext portletDataContext,
 			String layoutSetPrototypeUuid, ServiceContext serviceContext,
@@ -764,8 +763,7 @@ public class LayoutImportController implements ImportController {
 						layoutSetPrototype.getGroupId(), true);
 
 				if (sourcePrototypeLayout == null) {
-					_layoutLocalService.deleteLayout(
-						layout, false, serviceContext);
+					_layoutLocalService.deleteLayout(layout, serviceContext);
 				}
 			}
 		}
@@ -786,24 +784,19 @@ public class LayoutImportController implements ImportController {
 
 		List<Element> layoutElements = layoutsElement.elements();
 
-		if (_log.isDebugEnabled()) {
-			if (!layoutElements.isEmpty()) {
-				_log.debug("Importing layouts");
-			}
+		if (_log.isDebugEnabled() && !layoutElements.isEmpty()) {
+			_log.debug("Importing layouts");
 		}
 
-		List<String> sourceLayoutsUuids = new ArrayList<>();
-
 		for (Element layoutElement : layoutElements) {
-			importLayout(portletDataContext, sourceLayoutsUuids, layoutElement);
+			StagedModelDataHandlerUtil.importStagedModel(
+				portletDataContext, layoutElement);
 		}
 
 		// Import portlets
 
-		if (_log.isDebugEnabled()) {
-			if (!portletElements.isEmpty()) {
-				_log.debug("Importing portlets");
-			}
+		if (_log.isDebugEnabled() && !portletElements.isEmpty()) {
+			_log.debug("Importing portlets");
 		}
 
 		Map<Long, Layout> layouts =
@@ -837,11 +830,6 @@ public class LayoutImportController implements ImportController {
 
 			portletDataContext.setPlid(plid);
 
-			long oldPlid = GetterUtil.getLong(
-				portletElement.attributeValue("old-plid"));
-
-			portletDataContext.setOldPlid(oldPlid);
-
 			portletDataContext.setPortletId(portletId);
 
 			if (BackgroundTaskThreadLocal.hasBackgroundTask()) {
@@ -861,8 +849,6 @@ public class LayoutImportController implements ImportController {
 			// portlet permissions. The import of the portlet data assumes that
 			// portlet preferences already exist.
 
-			setPortletScope(portletDataContext, portletElement);
-
 			long portletPreferencesGroupId = portletDataContext.getGroupId();
 
 			Element portletDataElement = portletElement.element("portlet-data");
@@ -880,6 +866,7 @@ public class LayoutImportController implements ImportController {
 				_exportImportLifecycleManager.fireExportImportLifecycleEvent(
 					ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_STARTED,
 					getProcessFlag(),
+					portletDataContext.getExportImportProcessId(),
 					_portletDataContextFactory.clonePortletDataContext(
 						portletDataContext));
 
@@ -910,6 +897,7 @@ public class LayoutImportController implements ImportController {
 					ExportImportLifecycleConstants.
 						EVENT_PORTLET_IMPORT_SUCCEEDED,
 					getProcessFlag(),
+					portletDataContext.getExportImportProcessId(),
 					_portletDataContextFactory.clonePortletDataContext(
 						portletDataContext));
 			}
@@ -917,6 +905,7 @@ public class LayoutImportController implements ImportController {
 				_exportImportLifecycleManager.fireExportImportLifecycleEvent(
 					ExportImportLifecycleConstants.EVENT_PORTLET_IMPORT_FAILED,
 					getProcessFlag(),
+					portletDataContext.getExportImportProcessId(),
 					_portletDataContextFactory.clonePortletDataContext(
 						portletDataContext),
 					t);
@@ -980,6 +969,22 @@ public class LayoutImportController implements ImportController {
 		}
 	}
 
+	protected boolean isValidateMissingReferences() {
+		try {
+			ExportImportServiceConfiguration configuration =
+				_configurationProvider.getCompanyConfiguration(
+					ExportImportServiceConfiguration.class,
+					CompanyThreadLocal.getCompanyId());
+
+			return configuration.validateMissingReferences();
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+		}
+
+		return true;
+	}
+
 	protected void populateDeletionStagedModelTypes(
 			PortletDataContext portletDataContext)
 		throws Exception {
@@ -1014,87 +1019,16 @@ public class LayoutImportController implements ImportController {
 		portletDataContext.addDeletionSystemEventStagedModelTypes(
 			new StagedModelType(Layout.class));
 		portletDataContext.addDeletionSystemEventStagedModelTypes(
+			new StagedModelType(SegmentsExperience.class, Layout.class));
+		portletDataContext.addDeletionSystemEventStagedModelTypes(
 			new StagedModelType(StagedAssetLink.class));
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setExportImportLifecycleManager(
-		ExportImportLifecycleManager exportImportLifecycleManager) {
-	}
+	@Reference(unbind = "-")
+	protected void setConfigurationProvider(
+		ConfigurationProvider configurationProvider) {
 
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setLayoutLocalService(
-		LayoutLocalService layoutLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setLayoutPrototypeLocalService(
-		LayoutPrototypeLocalService layoutPrototypeLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setLayoutSetLocalService(
-		LayoutSetLocalService layoutSetLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setLayoutSetPrototypeLocalService(
-		LayoutSetPrototypeLocalService layoutSetPrototypeLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setPortletImportController(
-		PortletImportController portletImportController) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setPortletLocalService(
-		PortletLocalService portletLocalService) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void setPortletScope(
-		PortletDataContext portletDataContext, Element portletElement) {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected void updateLayoutPriorities(
-		PortletDataContext portletDataContext, List<Element> layoutElements,
-		boolean privateLayout) {
+		_configurationProvider = configurationProvider;
 	}
 
 	protected void validateFile(
@@ -1117,9 +1051,9 @@ public class LayoutImportController implements ImportController {
 
 			rootElement = document.getRootElement();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new LARFileException(
-				LARFileException.TYPE_INVALID_MANIFEST, e);
+				LARFileException.TYPE_INVALID_MANIFEST, exception);
 		}
 
 		// Bundle compatibility
@@ -1190,8 +1124,9 @@ public class LayoutImportController implements ImportController {
 
 		String larType = headerElement.attributeValue("type");
 
-		String[] expectedLARTypes =
-			{"layout-prototype", "layout-set", "layout-set-prototype"};
+		String[] expectedLARTypes = {
+			"layout-prototype", "layout-set", "layout-set-prototype"
+		};
 
 		Stream<String> stream = Stream.of(expectedLARTypes);
 
@@ -1296,14 +1231,15 @@ public class LayoutImportController implements ImportController {
 			if (!LanguageUtil.isAvailableLocale(
 					groupId, sourceAvailableLocale)) {
 
-				LocaleException le = new LocaleException(
+				LocaleException localeException = new LocaleException(
 					LocaleException.TYPE_EXPORT_IMPORT);
 
-				le.setSourceAvailableLocales(sourceAvailableLocales);
-				le.setTargetAvailableLocales(
+				localeException.setSourceAvailableLocales(
+					sourceAvailableLocales);
+				localeException.setTargetAvailableLocales(
 					LanguageUtil.getAvailableLocales(groupId));
 
-				throw le;
+				throw localeException;
 			}
 		}
 
@@ -1313,20 +1249,6 @@ public class LayoutImportController implements ImportController {
 			Layout.class.getSimpleName());
 
 		validateLayoutPrototypes(companyId, headerElement, layoutsElement);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #validateLayoutPrototypes(long, Element, Element)}
-	 */
-	@Deprecated
-	protected void validateLayoutPrototypes(
-			long companyId, Element layoutsElement)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method is deprecated and replaced by " +
-				"#validateLayoutPrototypes(long, Element, Element)");
 	}
 
 	protected void validateLayoutPrototypes(
@@ -1344,12 +1266,15 @@ public class LayoutImportController implements ImportController {
 					getLayoutSetPrototypeByUuidAndCompanyId(
 						layoutSetPrototypeUuid, companyId);
 			}
-			catch (NoSuchLayoutSetPrototypeException nslspe) {
+			catch (NoSuchLayoutSetPrototypeException
+						noSuchLayoutSetPrototypeException) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(nslspe, nslspe);
+					_log.debug(
+						noSuchLayoutSetPrototypeException,
+						noSuchLayoutSetPrototypeException);
 				}
 
 				String layoutSetPrototypeName = headerElement.attributeValue(
@@ -1371,40 +1296,50 @@ public class LayoutImportController implements ImportController {
 				continue;
 			}
 
+			boolean layoutPrototypeGlobal = GetterUtil.getBoolean(
+				layoutElement.attributeValue(
+					"layout-prototype-global", "true"));
+
+			if (!layoutPrototypeGlobal) {
+				continue;
+			}
+
 			String layoutPrototypeUuid = GetterUtil.getString(
 				layoutElement.attributeValue("layout-prototype-uuid"));
 
-			if (Validator.isNotNull(layoutPrototypeUuid)) {
-				String layoutPrototypeName = GetterUtil.getString(
-					layoutElement.attributeValue("layout-prototype-name"));
+			if (Validator.isNull(layoutPrototypeUuid)) {
+				continue;
+			}
 
-				boolean preloaded = GetterUtil.getBoolean(
-					layoutElement.attributeValue("preloaded"));
+			String layoutPrototypeName = GetterUtil.getString(
+				layoutElement.attributeValue("layout-prototype-name"));
 
-				if (!preloaded) {
-					LayoutPrototype layoutPrototype =
-						_layoutPrototypeLocalService.
-							fetchLayoutPrototypeByUuidAndCompanyId(
-								layoutPrototypeUuid, companyId);
+			boolean preloaded = GetterUtil.getBoolean(
+				layoutElement.attributeValue("preloaded"));
 
-					if (layoutPrototype == null) {
-						missingLayoutPrototypes.add(
-							new Tuple(
-								LayoutPrototype.class.getName(),
-								layoutPrototypeUuid, layoutPrototypeName));
-					}
+			if (!preloaded) {
+				LayoutPrototype layoutPrototype =
+					_layoutPrototypeLocalService.
+						fetchLayoutPrototypeByUuidAndCompanyId(
+							layoutPrototypeUuid, companyId);
+
+				if (layoutPrototype == null) {
+					missingLayoutPrototypes.add(
+						new Tuple(
+							LayoutPrototype.class.getName(),
+							layoutPrototypeUuid, layoutPrototypeName));
 				}
-				else {
-					LayoutPrototype layoutPrototype =
-						_layoutPrototypeLocalService.fetchLayoutProtoype(
-							companyId, layoutPrototypeName);
+			}
+			else {
+				LayoutPrototype layoutPrototype =
+					_layoutPrototypeLocalService.fetchLayoutProtoype(
+						companyId, layoutPrototypeName);
 
-					if (layoutPrototype == null) {
-						missingLayoutPrototypes.add(
-							new Tuple(
-								LayoutPrototype.class.getName(),
-								layoutPrototypeUuid, layoutPrototypeName));
-					}
+				if (layoutPrototype == null) {
+					missingLayoutPrototypes.add(
+						new Tuple(
+							LayoutPrototype.class.getName(),
+							layoutPrototypeUuid, layoutPrototypeName));
 				}
 			}
 		}
@@ -1417,6 +1352,7 @@ public class LayoutImportController implements ImportController {
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutImportController.class);
 
+	private ConfigurationProvider _configurationProvider;
 	private final DeletionSystemEventImporter _deletionSystemEventImporter =
 		DeletionSystemEventImporter.getInstance();
 
@@ -1455,5 +1391,8 @@ public class LayoutImportController implements ImportController {
 
 	@Reference
 	private PortletLocalService _portletLocalService;
+
+	@Reference
+	private Staging _staging;
 
 }

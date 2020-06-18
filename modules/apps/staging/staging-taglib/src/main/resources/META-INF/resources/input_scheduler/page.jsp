@@ -18,6 +18,8 @@
 
 <ul class="hide options portlet-list select-options" id="<portlet:namespace />selectSchedule">
 	<li>
+		<liferay-ui:error exception="<%= com.liferay.portal.kernel.scheduler.SchedulerException.class %>" message="a-wrong-end-date-was-specified-the-scheduled-process-will-never-run" />
+
 		<aui:input name="jobName" type="hidden" />
 
 		<%
@@ -36,8 +38,6 @@
 		int startMinute = ParamUtil.get(request, "schedulerStartDateMinute", cal.get(Calendar.MINUTE));
 		int startMonth = ParamUtil.get(request, "schedulerStartDateMonth", cal.get(Calendar.MONTH));
 		int startYear = ParamUtil.get(request, "schedulerStartDateYear", cal.get(Calendar.YEAR));
-
-		String cssClass = GetterUtil.getString((String)request.getAttribute("liferay-ui:input-repeat:cssClass"));
 
 		Recurrence recurrence = null;
 
@@ -62,6 +62,7 @@
 
 		int[] monthIds = CalendarUtil.getMonthIds();
 		String[] months = CalendarUtil.getMonths(locale);
+		String timeZoneID = timeZone.getID();
 		%>
 
 		<table class="staging-publish-schedule">
@@ -102,6 +103,17 @@
 								name="schedulerStartTime"
 							/>
 						</div>
+					</td>
+				</tr>
+			</tbody>
+
+			<tbody>
+				<tr>
+					<th class="staging-scheduler-title">
+						<liferay-ui:message key="time-zone" />:
+					</th>
+					<td class="staging-scheduler-content">
+						<aui:input cssClass="calendar-portlet-time-zone-field" label="" name="timeZoneId" type="timeZone" value="<%= timeZoneID %>" />
 					</td>
 				</tr>
 			</tbody>
@@ -215,7 +227,9 @@
 						String[] days = CalendarUtil.getDays(locale);
 						%>
 
-						<div class="row weekdays">
+						<clay:row
+							className="weekdays"
+						>
 
 							<%
 							int firstDayOfWeek = cal.getFirstDayOfWeek();
@@ -227,15 +241,17 @@
 							for (Weekday weekday : weekdaysArray) {
 							%>
 
-								<div class="col-md-3">
+								<clay:col
+									md="3"
+								>
 									<aui:input inlineLabel="right" label="<%= days[weekday.getCalendarWeekday() - 1] %>" name='<%= "weeklyDayPos" + weekday.getCalendarWeekday() %>' type="checkbox" value="<%= _getWeeklyDayPos(request, weekday.getCalendarWeekday(), recurrence) %>" />
-								</div>
+								</clay:col>
 
 							<%
 							}
 							%>
 
-						</div>
+						</clay:row>
 					</td>
 				</tr>
 			</tbody>
@@ -423,23 +439,34 @@
 			</tbody>
 		</table>
 
-		<aui:script sandbox="<%= true %>">
-			var tables = $('#<portlet:namespace />recurrenceTypeDailyTable, #<portlet:namespace />recurrenceTypeMonthlyTable, #<portlet:namespace />recurrenceTypeNeverTable, #<portlet:namespace />recurrenceTypeWeeklyTable, #<portlet:namespace />recurrenceTypeYearlyTable');
+		<script>
+			(function () {
+				var tables = document.querySelectorAll(
+					'#<portlet:namespace />recurrenceTypeDailyTable, #<portlet:namespace />recurrenceTypeMonthlyTable, #<portlet:namespace />recurrenceTypeNeverTable, #<portlet:namespace />recurrenceTypeWeeklyTable, #<portlet:namespace />recurrenceTypeYearlyTable'
+				);
+				var recurrenceTypeSelect = document.getElementById(
+					'<portlet:namespace />recurrenceType'
+				);
 
-			$('#<portlet:namespace />recurrenceType').on(
-				'change',
-				function(event) {
-					var tableId = '<portlet:namespace />' + $(event.currentTarget).find(':selected').attr('id') + 'Table';
+				if (recurrenceTypeSelect) {
+					recurrenceTypeSelect.addEventListener('change', function (event) {
+						var selectedTableId =
+							'<portlet:namespace />' +
+							recurrenceTypeSelect[recurrenceTypeSelect.selectedIndex].id +
+							'Table';
 
-					tables.each(
-						function(index, item) {
-							item = $(item);
-
-							item.toggleClass('hide', item.attr('id') != tableId);
-						}
-					);
-				});
-		</aui:script>
+						Array.prototype.forEach.call(tables, function (table) {
+							if (table.id !== selectedTableId) {
+								table.classList.add('hide');
+							}
+							else {
+								table.classList.remove('hide');
+							}
+						});
+					});
+				}
+			})();
+		</script>
 
 		<%!
 		private boolean _getWeeklyDayPos(HttpServletRequest req, int day, Recurrence recurrence) {
@@ -452,24 +479,77 @@
 
 <aui:script>
 	function <portlet:namespace />showTable(id) {
-		document.getElementById('<portlet:namespace />neverTable').style.display = 'none';
-		document.getElementById('<portlet:namespace />dailyTable').style.display = 'none';
-		document.getElementById('<portlet:namespace />weeklyTable').style.display = 'none';
-		document.getElementById('<portlet:namespace />monthlyTable').style.display = 'none';
-		document.getElementById('<portlet:namespace />yearlyTable').style.display = 'none';
+		document.getElementById('<portlet:namespace />neverTable').style.display =
+			'none';
+		document.getElementById('<portlet:namespace />dailyTable').style.display =
+			'none';
+		document.getElementById('<portlet:namespace />weeklyTable').style.display =
+			'none';
+		document.getElementById('<portlet:namespace />monthlyTable').style.display =
+			'none';
+		document.getElementById('<portlet:namespace />yearlyTable').style.display =
+			'none';
 
 		document.getElementById(id).style.display = 'block';
 	}
 
-	Liferay.Util.toggleRadio('<portlet:namespace />schedulerEndBy', '<portlet:namespace />schedulerEndDateType');
-	Liferay.Util.toggleRadio('<portlet:namespace />schedulerNoEndDate', '', ['<portlet:namespace />schedulerEndDateType']);
+	Liferay.Util.toggleRadio(
+		'<portlet:namespace />schedulerEndBy',
+		'<portlet:namespace />schedulerEndDateType'
+	);
+	Liferay.Util.toggleRadio('<portlet:namespace />schedulerNoEndDate', '', [
+		'<portlet:namespace />schedulerEndDateType',
+	]);
 
-	Liferay.Util.toggleRadio('<portlet:namespace />monthlyTypeDayOfMonth', ['<portlet:namespace />schedulerMonthlyDayOfMonthTypeDay','<portlet:namespace />schedulerMonthlyDayOfMonthTypeMonth'], ['<portlet:namespace />schedulerMonthlyDayOfWeekTypeDay','<portlet:namespace />schedulerMonthlyDayOfWeekTypeMonth']);
+	Liferay.Util.toggleRadio(
+		'<portlet:namespace />monthlyTypeDayOfMonth',
+		[
+			'<portlet:namespace />schedulerMonthlyDayOfMonthTypeDay',
+			'<portlet:namespace />schedulerMonthlyDayOfMonthTypeMonth',
+		],
+		[
+			'<portlet:namespace />schedulerMonthlyDayOfWeekTypeDay',
+			'<portlet:namespace />schedulerMonthlyDayOfWeekTypeMonth',
+		]
+	);
 
-	Liferay.Util.toggleRadio('<portlet:namespace />monthlyTypeDayOfWeek', ['<portlet:namespace />schedulerMonthlyDayOfWeekTypeDay','<portlet:namespace />schedulerMonthlyDayOfWeekTypeMonth'], ['<portlet:namespace />schedulerMonthlyDayOfMonthTypeDay','<portlet:namespace />schedulerMonthlyDayOfMonthTypeMonth']);
+	Liferay.Util.toggleRadio(
+		'<portlet:namespace />monthlyTypeDayOfWeek',
+		[
+			'<portlet:namespace />schedulerMonthlyDayOfWeekTypeDay',
+			'<portlet:namespace />schedulerMonthlyDayOfWeekTypeMonth',
+		],
+		[
+			'<portlet:namespace />schedulerMonthlyDayOfMonthTypeDay',
+			'<portlet:namespace />schedulerMonthlyDayOfMonthTypeMonth',
+		]
+	);
 
-	Liferay.Util.toggleRadio('<portlet:namespace />yearlyTypeDayOfMonth', ['<portlet:namespace />schedulerYearlyDayOfMonthTypeDay','<portlet:namespace />schedulerYearlyDayOfMonthTypeMonth','<portlet:namespace />schedulerYearlyDayOfMonthTypeYear'], ['<portlet:namespace />schedulerYearlyDayOfWeekTypeDay', '<portlet:namespace />schedulerYearlyDayOfWeekTypeMonth','<portlet:namespace />schedulerYearlyDayOfWeekTypeYear']);
+	Liferay.Util.toggleRadio(
+		'<portlet:namespace />yearlyTypeDayOfMonth',
+		[
+			'<portlet:namespace />schedulerYearlyDayOfMonthTypeDay',
+			'<portlet:namespace />schedulerYearlyDayOfMonthTypeMonth',
+			'<portlet:namespace />schedulerYearlyDayOfMonthTypeYear',
+		],
+		[
+			'<portlet:namespace />schedulerYearlyDayOfWeekTypeDay',
+			'<portlet:namespace />schedulerYearlyDayOfWeekTypeMonth',
+			'<portlet:namespace />schedulerYearlyDayOfWeekTypeYear',
+		]
+	);
 
-	Liferay.Util.toggleRadio('<portlet:namespace />yearlyTypeDayOfWeek', ['<portlet:namespace />schedulerYearlyDayOfWeekTypeDay', '<portlet:namespace />schedulerYearlyDayOfWeekTypeMonth','<portlet:namespace />schedulerYearlyDayOfWeekTypeYear'], ['<portlet:namespace />schedulerYearlyDayOfMonthTypeDay','<portlet:namespace />schedulerYearlyDayOfMonthTypeMonth','<portlet:namespace />schedulerYearlyDayOfMonthTypeYear']);
-
+	Liferay.Util.toggleRadio(
+		'<portlet:namespace />yearlyTypeDayOfWeek',
+		[
+			'<portlet:namespace />schedulerYearlyDayOfWeekTypeDay',
+			'<portlet:namespace />schedulerYearlyDayOfWeekTypeMonth',
+			'<portlet:namespace />schedulerYearlyDayOfWeekTypeYear',
+		],
+		[
+			'<portlet:namespace />schedulerYearlyDayOfMonthTypeDay',
+			'<portlet:namespace />schedulerYearlyDayOfMonthTypeMonth',
+			'<portlet:namespace />schedulerYearlyDayOfMonthTypeYear',
+		]
+	);
 </aui:script>

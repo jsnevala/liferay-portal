@@ -14,6 +14,8 @@
 
 package com.liferay.jenkins.results.parser;
 
+import com.google.common.collect.Lists;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -31,11 +33,16 @@ import org.dom4j.Element;
 /**
  * @author Michael Hashimoto
  */
-public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
-	extends BaseBuildRunner<T> {
+public abstract class TopLevelBuildRunner
+	<T extends TopLevelBuildData, S extends Workspace>
+		extends BaseBuildRunner<T, S> {
 
 	@Override
 	public void run() {
+		validateBuildParameters();
+
+		publishJenkinsReport();
+
 		updateBuildDescription();
 
 		setUpWorkspace();
@@ -47,6 +54,13 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 		invokeDownstreamBuilds();
 
 		waitForDownstreamBuildsToComplete();
+
+		publishJenkinsReport();
+	}
+
+	@Override
+	public void tearDown() {
+		super.tearDown();
 
 		publishJenkinsReport();
 	}
@@ -63,15 +77,55 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 		}
 
 		_topLevelBuild = (TopLevelBuild)build;
+
+		topLevelBuildData.setInvocationTime(topLevelBuildData.getStartTime());
 	}
 
 	protected void addInvocationBuildData(BuildData buildData) {
-		_invocationBuildDataList.add(buildData);
+		_downstreamBuildDataList.add(buildData);
+	}
+
+	protected void failBuildRunner(String message) {
+		failBuildRunner(message, null);
+	}
+
+	protected void failBuildRunner(String message, Exception exception) {
+		TopLevelBuildData topLevelBuildData = getBuildData();
+
+		topLevelBuildData.setBuildDescription("<b>ERROR:</b> " + message);
+
+		updateBuildDescription();
+
+		if (exception == null) {
+			throw new RuntimeException(message);
+		}
+
+		throw new RuntimeException(message, exception);
+	}
+
+	protected String getBuildParameter(String key) {
+		TopLevelBuildData topLevelBuildData = getBuildData();
+
+		return topLevelBuildData.getBuildParameter(key);
+	}
+
+	protected Element getJenkinsReportElement() {
+		return _topLevelBuild.getJenkinsReportElement();
+	}
+
+	protected String getJobProperty(String key) {
+		Job job = getJob();
+
+		return job.getJobProperty(key);
+	}
+
+	protected TopLevelBuild getTopLevelBuild() {
+		return _topLevelBuild;
 	}
 
 	protected void invokeDownstreamBuilds() {
-		for (BuildData invocationBuildData : _invocationBuildDataList) {
-			_invokeDownstreamBuild(invocationBuildData);
+		for (BuildData downstreamBuildData : _downstreamBuildDataList) {
+			_invokeDownstreamBuild(downstreamBuildData);
 		}
 	}
 
@@ -87,28 +141,31 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 		File workspaceDir = topLevelBuildData.getWorkspaceDir();
 
 		FilePropagator filePropagator = new FilePropagator(
-			new String[] {BuildDatabase.BUILD_DATABASE_FILE_NAME},
+			new String[] {BuildDatabase.FILE_NAME_BUILD_DATABASE},
 			JenkinsResultsParserUtil.combine(
 				topLevelBuildData.getHostname(), ":", workspaceDir.toString()),
 			topLevelBuildData.getDistPath(), topLevelBuildData.getDistNodes());
 
-		filePropagator.setCleanUpCommand(_FILE_PROPAGATOR_CLEAN_UP_COMMAND);
+		filePropagator.setCleanUpCommand(_COMMAND_FILE_PROPAGATOR_CLEAN_UP);
 
-		filePropagator.start(_FILE_PROPAGATOR_THREAD_COUNT);
+		filePropagator.start(_THREADS_FILE_PROPAGATOR_THREAD_SIZE);
+
+		List<String> distNodes = Lists.newArrayList(
+			topLevelBuildData.getDistNodes());
+
+		distNodes.removeAll(filePropagator.getErrorSlaves());
+
+		topLevelBuildData.setDistNodes(distNodes);
 	}
 
 	protected void publishJenkinsReport() {
-		Element jenkinsReportElement = _topLevelBuild.getJenkinsReportElement();
+		_updateBuildData();
 
 		try {
-			BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
-
-			publishToUserContentDir(buildDatabase.getBuildDatabaseJSFile());
+			String jenkinsReportString = StringEscapeUtils.unescapeXml(
+				Dom4JUtil.format(getJenkinsReportElement(), true));
 
 			TopLevelBuildData topLevelBuildData = getBuildData();
-
-			String jenkinsReportString = StringEscapeUtils.unescapeXml(
-				Dom4JUtil.format(jenkinsReportElement, true));
 
 			File jenkinsReportFile = new File(
 				topLevelBuildData.getWorkspaceDir(), "jenkins-report.html");
@@ -118,8 +175,8 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 
 			publishToUserContentDir(jenkinsReportFile);
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 
@@ -140,7 +197,7 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 			return;
 		}
 
-		if ((_lastGeneratedReportTime + _REPORT_GENERATION_INTERVAL) >
+		if ((_lastGeneratedReportTime + _MILLIS_REPORT_GENERATION_INTERVAL) >
 				currentTimeMillis) {
 
 			return;
@@ -151,11 +208,11 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 		publishJenkinsReport();
 	}
 
+	protected abstract void validateBuildParameters();
+
 	protected void waitForDownstreamBuildsToComplete() {
 		while (true) {
 			_topLevelBuild.update();
-
-			_updateDownstreamBuildURLs();
 
 			updateJenkinsReport();
 
@@ -169,7 +226,7 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 			}
 
 			JenkinsResultsParserUtil.sleep(
-				_WAIT_FOR_INVOKED_JOB_DURATION * 1000);
+				_SECONDS_WAIT_FOR_INVOKED_JOB_DURATION * 1000);
 		}
 	}
 
@@ -190,6 +247,8 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 
 	private String _getCachedJenkinsGitHubURL() {
 		if (JenkinsResultsParserUtil.isCINode()) {
+			Workspace workspace = getWorkspace();
+
 			WorkspaceGitRepository jenkinsWorkspaceGitRepository =
 				workspace.getJenkinsWorkspaceGitRepository();
 
@@ -208,6 +267,28 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 		return topLevelBuildData.getJenkinsGitHubURL();
 	}
 
+	private BuildData _getDownstreamBuildData(Build downstreamBuild) {
+		if (_downstreamBuildDataList.isEmpty()) {
+			return null;
+		}
+
+		String buildURL = downstreamBuild.getBuildURL();
+
+		if (buildURL == null) {
+			return null;
+		}
+
+		String runID = downstreamBuild.getParameterValue("RUN_ID");
+
+		for (BuildData downstreamBuildData : _downstreamBuildDataList) {
+			if (runID.equals(downstreamBuildData.getRunID())) {
+				return downstreamBuildData;
+			}
+		}
+
+		return null;
+	}
+
 	private void _invokeBuild(
 		String cohortName, String jobName,
 		Map<String, String> invocationParameters) {
@@ -217,8 +298,8 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 		try {
 			buildProperties = JenkinsResultsParserUtil.getBuildProperties();
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 
 		String invocationURL =
@@ -248,13 +329,6 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 		}
 
 		_topLevelBuild.addDownstreamBuilds(sb.toString());
-
-		try {
-			JenkinsResultsParserUtil.toString(sb.toString());
-		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
-		}
 	}
 
 	private void _invokeDownstreamBuild(BuildData buildData) {
@@ -274,61 +348,60 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 		invocationParameters.put(
 			"TOP_LEVEL_RUN_ID", topLevelBuildData.getRunID());
 
+		buildData.setInvocationTime(System.currentTimeMillis());
+
 		_invokeBuild(
 			topLevelBuildData.getCohortName(), buildData.getJobName(),
 			invocationParameters);
 	}
 
-	private void _updateDownstreamBuildURLs() {
-		if (_invocationBuildDataList.isEmpty()) {
-			return;
-		}
+	private void _updateBuildData() {
+		TopLevelBuildData topLevelBuildData = getBuildData();
 
-		List<Build> downstreamBuilds = _topLevelBuild.getDownstreamBuilds(null);
+		topLevelBuildData.setBuildDuration(
+			System.currentTimeMillis() - topLevelBuildData.getStartTime());
+		topLevelBuildData.setBuildResult(_topLevelBuild.getResult());
+		topLevelBuildData.setBuildStatus(_topLevelBuild.getStatus());
 
-		for (Build downstreamBuild : downstreamBuilds) {
+		for (Build downstreamBuild : _topLevelBuild.getDownstreamBuilds(null)) {
 			String buildURL = downstreamBuild.getBuildURL();
 
 			if (buildURL == null) {
 				continue;
 			}
 
-			String runID = downstreamBuild.getParameterValue("RUN_ID");
+			BuildData downstreamBuildData = _getDownstreamBuildData(
+				downstreamBuild);
 
-			BuildData invocationBuildDataToRemove = null;
-
-			for (BuildData invocationBuildData : _invocationBuildDataList) {
-				if (runID.equals(invocationBuildData.getRunID())) {
-					invocationBuildData.setBuildURL(buildURL);
-
-					invocationBuildDataToRemove = invocationBuildData;
-
-					break;
-				}
+			if (downstreamBuildData == null) {
+				continue;
 			}
 
-			if (invocationBuildDataToRemove != null) {
-				_invocationBuildDataList.remove(invocationBuildDataToRemove);
-			}
+			downstreamBuildData.setBuildDuration(downstreamBuild.getDuration());
+			downstreamBuildData.setBuildResult(downstreamBuild.getResult());
+			downstreamBuildData.setBuildStatus(downstreamBuild.getStatus());
+			downstreamBuildData.setBuildURL(buildURL);
 		}
 	}
 
-	private static final String _FILE_PROPAGATOR_CLEAN_UP_COMMAND =
+	private static final String _COMMAND_FILE_PROPAGATOR_CLEAN_UP =
 		JenkinsResultsParserUtil.combine(
-			"find ", BuildData.DIST_ROOT_PATH,
+			"find ", BuildData.FILE_PATH_DIST_ROOT,
 			"/*/* -maxdepth 1 -type d -mmin +",
-			String.valueOf(TopLevelBuildRunner._FILE_PROPAGATOR_EXPIRATION),
+			String.valueOf(
+				TopLevelBuildRunner._MILLIS_FILE_PROPAGATOR_EXPIRATION),
 			" -exec rm -frv {} \\;");
 
-	private static final int _FILE_PROPAGATOR_EXPIRATION = 180;
+	private static final int _MILLIS_FILE_PROPAGATOR_EXPIRATION = 1440;
 
-	private static final int _FILE_PROPAGATOR_THREAD_COUNT = 1;
+	private static final long _MILLIS_REPORT_GENERATION_INTERVAL =
+		1000 * 60 * 5;
 
-	private static final long _REPORT_GENERATION_INTERVAL = 1000 * 60 * 5;
+	private static final int _SECONDS_WAIT_FOR_INVOKED_JOB_DURATION = 30;
 
-	private static final int _WAIT_FOR_INVOKED_JOB_DURATION = 30;
+	private static final int _THREADS_FILE_PROPAGATOR_THREAD_SIZE = 1;
 
-	private final List<BuildData> _invocationBuildDataList = new ArrayList<>();
+	private final List<BuildData> _downstreamBuildDataList = new ArrayList<>();
 	private long _lastGeneratedReportTime = -1;
 	private final TopLevelBuild _topLevelBuild;
 

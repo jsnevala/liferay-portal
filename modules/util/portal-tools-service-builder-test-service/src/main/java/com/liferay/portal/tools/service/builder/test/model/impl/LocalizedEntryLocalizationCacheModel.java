@@ -14,13 +14,10 @@
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.tools.service.builder.test.model.LocalizedEntryLocalization;
 
 import java.io.Externalizable;
@@ -32,12 +29,12 @@ import java.io.ObjectOutput;
  * The cache model class for representing LocalizedEntryLocalization in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see LocalizedEntryLocalization
  * @generated
  */
-@ProviderType
-public class LocalizedEntryLocalizationCacheModel implements CacheModel<LocalizedEntryLocalization>,
-	Externalizable, MVCCModel {
+public class LocalizedEntryLocalizationCacheModel
+	implements CacheModel<LocalizedEntryLocalization>, Externalizable,
+			   MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -48,11 +45,15 @@ public class LocalizedEntryLocalizationCacheModel implements CacheModel<Localize
 			return false;
 		}
 
-		LocalizedEntryLocalizationCacheModel localizedEntryLocalizationCacheModel =
-			(LocalizedEntryLocalizationCacheModel)obj;
+		LocalizedEntryLocalizationCacheModel
+			localizedEntryLocalizationCacheModel =
+				(LocalizedEntryLocalizationCacheModel)obj;
 
-		if ((localizedEntryLocalizationId == localizedEntryLocalizationCacheModel.localizedEntryLocalizationId) &&
-				(mvccVersion == localizedEntryLocalizationCacheModel.mvccVersion)) {
+		if ((localizedEntryLocalizationId ==
+				localizedEntryLocalizationCacheModel.
+					localizedEntryLocalizationId) &&
+			(mvccVersion == localizedEntryLocalizationCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -99,10 +100,12 @@ public class LocalizedEntryLocalizationCacheModel implements CacheModel<Localize
 
 	@Override
 	public LocalizedEntryLocalization toEntityModel() {
-		LocalizedEntryLocalizationImpl localizedEntryLocalizationImpl = new LocalizedEntryLocalizationImpl();
+		LocalizedEntryLocalizationImpl localizedEntryLocalizationImpl =
+			new LocalizedEntryLocalizationImpl();
 
 		localizedEntryLocalizationImpl.setMvccVersion(mvccVersion);
-		localizedEntryLocalizationImpl.setLocalizedEntryLocalizationId(localizedEntryLocalizationId);
+		localizedEntryLocalizationImpl.setLocalizedEntryLocalizationId(
+			localizedEntryLocalizationId);
 		localizedEntryLocalizationImpl.setLocalizedEntryId(localizedEntryId);
 
 		if (languageId == null) {
@@ -144,8 +147,7 @@ public class LocalizedEntryLocalizationCacheModel implements CacheModel<Localize
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
 		objectOutput.writeLong(localizedEntryLocalizationId);
@@ -180,4 +182,5 @@ public class LocalizedEntryLocalizationCacheModel implements CacheModel<Localize
 	public String languageId;
 	public String title;
 	public String content;
+
 }

@@ -14,7 +14,9 @@
 
 package com.liferay.document.library.web.internal.display.context;
 
-import com.liferay.document.library.web.internal.util.DLTrashUtil;
+import com.liferay.document.library.kernel.versioning.VersioningStrategy;
+import com.liferay.document.library.util.DLURLHelper;
+import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.image.gallery.display.kernel.display.context.IGDisplayContextFactory;
 import com.liferay.image.gallery.display.kernel.display.context.IGViewFileVersionDisplayContext;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
@@ -48,12 +50,14 @@ public class IGDisplayContextProvider {
 
 	public IGViewFileVersionDisplayContext
 		getIGViewFileVersionActionsDisplayContext(
-			HttpServletRequest request, HttpServletResponse response,
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse,
 			FileShortcut fileShortcut) {
 
 		try {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			ResourceBundle resourceBundle =
 				_resourceBundleLoader.loadResourceBundle(
@@ -61,8 +65,9 @@ public class IGDisplayContextProvider {
 
 			IGViewFileVersionDisplayContext igViewFileVersionDisplayContext =
 				new DefaultIGViewFileVersionDisplayContext(
-					request, response, fileShortcut, resourceBundle,
-					_dlTrashUtil);
+					httpServletRequest, httpServletResponse, fileShortcut,
+					resourceBundle, _dlTrashHelper, _versioningStrategy,
+					_dlURLHelper);
 
 			if (fileShortcut == null) {
 				return igViewFileVersionDisplayContext;
@@ -73,25 +78,26 @@ public class IGDisplayContextProvider {
 
 				igViewFileVersionDisplayContext =
 					igDisplayContextFactory.getIGViewFileVersionDisplayContext(
-						igViewFileVersionDisplayContext, request, response,
-						fileShortcut);
+						igViewFileVersionDisplayContext, httpServletRequest,
+						httpServletResponse, fileShortcut);
 			}
 
 			return igViewFileVersionDisplayContext;
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 
 	public IGViewFileVersionDisplayContext
 		getIGViewFileVersionActionsDisplayContext(
-			HttpServletRequest request, HttpServletResponse response,
-			FileVersion fileVersion) {
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FileVersion fileVersion) {
 
 		try {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			ResourceBundle resourceBundle =
 				_resourceBundleLoader.loadResourceBundle(
@@ -99,8 +105,9 @@ public class IGDisplayContextProvider {
 
 			IGViewFileVersionDisplayContext igViewFileVersionDisplayContext =
 				new DefaultIGViewFileVersionDisplayContext(
-					request, response, fileVersion, resourceBundle,
-					_dlTrashUtil);
+					httpServletRequest, httpServletResponse, fileVersion,
+					resourceBundle, _dlTrashHelper, _versioningStrategy,
+					_dlURLHelper);
 
 			if (fileVersion == null) {
 				return igViewFileVersionDisplayContext;
@@ -111,14 +118,14 @@ public class IGDisplayContextProvider {
 
 				igViewFileVersionDisplayContext =
 					igDisplayContextFactory.getIGViewFileVersionDisplayContext(
-						igViewFileVersionDisplayContext, request, response,
-						fileVersion);
+						igViewFileVersionDisplayContext, httpServletRequest,
+						httpServletResponse, fileVersion);
 			}
 
 			return igViewFileVersionDisplayContext;
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 
@@ -134,7 +141,10 @@ public class IGDisplayContextProvider {
 	}
 
 	@Reference
-	private DLTrashUtil _dlTrashUtil;
+	private DLTrashHelper _dlTrashHelper;
+
+	@Reference
+	private DLURLHelper _dlURLHelper;
 
 	private ServiceTrackerList<IGDisplayContextFactory, IGDisplayContextFactory>
 		_igDisplayContextFactories;
@@ -145,5 +155,11 @@ public class IGDisplayContextProvider {
 		target = "(bundle.symbolic.name=com.liferay.document.library.web)"
 	)
 	private volatile ResourceBundleLoader _resourceBundleLoader;
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile VersioningStrategy _versioningStrategy;
 
 }

@@ -20,12 +20,12 @@ import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.model.BookmarksFolderConstants;
 import com.liferay.bookmarks.service.BookmarksFolderLocalServiceUtil;
-import com.liferay.bookmarks.util.test.BookmarksTestUtil;
+import com.liferay.bookmarks.test.util.BookmarksTestUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
@@ -41,13 +41,13 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.service.test.ServiceTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.subscription.model.Subscription;
 import com.liferay.subscription.service.SubscriptionLocalServiceUtil;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -71,7 +71,7 @@ public class BookmarksFolderLocalServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
-		ServiceTestUtil.setUser(TestPropsValues.getUser());
+		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		_group = GroupTestUtil.addGroup();
 	}
@@ -195,7 +195,8 @@ public class BookmarksFolderLocalServiceTest {
 				TestPropsValues.getUserId(), BookmarksFolder.class.getName());
 
 		for (Subscription subscription : subscriptions) {
-			if (subscription.getClassName().equals(
+			if (Objects.equals(
+					subscription.getClassName(),
 					BookmarksFolder.class.getName()) &&
 				(subscription.getClassPK() == expectedSubscriptionClassPK)) {
 
@@ -234,7 +235,8 @@ public class BookmarksFolderLocalServiceTest {
 		for (Subscription subscription : subscriptions) {
 			Assert.assertFalse(
 				"Subscription exists",
-				subscription.getClassName().equals(
+				Objects.equals(
+					subscription.getClassName(),
 					BookmarksFolder.class.getName()) &&
 				(subscription.getClassPK() == expectedSubscriptionClassPK));
 		}

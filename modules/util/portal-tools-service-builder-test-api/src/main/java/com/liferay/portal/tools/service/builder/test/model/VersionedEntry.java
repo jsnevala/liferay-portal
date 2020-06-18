@@ -14,31 +14,33 @@
 
 package com.liferay.portal.tools.service.builder.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the VersionedEntry service. Represents a row in the &quot;VersionedEntry&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see VersionedEntryModel
- * @see com.liferay.portal.tools.service.builder.test.model.impl.VersionedEntryImpl
- * @see com.liferay.portal.tools.service.builder.test.model.impl.VersionedEntryModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.portal.tools.service.builder.test.model.impl.VersionedEntryImpl")
+@ImplementationClassName(
+	"com.liferay.portal.tools.service.builder.test.model.impl.VersionedEntryImpl"
+)
 @ProviderType
-public interface VersionedEntry extends VersionedEntryModel, PersistedModel {
+public interface VersionedEntry extends PersistedModel, VersionedEntryModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.tools.service.builder.test.model.impl.VersionedEntryImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.portal.tools.service.builder.test.model.impl.VersionedEntryImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<VersionedEntry, Long> VERSIONED_ENTRY_ID_ACCESSOR =
-		new Accessor<VersionedEntry, Long>() {
+	public static final Accessor<VersionedEntry, Long>
+		VERSIONED_ENTRY_ID_ACCESSOR = new Accessor<VersionedEntry, Long>() {
+
 			@Override
 			public Long get(VersionedEntry versionedEntry) {
 				return versionedEntry.getVersionedEntryId();
@@ -53,5 +55,7 @@ public interface VersionedEntry extends VersionedEntryModel, PersistedModel {
 			public Class<VersionedEntry> getTypeClass() {
 				return VersionedEntry.class;
 			}
+
 		};
+
 }

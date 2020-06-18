@@ -14,6 +14,7 @@
 
 package com.liferay.portal.jsonwebservice.action;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.data.FileData;
 import com.liferay.portal.json.transformer.BeanAnalyzerTransformer;
@@ -27,10 +28,10 @@ import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceActionMapping;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceActionsManagerUtil;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceNaming;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.MethodParameter;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -63,15 +64,15 @@ import jodd.util.ReflectUtil;
  */
 public class JSONWebServiceDiscoverAction implements JSONWebServiceAction {
 
-	public JSONWebServiceDiscoverAction(HttpServletRequest request) {
-		_basePath = request.getServletPath();
-		_baseURL = String.valueOf(request.getRequestURL());
+	public JSONWebServiceDiscoverAction(HttpServletRequest httpServletRequest) {
+		_basePath = httpServletRequest.getServletPath();
+		_baseURL = String.valueOf(httpServletRequest.getRequestURL());
 
-		ServletContext servletContext = request.getServletContext();
+		ServletContext servletContext = httpServletRequest.getServletContext();
 
 		_contextName = GetterUtil.getString(
 			ParamUtil.getString(
-				request, "contextName",
+				httpServletRequest, "contextName",
 				servletContext.getServletContextName()));
 
 		_jsonWebServiceNaming =
@@ -85,14 +86,20 @@ public class JSONWebServiceDiscoverAction implements JSONWebServiceAction {
 
 	@Override
 	public Object invoke() throws Exception {
-		Map<String, Object> resultsMap = new LinkedHashMap<>();
-
-		resultsMap.put("contextName", _contextName);
-		resultsMap.put("basePath", _basePath);
-		resultsMap.put("baseURL", _baseURL);
-		resultsMap.put("services", _buildJsonWebServiceActionMappingMaps());
-		resultsMap.put("types", _buildTypes());
-		resultsMap.put("version", ReleaseInfo.getVersion());
+		Map<String, Object> resultsMap =
+			LinkedHashMapBuilder.<String, Object>put(
+				"contextName", _contextName
+			).put(
+				"basePath", _basePath
+			).put(
+				"baseURL", _baseURL
+			).put(
+				"services", _buildJsonWebServiceActionMappingMaps()
+			).put(
+				"types", _buildTypes()
+			).put(
+				"version", ReleaseInfo.getVersion()
+			).build();
 
 		return new DiscoveryContent(resultsMap);
 	}
@@ -231,7 +238,7 @@ public class JSONWebServiceDiscoverAction implements JSONWebServiceAction {
 
 			return beanAnalyzerTransformer.collect();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return null;
 		}
 	}
@@ -287,9 +294,10 @@ public class JSONWebServiceDiscoverAction implements JSONWebServiceAction {
 		Class<?> type, Class<?>[] genericTypes, boolean returnType) {
 
 		if (type.isArray()) {
-			Class<?> componentType = type.getComponentType();
+			String typeName = _formatType(
+				type.getComponentType(), genericTypes, returnType);
 
-			return _formatType(componentType, genericTypes, returnType) + "[]";
+			return typeName + "[]";
 		}
 
 		if (type.isPrimitive()) {
@@ -311,9 +319,8 @@ public class JSONWebServiceDiscoverAction implements JSONWebServiceAction {
 			if (!returnType) {
 				return "file";
 			}
-			else {
-				type = FileData.class;
-			}
+
+			type = FileData.class;
 		}
 		else if (type.equals(Locale.class) || type.equals(String.class) ||
 				 type.equals(TimeZone.class)) {
@@ -427,7 +434,7 @@ public class JSONWebServiceDiscoverAction implements JSONWebServiceAction {
 
 				modelType = classLoader.loadClass(modelImplClassName);
 			}
-			catch (ClassNotFoundException cnfe) {
+			catch (ClassNotFoundException classNotFoundException) {
 			}
 		}
 
@@ -444,7 +451,11 @@ public class JSONWebServiceDiscoverAction implements JSONWebServiceAction {
 
 		Method method = jsonWebServiceActionMapping.getRealActionMethod();
 
-		return className.concat(StringPool.POUND).concat(method.getName());
+		return className.concat(
+			StringPool.POUND
+		).concat(
+			method.getName()
+		);
 	}
 
 	private final String _basePath;

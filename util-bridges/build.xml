@@ -14,11 +14,11 @@
 		<pathelement path="${project.dir}/util-java/classes" />
 		<fileset
 			dir="${project.dir}/lib/development"
-			includes="groovy.jar,jruby.jar,resin.jar"
+			includes="groovy.jar,jruby.jar"
 		/>
 		<fileset
 			dir="${project.dir}/lib/portal"
-			includes="bsf.jar,commons-logging.jar,liferay-rhino.jar,struts-core.jar,struts-extras.jar,struts-taglib.jar,struts-tiles.jar"
+			includes="bsf.jar,commons-logging.jar,liferay-rhino.jar"
 		/>
 	</path>
 

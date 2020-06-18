@@ -28,6 +28,8 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.exception.NoSuchUserException" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
+page import="com.liferay.portal.kernel.log.Log" %><%@
+page import="com.liferay.portal.kernel.log.LogFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.model.*" %><%@
 page import="com.liferay.portal.kernel.model.impl.*" %><%@
 page import="com.liferay.portal.kernel.portlet.PortletURLUtil" %><%@
@@ -42,7 +44,6 @@ page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.comparator.UserTrackerModifiedDateComparator" %><%@
 page import="com.liferay.portal.liveusers.LiveUsers" %><%@
 page import="com.liferay.portal.model.impl.*" %><%@
-page import="com.liferay.portal.service.*" %><%@
 page import="com.liferay.portal.util.PropsValues" %>
 
 <%@ page import="java.text.Format" %>

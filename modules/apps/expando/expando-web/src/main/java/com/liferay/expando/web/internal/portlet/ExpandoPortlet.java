@@ -24,11 +24,12 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.service.ExpandoColumnService;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
-import com.liferay.expando.kernel.util.ExpandoPresetUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -36,17 +37,16 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Enumeration;
-import java.util.List;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -82,7 +82,6 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + ExpandoPortletKeys.EXPANDO,
-		"javax.portlet.portlet-mode=text/html",
 		"javax.portlet.resource-bundle=content.Language"
 	},
 	service = Portlet.class
@@ -101,22 +100,34 @@ public class ExpandoPortlet extends MVCPortlet {
 		long resourcePrimKey = ParamUtil.getLong(
 			actionRequest, "resourcePrimKey");
 
-		String name = ParamUtil.getString(actionRequest, "name");
-		String preset = ParamUtil.getString(actionRequest, "type");
+		int type = ParamUtil.getInteger(actionRequest, "type");
+
+		String dataType = ParamUtil.getString(actionRequest, "dataType");
+		String precisionType = ParamUtil.getString(
+			actionRequest, "precisionType");
+
+		if (Validator.isNotNull(dataType) &&
+			Validator.isNotNull(precisionType)) {
+
+			type = _getNumberType(dataType, precisionType, type);
+		}
 
 		ExpandoBridge expandoBridge = ExpandoBridgeFactoryUtil.getExpandoBridge(
 			themeDisplay.getCompanyId(), modelResource, resourcePrimKey);
 
-		if (preset.startsWith("Preset")) {
-			ExpandoPresetUtil.addPresetExpando(expandoBridge, preset, name);
-		}
-		else {
-			int type = ParamUtil.getInteger(actionRequest, "type");
+		String name = ParamUtil.getString(actionRequest, "name");
 
-			expandoBridge.addAttribute(name, type);
-
-			updateProperties(actionRequest, expandoBridge, name);
+		if (!Field.validateFieldName(name)) {
+			throw new ColumnNameException.MustValidate();
 		}
+
+		expandoBridge.addAttribute(name, type);
+
+		Serializable defaultValue = getDefaultValue(actionRequest, type);
+
+		expandoBridge.setAttributeDefault(name, defaultValue);
+
+		updateProperties(actionRequest, expandoBridge, name);
 	}
 
 	public void deleteExpando(
@@ -156,8 +167,7 @@ public class ExpandoPortlet extends MVCPortlet {
 
 		int type = ParamUtil.getInteger(actionRequest, "type");
 
-		Serializable defaultValue = getValue(
-			actionRequest, "defaultValue", type);
+		Serializable defaultValue = getDefaultValue(actionRequest, type);
 
 		ExpandoBridge expandoBridge = ExpandoBridgeFactoryUtil.getExpandoBridge(
 			themeDisplay.getCompanyId(), modelResource, resourcePrimKey);
@@ -181,7 +191,7 @@ public class ExpandoPortlet extends MVCPortlet {
 			SessionErrors.contains(
 				renderRequest, ValueDataException.class.getName())) {
 
-			include("/edit_expando.jsp", renderRequest, renderResponse);
+			include("/edit/expando.jsp", renderRequest, renderResponse);
 		}
 		else if (SessionErrors.contains(
 					renderRequest, NoSuchColumnException.class.getName()) ||
@@ -193,6 +203,23 @@ public class ExpandoPortlet extends MVCPortlet {
 		else {
 			super.doDispatch(renderRequest, renderResponse);
 		}
+	}
+
+	protected Serializable getDefaultValue(
+			ActionRequest actionRequest, int type)
+		throws Exception {
+
+		if (type == ExpandoColumnConstants.GEOLOCATION) {
+			return JSONFactoryUtil.createJSONObject(
+				ParamUtil.getString(actionRequest, "defaultValue"));
+		}
+
+		if (type == ExpandoColumnConstants.STRING_LOCALIZED) {
+			return (Serializable)LocalizationUtil.getLocalizationMap(
+				actionRequest, "defaultValueLocalized");
+		}
+
+		return getValue(actionRequest, "defaultValue", type);
 	}
 
 	protected Serializable getValue(
@@ -327,10 +354,6 @@ public class ExpandoPortlet extends MVCPortlet {
 
 			value = StringUtil.split(paramValue, delimiter);
 		}
-		else if (type == ExpandoColumnConstants.STRING_LOCALIZED) {
-			value = (Serializable)LocalizationUtil.getLocalizationMap(
-				portletRequest, name);
-		}
 		else {
 			value = ParamUtil.getString(portletRequest, name);
 		}
@@ -365,31 +388,74 @@ public class ExpandoPortlet extends MVCPortlet {
 			String name)
 		throws Exception {
 
-		Enumeration<String> enu = actionRequest.getParameterNames();
+		UnicodeProperties unicodeProperties = PropertiesParamUtil.getProperties(
+			actionRequest, "Property--");
 
-		UnicodeProperties properties = expandoBridge.getAttributeProperties(
-			name);
+		boolean searchable = ParamUtil.getBoolean(actionRequest, "searchable");
 
-		List<String> propertyNames = new ArrayList<>();
+		if (!searchable) {
+			unicodeProperties.setProperty(
+				ExpandoColumnConstants.INDEX_TYPE,
+				String.valueOf(ExpandoColumnConstants.INDEX_TYPE_NONE));
+		}
 
-		while (enu.hasMoreElements()) {
-			String param = enu.nextElement();
+		expandoBridge.setAttributeProperties(name, unicodeProperties);
+	}
 
-			if (param.contains("PropertyName--")) {
-				String propertyName = ParamUtil.getString(actionRequest, param);
+	private int _getNumberType(
+		String dataType, String precisionType, int type) {
 
-				propertyNames.add(propertyName);
+		if (dataType.equals(ExpandoColumnConstants.DATA_TYPE_DECIMAL) &&
+			precisionType.equals(ExpandoColumnConstants.PRECISION_64_BIT)) {
+
+			if (type == ExpandoColumnConstants.STRING_ARRAY) {
+				return ExpandoColumnConstants.DOUBLE_ARRAY;
 			}
+
+			return ExpandoColumnConstants.DOUBLE;
 		}
 
-		for (String propertyName : propertyNames) {
-			String value = ParamUtil.getString(
-				actionRequest, "Property--" + propertyName + "--");
+		if (dataType.equals(ExpandoColumnConstants.DATA_TYPE_DECIMAL) &&
+			precisionType.equals(ExpandoColumnConstants.PRECISION_32_BIT)) {
 
-			properties.setProperty(propertyName, value);
+			if (type == ExpandoColumnConstants.STRING_ARRAY) {
+				return ExpandoColumnConstants.FLOAT_ARRAY;
+			}
+
+			return ExpandoColumnConstants.FLOAT;
 		}
 
-		expandoBridge.setAttributeProperties(name, properties);
+		if (dataType.equals(ExpandoColumnConstants.DATA_TYPE_INTEGER) &&
+			precisionType.equals(ExpandoColumnConstants.PRECISION_64_BIT)) {
+
+			if (type == ExpandoColumnConstants.STRING_ARRAY) {
+				return ExpandoColumnConstants.LONG_ARRAY;
+			}
+
+			return ExpandoColumnConstants.LONG;
+		}
+
+		if (dataType.equals(ExpandoColumnConstants.DATA_TYPE_INTEGER) &&
+			precisionType.equals(ExpandoColumnConstants.PRECISION_32_BIT)) {
+
+			if (type == ExpandoColumnConstants.STRING_ARRAY) {
+				return ExpandoColumnConstants.INTEGER_ARRAY;
+			}
+
+			return ExpandoColumnConstants.INTEGER;
+		}
+
+		if (dataType.equals(ExpandoColumnConstants.DATA_TYPE_INTEGER) &&
+			precisionType.equals(ExpandoColumnConstants.PRECISION_16_BIT)) {
+
+			if (type == ExpandoColumnConstants.STRING_ARRAY) {
+				return ExpandoColumnConstants.SHORT_ARRAY;
+			}
+
+			return ExpandoColumnConstants.SHORT;
+		}
+
+		return 0;
 	}
 
 	private ExpandoColumnService _expandoColumnService;

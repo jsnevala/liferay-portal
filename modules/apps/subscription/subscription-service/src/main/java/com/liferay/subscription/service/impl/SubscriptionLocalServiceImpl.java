@@ -15,9 +15,10 @@
 package com.liferay.subscription.service.impl;
 
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.social.SocialActivityManagerUtil;
@@ -29,6 +30,8 @@ import com.liferay.subscription.service.base.SubscriptionLocalServiceBaseImpl;
 
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+
 /**
  * Provides the local service for accessing, adding, and deleting notification
  * subscriptions to entities. It handles subscriptions to entities found in many
@@ -38,6 +41,10 @@ import java.util.List;
  * @author Charles May
  * @author Zsolt Berentey
  */
+@Component(
+	property = "model.class.name=com.liferay.subscription.model.Subscription",
+	service = AopService.class
+)
 public class SubscriptionLocalServiceImpl
 	extends SubscriptionLocalServiceBaseImpl {
 
@@ -120,7 +127,7 @@ public class SubscriptionLocalServiceImpl
 			subscription.setClassPK(classPK);
 			subscription.setFrequency(frequency);
 
-			subscriptionPersistence.update(subscription);
+			subscription = subscriptionPersistence.update(subscription);
 		}
 
 		if (groupId > 0) {
@@ -133,7 +140,7 @@ public class SubscriptionLocalServiceImpl
 				assetEntry = assetEntryLocalService.getEntry(
 					className, classPK);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				assetEntry = assetEntryLocalService.updateEntry(
 					userId, groupId, subscription.getCreateDate(),
 					subscription.getModifiedDate(), className, classPK, null, 0,
@@ -144,9 +151,8 @@ public class SubscriptionLocalServiceImpl
 
 			// Social
 
-			JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
-
-			extraDataJSONObject.put("title", assetEntry.getTitle());
+			JSONObject extraDataJSONObject = JSONUtil.put(
+				"title", assetEntry.getTitle());
 
 			SocialActivityManagerUtil.addActivity(
 				userId, assetEntry, SocialActivityConstants.TYPE_SUBSCRIBE,
@@ -191,10 +197,10 @@ public class SubscriptionLocalServiceImpl
 		throws PortalException {
 
 		User user = userLocalService.getUser(userId);
-		long classNameId = classNameLocalService.getClassNameId(className);
 
 		Subscription subscription = subscriptionPersistence.fetchByC_U_C_C(
-			user.getCompanyId(), userId, classNameId, classPK);
+			user.getCompanyId(), userId,
+			classNameLocalService.getClassNameId(className), classPK);
 
 		if (subscription != null) {
 			deleteSubscription(subscription);
@@ -225,9 +231,8 @@ public class SubscriptionLocalServiceImpl
 			className.getClassName(), subscription.getClassPK());
 
 		if (assetEntry != null) {
-			JSONObject extraDataJSONObject = JSONFactoryUtil.createJSONObject();
-
-			extraDataJSONObject.put("title", assetEntry.getTitle());
+			JSONObject extraDataJSONObject = JSONUtil.put(
+				"title", assetEntry.getTitle());
 
 			SocialActivityManagerUtil.addActivity(
 				subscription.getUserId(), subscription,
@@ -277,10 +282,9 @@ public class SubscriptionLocalServiceImpl
 			long companyId, String className, long classPK)
 		throws PortalException {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
 		List<Subscription> subscriptions = subscriptionPersistence.findByC_C_C(
-			companyId, classNameId, classPK);
+			companyId, classNameLocalService.getClassNameId(className),
+			classPK);
 
 		for (Subscription subscription : subscriptions) {
 			deleteSubscription(subscription);
@@ -291,10 +295,9 @@ public class SubscriptionLocalServiceImpl
 	public Subscription fetchSubscription(
 		long companyId, long userId, String className, long classPK) {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
 		return subscriptionPersistence.fetchByC_U_C_C(
-			companyId, userId, classNameId, classPK);
+			companyId, userId, classNameLocalService.getClassNameId(className),
+			classPK);
 	}
 
 	/**
@@ -311,10 +314,9 @@ public class SubscriptionLocalServiceImpl
 			long companyId, long userId, String className, long classPK)
 		throws PortalException {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
 		return subscriptionPersistence.findByC_U_C_C(
-			companyId, userId, classNameId, classPK);
+			companyId, userId, classNameLocalService.getClassNameId(className),
+			classPK);
 	}
 
 	/**
@@ -330,10 +332,9 @@ public class SubscriptionLocalServiceImpl
 	public List<Subscription> getSubscriptions(
 		long companyId, long userId, String className, long[] classPKs) {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
 		return subscriptionPersistence.findByC_U_C_C(
-			companyId, userId, classNameId, classPKs);
+			companyId, userId, classNameLocalService.getClassNameId(className),
+			classPKs);
 	}
 
 	/**
@@ -348,10 +349,33 @@ public class SubscriptionLocalServiceImpl
 	public List<Subscription> getSubscriptions(
 		long companyId, String className, long classPK) {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
 		return subscriptionPersistence.findByC_C_C(
-			companyId, classNameId, classPK);
+			companyId, classNameLocalService.getClassNameId(className),
+			classPK);
+	}
+
+	/**
+	 * Returns all the subscriptions to the class name.
+	 *
+	 * @param  className the entity's class name
+	 * @return the subscriptions to the class name
+	 */
+	@Override
+	public List<Subscription> getSubscriptions(String className) {
+		return subscriptionPersistence.findByClassNameId(
+			classNameLocalService.getClassNameId(className));
+	}
+
+	/**
+	 * Returns the number of the subscriptions to the class name.
+	 *
+	 * @param  className the entity's class name
+	 * @return the subscriptions to the class name
+	 */
+	@Override
+	public int getSubscriptionsCount(String className) {
+		return subscriptionPersistence.countByClassNameId(
+			classNameLocalService.getClassNameId(className));
 	}
 
 	/**
@@ -384,9 +408,8 @@ public class SubscriptionLocalServiceImpl
 	public List<Subscription> getUserSubscriptions(
 		long userId, String className) {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
-
-		return subscriptionPersistence.findByU_C(userId, classNameId);
+		return subscriptionPersistence.findByU_C(
+			userId, classNameLocalService.getClassNameId(className));
 	}
 
 	/**
@@ -416,6 +439,10 @@ public class SubscriptionLocalServiceImpl
 
 		long classNameId = classNameLocalService.getClassNameId(className);
 
+		if (subscriptionPersistence.countByU_C(userId, classNameId) == 0) {
+			return false;
+		}
+
 		Subscription subscription = subscriptionPersistence.fetchByC_U_C_C(
 			companyId, userId, classNameId, classPK);
 
@@ -442,6 +469,10 @@ public class SubscriptionLocalServiceImpl
 		long companyId, long userId, String className, long[] classPKs) {
 
 		long classNameId = classNameLocalService.getClassNameId(className);
+
+		if (subscriptionPersistence.countByU_C(userId, classNameId) == 0) {
+			return false;
+		}
 
 		int count = subscriptionPersistence.countByC_U_C_C(
 			companyId, userId, classNameId, classPKs);

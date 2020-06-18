@@ -14,14 +14,14 @@
 
 package com.liferay.document.library.uad.anonymizer;
 
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.uad.constants.DLUADConstants;
-
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
-
 import com.liferay.user.associated.data.anonymizer.DynamicQueryUADAnonymizer;
 
 import org.osgi.service.component.annotations.Reference;
@@ -40,12 +40,17 @@ import org.osgi.service.component.annotations.Reference;
  */
 public abstract class BaseDLFileEntryUADAnonymizer
 	extends DynamicQueryUADAnonymizer<DLFileEntry> {
+
 	@Override
-	public void autoAnonymize(DLFileEntry dlFileEntry, long userId,
-		User anonymousUser) throws PortalException {
+	public void autoAnonymize(
+			DLFileEntry dlFileEntry, long userId, User anonymousUser)
+		throws PortalException {
+
 		if (dlFileEntry.getUserId() == userId) {
 			dlFileEntry.setUserId(anonymousUser.getUserId());
 			dlFileEntry.setUserName(anonymousUser.getFullName());
+
+			autoAnonymizeAssetEntry(dlFileEntry, anonymousUser);
 		}
 
 		dlFileEntryLocalService.updateDLFileEntry(dlFileEntry);
@@ -61,6 +66,19 @@ public abstract class BaseDLFileEntryUADAnonymizer
 		return DLFileEntry.class;
 	}
 
+	protected void autoAnonymizeAssetEntry(
+		DLFileEntry dlFileEntry, User anonymousUser) {
+
+		AssetEntry assetEntry = fetchAssetEntry(dlFileEntry);
+
+		if (assetEntry != null) {
+			assetEntry.setUserId(anonymousUser.getUserId());
+			assetEntry.setUserName(anonymousUser.getFullName());
+
+			assetEntryLocalService.updateAssetEntry(assetEntry);
+		}
+	}
+
 	@Override
 	protected ActionableDynamicQuery doGetActionableDynamicQuery() {
 		return dlFileEntryLocalService.getActionableDynamicQuery();
@@ -71,6 +89,15 @@ public abstract class BaseDLFileEntryUADAnonymizer
 		return DLUADConstants.USER_ID_FIELD_NAMES_DL_FILE_ENTRY;
 	}
 
+	protected AssetEntry fetchAssetEntry(DLFileEntry dlFileEntry) {
+		return assetEntryLocalService.fetchEntry(
+			DLFileEntry.class.getName(), dlFileEntry.getFileEntryId());
+	}
+
+	@Reference
+	protected AssetEntryLocalService assetEntryLocalService;
+
 	@Reference
 	protected DLFileEntryLocalService dlFileEntryLocalService;
+
 }

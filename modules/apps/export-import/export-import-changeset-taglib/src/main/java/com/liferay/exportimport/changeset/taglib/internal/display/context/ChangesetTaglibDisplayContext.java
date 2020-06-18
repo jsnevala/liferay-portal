@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.model.WorkflowedModel;
 import com.liferay.portal.kernel.util.ArrayUtil;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class ChangesetTaglibDisplayContext {
 
@@ -40,7 +40,7 @@ public class ChangesetTaglibDisplayContext {
 
 			return true;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return false;
 		}
 	}
@@ -59,7 +59,7 @@ public class ChangesetTaglibDisplayContext {
 
 			return false;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return false;
 		}
 	}
@@ -93,7 +93,7 @@ public class ChangesetTaglibDisplayContext {
 
 			return isShowPublishMenuItem(group, portletId);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return false;
 		}
 	}

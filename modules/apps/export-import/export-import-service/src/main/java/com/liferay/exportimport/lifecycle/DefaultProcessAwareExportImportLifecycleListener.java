@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.lifecycle;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleEvent;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleListener;
@@ -24,7 +22,6 @@ import com.liferay.exportimport.kernel.lifecycle.ProcessAwareExportImportLifecyc
 /**
  * @author Daniel Kocsis
  */
-@ProviderType
 public class DefaultProcessAwareExportImportLifecycleListener
 	implements ExportImportLifecycleListener {
 

@@ -2,6 +2,7 @@
 
 <model-hints>
 	<model name="com.liferay.dynamic.data.lists.model.DDLRecord">
+		<field name="mvccVersion" type="long" />
 		<field name="uuid" type="String" />
 		<field name="recordId" type="long" />
 		<field name="groupId" type="long" />
@@ -15,11 +16,16 @@
 		<field name="DDMStorageId" type="long" />
 		<field name="recordSetId" type="long" />
 		<field name="recordSetVersion" type="String" />
+		<field name="className" type="String">
+			<hint name="max-length">300</hint>
+		</field>
+		<field name="classPK" type="long" />
 		<field name="version" type="String" />
 		<field name="displayIndex" type="int" />
 		<field name="lastPublishDate" type="Date" />
 	</model>
 	<model name="com.liferay.dynamic.data.lists.model.DDLRecordSet">
+		<field name="mvccVersion" type="long" />
 		<field name="uuid" type="String" />
 		<field name="recordSetId" type="long" />
 		<field name="groupId" type="long" />
@@ -50,6 +56,7 @@
 		<field name="lastPublishDate" type="Date" />
 	</model>
 	<model name="com.liferay.dynamic.data.lists.model.DDLRecordSetVersion">
+		<field name="mvccVersion" type="long" />
 		<field name="recordSetVersionId" type="long" />
 		<field name="groupId" type="long" />
 		<field name="companyId" type="long" />
@@ -70,6 +77,7 @@
 		<field name="statusDate" type="Date" />
 	</model>
 	<model name="com.liferay.dynamic.data.lists.model.DDLRecordVersion">
+		<field name="mvccVersion" type="long" />
 		<field name="recordVersionId" type="long" />
 		<field name="groupId" type="long" />
 		<field name="companyId" type="long" />

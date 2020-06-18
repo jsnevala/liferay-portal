@@ -14,14 +14,14 @@
 
 package com.liferay.portal.kernel.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import javax.portlet.EventResponse;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Neil Griffin
  */
 @ProviderType
 public interface LiferayEventResponse
-	extends LiferayStateAwareResponse, EventResponse {
+	extends EventResponse, LiferayStateAwareResponse {
 }

@@ -36,7 +36,7 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Daniel Kocsis
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -163,8 +163,8 @@ public class BookmarksFolderStagedModelRepository
 					userId, existingFolder.getFolderId());
 			}
 		}
-		catch (PortalException pe) {
-			throw new PortletDataException(pe);
+		catch (PortalException portalException) {
+			throw new PortletDataException(portalException);
 		}
 	}
 

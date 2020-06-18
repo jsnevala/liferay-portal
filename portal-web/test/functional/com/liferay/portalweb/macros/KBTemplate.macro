@@ -1,73 +1,76 @@
-<definition>
-	<command name="addCP">
-		<execute function="AssertClick" locator1="NavBar#TEMPLATES" value1="Templates" />
+definition {
 
-		<execute macro="LexiconEntry#gotoAdd" />
+	macro addCP {
+		Navigator.gotoNavItem(navItem = "Templates");
 
-		<execute macro="AlloyEditor#addTitleAndContent">
-			<var name="content" value="${kbTemplateContent}" />
-			<var name="title" value="${kbTemplateTitle}" />
-		</execute>
+		LexiconEntry.gotoAdd();
 
-		<execute macro="PortletEntry#publish" />
-	</command>
+		Type(
+			locator1 = "KnowledgeBaseTemplate#TEMPLATE_TITLE_INPUT",
+			value1 = "${kbTemplateTitle}");
 
-	<command name="gotoCP">
-		<execute function="AssertClick" locator1="NavBar#TEMPLATES" value1="Templates" />
+		CKEditor.addContent(content = "${kbTemplateContent}");
 
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="View" />
-			<var name="rowEntry" value="${kbTemplateTitle}" />
-		</execute>
-	</command>
+		PortletEntry.publish();
+	}
 
-	<command name="tearDownCP">
-		<execute macro="Navigator#openURL" />
+	macro gotoCP {
+		Navigator.gotoNavItem(navItem = "Templates");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Content" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Knowledge Base" />
-		</execute>
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "View",
+			rowEntry = "${kbTemplateTitle}");
+	}
 
-		<execute macro="LexiconEntry#gotoHeaderMenuItem">
-			<var name="menuItem" value="Templates" />
-		</execute>
+	macro tearDownCP {
+		Navigator.openURL();
 
-		<if>
-			<condition function="IsElementPresent" locator1="ContentRow#ENTRY_CONTENT_ROW_1" />
-			<then>
-				<execute macro="PortletEntry#selectAll" />
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			panel = "Site Administration",
+			portlet = "Knowledge Base");
 
-				<execute function="AssertClickNoError" locator1="Button#DELETE" value1="Delete" />
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Templates");
 
-				<execute function="AssertConfirm" value1="Are you sure you want to delete the selected templates?" />
+		if (IsElementPresent(locator1 = "ContentRow#ENTRY_CONTENT_ROW_1")) {
+			PortletEntry.selectAll();
 
-				<execute macro="Alert#viewSuccessMessage" />
-			</then>
-		</if>
-	</command>
+			AssertClickNoError(
+				locator1 = "Button#DELETE",
+				value1 = "Delete");
 
-	<command name="viewCP">
-		<execute macro="KBTemplate#gotoCP">
-			<var name="kbTemplateTitle" value="${kbTemplateTitle}" />
-		</execute>
+			AssertConfirm(value1 = "Are you sure you want to delete the selected templates?");
 
-		<execute function="AssertTextEquals" locator1="KnowledgeBaseTemplate#TEMPLATE_TITLE" value1="${kbTemplateTitle}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="KnowledgeBaseTemplate#TEMPLATE_CONTENT" value1="${kbTemplateContent}" />
-	</command>
+			Alert.viewSuccessMessage();
+		}
+	}
 
-	<command name="viewCPViaAddTemplate">
-		<execute macro="LexiconEntry#gotoAddMenuItem">
-			<var name="menuItem" value="${kbTemplateTitle}" />
-		</execute>
+	macro viewCP {
+		KBTemplate.gotoCP(kbTemplateTitle = "${kbTemplateTitle}");
 
-		<execute function="AssertTextEquals" locator1="AlloyEditor#EDITOR" value1="${kbTemplateTitle}">
-			<var name="key_editor" value="title" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "KnowledgeBaseTemplate#TEMPLATE_TITLE",
+			value1 = "${kbTemplateTitle}");
 
-		<execute function="AssertTextEquals" locator1="AlloyEditor#EDITOR" value1="${kbTemplateContent}">
-			<var name="key_editor" value="content" />
-		</execute>
-	</command>
-</definition>
+		AssertTextEquals.assertPartialText(
+			locator1 = "KnowledgeBaseTemplate#TEMPLATE_CONTENT",
+			value1 = "${kbTemplateContent}");
+	}
+
+	macro viewCPViaAddTemplate {
+		LexiconEntry.gotoAddMenuItem(menuItem = "${kbTemplateTitle}");
+
+		AssertTextEquals(
+			key_editor = "title",
+			locator1 = "TextInput#TITLE",
+			value1 = "${kbTemplateTitle}");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+		AssertTextEquals(
+			key_editor = "content",
+			locator1 = "CKEditor#BODY",
+			value1 = "${kbTemplateContent}");
+	}
+
+}

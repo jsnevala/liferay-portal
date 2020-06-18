@@ -22,12 +22,12 @@ import com.liferay.invitation.invite.members.service.base.MemberRequestLocalServ
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -42,6 +42,7 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
@@ -56,10 +57,17 @@ import java.util.List;
 
 import javax.mail.internet.InternetAddress;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Ryan Park
  * @author Jonathan Lee
  */
+@Component(
+	property = "model.class.name=com.liferay.invitation.invite.members.model.MemberRequest",
+	service = AopService.class
+)
 public class MemberRequestLocalServiceImpl
 	extends MemberRequestLocalServiceBaseImpl {
 
@@ -80,12 +88,12 @@ public class MemberRequestLocalServiceImpl
 
 			receiverUserId = receiverUser.getUserId();
 		}
-		catch (NoSuchUserException nsue) {
+		catch (NoSuchUserException noSuchUserException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(nsue, nsue);
+				_log.debug(noSuchUserException, noSuchUserException);
 			}
 		}
 
@@ -108,15 +116,15 @@ public class MemberRequestLocalServiceImpl
 		memberRequest.setInvitedTeamId(invitedTeamId);
 		memberRequest.setStatus(InviteMembersConstants.STATUS_PENDING);
 
-		memberRequestPersistence.update(memberRequest);
+		memberRequest = memberRequestPersistence.update(memberRequest);
 
 		// Email
 
 		try {
 			sendEmail(receiverEmailAddress, memberRequest, serviceContext);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 
 		// Notifications
@@ -142,11 +150,9 @@ public class MemberRequestLocalServiceImpl
 
 			User user = userLocalService.getUser(receiverUserId);
 
-			String emailAddress = user.getEmailAddress();
-
 			addMemberRequest(
-				userId, groupId, receiverUserId, emailAddress, invitedRoleId,
-				invitedTeamId, serviceContext);
+				userId, groupId, receiverUserId, user.getEmailAddress(),
+				invitedRoleId, invitedTeamId, serviceContext);
 		}
 	}
 
@@ -229,7 +235,7 @@ public class MemberRequestLocalServiceImpl
 		memberRequest.setModifiedDate(new Date());
 		memberRequest.setStatus(status);
 
-		memberRequestPersistence.update(memberRequest);
+		memberRequest = memberRequestPersistence.update(memberRequest);
 
 		if (status == InviteMembersConstants.STATUS_ACCEPTED) {
 			userLocalService.addGroupUsers(
@@ -264,7 +270,7 @@ public class MemberRequestLocalServiceImpl
 		memberRequest.setModifiedDate(new Date());
 		memberRequest.setReceiverUserId(receiverUserId);
 
-		memberRequestPersistence.update(memberRequest);
+		memberRequest = memberRequestPersistence.update(memberRequest);
 
 		if (receiverUserId > 0) {
 			sendNotificationEvent(memberRequest);
@@ -296,7 +302,7 @@ public class MemberRequestLocalServiceImpl
 			createAccountURL = serviceContext.getPortalURL();
 		}
 
-		if (!workflowDefinitionLinkLocalService.hasWorkflowDefinitionLink(
+		if (!_workflowDefinitionLinkLocalService.hasWorkflowDefinitionLink(
 				memberRequest.getCompanyId(),
 				WorkflowConstants.DEFAULT_GROUP_ID, User.class.getName(), 0)) {
 
@@ -330,7 +336,7 @@ public class MemberRequestLocalServiceImpl
 		redirectURL = addParameterWithPortletNamespace(
 			redirectURL, "key", memberRequest.getKey());
 
-		return HttpUtil.addParameter(loginURL, "redirect", redirectURL);
+		return _http.addParameter(loginURL, "redirect", redirectURL);
 	}
 
 	protected String getRedirectURL(ServiceContext serviceContext) {
@@ -424,7 +430,7 @@ public class MemberRequestLocalServiceImpl
 		MailMessage mailMessage = new MailMessage(
 			from, to, subject, body, true);
 
-		mailService.sendEmail(mailMessage);
+		_mailService.sendEmail(mailMessage);
 	}
 
 	protected void sendNotificationEvent(MemberRequest memberRequest)
@@ -438,13 +444,11 @@ public class MemberRequestLocalServiceImpl
 				MembershipRequestConstants.STATUS_PENDING,
 				UserNotificationDeliveryConstants.TYPE_WEBSITE)) {
 
-			JSONObject notificationEventJSONObject =
-				JSONFactoryUtil.createJSONObject();
-
-			notificationEventJSONObject.put(
-				"classPK", memberRequest.getMemberRequestId());
-			notificationEventJSONObject.put(
-				"userId", memberRequest.getUserId());
+			JSONObject notificationEventJSONObject = JSONUtil.put(
+				"classPK", memberRequest.getMemberRequestId()
+			).put(
+				"userId", memberRequest.getUserId()
+			);
 
 			NotificationEvent notificationEvent =
 				NotificationEventFactoryUtil.createNotificationEvent(
@@ -455,7 +459,7 @@ public class MemberRequestLocalServiceImpl
 			notificationEvent.setDeliveryType(
 				UserNotificationDeliveryConstants.TYPE_WEBSITE);
 
-			userNotificationEventLocalService.addUserNotificationEvent(
+			_userNotificationEventLocalService.addUserNotificationEvent(
 				memberRequest.getReceiverUserId(), true, notificationEvent);
 		}
 	}
@@ -473,18 +477,21 @@ public class MemberRequestLocalServiceImpl
 		}
 	}
 
-	@BeanReference(type = MailService.class)
-	protected MailService mailService;
-
-	@BeanReference(type = UserNotificationEventLocalService.class)
-	protected UserNotificationEventLocalService
-		userNotificationEventLocalService;
-
-	@BeanReference(type = WorkflowDefinitionLinkLocalService.class)
-	protected WorkflowDefinitionLinkLocalService
-		workflowDefinitionLinkLocalService;
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		MemberRequestLocalServiceImpl.class);
+
+	@Reference
+	private Http _http;
+
+	@Reference
+	private MailService _mailService;
+
+	@Reference
+	private UserNotificationEventLocalService
+		_userNotificationEventLocalService;
+
+	@Reference
+	private WorkflowDefinitionLinkLocalService
+		_workflowDefinitionLinkLocalService;
 
 }

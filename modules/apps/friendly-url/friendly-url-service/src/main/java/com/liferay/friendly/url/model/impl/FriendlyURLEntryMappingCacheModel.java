@@ -14,15 +14,11 @@
 
 package com.liferay.friendly.url.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.friendly.url.model.FriendlyURLEntryMapping;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -33,12 +29,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing FriendlyURLEntryMapping in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see FriendlyURLEntryMapping
  * @generated
  */
-@ProviderType
-public class FriendlyURLEntryMappingCacheModel implements CacheModel<FriendlyURLEntryMapping>,
-	Externalizable, MVCCModel {
+public class FriendlyURLEntryMappingCacheModel
+	implements CacheModel<FriendlyURLEntryMapping>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -49,10 +44,13 @@ public class FriendlyURLEntryMappingCacheModel implements CacheModel<FriendlyURL
 			return false;
 		}
 
-		FriendlyURLEntryMappingCacheModel friendlyURLEntryMappingCacheModel = (FriendlyURLEntryMappingCacheModel)obj;
+		FriendlyURLEntryMappingCacheModel friendlyURLEntryMappingCacheModel =
+			(FriendlyURLEntryMappingCacheModel)obj;
 
-		if ((friendlyURLEntryMappingId == friendlyURLEntryMappingCacheModel.friendlyURLEntryMappingId) &&
-				(mvccVersion == friendlyURLEntryMappingCacheModel.mvccVersion)) {
+		if ((friendlyURLEntryMappingId ==
+				friendlyURLEntryMappingCacheModel.friendlyURLEntryMappingId) &&
+			(mvccVersion == friendlyURLEntryMappingCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -78,12 +76,14 @@ public class FriendlyURLEntryMappingCacheModel implements CacheModel<FriendlyURL
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(11);
+		StringBundler sb = new StringBundler(13);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
 		sb.append(", friendlyURLEntryMappingId=");
 		sb.append(friendlyURLEntryMappingId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 		sb.append(", classNameId=");
 		sb.append(classNameId);
 		sb.append(", classPK=");
@@ -97,10 +97,13 @@ public class FriendlyURLEntryMappingCacheModel implements CacheModel<FriendlyURL
 
 	@Override
 	public FriendlyURLEntryMapping toEntityModel() {
-		FriendlyURLEntryMappingImpl friendlyURLEntryMappingImpl = new FriendlyURLEntryMappingImpl();
+		FriendlyURLEntryMappingImpl friendlyURLEntryMappingImpl =
+			new FriendlyURLEntryMappingImpl();
 
 		friendlyURLEntryMappingImpl.setMvccVersion(mvccVersion);
-		friendlyURLEntryMappingImpl.setFriendlyURLEntryMappingId(friendlyURLEntryMappingId);
+		friendlyURLEntryMappingImpl.setFriendlyURLEntryMappingId(
+			friendlyURLEntryMappingId);
+		friendlyURLEntryMappingImpl.setCompanyId(companyId);
 		friendlyURLEntryMappingImpl.setClassNameId(classNameId);
 		friendlyURLEntryMappingImpl.setClassPK(classPK);
 		friendlyURLEntryMappingImpl.setFriendlyURLEntryId(friendlyURLEntryId);
@@ -116,6 +119,8 @@ public class FriendlyURLEntryMappingCacheModel implements CacheModel<FriendlyURL
 
 		friendlyURLEntryMappingId = objectInput.readLong();
 
+		companyId = objectInput.readLong();
+
 		classNameId = objectInput.readLong();
 
 		classPK = objectInput.readLong();
@@ -124,11 +129,12 @@ public class FriendlyURLEntryMappingCacheModel implements CacheModel<FriendlyURL
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
 		objectOutput.writeLong(friendlyURLEntryMappingId);
+
+		objectOutput.writeLong(companyId);
 
 		objectOutput.writeLong(classNameId);
 
@@ -139,7 +145,9 @@ public class FriendlyURLEntryMappingCacheModel implements CacheModel<FriendlyURL
 
 	public long mvccVersion;
 	public long friendlyURLEntryMappingId;
+	public long companyId;
 	public long classNameId;
 	public long classPK;
 	public long friendlyURLEntryId;
+
 }

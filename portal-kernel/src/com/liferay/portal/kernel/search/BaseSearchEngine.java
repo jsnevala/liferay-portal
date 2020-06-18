@@ -16,10 +16,6 @@ package com.liferay.portal.kernel.search;
 
 import com.liferay.portal.kernel.search.dummy.DummyIndexSearcher;
 import com.liferay.portal.kernel.search.dummy.DummyIndexWriter;
-import com.liferay.portal.kernel.search.generic.BooleanClauseFactoryImpl;
-import com.liferay.portal.kernel.search.generic.BooleanQueryFactoryImpl;
-import com.liferay.portal.kernel.search.generic.TermQueryFactoryImpl;
-import com.liferay.portal.kernel.search.generic.TermRangeQueryFactoryImpl;
 
 /**
  * @author Bruno Farache
@@ -38,32 +34,6 @@ public class BaseSearchEngine implements SearchEngine {
 		return null;
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	@Override
-	public BooleanClauseFactory getBooleanClauseFactory() {
-		if (_booleanClauseFactory == null) {
-			_booleanClauseFactory = new BooleanClauseFactoryImpl();
-		}
-
-		return _booleanClauseFactory;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	@Override
-	public BooleanQueryFactory getBooleanQueryFactory() {
-		if (_booleanQueryFactory == null) {
-			_booleanQueryFactory = new BooleanQueryFactoryImpl();
-		}
-
-		return _booleanQueryFactory;
-	}
-
 	@Override
 	public IndexSearcher getIndexSearcher() {
 		return _indexSearcher;
@@ -72,32 +42,6 @@ public class BaseSearchEngine implements SearchEngine {
 	@Override
 	public IndexWriter getIndexWriter() {
 		return _indexWriter;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	@Override
-	public TermQueryFactory getTermQueryFactory() {
-		if (_termQueryFactory == null) {
-			_termQueryFactory = new TermQueryFactoryImpl();
-		}
-
-		return _termQueryFactory;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	@Override
-	public TermRangeQueryFactory getTermRangeQueryFactory() {
-		if (_termRangeQueryFactory == null) {
-			_termRangeQueryFactory = new TermRangeQueryFactoryImpl();
-		}
-
-		return _termRangeQueryFactory;
 	}
 
 	@Override
@@ -129,26 +73,6 @@ public class BaseSearchEngine implements SearchEngine {
 		throws SearchException {
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	public void setBooleanClauseFactory(
-		BooleanClauseFactory booleanClauseFactory) {
-
-		_booleanClauseFactory = booleanClauseFactory;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	public void setBooleanQueryFactory(
-		BooleanQueryFactory booleanQueryFactory) {
-
-		_booleanQueryFactory = booleanQueryFactory;
-	}
-
 	public void setIndexSearcher(IndexSearcher indexSearcher) {
 		_indexSearcher = indexSearcher;
 	}
@@ -157,42 +81,12 @@ public class BaseSearchEngine implements SearchEngine {
 		_indexWriter = indexWriter;
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	public void setTermQueryFactory(TermQueryFactory termQueryFactory) {
-		_termQueryFactory = termQueryFactory;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	public void setTermRangeQueryFactory(
-		TermRangeQueryFactory termRangeQueryFactory) {
-
-		_termRangeQueryFactory = termRangeQueryFactory;
-	}
-
 	public void setVendor(String vendor) {
 		_vendor = vendor;
 	}
 
-	private BooleanClauseFactory _booleanClauseFactory;
-
-	@SuppressWarnings("deprecation")
-	private BooleanQueryFactory _booleanQueryFactory;
-
 	private IndexSearcher _indexSearcher = new DummyIndexSearcher();
 	private IndexWriter _indexWriter = new DummyIndexWriter();
-
-	@SuppressWarnings("deprecation")
-	private TermQueryFactory _termQueryFactory;
-
-	@SuppressWarnings("deprecation")
-	private TermRangeQueryFactory _termRangeQueryFactory;
-
 	private String _vendor;
 
 }

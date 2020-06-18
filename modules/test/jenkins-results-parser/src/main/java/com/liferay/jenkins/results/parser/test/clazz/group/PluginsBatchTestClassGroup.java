@@ -36,26 +36,41 @@ import java.util.Properties;
  */
 public class PluginsBatchTestClassGroup extends BatchTestClassGroup {
 
+	@Override
+	public int getAxisCount() {
+		if (!isStableTestSuiteBatch() && testRelevantIntegrationUnitOnly) {
+			return 0;
+		}
+
+		return super.getAxisCount();
+	}
+
 	public static class PluginsBatchTestClass extends BaseTestClass {
 
 		protected static PluginsBatchTestClass getInstance(
 			String batchName, File pluginDir) {
 
-			return new PluginsBatchTestClass(batchName, pluginDir);
+			return new PluginsBatchTestClass(
+				batchName,
+				new TestClassFile(
+					JenkinsResultsParserUtil.getCanonicalPath(pluginDir)));
 		}
 
-		protected PluginsBatchTestClass(String batchName, File file) {
-			super(file);
+		protected PluginsBatchTestClass(
+			String batchName, TestClassFile testClassFile) {
 
-			addTestMethod(batchName);
+			super(testClassFile);
+
+			addTestClassMethod(batchName);
 		}
 
 	}
 
 	protected PluginsBatchTestClassGroup(
-		String batchName, PortalTestClassJob portalTestClassJob) {
+		String batchName, BuildProfile buildProfile,
+		PortalTestClassJob portalTestClassJob) {
 
-		super(batchName, portalTestClassJob);
+		super(batchName, buildProfile, portalTestClassJob);
 
 		Properties portalReleaseProperties =
 			JenkinsResultsParserUtil.getProperties(
@@ -64,8 +79,8 @@ public class PluginsBatchTestClassGroup extends BatchTestClassGroup {
 					"release.properties"));
 
 		_pluginsGitWorkingDirectory =
-			(PluginsGitWorkingDirectory)GitWorkingDirectoryFactory.
-				newGitWorkingDirectory(
+			(PluginsGitWorkingDirectory)
+				GitWorkingDirectoryFactory.newGitWorkingDirectory(
 					portalGitWorkingDirectory.getUpstreamBranchName(),
 					JenkinsResultsParserUtil.getProperty(
 						portalReleaseProperties, "lp.plugins.dir"));
@@ -79,6 +94,22 @@ public class PluginsBatchTestClassGroup extends BatchTestClassGroup {
 			getPathMatchers(
 				getFirstPropertyValue("test.batch.plugin.names.includes"),
 				_pluginsGitWorkingDirectory.getWorkingDirectory()));
+
+		if (includeStableTestSuite && isStableTestSuiteBatch()) {
+			excludesPathMatchers.addAll(
+				getPathMatchers(
+					getFirstPropertyValue(
+						"test.batch.plugin.names.excludes", batchName,
+						NAME_STABLE_TEST_SUITE),
+					_pluginsGitWorkingDirectory.getWorkingDirectory()));
+
+			includesPathMatchers.addAll(
+				getPathMatchers(
+					getFirstPropertyValue(
+						"test.batch.plugin.names.includes", batchName,
+						NAME_STABLE_TEST_SUITE),
+					_pluginsGitWorkingDirectory.getWorkingDirectory()));
+		}
 
 		setTestClasses();
 
@@ -129,11 +160,11 @@ public class PluginsBatchTestClassGroup extends BatchTestClassGroup {
 
 				});
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			throw new RuntimeException(
 				"Unable to search for test file names in " +
 					workingDirectory.getPath(),
-				ioe);
+				ioException);
 		}
 
 		Collections.sort(testClasses);

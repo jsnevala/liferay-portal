@@ -41,25 +41,25 @@ public class WikiCreoleConvertProcess extends BaseConvertProcess {
 
 	@Override
 	public boolean isEnabled() {
-		boolean enabled = false;
-
 		try {
 			int pagesCount = _wikiPageLocalService.getPagesCount(
 				"classic_wiki");
 
 			if (pagesCount > 0) {
-				enabled = true;
+				return true;
 			}
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-		}
 
-		return enabled;
+			return false;
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			return false;
+		}
 	}
 
 	@Override
-	protected void doConvert() throws Exception {
+	protected void doConvert() {
 		List<WikiPage> pages = _wikiPageLocalService.getPages("classic_wiki");
 
 		ClassicToCreoleTranslator translator = new ClassicToCreoleTranslator();
@@ -69,7 +69,7 @@ public class WikiCreoleConvertProcess extends BaseConvertProcess {
 				" Wiki pages from Classic Wiki to Creole format");
 
 		for (int i = 0; i < pages.size(); i++) {
-			if ((i > 0) && (i % (pages.size() / 4) == 0)) {
+			if ((i > 0) && ((i % (pages.size() / 4)) == 0)) {
 				MaintenanceUtil.appendStatus((i * 100. / pages.size()) + "%");
 			}
 
@@ -83,16 +83,10 @@ public class WikiCreoleConvertProcess extends BaseConvertProcess {
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setWikiPageLocalService(
-		WikiPageLocalService wikiPageLocalService) {
-
-		_wikiPageLocalService = wikiPageLocalService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		WikiCreoleConvertProcess.class);
 
+	@Reference
 	private WikiPageLocalService _wikiPageLocalService;
 
 }

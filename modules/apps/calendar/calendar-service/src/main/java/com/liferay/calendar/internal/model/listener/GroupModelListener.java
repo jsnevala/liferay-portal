@@ -20,10 +20,11 @@ import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.Portal;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -49,17 +50,21 @@ public class GroupModelListener extends BaseModelListener<Group> {
 				return;
 			}
 
-			Map<Locale, String> nameMap = new HashMap<>();
+			Map<Locale, String> nameMap = HashMapBuilder.put(
+				LocaleUtil.getSiteDefault(), group.getDescriptiveName()
+			).build();
 
-			nameMap.put(LocaleUtil.getDefault(), group.getDescriptiveName());
-
-			calendarResource.setNameMap(nameMap);
+			calendarResource.setNameMap(
+				LocalizationUtil.populateLocalizationMap(
+					nameMap,
+					LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()),
+					group.getGroupId()));
 
 			_calendarResourceLocalService.updateCalendarResource(
 				calendarResource);
 		}
-		catch (Exception e) {
-			throw new ModelListenerException(e);
+		catch (Exception exception) {
+			throw new ModelListenerException(exception);
 		}
 	}
 
@@ -85,18 +90,12 @@ public class GroupModelListener extends BaseModelListener<Group> {
 			_calendarResourceLocalService.deleteCalendarResources(
 				group.getGroupId());
 		}
-		catch (Exception e) {
-			throw new ModelListenerException(e);
+		catch (Exception exception) {
+			throw new ModelListenerException(exception);
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setCalendarResourceLocalService(
-		CalendarResourceLocalService calendarResourceLocalService) {
-
-		_calendarResourceLocalService = calendarResourceLocalService;
-	}
-
+	@Reference
 	private CalendarResourceLocalService _calendarResourceLocalService;
 
 	@Reference

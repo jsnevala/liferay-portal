@@ -34,6 +34,7 @@
 					disabled=entry.isDisabled()
 					label=entry.getLongDisplayName()
 					lang=entry.getW3cLanguageId()
+					localizeLabel=false
 					selected=entry.isSelected()
 					value=entry.getLanguageId()
 				/>
@@ -43,8 +44,6 @@
 
 	<@liferay_aui["script"]>
 		function ${namespace}changeLanguage() {
-			var languageId = AUI.$(document.${namespace + formName}.${name}).val();
-
 			submitForm(document.${namespace + formName});
 		}
 	</@>

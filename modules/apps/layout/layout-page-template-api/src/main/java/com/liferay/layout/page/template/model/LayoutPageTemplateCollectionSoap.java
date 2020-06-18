@@ -14,8 +14,6 @@
 
 package com.liferay.layout.page.template.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,23 +24,28 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.layout.page.template.service.http.LayoutPageTemplateCollectionServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.layout.page.template.service.http.LayoutPageTemplateCollectionServiceSoap
  * @generated
  */
-@ProviderType
 public class LayoutPageTemplateCollectionSoap implements Serializable {
+
 	public static LayoutPageTemplateCollectionSoap toSoapModel(
 		LayoutPageTemplateCollection model) {
-		LayoutPageTemplateCollectionSoap soapModel = new LayoutPageTemplateCollectionSoap();
 
+		LayoutPageTemplateCollectionSoap soapModel =
+			new LayoutPageTemplateCollectionSoap();
+
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
-		soapModel.setLayoutPageTemplateCollectionId(model.getLayoutPageTemplateCollectionId());
+		soapModel.setLayoutPageTemplateCollectionId(
+			model.getLayoutPageTemplateCollectionId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setUserId(model.getUserId());
 		soapModel.setUserName(model.getUserName());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
+		soapModel.setLayoutPageTemplateCollectionKey(
+			model.getLayoutPageTemplateCollectionKey());
 		soapModel.setName(model.getName());
 		soapModel.setDescription(model.getDescription());
 		soapModel.setLastPublishDate(model.getLastPublishDate());
@@ -52,7 +55,9 @@ public class LayoutPageTemplateCollectionSoap implements Serializable {
 
 	public static LayoutPageTemplateCollectionSoap[] toSoapModels(
 		LayoutPageTemplateCollection[] models) {
-		LayoutPageTemplateCollectionSoap[] soapModels = new LayoutPageTemplateCollectionSoap[models.length];
+
+		LayoutPageTemplateCollectionSoap[] soapModels =
+			new LayoutPageTemplateCollectionSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -63,10 +68,12 @@ public class LayoutPageTemplateCollectionSoap implements Serializable {
 
 	public static LayoutPageTemplateCollectionSoap[][] toSoapModels(
 		LayoutPageTemplateCollection[][] models) {
+
 		LayoutPageTemplateCollectionSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new LayoutPageTemplateCollectionSoap[models.length][models[0].length];
+			soapModels = new LayoutPageTemplateCollectionSoap
+				[models.length][models[0].length];
 		}
 		else {
 			soapModels = new LayoutPageTemplateCollectionSoap[0][0];
@@ -81,13 +88,16 @@ public class LayoutPageTemplateCollectionSoap implements Serializable {
 
 	public static LayoutPageTemplateCollectionSoap[] toSoapModels(
 		List<LayoutPageTemplateCollection> models) {
-		List<LayoutPageTemplateCollectionSoap> soapModels = new ArrayList<LayoutPageTemplateCollectionSoap>(models.size());
+
+		List<LayoutPageTemplateCollectionSoap> soapModels =
+			new ArrayList<LayoutPageTemplateCollectionSoap>(models.size());
 
 		for (LayoutPageTemplateCollection model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new LayoutPageTemplateCollectionSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new LayoutPageTemplateCollectionSoap[soapModels.size()]);
 	}
 
 	public LayoutPageTemplateCollectionSoap() {
@@ -99,6 +109,14 @@ public class LayoutPageTemplateCollectionSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setLayoutPageTemplateCollectionId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -115,6 +133,7 @@ public class LayoutPageTemplateCollectionSoap implements Serializable {
 
 	public void setLayoutPageTemplateCollectionId(
 		long layoutPageTemplateCollectionId) {
+
 		_layoutPageTemplateCollectionId = layoutPageTemplateCollectionId;
 	}
 
@@ -166,6 +185,16 @@ public class LayoutPageTemplateCollectionSoap implements Serializable {
 		_modifiedDate = modifiedDate;
 	}
 
+	public String getLayoutPageTemplateCollectionKey() {
+		return _layoutPageTemplateCollectionKey;
+	}
+
+	public void setLayoutPageTemplateCollectionKey(
+		String layoutPageTemplateCollectionKey) {
+
+		_layoutPageTemplateCollectionKey = layoutPageTemplateCollectionKey;
+	}
+
 	public String getName() {
 		return _name;
 	}
@@ -190,6 +219,7 @@ public class LayoutPageTemplateCollectionSoap implements Serializable {
 		_lastPublishDate = lastPublishDate;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _layoutPageTemplateCollectionId;
 	private long _groupId;
@@ -198,7 +228,9 @@ public class LayoutPageTemplateCollectionSoap implements Serializable {
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
+	private String _layoutPageTemplateCollectionKey;
 	private String _name;
 	private String _description;
 	private Date _lastPublishDate;
+
 }

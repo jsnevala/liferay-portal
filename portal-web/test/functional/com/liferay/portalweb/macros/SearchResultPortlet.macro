@@ -1,84 +1,134 @@
-<definition>
-	<command name="viewMultipleSearchResults">
-		<if>
-			<not>
-				<contains string="${resultsList}" substring="/" />
-			</not>
-			<then>
-				<fail message="You must pass in a list with title and type separated by '/'." />
-			</then>
-		</if>
+definition {
 
-		<for list="${resultsList}" param="titleAndType">
-			<var method="StringUtil#extractFirst('${titleAndType}', '/')" name="searchAssetTitle" />
-			<var method="StringUtil#extractLast('${titleAndType}', '/')" name="searchAssetType" />
+	macro configureSearchResults {
+		Portlet.gotoPortletOptions(
+			portletName = "Search Results",
+			portletOption = "Configuration");
 
-			<execute macro="SearchResultPortlet#viewSearchResults">
-				<var name="searchAssetTitle" value="${searchAssetTitle}" />
-				<var name="searchAssetType" value="${searchAssetType}" />
-				<var name="searchTerm" value="${searchTerm}" />
-			</execute>
-		</for>
-	</command>
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
-	<command name="viewMultipleSearchResultsNotPresent">
-		<if>
-			<not>
-				<contains string="${noResultsList}" substring="/" />
-			</not>
-			<then>
-				<fail message="You must pass in a list with title and type separated by '/'." />
-			</then>
-		</if>
+		if (isSet(federatedSearchKey)) {
+			Type(
+				key_fieldLabel = "Federated Search Key",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "${federatedSearchKey}");
+		}
 
-		<for list="${noResultsList}" param="titleAndType">
-			<var method="StringUtil#extractFirst('${titleAndType}', '/')" name="searchAssetTitle" />
-			<var method="StringUtil#extractLast('${titleAndType}', '/')" name="searchAssetType" />
+		if (isSet(fieldsToDisplay)) {
+			Type(
+				key_fieldLabel = "Fields to Display",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "${fieldsToDisplay}");
+		}
 
-			<execute macro="SearchResultPortlet#viewSearchResultNotPresent">
-				<var name="searchAssetTitle" value="${searchAssetTitle}" />
-				<var name="searchAssetType" value="${searchAssetType}" />
-			</execute>
-		</for>
-	</command>
+		PortletEntry.save();
 
-	<command name="viewNoSearchResults">
-		<execute function="AssertTextEquals" locator1="Message#EMPTY_INFO" value1="No results were found that matched the keywords: ${searchTerm}." />
-	</command>
+		IFrame.closeFrame();
+	}
 
-	<command name="viewSearchResultNotPresent">
-		<execute function="AssertElementNotPresent" locator1="SearchResults#ASSET_ENTRY_TABLE_TYPE_SPECIFIC">
-			<var name="key_searchAssetTitle" value="${searchAssetTitle}" />
-			<var name="key_searchAssetType" value="${searchAssetType}" />
-		</execute>
-	</command>
+	macro paginateAndViewSearchResults {
+		var key_searchAssetTitle = "${searchAssetTitle}";
+		var key_searchAssetType = "${searchAssetType}";
+		var searchAssetTitle = "${searchAssetTitle}";
+		var searchAssetType = "${searchAssetType}";
+		var searchTerm = "${searchTerm}";
 
-	<command name="viewSearchResults">
-		<var name="key_searchAssetTitle" value="${searchAssetTitle}" />
-		<var name="key_searchAssetType" value="${searchAssetType}" />
+		while (IsElementNotPresent(locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE_SPECIFIC")) {
+			Click(locator1 = "Pagination#NEXT_LINK");
+		}
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#ASSET_ENTRY_TABLE_TITLE_SPECIFIC" value1="${searchAssetTitle}" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#ASSET_ENTRY_TABLE_TYPE_SPECIFIC" value1="${searchAssetType}" />
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "${searchAssetTitle}",
+			searchAssetType = "${searchAssetType}",
+			searchTerm = "${searchTerm}");
+	}
 
-		<if>
-			<isset var="entryDate" />
-			<then>
-				<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#ASSET_ENTRY_TABLE_TYPE_SPECIFIC" value1="${entryDate}" />
-			</then>
-		</if>
+	macro viewMultipleSearchResults {
+		if (!(contains("${resultsList}", "/"))) {
+			fail("You must pass in a list with title and type separated by '/'.");
+		}
 
-		<if>
-			<isset var="searchAssetSummary" />
-			<then>
-				<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#ASSET_ENTRY_TABLE_SUMMARY_SPECIFIC" value1="${searchAssetSummary}" />
-			</then>
-		</if>
+		for (var titleAndType : list "${resultsList}") {
+			var searchAssetTitle = StringUtil.extractFirst("${titleAndType}", "/");
+			var searchAssetType = StringUtil.extractLast("${titleAndType}", "/");
 
-		<if>
-			<isset var="searchTerm" />
-			<then>
-				<execute function="AssertTextEquals#assertPartialText" locator1="SearchResults#RESULTS_PORTLET_SEARCH_QUERY" value1="${searchTerm}" />
-			</then>
-		</if>
-	</command>
-</definition>
+			SearchResultPortlet.viewSearchResults(
+				searchAssetTitle = "${searchAssetTitle}",
+				searchAssetType = "${searchAssetType}",
+				searchTerm = "${searchTerm}");
+		}
+	}
+
+	macro viewMultipleSearchResultsNotPresent {
+		if (!(contains("${noResultsList}", "/"))) {
+			fail("You must pass in a list with title and type separated by '/'.");
+		}
+
+		for (var titleAndType : list "${noResultsList}") {
+			var searchAssetTitle = StringUtil.extractFirst("${titleAndType}", "/");
+			var searchAssetType = StringUtil.extractLast("${titleAndType}", "/");
+
+			SearchResultPortlet.viewSearchResultNotPresent(
+				searchAssetTitle = "${searchAssetTitle}",
+				searchAssetType = "${searchAssetType}");
+		}
+	}
+
+	macro viewNoSearchResults {
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_INFO",
+			value1 = "No results were found that matched the keywords: ${searchTerm}.");
+	}
+
+	macro viewSearchResultNotPresent {
+		AssertElementNotPresent(
+			key_searchAssetTitle = "${searchAssetTitle}",
+			key_searchAssetType = "${searchAssetType}",
+			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TYPE_SPECIFIC");
+	}
+
+	macro viewSearchResults {
+		var key_searchAssetTitle = "${searchAssetTitle}";
+		var key_searchAssetType = "${searchAssetType}";
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE_SPECIFIC",
+			value1 = "${searchAssetTitle}");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TYPE_SPECIFIC",
+			value1 = "${searchAssetType}");
+
+		if (isSet(entryDate)) {
+			AssertTextEquals.assertPartialText(
+				locator1 = "SearchResults#ASSET_ENTRY_TABLE_TYPE_SPECIFIC_DATE",
+				value1 = "${entryDate}");
+		}
+
+		if (isSet(searchAssetSummary)) {
+			AssertTextEquals.assertPartialText(
+				locator1 = "SearchResults#ASSET_ENTRY_TABLE_SUMMARY_SPECIFIC",
+				value1 = "${searchAssetSummary}");
+		}
+
+		if (isSet(searchTerm)) {
+			AssertTextEquals.assertPartialText(
+				locator1 = "SearchResults#RESULTS_PORTLET_SEARCH_QUERY",
+				value1 = "${searchTerm}");
+		}
+	}
+
+	macro viewSearchResultsSpecificOrder {
+		var resultOrder = "0";
+
+		for (var searchAssetTitle : list "${resultsList}") {
+			var resultOrder = ${resultOrder} + 1;
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE_SPECIFIC_ORDER",
+				resultOrder = "${resultOrder}",
+				value1 = "${searchAssetTitle}");
+		}
+	}
+
+}

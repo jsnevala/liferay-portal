@@ -14,14 +14,11 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.LayoutFriendlyURL;
 import com.liferay.portal.kernel.model.MVCCModel;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing LayoutFriendlyURL in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see LayoutFriendlyURL
  * @generated
  */
-@ProviderType
-public class LayoutFriendlyURLCacheModel implements CacheModel<LayoutFriendlyURL>,
-	Externalizable, MVCCModel {
+public class LayoutFriendlyURLCacheModel
+	implements CacheModel<LayoutFriendlyURL>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,10 +46,13 @@ public class LayoutFriendlyURLCacheModel implements CacheModel<LayoutFriendlyURL
 			return false;
 		}
 
-		LayoutFriendlyURLCacheModel layoutFriendlyURLCacheModel = (LayoutFriendlyURLCacheModel)obj;
+		LayoutFriendlyURLCacheModel layoutFriendlyURLCacheModel =
+			(LayoutFriendlyURLCacheModel)obj;
 
-		if ((layoutFriendlyURLId == layoutFriendlyURLCacheModel.layoutFriendlyURLId) &&
-				(mvccVersion == layoutFriendlyURLCacheModel.mvccVersion)) {
+		if ((layoutFriendlyURLId ==
+				layoutFriendlyURLCacheModel.layoutFriendlyURLId) &&
+			(mvccVersion == layoutFriendlyURLCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -79,10 +78,12 @@ public class LayoutFriendlyURLCacheModel implements CacheModel<LayoutFriendlyURL
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(29);
+		StringBundler sb = new StringBundler(31);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", layoutFriendlyURLId=");
@@ -116,9 +117,11 @@ public class LayoutFriendlyURLCacheModel implements CacheModel<LayoutFriendlyURL
 
 	@Override
 	public LayoutFriendlyURL toEntityModel() {
-		LayoutFriendlyURLImpl layoutFriendlyURLImpl = new LayoutFriendlyURLImpl();
+		LayoutFriendlyURLImpl layoutFriendlyURLImpl =
+			new LayoutFriendlyURLImpl();
 
 		layoutFriendlyURLImpl.setMvccVersion(mvccVersion);
+		layoutFriendlyURLImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			layoutFriendlyURLImpl.setUuid("");
@@ -185,6 +188,8 @@ public class LayoutFriendlyURLCacheModel implements CacheModel<LayoutFriendlyURL
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		layoutFriendlyURLId = objectInput.readLong();
@@ -207,9 +212,10 @@ public class LayoutFriendlyURLCacheModel implements CacheModel<LayoutFriendlyURL
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		if (uuid == null) {
 			objectOutput.writeUTF("");
@@ -258,6 +264,7 @@ public class LayoutFriendlyURLCacheModel implements CacheModel<LayoutFriendlyURL
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long layoutFriendlyURLId;
 	public long groupId;
@@ -271,4 +278,5 @@ public class LayoutFriendlyURLCacheModel implements CacheModel<LayoutFriendlyURL
 	public String friendlyURL;
 	public String languageId;
 	public long lastPublishDate;
+
 }

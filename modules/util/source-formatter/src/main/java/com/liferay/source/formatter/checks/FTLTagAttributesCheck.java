@@ -14,16 +14,16 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 /**
  * @author Hugo Huijser
  */
-public class FTLTagAttributesCheck extends TagAttributesCheck {
+public class FTLTagAttributesCheck extends BaseTagAttributesCheck {
 
 	@Override
 	protected Tag doFormatLineBreaks(Tag tag, String absolutePath) {

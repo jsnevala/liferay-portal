@@ -224,7 +224,7 @@ public class DDLXLSExporter extends BaseDDLExporter {
 
 			return byteArrayOutputStream.toByteArray();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return new byte[0];
 		}
 	}
@@ -235,8 +235,8 @@ public class DDLXLSExporter extends BaseDDLExporter {
 	}
 
 	@Override
-	protected
-		DDMFormFieldTypeServicesTracker getDDMFormFieldTypeServicesTracker() {
+	protected DDMFormFieldTypeServicesTracker
+		getDDMFormFieldTypeServicesTracker() {
 
 		return _ddmFormFieldTypeServicesTracker;
 	}

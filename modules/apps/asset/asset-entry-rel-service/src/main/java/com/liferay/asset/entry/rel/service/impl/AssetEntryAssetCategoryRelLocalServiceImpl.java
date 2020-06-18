@@ -16,12 +16,28 @@ package com.liferay.asset.entry.rel.service.impl;
 
 import com.liferay.asset.entry.rel.model.AssetEntryAssetCategoryRel;
 import com.liferay.asset.entry.rel.service.base.AssetEntryAssetCategoryRelLocalServiceBaseImpl;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetRenderer;
+import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
 
 /**
  * @author Eudaldo Alonso
  */
+@Component(
+	property = "model.class.name=com.liferay.asset.entry.rel.model.AssetEntryAssetCategoryRel",
+	service = AopService.class
+)
 public class AssetEntryAssetCategoryRelLocalServiceImpl
 	extends AssetEntryAssetCategoryRelLocalServiceBaseImpl {
 
@@ -47,10 +63,8 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 		assetEntryAssetCategoryRel.setAssetCategoryId(assetCategoryId);
 		assetEntryAssetCategoryRel.setPriority(priority);
 
-		assetEntryAssetCategoryRelPersistence.update(
+		return assetEntryAssetCategoryRelPersistence.update(
 			assetEntryAssetCategoryRel);
-
-		return assetEntryAssetCategoryRel;
 	}
 
 	@Override
@@ -65,14 +79,25 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 			assetEntryAssetCategoryRelPersistence.remove(
 				assetEntryAssetCategoryRel);
 		}
+
+		_reindex(assetEntryId);
 	}
 
 	@Override
 	public void deleteAssetEntryAssetCategoryRelByAssetCategoryId(
 		long assetCategoryId) {
 
-		assetEntryAssetCategoryRelPersistence.removeByAssetCategoryId(
-			assetCategoryId);
+		List<AssetEntryAssetCategoryRel> assetEntryAssetCategoryRels =
+			assetEntryAssetCategoryRelPersistence.findByAssetCategoryId(
+				assetCategoryId);
+
+		assetEntryAssetCategoryRels.forEach(
+			assetEntryAssetCategoryRel -> {
+				assetEntryAssetCategoryRelPersistence.remove(
+					assetEntryAssetCategoryRel);
+
+				_reindex(assetEntryAssetCategoryRel.getAssetEntryId());
+			});
 	}
 
 	@Override
@@ -81,6 +106,8 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 
 		assetEntryAssetCategoryRelPersistence.removeByAssetEntryId(
 			assetEntryId);
+
+		_reindex(assetEntryId);
 	}
 
 	@Override
@@ -89,6 +116,16 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 
 		return assetEntryAssetCategoryRelPersistence.fetchByA_A(
 			assetEntryId, assetCategoryId);
+	}
+
+	@Override
+	public long[] getAssetCategoryPrimaryKeys(long assetEntryId) {
+		List<AssetEntryAssetCategoryRel> assetEntryAssetCategoryRels =
+			getAssetEntryAssetCategoryRelsByAssetEntryId(assetEntryId);
+
+		return ListUtil.toLongArray(
+			assetEntryAssetCategoryRels,
+			AssetEntryAssetCategoryRel::getAssetCategoryId);
 	}
 
 	@Override
@@ -101,6 +138,25 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 
 	@Override
 	public List<AssetEntryAssetCategoryRel>
+		getAssetEntryAssetCategoryRelsByAssetCategoryId(
+			long assetCategoryId, int start, int end) {
+
+		return assetEntryAssetCategoryRelPersistence.findByAssetCategoryId(
+			assetCategoryId, start, end);
+	}
+
+	@Override
+	public List<AssetEntryAssetCategoryRel>
+		getAssetEntryAssetCategoryRelsByAssetCategoryId(
+			long assetCategoryId, int start, int end,
+			OrderByComparator<AssetEntryAssetCategoryRel> orderByComparator) {
+
+		return assetEntryAssetCategoryRelPersistence.findByAssetCategoryId(
+			assetCategoryId, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<AssetEntryAssetCategoryRel>
 		getAssetEntryAssetCategoryRelsByAssetEntryId(long assetEntryId) {
 
 		return assetEntryAssetCategoryRelPersistence.findByAssetEntryId(
@@ -108,9 +164,79 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 	}
 
 	@Override
+	public List<AssetEntryAssetCategoryRel>
+		getAssetEntryAssetCategoryRelsByAssetEntryId(
+			long assetEntryId, int start, int end) {
+
+		return assetEntryAssetCategoryRelPersistence.findByAssetEntryId(
+			assetEntryId, start, end);
+	}
+
+	@Override
+	public List<AssetEntryAssetCategoryRel>
+		getAssetEntryAssetCategoryRelsByAssetEntryId(
+			long assetEntryId, int start, int end,
+			OrderByComparator<AssetEntryAssetCategoryRel> orderByComparator) {
+
+		return assetEntryAssetCategoryRelPersistence.findByAssetEntryId(
+			assetEntryId, start, end, orderByComparator);
+	}
+
+	@Override
 	public int getAssetEntryAssetCategoryRelsCount(long assetEntryId) {
 		return assetEntryAssetCategoryRelPersistence.countByAssetEntryId(
 			assetEntryId);
 	}
+
+	@Override
+	public long[] getAssetEntryPrimaryKeys(long assetCategoryId) {
+		List<AssetEntryAssetCategoryRel> assetEntryAssetCategoryRels =
+			getAssetEntryAssetCategoryRelsByAssetCategoryId(assetCategoryId);
+
+		return ListUtil.toLongArray(
+			assetEntryAssetCategoryRels,
+			AssetEntryAssetCategoryRel::getAssetEntryId);
+	}
+
+	private void _reindex(long assetEntryId) {
+		if (assetEntryId <= 0) {
+			return;
+		}
+
+		AssetEntry assetEntry = assetEntryLocalService.fetchEntry(assetEntryId);
+
+		if (assetEntry == null) {
+			return;
+		}
+
+		try {
+			Indexer indexer = IndexerRegistryUtil.getIndexer(
+				assetEntry.getClassName());
+
+			if (indexer == null) {
+				return;
+			}
+
+			AssetRenderer assetRenderer = assetEntry.getAssetRenderer();
+
+			if (assetRenderer == null) {
+				return;
+			}
+
+			Object assetObject = assetRenderer.getAssetObject();
+
+			if (assetObject == null) {
+				return;
+			}
+
+			indexer.reindex(assetObject);
+		}
+		catch (SearchException searchException) {
+			_log.error("Unable to reindex asset entry", searchException);
+		}
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetEntryAssetCategoryRelLocalServiceImpl.class);
 
 }

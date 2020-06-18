@@ -67,7 +67,7 @@ if (groupIds.length == 1) {
 						List<String> localizedResourceActions = new ArrayList<String>(resourceActions.size());
 
 						for (String resourceAction : resourceActions) {
-							localizedResourceActions.add(LanguageUtil.get(request, ResourceActionsUtil.getActionNamePrefix() + resourceAction));
+							localizedResourceActions.add(ResourceActionsUtil.getAction(request, resourceAction));
 						}
 					%>
 
@@ -128,23 +128,21 @@ if (groupIds.length == 1) {
 	</tbody>
 </table>
 
-<aui:script use="aui-base,aui-io-request">
+<aui:script>
 	Liferay.provide(
 		window,
 		'<portlet:namespace />setPermissions',
-		function(uri) {
-			A.io.request(
-				uri,
-				{
-					method: 'post',
-					on: {
-						success: function() {
-							Liferay.Util.getWindow('<portlet:namespace />editDefaultFilePermissionsDialog').destroy();
-						}
-					}
-				}
-			);
+		function (uri) {
+			Liferay.Util.fetch(uri, {method: 'POST'})
+				.then(function (response) {
+					return response.text();
+				})
+				.then(function () {
+					Liferay.Util.getWindow(
+						'<portlet:namespace />editDefaultFilePermissionsDialog'
+					).destroy();
+				});
 		},
-		['liferay-util']
+		['liferay-util-window']
 	);
 </aui:script>

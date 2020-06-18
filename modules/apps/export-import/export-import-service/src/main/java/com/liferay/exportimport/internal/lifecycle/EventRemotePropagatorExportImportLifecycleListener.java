@@ -124,10 +124,11 @@ public class EventRemotePropagatorExportImportLifecycleListener
 
 		Group targetGroup = _groupLocalService.fetchGroup(targetGroupId);
 
-		UnicodeProperties typeSettings =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			sourceGroup.getTypeSettingsProperties();
 
-		String remoteGroupUUID = typeSettings.getProperty("remoteGroupUUID");
+		String remoteGroupUUID = typeSettingsUnicodeProperties.getProperty(
+			"remoteGroupUUID");
 
 		// If the target group can be found and the UUID's also match, then we
 		// must not propagate the event because it means remote staging is
@@ -181,12 +182,12 @@ public class EventRemotePropagatorExportImportLifecycleListener
 				remoteURL, user.getLogin(), user.getPassword(),
 				user.isPasswordEncrypted());
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Unable to generate HttpPrincipal for user " +
 						user.getFullName(),
-					pe);
+					portalException);
 			}
 		}
 
@@ -208,7 +209,9 @@ public class EventRemotePropagatorExportImportLifecycleListener
 	private void _propagateEvent(
 		ExportImportLifecycleEvent exportImportLifecycleEvent) {
 
-		_getHttpPrincipal(exportImportLifecycleEvent).ifPresent(
+		_getHttpPrincipal(
+			exportImportLifecycleEvent
+		).ifPresent(
 			httpPrincipal -> {
 				try {
 					StagingServiceHttp.propagateExportImportLifecycleEvent(
@@ -217,13 +220,14 @@ public class EventRemotePropagatorExportImportLifecycleListener
 						exportImportLifecycleEvent.getProcessId(),
 						exportImportLifecycleEvent.getAttributes());
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					_log.error(
 						"Unable to propagate staging lifecycle event to the " +
 							"remote live site",
-						pe);
+						portalException);
 				}
-			});
+			}
+		);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

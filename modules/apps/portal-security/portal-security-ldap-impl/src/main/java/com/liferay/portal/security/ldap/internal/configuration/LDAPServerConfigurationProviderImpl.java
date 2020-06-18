@@ -76,14 +76,15 @@ public class LDAPServerConfigurationProviderImpl
 			try {
 				configuration.delete();
 			}
-			catch (IOException ioe) {
-				throw new SystemException(ioe);
+			catch (IOException ioException) {
+				throw new SystemException(ioException);
 			}
 		}
 
 		return true;
 	}
 
+	@Override
 	public boolean delete(long companyId, long ldapServerId) {
 		Map<Long, ObjectValuePair<Configuration, LDAPServerConfiguration>>
 			objectValuePairs = _configurations.get(companyId);
@@ -107,8 +108,8 @@ public class LDAPServerConfigurationProviderImpl
 		try {
 			configuration.delete();
 		}
-		catch (IOException ioe) {
-			throw new SystemException(ioe);
+		catch (IOException ioException) {
+			throw new SystemException(ioException);
 		}
 
 		return true;
@@ -262,7 +263,7 @@ public class LDAPServerConfigurationProviderImpl
 								properties.get(
 									LDAPConstants.AUTH_SERVER_PRIORITY));
 						}
-						catch (IllegalStateException ise) {
+						catch (IllegalStateException illegalStateException) {
 							return 0L;
 						}
 					}));
@@ -305,10 +306,7 @@ public class LDAPServerConfigurationProviderImpl
 
 				Configuration configuration = objectValuePair.getKey();
 
-				Dictionary<String, Object> properties =
-					configuration.getProperties();
-
-				configurationsProperties.add(properties);
+				configurationsProperties.add(configuration.getProperties());
 			}
 		}
 
@@ -405,8 +403,9 @@ public class LDAPServerConfigurationProviderImpl
 
 			configuration.update(properties);
 		}
-		catch (IOException ioe) {
-			throw new SystemException("Unable to update configuration", ioe);
+		catch (IOException ioException) {
+			throw new SystemException(
+				"Unable to update configuration", ioException);
 		}
 	}
 

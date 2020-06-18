@@ -18,6 +18,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.exportimport.test.util.lar.BaseStagedModelDataHandlerTestCase;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.RepositoryEntry;
@@ -45,7 +46,7 @@ import org.junit.Rule;
 import org.junit.runner.RunWith;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @RunWith(Arquillian.class)
 public class RepositoryStagedModelDataHandlerTest
@@ -104,14 +105,11 @@ public class RepositoryStagedModelDataHandlerTest
 	}
 
 	@Override
-	protected StagedModel getStagedModel(String uuid, Group group) {
-		try {
-			return RepositoryLocalServiceUtil.getRepositoryByUuidAndGroupId(
-				uuid, group.getGroupId());
-		}
-		catch (Exception e) {
-			return null;
-		}
+	protected StagedModel getStagedModel(String uuid, Group group)
+		throws PortalException {
+
+		return RepositoryLocalServiceUtil.getRepositoryByUuidAndGroupId(
+			uuid, group.getGroupId());
 	}
 
 	@Override

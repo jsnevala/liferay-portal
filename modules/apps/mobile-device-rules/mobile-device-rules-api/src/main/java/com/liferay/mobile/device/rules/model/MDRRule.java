@@ -14,30 +14,33 @@
 
 package com.liferay.mobile.device.rules.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the MDRRule service. Represents a row in the &quot;MDRRule&quot; database table, with each column mapped to a property of this class.
  *
  * @author Edward C. Han
  * @see MDRRuleModel
- * @see com.liferay.mobile.device.rules.model.impl.MDRRuleImpl
- * @see com.liferay.mobile.device.rules.model.impl.MDRRuleModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.mobile.device.rules.model.impl.MDRRuleImpl")
+@ImplementationClassName(
+	"com.liferay.mobile.device.rules.model.impl.MDRRuleImpl"
+)
 @ProviderType
 public interface MDRRule extends MDRRuleModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.mobile.device.rules.model.impl.MDRRuleImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.mobile.device.rules.model.impl.MDRRuleImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<MDRRule, Long> RULE_ID_ACCESSOR = new Accessor<MDRRule, Long>() {
+	public static final Accessor<MDRRule, Long> RULE_ID_ACCESSOR =
+		new Accessor<MDRRule, Long>() {
+
 			@Override
 			public Long get(MDRRule mdrRule) {
 				return mdrRule.getRuleId();
@@ -52,10 +55,14 @@ public interface MDRRule extends MDRRuleModel, PersistedModel {
 			public Class<MDRRule> getTypeClass() {
 				return MDRRule.class;
 			}
+
 		};
 
-	public com.liferay.portal.kernel.util.UnicodeProperties getTypeSettingsProperties();
+	public com.liferay.portal.kernel.util.UnicodeProperties
+		getTypeSettingsProperties();
 
 	public void setTypeSettingsProperties(
-		com.liferay.portal.kernel.util.UnicodeProperties typeSettingsProperties);
+		com.liferay.portal.kernel.util.UnicodeProperties
+			typeSettingsUnicodeProperties);
+
 }

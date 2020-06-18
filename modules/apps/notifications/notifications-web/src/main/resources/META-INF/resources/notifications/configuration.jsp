@@ -17,7 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <clay:navigation-bar
-	navigationItems="<%=
+	navigationItems='<%=
 		new JSPNavigationItemList(pageContext) {
 			{
 				add(
@@ -27,7 +27,7 @@
 					});
 			}
 		}
-	%>"
+	%>'
 />
 
 <div class="manage-notifications-content portlet-configuration-setup">
@@ -65,7 +65,7 @@
 							collapsible="<%= true %>"
 							label="<%= PortalUtil.getPortletTitle(portlet, application, locale) %>"
 						>
-							<table class="table table-autofit table-condensed">
+							<table class="table table-autofit table-condensed table-responsive">
 								<tbody>
 
 									<%
@@ -110,7 +110,9 @@
 
 												UserNotificationDelivery userNotificationDelivery = UserNotificationDeliveryLocalServiceUtil.getUserNotificationDelivery(themeDisplay.getUserId(), entry.getKey(), userNotificationDefinition.getClassNameId(), userNotificationDefinition.getNotificationType(), userNotificationDeliveryType.getType(), userNotificationDeliveryType.isDefault());
 
-												userNotificationDeliveryIds.add(userNotificationDelivery.getUserNotificationDeliveryId());
+												if (userNotificationDeliveryType.isModifiable()) {
+													userNotificationDeliveryIds.add(userNotificationDelivery.getUserNotificationDeliveryId());
+												}
 											%>
 
 												<td class="lfr-<%= userNotificationDeliveryType.getName() %>-column">

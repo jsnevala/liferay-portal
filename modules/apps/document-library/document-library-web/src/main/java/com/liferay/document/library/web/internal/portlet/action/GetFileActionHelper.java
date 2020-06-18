@@ -22,6 +22,7 @@ import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.web.internal.security.permission.resource.DLFileEntryPermission;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.flash.FlashMagicBytesUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -58,52 +59,60 @@ import javax.servlet.http.HttpServletResponse;
 public class GetFileActionHelper {
 
 	public void processRequest(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		try {
-			long fileEntryId = ParamUtil.getLong(request, "fileEntryId");
+			long fileEntryId = ParamUtil.getLong(
+				httpServletRequest, "fileEntryId");
 
-			long folderId = ParamUtil.getLong(request, "folderId");
-			String name = ParamUtil.getString(request, "name");
-			String title = ParamUtil.getString(request, "title");
-			String version = ParamUtil.getString(request, "version");
+			long folderId = ParamUtil.getLong(httpServletRequest, "folderId");
+			String name = ParamUtil.getString(httpServletRequest, "name");
+			String title = ParamUtil.getString(httpServletRequest, "title");
+			String version = ParamUtil.getString(httpServletRequest, "version");
 
-			long fileShortcutId = ParamUtil.getLong(request, "fileShortcutId");
+			long fileShortcutId = ParamUtil.getLong(
+				httpServletRequest, "fileShortcutId");
 
-			String uuid = ParamUtil.getString(request, "uuid");
+			String uuid = ParamUtil.getString(httpServletRequest, "uuid");
 
 			String targetExtension = ParamUtil.getString(
-				request, "targetExtension");
+				httpServletRequest, "targetExtension");
 
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			long groupId = ParamUtil.getLong(
-				request, "groupId", themeDisplay.getScopeGroupId());
+				httpServletRequest, "groupId", themeDisplay.getScopeGroupId());
 
-			getFile(
+			_getFile(
 				fileEntryId, folderId, name, title, version, fileShortcutId,
-				uuid, groupId, targetExtension, request, response);
+				uuid, groupId, targetExtension, httpServletRequest,
+				httpServletResponse);
 		}
-		catch (NoSuchFileEntryException nsfee) {
+		catch (NoSuchFileEntryException noSuchFileEntryException) {
 			PortalUtil.sendError(
-				HttpServletResponse.SC_NOT_FOUND, nsfee, request, response);
+				HttpServletResponse.SC_NOT_FOUND, noSuchFileEntryException,
+				httpServletRequest, httpServletResponse);
 		}
-		catch (PrincipalException pe) {
-			processPrincipalException(pe, request, response);
+		catch (PrincipalException principalException) {
+			_processPrincipalException(
+				principalException, httpServletRequest, httpServletResponse);
 		}
-		catch (Exception e) {
-			PortalUtil.sendError(e, request, response);
+		catch (Exception exception) {
+			PortalUtil.sendError(
+				exception, httpServletRequest, httpServletResponse);
 		}
 	}
 
-	protected void getFile(
+	private void _getFile(
 			long fileEntryId, long folderId, String name, String title,
 			String version, long fileShortcutId, String uuid, long groupId,
-			String targetExtension, HttpServletRequest request,
-			HttpServletResponse response)
-		throws Exception {
+			String targetExtension, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
+		throws IOException, PortalException {
 
 		if (name.startsWith("DLFE-")) {
 			name = name.substring(5);
@@ -148,14 +157,12 @@ public class GetFileActionHelper {
 
 				if (dlFileEntry != null) {
 					ThemeDisplay themeDisplay =
-						(ThemeDisplay)request.getAttribute(
+						(ThemeDisplay)httpServletRequest.getAttribute(
 							WebKeys.THEME_DISPLAY);
 
-					PermissionChecker permissionChecker =
-						themeDisplay.getPermissionChecker();
-
 					DLFileEntryPermission.check(
-						permissionChecker, dlFileEntry, ActionKeys.VIEW);
+						themeDisplay.getPermissionChecker(), dlFileEntry,
+						ActionKeys.VIEW);
 
 					fileEntry = new LiferayFileEntry(dlFileEntry);
 				}
@@ -207,8 +214,13 @@ public class GetFileActionHelper {
 				id, is, sourceExtension, targetExtension);
 
 			if (convertedFile != null) {
-				fileName = FileUtil.stripExtension(fileName).concat(
-					StringPool.PERIOD).concat(targetExtension);
+				fileName = FileUtil.stripExtension(
+					fileName
+				).concat(
+					StringPool.PERIOD
+				).concat(
+					targetExtension
+				);
 				is = new FileInputStream(convertedFile);
 				contentLength = convertedFile.length();
 				contentType = MimeTypesUtil.getContentType(fileName);
@@ -225,16 +237,18 @@ public class GetFileActionHelper {
 		is = flashMagicBytesUtilResult.getInputStream();
 
 		ServletResponseUtil.sendFile(
-			request, response, fileName, is, contentLength, contentType);
+			httpServletRequest, httpServletResponse, fileName, is,
+			contentLength, contentType);
 	}
 
-	protected void processPrincipalException(
-			Throwable t, HttpServletRequest request,
-			HttpServletResponse response)
+	private void _processPrincipalException(
+			Throwable t, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PermissionChecker permissionChecker =
 			themeDisplay.getPermissionChecker();
@@ -243,19 +257,18 @@ public class GetFileActionHelper {
 
 		if ((user != null) && !user.isDefaultUser()) {
 			PortalUtil.sendError(
-				HttpServletResponse.SC_UNAUTHORIZED, (Exception)t, request,
-				response);
+				HttpServletResponse.SC_UNAUTHORIZED, (Exception)t,
+				httpServletRequest, httpServletResponse);
 
 			return;
 		}
 
 		String redirect = PortalUtil.getPathMain() + "/portal/login";
 
-		String currentURL = PortalUtil.getCurrentURL(request);
+		redirect = HttpUtil.addParameter(
+			redirect, "redirect", PortalUtil.getCurrentURL(httpServletRequest));
 
-		redirect = HttpUtil.addParameter(redirect, "redirect", currentURL);
-
-		response.sendRedirect(redirect);
+		httpServletResponse.sendRedirect(redirect);
 	}
 
 }

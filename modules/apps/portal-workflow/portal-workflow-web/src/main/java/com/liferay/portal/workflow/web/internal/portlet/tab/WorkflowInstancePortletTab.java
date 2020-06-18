@@ -43,6 +43,7 @@ import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
@@ -50,7 +51,8 @@ import org.osgi.service.component.annotations.Reference;
  * @author Adam Brandizzi
  */
 @Component(
-	immediate = true,
+	configurationPid = "com.liferay.portal.workflow.web.internal.configuration.WorkflowInstanceWebConfiguration",
+	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	property = "portal.workflow.tabs.name=" + WorkflowWebKeys.WORKFLOW_TAB_INSTANCE,
 	service = WorkflowPortletTab.class
 )
@@ -96,19 +98,19 @@ public class WorkflowInstancePortletTab extends BaseWorkflowPortletTab {
 		try {
 			setWorkflowInstanceRenderRequestAttribute(renderRequest);
 		}
-		catch (Exception e) {
-			if (workflowPreprocessorHelper.isSessionErrorException(e)) {
+		catch (Exception exception) {
+			if (workflowPreprocessorHelper.isSessionErrorException(exception)) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(e, e);
+					_log.warn(exception, exception);
 				}
 
 				workflowPreprocessorHelper.hideDefaultErrorMessage(
 					renderRequest);
 
-				SessionErrors.add(renderRequest, e.getClass());
+				SessionErrors.add(renderRequest, exception.getClass());
 			}
 			else {
-				throw new PortletException(e);
+				throw new PortletException(exception);
 			}
 		}
 	}

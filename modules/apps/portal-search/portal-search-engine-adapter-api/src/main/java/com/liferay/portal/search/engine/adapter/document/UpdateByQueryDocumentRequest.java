@@ -14,20 +14,19 @@
 
 package com.liferay.portal.search.engine.adapter.document;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.search.Query;
+import com.liferay.portal.search.engine.adapter.ccr.CrossClusterRequest;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class UpdateByQueryDocumentRequest
+	extends CrossClusterRequest
 	implements DocumentRequest<UpdateByQueryDocumentResponse> {
 
 	public UpdateByQueryDocumentRequest(
-		Query query, JSONObject scriptJSONObject, String[] indexNames) {
+		Query query, JSONObject scriptJSONObject, String... indexNames) {
 
 		_query = query;
 		_scriptJSONObject = scriptJSONObject;

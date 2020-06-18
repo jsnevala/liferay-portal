@@ -14,23 +14,35 @@
 
 package com.liferay.dynamic.data.mapping.service.impl;
 
+import com.liferay.dynamic.data.mapping.internal.search.util.DDMSearchHelper;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionSupport;
 import com.liferay.dynamic.data.mapping.service.base.DDMStructureServiceBaseImpl;
+import com.liferay.dynamic.data.mapping.service.persistence.DDMStructureFinder;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the remote service for accessing, adding, deleting, and updating
@@ -41,13 +53,38 @@ import java.util.Map;
  * @author Marcellus Tavares
  * @see    DDMStructureLocalServiceImpl
  */
+@Component(
+	property = {
+		"json.web.service.context.name=ddm",
+		"json.web.service.context.path=DDMStructure"
+	},
+	service = AopService.class
+)
 public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 
 	@Override
 	public DDMStructure addStructure(
-			long userId, long groupId, long classNameId,
-			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-			DDMForm ddmForm, DDMFormLayout ddmFormLayout, String storageType,
+			long groupId, long parentStructureId, long classNameId,
+			String structureKey, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, DDMForm ddmForm,
+			DDMFormLayout ddmFormLayout, String storageType, int type,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_ddmPermissionSupport.checkAddStructurePermission(
+			getPermissionChecker(), groupId, classNameId);
+
+		return ddmStructureLocalService.addStructure(
+			getUserId(), groupId, parentStructureId, classNameId, structureKey,
+			nameMap, descriptionMap, ddmForm, ddmFormLayout, storageType, type,
+			serviceContext);
+	}
+
+	@Override
+	public DDMStructure addStructure(
+			long groupId, long classNameId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, DDMForm ddmForm,
+			DDMFormLayout ddmFormLayout, String storageType,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -59,46 +96,9 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 			ddmFormLayout, storageType, serviceContext);
 	}
 
-	/**
-	 * Adds a structure referencing a default parent structure, using the portal
-	 * property <code>dynamic.data.lists.storage.type</code> storage type and
-	 * default structure type.
-	 *
-	 * @param      userId the primary key of the structure's creator/owner
-	 * @param      groupId the primary key of the group
-	 * @param      classNameId the primary key of the class name for the
-	 *             structure's related model
-	 * @param      nameMap the structure's locales and localized names
-	 * @param      descriptionMap the structure's locales and localized
-	 *             descriptions
-	 * @param      xsd the structure's XML schema definition
-	 * @param      serviceContext the service context to be applied. Can set the
-	 *             UUID, creation date, modification date, guest permissions,
-	 *             and group permissions for the structure.
-	 * @return     the structure
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #addStructure(long, long, long, Map, Map, DDMForm,
-	 *             DDMFormLayout, ServiceContext)}
-	 */
-	@Deprecated
 	@Override
 	public DDMStructure addStructure(
-			long userId, long groupId, long classNameId,
-			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-			String xsd, ServiceContext serviceContext)
-		throws PortalException {
-
-		_ddmPermissionSupport.checkAddStructurePermission(
-			getPermissionChecker(), groupId, classNameId);
-
-		return ddmStructureLocalService.addStructure(
-			getUserId(), groupId, classNameId, nameMap, descriptionMap, xsd,
-			serviceContext);
-	}
-
-	@Override
-	public DDMStructure addStructure(
-			long groupId, long parentStructureId, long classNameId,
+			long groupId, String parentStructureKey, long classNameId,
 			String structureKey, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap, DDMForm ddmForm,
 			DDMFormLayout ddmFormLayout, String storageType, int type,
@@ -109,120 +109,9 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 			getPermissionChecker(), groupId, classNameId);
 
 		return ddmStructureLocalService.addStructure(
-			getUserId(), groupId, parentStructureId, classNameId, structureKey,
+			getUserId(), groupId, parentStructureKey, classNameId, structureKey,
 			nameMap, descriptionMap, ddmForm, ddmFormLayout, storageType, type,
 			serviceContext);
-	}
-
-	/**
-	 * Adds a structure referencing its parent structure.
-	 *
-	 * @param      groupId the primary key of the group
-	 * @param      parentStructureId the primary key of the parent structure
-	 *             (optionally {@link
-	 *             com.liferay.dynamic.data.mapping.model.DDMStructureConstants#DEFAULT_PARENT_STRUCTURE_ID})
-	 * @param      classNameId the primary key of the class name for the
-	 *             structure's related model
-	 * @param      structureKey the unique string identifying the structure
-	 *             (optionally <code>null</code>)
-	 * @param      nameMap the structure's locales and localized names
-	 * @param      descriptionMap the structure's locales and localized
-	 *             descriptions
-	 * @param      xsd the structure's XML schema definition
-	 * @param      storageType the structure's storage type. It can be "xml" or
-	 *             "expando". For more information, see {@link
-	 *             com.liferay.dynamic.data.mapping.storage.StorageType}.
-	 * @param      type the structure's type. For more information, see {@link
-	 *             com.liferay.dynamic.data.mapping.model.DDMStructureConstants}.
-	 * @param      serviceContext the service context to be applied. Can set the
-	 *             UUID, creation date, modification date, guest permissions,
-	 *             and group permissions for the structure.
-	 * @return     the structure
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #addStructure(long, long, long, String, Map, Map, DDMForm,
-	 *             DDMFormLayout, String, int, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DDMStructure addStructure(
-			long groupId, long parentStructureId, long classNameId,
-			String structureKey, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, String xsd, String storageType,
-			int type, ServiceContext serviceContext)
-		throws PortalException {
-
-		_ddmPermissionSupport.checkAddStructurePermission(
-			getPermissionChecker(), groupId, classNameId);
-
-		return ddmStructureLocalService.addStructure(
-			getUserId(), groupId, parentStructureId, classNameId, structureKey,
-			nameMap, descriptionMap, xsd, storageType, type, serviceContext);
-	}
-
-	@Override
-	public DDMStructure addStructure(
-			long userId, long groupId, String parentStructureKey,
-			long classNameId, String structureKey, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, DDMForm ddmForm,
-			DDMFormLayout ddmFormLayout, String storageType, int type,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		_ddmPermissionSupport.checkAddStructurePermission(
-			getPermissionChecker(), groupId, classNameId);
-
-		return ddmStructureLocalService.addStructure(
-			userId, groupId, parentStructureKey, classNameId, structureKey,
-			nameMap, descriptionMap, ddmForm, ddmFormLayout, storageType, type,
-			serviceContext);
-	}
-
-	/**
-	 * Adds a structure referencing the parent structure by its structure key.
-	 * In case the parent structure is not found, it uses the default parent
-	 * structure ID.
-	 *
-	 * @param      userId the primary key of the structure's creator/owner
-	 * @param      groupId the primary key of the group
-	 * @param      parentStructureKey the unique string identifying the
-	 *             structure
-	 * @param      classNameId the primary key of the class name for the
-	 *             structure's related model
-	 * @param      structureKey unique string identifying the structure
-	 *             (optionally <code>null</code>)
-	 * @param      nameMap the structure's locales and localized names
-	 * @param      descriptionMap the structure's locales and localized
-	 *             descriptions
-	 * @param      xsd the XML schema definition of the structure
-	 * @param      storageType the storage type of the structure. It can be XML
-	 *             or expando. For more information, see {@link
-	 *             com.liferay.dynamic.data.mapping.storage.StorageType}.
-	 * @param      type the structure's type. For more information, see {@link
-	 *             com.liferay.dynamic.data.mapping.model.DDMStructureConstants}.
-	 * @param      serviceContext the service context to be applied. Must have
-	 *             the <code>ddmResource</code> attribute to check permissions.
-	 *             Can set the UUID, creation date, modification date, guest
-	 *             permissions, and group permissions for the structure.
-	 * @return     the structure
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #addStructure(long, long, String, long, String, Map, Map,
-	 *             DDMForm, DDMFormLayout, String, int, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DDMStructure addStructure(
-			long userId, long groupId, String parentStructureKey,
-			long classNameId, String structureKey, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, String xsd, String storageType,
-			int type, ServiceContext serviceContext)
-		throws PortalException {
-
-		_ddmPermissionSupport.checkAddStructurePermission(
-			getPermissionChecker(), groupId, classNameId);
-
-		return ddmStructureLocalService.addStructure(
-			userId, groupId, parentStructureKey, classNameId, structureKey,
-			nameMap, descriptionMap, xsd, storageType, type, serviceContext);
 	}
 
 	/**
@@ -418,9 +307,24 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 	public List<DDMStructure> getStructures(
 		long companyId, long[] groupIds, long classNameId, int status) {
 
-		return ddmStructureFinder.filterFindByC_G_C_S(
-			companyId, groupIds, classNameId, status, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		try {
+			SearchContext searchContext =
+				_ddmSearchHelper.buildStructureSearchContext(
+					companyId, groupIds, getUserId(), classNameId, null,
+					StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, null,
+					status, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+			return _ddmSearchHelper.doSearch(
+				searchContext, DDMStructure.class,
+				ddmStructurePersistence::findByPrimaryKey);
+		}
+		catch (PrincipalException principalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(principalException, principalException);
+			}
+		}
+
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -428,9 +332,62 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 		long companyId, long[] groupIds, long classNameId, int status,
 		int start, int end, OrderByComparator<DDMStructure> orderByComparator) {
 
+		try {
+			SearchContext searchContext =
+				_ddmSearchHelper.buildStructureSearchContext(
+					companyId, groupIds, getUserId(), classNameId, null,
+					StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, null,
+					status, start, end, orderByComparator);
+
+			return _ddmSearchHelper.doSearch(
+				searchContext, DDMStructure.class,
+				ddmStructurePersistence::findByPrimaryKey);
+		}
+		catch (PrincipalException principalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(principalException, principalException);
+			}
+		}
+
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<DDMStructure> getStructures(
+		long companyId, long[] groupIds, long classNameId, int start, int end,
+		OrderByComparator<DDMStructure> orderByComparator) {
+
 		return ddmStructureFinder.filterFindByC_G_C_S(
-			companyId, groupIds, classNameId, status, start, end,
+			companyId, groupIds, classNameId, WorkflowConstants.STATUS_ANY,
+			start, end, orderByComparator);
+	}
+
+	@Override
+	public List<DDMStructure> getStructures(
+		long companyId, long[] groupIds, long classNameId, String keywords,
+		int status, int start, int end,
+		OrderByComparator<DDMStructure> orderByComparator) {
+
+		return ddmStructureLocalService.getStructures(
+			companyId, groupIds, classNameId, keywords, status, start, end,
 			orderByComparator);
+	}
+
+	@Override
+	public int getStructuresCount(
+		long companyId, long[] groupIds, long classNameId) {
+
+		return _ddmStructureFinder.filterCountByC_G_C_S(
+			companyId, groupIds, classNameId, WorkflowConstants.STATUS_ANY);
+	}
+
+	@Override
+	public int getStructuresCount(
+		long companyId, long[] groupIds, long classNameId, String keywords,
+		int status) {
+
+		return ddmStructureLocalService.getStructuresCount(
+			companyId, groupIds, classNameId, keywords, status);
 	}
 
 	@Override
@@ -481,9 +438,24 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 		int type, int status, int start, int end,
 		OrderByComparator<DDMStructure> orderByComparator) {
 
-		return ddmStructureFinder.filterFindByKeywords(
-			companyId, groupIds, classNameId, keywords, type, status, start,
-			end, orderByComparator);
+		try {
+			SearchContext searchContext =
+				_ddmSearchHelper.buildStructureSearchContext(
+					companyId, groupIds, getUserId(), classNameId, null,
+					keywords, keywords, StringPool.BLANK, type, status, start,
+					end, orderByComparator);
+
+			return _ddmSearchHelper.doSearch(
+				searchContext, DDMStructure.class,
+				ddmStructurePersistence::findByPrimaryKey);
+		}
+		catch (PrincipalException principalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(principalException, principalException);
+			}
+		}
+
+		return Collections.emptyList();
 	}
 
 	/**
@@ -520,9 +492,24 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 		int status, int start, int end,
 		OrderByComparator<DDMStructure> orderByComparator) {
 
-		return ddmStructureFinder.filterFindByKeywords(
-			companyId, groupIds, classNameId, keywords, status, start, end,
-			orderByComparator);
+		try {
+			SearchContext searchContext =
+				_ddmSearchHelper.buildStructureSearchContext(
+					companyId, groupIds, getUserId(), classNameId, null,
+					keywords, keywords, StringPool.BLANK, null, status, start,
+					end, orderByComparator);
+
+			return _ddmSearchHelper.doSearch(
+				searchContext, DDMStructure.class,
+				ddmStructureLocalService::fetchStructure);
+		}
+		catch (PrincipalException principalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(principalException, principalException);
+			}
+		}
+
+		return Collections.emptyList();
 	}
 
 	/**
@@ -566,9 +553,24 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 		boolean andOperator, int start, int end,
 		OrderByComparator<DDMStructure> orderByComparator) {
 
-		return ddmStructureFinder.filterFindByC_G_C_N_D_S_T_S(
-			companyId, groupIds, classNameId, name, description, storageType,
-			type, status, andOperator, start, end, orderByComparator);
+		try {
+			SearchContext searchContext =
+				_ddmSearchHelper.buildStructureSearchContext(
+					companyId, groupIds, getUserId(), classNameId, null, name,
+					description, storageType, type, status, start, end,
+					orderByComparator);
+
+			return _ddmSearchHelper.doSearch(
+				searchContext, DDMStructure.class,
+				ddmStructurePersistence::findByPrimaryKey);
+		}
+		catch (PrincipalException principalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(principalException, principalException);
+			}
+		}
+
+		return Collections.emptyList();
 	}
 
 	/**
@@ -589,8 +591,23 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 		long companyId, long[] groupIds, long classNameId, String keywords,
 		int status) {
 
-		return ddmStructureFinder.filterCountByKeywords(
-			companyId, groupIds, classNameId, keywords, status);
+		try {
+			SearchContext searchContext =
+				_ddmSearchHelper.buildStructureSearchContext(
+					companyId, groupIds, getUserId(), classNameId, null,
+					keywords, keywords, StringPool.BLANK, null, status,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+			return _ddmSearchHelper.doSearchCount(
+				searchContext, DDMStructure.class);
+		}
+		catch (PrincipalException principalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(principalException, principalException);
+			}
+		}
+
+		return 0;
 	}
 
 	/**
@@ -613,8 +630,23 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 		long companyId, long[] groupIds, long classNameId, String keywords,
 		int type, int status) {
 
-		return ddmStructureFinder.filterCountByKeywords(
-			companyId, groupIds, classNameId, keywords, type, status);
+		try {
+			SearchContext searchContext =
+				_ddmSearchHelper.buildStructureSearchContext(
+					companyId, groupIds, getUserId(), classNameId, null,
+					keywords, keywords, StringPool.BLANK, type, status,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+			return _ddmSearchHelper.doSearchCount(
+				searchContext, DDMStructure.class);
+		}
+		catch (PrincipalException principalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(principalException, principalException);
+			}
+		}
+
+		return 0;
 	}
 
 	/**
@@ -642,9 +674,23 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 		String description, String storageType, int type, int status,
 		boolean andOperator) {
 
-		return ddmStructureFinder.filterCountByC_G_C_N_D_S_T_S(
-			companyId, groupIds, classNameId, name, description, storageType,
-			type, status, andOperator);
+		try {
+			SearchContext searchContext =
+				_ddmSearchHelper.buildStructureSearchContext(
+					companyId, groupIds, getUserId(), classNameId, null, name,
+					description, storageType, type, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null);
+
+			return _ddmSearchHelper.doSearchCount(
+				searchContext, DDMStructure.class);
+		}
+		catch (PrincipalException principalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(principalException, principalException);
+			}
+		}
+
+		return 0;
 	}
 
 	@Override
@@ -666,47 +712,6 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 			nameMap, descriptionMap, ddmForm, ddmFormLayout, serviceContext);
 	}
 
-	/**
-	 * Updates the structure matching the class name ID, structure key, and
-	 * group, replacing its old parent structure, name map, description map, and
-	 * XSD with new ones.
-	 *
-	 * @param      groupId the primary key of the group
-	 * @param      parentStructureId the primary key of the new parent structure
-	 * @param      classNameId the primary key of the class name for the
-	 *             structure's related model
-	 * @param      structureKey the unique string identifying the structure
-	 * @param      nameMap the structure's new locales and localized names
-	 * @param      descriptionMap the structure's new locales and localized
-	 *             description
-	 * @param      definition the structure's new XML schema definition
-	 * @param      serviceContext the service context to be applied. Can set the
-	 *             modification date.
-	 * @return     the updated structure
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #updateStructure(long, long, long, String, Map, Map, DDMForm,
-	 *             DDMFormLayout, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DDMStructure updateStructure(
-			long groupId, long parentStructureId, long classNameId,
-			String structureKey, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, String definition,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		DDMStructure structure = ddmStructurePersistence.findByG_C_S(
-			groupId, classNameId, structureKey);
-
-		_ddmStructureModelResourcePermission.check(
-			getPermissionChecker(), structure, ActionKeys.UPDATE);
-
-		return ddmStructureLocalService.updateStructure(
-			groupId, parentStructureId, classNameId, structureKey, nameMap,
-			descriptionMap, definition, serviceContext);
-	}
-
 	@Override
 	public DDMStructure updateStructure(
 			long structureId, long parentStructureId,
@@ -723,38 +728,8 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 			descriptionMap, ddmForm, ddmFormLayout, serviceContext);
 	}
 
-	/**
-	 * Updates the structure matching the structure ID, replacing the old parent
-	 * structure ID, name map, description map, and XSD with the new values.
-	 *
-	 * @param      structureId the primary key of the structure
-	 * @param      parentStructureId the new parent structure primary key
-	 * @param      nameMap the structure's new locales and localized names
-	 * @param      descriptionMap the structure's new locales and localized
-	 *             description
-	 * @param      definition the new XML schema definition of the structure
-	 * @param      serviceContext the service context to be applied. Can set the
-	 *             modification date.
-	 * @return     the updated structure
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #updateStructure(long, long, Map, Map, DDMForm,
-	 *             DDMFormLayout, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public DDMStructure updateStructure(
-			long structureId, long parentStructureId,
-			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-			String definition, ServiceContext serviceContext)
-		throws PortalException {
-
-		_ddmStructureModelResourcePermission.check(
-			getPermissionChecker(), structureId, ActionKeys.UPDATE);
-
-		return ddmStructureLocalService.updateStructure(
-			structureId, parentStructureId, nameMap, descriptionMap, definition,
-			serviceContext);
-	}
+	private static final Log _log = LogFactoryUtil.getLog(
+		DDMStructureServiceImpl.class);
 
 	private static volatile ModelResourcePermission<DDMStructure>
 		_ddmStructureModelResourcePermission =
@@ -762,7 +737,13 @@ public class DDMStructureServiceImpl extends DDMStructureServiceBaseImpl {
 				DDMStructureServiceImpl.class,
 				"_ddmStructureModelResourcePermission", DDMStructure.class);
 
-	@ServiceReference(type = DDMPermissionSupport.class)
+	@Reference
 	private DDMPermissionSupport _ddmPermissionSupport;
+
+	@Reference
+	private DDMSearchHelper _ddmSearchHelper;
+
+	@Reference
+	private DDMStructureFinder _ddmStructureFinder;
 
 }

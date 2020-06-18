@@ -14,12 +14,12 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,13 +46,11 @@ public class Autocomplete {
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		for (int i = 0; (i < array.length) && (i < max); i++) {
-			String text = array[i][0];
-			String value = array[i][1];
-
-			Map<String, String> map = new HashMap<>();
-
-			map.put("text", text);
-			map.put("value", value);
+			Map<String, String> map = HashMapBuilder.put(
+				"text", array[i][0]
+			).put(
+				"value", array[i][1]
+			).build();
 
 			jsonArray.put(map);
 		}

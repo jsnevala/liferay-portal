@@ -15,8 +15,12 @@
 package com.liferay.site.navigation.admin.web.internal.portlet;
 
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.site.navigation.admin.constants.SiteNavigationAdminPortletKeys;
 import com.liferay.site.navigation.admin.web.internal.constants.SiteNavigationAdminWebKeys;
+import com.liferay.site.navigation.admin.web.internal.display.context.SiteNavigationAdminDisplayContext;
+import com.liferay.site.navigation.service.SiteNavigationMenuLocalService;
+import com.liferay.site.navigation.service.SiteNavigationMenuService;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
 
 import java.io.IOException;
@@ -51,8 +55,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + SiteNavigationAdminPortletKeys.SITE_NAVIGATION_ADMIN,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=guest,power-user,user"
 	},
 	service = Portlet.class
 )
@@ -63,15 +66,33 @@ public class SiteNavigationAdminPortlet extends MVCPortlet {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
 
+		SiteNavigationAdminDisplayContext siteNavigationAdminDisplayContext =
+			new SiteNavigationAdminDisplayContext(
+				_portal.getHttpServletRequest(renderRequest),
+				_portal.getLiferayPortletRequest(renderRequest),
+				_portal.getLiferayPortletResponse(renderResponse),
+				_siteNavigationMenuItemTypeRegistry,
+				_siteNavigationMenuLocalService, _siteNavigationMenuService);
+
 		renderRequest.setAttribute(
-			SiteNavigationAdminWebKeys.SITE_NAVIGATION_MENU_ITEM_TYPE_REGISTRY,
-			_siteNavigationMenuItemTypeRegistry);
+			SiteNavigationAdminWebKeys.
+				SITE_NAVIGATION_MENU_ADMIN_DISPLAY_CONTEXT,
+			siteNavigationAdminDisplayContext);
 
 		super.doDispatch(renderRequest, renderResponse);
 	}
 
 	@Reference
+	private Portal _portal;
+
+	@Reference
 	private SiteNavigationMenuItemTypeRegistry
 		_siteNavigationMenuItemTypeRegistry;
+
+	@Reference
+	private SiteNavigationMenuLocalService _siteNavigationMenuLocalService;
+
+	@Reference
+	private SiteNavigationMenuService _siteNavigationMenuService;
 
 }

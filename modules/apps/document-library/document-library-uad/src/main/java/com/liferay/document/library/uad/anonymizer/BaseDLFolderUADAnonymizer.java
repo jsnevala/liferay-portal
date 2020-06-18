@@ -14,14 +14,14 @@
 
 package com.liferay.document.library.uad.anonymizer;
 
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
 import com.liferay.document.library.uad.constants.DLUADConstants;
-
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
-
 import com.liferay.user.associated.data.anonymizer.DynamicQueryUADAnonymizer;
 
 import org.osgi.service.component.annotations.Reference;
@@ -40,12 +40,17 @@ import org.osgi.service.component.annotations.Reference;
  */
 public abstract class BaseDLFolderUADAnonymizer
 	extends DynamicQueryUADAnonymizer<DLFolder> {
+
 	@Override
-	public void autoAnonymize(DLFolder dlFolder, long userId, User anonymousUser)
+	public void autoAnonymize(
+			DLFolder dlFolder, long userId, User anonymousUser)
 		throws PortalException {
+
 		if (dlFolder.getUserId() == userId) {
 			dlFolder.setUserId(anonymousUser.getUserId());
 			dlFolder.setUserName(anonymousUser.getFullName());
+
+			autoAnonymizeAssetEntry(dlFolder, anonymousUser);
 		}
 
 		if (dlFolder.getStatusByUserId() == userId) {
@@ -66,6 +71,19 @@ public abstract class BaseDLFolderUADAnonymizer
 		return DLFolder.class;
 	}
 
+	protected void autoAnonymizeAssetEntry(
+		DLFolder dlFolder, User anonymousUser) {
+
+		AssetEntry assetEntry = fetchAssetEntry(dlFolder);
+
+		if (assetEntry != null) {
+			assetEntry.setUserId(anonymousUser.getUserId());
+			assetEntry.setUserName(anonymousUser.getFullName());
+
+			assetEntryLocalService.updateAssetEntry(assetEntry);
+		}
+	}
+
 	@Override
 	protected ActionableDynamicQuery doGetActionableDynamicQuery() {
 		return dlFolderLocalService.getActionableDynamicQuery();
@@ -76,6 +94,15 @@ public abstract class BaseDLFolderUADAnonymizer
 		return DLUADConstants.USER_ID_FIELD_NAMES_DL_FOLDER;
 	}
 
+	protected AssetEntry fetchAssetEntry(DLFolder dlFolder) {
+		return assetEntryLocalService.fetchEntry(
+			DLFolder.class.getName(), dlFolder.getFolderId());
+	}
+
+	@Reference
+	protected AssetEntryLocalService assetEntryLocalService;
+
 	@Reference
 	protected DLFolderLocalService dlFolderLocalService;
+
 }

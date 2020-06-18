@@ -18,16 +18,11 @@
 
 <%
 final String navigation = ParamUtil.getString(request, "navigation", "entries");
-
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/blogs/view");
-portletURL.setParameter("navigation", navigation);
 %>
 
 <clay:navigation-bar
 	inverted="<%= true %>"
-	navigationItems="<%=
+	navigationItems='<%=
 		new JSPNavigationItemList(pageContext) {
 			{
 				add(
@@ -45,7 +40,7 @@ portletURL.setParameter("navigation", navigation);
 				});
 			}
 		}
-	%>"
+	%>'
 />
 
 <c:choose>

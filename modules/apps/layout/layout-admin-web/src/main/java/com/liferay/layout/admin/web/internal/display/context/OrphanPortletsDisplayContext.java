@@ -14,10 +14,8 @@
 
 package com.liferay.layout.admin.web.internal.display.context;
 
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
+import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
+import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -53,27 +51,13 @@ import javax.servlet.http.HttpServletRequest;
 public class OrphanPortletsDisplayContext {
 
 	public OrphanPortletsDisplayContext(
-		HttpServletRequest request, LiferayPortletRequest liferayPortletRequest,
+		HttpServletRequest httpServletRequest,
+		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
-	}
-
-	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData("action", "deleteOrphanPortlets");
-						dropdownItem.setIcon("times-circle");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
-			}
-		};
 	}
 
 	public String getBackURL() {
@@ -81,7 +65,7 @@ public class OrphanPortletsDisplayContext {
 			return _backURL;
 		}
 
-		_backURL = ParamUtil.getString(_request, "backURL");
+		_backURL = ParamUtil.getString(_httpServletRequest, "backURL");
 
 		return _backURL;
 	}
@@ -97,39 +81,6 @@ public class OrphanPortletsDisplayContext {
 		return _displayStyle;
 	}
 
-	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
-			}
-		};
-	}
-
-	public String getOrderByCol() {
-		if (Validator.isNotNull(_orderByCol)) {
-			return _orderByCol;
-		}
-
-		_orderByCol = ParamUtil.getString(
-			_liferayPortletRequest, "orderByCol", "name");
-
-		return _orderByCol;
-	}
-
 	public String getOrderByType() {
 		if (Validator.isNotNull(_orderByType)) {
 			return _orderByType;
@@ -142,9 +93,7 @@ public class OrphanPortletsDisplayContext {
 	}
 
 	public List<Portlet> getOrphanPortlets() {
-		Layout selLayout = getSelLayout();
-
-		return getOrphanPortlets(selLayout);
+		return getOrphanPortlets(getSelLayout());
 	}
 
 	public List<Portlet> getOrphanPortlets(Layout layout) {
@@ -193,8 +142,8 @@ public class OrphanPortletsDisplayContext {
 			orphanPortlets.add(portlet);
 		}
 
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			_liferayPortletRequest);
+		HttpServletRequest httpServletRequest =
+			PortalUtil.getHttpServletRequest(_liferayPortletRequest);
 
 		boolean orderByAsc = false;
 
@@ -204,12 +153,41 @@ public class OrphanPortletsDisplayContext {
 
 		PortletTitleComparator portletTitleComparator =
 			new PortletTitleComparator(
-				request.getServletContext(), themeDisplay.getLocale(),
-				orderByAsc);
+				httpServletRequest.getServletContext(),
+				themeDisplay.getLocale(), orderByAsc);
 
-		orphanPortlets = ListUtil.sort(orphanPortlets, portletTitleComparator);
+		return ListUtil.sort(orphanPortlets, portletTitleComparator);
+	}
 
-		return orphanPortlets;
+	public SearchContainer getOrphanPortletsSearchContainer() {
+		if (_orphanPortletsSearchContainer != null) {
+			return _orphanPortletsSearchContainer;
+		}
+
+		SearchContainer orphanPortletsSearchContainer = new SearchContainer(
+			_liferayPortletRequest, getPortletURL(), null, null);
+
+		orphanPortletsSearchContainer.setDeltaConfigurable(false);
+		orphanPortletsSearchContainer.setId("portlets");
+		orphanPortletsSearchContainer.setOrderByCol("name");
+		orphanPortletsSearchContainer.setOrderByType(getOrderByType());
+
+		Layout selLayout = getSelLayout();
+
+		if (!selLayout.isLayoutPrototypeLinkActive()) {
+			orphanPortletsSearchContainer.setRowChecker(
+				new EmptyOnClickRowChecker(_liferayPortletResponse));
+		}
+
+		List<Portlet> portlets = getOrphanPortlets();
+
+		orphanPortletsSearchContainer.setResults(portlets);
+
+		orphanPortletsSearchContainer.setTotal(portlets.size());
+
+		_orphanPortletsSearchContainer = orphanPortletsSearchContainer;
+
+		return _orphanPortletsSearchContainer;
 	}
 
 	public PortletURL getPortletURL() {
@@ -245,79 +223,31 @@ public class OrphanPortletsDisplayContext {
 		return _selPlid;
 	}
 
-	public String getSortingURL() {
-		PortletURL sortingURL = getPortletURL();
-
-		sortingURL.setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL.toString();
-	}
-
 	public String getStatus(Portlet portlet) {
-		HttpServletRequest request = PortalUtil.getHttpServletRequest(
-			_liferayPortletRequest);
+		HttpServletRequest httpServletRequest =
+			PortalUtil.getHttpServletRequest(_liferayPortletRequest);
 
 		if (!portlet.isActive()) {
-			return LanguageUtil.get(request, "inactive");
+			return LanguageUtil.get(httpServletRequest, "inactive");
 		}
 		else if (!portlet.isReady()) {
-			return LanguageUtil.format(request, "is-not-ready", "portlet");
+			return LanguageUtil.format(
+				httpServletRequest, "is-not-ready", "portlet");
 		}
 		else if (portlet.isUndeployedPortlet()) {
-			return LanguageUtil.get(request, "undeployed");
+			return LanguageUtil.get(httpServletRequest, "undeployed");
 		}
 
-		return LanguageUtil.get(request, "active");
-	}
-
-	public List<ViewTypeItem> getViewTypeItems() {
-		return new ViewTypeItemList(getPortletURL(), getDisplayStyle()) {
-			{
-				addListViewTypeItem();
-				addTableViewTypeItem();
-			}
-		};
-	}
-
-	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(getPortletURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
-			}
-		};
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "name"));
-					});
-			}
-		};
+		return LanguageUtil.get(httpServletRequest, "active");
 	}
 
 	private String _backURL;
 	private String _displayStyle;
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
-	private String _orderByCol;
 	private String _orderByType;
-	private final HttpServletRequest _request;
+	private SearchContainer _orphanPortletsSearchContainer;
 	private Layout _selLayout;
 	private Long _selPlid;
 

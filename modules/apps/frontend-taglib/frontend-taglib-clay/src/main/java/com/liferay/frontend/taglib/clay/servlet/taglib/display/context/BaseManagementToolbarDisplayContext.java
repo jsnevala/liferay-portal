@@ -16,14 +16,18 @@ package com.liferay.frontend.taglib.clay.servlet.taglib.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.SafeConsumer;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,50 +46,53 @@ public class BaseManagementToolbarDisplayContext
 	implements ManagementToolbarDisplayContext {
 
 	public BaseManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request) {
+		LiferayPortletResponse liferayPortletResponse) {
 
 		this.liferayPortletRequest = liferayPortletRequest;
 		this.liferayPortletResponse = liferayPortletResponse;
-		this.request = request;
+		request = httpServletRequest;
 
 		currentURLObj = PortletURLUtil.getCurrent(
 			liferayPortletRequest, liferayPortletResponse);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #BaseManagementToolbarDisplayContext(HttpServletRequest,
+	 *             LiferayPortletRequest, LiferayPortletResponse)}
+	 */
+	@Deprecated
+	public BaseManagementToolbarDisplayContext(
+		LiferayPortletRequest liferayPortletRequest,
+		LiferayPortletResponse liferayPortletResponse,
+		HttpServletRequest httpServletRequest) {
+
+		this(httpServletRequest, liferayPortletRequest, liferayPortletResponse);
+	}
+
+	@Override
 	public List<DropdownItem> getFilterDropdownItems() {
-		DropdownItemList filterDropdownItems = new DropdownItemList() {
-			{
-				List<DropdownItem> filterNavigationDropdownItems =
-					getFilterNavigationDropdownItems();
+		List<DropdownItem> filterNavigationDropdownItems =
+			getFilterNavigationDropdownItems();
+		List<DropdownItem> orderByDropdownItems = getOrderByDropdownItems();
 
-				if (filterNavigationDropdownItems != null) {
-					addGroup(
-						SafeConsumer.ignore(
-							dropdownGroupItem -> {
-								dropdownGroupItem.setDropdownItems(
-									filterNavigationDropdownItems);
-								dropdownGroupItem.setLabel(
-									getFilterNavigationDropdownItemsLabel());
-							}));
-				}
-
-				List<DropdownItem> orderByDropdownItems =
-					getOrderByDropdownItems();
-
-				if (orderByDropdownItems != null) {
-					addGroup(
-						SafeConsumer.ignore(
-							dropdownGroupItem -> {
-								dropdownGroupItem.setDropdownItems(
-									orderByDropdownItems);
-								dropdownGroupItem.setLabel(
-									getOrderByDropdownItemsLabel());
-							}));
-				}
+		DropdownItemList filterDropdownItems = DropdownItemListBuilder.addGroup(
+			() -> filterNavigationDropdownItems != null,
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					filterNavigationDropdownItems);
+				dropdownGroupItem.setLabel(
+					getFilterNavigationDropdownItemsLabel());
 			}
-		};
+		).addGroup(
+			() -> orderByDropdownItems != null,
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(orderByDropdownItems);
+				dropdownGroupItem.setLabel(getOrderByDropdownItemsLabel());
+			}
+		).build();
 
 		if (filterDropdownItems.isEmpty()) {
 			return null;
@@ -108,11 +115,44 @@ public class BaseManagementToolbarDisplayContext
 	public String getSortingURL() {
 		PortletURL sortingURL = getPortletURL();
 
+		String orderByCol = getOrderByCol();
+
+		if (Validator.isNotNull(orderByCol)) {
+			sortingURL.setParameter(getOrderByColParam(), orderByCol);
+		}
+
 		sortingURL.setParameter(
 			getOrderByTypeParam(),
 			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
 
 		return sortingURL.toString();
+	}
+
+	@Override
+	public List<ViewTypeItem> getViewTypeItems() {
+		if (ArrayUtil.isEmpty(getDisplayViews())) {
+			return null;
+		}
+
+		return new ViewTypeItemList(getPortletURL(), getDisplayStyle()) {
+			{
+				if (ArrayUtil.contains(getDisplayViews(), "icon")) {
+					addCardViewTypeItem();
+				}
+
+				if (ArrayUtil.contains(getDisplayViews(), "descriptive")) {
+					addListViewTypeItem();
+				}
+
+				if (ArrayUtil.contains(getDisplayViews(), "list")) {
+					addTableViewTypeItem();
+				}
+			}
+		};
+	}
+
+	protected String getDefaultDisplayStyle() {
+		return "list";
 	}
 
 	protected Map<String, String> getDefaultEntriesMap(String[] entryKeys) {
@@ -129,6 +169,15 @@ public class BaseManagementToolbarDisplayContext
 		return entriesMap;
 	}
 
+	protected String getDisplayStyle() {
+		return ParamUtil.getString(
+			request, "displayStyle", getDefaultDisplayStyle());
+	}
+
+	protected String[] getDisplayViews() {
+		return new String[0];
+	}
+
 	protected List<DropdownItem> getDropdownItems(
 		Map<String, String> entriesMap, PortletURL entryURL,
 		String parameterName, String parameterValue) {
@@ -142,8 +191,11 @@ public class BaseManagementToolbarDisplayContext
 				for (Map.Entry<String, String> entry : entriesMap.entrySet()) {
 					add(
 						dropdownItem -> {
-							dropdownItem.setActive(
-								parameterValue.equals(entry.getValue()));
+							if (parameterValue != null) {
+								dropdownItem.setActive(
+									parameterValue.equals(entry.getValue()));
+							}
+
 							dropdownItem.setHref(
 								entryURL, parameterName, entry.getValue());
 							dropdownItem.setLabel(
@@ -220,9 +272,9 @@ public class BaseManagementToolbarDisplayContext
 		try {
 			return PortletURLUtil.clone(currentURLObj, liferayPortletResponse);
 		}
-		catch (PortletException pe) {
+		catch (PortletException portletException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(pe, pe);
+				_log.warn(portletException, portletException);
 			}
 
 			PortletURL portletURL = liferayPortletResponse.createRenderURL();

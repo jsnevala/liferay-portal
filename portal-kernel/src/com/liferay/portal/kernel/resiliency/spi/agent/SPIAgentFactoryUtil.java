@@ -25,7 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Shuyang Zhou
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
+@Deprecated
 public class SPIAgentFactoryUtil {
 
 	public static SPIAgent createSPIAgent(
@@ -54,9 +56,9 @@ public class SPIAgentFactoryUtil {
 			return constructor.newInstance(
 				spiConfiguration, registrationReference);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new RuntimeException(
-				"Unable to instantiate " + spiAgentClass, e);
+				"Unable to instantiate " + spiAgentClass, exception);
 		}
 	}
 

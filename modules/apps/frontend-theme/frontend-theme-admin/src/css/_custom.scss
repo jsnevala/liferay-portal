@@ -1,12 +1,23 @@
-@import "components/breadcrumb";
-@import "components/group-item";
-@import "components/sidebar";
-@import "components/splitter";
-@import "components/table";
-@import "portlet/portlet";
+@import 'components/breadcrumb';
+@import 'components/group-item';
+@import 'components/sidebar';
+@import 'components/splitter';
+@import 'components/table';
+@import 'portlet/portlet';
 
 body {
 	background-color: $bg-color;
+
+	.user-avatar-link {
+		position: relative;
+
+		.panel-notifications-count {
+			margin: 0;
+			position: absolute;
+			right: calc(100% - 0.7rem);
+			top: -0.4rem;
+		}
+	}
 }
 
 #wrapper {
@@ -34,17 +45,5 @@ body {
 	.main-content-nav {
 		margin-left: -($grid-gutter-width / 2);
 		margin-top: 20px;
-	}
-
-	.sidenav-container {
-		.sidenav-content {
-			@include sm {
-				margin-right: -15px;
-			}
-		}
-
-		&.closed .sidenav-content {
-			margin-right: 0;
-		}
 	}
 }

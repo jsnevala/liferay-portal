@@ -15,35 +15,53 @@
 package com.liferay.blogs.web.internal.display.context;
 
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.blogs.constants.BlogsPortletKeys;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalServiceUtil;
 import com.liferay.blogs.service.BlogsEntryServiceUtil;
+import com.liferay.blogs.web.internal.security.permission.resource.BlogsEntryPermission;
 import com.liferay.blogs.web.internal.util.BlogsUtil;
+import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.dao.search.SearchContainerResults;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
-import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.PortalPreferences;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchContextFactory;
+import com.liferay.portal.kernel.search.SearchResult;
+import com.liferay.portal.kernel.search.SearchResultUtil;
 import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.trash.TrashHelper;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.portlet.PortletException;
+import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -53,25 +71,125 @@ import javax.servlet.http.HttpServletRequest;
 public class BlogEntriesDisplayContext {
 
 	public BlogEntriesDisplayContext(
-		LiferayPortletRequest liferayPortletRequest) {
+		LiferayPortletRequest liferayPortletRequest,
+		LiferayPortletResponse liferayPortletResponse,
+		TrashHelper trashHelper) {
 
 		_liferayPortletRequest = liferayPortletRequest;
+		_liferayPortletResponse = liferayPortletResponse;
+		_trashHelper = trashHelper;
 
-		_request = _liferayPortletRequest.getHttpServletRequest();
+		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
+			liferayPortletRequest);
+
+		_httpServletRequest = _liferayPortletRequest.getHttpServletRequest();
 	}
 
-	public void populateResults(SearchContainer searchContainer)
+	public List<String> getAvailableActions(BlogsEntry blogsEntry)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (BlogsEntryPermission.contains(
+				themeDisplay.getPermissionChecker(), blogsEntry,
+				ActionKeys.DELETE)) {
+
+			return Collections.singletonList("deleteEntries");
+		}
+
+		return Collections.emptyList();
+	}
+
+	public Map<String, Object> getComponentContext() throws PortalException {
+		return HashMapBuilder.<String, Object>put(
+			"trashEnabled",
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)_httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				return _trashHelper.isTrashEnabled(
+					themeDisplay.getScopeGroupId());
+			}
+		).build();
+	}
+
+	public String getDisplayStyle() {
+		String displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle");
+
+		if (Validator.isNull(displayStyle)) {
+			return _portalPreferences.getValue(
+				BlogsPortletKeys.BLOGS_ADMIN, "entries-display-style", "icon");
+		}
+
+		_portalPreferences.setValue(
+			BlogsPortletKeys.BLOGS_ADMIN, "entries-display-style",
+			displayStyle);
+
+		_httpServletRequest.setAttribute(
+			WebKeys.SINGLE_PAGE_APPLICATION_CLEAR_CACHE, Boolean.TRUE);
+
+		return displayStyle;
+	}
+
+	public SearchContainer getSearchContainer()
+		throws PortalException, PortletException {
+
+		PortletURL portletURL = _liferayPortletResponse.createRenderURL();
+
+		portletURL.setParameter("mvcRenderCommandName", "/blogs/view");
+
+		String entriesNavigation = ParamUtil.getString(
+			_httpServletRequest, "entriesNavigation");
+
+		portletURL.setParameter("entriesNavigation", entriesNavigation);
+
+		SearchContainer<BlogsEntry> entriesSearchContainer =
+			new SearchContainer<>(
+				_liferayPortletRequest,
+				PortletURLUtil.clone(portletURL, _liferayPortletResponse), null,
+				"no-entries-were-found");
+
+		String orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol", "title");
+
+		entriesSearchContainer.setOrderByCol(orderByCol);
+
+		String orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
+
+		entriesSearchContainer.setOrderByType(orderByType);
+
+		entriesSearchContainer.setOrderByComparator(
+			BlogsUtil.getOrderByComparator(
+				entriesSearchContainer.getOrderByCol(),
+				entriesSearchContainer.getOrderByType()));
+
+		entriesSearchContainer.setRowChecker(
+			new EmptyOnClickRowChecker(_liferayPortletResponse));
+
+		_populateResults(entriesSearchContainer);
+
+		return entriesSearchContainer;
+	}
+
+	private void _populateResults(SearchContainer searchContainer)
+		throws PortalException {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		List entriesResults = null;
 
-		long assetCategoryId = ParamUtil.getLong(_request, "categoryId");
-		String assetTagName = ParamUtil.getString(_request, "tag");
+		long assetCategoryId = ParamUtil.getLong(
+			_httpServletRequest, "categoryId");
+		String assetTagName = ParamUtil.getString(_httpServletRequest, "tag");
 
-		String keywords = ParamUtil.getString(_request, "keywords");
+		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		if ((assetCategoryId != 0) || Validator.isNotNull(assetTagName)) {
 			SearchContainerResults<AssetEntry> searchContainerResults =
@@ -91,7 +209,7 @@ public class BlogEntriesDisplayContext {
 		}
 		else if (Validator.isNull(keywords)) {
 			String entriesNavigation = ParamUtil.getString(
-				_request, "entriesNavigation");
+				_httpServletRequest, "entriesNavigation");
 
 			if (entriesNavigation.equals("mine")) {
 				searchContainer.setTotal(
@@ -126,108 +244,94 @@ public class BlogEntriesDisplayContext {
 			Indexer indexer = IndexerRegistryUtil.getIndexer(BlogsEntry.class);
 
 			SearchContext searchContext = SearchContextFactory.getInstance(
-				_request);
+				_httpServletRequest);
 
-			searchContext.setAttribute(Field.STATUS, _getStatus());
+			searchContext.setAttribute(
+				Field.STATUS, WorkflowConstants.STATUS_ANY);
 			searchContext.setEnd(searchContainer.getEnd());
+			searchContext.setIncludeDiscussions(true);
 			searchContext.setKeywords(keywords);
 			searchContext.setStart(searchContainer.getStart());
 
 			String entriesNavigation = ParamUtil.getString(
-				_request, "entriesNavigation");
+				_httpServletRequest, "entriesNavigation");
 
 			if (entriesNavigation.equals("mine")) {
 				searchContext.setOwnerUserId(themeDisplay.getUserId());
 			}
 
 			String orderByCol = ParamUtil.getString(
-				_request, "orderByCol", "title");
+				_httpServletRequest, "orderByCol", "title");
 			String orderByType = ParamUtil.getString(
-				_request, "orderByType", "asc");
+				_httpServletRequest, "orderByType", "asc");
 
 			Sort sort = null;
 
-			boolean orderByAsc = true;
+			boolean orderByAsc = false;
 
 			if (Objects.equals(orderByType, "asc")) {
-				orderByAsc = false;
+				orderByAsc = true;
 			}
 
-			if ("display-date".equals(orderByCol)) {
-				sort = new Sort(Field.DISPLAY_DATE, Sort.LONG_TYPE, orderByAsc);
+			if (Objects.equals(orderByCol, "display-date")) {
+				sort = new Sort(
+					Field.DISPLAY_DATE, Sort.LONG_TYPE, !orderByAsc);
 			}
 			else {
-				sort = new Sort(orderByCol, orderByAsc);
+				sort = new Sort(orderByCol, !orderByAsc);
 			}
 
 			searchContext.setSorts(sort);
 
 			Hits hits = indexer.search(searchContext);
 
-			entriesResults = new ArrayList<>(hits.getLength());
-
 			searchContainer.setTotal(hits.getLength());
 
-			Document[] docs = hits.getDocs();
+			List<SearchResult> searchResults =
+				SearchResultUtil.getSearchResults(
+					hits, LocaleUtil.getDefault());
 
-			for (int i = 0; i < docs.length; i++) {
-				Document doc = hits.doc(i);
+			Stream<SearchResult> stream = searchResults.stream();
 
-				long entryId = GetterUtil.getLong(
-					doc.get(Field.ENTRY_CLASS_PK));
-
-				BlogsEntry entry = null;
-
-				try {
-					entry = BlogsEntryServiceUtil.getEntry(entryId);
-
-					entry = entry.toEscapedModel();
-				}
-				catch (Exception e) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Blogs search index is stale and contains entry " +
-								entryId);
-					}
-
-					continue;
-				}
-
-				entriesResults.add(entry);
-			}
+			entriesResults = stream.map(
+				this::_toBlogsEntryOptional
+			).filter(
+				Optional::isPresent
+			).map(
+				Optional::get
+			).collect(
+				Collectors.toList()
+			);
 		}
 
 		searchContainer.setResults(entriesResults);
 	}
 
-	private int _getStatus() {
-		if (_status != null) {
-			return _status;
+	private Optional<BlogsEntry> _toBlogsEntryOptional(
+		SearchResult searchResult) {
+
+		try {
+			return Optional.of(
+				BlogsEntryServiceUtil.getEntry(searchResult.getClassPK()));
 		}
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Blogs search index is stale and contains entry " +
+						searchResult.getClassPK());
+			}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		PermissionChecker permissionChecker =
-			themeDisplay.getPermissionChecker();
-
-		if (permissionChecker.isContentReviewer(
-				themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId())) {
-
-			_status = WorkflowConstants.STATUS_ANY;
+			return Optional.empty();
 		}
-		else {
-			_status = WorkflowConstants.STATUS_APPROVED;
-		}
-
-		return _status;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		BlogEntriesDisplayContext.class);
 
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
-	private final HttpServletRequest _request;
-	private Integer _status;
+	private final LiferayPortletResponse _liferayPortletResponse;
+	private final PortalPreferences _portalPreferences;
+	private final TrashHelper _trashHelper;
 
 }

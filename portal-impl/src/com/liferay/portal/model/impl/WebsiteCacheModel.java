@@ -14,14 +14,11 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.Website;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing Website in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see Website
  * @generated
  */
-@ProviderType
-public class WebsiteCacheModel implements CacheModel<Website>, Externalizable,
-	MVCCModel {
+public class WebsiteCacheModel
+	implements CacheModel<Website>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -53,7 +49,8 @@ public class WebsiteCacheModel implements CacheModel<Website>, Externalizable,
 		WebsiteCacheModel websiteCacheModel = (WebsiteCacheModel)obj;
 
 		if ((websiteId == websiteCacheModel.websiteId) &&
-				(mvccVersion == websiteCacheModel.mvccVersion)) {
+			(mvccVersion == websiteCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -203,8 +200,7 @@ public class WebsiteCacheModel implements CacheModel<Website>, Externalizable,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
 		if (uuid == null) {
@@ -261,4 +257,5 @@ public class WebsiteCacheModel implements CacheModel<Website>, Externalizable,
 	public long typeId;
 	public boolean primary;
 	public long lastPublishDate;
+
 }

@@ -27,10 +27,11 @@ SiteNavigationMenuItemType siteNavigationMenuItemType = siteNavigationMenuItemTy
 
 String title = siteNavigationMenuItemType.getTitle(siteNavigationMenuItem, locale);
 
-Map<String, Object> data = new HashMap<String, Object>();
-
-data.put("site-navigation-menu-item-id", siteNavigationMenuItemId);
-data.put("title", HtmlUtil.escape(title));
+Map<String, Object> data = HashMapBuilder.<String, Object>put(
+	"site-navigation-menu-item-id", siteNavigationMenuItemId
+).put(
+	"title", HtmlUtil.escape(title)
+).build();
 
 request.setAttribute("edit_site_navigation_menu.jsp-siteNavigationMenuItemId", siteNavigationMenuItem.getSiteNavigationMenuItemId());
 %>
@@ -38,7 +39,7 @@ request.setAttribute("edit_site_navigation_menu.jsp-siteNavigationMenuItemId", s
 <div class="site-navigation-menu-item <%= (siteNavigationMenuItem.getParentSiteNavigationMenuItemId() > 0) ? "site-navigation-menu-item--nested" : StringPool.BLANK %> <%= (selectedSiteNavigationMenuItemId == siteNavigationMenuItemId) ? "site-navigation-menu-item--selected" : StringPool.BLANK %>" <%= AUIUtil.buildData(data) %>" tabindex="0">
 	<div class="site-navigation-menu-item__content">
 		<div class="card card-horizontal taglib-horizontal-card">
-			<div class="card-row card-row-padded">
+			<div class="card-body site-navigation-menu-item__card">
 				<div class="card-row">
 					<div class="autofit-col site-navigation-menu-item__drag-icon">
 						<liferay-ui:icon
@@ -48,23 +49,25 @@ request.setAttribute("edit_site_navigation_menu.jsp-siteNavigationMenuItemId", s
 					</div>
 
 					<div class="autofit-col autofit-col-expand autofit-col-gutters">
-						<h4 class="list-group-title">
+						<p class="card-title">
 							<span class="text-truncate">
 								<a href="javascript:;">
 									<%= HtmlUtil.escape(title) %>
 								</a>
 							</span>
-						</h4>
+						</p>
 
-						<h6 class="list-group-subtitle text-truncate">
+						<p class="card-subtitle text-truncate">
 							<%= HtmlUtil.escape(siteNavigationMenuItemType.getSubtitle(siteNavigationMenuItem, locale)) %>
-						</h6>
+						</p>
 					</div>
 				</div>
 
-				<div class="card-col-field lfr-card-actions-column">
-					<liferay-util:include page="/site_navigation_menu_item_action.jsp" servletContext="<%= application %>" />
-				</div>
+				<c:if test="<%= siteNavigationAdminDisplayContext.hasUpdatePermission() %>">
+					<div class="card-col-field lfr-card-actions-column">
+						<liferay-util:include page="/site_navigation_menu_item_action.jsp" servletContext="<%= application %>" />
+					</div>
+				</c:if>
 			</div>
 		</div>
 	</div>

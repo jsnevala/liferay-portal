@@ -34,16 +34,19 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.Iterator;
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eduardo Lundgren
  * @author Connor McKay
  * @author Marcellus Tavares
  */
+@Component(service = DDMStructureFinder.class)
 public class DDMStructureFinderImpl
 	extends DDMStructureFinderBaseImpl implements DDMStructureFinder {
 
@@ -399,24 +402,24 @@ public class DDMStructureFinderImpl
 
 			sql = _customSQL.replaceAndOperator(sql, andOperator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (groupIds != null) {
-				qPos.add(groupIds);
+				queryPos.add(groupIds);
 			}
 
-			qPos.add(classNameId);
-			qPos.add(classPK);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(classNameId);
+			queryPos.add(classPK);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -428,8 +431,8 @@ public class DDMStructureFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -472,30 +475,30 @@ public class DDMStructureFinderImpl
 
 			sql = _customSQL.replaceAndOperator(sql, andOperator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (groupIds != null) {
-				qPos.add(groupIds);
+				queryPos.add(groupIds);
 			}
 
-			qPos.add(classNameId);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
-			qPos.add(storageType);
-			qPos.add(storageType);
-			qPos.add(type);
+			queryPos.add(classNameId);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
+			queryPos.add(storageType);
+			queryPos.add(storageType);
+			queryPos.add(type);
 
 			if (status != WorkflowConstants.STATUS_ANY) {
-				qPos.add(status);
+				queryPos.add(status);
 			}
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -507,8 +510,8 @@ public class DDMStructureFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -544,28 +547,28 @@ public class DDMStructureFinderImpl
 				sql = _customSQL.replaceOrderBy(sql, orderByComparator);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("DDMStructure", DDMStructureImpl.class);
+			sqlQuery.addEntity("DDMStructure", DDMStructureImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (groupIds != null) {
-				qPos.add(groupIds);
+				queryPos.add(groupIds);
 			}
 
-			qPos.add(classNameId);
-			qPos.add(classPK);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(classNameId);
+			queryPos.add(classPK);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
 			return (List<DDMStructure>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -612,34 +615,34 @@ public class DDMStructureFinderImpl
 				sql = _customSQL.replaceOrderBy(sql, orderByComparator);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("DDMStructure", DDMStructureImpl.class);
+			sqlQuery.addEntity("DDMStructure", DDMStructureImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (groupIds != null) {
-				qPos.add(groupIds);
+				queryPos.add(groupIds);
 			}
 
-			qPos.add(classNameId);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
-			qPos.add(storageType);
-			qPos.add(storageType);
-			qPos.add(type);
+			queryPos.add(classNameId);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
+			queryPos.add(storageType);
+			queryPos.add(storageType);
+			queryPos.add(type);
 
 			if (status != WorkflowConstants.STATUS_ANY) {
-				qPos.add(status);
+				queryPos.add(status);
 			}
 
 			return (List<DDMStructure>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -655,7 +658,7 @@ public class DDMStructureFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < groupIds.length - 1; i++) {
+		for (int i = 0; i < (groupIds.length - 1); i++) {
 			sb.append("DDMStructure.groupId = ? OR ");
 		}
 
@@ -680,10 +683,10 @@ public class DDMStructureFinderImpl
 		return sb.toString();
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
-	@ServiceReference(type = DDMPermissionSupport.class)
+	@Reference
 	private DDMPermissionSupport _ddmPermissionSupport;
 
 }

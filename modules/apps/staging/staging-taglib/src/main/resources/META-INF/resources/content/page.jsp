@@ -20,6 +20,7 @@
 	<aui:fieldset cssClass="options-group" markupView="lexicon">
 		<div class="sheet-section">
 			<h3 class="sheet-subtitle"><liferay-ui:message key="content" /></h3>
+
 			<ul class="list-unstyled">
 				<li class="tree-item">
 					<aui:input disabled="<%= disableInputs %>" name="<%= PortletDataHandlerKeys.PORTLET_DATA %>" type="hidden" value="<%= MapUtil.getBoolean(parameterMap, PortletDataHandlerKeys.PORTLET_DATA, true) %>" />
@@ -134,15 +135,15 @@
 													/>
 
 													<liferay-ui:input-time
-														amPmParam='<%= "startDateAmPm" %>'
+														amPmParam="startDateAmPm"
 														amPmValue="<%= startCalendar.get(Calendar.AM_PM) %>"
 														cssClass="form-group form-group-inline range-options"
 														dateParam="startDateTime"
 														dateValue="<%= startCalendar.getTime() %>"
 														disabled="<%= disableInputs %>"
-														hourParam='<%= "startDateHour" %>'
+														hourParam="startDateHour"
 														hourValue="<%= startCalendar.get(Calendar.HOUR) %>"
-														minuteParam='<%= "startDateMinute" %>'
+														minuteParam="startDateMinute"
 														minuteValue="<%= startCalendar.get(Calendar.MINUTE) %>"
 														name="startTime"
 													/>
@@ -167,15 +168,15 @@
 													/>
 
 													<liferay-ui:input-time
-														amPmParam='<%= "endDateAmPm" %>'
+														amPmParam="endDateAmPm"
 														amPmValue="<%= endCalendar.get(Calendar.AM_PM) %>"
 														cssClass="form-group form-group-inline"
 														dateParam="endDateTime"
 														dateValue="<%= endCalendar.getTime() %>"
 														disabled="<%= disableInputs %>"
-														hourParam='<%= "endDateHour" %>'
+														hourParam="endDateHour"
 														hourValue="<%= endCalendar.get(Calendar.HOUR) %>"
-														minuteParam='<%= "endDateMinute" %>'
+														minuteParam="endDateMinute"
 														minuteValue="<%= endCalendar.get(Calendar.MINUTE) %>"
 														name="endTime"
 													/>

@@ -14,10 +14,11 @@
 
 package com.liferay.document.library.configuration;
 
-import aQute.bnd.annotation.ProviderType;
 import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Sergio González
@@ -107,5 +108,17 @@ public interface DLConfiguration {
 		required = false
 	)
 	public String[] vectorialFileMimeTypes();
+
+	@Meta.AD(
+		deflt = "true", description = "versioning-strategy-overridable-help",
+		name = "versioning-strategy-overridable", required = false
+	)
+	public boolean versioningStrategyOverridable();
+
+	@Meta.AD(
+		deflt = "0", description = "maximum-number-of-versions-help",
+		name = "maximum-number-of-versions", required = false
+	)
+	public int maximumNumberOfVersions();
 
 }

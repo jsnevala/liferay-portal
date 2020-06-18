@@ -14,6 +14,7 @@
 
 package com.liferay.journal.internal.util;
 
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
@@ -23,6 +24,7 @@ import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.dynamic.data.mapping.util.DDMFieldsCounter;
 import com.liferay.dynamic.data.mapping.util.FieldsToDDMFormValuesConverter;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.journal.exception.ArticleContentException;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
@@ -36,18 +38,22 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -61,11 +67,11 @@ import com.liferay.portal.kernel.xml.XPath;
 import java.io.Serializable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
@@ -79,49 +85,77 @@ import org.osgi.service.component.annotations.Reference;
 public class JournalConverterImpl implements JournalConverter {
 
 	public JournalConverterImpl() {
-		_ddmDataTypes = new HashMap<>();
+		_ddmDataTypes = HashMapBuilder.put(
+			"boolean", "boolean"
+		).put(
+			"document_library", "document-library"
+		).put(
+			"image", "image"
+		).put(
+			"link_to_layout", "link-to-page"
+		).put(
+			"list", "string"
+		).put(
+			"multi-list", "string"
+		).put(
+			"text", "string"
+		).put(
+			"text_area", "html"
+		).put(
+			"text_box", "string"
+		).build();
 
-		_ddmDataTypes.put("boolean", "boolean");
-		_ddmDataTypes.put("document_library", "document-library");
-		_ddmDataTypes.put("image", "image");
-		_ddmDataTypes.put("link_to_layout", "link-to-page");
-		_ddmDataTypes.put("list", "string");
-		_ddmDataTypes.put("multi-list", "string");
-		_ddmDataTypes.put("text", "string");
-		_ddmDataTypes.put("text_area", "html");
-		_ddmDataTypes.put("text_box", "string");
+		_ddmMetadataAttributes = HashMapBuilder.put(
+			"instructions", "tip"
+		).put(
+			"label", "label"
+		).put(
+			"predefinedValue", "predefinedValue"
+		).build();
 
-		_ddmMetadataAttributes = new HashMap<>();
+		_ddmTypesToJournalTypes = HashMapBuilder.put(
+			"checkbox", "boolean"
+		).put(
+			"ddm-documentlibrary", "document_library"
+		).put(
+			"ddm-image", "image"
+		).put(
+			"ddm-link-to-page", "link_to_layout"
+		).put(
+			"ddm-separator", "selection_break"
+		).put(
+			"ddm-text-html", "text_area"
+		).put(
+			"select", "list"
+		).put(
+			"text", "text"
+		).put(
+			"textarea", "text_box"
+		).build();
 
-		_ddmMetadataAttributes.put("instructions", "tip");
-		_ddmMetadataAttributes.put("label", "label");
-		_ddmMetadataAttributes.put("predefinedValue", "predefinedValue");
-
-		_ddmTypesToJournalTypes = new HashMap<>();
-
-		_ddmTypesToJournalTypes.put("checkbox", "boolean");
-		_ddmTypesToJournalTypes.put("ddm-documentlibrary", "document_library");
-		_ddmTypesToJournalTypes.put("ddm-image", "image");
-		_ddmTypesToJournalTypes.put("ddm-link-to-page", "link_to_layout");
-		_ddmTypesToJournalTypes.put("ddm-separator", "selection_break");
-		_ddmTypesToJournalTypes.put("ddm-text-html", "text_area");
-		_ddmTypesToJournalTypes.put("select", "list");
-		_ddmTypesToJournalTypes.put("text", "text");
-		_ddmTypesToJournalTypes.put("textarea", "text_box");
-
-		_journalTypesToDDMTypes = new HashMap<>();
-
-		_journalTypesToDDMTypes.put("boolean", "checkbox");
-		_journalTypesToDDMTypes.put("document_library", "ddm-documentlibrary");
-		_journalTypesToDDMTypes.put("image", "ddm-image");
-		_journalTypesToDDMTypes.put("image_gallery", "ddm-documentlibrary");
-		_journalTypesToDDMTypes.put("link_to_layout", "ddm-link-to-page");
-		_journalTypesToDDMTypes.put("list", "select");
-		_journalTypesToDDMTypes.put("multi-list", "select");
-		_journalTypesToDDMTypes.put("selection_break", "ddm-separator");
-		_journalTypesToDDMTypes.put("text", "text");
-		_journalTypesToDDMTypes.put("text_area", "ddm-text-html");
-		_journalTypesToDDMTypes.put("text_box", "textarea");
+		_journalTypesToDDMTypes = HashMapBuilder.put(
+			"boolean", "checkbox"
+		).put(
+			"document_library", "ddm-documentlibrary"
+		).put(
+			"image", "ddm-image"
+		).put(
+			"image_gallery", "ddm-documentlibrary"
+		).put(
+			"link_to_layout", "ddm-link-to-page"
+		).put(
+			"list", "select"
+		).put(
+			"multi-list", "select"
+		).put(
+			"selection_break", "ddm-separator"
+		).put(
+			"text", "text"
+		).put(
+			"text_area", "ddm-text-html"
+		).put(
+			"text_box", "textarea"
+		).build();
 	}
 
 	@Override
@@ -132,14 +166,12 @@ public class JournalConverterImpl implements JournalConverter {
 
 		Element rootElement = document.addElement("root");
 
-		String availableLocales = getAvailableLocales(ddmFields);
-
-		rootElement.addAttribute("available-locales", availableLocales);
-
-		Locale defaultLocale = ddmFields.getDefaultLocale();
+		rootElement.addAttribute(
+			"available-locales", getAvailableLocales(ddmFields));
 
 		rootElement.addAttribute(
-			"default-locale", LocaleUtil.toLanguageId(defaultLocale));
+			"default-locale",
+			LocaleUtil.toLanguageId(ddmFields.getDefaultLocale()));
 
 		DDMFieldsCounter ddmFieldsCounter = new DDMFieldsCounter();
 
@@ -160,11 +192,13 @@ public class JournalConverterImpl implements JournalConverter {
 		}
 
 		try {
-			return XMLUtil.formatXML(document.asXML());
+			String content = XMLUtil.stripInvalidChars(document.asXML());
+
+			return XMLUtil.formatXML(content);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new ArticleContentException(
-				"Unable to read content with an XML parser", e);
+				"Unable to read content with an XML parser", exception);
 		}
 	}
 
@@ -205,8 +239,8 @@ public class JournalConverterImpl implements JournalConverter {
 		try {
 			return getDDMFields(ddmStructure, SAXReaderUtil.read(content));
 		}
-		catch (DocumentException de) {
-			throw new PortalException(de);
+		catch (DocumentException documentException) {
+			throw new PortalException(documentException);
 		}
 	}
 
@@ -394,7 +428,7 @@ public class JournalConverterImpl implements JournalConverter {
 		try {
 			return _http.decodeURL(url);
 		}
-		catch (IllegalArgumentException iae) {
+		catch (IllegalArgumentException illegalArgumentException) {
 			return url;
 		}
 	}
@@ -446,20 +480,11 @@ public class JournalConverterImpl implements JournalConverter {
 				}
 			}
 
-			return fieldsDisplayValues.toArray(
-				new String[fieldsDisplayValues.size()]);
+			return fieldsDisplayValues.toArray(new String[0]);
 		}
-		catch (Exception e) {
-			throw new PortalException(e);
+		catch (Exception exception) {
+			throw new PortalException(exception);
 		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected Serializable getDocumentLibraryValue(String url) {
-		return null;
 	}
 
 	protected Field getField(
@@ -504,7 +529,11 @@ public class JournalConverterImpl implements JournalConverter {
 				"language-id");
 
 			if (Validator.isNotNull(languageId)) {
-				locale = LocaleUtil.fromLanguageId(languageId);
+				locale = LocaleUtil.fromLanguageId(languageId, true, false);
+
+				if (locale == null) {
+					continue;
+				}
 
 				missingLanguageIds.remove(languageId);
 			}
@@ -550,7 +579,26 @@ public class JournalConverterImpl implements JournalConverter {
 
 		Serializable serializable = null;
 
-		if (DDMFormFieldType.JOURNAL_ARTICLE.equals(type)) {
+		if (Objects.equals(DDMFormFieldType.DOCUMENT_LIBRARY, type)) {
+			try {
+				JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+					dynamicContentElement.getText());
+
+				if (!ExportImportThreadLocal.isImportInProcess()) {
+					String uuid = jsonObject.getString("uuid");
+					long groupId = jsonObject.getLong("groupId");
+
+					_dlAppLocalService.getFileEntryByUuidAndGroupId(
+						uuid, groupId);
+				}
+
+				serializable = dynamicContentElement.getText();
+			}
+			catch (Exception exception) {
+				return StringPool.BLANK;
+			}
+		}
+		else if (Objects.equals(DDMFormFieldType.JOURNAL_ARTICLE, type)) {
 			try {
 				JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 					dynamicContentElement.getText());
@@ -558,23 +606,45 @@ public class JournalConverterImpl implements JournalConverter {
 				Long classPK = jsonObject.getLong("classPK");
 
 				if (Validator.isNotNull(classPK)) {
-					JournalArticle journalArticle =
+					JournalArticle article =
 						_journalArticleLocalService.fetchLatestArticle(classPK);
 
-					jsonObject.put("groupId", journalArticle.getGroupId());
-					jsonObject.put(
-						"title", journalArticle.getTitle(defaultLocale));
-					jsonObject.put("uuid", journalArticle.getUuid());
+					if (article != null) {
+						jsonObject.put("groupId", article.getGroupId());
+
+						String title = article.getTitle(defaultLocale);
+
+						if (article.isInTrash()) {
+							jsonObject.put(
+								"message",
+								LanguageUtil.get(
+									_getResourceBundle(defaultLocale),
+									"the-selected-web-content-was-moved-to-" +
+										"the-recycle-bin"));
+						}
+
+						jsonObject.put(
+							"title", title
+						).put(
+							"uuid", article.getUuid()
+						);
+					}
+					else {
+						jsonObject.put(
+							"message",
+							LanguageUtil.get(
+								_getResourceBundle(defaultLocale),
+								"the-selected-web-content-was-deleted"));
+					}
 				}
 
 				serializable = jsonObject.toString();
 			}
-			catch (JSONException jsone) {
-				serializable = FieldConstants.getSerializable(
-					dataType, dynamicContentElement.getText());
+			catch (JSONException jsonException) {
+				serializable = StringPool.BLANK;
 			}
 		}
-		else if (DDMFormFieldType.LINK_TO_PAGE.equals(type)) {
+		else if (Objects.equals(DDMFormFieldType.LINK_TO_PAGE, type)) {
 			String[] values = StringUtil.split(
 				dynamicContentElement.getText(), CharPool.AT);
 
@@ -600,12 +670,15 @@ public class JournalConverterImpl implements JournalConverter {
 				}
 			}
 
-			jsonObject.put("layoutId", layoutId);
-			jsonObject.put("privateLayout", privateLayout);
+			jsonObject.put(
+				"layoutId", layoutId
+			).put(
+				"privateLayout", privateLayout
+			);
 
 			serializable = jsonObject.toString();
 		}
-		else if (DDMFormFieldType.SELECT.equals(type)) {
+		else if (Objects.equals(DDMFormFieldType.SELECT, type)) {
 			JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 			List<Element> optionElements = dynamicContentElement.elements(
@@ -628,24 +701,6 @@ public class JournalConverterImpl implements JournalConverter {
 		}
 
 		return serializable;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected FileEntry getFileEntryByDocumentLibraryURL(String url) {
-		return null;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	protected FileEntry getFileEntryByOldDocumentLibraryURL(String url)
-		throws PortalException {
-
-		return null;
 	}
 
 	protected void getJournalMetadataElement(Element metadataElement) {
@@ -764,6 +819,11 @@ public class JournalConverterImpl implements JournalConverter {
 					"language-id", LocaleUtil.toLanguageId(locale));
 
 				Serializable fieldValue = ddmField.getValue(locale, count);
+
+				if (fieldValue == null) {
+					fieldValue = ddmField.getValue(
+						ddmField.getDefaultLocale(), count);
+				}
 
 				String valueString = String.valueOf(fieldValue);
 
@@ -932,9 +992,9 @@ public class JournalConverterImpl implements JournalConverter {
 			try {
 				jsonArray = JSONFactoryUtil.createJSONArray(fieldValue);
 			}
-			catch (JSONException jsone) {
+			catch (JSONException jsonException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug("Unable to parse object", jsone);
+					_log.debug("Unable to parse object", jsonException);
 				}
 
 				return;
@@ -965,7 +1025,10 @@ public class JournalConverterImpl implements JournalConverter {
 		}
 
 		String fieldsDisplayValue = fieldName.concat(
-			DDM.INSTANCE_SEPARATOR).concat(instanceId);
+			DDM.INSTANCE_SEPARATOR
+		).concat(
+			instanceId
+		);
 
 		Field fieldsDisplayField = ddmFields.get(DDM.FIELDS_DISPLAY_NAME);
 
@@ -1118,12 +1181,23 @@ public class JournalConverterImpl implements JournalConverter {
 		}
 	}
 
+	private ResourceBundle _getResourceBundle(Locale locale) {
+		ResourceBundle classResourceBundle = ResourceBundleUtil.getBundle(
+			locale, "com.liferay.journal.lang");
+
+		return new AggregateResourceBundle(
+			classResourceBundle, _portal.getResourceBundle(locale));
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalConverterImpl.class);
 
 	private final Map<String, String> _ddmDataTypes;
 	private final Map<String, String> _ddmMetadataAttributes;
 	private final Map<String, String> _ddmTypesToJournalTypes;
+
+	@Reference
+	private DLAppLocalService _dlAppLocalService;
 
 	@Reference
 	private FieldsToDDMFormValuesConverter _fieldsToDDMFormValuesConverter;
@@ -1141,5 +1215,8 @@ public class JournalConverterImpl implements JournalConverter {
 
 	@Reference(unbind = "-")
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private Portal _portal;
 
 }

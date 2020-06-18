@@ -14,14 +14,11 @@
 
 package com.liferay.exportimport.kernel.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Gergely Mathe
  */
-@ProviderType
 public class ExportImportContentProcessorException extends PortalException {
 
 	public static final int ARTICLE_NOT_FOUND = 2;

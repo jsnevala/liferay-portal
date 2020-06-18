@@ -15,6 +15,7 @@
 package com.liferay.sync.service.impl;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -26,9 +27,15 @@ import com.liferay.sync.service.base.SyncDeviceLocalServiceBaseImpl;
 import java.util.Date;
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+
 /**
  * @author Shinn Lok
  */
+@Component(
+	property = "model.class.name=com.liferay.sync.model.SyncDevice",
+	service = AopService.class
+)
 public class SyncDeviceLocalServiceImpl extends SyncDeviceLocalServiceBaseImpl {
 
 	@Override
@@ -55,9 +62,7 @@ public class SyncDeviceLocalServiceImpl extends SyncDeviceLocalServiceBaseImpl {
 		syncDevice.setHostname(hostname);
 		syncDevice.setStatus(SyncDeviceConstants.STATUS_ACTIVE);
 
-		syncDevicePersistence.update(syncDevice);
-
-		return syncDevice;
+		return syncDevicePersistence.update(syncDevice);
 	}
 
 	@Override
@@ -108,9 +113,7 @@ public class SyncDeviceLocalServiceImpl extends SyncDeviceLocalServiceBaseImpl {
 		syncDevice.setHostname(hostname);
 		syncDevice.setStatus(status);
 
-		syncDevicePersistence.update(syncDevice);
-
-		return syncDevice;
+		return syncDevicePersistence.update(syncDevice);
 	}
 
 }

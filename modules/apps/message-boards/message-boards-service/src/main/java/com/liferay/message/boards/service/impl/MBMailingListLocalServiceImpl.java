@@ -23,11 +23,13 @@ import com.liferay.message.boards.exception.MailingListOutUserNameException;
 import com.liferay.message.boards.internal.messaging.MailingListRequest;
 import com.liferay.message.boards.model.MBMailingList;
 import com.liferay.message.boards.service.base.MBMailingListLocalServiceBaseImpl;
+import com.liferay.petra.lang.SafeClosable;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.json.jabsorb.serializer.LiferayJSONDeserializationWhitelist;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.messaging.DestinationNames;
+import com.liferay.portal.kernel.messaging.proxy.ProxyModeThreadLocal;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
 import com.liferay.portal.kernel.scheduler.StorageType;
@@ -38,16 +40,23 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Closeable;
-import java.io.IOException;
 
 import java.util.Calendar;
+
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Thiago Moreira
  */
+@Component(
+	property = "model.class.name=com.liferay.message.boards.model.MBMailingList",
+	service = AopService.class
+)
 public class MBMailingListLocalServiceImpl
 	extends MBMailingListLocalServiceBaseImpl {
 
@@ -99,7 +108,7 @@ public class MBMailingListLocalServiceImpl
 		mailingList.setAllowAnonymous(allowAnonymous);
 		mailingList.setActive(active);
 
-		mbMailingListPersistence.update(mailingList);
+		mailingList = mbMailingListPersistence.update(mailingList);
 
 		// Scheduler
 
@@ -108,14 +117,6 @@ public class MBMailingListLocalServiceImpl
 		}
 
 		return mailingList;
-	}
-
-	@Override
-	public void afterPropertiesSet() {
-		super.afterPropertiesSet();
-
-		_unregister = _liferayJSONDeserializationWhitelist.register(
-			MailingListRequest.class.getName());
 	}
 
 	@Override
@@ -143,18 +144,6 @@ public class MBMailingListLocalServiceImpl
 		unscheduleMailingList(mailingList);
 
 		mbMailingListPersistence.remove(mailingList);
-	}
-
-	@Override
-	public void destroy() {
-		super.destroy();
-
-		try {
-			_unregister.close();
-		}
-		catch (IOException ioe) {
-			throw new SystemException(ioe);
-		}
 	}
 
 	@Override
@@ -209,12 +198,18 @@ public class MBMailingListLocalServiceImpl
 		mailingList.setAllowAnonymous(allowAnonymous);
 		mailingList.setActive(active);
 
-		mbMailingListPersistence.update(mailingList);
+		mailingList = mbMailingListPersistence.update(mailingList);
 
 		// Scheduler
 
 		if (active) {
-			scheduleMailingList(mailingList);
+			try (SafeClosable safeClosable =
+					ProxyModeThreadLocal.setWithSafeClosable(true)) {
+
+				unscheduleMailingList(mailingList);
+
+				scheduleMailingList(mailingList);
+			}
 		}
 		else {
 			unscheduleMailingList(mailingList);
@@ -223,10 +218,23 @@ public class MBMailingListLocalServiceImpl
 		return mailingList;
 	}
 
+	@Activate
+	protected void activate() {
+		_unregister = _liferayJSONDeserializationWhitelist.register(
+			MailingListRequest.class.getName());
+	}
+
+	@Deactivate
+	protected void deactivate() throws Exception {
+		_unregister.close();
+	}
+
 	protected String getSchedulerGroupName(MBMailingList mailingList) {
 		return DestinationNames.MESSAGE_BOARDS_MAILING_LIST.concat(
-			StringPool.SLASH).concat(
-				String.valueOf(mailingList.getMailingListId()));
+			StringPool.SLASH
+		).concat(
+			String.valueOf(mailingList.getMailingListId())
+		);
 	}
 
 	protected void scheduleMailingList(MBMailingList mailingList)
@@ -265,7 +273,7 @@ public class MBMailingListLocalServiceImpl
 
 		String groupName = getSchedulerGroupName(mailingList);
 
-		SchedulerEngineHelperUtil.unschedule(groupName, StorageType.PERSISTED);
+		SchedulerEngineHelperUtil.delete(groupName, StorageType.PERSISTED);
 	}
 
 	protected void validate(
@@ -304,13 +312,13 @@ public class MBMailingListLocalServiceImpl
 		}
 	}
 
-	@ServiceReference(type = LiferayJSONDeserializationWhitelist.class)
+	@Reference
 	private LiferayJSONDeserializationWhitelist
 		_liferayJSONDeserializationWhitelist;
 
 	private Closeable _unregister;
 
-	@ServiceReference(type = UserLocalService.class)
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

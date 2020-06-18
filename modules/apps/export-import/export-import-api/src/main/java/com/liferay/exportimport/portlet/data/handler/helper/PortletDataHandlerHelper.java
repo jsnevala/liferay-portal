@@ -14,10 +14,10 @@
 
 package com.liferay.exportimport.portlet.data.handler.helper;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @ProviderType
 public interface PortletDataHandlerHelper {

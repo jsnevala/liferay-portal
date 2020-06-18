@@ -20,7 +20,7 @@ import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -32,14 +32,15 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * @author Marcellus Tavares
@@ -102,18 +103,16 @@ public class DDMFormFactoryHelper {
 				resourceBundles.add(resourceBundle);
 			}
 		}
-		catch (MissingResourceException mre) {
+		catch (MissingResourceException missingResourceException) {
 		}
 	}
 
 	protected Set<Locale> getAvailableLocales() {
 		if (Validator.isNull(_ddmForm.availableLanguageIds())) {
-			Locale defaultLocale = getDefaultLocale();
-
-			return SetUtil.fromArray(new Locale[] {defaultLocale});
+			return SetUtil.fromArray(new Locale[] {getDefaultLocale()});
 		}
 
-		Set<Locale> availableLocales = new TreeSet<>();
+		Set<Locale> availableLocales = new HashSet<>();
 
 		for (String availableLanguageId :
 				StringUtil.split(_ddmForm.availableLanguageIds())) {
@@ -161,8 +160,8 @@ public class DDMFormFactoryHelper {
 		for (DDMFormRule ddmFormRule : _ddmForm.rules()) {
 			ddmFormRules.add(
 				new com.liferay.dynamic.data.mapping.model.DDMFormRule(
-					ddmFormRule.condition(),
-					ListUtil.fromArray(ddmFormRule.actions())));
+					ListUtil.fromArray(ddmFormRule.actions()),
+					ddmFormRule.condition()));
 		}
 
 		return ddmFormRules;
@@ -170,13 +169,15 @@ public class DDMFormFactoryHelper {
 
 	protected Locale getDefaultLocale() {
 		if (Validator.isNull(_ddmForm.defaultLanguageId())) {
-			Locale defaultLocale = LocaleThreadLocal.getThemeDisplayLocale();
-
-			if (defaultLocale == null) {
-				defaultLocale = LocaleUtil.getDefault();
-			}
-
-			return defaultLocale;
+			return Optional.ofNullable(
+				LocaleThreadLocal.getThemeDisplayLocale()
+			).orElse(
+				Optional.ofNullable(
+					LocaleThreadLocal.getSiteDefaultLocale()
+				).orElse(
+					LocaleUtil.getDefault()
+				)
+			);
 		}
 
 		return LocaleUtil.fromLanguageId(_ddmForm.defaultLanguageId());
@@ -193,16 +194,14 @@ public class DDMFormFactoryHelper {
 				List<ResourceBundle> resourceBundles = new ArrayList<>();
 
 				ResourceBundle portalResourceBundle =
-					ResourceBundleUtil.getBundle(
-						"content.Language", locale,
-						PortalClassLoaderUtil.getClassLoader());
+					PortalUtil.getResourceBundle(locale);
 
 				resourceBundles.add(portalResourceBundle);
 
 				collectResourceBundles(_clazz, resourceBundles, locale);
 
 				ResourceBundle[] resourceBundlesArray = resourceBundles.toArray(
-					new ResourceBundle[resourceBundles.size()]);
+					new ResourceBundle[0]);
 
 				return new AggregateResourceBundle(resourceBundlesArray);
 			});

@@ -16,7 +16,6 @@ package com.liferay.source.formatter.checkstyle.checks;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.FullIdent;
@@ -36,73 +35,75 @@ public class MapIterationCheck extends BaseCheck {
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		List<DetailAST> forEachClauseASTList = DetailASTUtil.getAllChildTokens(
+		List<DetailAST> forEachClauseDetailASTList = getAllChildTokens(
 			detailAST, true, TokenTypes.FOR_EACH_CLAUSE);
 
-		for (DetailAST forEachClauseAST : forEachClauseASTList) {
-			_checkKeySetIteration(forEachClauseAST);
+		for (DetailAST forEachClauseDetailAST : forEachClauseDetailASTList) {
+			_checkKeySetIteration(forEachClauseDetailAST);
 		}
 	}
 
-	private void _checkKeySetIteration(DetailAST forEachClauseAST) {
-		DetailAST variableDefAST = forEachClauseAST.findFirstToken(
-			TokenTypes.VARIABLE_DEF);
+	private void _checkKeySetIteration(DetailAST forEachClauseDetailAST) {
+		DetailAST variableDefinitionDetailAST =
+			forEachClauseDetailAST.findFirstToken(TokenTypes.VARIABLE_DEF);
 
-		DetailAST identAST = variableDefAST.findFirstToken(TokenTypes.IDENT);
+		DetailAST identDetailAST = variableDefinitionDetailAST.findFirstToken(
+			TokenTypes.IDENT);
 
-		String keyName = identAST.getText();
+		String keyName = identDetailAST.getText();
 
-		List<DetailAST> keySetMethodCallASTList = DetailASTUtil.getMethodCalls(
-			forEachClauseAST, "keySet");
+		List<DetailAST> keySetMethodCallDetailASTList = getMethodCalls(
+			forEachClauseDetailAST, "keySet");
 
-		for (DetailAST keySetMethodCallAST : keySetMethodCallASTList) {
+		for (DetailAST keySetMethodCallDetailAST :
+				keySetMethodCallDetailASTList) {
+
 			FullIdent fullIdent = FullIdent.createFullIdentBelow(
-				keySetMethodCallAST);
+				keySetMethodCallDetailAST);
 
 			String mapName = StringUtil.replaceLast(
 				fullIdent.getText(), ".keySet", StringPool.BLANK);
 
 			if (!_containsGetMethod(
-					forEachClauseAST.getParent(), keyName, mapName)) {
+					forEachClauseDetailAST.getParent(), keyName, mapName)) {
 
 				continue;
 			}
 
-			DetailAST typeAST = DetailASTUtil.getVariableTypeAST(
-				keySetMethodCallAST, mapName);
+			DetailAST typeDetailAST = getVariableTypeDetailAST(
+				keySetMethodCallDetailAST, mapName);
 
-			if ((typeAST != null) && DetailASTUtil.isCollection(typeAST)) {
-				List<DetailAST> wildcardTypeASTList =
-					DetailASTUtil.getAllChildTokens(
-						typeAST, true, TokenTypes.WILDCARD_TYPE);
+			if ((typeDetailAST != null) && isCollection(typeDetailAST)) {
+				List<DetailAST> wildcardTypeDetailASTList = getAllChildTokens(
+					typeDetailAST, true, TokenTypes.WILDCARD_TYPE);
 
-				if (wildcardTypeASTList.isEmpty()) {
-					log(forEachClauseAST, _MSG_USE_ENTRY_SET);
+				if (wildcardTypeDetailASTList.isEmpty()) {
+					log(forEachClauseDetailAST, _MSG_USE_ENTRY_SET);
 				}
 			}
 		}
 	}
 
 	private boolean _containsGetMethod(
-		DetailAST forAST, String keyName, String mapName) {
+		DetailAST forDetailAST, String keyName, String mapName) {
 
-		List<DetailAST> getMethodCallASTList = DetailASTUtil.getMethodCalls(
-			forAST, mapName, "get");
+		List<DetailAST> getMethodCallDetailASTList = getMethodCalls(
+			forDetailAST, mapName, "get");
 
-		for (DetailAST getMethodCallAST : getMethodCallASTList) {
-			DetailAST eListAST = getMethodCallAST.findFirstToken(
+		for (DetailAST getMethodCallDetailAST : getMethodCallDetailASTList) {
+			DetailAST eListDetailAST = getMethodCallDetailAST.findFirstToken(
 				TokenTypes.ELIST);
 
-			DetailAST firstChildAST = eListAST.getFirstChild();
+			DetailAST firstChildDetailAST = eListDetailAST.getFirstChild();
 
-			if (firstChildAST.getType() != TokenTypes.EXPR) {
+			if (firstChildDetailAST.getType() != TokenTypes.EXPR) {
 				continue;
 			}
 
-			firstChildAST = firstChildAST.getFirstChild();
+			firstChildDetailAST = firstChildDetailAST.getFirstChild();
 
-			if (firstChildAST.getType() == TokenTypes.IDENT) {
-				String parameterName = firstChildAST.getText();
+			if (firstChildDetailAST.getType() == TokenTypes.IDENT) {
+				String parameterName = firstChildDetailAST.getText();
 
 				if (parameterName.equals(keyName)) {
 					return true;

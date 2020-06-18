@@ -17,18 +17,14 @@ package com.liferay.document.library.opener.google.drive.web.internal.portlet.ac
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppService;
-import com.liferay.document.library.opener.google.drive.DLOpenerGoogleDriveFileReference;
-import com.liferay.document.library.opener.google.drive.DLOpenerGoogleDriveManager;
-import com.liferay.document.library.opener.google.drive.constants.DLOpenerGoogleDriveMimeTypes;
-import com.liferay.document.library.opener.google.drive.upload.UniqueFileEntryTitleProvider;
-import com.liferay.document.library.opener.google.drive.web.internal.constants.DLOpenerGoogleDriveWebConstants;
+import com.liferay.document.library.opener.constants.DLOpenerMimeTypes;
+import com.liferay.document.library.opener.google.drive.web.internal.DLOpenerGoogleDriveFileReference;
+import com.liferay.document.library.opener.google.drive.web.internal.DLOpenerGoogleDriveManager;
 import com.liferay.document.library.opener.google.drive.web.internal.constants.DLOpenerGoogleDriveWebKeys;
-import com.liferay.document.library.opener.google.drive.web.internal.util.OAuth2Helper;
-import com.liferay.document.library.opener.google.drive.web.internal.util.State;
+import com.liferay.document.library.opener.google.drive.web.internal.util.GoogleDrivePortletRequestAuthorizationHelper;
+import com.liferay.document.library.opener.upload.UniqueFileEntryTitleProvider;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.portlet.LiferayPortletURL;
-import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -41,11 +37,8 @@ import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-
-import java.io.IOException;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -59,6 +52,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
+		"auth.token.ignore.mvc.action=true",
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
 		"mvc.command.name=/document_library/edit_in_google_docs"
@@ -77,7 +71,7 @@ public class EditInGoogleDriveMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			if (_dlOpenerGoogleDriveManager.hasValidCredential(
-					themeDisplay.getUserId())) {
+					themeDisplay.getCompanyId(), themeDisplay.getUserId())) {
 
 				long fileEntryId = ParamUtil.getLong(
 					actionRequest, "fileEntryId");
@@ -85,11 +79,12 @@ public class EditInGoogleDriveMVCActionCommand extends BaseMVCActionCommand {
 				_executeCommand(actionRequest, fileEntryId);
 			}
 			else {
-				_performAuthorizationFlow(actionRequest, actionResponse);
+				_googleDrivePortletRequestAuthorizationHelper.
+					performAuthorizationFlow(actionRequest, actionResponse);
 			}
 		}
-		catch (PortalException pe) {
-			SessionErrors.add(actionRequest, pe.getClass());
+		catch (PortalException portalException) {
+			SessionErrors.add(actionRequest, portalException.getClass());
 		}
 	}
 
@@ -101,6 +96,8 @@ public class EditInGoogleDriveMVCActionCommand extends BaseMVCActionCommand {
 		String title = _uniqueFileEntryTitleProvider.provide(
 			serviceContext.getScopeGroupId(), folderId,
 			serviceContext.getLocale());
+
+		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
 
 		FileEntry fileEntry = _dlAppService.addFileEntry(
 			repositoryId, folderId, null, contentType, title, StringPool.BLANK,
@@ -129,14 +126,14 @@ public class EditInGoogleDriveMVCActionCommand extends BaseMVCActionCommand {
 
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
-		if (cmd.equals(DLOpenerGoogleDriveWebConstants.GOOGLE_DRIVE_ADD)) {
+		if (cmd.equals(Constants.ADD)) {
 			try {
 				long repositoryId = ParamUtil.getLong(
 					actionRequest, "repositoryId");
 				long folderId = ParamUtil.getLong(actionRequest, "folderId");
 				String contentType = ParamUtil.getString(
 					actionRequest, "contentType",
-					DLOpenerGoogleDriveMimeTypes.APPLICATION_VND_DOCX);
+					DLOpenerMimeTypes.APPLICATION_VND_DOCX);
 
 				ServiceContext serviceContext =
 					ServiceContextFactory.getInstance(actionRequest);
@@ -151,27 +148,21 @@ public class EditInGoogleDriveMVCActionCommand extends BaseMVCActionCommand {
 
 				hideDefaultSuccessMessage(actionRequest);
 			}
-			catch (PortalException pe) {
-				throw pe;
+			catch (PortalException portalException) {
+				throw portalException;
 			}
 			catch (Throwable throwable) {
 				throw new PortalException(throwable);
 			}
 		}
-		else if (cmd.equals(
-					DLOpenerGoogleDriveWebConstants.
-						GOOGLE_DRIVE_CANCEL_CHECKOUT)) {
-
+		else if (cmd.equals(Constants.CANCEL_CHECKOUT)) {
 			_dlAppService.cancelCheckOut(fileEntryId);
 		}
-		else if (cmd.equals(
-					DLOpenerGoogleDriveWebConstants.GOOGLE_DRIVE_CHECKIN)) {
-
+		else if (cmd.equals(Constants.CHECKIN)) {
 			DLVersionNumberIncrease dlVersionNumberIncrease =
 				DLVersionNumberIncrease.valueOf(
-					ParamUtil.getString(
-						actionRequest, "versionIncrease",
-						DLVersionNumberIncrease.NONE.toString()));
+					actionRequest.getParameter("versionIncrease"),
+					DLVersionNumberIncrease.AUTOMATIC);
 
 			String changeLog = ParamUtil.getString(actionRequest, "changeLog");
 
@@ -182,9 +173,7 @@ public class EditInGoogleDriveMVCActionCommand extends BaseMVCActionCommand {
 				fileEntryId, dlVersionNumberIncrease, changeLog,
 				serviceContext);
 		}
-		else if (cmd.equals(
-					DLOpenerGoogleDriveWebConstants.GOOGLE_DRIVE_CHECKOUT)) {
-
+		else if (cmd.equals(Constants.CHECKOUT)) {
 			try {
 				ServiceContext serviceContext =
 					ServiceContextFactory.getInstance(actionRequest);
@@ -198,16 +187,14 @@ public class EditInGoogleDriveMVCActionCommand extends BaseMVCActionCommand {
 
 				hideDefaultSuccessMessage(actionRequest);
 			}
-			catch (PortalException pe) {
-				throw pe;
+			catch (PortalException portalException) {
+				throw portalException;
 			}
 			catch (Throwable throwable) {
 				throw new PortalException(throwable);
 			}
 		}
-		else if (cmd.equals(
-					DLOpenerGoogleDriveWebConstants.GOOGLE_DRIVE_EDIT)) {
-
+		else if (cmd.equals(Constants.EDIT)) {
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
@@ -220,42 +207,6 @@ public class EditInGoogleDriveMVCActionCommand extends BaseMVCActionCommand {
 		else {
 			throw new IllegalArgumentException();
 		}
-	}
-
-	private String _getFailureURL(PortletRequest portletRequest)
-		throws PortalException {
-
-		LiferayPortletURL liferayPortletURL = PortletURLFactoryUtil.create(
-			portletRequest, _portal.getPortletId(portletRequest),
-			_portal.getControlPanelPlid(portletRequest),
-			PortletRequest.RENDER_PHASE);
-
-		return liferayPortletURL.toString();
-	}
-
-	private String _getSuccessURL(PortletRequest portletRequest) {
-		return _portal.getCurrentCompleteURL(
-			_portal.getHttpServletRequest(portletRequest));
-	}
-
-	private void _performAuthorizationFlow(
-			ActionRequest actionRequest, ActionResponse actionResponse)
-		throws IOException, PortalException {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		String state = StringUtil.randomString(5);
-
-		State.save(
-			_portal.getOriginalServletRequest(
-				_portal.getHttpServletRequest(actionRequest)),
-			themeDisplay.getUserId(), _getSuccessURL(actionRequest),
-			_getFailureURL(actionRequest), state);
-
-		actionResponse.sendRedirect(
-			_dlOpenerGoogleDriveManager.getAuthorizationURL(
-				state, _oAuth2Helper.getRedirectURI(actionRequest)));
 	}
 
 	private void _saveDLOpenerGoogleDriveFileReference(
@@ -274,10 +225,8 @@ public class EditInGoogleDriveMVCActionCommand extends BaseMVCActionCommand {
 	private DLOpenerGoogleDriveManager _dlOpenerGoogleDriveManager;
 
 	@Reference
-	private OAuth2Helper _oAuth2Helper;
-
-	@Reference
-	private Portal _portal;
+	private GoogleDrivePortletRequestAuthorizationHelper
+		_googleDrivePortletRequestAuthorizationHelper;
 
 	private final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(

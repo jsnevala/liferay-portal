@@ -118,21 +118,13 @@ request.setAttribute("edit_roles.jsp-portletURL", portletURL);
 />
 
 <%
-String stripeMessage;
+String stripeMessage = null;
 
 if (role == null) {
 	stripeMessage = LanguageUtil.format(request, "step-x-of-x", new String[] {"1", "2"}, false) + StringPool.SPACE + LanguageUtil.get(request, "choose-a-role");
 }
 else {
-	stripeMessage =
-		LanguageUtil.format(request, "step-x-of-x", new String[] {"2", "2"}, false) + StringPool.SPACE +
-		LanguageUtil.format(
-			request, "current-signifies-current-users-associated-with-the-x-role.-available-signifies-all-users-associated-with-the-x-x",
-			new String[] {
-				HtmlUtil.escape(role.getTitle(locale)),
-				HtmlUtil.escape(groupDescriptiveName),
-				LanguageUtil.get(request, (group.isOrganization() ? "organization" : "site"))
-			});
+	stripeMessage = LanguageUtil.format(request, "step-x-of-x", new String[] {"2", "2"}, false) + StringPool.SPACE + LanguageUtil.format(request, "current-signifies-current-users-associated-with-the-x-role.-available-signifies-all-users-associated-with-the-x-x", new String[] {HtmlUtil.escape(role.getTitle(locale)), HtmlUtil.escape(groupDescriptiveName), LanguageUtil.get(request, group.isOrganization() ? "organization" : "site")});
 }
 %>
 
@@ -206,28 +198,46 @@ else {
 	</aui:button-row>
 </aui:form>
 
-<aui:script>
+<script>
 	function <portlet:namespace />updateUserGroupGroupRoleUsers(redirect) {
 		var Util = Liferay.Util;
 
-		var form = AUI.$(document.<portlet:namespace />fm);
+		var form = document.<portlet:namespace />fm;
 
-		form.fm('redirect').val(redirect);
-		form.fm('addUserGroupIds').val(Util.listCheckedExcept(form, '<portlet:namespace />allRowIds'));
-		form.fm('removeUserGroupIds').val(Util.listUncheckedExcept(form, '<portlet:namespace />allRowIds'));
-
-		submitForm(form, '<portlet:actionURL name="editUserGroupGroupRoleUsers" />');
+		Util.postForm(form, {
+			data: {
+				redirect: redirect,
+				addUserGroupIds: Util.listCheckedExcept(
+					form,
+					'<portlet:namespace />allRowIds'
+				),
+				removeUserGroupIds: Util.listUncheckedExcept(
+					form,
+					'<portlet:namespace />allRowIds'
+				),
+			},
+			url: '<portlet:actionURL name="editUserGroupGroupRoleUsers" />',
+		});
 	}
 
 	function <portlet:namespace />updateUserGroupRoleUsers(redirect) {
 		var Util = Liferay.Util;
 
-		var form = AUI.$(document.<portlet:namespace />fm);
+		var form = document.<portlet:namespace />fm;
 
-		form.fm('redirect').val(redirect);
-		form.fm('addUserIds').val(Util.listCheckedExcept(form, '<portlet:namespace />allRowIds'));
-		form.fm('removeUserIds').val(Util.listUncheckedExcept(form, '<portlet:namespace />allRowIds'));
-
-		submitForm(form, '<portlet:actionURL name="editUserGroupRoleUsers" />');
+		Util.postForm(form, {
+			data: {
+				redirect: redirect,
+				addUserIds: Util.listCheckedExcept(
+					form,
+					'<portlet:namespace />allRowIds'
+				),
+				removeUserIds: Util.listUncheckedExcept(
+					form,
+					'<portlet:namespace />allRowIds'
+				),
+			},
+			url: '<portlet:actionURL name="editUserGroupRoleUsers" />',
+		});
 	}
-</aui:script>
+</script>

@@ -21,8 +21,8 @@ import com.liferay.portal.kernel.exception.GroupInheritContentException;
 import com.liferay.portal.kernel.exception.GroupKeyException;
 import com.liferay.portal.kernel.exception.GroupParentException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
@@ -45,29 +45,29 @@ public class GroupExceptionRequestHandler {
 
 	public void handlePortalException(
 			ActionRequest actionRequest, ActionResponse actionResponse,
-			PortalException pe)
+			PortalException portalException)
 		throws Exception {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
 		String errorMessage = null;
 
-		if (pe instanceof DuplicateGroupException) {
+		if (portalException instanceof DuplicateGroupException) {
 			errorMessage = LanguageUtil.get(
 				themeDisplay.getRequest(), "please-enter-a-unique-name");
 		}
-		else if (pe instanceof GroupInheritContentException) {
+		else if (portalException instanceof GroupInheritContentException) {
 			errorMessage = LanguageUtil.get(
 				themeDisplay.getRequest(),
 				"this-site-cannot-inherit-content-from-its-parent-site");
 		}
-		else if (pe instanceof GroupKeyException) {
+		else if (portalException instanceof GroupKeyException) {
 			errorMessage = _handleGroupKeyException(actionRequest);
 		}
-		else if (pe instanceof GroupParentException.MustNotBeOwnParent) {
+		else if (portalException instanceof
+					GroupParentException.MustNotBeOwnParent) {
+
 			errorMessage = LanguageUtil.get(
 				themeDisplay.getRequest(),
 				"this-site-cannot-inherit-content-from-its-parent-site");
@@ -78,7 +78,7 @@ public class GroupExceptionRequestHandler {
 				themeDisplay.getRequest(), "an-unexpected-error-occurred");
 		}
 
-		jsonObject.put("error", errorMessage);
+		JSONObject jsonObject = JSONUtil.put("error", errorMessage);
 
 		JSONPortletResponseUtil.writeJSON(
 			actionRequest, actionResponse, jsonObject);

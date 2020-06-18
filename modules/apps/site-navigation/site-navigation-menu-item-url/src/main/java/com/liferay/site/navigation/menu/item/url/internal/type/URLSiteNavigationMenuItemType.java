@@ -16,6 +16,8 @@ package com.liferay.site.navigation.menu.item.url.internal.type;
 
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.site.navigation.constants.SiteNavigationWebKeys;
 import com.liferay.site.navigation.menu.item.layout.constants.SiteNavigationMenuItemTypeConstants;
@@ -56,15 +58,39 @@ public class URLSiteNavigationMenuItemType
 
 	@Override
 	public String getRegularURL(
-		HttpServletRequest request,
+		HttpServletRequest httpServletRequest,
 		SiteNavigationMenuItem siteNavigationMenuItem) {
 
-		UnicodeProperties typeSettingsProperties = new UnicodeProperties();
+		UnicodeProperties typeSettingsUnicodeProperties =
+			new UnicodeProperties();
 
-		typeSettingsProperties.fastLoad(
+		typeSettingsUnicodeProperties.fastLoad(
 			siteNavigationMenuItem.getTypeSettings());
 
-		return typeSettingsProperties.get("url");
+		return typeSettingsUnicodeProperties.get("url");
+	}
+
+	@Override
+	public String getTitle(
+		SiteNavigationMenuItem siteNavigationMenuItem, Locale locale) {
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			new UnicodeProperties();
+
+		typeSettingsUnicodeProperties.fastLoad(
+			siteNavigationMenuItem.getTypeSettings());
+
+		String defaultLanguageId = typeSettingsUnicodeProperties.getProperty(
+			Field.DEFAULT_LANGUAGE_ID,
+			LocaleUtil.toLanguageId(LocaleUtil.getMostRelevantLocale()));
+
+		String defaultTitle = typeSettingsUnicodeProperties.getProperty(
+			"name_" + defaultLanguageId,
+			typeSettingsUnicodeProperties.getProperty(
+				"name", getLabel(locale)));
+
+		return typeSettingsUnicodeProperties.getProperty(
+			"name_" + LocaleUtil.toLanguageId(locale), defaultTitle);
 	}
 
 	@Override
@@ -79,25 +105,29 @@ public class URLSiteNavigationMenuItemType
 
 	@Override
 	public void renderAddPage(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
 		_jspRenderer.renderJSP(
-			_servletContext, request, response, "/edit_url.jsp");
+			_servletContext, httpServletRequest, httpServletResponse,
+			"/edit_url.jsp");
 	}
 
 	@Override
 	public void renderEditPage(
-			HttpServletRequest request, HttpServletResponse response,
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse,
 			SiteNavigationMenuItem siteNavigationMenuItem)
 		throws IOException {
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			SiteNavigationWebKeys.SITE_NAVIGATION_MENU_ITEM,
 			siteNavigationMenuItem);
 
 		_jspRenderer.renderJSP(
-			_servletContext, request, response, "/edit_url.jsp");
+			_servletContext, httpServletRequest, httpServletResponse,
+			"/edit_url.jsp");
 	}
 
 	@Reference

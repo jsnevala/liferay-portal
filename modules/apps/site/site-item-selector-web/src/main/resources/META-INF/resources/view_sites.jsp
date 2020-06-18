@@ -21,22 +21,16 @@ SitesItemSelectorViewDisplayContext siteItemSelectorViewDisplayContext = (SitesI
 GroupURLProvider groupURLProvider = (GroupURLProvider)request.getAttribute(SiteWebKeys.GROUP_URL_PROVIDER);
 
 String displayStyle = siteItemSelectorViewDisplayContext.getDisplayStyle();
-String target = ParamUtil.getString(request, "target");
+
+GroupItemSelectorCriterion groupItemSelectorCriterion = siteItemSelectorViewDisplayContext.getGroupItemSelectorCriterion();
+
+String target = ParamUtil.getString(request, "target", groupItemSelectorCriterion.getTarget());
 
 GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
 %>
 
 <clay:management-toolbar
-	clearResultsURL="<%= siteItemSelectorViewDisplayContext.getClearResultsURL() %>"
-	filterDropdownItems="<%= siteItemSelectorViewDisplayContext.getFilterDropdownItems() %>"
-	itemsTotal="<%= siteItemSelectorViewDisplayContext.getTotalItems() %>"
-	searchActionURL="<%= siteItemSelectorViewDisplayContext.getSearchActionURL() %>"
-	searchFormName="searchFm"
-	selectable="<%= false %>"
-	showSearch="<%= siteItemSelectorViewDisplayContext.isShowSearch() %>"
-	sortingOrder="<%= siteItemSelectorViewDisplayContext.getOrderByType() %>"
-	sortingURL="<%= siteItemSelectorViewDisplayContext.getSortingURL() %>"
-	viewTypeItems="<%= siteItemSelectorViewDisplayContext.getViewTypeItems() %>"
+	displayContext="<%= new SitesItemSelectorViewManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, siteItemSelectorViewDisplayContext) %>"
 />
 
 <aui:form action="<%= siteItemSelectorViewDisplayContext.getPortletURL() %>" cssClass="container-fluid-1280" method="post" name="selectGroupFm">
@@ -64,16 +58,23 @@ GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
 		>
 
 			<%
-			List<Group> childGroups = group.getChildren(true);
+			List<Group> childGroups = GroupServiceUtil.getGroups(group.getCompanyId(), group.getGroupId(), true);
 
-			Map<String, Object> data = new HashMap<String, Object>();
-
-			data.put("groupdescriptivename", group.getDescriptiveName(locale));
-			data.put("groupid", group.getGroupId());
-			data.put("grouptarget", target);
-			data.put("grouptype", LanguageUtil.get(resourceBundle, group.getTypeLabel()));
-			data.put("url", groupURLProvider.getGroupURL(group, liferayPortletRequest));
-			data.put("uuid", group.getUuid());
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"groupdescriptivename", group.getDescriptiveName(locale)
+			).put(
+				"groupid", group.getGroupId()
+			).put(
+				"groupscopelabel", LanguageUtil.get(resourceBundle, group.getScopeLabel(themeDisplay))
+			).put(
+				"grouptarget", target
+			).put(
+				"grouptype", LanguageUtil.get(resourceBundle, group.getTypeLabel())
+			).put(
+				"url", groupURLProvider.getGroupURL(group, liferayPortletRequest)
+			).put(
+				"uuid", group.getUuid()
+			).build();
 
 			String childGroupsHREF = null;
 
@@ -88,9 +89,18 @@ GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
 
 			<c:choose>
 				<c:when test='<%= displayStyle.equals("descriptive") %>'>
-					<liferay-ui:search-container-column-icon
-						icon="sites"
-					/>
+					<c:choose>
+						<c:when test="<%= Validator.isNotNull(group.getLogoURL(themeDisplay, false)) %>">
+							<liferay-ui:search-container-column-image
+								src="<%= group.getLogoURL(themeDisplay, false) %>"
+							/>
+						</c:when>
+						<c:otherwise>
+							<liferay-ui:search-container-column-icon
+								icon="<%= group.getIconCssClass() %>"
+							/>
+						</c:otherwise>
+					</c:choose>
 
 					<liferay-ui:search-container-column-text
 						colspan="<%= 2 %>"
@@ -100,7 +110,9 @@ GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
 								<%= HtmlUtil.escape(siteItemSelectorViewDisplayContext.getGroupName(group)) %>
 							</aui:a>
 
-							<aui:a href="<%= groupURLProvider.getGroupURL(group, liferayPortletRequest) %>" target="_blank" />
+							<c:if test="<%= groupItemSelectorCriterion.isAllowNavigation() %>">
+								<aui:a href="<%= groupURLProvider.getGroupURL(group, liferayPortletRequest) %>" target="_blank" />
+							</c:if>
 						</h5>
 
 						<h6 class="text-default">
@@ -121,70 +133,55 @@ GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
 					<%
 					row.setCssClass("entry-card lfr-asset-item " + row.getCssClass());
 
-					Map<String, Object> linkData = new HashMap<String, Object>();
+					Map<String, Object> linkData = HashMapBuilder.<String, Object>put(
+						"prevent-selection", true
+					).build();
 
-					linkData.put("prevent-selection", true);
+					SiteVerticalCard siteVerticalCard = new SiteVerticalCard(group, liferayPortletRequest);
 					%>
 
 					<liferay-ui:search-container-column-text>
-						<c:choose>
-							<c:when test="<%= Validator.isNotNull(group.getLogoURL(themeDisplay, false)) %>">
-								<liferay-frontend:vertical-card
-									imageUrl="<%= group.getLogoURL(themeDisplay, false) %>"
-									resultRow="<%= row %>"
-									rowChecker="<%= searchContainer.getRowChecker() %>"
-									showCheckbox="<%= false %>"
-								>
-									<liferay-frontend:vertical-card-header>
-										<div class="row">
-											<h5 class="col text-truncate">
-												<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
-													<%= HtmlUtil.escape(siteItemSelectorViewDisplayContext.getGroupName(group)) %>
-												</aui:a>
-											</h5>
+						<div class="card card-horizontal">
+							<div class="card-body">
+								<div class="card-row">
+									<div class="autofit-col">
+										<span class="sticker sticker-secondary">
+											<c:choose>
+												<c:when test="<%= Validator.isNotNull(siteVerticalCard.getImageSrc()) %>">
+													<span class="sticker-overlay">
+														<img alt="" class="sticker-img" src="<%= siteVerticalCard.getImageSrc() %>" />
+													</span>
+												</c:when>
+												<c:otherwise>
+													<liferay-ui:icon
+														icon="<%= group.getIconCssClass() %>"
+														markupView="lexicon"
+													/>
+												</c:otherwise>
+											</c:choose>
+										</span>
+									</div>
 
-											<aui:a cssClass="col-auto" href="<%= groupURLProvider.getGroupURL(group, liferayPortletRequest) %>" target="_blank" />
-										</div>
-									</liferay-frontend:vertical-card-header>
+									<div class="autofit-col autofit-col-expand autofit-col-gutters">
+										<aui:a cssClass="card-title selector-button text-truncate" data="<%= data %>" href="javascript:;" title="<%= siteVerticalCard.getSubtitle() %>">
+											<%= siteVerticalCard.getTitle() %>
+										</aui:a>
 
-									<c:if test="<%= siteItemSelectorViewDisplayContext.isShowChildSitesLink() %>">
-										<liferay-frontend:vertical-card-footer>
-											<aui:a cssClass='<%= !childGroups.isEmpty() ? "text-default" : "disabled text-muted" %>' data="<%= linkData %>" href="<%= childGroupsHREF %>">
-												<liferay-ui:message arguments="<%= String.valueOf(childGroups.size()) %>" key="x-child-sites" />
-											</aui:a>
-										</liferay-frontend:vertical-card-footer>
-									</c:if>
-								</liferay-frontend:vertical-card>
-							</c:when>
-							<c:otherwise>
-								<liferay-frontend:icon-vertical-card
-									icon="sites"
-									resultRow="<%= row %>"
-									rowChecker="<%= searchContainer.getRowChecker() %>"
-									showCheckbox="<%= false %>"
-								>
-									<liferay-frontend:vertical-card-header>
-										<div class="row">
-											<h5 class="col text-truncate">
-												<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
-													<%= HtmlUtil.escape(siteItemSelectorViewDisplayContext.getGroupName(group)) %>
-												</aui:a>
-											</h5>
-
-											<aui:a cssClass="col-auto" href="<%= groupURLProvider.getGroupURL(group, liferayPortletRequest) %>" target="_blank" />
-										</div>
-									</liferay-frontend:vertical-card-header>
-
-									<liferay-frontend:vertical-card-footer>
 										<c:if test="<%= siteItemSelectorViewDisplayContext.isShowChildSitesLink() %>">
-											<aui:a cssClass='<%= !childGroups.isEmpty() ? "text-default" : "disabled text-muted" %>' data="<%= linkData %>" href="<%= childGroupsHREF %>">
-												<liferay-ui:message arguments="<%= String.valueOf(childGroups.size()) %>" key="x-child-sites" />
+											<aui:a cssClass='<%= "card-subtitle text-truncate selector-button " + (!childGroups.isEmpty() ? "text-default" : "text-muted") %>' data="<%= linkData %>" href="<%= childGroupsHREF %>" title="<%= siteVerticalCard.getSubtitle() %>">
+												<%= siteVerticalCard.getSubtitle() %>
 											</aui:a>
 										</c:if>
-									</liferay-frontend:vertical-card-footer>
-								</liferay-frontend:icon-vertical-card>
-							</c:otherwise>
-						</c:choose>
+									</div>
+
+									<c:if test="<%= groupItemSelectorCriterion.isAllowNavigation() %>">
+										<div class="autofit-col">
+											<aui:a cssClass="btn btn-outline-borderless btn-outline-secondary" href="<%= siteVerticalCard.getHref() %>" target="_blank" />
+										</div>
+									</c:if>
+								</div>
+							</div>
+						</div>
 					</liferay-ui:search-container-column-text>
 				</c:when>
 				<c:when test='<%= displayStyle.equals("list") %>'>
@@ -196,7 +193,9 @@ GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
 							<%= HtmlUtil.escape(siteItemSelectorViewDisplayContext.getGroupName(group)) %>
 						</aui:a>
 
-						<aui:a href="<%= groupURLProvider.getGroupURL(group, liferayPortletRequest) %>" target="_blank" />
+						<c:if test="<%= groupItemSelectorCriterion.isAllowNavigation() %>">
+							<aui:a href="<%= groupURLProvider.getGroupURL(group, liferayPortletRequest) %>" target="_blank" />
+						</c:if>
 					</liferay-ui:search-container-column-text>
 
 					<c:if test="<%= siteItemSelectorViewDisplayContext.isShowChildSitesLink() %>">
@@ -226,5 +225,8 @@ GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
 </aui:form>
 
 <aui:script use="aui-base">
-	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectGroupFm', '<%= HtmlUtil.escapeJS(siteItemSelectorViewDisplayContext.getItemSelectedEventName()) %>');
+	Liferay.Util.selectEntityHandler(
+		'#<portlet:namespace />selectGroupFm',
+		'<%= HtmlUtil.escapeJS(siteItemSelectorViewDisplayContext.getItemSelectedEventName()) %>'
+	);
 </aui:script>

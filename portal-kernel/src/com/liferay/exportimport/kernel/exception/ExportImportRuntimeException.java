@@ -14,14 +14,11 @@
 
 package com.liferay.exportimport.kernel.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NestableRuntimeException;
 
 /**
  * @author Gergely Mathe
  */
-@ProviderType
 public class ExportImportRuntimeException extends NestableRuntimeException {
 
 	public ExportImportRuntimeException() {

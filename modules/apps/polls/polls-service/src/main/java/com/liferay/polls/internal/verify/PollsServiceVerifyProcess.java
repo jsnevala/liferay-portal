@@ -18,7 +18,6 @@ import com.liferay.polls.internal.verify.model.PollsChoiceVerifiableModel;
 import com.liferay.polls.internal.verify.model.PollsVoteVerifiableModel;
 import com.liferay.polls.service.PollsChoiceLocalService;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.verify.VerifyAuditedModel;
 import com.liferay.portal.verify.VerifyGroupedModel;
 import com.liferay.portal.verify.VerifyProcess;
 
@@ -26,31 +25,25 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Miguel Pastor
+ * @author     Miguel Pastor
+ * @deprecated As of Mueller (7.2.x), with no direct replacement
  */
 @Component(
 	immediate = true,
 	property = "verify.process.name=com.liferay.polls.service",
 	service = VerifyProcess.class
 )
+@Deprecated
 public class PollsServiceVerifyProcess extends VerifyProcess {
 
 	@Override
 	protected void doVerify() throws Exception {
-		verifyAuditedModels();
 		verifyGroupedModels();
 	}
 
 	@Reference(unbind = "-")
 	protected void setPollsChoiceLocalService(
 		PollsChoiceLocalService pollsChoiceLocalService) {
-	}
-
-	protected void verifyAuditedModels() throws Exception {
-		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			_verifyAuditedModel.verify(new PollsChoiceVerifiableModel());
-			_verifyAuditedModel.verify(new PollsVoteVerifiableModel());
-		}
 	}
 
 	protected void verifyGroupedModels() throws Exception {
@@ -60,8 +53,6 @@ public class PollsServiceVerifyProcess extends VerifyProcess {
 		}
 	}
 
-	private final VerifyAuditedModel _verifyAuditedModel =
-		new VerifyAuditedModel();
 	private final VerifyGroupedModel _verifyGroupedModel =
 		new VerifyGroupedModel();
 

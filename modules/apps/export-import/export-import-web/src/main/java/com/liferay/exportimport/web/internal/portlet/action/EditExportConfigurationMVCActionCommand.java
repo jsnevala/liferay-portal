@@ -17,8 +17,8 @@ package com.liferay.exportimport.web.internal.portlet.action;
 import com.liferay.exportimport.constants.ExportImportPortletKeys;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationFactory;
-import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationHelper;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactory;
+import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportHelper;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
@@ -36,6 +36,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -47,7 +48,6 @@ import com.liferay.trash.service.TrashEntryService;
 import java.io.Serializable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -112,8 +112,9 @@ public class EditExportConfigurationMVCActionCommand
 			actionRequest, "exportImportConfigurationId");
 
 		if (exportImportConfigurationId > 0) {
-			deleteExportImportConfigurationIds =
-				new long[] {exportImportConfigurationId};
+			deleteExportImportConfigurationIds = new long[] {
+				exportImportConfigurationId
+			};
 		}
 		else {
 			deleteExportImportConfigurationIds = StringUtil.split(
@@ -143,9 +144,9 @@ public class EditExportConfigurationMVCActionCommand
 		}
 
 		if (moveToTrash && !trashedModels.isEmpty()) {
-			Map<String, Object> data = new HashMap<>();
-
-			data.put("trashedModels", trashedModels);
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"trashedModels", trashedModels
+			).build();
 
 			addDeleteSuccessData(actionRequest, data);
 		}
@@ -186,10 +187,10 @@ public class EditExportConfigurationMVCActionCommand
 
 			sendRedirect(actionRequest, actionResponse, redirect);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			SessionErrors.add(actionRequest, e.getClass());
+			SessionErrors.add(actionRequest, exception.getClass());
 		}
 	}
 
@@ -203,12 +204,11 @@ public class EditExportConfigurationMVCActionCommand
 		BackgroundTask backgroundTask = backgroundTaskManager.getBackgroundTask(
 			backgroundTaskId);
 
-		Map<String, Serializable> taskContextMap =
-			backgroundTask.getTaskContextMap();
-
 		ExportImportConfiguration exportImportConfiguration =
 			exportImportConfigurationLocalService.getExportImportConfiguration(
-				MapUtil.getLong(taskContextMap, "exportImportConfigurationId"));
+				MapUtil.getLong(
+					backgroundTask.getTaskContextMap(),
+					"exportImportConfigurationId"));
 
 		exportImportConfiguration =
 			ExportImportConfigurationFactory.cloneExportImportConfiguration(
@@ -253,7 +253,7 @@ public class EditExportConfigurationMVCActionCommand
 	}
 
 	protected void setLayoutIdMap(ActionRequest actionRequest) {
-		HttpServletRequest portletRequest = portal.getHttpServletRequest(
+		HttpServletRequest httpServletRequest = portal.getHttpServletRequest(
 			actionRequest);
 
 		long groupId = ParamUtil.getLong(actionRequest, "groupId");
@@ -263,7 +263,7 @@ public class EditExportConfigurationMVCActionCommand
 		String treeId = ParamUtil.getString(actionRequest, "treeId");
 
 		String openNodes = SessionTreeJSClicks.getOpenNodes(
-			portletRequest, treeId + "SelectedNode");
+			httpServletRequest, treeId + "SelectedNode");
 
 		String selectedLayoutsJSON = exportImportHelper.getSelectedLayoutsJSON(
 			groupId, privateLayout, openNodes);
@@ -284,11 +284,11 @@ public class EditExportConfigurationMVCActionCommand
 			actionRequest, "exportImportConfigurationId");
 
 		if (exportImportConfigurationId > 0) {
-			return ExportImportConfigurationHelper.
+			return ExportImportConfigurationUtil.
 				updateExportLayoutExportImportConfiguration(actionRequest);
 		}
 
-		return ExportImportConfigurationHelper.
+		return ExportImportConfigurationUtil.
 			addExportLayoutExportImportConfiguration(actionRequest);
 	}
 

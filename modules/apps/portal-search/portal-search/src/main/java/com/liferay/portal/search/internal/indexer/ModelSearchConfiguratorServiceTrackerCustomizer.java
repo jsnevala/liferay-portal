@@ -23,8 +23,8 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.search.DocumentContributor;
-import com.liferay.portal.kernel.search.IndexSearcherHelper;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
@@ -45,6 +45,8 @@ import com.liferay.portal.search.indexer.IndexerQueryBuilder;
 import com.liferay.portal.search.indexer.IndexerSearcher;
 import com.liferay.portal.search.indexer.IndexerSummaryBuilder;
 import com.liferay.portal.search.indexer.IndexerWriter;
+import com.liferay.portal.search.internal.searcher.IndexSearcherHelper;
+import com.liferay.portal.search.permission.SearchPermissionDocumentContributor;
 import com.liferay.portal.search.permission.SearchPermissionIndexWriter;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
 import com.liferay.portal.search.spi.model.query.contributor.QueryConfigContributor;
@@ -81,7 +83,7 @@ public class ModelSearchConfiguratorServiceTrackerCustomizer
 			<ModelSearchConfigurator, ModelSearchConfigurator> {
 
 	@Override
-	@SuppressWarnings(value = "unchecked")
+	@SuppressWarnings("unchecked")
 	public ModelSearchConfigurator addingService(
 		ServiceReference<ModelSearchConfigurator> serviceReference) {
 
@@ -203,7 +205,8 @@ public class ModelSearchConfiguratorServiceTrackerCustomizer
 		IndexerDocumentBuilder indexerDocumentBuilder =
 			new IndexerDocumentBuilderImpl(
 				baseModelDocumentFactory, modelDocumentContributors,
-				documentContributors, indexerPostProcessorsHolder);
+				documentContributors, indexerPostProcessorsHolder,
+				searchPermissionDocumentContributor);
 
 		ServiceRegistration<IndexerDocumentBuilder>
 			indexerDocumentBuilderServiceRegistration =
@@ -350,6 +353,10 @@ public class ModelSearchConfiguratorServiceTrackerCustomizer
 	protected RelatedEntryIndexerRegistry relatedEntryIndexerRegistry;
 
 	@Reference
+	protected SearchPermissionDocumentContributor
+		searchPermissionDocumentContributor;
+
+	@Reference
 	protected SearchPermissionIndexWriter searchPermissionIndexWriter;
 
 	@Reference
@@ -367,6 +374,10 @@ public class ModelSearchConfiguratorServiceTrackerCustomizer
 		_documentContributors;
 	private ServiceTrackerMap<String, ModelResourcePermission>
 		_modelResourcePermissionServiceTrackerMap;
+
+	@Reference(target = ModuleServiceLifecycle.PORTLETS_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
+
 	private ServiceTrackerList<QueryConfigContributor, QueryConfigContributor>
 		_queryConfigContributors;
 	private ServiceTrackerList
@@ -374,8 +385,8 @@ public class ModelSearchConfiguratorServiceTrackerCustomizer
 			_searchContextContributors;
 	private final Map<String, ServiceRegistrationHolder>
 		_serviceRegistrationHolders = new Hashtable<>();
-	private ServiceTracker
-		<ModelSearchConfigurator, ModelSearchConfigurator> _serviceTracker;
+	private ServiceTracker<ModelSearchConfigurator, ModelSearchConfigurator>
+		_serviceTracker;
 
 	private class ServiceRegistrationHolder {
 

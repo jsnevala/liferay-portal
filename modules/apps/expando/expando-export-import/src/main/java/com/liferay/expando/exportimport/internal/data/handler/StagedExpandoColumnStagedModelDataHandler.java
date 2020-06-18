@@ -46,8 +46,9 @@ import org.osgi.service.component.annotations.Reference;
 public class StagedExpandoColumnStagedModelDataHandler
 	extends BaseStagedModelDataHandler<StagedExpandoColumn> {
 
-	public static final String[] CLASS_NAMES =
-		{StagedExpandoColumn.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		StagedExpandoColumn.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(StagedExpandoColumn stagedExpandoColumn)
@@ -134,6 +135,10 @@ public class StagedExpandoColumnStagedModelDataHandler
 		List<StagedExpandoColumn> stagedExpandoColumns =
 			fetchStagedModelsByUuidAndCompanyId(
 				uuid, portletDataContext.getCompanyId());
+
+		if (ListUtil.isEmpty(stagedExpandoColumns)) {
+			return;
+		}
 
 		StagedExpandoColumn existingStagedExpandoColumn =
 			stagedExpandoColumns.get(0);

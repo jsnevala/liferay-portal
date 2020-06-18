@@ -20,11 +20,11 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.user.associated.data.display.UADDisplay;
 
 import java.util.List;
-import java.util.Locale;
 
 import org.junit.Assert;
 import org.junit.Assume;
@@ -38,15 +38,16 @@ public abstract class BaseUADDisplayTestCase<T> {
 
 	@Before
 	public void setUp() throws Exception {
+		user = UserTestUtil.addUser();
+
 		_uadDisplay = getUADDisplay();
-		_user = UserTestUtil.addUser();
 	}
 
 	@Test
 	public void testCount() throws Exception {
-		addBaseModel(_user.getUserId());
+		addBaseModel(user.getUserId());
 
-		Assert.assertEquals(1, _uadDisplay.count(_user.getUserId()));
+		Assert.assertEquals(1, _uadDisplay.count(user.getUserId()));
 	}
 
 	@Test
@@ -57,10 +58,10 @@ public abstract class BaseUADDisplayTestCase<T> {
 			(WhenHasStatusByUserIdField)this;
 
 		T baseModel = whenHasStatusByUserIdField.addBaseModelWithStatusByUserId(
-			TestPropsValues.getUserId(), _user.getUserId());
+			TestPropsValues.getUserId(), user.getUserId());
 
 		List<T> baseModels = _uadDisplay.getRange(
-			_user.getUserId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			user.getUserId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		Assert.assertEquals(baseModels.toString(), 1, baseModels.size());
 
@@ -69,23 +70,23 @@ public abstract class BaseUADDisplayTestCase<T> {
 
 	@Test
 	public void testGetAllWithNoBaseModel() throws Exception {
-		Assert.assertEquals(0, _uadDisplay.count(_user.getUserId()));
+		Assert.assertEquals(0, _uadDisplay.count(user.getUserId()));
 	}
 
 	@Test
 	public void testGetTypeName() {
 		Assert.assertTrue(
 			"The type name should not be null",
-			Validator.isNotNull(_uadDisplay.getTypeName(Locale.US)));
+			Validator.isNotNull(_uadDisplay.getTypeName(LocaleUtil.US)));
 	}
 
 	protected abstract BaseModel<?> addBaseModel(long userId) throws Exception;
 
 	protected abstract UADDisplay<T> getUADDisplay();
 
-	private UADDisplay<T> _uadDisplay;
-
 	@DeleteAfterTestRun
-	private User _user;
+	protected User user;
+
+	private UADDisplay<T> _uadDisplay;
 
 }

@@ -20,16 +20,12 @@ import com.liferay.dynamic.data.mapping.form.taglib.internal.security.permission
 import com.liferay.dynamic.data.mapping.form.taglib.servlet.taglib.base.BaseDDMFormRendererTag;
 import com.liferay.dynamic.data.mapping.form.taglib.servlet.taglib.util.DDMFormTaglibUtil;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
-import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceVersion;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
-import com.liferay.dynamic.data.mapping.model.DDMFormLayoutColumn;
-import com.liferay.dynamic.data.mapping.model.DDMFormLayoutPage;
-import com.liferay.dynamic.data.mapping.model.DDMFormLayoutRow;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.petra.string.StringPool;
@@ -53,15 +49,14 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
 
 import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.JspException;
 
 /**
  * @author Pedro Queiroz
@@ -69,24 +64,29 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 
-	protected DDMFormField createCaptchaField() {
-		DDMFormField captchaDDMFormField = new DDMFormField(
-			_DDM_FORM_FIELD_NAME_CAPTCHA, "captcha");
+	@Override
+	public int doStartTag() throws JspException {
+		int result = super.doStartTag();
 
-		captchaDDMFormField.setDataType("string");
-		captchaDDMFormField.setProperty("url", createCaptchaResourceURL());
+		setNamespacedAttribute(request, "ddmFormHTML", getDDMFormHTML());
+		setNamespacedAttribute(
+			request, "ddmFormInstance", getDDMFormInstance());
+		setNamespacedAttribute(
+			request, "hasAddFormInstanceRecordPermission",
+			hasAddFormInstanceRecordPermission());
+		setNamespacedAttribute(
+			request, "hasViewFormInstancePermission",
+			hasViewFormInstancePermission());
+		setNamespacedAttribute(request, "isFormAvailable", isFormAvailable());
+		setNamespacedAttribute(
+			request, "languageId",
+			LocaleUtil.toLanguageId(getLocale(request, getDDMForm())));
+		setNamespacedAttribute(request, "redirectURL", getRedirectURL());
+		setNamespacedAttribute(
+			request, "resourceBundle",
+			getResourceBundle(getLocale(request, getDDMForm())));
 
-		return captchaDDMFormField;
-	}
-
-	protected String createCaptchaResourceURL() {
-		RenderResponse renderResponse = getRenderResponse();
-
-		ResourceURL resourceURL = renderResponse.createResourceURL();
-
-		resourceURL.setResourceID("captcha");
-
-		return resourceURL.toString();
+		return result;
 	}
 
 	protected DDMFormRenderingContext createDDMFormRenderingContext(
@@ -97,7 +97,8 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 
 		DDMFormInstance ddmFormInstance = getDDMFormInstance();
 
-		ddmFormRenderingContext.setContainerId(StringUtil.randomString());
+		ddmFormRenderingContext.setContainerId(
+			"form_" + StringUtil.randomString());
 
 		ddmFormRenderingContext.setGroupId(ddmFormInstance.getGroupId());
 
@@ -119,19 +120,6 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 		return ddmFormRenderingContext;
 	}
 
-	protected DDMFormLayoutRow createFullColumnDDMFormLayoutRow(
-		String ddmFormFieldName) {
-
-		DDMFormLayoutRow ddmFormLayoutRow = new DDMFormLayoutRow();
-
-		DDMFormLayoutColumn ddmFormLayoutColumn = new DDMFormLayoutColumn(
-			DDMFormLayoutColumn.FULL, ddmFormFieldName);
-
-		ddmFormLayoutRow.addDDMFormLayoutColumn(ddmFormLayoutColumn);
-
-		return ddmFormLayoutRow;
-	}
-
 	protected DDMForm getDDMForm() {
 		DDMForm ddmForm = null;
 
@@ -151,14 +139,10 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 				latestDDMFormInstanceVersion.getStructureVersion();
 
 			ddmForm = ddmStructureVersion.getDDMForm();
-
-			if (isCaptchaRequired(ddmFormInstance)) {
-				ddmForm.addDDMFormField(createCaptchaField());
-			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 
@@ -179,9 +163,9 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 			ddmFormHTML = DDMFormTaglibUtil.renderForm(
 				ddmForm, ddmFormLayout, createDDMFormRenderingContext(ddmForm));
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 
@@ -239,40 +223,21 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 				latestDDMFormInstanceVersion.getStructureVersion();
 
 			ddmFormLayout = ddmStructureVersion.getDDMFormLayout();
-
-			if (isCaptchaRequired(ddmFormInstance)) {
-				DDMFormLayoutPage lastDDMFormLayoutPage =
-					getLastDDMFormLayoutPage(ddmFormLayout);
-
-				DDMFormLayoutRow ddmFormLayoutRow =
-					createFullColumnDDMFormLayoutRow(
-						_DDM_FORM_FIELD_NAME_CAPTCHA);
-
-				lastDDMFormLayoutPage.addDDMFormLayoutRow(ddmFormLayoutRow);
-			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 
 		return ddmFormLayout;
 	}
 
-	protected DDMFormLayoutPage getLastDDMFormLayoutPage(
-		DDMFormLayout ddmFormLayout) {
+	protected Locale getLocale(
+		HttpServletRequest httpServletRequest, DDMForm ddmForm) {
 
-		List<DDMFormLayoutPage> ddmFormLayoutPages =
-			ddmFormLayout.getDDMFormLayoutPages();
-
-		return ddmFormLayoutPages.get(ddmFormLayoutPages.size() - 1);
-	}
-
-	protected Locale getLocale(HttpServletRequest request, DDMForm ddmForm) {
-		String languageId = LanguageUtil.getLanguageId(request);
-
-		Locale locale = LocaleUtil.fromLanguageId(languageId);
+		Locale locale = LocaleUtil.fromLanguageId(
+			LanguageUtil.getLanguageId(httpServletRequest));
 
 		if (ddmForm == null) {
 			return locale;
@@ -300,9 +265,9 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 
 			return ddmFormInstanceSettings.redirectURL();
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 
@@ -331,10 +296,8 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 	protected String getSubmitLabel(
 		DDMFormInstance ddmFormInstance, Locale locale) {
 
-		ThemeDisplay themeDisplay = getThemeDisplay();
-
 		boolean workflowEnabled = hasWorkflowEnabled(
-			ddmFormInstance, themeDisplay);
+			ddmFormInstance, getThemeDisplay());
 
 		ResourceBundle resourceBundle = getResourceBundle(locale);
 
@@ -346,10 +309,7 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 	}
 
 	protected ThemeDisplay getThemeDisplay() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		return themeDisplay;
+		return (ThemeDisplay)request.getAttribute(WebKeys.THEME_DISPLAY);
 	}
 
 	protected boolean hasAddFormInstanceRecordPermission() {
@@ -366,9 +326,9 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 						themeDisplay.getPermissionChecker(), ddmFormInstance,
 						DDMActionKeys.ADD_FORM_INSTANCE_RECORD);
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(pe, pe);
+					_log.debug(portalException, portalException);
 				}
 			}
 		}
@@ -390,9 +350,9 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 						themeDisplay.getPermissionChecker(), ddmFormInstance,
 						ActionKeys.VIEW);
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(pe, pe);
+					_log.debug(portalException, portalException);
 				}
 			}
 		}
@@ -407,24 +367,6 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 			themeDisplay.getCompanyId(), ddmFormInstance.getGroupId(),
 			DDMFormInstance.class.getName(),
 			ddmFormInstance.getFormInstanceId());
-	}
-
-	protected boolean isCaptchaRequired(DDMFormInstance ddmFormInstance) {
-		boolean captchaRequired = false;
-
-		try {
-			DDMFormInstanceSettings ddmFormInstanceSettings =
-				ddmFormInstance.getSettingsModel();
-
-			captchaRequired = ddmFormInstanceSettings.requireCaptcha();
-		}
-		catch (PortalException pe) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
-			}
-		}
-
-		return captchaRequired;
 	}
 
 	protected boolean isFormAvailable() {
@@ -446,29 +388,6 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 		}
 
 		return false;
-	}
-
-	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		super.setAttributes(request);
-
-		setNamespacedAttribute(request, "ddmFormHTML", getDDMFormHTML());
-		setNamespacedAttribute(
-			request, "ddmFormInstance", getDDMFormInstance());
-		setNamespacedAttribute(
-			request, "hasAddFormInstanceRecordPermission",
-			hasAddFormInstanceRecordPermission());
-		setNamespacedAttribute(
-			request, "hasViewFormInstancePermission",
-			hasViewFormInstancePermission());
-		setNamespacedAttribute(request, "isFormAvailable", isFormAvailable());
-		setNamespacedAttribute(
-			request, "languageId",
-			LocaleUtil.toLanguageId(getLocale(request, getDDMForm())));
-		setNamespacedAttribute(request, "redirectURL", getRedirectURL());
-		setNamespacedAttribute(
-			request, "resourceBundle",
-			getResourceBundle(getLocale(request, getDDMForm())));
 	}
 
 	protected void setDDMFormValues(
@@ -501,9 +420,9 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 				}
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 
@@ -546,8 +465,6 @@ public class DDMFormRendererTag extends BaseDDMFormRendererTag {
 			ddmFormRenderingContext.setShowSubmitButton(false);
 		}
 	}
-
-	private static final String _DDM_FORM_FIELD_NAME_CAPTCHA = "_CAPTCHA_";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormRendererTag.class);

@@ -65,6 +65,42 @@ public class ScreenNavigationTag extends IncludeTag {
 		return super.doStartTag();
 	}
 
+	public String getContainerCssClass() {
+		return _containerCssClass;
+	}
+
+	public String getContainerWrapperCssClass() {
+		return _containerWrapperCssClass;
+	}
+
+	public Object getContext() {
+		return _context;
+	}
+
+	public String getFullContainerCssClass() {
+		return _fullContainerCssClass;
+	}
+
+	public String getHeaderContainerCssClass() {
+		return _headerContainerCssClass;
+	}
+
+	public String getId() {
+		return _id;
+	}
+
+	public String getKey() {
+		return _key;
+	}
+
+	public String getMenubarCssClass() {
+		return _menubarCssClass;
+	}
+
+	public Object getModelBean() {
+		return _modelBean;
+	}
+
 	public Object getModelContext() {
 		if (Validator.isNotNull(_modelBean)) {
 			return _modelBean;
@@ -73,8 +109,24 @@ public class ScreenNavigationTag extends IncludeTag {
 		return _context;
 	}
 
+	public String getNavCssClass() {
+		return _navCssClass;
+	}
+
+	public PortletURL getPortletURL() {
+		return _portletURL;
+	}
+
+	public boolean isInverted() {
+		return _inverted;
+	}
+
 	public void setContainerCssClass(String containerCssClass) {
 		_containerCssClass = containerCssClass;
+	}
+
+	public void setContainerWrapperCssClass(String containerWrapperCssClass) {
+		_containerWrapperCssClass = containerWrapperCssClass;
 	}
 
 	public void setContext(Object context) {
@@ -85,12 +137,24 @@ public class ScreenNavigationTag extends IncludeTag {
 		_fullContainerCssClass = fullContainerCssClass;
 	}
 
+	public void setHeaderContainerCssClass(String headerContainerCssClass) {
+		_headerContainerCssClass = headerContainerCssClass;
+	}
+
 	public void setId(String id) {
 		_id = id;
 	}
 
+	public void setInverted(boolean inverted) {
+		_inverted = inverted;
+	}
+
 	public void setKey(String key) {
 		_key = key;
+	}
+
+	public void setMenubarCssClass(String menubarCssClass) {
+		_menubarCssClass = menubarCssClass;
 	}
 
 	public void setModelBean(Object modelBean) {
@@ -117,13 +181,19 @@ public class ScreenNavigationTag extends IncludeTag {
 		super.cleanUp();
 
 		_containerCssClass = "col-md-9";
+		_containerWrapperCssClass = "container";
 		_context = null;
 		_fullContainerCssClass = "col-md-12";
+		_headerContainerCssClass = "container";
 		_id = null;
+		_inverted = false;
 		_key = null;
+		_menubarCssClass =
+			"menubar menubar-transparent menubar-vertical-expand-md";
 		_modelBean = null;
 		_navCssClass = "col-md-3";
 		_portletURL = null;
+		_screenNavigationCategories = null;
 	}
 
 	@Override
@@ -137,19 +207,22 @@ public class ScreenNavigationTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-frontend:screen-navigation:containerCssClass",
 			_containerCssClass);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:screen-navigation:fullContainerCssClass",
 			_fullContainerCssClass);
+		httpServletRequest.setAttribute(
+			"liferay-frontend:screen-navigation:headerContainerCssClass",
+			_headerContainerCssClass);
 
 		String id = _id;
 
 		if (Validator.isNotNull(id)) {
 			PortletResponse portletResponse =
-				(PortletResponse)request.getAttribute(
+				(PortletResponse)httpServletRequest.getAttribute(
 					JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 			String namespace = StringPool.BLANK;
@@ -163,31 +236,44 @@ public class ScreenNavigationTag extends IncludeTag {
 		}
 		else {
 			id = PortalUtil.generateRandomKey(
-				request, ScreenNavigationTag.class.getName());
+				httpServletRequest, ScreenNavigationTag.class.getName());
 		}
 
-		request.setAttribute("liferay-frontend:screen-navigation:id", id);
+		httpServletRequest.setAttribute(
+			"liferay-frontend:screen-navigation:id", id);
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-frontend:screen-navigation:containerWrapperCssClass",
+			_containerWrapperCssClass);
+		httpServletRequest.setAttribute(
+			"liferay-frontend:screen-navigation:inverted", _inverted);
+		httpServletRequest.setAttribute(
+			"liferay-frontend:screen-navigation:menubarCssClass",
+			_menubarCssClass);
+		httpServletRequest.setAttribute(
 			"liferay-frontend:screen-navigation:navCssClass", _navCssClass);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:screen-navigation:portletURL", _portletURL);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:screen-navigation:screenNavigationCategories",
 			_screenNavigationCategories);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:screen-navigation:screenNavigationEntries",
 			_getScreenNavigationEntries());
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:screen-navigation:" +
 				"selectedScreenNavigationCategory",
 			_getSelectedScreenNavigationCategory());
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:screen-navigation:selectedScreenNavigationEntry",
 			_getSelectedScreenNavigationEntry());
 	}
 
 	private String _getDefaultScreenNavigationCategoryKey() {
+		if (ListUtil.isEmpty(_screenNavigationCategories)) {
+			return null;
+		}
+
 		ScreenNavigationCategory screenNavigationCategory =
 			_screenNavigationCategories.get(0);
 
@@ -198,6 +284,10 @@ public class ScreenNavigationTag extends IncludeTag {
 		List<ScreenNavigationEntry> screenNavigationEntries =
 			_getScreenNavigationEntries();
 
+		if (ListUtil.isEmpty(screenNavigationEntries)) {
+			return null;
+		}
+
 		ScreenNavigationEntry screenNavigationEntry =
 			screenNavigationEntries.get(0);
 
@@ -205,14 +295,18 @@ public class ScreenNavigationTag extends IncludeTag {
 	}
 
 	private List<ScreenNavigationEntry> _getScreenNavigationEntries() {
+		ScreenNavigationCategory selectedScreenNavigationCategory =
+			_getSelectedScreenNavigationCategory();
+
+		if (selectedScreenNavigationCategory == null) {
+			return null;
+		}
+
 		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		ScreenNavigationRegistry screenNavigationRegistry =
 			ServletContextUtil.getScreenNavigationRegistry();
-
-		ScreenNavigationCategory selectedScreenNavigationCategory =
-			_getSelectedScreenNavigationCategory();
 
 		return screenNavigationRegistry.getScreenNavigationEntries(
 			selectedScreenNavigationCategory, themeDisplay.getUser(),
@@ -249,6 +343,10 @@ public class ScreenNavigationTag extends IncludeTag {
 		List<ScreenNavigationEntry> screenNavigationEntries =
 			_getScreenNavigationEntries();
 
+		if (ListUtil.isEmpty(screenNavigationEntries)) {
+			return null;
+		}
+
 		for (ScreenNavigationEntry screenNavigationEntry :
 				screenNavigationEntries) {
 
@@ -268,10 +366,15 @@ public class ScreenNavigationTag extends IncludeTag {
 	private static final String _PAGE = "/screen_navigation/page.jsp";
 
 	private String _containerCssClass = "col-md-9";
+	private String _containerWrapperCssClass = "container";
 	private Object _context;
 	private String _fullContainerCssClass = "col-md-12";
+	private String _headerContainerCssClass = "container";
 	private String _id;
+	private boolean _inverted;
 	private String _key;
+	private String _menubarCssClass =
+		"menubar menubar-transparent menubar-vertical-expand-md";
 	private Object _modelBean;
 	private String _navCssClass = "col-md-3";
 	private PortletURL _portletURL;

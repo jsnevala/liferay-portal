@@ -14,8 +14,6 @@
 
 package com.liferay.layout.page.template.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -23,12 +21,11 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.persistence.LayoutPageTemplateEntryPersistence;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -53,20 +50,20 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
-import com.liferay.portal.kernel.service.persistence.ClassNamePersistence;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
 import java.util.List;
 
 import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the base implementation for the layout page template entry local service.
@@ -77,17 +74,17 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.layout.page.template.service.impl.LayoutPageTemplateEntryLocalServiceImpl
- * @see com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil
  * @generated
  */
-@ProviderType
 public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements LayoutPageTemplateEntryLocalService,
-		IdentifiableOSGiService {
+	extends BaseLocalServiceImpl
+	implements AopService, IdentifiableOSGiService,
+			   LayoutPageTemplateEntryLocalService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil} to access the layout page template entry local service.
+	 * Never modify or reference this class directly. Use <code>LayoutPageTemplateEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -100,9 +97,11 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	@Override
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
 		LayoutPageTemplateEntry layoutPageTemplateEntry) {
+
 		layoutPageTemplateEntry.setNew(true);
 
-		return layoutPageTemplateEntryPersistence.update(layoutPageTemplateEntry);
+		return layoutPageTemplateEntryPersistence.update(
+			layoutPageTemplateEntry);
 	}
 
 	/**
@@ -115,7 +114,9 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	@Transactional(enabled = false)
 	public LayoutPageTemplateEntry createLayoutPageTemplateEntry(
 		long layoutPageTemplateEntryId) {
-		return layoutPageTemplateEntryPersistence.create(layoutPageTemplateEntryId);
+
+		return layoutPageTemplateEntryPersistence.create(
+			layoutPageTemplateEntryId);
 	}
 
 	/**
@@ -128,8 +129,11 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public LayoutPageTemplateEntry deleteLayoutPageTemplateEntry(
-		long layoutPageTemplateEntryId) throws PortalException {
-		return layoutPageTemplateEntryPersistence.remove(layoutPageTemplateEntryId);
+			long layoutPageTemplateEntryId)
+		throws PortalException {
+
+		return layoutPageTemplateEntryPersistence.remove(
+			layoutPageTemplateEntryId);
 	}
 
 	/**
@@ -142,17 +146,24 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public LayoutPageTemplateEntry deleteLayoutPageTemplateEntry(
-		LayoutPageTemplateEntry layoutPageTemplateEntry)
+			LayoutPageTemplateEntry layoutPageTemplateEntry)
 		throws PortalException {
-		return layoutPageTemplateEntryPersistence.remove(layoutPageTemplateEntry);
+
+		return layoutPageTemplateEntryPersistence.remove(
+			layoutPageTemplateEntry);
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return layoutPageTemplateEntryPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(LayoutPageTemplateEntry.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			LayoutPageTemplateEntry.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -163,14 +174,15 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 */
 	@Override
 	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery) {
-		return layoutPageTemplateEntryPersistence.findWithDynamicQuery(dynamicQuery);
+		return layoutPageTemplateEntryPersistence.findWithDynamicQuery(
+			dynamicQuery);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -179,17 +191,18 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return layoutPageTemplateEntryPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return layoutPageTemplateEntryPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -199,10 +212,12 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return layoutPageTemplateEntryPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return layoutPageTemplateEntryPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -213,7 +228,8 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 */
 	@Override
 	public long dynamicQueryCount(DynamicQuery dynamicQuery) {
-		return layoutPageTemplateEntryPersistence.countWithDynamicQuery(dynamicQuery);
+		return layoutPageTemplateEntryPersistence.countWithDynamicQuery(
+			dynamicQuery);
 	}
 
 	/**
@@ -224,16 +240,19 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return layoutPageTemplateEntryPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return layoutPageTemplateEntryPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
 	public LayoutPageTemplateEntry fetchLayoutPageTemplateEntry(
 		long layoutPageTemplateEntryId) {
-		return layoutPageTemplateEntryPersistence.fetchByPrimaryKey(layoutPageTemplateEntryId);
+
+		return layoutPageTemplateEntryPersistence.fetchByPrimaryKey(
+			layoutPageTemplateEntryId);
 	}
 
 	/**
@@ -246,6 +265,7 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	@Override
 	public LayoutPageTemplateEntry fetchLayoutPageTemplateEntryByUuidAndGroupId(
 		String uuid, long groupId) {
+
 		return layoutPageTemplateEntryPersistence.fetchByUUID_G(uuid, groupId);
 	}
 
@@ -258,15 +278,20 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 */
 	@Override
 	public LayoutPageTemplateEntry getLayoutPageTemplateEntry(
-		long layoutPageTemplateEntryId) throws PortalException {
-		return layoutPageTemplateEntryPersistence.findByPrimaryKey(layoutPageTemplateEntryId);
+			long layoutPageTemplateEntryId)
+		throws PortalException {
+
+		return layoutPageTemplateEntryPersistence.findByPrimaryKey(
+			layoutPageTemplateEntryId);
 	}
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
-		actionableDynamicQuery.setBaseLocalService(layoutPageTemplateEntryLocalService);
+		actionableDynamicQuery.setBaseLocalService(
+			layoutPageTemplateEntryLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(LayoutPageTemplateEntry.class);
 
@@ -277,12 +302,17 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(layoutPageTemplateEntryLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			layoutPageTemplateEntryLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
-		indexableActionableDynamicQuery.setModelClass(LayoutPageTemplateEntry.class);
+		indexableActionableDynamicQuery.setModelClass(
+			LayoutPageTemplateEntry.class);
 
 		indexableActionableDynamicQuery.setPrimaryKeyPropertyName(
 			"layoutPageTemplateEntryId");
@@ -292,7 +322,9 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
-		actionableDynamicQuery.setBaseLocalService(layoutPageTemplateEntryLocalService);
+
+		actionableDynamicQuery.setBaseLocalService(
+			layoutPageTemplateEntryLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(LayoutPageTemplateEntry.class);
 
@@ -303,48 +335,59 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
-		final ExportActionableDynamicQuery exportActionableDynamicQuery = new ExportActionableDynamicQuery() {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
 				@Override
 				public long performCount() throws PortalException {
-					ManifestSummary manifestSummary = portletDataContext.getManifestSummary();
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
 
 					StagedModelType stagedModelType = getStagedModelType();
 
 					long modelAdditionCount = super.performCount();
 
-					manifestSummary.addModelAdditionCount(stagedModelType,
-						modelAdditionCount);
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
 
-					long modelDeletionCount = ExportImportHelperUtil.getModelDeletionCount(portletDataContext,
-							stagedModelType);
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
 
-					manifestSummary.addModelDeletionCount(stagedModelType,
-						modelDeletionCount);
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
 
 					return modelAdditionCount;
 				}
+
 			};
 
 		initActionableDynamicQuery(exportActionableDynamicQuery);
 
-		exportActionableDynamicQuery.setAddCriteriaMethod(new ActionableDynamicQuery.AddCriteriaMethod() {
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
 				@Override
 				public void addCriteria(DynamicQuery dynamicQuery) {
-					Criterion modifiedDateCriterion = portletDataContext.getDateRangeCriteria(
-							"modifiedDate");
+					Criterion modifiedDateCriterion =
+						portletDataContext.getDateRangeCriteria("modifiedDate");
 
 					if (modifiedDateCriterion != null) {
-						Conjunction conjunction = RestrictionsFactoryUtil.conjunction();
+						Conjunction conjunction =
+							RestrictionsFactoryUtil.conjunction();
 
 						conjunction.add(modifiedDateCriterion);
 
-						Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+						Disjunction disjunction =
+							RestrictionsFactoryUtil.disjunction();
 
-						disjunction.add(RestrictionsFactoryUtil.gtProperty(
+						disjunction.add(
+							RestrictionsFactoryUtil.gtProperty(
 								"modifiedDate", "lastPublishDate"));
 
-						Property lastPublishDateProperty = PropertyFactoryUtil.forName(
-								"lastPublishDate");
+						Property lastPublishDateProperty =
+							PropertyFactoryUtil.forName("lastPublishDate");
 
 						disjunction.add(lastPublishDateProperty.isNull());
 
@@ -353,12 +396,14 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 						modifiedDateCriterion = conjunction;
 					}
 
-					Criterion statusDateCriterion = portletDataContext.getDateRangeCriteria(
-							"statusDate");
+					Criterion statusDateCriterion =
+						portletDataContext.getDateRangeCriteria("statusDate");
 
 					if ((modifiedDateCriterion != null) &&
-							(statusDateCriterion != null)) {
-						Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+						(statusDateCriterion != null)) {
+
+						Disjunction disjunction =
+							RestrictionsFactoryUtil.disjunction();
 
 						disjunction.add(modifiedDateCriterion);
 						disjunction.add(statusDateCriterion);
@@ -366,52 +411,75 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 						dynamicQuery.add(disjunction);
 					}
 
-					StagedModelType stagedModelType = exportActionableDynamicQuery.getStagedModelType();
+					StagedModelType stagedModelType =
+						exportActionableDynamicQuery.getStagedModelType();
 
-					long referrerClassNameId = stagedModelType.getReferrerClassNameId();
+					long referrerClassNameId =
+						stagedModelType.getReferrerClassNameId();
 
 					Property classNameIdProperty = PropertyFactoryUtil.forName(
-							"classNameId");
+						"classNameId");
 
-					if ((referrerClassNameId != StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
-							(referrerClassNameId != StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
-						dynamicQuery.add(classNameIdProperty.eq(
+					if ((referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
+						(referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
+
+						dynamicQuery.add(
+							classNameIdProperty.eq(
 								stagedModelType.getReferrerClassNameId()));
 					}
-					else if (referrerClassNameId == StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
+					else if (referrerClassNameId ==
+								StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
+
 						dynamicQuery.add(classNameIdProperty.isNotNull());
 					}
 
-					Property workflowStatusProperty = PropertyFactoryUtil.forName(
-							"status");
+					Property workflowStatusProperty =
+						PropertyFactoryUtil.forName("status");
 
 					if (portletDataContext.isInitialPublication()) {
-						dynamicQuery.add(workflowStatusProperty.ne(
+						dynamicQuery.add(
+							workflowStatusProperty.ne(
 								WorkflowConstants.STATUS_IN_TRASH));
 					}
 					else {
-						StagedModelDataHandler<?> stagedModelDataHandler = StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(LayoutPageTemplateEntry.class.getName());
+						StagedModelDataHandler<?> stagedModelDataHandler =
+							StagedModelDataHandlerRegistryUtil.
+								getStagedModelDataHandler(
+									LayoutPageTemplateEntry.class.getName());
 
-						dynamicQuery.add(workflowStatusProperty.in(
-								stagedModelDataHandler.getExportableStatuses()));
+						dynamicQuery.add(
+							workflowStatusProperty.in(
+								stagedModelDataHandler.
+									getExportableStatuses()));
 					}
 				}
+
 			});
 
-		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setGroupId(portletDataContext.getScopeGroupId());
+		exportActionableDynamicQuery.setGroupId(
+			portletDataContext.getScopeGroupId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<LayoutPageTemplateEntry>() {
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod
+				<LayoutPageTemplateEntry>() {
+
 				@Override
 				public void performAction(
-					LayoutPageTemplateEntry layoutPageTemplateEntry)
+						LayoutPageTemplateEntry layoutPageTemplateEntry)
 					throws PortalException {
-					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
-						layoutPageTemplateEntry);
+
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, layoutPageTemplateEntry);
 				}
+
 			});
-		exportActionableDynamicQuery.setStagedModelType(new StagedModelType(
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
 				PortalUtil.getClassNameId(
 					LayoutPageTemplateEntry.class.getName()),
 				StagedModelType.REFERRER_CLASS_NAME_ID_ALL));
@@ -422,16 +490,38 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return layoutPageTemplateEntryPersistence.create(
+			((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
-		return layoutPageTemplateEntryLocalService.deleteLayoutPageTemplateEntry((LayoutPageTemplateEntry)persistedModel);
+
+		return layoutPageTemplateEntryLocalService.
+			deleteLayoutPageTemplateEntry(
+				(LayoutPageTemplateEntry)persistedModel);
 	}
 
+	public BasePersistence<LayoutPageTemplateEntry> getBasePersistence() {
+		return layoutPageTemplateEntryPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
-		return layoutPageTemplateEntryPersistence.findByPrimaryKey(primaryKeyObj);
+
+		return layoutPageTemplateEntryPersistence.findByPrimaryKey(
+			primaryKeyObj);
 	}
 
 	/**
@@ -442,8 +532,10 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 * @return the matching layout page template entries, or an empty list if no matches were found
 	 */
 	@Override
-	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntriesByUuidAndCompanyId(
-		String uuid, long companyId) {
+	public List<LayoutPageTemplateEntry>
+		getLayoutPageTemplateEntriesByUuidAndCompanyId(
+			String uuid, long companyId) {
+
 		return layoutPageTemplateEntryPersistence.findByUuid_C(uuid, companyId);
 	}
 
@@ -458,11 +550,13 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 * @return the range of matching layout page template entries, or an empty list if no matches were found
 	 */
 	@Override
-	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntriesByUuidAndCompanyId(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<LayoutPageTemplateEntry> orderByComparator) {
-		return layoutPageTemplateEntryPersistence.findByUuid_C(uuid, companyId,
-			start, end, orderByComparator);
+	public List<LayoutPageTemplateEntry>
+		getLayoutPageTemplateEntriesByUuidAndCompanyId(
+			String uuid, long companyId, int start, int end,
+			OrderByComparator<LayoutPageTemplateEntry> orderByComparator) {
+
+		return layoutPageTemplateEntryPersistence.findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -475,7 +569,9 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 */
 	@Override
 	public LayoutPageTemplateEntry getLayoutPageTemplateEntryByUuidAndGroupId(
-		String uuid, long groupId) throws PortalException {
+			String uuid, long groupId)
+		throws PortalException {
+
 		return layoutPageTemplateEntryPersistence.findByUUID_G(uuid, groupId);
 	}
 
@@ -483,7 +579,7 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 * Returns a range of all the layout page template entries.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.layout.page.template.model.impl.LayoutPageTemplateEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of layout page template entries
@@ -493,6 +589,7 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	@Override
 	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
 		int start, int end) {
+
 		return layoutPageTemplateEntryPersistence.findAll(start, end);
 	}
 
@@ -516,168 +613,23 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	@Override
 	public LayoutPageTemplateEntry updateLayoutPageTemplateEntry(
 		LayoutPageTemplateEntry layoutPageTemplateEntry) {
-		return layoutPageTemplateEntryPersistence.update(layoutPageTemplateEntry);
+
+		return layoutPageTemplateEntryPersistence.update(
+			layoutPageTemplateEntry);
 	}
 
-	/**
-	 * Returns the layout page template entry local service.
-	 *
-	 * @return the layout page template entry local service
-	 */
-	public LayoutPageTemplateEntryLocalService getLayoutPageTemplateEntryLocalService() {
-		return layoutPageTemplateEntryLocalService;
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			LayoutPageTemplateEntryLocalService.class,
+			IdentifiableOSGiService.class, PersistedModelLocalService.class
+		};
 	}
 
-	/**
-	 * Sets the layout page template entry local service.
-	 *
-	 * @param layoutPageTemplateEntryLocalService the layout page template entry local service
-	 */
-	public void setLayoutPageTemplateEntryLocalService(
-		LayoutPageTemplateEntryLocalService layoutPageTemplateEntryLocalService) {
-		this.layoutPageTemplateEntryLocalService = layoutPageTemplateEntryLocalService;
-	}
-
-	/**
-	 * Returns the layout page template entry persistence.
-	 *
-	 * @return the layout page template entry persistence
-	 */
-	public LayoutPageTemplateEntryPersistence getLayoutPageTemplateEntryPersistence() {
-		return layoutPageTemplateEntryPersistence;
-	}
-
-	/**
-	 * Sets the layout page template entry persistence.
-	 *
-	 * @param layoutPageTemplateEntryPersistence the layout page template entry persistence
-	 */
-	public void setLayoutPageTemplateEntryPersistence(
-		LayoutPageTemplateEntryPersistence layoutPageTemplateEntryPersistence) {
-		this.layoutPageTemplateEntryPersistence = layoutPageTemplateEntryPersistence;
-	}
-
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
-		return counterLocalService;
-	}
-
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
-		this.counterLocalService = counterLocalService;
-	}
-
-	/**
-	 * Returns the class name local service.
-	 *
-	 * @return the class name local service
-	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService getClassNameLocalService() {
-		return classNameLocalService;
-	}
-
-	/**
-	 * Sets the class name local service.
-	 *
-	 * @param classNameLocalService the class name local service
-	 */
-	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService) {
-		this.classNameLocalService = classNameLocalService;
-	}
-
-	/**
-	 * Returns the class name persistence.
-	 *
-	 * @return the class name persistence
-	 */
-	public ClassNamePersistence getClassNamePersistence() {
-		return classNamePersistence;
-	}
-
-	/**
-	 * Sets the class name persistence.
-	 *
-	 * @param classNamePersistence the class name persistence
-	 */
-	public void setClassNamePersistence(
-		ClassNamePersistence classNamePersistence) {
-		this.classNamePersistence = classNamePersistence;
-	}
-
-	/**
-	 * Returns the resource local service.
-	 *
-	 * @return the resource local service
-	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService getResourceLocalService() {
-		return resourceLocalService;
-	}
-
-	/**
-	 * Sets the resource local service.
-	 *
-	 * @param resourceLocalService the resource local service
-	 */
-	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService) {
-		this.resourceLocalService = resourceLocalService;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService getUserLocalService() {
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.layout.page.template.model.LayoutPageTemplateEntry",
-			layoutPageTemplateEntryLocalService);
-	}
-
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.layout.page.template.model.LayoutPageTemplateEntry");
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		layoutPageTemplateEntryLocalService =
+			(LayoutPageTemplateEntryLocalService)aopProxy;
 	}
 
 	/**
@@ -705,39 +657,53 @@ public abstract class LayoutPageTemplateEntryLocalServiceBaseImpl
 	 */
 	protected void runSQL(String sql) {
 		try {
-			DataSource dataSource = layoutPageTemplateEntryPersistence.getDataSource();
+			DataSource dataSource =
+				layoutPageTemplateEntryPersistence.getDataSource();
 
 			DB db = DBManagerUtil.getDB();
 
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = LayoutPageTemplateEntryLocalService.class)
-	protected LayoutPageTemplateEntryLocalService layoutPageTemplateEntryLocalService;
-	@BeanReference(type = LayoutPageTemplateEntryPersistence.class)
-	protected LayoutPageTemplateEntryPersistence layoutPageTemplateEntryPersistence;
-	@ServiceReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ClassNameLocalService.class)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService;
-	@ServiceReference(type = ClassNamePersistence.class)
-	protected ClassNamePersistence classNamePersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ResourceLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.UserLocalService.class)
-	protected com.liferay.portal.kernel.service.UserLocalService userLocalService;
-	@ServiceReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+	protected LayoutPageTemplateEntryLocalService
+		layoutPageTemplateEntryLocalService;
+
+	@Reference
+	protected LayoutPageTemplateEntryPersistence
+		layoutPageTemplateEntryPersistence;
+
+	@Reference
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.ClassNameLocalService
+		classNameLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.LayoutLocalService
+		layoutLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.LayoutSetLocalService
+		layoutSetLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.ResourceLocalService
+		resourceLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.UserLocalService
+		userLocalService;
+
 }

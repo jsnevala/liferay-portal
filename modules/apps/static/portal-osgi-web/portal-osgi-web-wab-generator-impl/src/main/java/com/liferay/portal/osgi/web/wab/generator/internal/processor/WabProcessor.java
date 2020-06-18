@@ -14,18 +14,22 @@
 
 package com.liferay.portal.osgi.web.wab.generator.internal.processor;
 
+import aQute.bnd.cdi.Discover;
 import aQute.bnd.component.DSAnnotations;
 import aQute.bnd.header.Attrs;
 import aQute.bnd.header.Parameters;
+import aQute.bnd.make.component.ServiceComponent;
 import aQute.bnd.osgi.Analyzer;
 import aQute.bnd.osgi.Builder;
 import aQute.bnd.osgi.Constants;
-import aQute.bnd.osgi.Descriptors;
 import aQute.bnd.osgi.FileResource;
 import aQute.bnd.osgi.Jar;
 import aQute.bnd.osgi.Packages;
 import aQute.bnd.osgi.Resource;
+import aQute.bnd.service.verifier.VerifierPlugin;
 import aQute.bnd.version.Version;
+
+import aQute.lib.filter.Filter;
 
 import com.liferay.ant.bnd.jsp.JspAnalyzerPlugin;
 import com.liferay.petra.string.StringBundler;
@@ -40,9 +44,12 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.plugin.PluginPackage;
 import com.liferay.portal.kernel.servlet.PortalClassLoaderFilter;
 import com.liferay.portal.kernel.servlet.PortalClassLoaderServlet;
+import com.liferay.portal.kernel.util.ConcurrentHashMapBuilder;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -73,16 +80,16 @@ import java.nio.file.Path;
 import java.text.Format;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.regex.Matcher;
@@ -118,8 +125,8 @@ public class WabProcessor {
 				outputFile = transformToOSGiBundle(jar);
 			}
 		}
-		catch (Exception e) {
-			ReflectionUtil.throwException(e);
+		catch (Exception exception) {
+			ReflectionUtil.throwException(exception);
 		}
 
 		if (PropsValues.MODULE_FRAMEWORK_WEB_GENERATOR_GENERATED_WABS_STORE) {
@@ -143,10 +150,8 @@ public class WabProcessor {
 	}
 
 	protected File autoDeploy() {
-		String webContextpath = getWebContextPath();
-
 		AutoDeploymentContext autoDeploymentContext =
-			buildAutoDeploymentContext(webContextpath);
+			buildAutoDeploymentContext(getWebContextPath());
 
 		executeAutoDeployers(autoDeploymentContext);
 
@@ -195,8 +200,8 @@ public class WabProcessor {
 				try (Jar jar = new Jar(file)) {
 					jar.expand(deployDir);
 				}
-				catch (Exception e) {
-					ReflectionUtil.throwException(e);
+				catch (Exception exception) {
+					ReflectionUtil.throwException(exception);
 				}
 			}
 		}
@@ -216,6 +221,8 @@ public class WabProcessor {
 		autoDeploymentContext.setFile(_file);
 
 		if (_file.isDirectory()) {
+			autoDeploymentContext.setDestDir(_file.getAbsolutePath());
+
 			return autoDeploymentContext;
 		}
 
@@ -244,8 +251,8 @@ public class WabProcessor {
 
 			autoDeployListener.deploy(autoDeploymentContext);
 		}
-		catch (AutoDeployException ade) {
-			throw new RuntimeException(ade);
+		catch (AutoDeployException autoDeployException) {
+			throw new RuntimeException(autoDeployException);
 		}
 		finally {
 			DependencyManagementThreadLocal.setEnabled(enabled);
@@ -258,8 +265,8 @@ public class WabProcessor {
 		try {
 			FileUtil.write(file, document.formattedString("  "));
 		}
-		catch (Exception e) {
-			throw new IOException(e);
+		catch (Exception exception) {
+			throw new IOException(exception);
 		}
 	}
 
@@ -276,8 +283,8 @@ public class WabProcessor {
 					deployableAutoDeployListeners.add(autoDeployListener);
 				}
 			}
-			catch (AutoDeployException ade) {
-				throw new RuntimeException(ade);
+			catch (AutoDeployException autoDeployException) {
+				throw new RuntimeException(autoDeployException);
 			}
 		}
 
@@ -319,7 +326,7 @@ public class WabProcessor {
 		try {
 			return PropertiesUtil.load(FileUtil.read(file));
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			return new Properties();
 		}
 	}
@@ -341,6 +348,84 @@ public class WabProcessor {
 		return webContextpath;
 	}
 
+	protected void processBeans(Builder analyzer) throws IOException {
+		String beansXMLFile = "WEB-INF/beans.xml";
+
+		File file = new File(_pluginDir, beansXMLFile);
+
+		if (!file.exists()) {
+			beansXMLFile = "WEB-INF/classes/META-INF/beans.xml";
+
+			file = new File(_pluginDir, beansXMLFile);
+		}
+
+		if (!file.exists()) {
+			return;
+		}
+
+		String finalBeansXMLFile = beansXMLFile;
+
+		Set<Object> plugins = analyzer.getPlugins();
+
+		plugins.add(
+			new VerifierPlugin() {
+
+				@Override
+				public void verify(Analyzer analyzer) throws Exception {
+					Parameters requireCapabilities = analyzer.parseHeader(
+						analyzer.getProperty(Constants.REQUIRE_CAPABILITY));
+
+					Map<String, Object> arguments =
+						HashMapBuilder.<String, Object>put(
+							"osgi.extender", "osgi.cdi"
+						).put(
+							"version", new Version(1)
+						).build();
+
+					for (Map.Entry<String, Attrs> entry :
+							requireCapabilities.entrySet()) {
+
+						String namespace = entry.getKey();
+
+						Attrs attrs = entry.getValue();
+
+						String filterString = attrs.get(
+							Constants.FILTER_DIRECTIVE);
+
+						Filter filter = new Filter(filterString);
+
+						if (Objects.equals(namespace, "osgi.extender") &&
+							filter.matchMap(arguments)) {
+
+							attrs.putTyped(
+								"descriptor", Arrays.asList(finalBeansXMLFile));
+						}
+					}
+
+					analyzer.setProperty(
+						Constants.REQUIRE_CAPABILITY,
+						requireCapabilities.toString());
+				}
+
+			});
+
+		String cdiInstruction = analyzer.getProperty(Constants.CDIANNOTATIONS);
+
+		if (cdiInstruction != null) {
+			return;
+		}
+
+		Document document = readDocument(file);
+
+		Discover discover = _findDiscoveryMode(document);
+
+		analyzer.setProperty(
+			Constants.CDIANNOTATIONS, "*;discover=" + discover);
+
+		appendProperty(
+			analyzer, Constants.REQUIRE_CAPABILITY, _CDI_REQUIREMENTS);
+	}
+
 	protected void processBundleClasspath(
 			Analyzer analyzer, Properties pluginPackageProperties)
 		throws IOException {
@@ -350,10 +435,9 @@ public class WabProcessor {
 
 		// Class path order is critical
 
-		Map<String, File> classPath = new LinkedHashMap<>();
-
-		classPath.put(
-			"WEB-INF/classes", new File(_pluginDir, "WEB-INF/classes"));
+		Map<String, File> classPath = LinkedHashMapBuilder.<String, File>put(
+			"WEB-INF/classes", new File(_pluginDir, "WEB-INF/classes")
+		).build();
 
 		appendProperty(analyzer, Constants.BUNDLE_CLASSPATH, "WEB-INF/classes");
 
@@ -420,7 +504,8 @@ public class WabProcessor {
 				_bundleVersion = sb.toString();
 			}
 			else {
-				_bundleVersion = "0.0.0." + _bundleVersion.replace(".", "_");
+				_bundleVersion =
+					"0.0.0." + StringUtil.replace(_bundleVersion, '.', '_');
 			}
 		}
 
@@ -438,9 +523,7 @@ public class WabProcessor {
 
 		String packageName = value.substring(0, index);
 
-		Descriptors.PackageRef packageRef = analyzer.getPackageRef(packageName);
-
-		packages.put(packageRef, new Attrs());
+		packages.put(analyzer.getPackageRef(packageName), new Attrs());
 	}
 
 	protected void processDeclarativeReferences(Analyzer analyzer)
@@ -581,12 +664,11 @@ public class WabProcessor {
 				Resource resource = entry.getValue();
 
 				if (resource instanceof FileResource) {
-					try (FileResource fileResource = (FileResource)resource) {
-						classPath.put(path, fileResource.getFile());
+					FileResource fileResource = (FileResource)resource;
 
-						appendProperty(
-							analyzer, Constants.BUNDLE_CLASSPATH, path);
-					}
+					classPath.put(path, fileResource.getFile());
+
+					appendProperty(analyzer, Constants.BUNDLE_CLASSPATH, path);
 				}
 			}
 			else if (_ignoredResourcePaths.contains(path)) {
@@ -774,7 +856,7 @@ public class WabProcessor {
 				processClass(analyzer, value);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 
 			// Ignore this case
 
@@ -866,8 +948,8 @@ public class WabProcessor {
 			_importPackageParameters.add(
 				"com.liferay.portal.osgi.web.wab.generator", _optionalAttrs);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -1044,82 +1126,99 @@ public class WabProcessor {
 
 			return UnsecureSAXReaderUtil.read(content);
 		}
-		catch (Exception de) {
+		catch (Exception exception) {
 			return SAXReaderUtil.createDocument();
 		}
 	}
 
 	protected File transformToOSGiBundle(Jar jar) throws IOException {
-		Builder analyzer = new Builder();
+		try (Builder analyzer = new Builder()) {
+			analyzer.setBase(_pluginDir);
+			analyzer.setJar(jar);
+			analyzer.setProperty("-jsp", "*.jsp,*.jspf");
+			analyzer.setProperty("Web-ContextPath", getWebContextPath());
 
-		analyzer.setBase(_pluginDir);
-		analyzer.setJar(jar);
-		analyzer.setProperty("-jsp", "*.jsp,*.jspf");
-		analyzer.setProperty("Web-ContextPath", getWebContextPath());
+			List<Object> disabledPlugins = new ArrayList<>();
+			Properties properties = PropsUtil.getProperties(
+				"module.framework.web.generator.bnd.plugin.enabled[", true);
 
-		Set<Object> plugins = analyzer.getPlugins();
+			Set<Object> plugins = analyzer.getPlugins();
 
-		Iterator<Object> iterator = plugins.iterator();
+			for (Object plugin : plugins) {
+				if (plugin instanceof DSAnnotations ||
+					plugin instanceof ServiceComponent) {
 
-		while (iterator.hasNext()) {
-			Object plugin = iterator.next();
+					disabledPlugins.add(plugin);
 
-			if (plugin instanceof DSAnnotations) {
-				iterator.remove();
+					continue;
+				}
+
+				Class<?> clazz = plugin.getClass();
+
+				String name = clazz.getName() + "]";
+
+				if (!GetterUtil.getBoolean(
+						properties.getProperty(name), true)) {
+
+					disabledPlugins.add(plugin);
+				}
 			}
-		}
 
-		plugins.add(new JspAnalyzerPlugin());
+			plugins.removeAll(disabledPlugins);
 
-		Properties pluginPackageProperties = getPluginPackageProperties();
+			plugins.add(new JspAnalyzerPlugin());
 
-		if (pluginPackageProperties.containsKey("portal-dependency-jars") &&
-			_log.isWarnEnabled()) {
+			Properties pluginPackageProperties = getPluginPackageProperties();
 
-			_log.warn(
-				"The property \"portal-dependency-jars\" is deprecated. " +
-					"Specified JARs may not be included in the class path.");
-		}
+			if (pluginPackageProperties.containsKey("portal-dependency-jars") &&
+				_log.isWarnEnabled()) {
 
-		processBundleVersion(analyzer);
-		processBundleClasspath(analyzer, pluginPackageProperties);
-		processBundleSymbolicName(analyzer);
-		processExtraHeaders(analyzer);
-		processPluginPackagePropertiesExportImportPackages(
-			pluginPackageProperties);
+				_log.warn(
+					"The property \"portal-dependency-jars\" is deprecated. " +
+						"Specified JARs may not be included in the class " +
+							"path.");
+			}
 
-		processBundleManifestVersion(analyzer);
+			processBundleVersion(analyzer);
+			processBundleClasspath(analyzer, pluginPackageProperties);
+			processBundleSymbolicName(analyzer);
+			processExtraHeaders(analyzer);
+			processPluginPackagePropertiesExportImportPackages(
+				pluginPackageProperties);
 
-		processLiferayPortletXML();
-		processWebXML("WEB-INF/web.xml");
-		processWebXML("WEB-INF/liferay-web.xml");
+			processBundleManifestVersion(analyzer);
 
-		processDeclarativeReferences(analyzer);
+			processLiferayPortletXML();
+			processWebXML("WEB-INF/web.xml");
+			processWebXML("WEB-INF/liferay-web.xml");
 
-		processExtraRequirements();
+			processDeclarativeReferences(analyzer);
 
-		processPackageNames(analyzer);
+			processExtraRequirements();
 
-		processRequiredDeploymentContexts(analyzer);
+			processPackageNames(analyzer);
 
-		_processExcludedJSPs(analyzer);
+			processRequiredDeploymentContexts(analyzer);
 
-		analyzer.setProperties(pluginPackageProperties);
+			_processExcludedJSPs(analyzer);
 
-		try {
-			jar = analyzer.build();
+			analyzer.setProperties(pluginPackageProperties);
 
-			File outputFile = analyzer.getOutputFile(null);
+			processBeans(analyzer);
 
-			jar.write(outputFile);
+			try {
+				jar = analyzer.build();
 
-			return outputFile;
-		}
-		catch (Exception e) {
-			throw new IOException("Unable to calculate the manifest", e);
-		}
-		finally {
-			analyzer.close();
+				File outputFile = analyzer.getOutputFile(null);
+
+				jar.write(outputFile);
+
+				return outputFile;
+			}
+			catch (Exception exception) {
+				throw new IOException(
+					"Unable to calculate the manifest", exception);
+			}
 		}
 	}
 
@@ -1150,8 +1249,8 @@ public class WabProcessor {
 		try (Jar jar = new Jar(pluginDir)) {
 			jar.write(new File(dir, sb.toString()));
 		}
-		catch (Exception e) {
-			_log.error("Unable to write JAR file for " + pluginDir, e);
+		catch (Exception exception) {
+			_log.error("Unable to write JAR file for " + pluginDir, exception);
 		}
 	}
 
@@ -1180,6 +1279,42 @@ public class WabProcessor {
 		sb.append(FileUtil.getExtension(name));
 
 		FileUtil.copyFile(file, new File(dir, sb.toString()));
+	}
+
+	private Discover _findDiscoveryMode(Document document) {
+		if (!document.hasContent()) {
+			return Discover.all;
+		}
+
+		Element rootElement = document.getRootElement();
+
+		// bean-discovery-mode="all" version="1.1"
+
+		XPath xPath = SAXReaderUtil.createXPath(
+			"/cdi-beans:beans/@version", _xsds);
+
+		Node versionNode = xPath.selectSingleNode(rootElement);
+
+		if (versionNode == null) {
+			return Discover.all;
+		}
+
+		Version version = Version.valueOf(versionNode.getStringValue());
+
+		if (_CDI_ARCHIVE_VERSION.compareTo(version) <= 0) {
+			xPath = SAXReaderUtil.createXPath(
+				"/cdi-beans:beans/@bean-discovery-mode", _xsds);
+
+			Node beanDiscoveryModeNode = xPath.selectSingleNode(rootElement);
+
+			if (beanDiscoveryModeNode == null) {
+				return Discover.annotated;
+			}
+
+			return Discover.valueOf(beanDiscoveryModeNode.getStringValue());
+		}
+
+		return Discover.all;
 	}
 
 	private void _processExcludedJSPs(Analyzer analyzer) {
@@ -1222,8 +1357,17 @@ public class WabProcessor {
 			PropsUtil.get(
 				"module.framework.web.generator.autodeployed.wars.store"));
 
-	private static final String[] _KNOWN_PROPERTY_KEYS =
-		{"jdbc.driverClassName"};
+	private static final Version _CDI_ARCHIVE_VERSION = new Version(1, 1, 0);
+
+	private static final String _CDI_REQUIREMENTS = StringBundler.concat(
+		"osgi.cdi.extension;filter:='(osgi.cdi.extension=aries.cdi.http)',",
+		"osgi.cdi.extension;filter:='(osgi.cdi.extension=aries.cdi.el.jsp)',",
+		"osgi.cdi.extension;filter:='(osgi.cdi.extension=",
+		"com.liferay.bean.portlet.cdi.extension)'");
+
+	private static final String[] _KNOWN_PROPERTY_KEYS = {
+		"jdbc.driverClassName"
+	};
 
 	private static final String _XPATHS_HBM = StringUtil.merge(
 		new String[] {
@@ -1296,36 +1440,48 @@ public class WabProcessor {
 	private static final Pattern _versionMavenPattern = Pattern.compile(
 		"(\\d{1,9})(\\.(\\d{1,9})(\\.(\\d{1,9})(-([-_\\da-zA-Z]+))?)?)?");
 	private static final Map<String, String> _xsds =
-		new ConcurrentHashMap<String, String>() {
-			{
-				put("aop", "http://www.springframework.org/schema/aop");
-				put("beans", "http://www.springframework.org/schema/beans");
-				put("blueprint", "http://www.osgi.org/xmlns/blueprint/v1.0.0");
-				put("context", "http://www.springframework.org/schema/context");
-				put(
-					"gemini-blueprint",
-					"http://www.eclipse.org/gemini/blueprint/schema/blueprint");
-				put("j2ee", "http://java.sun.com/xml/ns/j2ee");
-				put("javaee", "http://java.sun.com/xml/ns/javaee");
-				put("jee", "http://www.springframework.org/schema/jee");
-				put("jms", "http://www.springframework.org/schema/jms");
-				put("lang", "http://www.springframework.org/schema/lang");
-				put("osgi", "http://www.springframework.org/schema/osgi");
-				put(
-					"osgi-compendium",
-					"http://www.springframework.org/schema/osgi-compendium");
-				put(
-					"portlet2",
-					"http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd");
-				put("tool", "http://www.springframework.org/schema/tool");
-				put("tx", "http://www.springframework.org/schema/tx");
-				put("util", "http://www.springframework.org/schema/util");
-				put(
-					"webflow-config",
-					"http://www.springframework.org/schema/webflow-config");
-				put("xsl", "http://www.w3.org/1999/XSL/Transform");
-			}
-		};
+		ConcurrentHashMapBuilder.put(
+			"aop", "http://www.springframework.org/schema/aop"
+		).put(
+			"beans", "http://www.springframework.org/schema/beans"
+		).put(
+			"blueprint", "http://www.osgi.org/xmlns/blueprint/v1.0.0"
+		).put(
+			"cdi-beans", "http://xmlns.jcp.org/xml/ns/javaee"
+		).put(
+			"context", "http://www.springframework.org/schema/context"
+		).put(
+			"gemini-blueprint",
+			"http://www.eclipse.org/gemini/blueprint/schema/blueprint"
+		).put(
+			"j2ee", "http://java.sun.com/xml/ns/j2ee"
+		).put(
+			"javaee", "http://java.sun.com/xml/ns/javaee"
+		).put(
+			"jee", "http://www.springframework.org/schema/jee"
+		).put(
+			"jms", "http://www.springframework.org/schema/jms"
+		).put(
+			"lang", "http://www.springframework.org/schema/lang"
+		).put(
+			"osgi", "http://www.springframework.org/schema/osgi"
+		).put(
+			"osgi-compendium",
+			"http://www.springframework.org/schema/osgi-compendium"
+		).put(
+			"portlet2", "http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd"
+		).put(
+			"tool", "http://www.springframework.org/schema/tool"
+		).put(
+			"tx", "http://www.springframework.org/schema/tx"
+		).put(
+			"util", "http://www.springframework.org/schema/util"
+		).put(
+			"webflow-config",
+			"http://www.springframework.org/schema/webflow-config"
+		).put(
+			"xsl", "http://www.w3.org/1999/XSL/Transform"
+		).build();
 
 	private String _bundleVersion;
 	private String _context;

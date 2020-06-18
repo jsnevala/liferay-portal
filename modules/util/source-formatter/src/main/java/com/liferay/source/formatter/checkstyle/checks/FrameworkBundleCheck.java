@@ -14,8 +14,6 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
-import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
-
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
@@ -33,19 +31,19 @@ public class FrameworkBundleCheck extends BaseCheck {
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		DetailAST parentAST = detailAST.getParent();
+		DetailAST parentDetailAST = detailAST.getParent();
 
-		if (parentAST != null) {
+		if (parentDetailAST != null) {
 			return;
 		}
 
-		List<String> importNames = DetailASTUtil.getImportNames(detailAST);
+		List<String> importNames = getImportNames(detailAST);
 
 		if (!importNames.contains("org.osgi.framework.Bundle")) {
 			return;
 		}
 
-		List<DetailAST> detailASTList = DetailASTUtil.getAllChildTokens(
+		List<DetailAST> detailASTList = getAllChildTokens(
 			detailAST, true, TokenTypes.CTOR_DEF, TokenTypes.METHOD_DEF);
 
 		for (DetailAST curDetailAST : detailASTList) {
@@ -54,26 +52,26 @@ public class FrameworkBundleCheck extends BaseCheck {
 	}
 
 	private void _checkGetHeadersMethodCall(DetailAST detailAST) {
-		List<DetailAST> methodCallASTList = DetailASTUtil.getMethodCalls(
+		List<DetailAST> methodCallDetailASTList = getMethodCalls(
 			detailAST, "getHeaders");
 
-		for (DetailAST methodCallAST : methodCallASTList) {
-			DetailAST elistAST = methodCallAST.findFirstToken(TokenTypes.ELIST);
+		for (DetailAST methodCallDetailAST : methodCallDetailASTList) {
+			DetailAST elistDetailAST = methodCallDetailAST.findFirstToken(
+				TokenTypes.ELIST);
 
-			List<DetailAST> exprASTList = DetailASTUtil.getAllChildTokens(
-				elistAST, false, TokenTypes.EXPR);
+			List<DetailAST> exprDetailASTList = getAllChildTokens(
+				elistDetailAST, false, TokenTypes.EXPR);
 
-			if (!exprASTList.isEmpty()) {
+			if (!exprDetailASTList.isEmpty()) {
 				continue;
 			}
 
-			String variableName = DetailASTUtil.getVariableName(methodCallAST);
-
-			String variableTypeName = DetailASTUtil.getVariableTypeName(
-				methodCallAST, variableName, false);
+			String variableTypeName = getVariableTypeName(
+				methodCallDetailAST, getVariableName(methodCallDetailAST),
+				false);
 
 			if (variableTypeName.equals("Bundle")) {
-				log(methodCallAST, _MSG_USE_BUNDLE_GET_HEADERS);
+				log(methodCallDetailAST, _MSG_USE_BUNDLE_GET_HEADERS);
 			}
 		}
 	}

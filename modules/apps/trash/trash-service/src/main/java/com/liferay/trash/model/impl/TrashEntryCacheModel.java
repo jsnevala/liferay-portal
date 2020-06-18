@@ -14,13 +14,10 @@
 
 package com.liferay.trash.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.trash.model.TrashEntry;
 
 import java.io.Externalizable;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing TrashEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see TrashEntry
  * @generated
  */
-@ProviderType
-public class TrashEntryCacheModel implements CacheModel<TrashEntry>,
-	Externalizable {
+public class TrashEntryCacheModel
+	implements CacheModel<TrashEntry>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -52,7 +48,9 @@ public class TrashEntryCacheModel implements CacheModel<TrashEntry>,
 
 		TrashEntryCacheModel trashEntryCacheModel = (TrashEntryCacheModel)obj;
 
-		if (entryId == trashEntryCacheModel.entryId) {
+		if ((entryId == trashEntryCacheModel.entryId) &&
+			(mvccVersion == trashEntryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +59,28 @@ public class TrashEntryCacheModel implements CacheModel<TrashEntry>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, entryId);
+		int hashCode = HashUtil.hash(0, entryId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(23);
+		StringBundler sb = new StringBundler(25);
 
-		sb.append("{entryId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", entryId=");
 		sb.append(entryId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -99,6 +111,7 @@ public class TrashEntryCacheModel implements CacheModel<TrashEntry>,
 	public TrashEntry toEntityModel() {
 		TrashEntryImpl trashEntryImpl = new TrashEntryImpl();
 
+		trashEntryImpl.setMvccVersion(mvccVersion);
 		trashEntryImpl.setEntryId(entryId);
 		trashEntryImpl.setGroupId(groupId);
 		trashEntryImpl.setCompanyId(companyId);
@@ -137,7 +150,11 @@ public class TrashEntryCacheModel implements CacheModel<TrashEntry>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
+
 		entryId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -153,14 +170,15 @@ public class TrashEntryCacheModel implements CacheModel<TrashEntry>,
 		classPK = objectInput.readLong();
 
 		systemEventSetKey = objectInput.readLong();
-		typeSettings = objectInput.readUTF();
+		typeSettings = (String)objectInput.readObject();
 
 		status = objectInput.readInt();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		objectOutput.writeLong(entryId);
 
 		objectOutput.writeLong(groupId);
@@ -185,15 +203,16 @@ public class TrashEntryCacheModel implements CacheModel<TrashEntry>,
 		objectOutput.writeLong(systemEventSetKey);
 
 		if (typeSettings == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(typeSettings);
+			objectOutput.writeObject(typeSettings);
 		}
 
 		objectOutput.writeInt(status);
 	}
 
+	public long mvccVersion;
 	public long entryId;
 	public long groupId;
 	public long companyId;
@@ -205,4 +224,5 @@ public class TrashEntryCacheModel implements CacheModel<TrashEntry>,
 	public long systemEventSetKey;
 	public String typeSettings;
 	public int status;
+
 }

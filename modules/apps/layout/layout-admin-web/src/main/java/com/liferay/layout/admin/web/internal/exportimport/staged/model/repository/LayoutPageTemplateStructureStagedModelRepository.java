@@ -61,8 +61,7 @@ public class LayoutPageTemplateStructureStagedModelRepository
 			addLayoutPageTemplateStructure(
 				userId, serviceContext.getScopeGroupId(),
 				layoutPageTemplateStructure.getClassNameId(),
-				layoutPageTemplateStructure.getClassPK(),
-				layoutPageTemplateStructure.getData(), serviceContext);
+				layoutPageTemplateStructure.getClassPK(), null, serviceContext);
 	}
 
 	@Override
@@ -96,8 +95,9 @@ public class LayoutPageTemplateStructureStagedModelRepository
 	public LayoutPageTemplateStructure fetchMissingReference(
 		String uuid, long groupId) {
 
-		return (LayoutPageTemplateStructure)_stagedModelRepositoryHelper.
-			fetchMissingReference(uuid, groupId, this);
+		return (LayoutPageTemplateStructure)
+			_stagedModelRepositoryHelper.fetchMissingReference(
+				uuid, groupId, this);
 	}
 
 	@Override

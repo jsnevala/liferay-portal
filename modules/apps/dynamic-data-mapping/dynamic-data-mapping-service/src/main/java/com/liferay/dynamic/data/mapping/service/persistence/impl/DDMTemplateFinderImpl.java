@@ -31,14 +31,16 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.Iterator;
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eduardo Lundgren
@@ -46,6 +48,7 @@ import java.util.List;
  * @author Marcellus Tavares
  * @author Juan Fernández
  */
+@Component(service = DDMTemplateFinder.class)
 public class DDMTemplateFinderImpl
 	extends DDMTemplateFinderBaseImpl implements DDMTemplateFinder {
 
@@ -120,7 +123,7 @@ public class DDMTemplateFinderImpl
 		long groupId, long structureClassNameId, int status) {
 
 		long[] groupIds = {groupId};
-		long classNameId = PortalUtil.getClassNameId(DDMStructure.class);
+		long classNameId = _portal.getClassNameId(DDMStructure.class);
 
 		return doCountByG_C_SC_S(
 			groupIds, classNameId, structureClassNameId, status, false);
@@ -133,6 +136,19 @@ public class DDMTemplateFinderImpl
 
 		long[] classNameIds = {classNameId};
 		long[] classPKs = {classPK};
+		String[] types = _customSQL.keywords(type, false);
+		String[] modes = _customSQL.keywords(mode, false);
+
+		return doCountByC_G_C_C_R_N_D_T_M_L_S(
+			companyId, groupIds, classNameIds, classPKs, resourceClassNameId,
+			null, null, types, modes, null, status, true, false);
+	}
+
+	@Override
+	public int countByC_G_C_C_R_T_M_S(
+		long companyId, long[] groupIds, long[] classNameIds, long[] classPKs,
+		long resourceClassNameId, String type, String mode, int status) {
+
 		String[] types = _customSQL.keywords(type, false);
 		String[] modes = _customSQL.keywords(mode, false);
 
@@ -264,7 +280,7 @@ public class DDMTemplateFinderImpl
 		long groupId, long structureClassNameId, int status) {
 
 		long[] groupIds = {groupId};
-		long classNameId = PortalUtil.getClassNameId(DDMStructure.class);
+		long classNameId = _portal.getClassNameId(DDMStructure.class);
 
 		return doCountByG_C_SC_S(
 			groupIds, classNameId, structureClassNameId, status, true);
@@ -274,7 +290,7 @@ public class DDMTemplateFinderImpl
 	public int filterCountByG_SC_S(
 		long[] groupIds, long structureClassNameId, int status) {
 
-		long classNameId = PortalUtil.getClassNameId(DDMStructure.class);
+		long classNameId = _portal.getClassNameId(DDMStructure.class);
 
 		return doCountByG_C_SC_S(
 			groupIds, classNameId, structureClassNameId, status, true);
@@ -287,6 +303,19 @@ public class DDMTemplateFinderImpl
 
 		long[] classNameIds = {classNameId};
 		long[] classPKs = {classPK};
+		String[] types = _customSQL.keywords(type, false);
+		String[] modes = _customSQL.keywords(mode, false);
+
+		return doCountByC_G_C_C_R_N_D_T_M_L_S(
+			companyId, groupIds, classNameIds, classPKs, resourceClassNameId,
+			null, null, types, modes, null, status, true, true);
+	}
+
+	@Override
+	public int filterCountByC_G_C_C_R_T_M_S(
+		long companyId, long[] groupIds, long[] classNameIds, long[] classPKs,
+		long resourceClassNameId, String type, String mode, int status) {
+
 		String[] types = _customSQL.keywords(type, false);
 		String[] modes = _customSQL.keywords(mode, false);
 
@@ -422,7 +451,7 @@ public class DDMTemplateFinderImpl
 		OrderByComparator<DDMTemplate> orderByComparator) {
 
 		long[] groupIds = {groupId};
-		long classNameId = PortalUtil.getClassNameId(DDMStructure.class);
+		long classNameId = _portal.getClassNameId(DDMStructure.class);
 
 		return doFindByG_C_SC_S(
 			groupIds, classNameId, structureClassNameId, status, start, end,
@@ -434,7 +463,7 @@ public class DDMTemplateFinderImpl
 		long[] groupIds, long structureClassNameId, int status, int start,
 		int end, OrderByComparator<DDMTemplate> orderByComparator) {
 
-		long classNameId = PortalUtil.getClassNameId(DDMStructure.class);
+		long classNameId = _portal.getClassNameId(DDMStructure.class);
 
 		return doFindByG_C_SC_S(
 			groupIds, classNameId, structureClassNameId, status, start, end,
@@ -449,6 +478,21 @@ public class DDMTemplateFinderImpl
 
 		long[] classNameIds = {classNameId};
 		long[] classPKs = {classPK};
+		String[] types = _customSQL.keywords(type, false);
+		String[] modes = _customSQL.keywords(mode, false);
+
+		return doFindByC_G_C_C_R_N_D_T_M_L_S(
+			companyId, groupIds, classNameIds, classPKs, resourceClassNameId,
+			null, null, types, modes, null, status, true, start, end,
+			orderByComparator, true);
+	}
+
+	@Override
+	public List<DDMTemplate> filterFindByC_G_C_C_R_T_M_S(
+		long companyId, long[] groupIds, long[] classNameIds, long[] classPKs,
+		long resourceClassNameId, String type, String mode, int status,
+		int start, int end, OrderByComparator<DDMTemplate> orderByComparator) {
+
 		String[] types = _customSQL.keywords(type, false);
 		String[] modes = _customSQL.keywords(mode, false);
 
@@ -592,7 +636,7 @@ public class DDMTemplateFinderImpl
 		OrderByComparator<DDMTemplate> orderByComparator) {
 
 		long[] groupIds = {groupId};
-		long classNameId = PortalUtil.getClassNameId(DDMStructure.class);
+		long classNameId = _portal.getClassNameId(DDMStructure.class);
 
 		return doFindByG_C_SC_S(
 			groupIds, classNameId, structureClassNameId, status, start, end,
@@ -604,7 +648,7 @@ public class DDMTemplateFinderImpl
 		long[] groupIds, long structureClassNameId, int status, int start,
 		int end, OrderByComparator<DDMTemplate> orderByComparator) {
 
-		long classNameId = PortalUtil.getClassNameId(DDMStructure.class);
+		long classNameId = _portal.getClassNameId(DDMStructure.class);
 
 		return doFindByG_C_SC_S(
 			groupIds, classNameId, structureClassNameId, status, start, end,
@@ -619,6 +663,21 @@ public class DDMTemplateFinderImpl
 
 		long[] classNameIds = {classNameId};
 		long[] classPKs = {classPK};
+		String[] types = _customSQL.keywords(type, false);
+		String[] modes = _customSQL.keywords(mode, false);
+
+		return doFindByC_G_C_C_R_N_D_T_M_L_S(
+			companyId, groupIds, classNameIds, classPKs, resourceClassNameId,
+			null, null, types, modes, null, status, true, start, end,
+			orderByComparator, false);
+	}
+
+	@Override
+	public List<DDMTemplate> findByC_G_C_C_R_T_M_S(
+		long companyId, long[] groupIds, long[] classNameIds, long[] classPKs,
+		long resourceClassNameId, String type, String mode, int status,
+		int start, int end, OrderByComparator<DDMTemplate> orderByComparator) {
+
 		String[] types = _customSQL.keywords(type, false);
 		String[] modes = _customSQL.keywords(mode, false);
 
@@ -721,24 +780,24 @@ public class DDMTemplateFinderImpl
 				sql, "[$GROUP_ID$]", getGroupIds(groupIds));
 			sql = StringUtil.replace(sql, "[$STATUS$]", getStatus(status));
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (groupIds != null) {
-				qPos.add(groupIds);
+				queryPos.add(groupIds);
 			}
 
-			qPos.add(classNameId);
-			qPos.add(structureClassNameId);
+			queryPos.add(classNameId);
+			queryPos.add(structureClassNameId);
 
 			if (status != WorkflowConstants.STATUS_ANY) {
-				qPos.add(status);
+				queryPos.add(status);
 			}
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -750,8 +809,8 @@ public class DDMTemplateFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -807,38 +866,38 @@ public class DDMTemplateFinderImpl
 				sql, "DDMTemplate.language", StringPool.LIKE, true, languages);
 			sql = _customSQL.replaceAndOperator(sql, andOperator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (groupIds != null) {
-				qPos.add(groupIds);
+				queryPos.add(groupIds);
 			}
 
 			if (classNameIds != null) {
-				qPos.add(classNameIds);
+				queryPos.add(classNameIds);
 			}
 
 			if (classPKs != null) {
-				qPos.add(classPKs);
+				queryPos.add(classPKs);
 			}
 
-			qPos.add(resourceClassNameId);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
-			qPos.add(types, 2);
-			qPos.add(modes, 2);
-			qPos.add(languages, 2);
+			queryPos.add(resourceClassNameId);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
+			queryPos.add(types, 2);
+			queryPos.add(modes, 2);
+			queryPos.add(languages, 2);
 
 			if (status != WorkflowConstants.STATUS_ANY) {
-				qPos.add(status);
+				queryPos.add(status);
 			}
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -850,8 +909,8 @@ public class DDMTemplateFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -887,28 +946,28 @@ public class DDMTemplateFinderImpl
 				sql = _customSQL.replaceOrderBy(sql, orderByComparator);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("DDMTemplate", DDMTemplateImpl.class);
+			sqlQuery.addEntity("DDMTemplate", DDMTemplateImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (groupIds != null) {
-				qPos.add(groupIds);
+				queryPos.add(groupIds);
 			}
 
-			qPos.add(classNameId);
-			qPos.add(structureClassNameId);
+			queryPos.add(classNameId);
+			queryPos.add(structureClassNameId);
 
 			if (status != WorkflowConstants.STATUS_ANY) {
-				qPos.add(status);
+				queryPos.add(status);
 			}
 
 			return (List<DDMTemplate>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -970,42 +1029,42 @@ public class DDMTemplateFinderImpl
 				sql = _customSQL.replaceOrderBy(sql, orderByComparator);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("DDMTemplate", DDMTemplateImpl.class);
+			sqlQuery.addEntity("DDMTemplate", DDMTemplateImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (groupIds != null) {
-				qPos.add(groupIds);
+				queryPos.add(groupIds);
 			}
 
 			if (classNameIds != null) {
-				qPos.add(classNameIds);
+				queryPos.add(classNameIds);
 			}
 
 			if (classPKs != null) {
-				qPos.add(classPKs);
+				queryPos.add(classPKs);
 			}
 
-			qPos.add(resourceClassNameId);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
-			qPos.add(types, 2);
-			qPos.add(modes, 2);
-			qPos.add(languages, 2);
+			queryPos.add(resourceClassNameId);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
+			queryPos.add(types, 2);
+			queryPos.add(modes, 2);
+			queryPos.add(languages, 2);
 
 			if (status != WorkflowConstants.STATUS_ANY) {
-				qPos.add(status);
+				queryPos.add(status);
 			}
 
 			return (List<DDMTemplate>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1021,7 +1080,7 @@ public class DDMTemplateFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < classNameIds.length - 1; i++) {
+		for (int i = 0; i < (classNameIds.length - 1); i++) {
 			sb.append("classNameId = ? OR ");
 		}
 
@@ -1039,7 +1098,7 @@ public class DDMTemplateFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < classPKs.length - 1; i++) {
+		for (int i = 0; i < (classPKs.length - 1); i++) {
 			sb.append("classPK = ? OR ");
 		}
 
@@ -1057,7 +1116,7 @@ public class DDMTemplateFinderImpl
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
-		for (int i = 0; i < groupIds.length - 1; i++) {
+		for (int i = 0; i < (groupIds.length - 1); i++) {
 			sb.append("groupId = ? OR ");
 		}
 
@@ -1081,10 +1140,13 @@ public class DDMTemplateFinderImpl
 		return sb.toString();
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
-	@ServiceReference(type = DDMPermissionSupport.class)
+	@Reference
 	private DDMPermissionSupport _ddmPermissionSupport;
+
+	@Reference
+	private Portal _portal;
 
 }

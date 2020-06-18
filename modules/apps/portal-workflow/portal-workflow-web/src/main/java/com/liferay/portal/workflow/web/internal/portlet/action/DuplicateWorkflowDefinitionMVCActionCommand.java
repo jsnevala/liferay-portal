@@ -24,7 +24,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
-import com.liferay.portal.workflow.web.internal.constants.WorkflowPortletKeys;
+import com.liferay.portal.workflow.constants.WorkflowPortletKeys;
 
 import java.util.Locale;
 import java.util.Map;
@@ -49,6 +49,7 @@ import org.osgi.service.component.annotations.Component;
 public class DuplicateWorkflowDefinitionMVCActionCommand
 	extends DeployWorkflowDefinitionMVCActionCommand {
 
+	@Override
 	protected void addDefaultTitle(
 		ActionRequest actionRequest, Map<Locale, String> titleMap) {
 

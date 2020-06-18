@@ -30,15 +30,12 @@ import java.io.IOException;
 import java.io.StringReader;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -52,8 +49,8 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
  */
 @Component(
 	configurationPid = "com.liferay.oauth2.provider.scope.internal.configuration.BundlePrefixHandlerFactoryConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
-	property = "default=true", service = PrefixHandlerFactory.class
+	configurationPolicy = ConfigurationPolicy.REQUIRE,
+	service = PrefixHandlerFactory.class
 )
 public class PrefixHandlerFactoryImpl implements PrefixHandlerFactory {
 
@@ -116,14 +113,17 @@ public class PrefixHandlerFactoryImpl implements PrefixHandlerFactory {
 
 		_delimiter = bundlePrefixHandlerFactoryConfiguration.delimiter();
 
-		Stream<String> stream = Arrays.stream(
-			bundlePrefixHandlerFactoryConfiguration.excludedScopes());
+		List<String> excludedInputs = new ArrayList<>();
 
-		_excludedInputs = stream.filter(
-			e -> !Validator.isBlank(e)
-		).collect(
-			Collectors.toList()
-		);
+		for (String excludedScope :
+				bundlePrefixHandlerFactoryConfiguration.excludedScopes()) {
+
+			if (!Validator.isBlank(excludedScope)) {
+				excludedInputs.add(excludedScope);
+			}
+		}
+
+		_excludedInputs = excludedInputs;
 
 		_includeBundleSymbolicName =
 			bundlePrefixHandlerFactoryConfiguration.includeBundleSymbolicName();
@@ -156,25 +156,24 @@ public class PrefixHandlerFactoryImpl implements PrefixHandlerFactory {
 		if (indexOfSpace == -1) {
 			return serviceProperty;
 		}
-		else {
-			String defaultsKey = serviceProperty.substring(0, indexOfSpace);
 
-			Properties modifiers = new Properties();
+		String defaultsKey = serviceProperty.substring(0, indexOfSpace);
 
-			try {
-				modifiers.load(
-					new StringReader(serviceProperty.substring(indexOfSpace)));
-			}
-			catch (IOException ioe) {
-				throw new IllegalArgumentException(ioe);
-			}
+		Properties modifiers = new Properties();
 
-			_defaults.put(
-				defaultsKey,
-				GetterUtil.getString(modifiers.getProperty("default")));
-
-			return defaultsKey;
+		try {
+			modifiers.load(
+				new StringReader(serviceProperty.substring(indexOfSpace)));
 		}
+		catch (IOException ioException) {
+			throw new IllegalArgumentException(ioException);
+		}
+
+		_defaults.put(
+			defaultsKey,
+			GetterUtil.getString(modifiers.getProperty("default")));
+
+		return defaultsKey;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

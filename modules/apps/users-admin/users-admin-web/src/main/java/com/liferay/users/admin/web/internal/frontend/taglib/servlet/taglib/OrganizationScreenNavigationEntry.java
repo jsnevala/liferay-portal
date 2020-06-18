@@ -14,7 +14,6 @@
 
 package com.liferay.users.admin.web.internal.frontend.taglib.servlet.taglib;
 
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -28,7 +27,7 @@ import com.liferay.portal.kernel.service.OrganizationService;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.users.admin.constants.UserFormConstants;
+import com.liferay.users.admin.constants.UserScreenNavigationEntryConstants;
 import com.liferay.users.admin.web.internal.constants.UsersAdminWebKeys;
 import com.liferay.users.admin.web.internal.display.context.OrganizationScreenNavigationDisplayContext;
 
@@ -51,15 +50,13 @@ public class OrganizationScreenNavigationEntry
 	implements ScreenNavigationEntry<Organization> {
 
 	public OrganizationScreenNavigationEntry(
-		JSPRenderer jspRenderer, NPMResolver npmResolver,
-		OrganizationService organizationService, Portal portal,
-		PortletURLFactory portletURLFactory, String entryKey,
+		JSPRenderer jspRenderer, OrganizationService organizationService,
+		Portal portal, PortletURLFactory portletURLFactory, String entryKey,
 		String categoryKey, String jspPath, String mvcActionCommandName,
 		boolean showControls, boolean showTitle,
 		BiFunction<User, Organization, Boolean> isVisibleBiFunction) {
 
 		_jspRenderer = jspRenderer;
-		_npmResolver = npmResolver;
 		_organizationService = organizationService;
 		_portal = portal;
 		_portletURLFactory = portletURLFactory;
@@ -92,7 +89,8 @@ public class OrganizationScreenNavigationEntry
 
 	@Override
 	public String getScreenNavigationKey() {
-		return UserFormConstants.SCREEN_NAVIGATION_KEY_ORGANIZATIONS;
+		return UserScreenNavigationEntryConstants.
+			SCREEN_NAVIGATION_KEY_ORGANIZATIONS;
 	}
 
 	@Override
@@ -101,24 +99,28 @@ public class OrganizationScreenNavigationEntry
 	}
 
 	@Override
-	public void render(HttpServletRequest request, HttpServletResponse response)
+	public void render(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
 		OrganizationScreenNavigationDisplayContext
 			organizationScreenNavigationDisplayContext =
 				new OrganizationScreenNavigationDisplayContext();
 
-		String redirect = ParamUtil.getString(request, "redirect");
+		String redirect = ParamUtil.getString(httpServletRequest, "redirect");
 
-		String backURL = ParamUtil.getString(request, "backURL", redirect);
+		String backURL = ParamUtil.getString(
+			httpServletRequest, "backURL", redirect);
 
 		organizationScreenNavigationDisplayContext.setBackURL(backURL);
 
 		organizationScreenNavigationDisplayContext.setFormLabel(
-			getLabel(request.getLocale()));
+			getLabel(httpServletRequest.getLocale()));
 		organizationScreenNavigationDisplayContext.setJspPath(_jspPath);
 
-		long organizationId = ParamUtil.getLong(request, "organizationId");
+		long organizationId = ParamUtil.getLong(
+			httpServletRequest, "organizationId");
 
 		Organization organization = null;
 
@@ -126,9 +128,9 @@ public class OrganizationScreenNavigationEntry
 			organization = _organizationService.fetchOrganization(
 				organizationId);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 
@@ -140,16 +142,16 @@ public class OrganizationScreenNavigationEntry
 			_showControls);
 		organizationScreenNavigationDisplayContext.setShowTitle(_showTitle);
 
-		String portletId = _portal.getPortletId(request);
+		String portletId = _portal.getPortletId(httpServletRequest);
 
 		PortletURL editOrganizationActionURL = _portletURLFactory.create(
-			request, portletId, PortletRequest.ACTION_PHASE);
+			httpServletRequest, portletId, PortletRequest.ACTION_PHASE);
 
 		editOrganizationActionURL.setParameter(
 			ActionRequest.ACTION_NAME, _mvcActionCommandName);
 
 		PortletURL editOrganizationRenderURL = _portletURLFactory.create(
-			request, portletId, PortletRequest.RENDER_PHASE);
+			httpServletRequest, portletId, PortletRequest.RENDER_PHASE);
 
 		editOrganizationRenderURL.setParameter(
 			"mvcRenderCommandName", "/users_admin/edit_organization");
@@ -175,19 +177,13 @@ public class OrganizationScreenNavigationEntry
 		organizationScreenNavigationDisplayContext.setEditOrganizationActionURL(
 			editOrganizationActionURL.toString());
 
-		String jsModuleName = _npmResolver.resolveModuleName(
-			"users-admin-web/js/contact-information.es");
-
-		organizationScreenNavigationDisplayContext.
-			setContactInformationJSRequire(
-				jsModuleName + " as ContactInformation");
-
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			UsersAdminWebKeys.ORGANIZATION_SCREEN_NAVIGATION_DISPLAY_CONTEXT,
 			organizationScreenNavigationDisplayContext);
 
 		_jspRenderer.renderJSP(
-			request, response, "/edit_organization_navigation.jsp");
+			httpServletRequest, httpServletResponse,
+			"/edit_organization_navigation.jsp");
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -199,7 +195,6 @@ public class OrganizationScreenNavigationEntry
 	private final String _jspPath;
 	private final JSPRenderer _jspRenderer;
 	private final String _mvcActionCommandName;
-	private final NPMResolver _npmResolver;
 	private final OrganizationService _organizationService;
 	private final Portal _portal;
 	private final PortletURLFactory _portletURLFactory;

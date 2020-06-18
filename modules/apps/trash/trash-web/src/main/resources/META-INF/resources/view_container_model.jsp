@@ -18,13 +18,6 @@
 
 <%
 TrashContainerModelDisplayContext trashContainerModelDisplayContext = new TrashContainerModelDisplayContext(liferayPortletRequest, liferayPortletResponse);
-
-trashUtil.addContainerModelBreadcrumbEntries(request, liferayPortletResponse, trashContainerModelDisplayContext.getContainerModelClassName(), trashContainerModelDisplayContext.getContainerModelId(), trashContainerModelDisplayContext.getContainerURL());
-
-portletDisplay.setShowBackIcon(trashContainerModelDisplayContext.isShowBackIcon());
-portletDisplay.setURLBack(trashContainerModelDisplayContext.getBackURL());
-
-renderResponse.setTitle(LanguageUtil.format(request, "select-x", trashContainerModelDisplayContext.getContainerModelName()));
 %>
 
 <div class="alert alert-block">
@@ -32,21 +25,22 @@ renderResponse.setTitle(LanguageUtil.format(request, "select-x", trashContainerM
 </div>
 
 <aui:form cssClass="container-fluid-1280" method="post" name="selectContainerFm">
-	<liferay-ui:breadcrumb
-		showGuestGroup="<%= false %>"
-		showLayout="<%= false %>"
-		showParentGroups="<%= false %>"
+	<liferay-site-navigation:breadcrumb
+		breadcrumbEntries="<%= trashDisplayContext.getContainerModelBreadcrumbEntries(trashContainerModelDisplayContext.getContainerModelClassName(), trashContainerModelDisplayContext.getContainerModelId(), trashContainerModelDisplayContext.getContainerURL()) %>"
 	/>
 
 	<aui:button-row>
 
 		<%
-		Map<String, Object> data = new HashMap<String, Object>();
-
-		data.put("classname", trashContainerModelDisplayContext.getClassName());
-		data.put("classpk", trashContainerModelDisplayContext.getClassPK());
-		data.put("containermodelid", trashContainerModelDisplayContext.getContainerModelId());
-		data.put("redirect", trashContainerModelDisplayContext.getRedirect());
+		Map<String, Object> data = HashMapBuilder.<String, Object>put(
+			"classname", trashContainerModelDisplayContext.getClassName()
+		).put(
+			"classpk", trashContainerModelDisplayContext.getClassPK()
+		).put(
+			"containermodelid", trashContainerModelDisplayContext.getContainerModelId()
+		).put(
+			"redirect", trashContainerModelDisplayContext.getRedirect()
+		).build();
 		%>
 
 		<aui:button cssClass="selector-button" data="<%= data %>" value='<%= LanguageUtil.format(request, "choose-this-x", trashContainerModelDisplayContext.getContainerModelName()) %>' />
@@ -102,12 +96,15 @@ renderResponse.setTitle(LanguageUtil.format(request, "select-x", trashContainerM
 			<liferay-ui:search-container-column-text>
 
 				<%
-				Map<String, Object> data = new HashMap<String, Object>();
-
-				data.put("classname", trashContainerModelDisplayContext.getClassName());
-				data.put("classpk", trashContainerModelDisplayContext.getClassPK());
-				data.put("containermodelid", curContainerModelId);
-				data.put("redirect", trashContainerModelDisplayContext.getRedirect());
+				Map<String, Object> data = HashMapBuilder.<String, Object>put(
+					"classname", trashContainerModelDisplayContext.getClassName()
+				).put(
+					"classpk", trashContainerModelDisplayContext.getClassPK()
+				).put(
+					"containermodelid", curContainerModelId
+				).put(
+					"redirect", trashContainerModelDisplayContext.getRedirect()
+				).build();
 				%>
 
 				<aui:button cssClass="selector-button" data="<%= data %>" value="choose" />
@@ -121,5 +118,8 @@ renderResponse.setTitle(LanguageUtil.format(request, "select-x", trashContainerM
 </aui:form>
 
 <aui:script>
-	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectContainerFm', '<%= HtmlUtil.escapeJS(trashContainerModelDisplayContext.getEventName()) %>');
+	Liferay.Util.selectEntityHandler(
+		'#<portlet:namespace />selectContainerFm',
+		'<%= HtmlUtil.escapeJS(trashContainerModelDisplayContext.getEventName()) %>'
+	);
 </aui:script>

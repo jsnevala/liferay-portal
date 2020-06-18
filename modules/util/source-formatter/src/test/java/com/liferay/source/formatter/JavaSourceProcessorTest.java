@@ -22,6 +22,18 @@ import org.junit.Test;
 public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
+	public void testAttributeOrder() throws Exception {
+		test("AttributeOrder.testjava",
+			new String[] {
+				"Attribute 'dataDefinitionId' should come after attribute " +
+					"'appDeployments'",
+				"Attribute 'type' should come after attribute 'settings'",
+				"Attribute 'type' should come after attribute 'settings'"
+			},
+			new Integer[] {29, 33, 45});
+	}
+
+	@Test
 	public void testAnnotationParameterImports() throws Exception {
 		test("AnnotationParameterImports.testjava");
 	}
@@ -47,6 +59,13 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testDeserializationSecurity() throws Exception {
+		test(
+			"DeserializationSecurity.testjava",
+			"Use ProtectedObjectInputStream instead of new ObjectInputStream");
+	}
+
+	@Test
 	public void testDiamondOperator() throws Exception {
 		test("DiamondOperator.testjava");
 	}
@@ -69,18 +88,42 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testElseStatement() throws Exception {
+		test("ElseStatement1.testjava");
+		test(
+			"ElseStatement2.testjava",
+			"Else statement is not needed because of the 'return' statement " +
+				"on line 26",
+			28);
+	}
+
+	@Test
 	public void testExceedMaxLineLength() throws Exception {
 		test("ExceedMaxLineLength.testjava", "> 80", 37);
 	}
 
 	@Test
 	public void testExceptionVariableName() throws Exception {
-		test("ExceptionVariableName.testjava");
+		test(
+			"ExceptionVariableName.testjava",
+			new String[] {
+				"Rename exception variable 'e' to 'configurationException'",
+				"Rename exception variable 'e' to 'configurationException'",
+				"Rename exception variable 're' to 'exception'",
+				"Rename exception variable 'ioe' to 'ioException1'",
+				"Rename exception variable 'oie' to 'ioException2'",
+				"Rename exception variable 'ioe1' to 'ioException1'",
+				"Rename exception variable 'ioe2' to 'ioException2'",
+				"Rename exception variable 'ioe1' to 'ioException'",
+				"Rename exception variable 'ioe2' to 'ioException'"
+			},
+			new Integer[] {37, 50, 61, 66, 70, 81, 85, 96, 102});
 	}
 
 	@Test
 	public void testFormatAnnotations() throws Exception {
-		test("FormatAnnotations.testjava");
+		test("FormatAnnotations1.testjava");
+		test("FormatAnnotations2.testjava");
 	}
 
 	@Test
@@ -109,22 +152,6 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testIfClauseParentheses() throws Exception {
-		test(
-			"IfClauseParentheses.testjava",
-			new String[] {
-				"Missing parentheses", "Missing parentheses",
-				"Missing parentheses", "Missing parentheses",
-				"Missing parentheses",
-				"Unnecessary parentheses around expression.",
-				"Redundant parentheses",
-				"Unnecessary parentheses around expression.",
-				"Missing parentheses"
-			},
-			new Integer[] {25, 29, 33, 39, 43, 43, 47, 51, 59});
-	}
-
-	@Test
 	public void testIfClauseWhitespace() throws Exception {
 		test("IfClauseWhitespace.testjava");
 	}
@@ -140,11 +167,6 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testIncorrectIfStatement() throws Exception {
-		test("IncorrectIfStatement.testjava", "Incorrect if statement", 23);
-	}
-
-	@Test
 	public void testIncorrectImports() throws Exception {
 		test("IncorrectImports1.testjava");
 		test(
@@ -157,45 +179,34 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testIncorrectLineBreaks() throws Exception {
+	public void testIncorrectOperatorOrder() throws Exception {
 		test(
-			"IncorrectLineBreaks1.testjava",
+			"IncorrectOperatorOrder.testjava",
 			new String[] {
-				"'=' should be on the previous line.",
-				"There should be a line break after '||'",
-				"There should be a line break after '\"Hello World\", " +
-					"\"Hello\", \"World\"),'",
-				"Add the string 'Hello World Hello World ' to the previous " +
-					"literal string",
-				"There should be a line break after '\"Hello World Hello " +
-					"World Hello World\",'",
-				"There should be a line break after " +
-					"'anotherStringWithAVeryLongName,'",
-				"There should be a line break after '='",
-				"There should be a line break after '+'",
-				"There should be a line break after '='",
-				"Line should not start with '.'",
-				"There should be a line break before 'throws'",
-				"There should be a line break after '}'",
-				"There should be a line break after '}'",
-				"There should be a line break after '('",
-				"There should be a line break after '('",
-				"'null) {' should be added to previous line",
-				"There should be a line break after 'stringArray,'",
-				"There should be a line break before 'new " +
-					"Comparator<String>() {'",
-				"There should be a line break after '},'",
-				"There should be a line break before 'throws'",
-				"There should be a line break after 'companyId,'",
-				"There should be a line break before 'throws'",
-				"There should be a line break after '}'"
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator",
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator",
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator",
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator",
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator",
+				"'3' should be on the right hand side of the operator",
+				"'+3' should be on the right hand side of the operator",
+				"'-3' should be on the right hand side of the operator"
 			},
 			new Integer[] {
-				32, 36, 44, 48, 48, 53, 56, 59, 62, 66, 69, 74, 78, 83, 87, 94,
-				105, 105, 118, 123, 130, 140, 158
+				53, 57, 61, 97, 101, 105, 141, 145, 149, 185, 189, 193, 229,
+				233, 237, 273, 277, 281
 			});
-		test("IncorrectLineBreaks2.testjava");
-	}
+		}
 
 	@Test
 	public void testIncorrectParameterNames() throws Exception {
@@ -208,20 +219,6 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 					"'^[a-z][a-zA-Z0-9]*$'"
 			},
 			new Integer[] {24, 28});
-	}
-
-	@Test
-	public void testIncorrectTabs() throws Exception {
-		test(
-			"IncorrectTabs.testjava",
-			new String[] {
-				"There should be a line break after '('",
-				"There should be a line break after '{'",
-				"Line starts with '3' tabs, but '4' tabs are expected",
-				"Line starts with '2' tabs, but '3' tabs are expected",
-				"Line starts with '3' tabs, but '4' tabs are expected"
-			},
-			new Integer[] {26, 30, 31, 32, 37});
 	}
 
 	@Test
@@ -278,11 +275,6 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testJavaTermMetadataIncorrectLineBreaks() throws Exception {
-		test("JavaTermMetadataIncorrectLineBreaks.testjava");
-	}
-
-	@Test
 	public void testJavaVariableFinalableFields1() throws Exception {
 		test("JavaVariableFinalableFields1.testjava");
 	}
@@ -317,6 +309,42 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testMissingEmptyLines() throws Exception {
 		test("MissingEmptyLines.testjava");
+	}
+
+	@Test
+	public void testMissingDiamondOperator() throws Exception {
+		test("MissingDiamondOperator.testjava",
+			new String[] {
+				"Missing diamond operator '<>' for type 'ArrayList'",
+				"Missing generic types '<String, String>' for type 'ArrayList'",
+				"Missing diamond operator '<>' for type 'ConcurrentHashMap'",
+				"Missing diamond operator '<>' for type " +
+					"'ConcurrentSkipListMap'",
+				"Missing diamond operator '<>' for type " +
+					"'ConcurrentSkipListSet'",
+				"Missing diamond operator '<>' for type 'CopyOnWriteArraySet'",
+				"Missing generic types '<Position, String>' for type 'EnumMap'",
+				"Missing diamond operator '<>' for type 'HashMap'",
+				"Missing generic types '<String, String>' for type 'HashMap'",
+				"Missing diamond operator '<>' for type 'HashSet'",
+				"Missing diamond operator '<>' for type 'Hashtable'",
+				"Missing diamond operator '<>' for type 'IdentityHashMap'",
+				"Missing diamond operator '<>' for type 'LinkedHashMap'",
+				"Missing diamond operator '<>' for type 'LinkedHashSet'",
+				"Missing diamond operator '<>' for type 'LinkedList'",
+				"Missing diamond operator '<>' for type 'Stack'",
+				"Missing diamond operator '<>' for type 'TreeMap'",
+				"Missing diamond operator '<>' for type 'TreeSet'",
+				"Missing diamond operator '<>' for type 'Vector'",
+				"Missing generic types '<Map<String, String>>' for type " +
+					"'ArrayList'",
+				"Missing generic types '<String, String>' for type 'HashMap'",
+				"Missing generic types '<String, String>' for type 'HashMap'"
+			},
+			new Integer[] {
+				45, 47, 53, 55, 57, 59, 61, 68, 70, 76, 78, 80, 83, 85, 87, 89,
+				91, 93, 95, 97, 99, 110
+			});
 	}
 
 	@Test
@@ -361,15 +389,20 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testSortAnnotationParameters() throws Exception {
+	public void testSingleStatementClause() throws Exception {
 		test(
-			"SortAnnotationParameters.testjava",
+			"SingleStatementClause.testjava",
 			new String[] {
-				"Annotation parameter 'immediate' is not sorted alphabetically",
-				"Annotation parameter 'propagation' is not sorted " +
-					"alphabetically"
+				"Use braces around if-statement clause",
+				"Use braces around while-statement clause",
+				"Use braces around for-statement clause"
 			},
-			new Integer[] {24, 27});
+			new Integer[] {23, 28, 31});
+	}
+
+	@Test
+	public void testSortAnnotationParameters() throws Exception {
+		test("SortAnnotationParameters.testjava");
 	}
 
 	@Test
@@ -413,6 +446,17 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testUnusedParameter() throws Exception {
 		test("UnusedParameter.testjava", "Parameter 'color' is unused", 26);
+	}
+
+	@Test
+	public void testUnusedVariable() throws Exception {
+		test(
+			"UnusedVariable.testjava",
+			new String[] {
+				"Variable 'matcher' is unused", "Variable 'hello' is unused",
+				"Variable '_s' is unused"
+			},
+			new Integer[] {26, 29, 41});
 	}
 
 }

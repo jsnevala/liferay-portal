@@ -132,6 +132,11 @@ public class LockLocalServiceTest {
 				expectedType = ExpectedType.PREFIX
 			),
 			@ExpectedLog(
+				expectedDBType = ExpectedDBType.SQLSERVER,
+				expectedLog = "Cannot insert duplicate key row in object",
+				expectedType = ExpectedType.PREFIX
+			),
+			@ExpectedLog(
 				expectedDBType = ExpectedDBType.SYBASE,
 				expectedLog = "Attempt to insert duplicate key row",
 				expectedType = ExpectedType.CONTAINS
@@ -176,7 +181,7 @@ public class LockLocalServiceTest {
 
 			Assert.fail();
 		}
-		catch (DuplicateLockException dle) {
+		catch (DuplicateLockException duplicateLockException) {
 		}
 
 		// Set lock to be expired
@@ -225,8 +230,9 @@ public class LockLocalServiceTest {
 							try {
 								continueCountDownLatch.await();
 							}
-							catch (InterruptedException ie) {
-								ReflectionUtil.throwException(ie);
+							catch (InterruptedException interruptedException) {
+								ReflectionUtil.throwException(
+									interruptedException);
 							}
 						}
 					}
@@ -246,7 +252,7 @@ public class LockLocalServiceTest {
 
 			});
 
-		Thread lockCreateThread = new Thread(futureTask, "Lock create thread");
+		Thread lockCreateThread = new Thread(futureTask, "Lock Create Thread");
 
 		lockCreateThread.start();
 
@@ -266,8 +272,8 @@ public class LockLocalServiceTest {
 
 			Assert.fail();
 		}
-		catch (ExecutionException ee) {
-			Throwable throwable = ee.getCause();
+		catch (ExecutionException executionException) {
+			Throwable throwable = executionException.getCause();
 
 			Assert.assertSame(
 				ConstraintViolationException.class, throwable.getClass());
@@ -324,6 +330,11 @@ public class LockLocalServiceTest {
 			@ExpectedLog(
 				expectedDBType = ExpectedDBType.POSTGRESQL,
 				expectedLog = "ERROR: duplicate key value violates unique constraint ",
+				expectedType = ExpectedType.PREFIX
+			),
+			@ExpectedLog(
+				expectedDBType = ExpectedDBType.SQLSERVER,
+				expectedLog = "Cannot insert duplicate key row in object",
 				expectedType = ExpectedType.PREFIX
 			),
 			@ExpectedLog(
@@ -416,22 +427,22 @@ public class LockLocalServiceTest {
 
 								break;
 							}
-							catch (RuntimeException re) {
-								if (_isExpectedException(re)) {
+							catch (RuntimeException runtimeException) {
+								if (_isExpectedException(runtimeException)) {
 									continue;
 								}
 
-								throw re;
+								throw runtimeException;
 							}
 						}
 					}
 				}
-				catch (RuntimeException re) {
-					if (_isExpectedException(re)) {
+				catch (RuntimeException runtimeException) {
+					if (_isExpectedException(runtimeException)) {
 						continue;
 					}
 
-					throw re;
+					throw runtimeException;
 				}
 			}
 		}
@@ -446,8 +457,10 @@ public class LockLocalServiceTest {
 			_requiredSuccessCount = requiredSuccessCount;
 		}
 
-		private boolean _isExpectedException(RuntimeException re) {
-			Throwable cause = re.getCause();
+		private boolean _isExpectedException(
+			RuntimeException runtimeException) {
+
+			Throwable cause = runtimeException.getCause();
 
 			DB db = DBManagerUtil.getDB();
 

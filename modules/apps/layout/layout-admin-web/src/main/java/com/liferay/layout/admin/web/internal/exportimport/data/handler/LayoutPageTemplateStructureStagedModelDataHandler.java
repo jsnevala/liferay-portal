@@ -17,10 +17,18 @@ package com.liferay.layout.admin.web.internal.exportimport.data.handler;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.exportimport.kernel.lar.PortletDataException;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
+import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
+import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
+import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.xml.Element;
+
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -32,8 +40,9 @@ import org.osgi.service.component.annotations.Reference;
 public class LayoutPageTemplateStructureStagedModelDataHandler
 	extends BaseStagedModelDataHandler<LayoutPageTemplateStructure> {
 
-	public static final String[] CLASS_NAMES =
-		{LayoutPageTemplateStructure.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		LayoutPageTemplateStructure.class.getName()
+	};
 
 	@Override
 	public String[] getClassNames() {
@@ -54,6 +63,9 @@ public class LayoutPageTemplateStructureStagedModelDataHandler
 			layoutPageTemplateStructureElement,
 			ExportImportPathUtil.getModelPath(layoutPageTemplateStructure),
 			layoutPageTemplateStructure);
+
+		_exportLayoutPageTemplateStructureRels(
+			portletDataContext, layoutPageTemplateStructure);
 	}
 
 	@Override
@@ -68,6 +80,14 @@ public class LayoutPageTemplateStructureStagedModelDataHandler
 		importedLayoutPageTemplateStructure.setGroupId(
 			portletDataContext.getScopeGroupId());
 
+		Element element = portletDataContext.getImportDataElement(
+			importedLayoutPageTemplateStructure);
+
+		importedLayoutPageTemplateStructure.setClassNameId(
+			_portal.getClassNameId(element.attributeValue("className")));
+		importedLayoutPageTemplateStructure.setClassPK(
+			GetterUtil.getLong(element.attributeValue("classPK")));
+
 		LayoutPageTemplateStructure existingLayoutPageTemplateStructure =
 			_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
 				layoutPageTemplateStructure.getUuid(),
@@ -81,6 +101,8 @@ public class LayoutPageTemplateStructureStagedModelDataHandler
 					portletDataContext, importedLayoutPageTemplateStructure);
 		}
 		else {
+			importedLayoutPageTemplateStructure.setMvccVersion(
+				existingLayoutPageTemplateStructure.getMvccVersion());
 			importedLayoutPageTemplateStructure.
 				setLayoutPageTemplateStructureId(
 					existingLayoutPageTemplateStructure.
@@ -93,6 +115,16 @@ public class LayoutPageTemplateStructureStagedModelDataHandler
 
 		portletDataContext.importClassedModel(
 			layoutPageTemplateStructure, importedLayoutPageTemplateStructure);
+
+		if (existingLayoutPageTemplateStructure != null) {
+			_layoutPageTemplateStructureRelLocalService.
+				deleteLayoutPageTemplateStructureRels(
+					existingLayoutPageTemplateStructure.
+						getLayoutPageTemplateStructureId());
+		}
+
+		_importLayoutPageTemplateStructureRels(
+			portletDataContext, layoutPageTemplateStructure);
 	}
 
 	@Override
@@ -101,6 +133,58 @@ public class LayoutPageTemplateStructureStagedModelDataHandler
 
 		return _stagedModelRepository;
 	}
+
+	@Override
+	protected boolean isSkipImportReferenceStagedModels() {
+		return true;
+	}
+
+	private void _exportLayoutPageTemplateStructureRels(
+			PortletDataContext portletDataContext,
+			LayoutPageTemplateStructure layoutPageTemplateStructure)
+		throws PortletDataException {
+
+		List<LayoutPageTemplateStructureRel> layoutPageTemplateStructureRels =
+			_layoutPageTemplateStructureRelLocalService.
+				getLayoutPageTemplateStructureRels(
+					layoutPageTemplateStructure.
+						getLayoutPageTemplateStructureId());
+
+		for (LayoutPageTemplateStructureRel layoutPageTemplateStructureRel :
+				layoutPageTemplateStructureRels) {
+
+			StagedModelDataHandlerUtil.exportReferenceStagedModel(
+				portletDataContext, layoutPageTemplateStructure,
+				layoutPageTemplateStructureRel,
+				PortletDataContext.REFERENCE_TYPE_CHILD);
+		}
+	}
+
+	private void _importLayoutPageTemplateStructureRels(
+			PortletDataContext portletDataContext,
+			LayoutPageTemplateStructure layoutPageTemplateStructure)
+		throws PortletDataException {
+
+		List<Element> layoutPageTemplateStructureRelElements =
+			portletDataContext.getReferenceDataElements(
+				layoutPageTemplateStructure,
+				LayoutPageTemplateStructureRel.class,
+				PortletDataContext.REFERENCE_TYPE_CHILD);
+
+		for (Element layoutPageTemplateStructureRelElement :
+				layoutPageTemplateStructureRelElements) {
+
+			StagedModelDataHandlerUtil.importStagedModel(
+				portletDataContext, layoutPageTemplateStructureRelElement);
+		}
+	}
+
+	@Reference
+	private LayoutPageTemplateStructureRelLocalService
+		_layoutPageTemplateStructureRelLocalService;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.layout.page.template.model.LayoutPageTemplateStructure)",

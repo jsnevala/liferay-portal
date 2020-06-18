@@ -14,18 +14,11 @@
 
 package com.liferay.portal.tools.service.builder.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
-import com.liferay.portal.kernel.service.ServiceContext;
-
-import java.io.Serializable;
+import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * <p>
@@ -36,23 +29,15 @@ import java.util.Objects;
  * @see LocalizedEntryLocalization
  * @generated
  */
-@ProviderType
 public class LocalizedEntryLocalizationWrapper
+	extends BaseModelWrapper<LocalizedEntryLocalization>
 	implements LocalizedEntryLocalization,
-		ModelWrapper<LocalizedEntryLocalization> {
+			   ModelWrapper<LocalizedEntryLocalization> {
+
 	public LocalizedEntryLocalizationWrapper(
 		LocalizedEntryLocalization localizedEntryLocalization) {
-		_localizedEntryLocalization = localizedEntryLocalization;
-	}
 
-	@Override
-	public Class<?> getModelClass() {
-		return LocalizedEntryLocalization.class;
-	}
-
-	@Override
-	public String getModelClassName() {
-		return LocalizedEntryLocalization.class.getName();
+		super(localizedEntryLocalization);
 	}
 
 	@Override
@@ -60,8 +45,8 @@ public class LocalizedEntryLocalizationWrapper
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
 		attributes.put("mvccVersion", getMvccVersion());
-		attributes.put("localizedEntryLocalizationId",
-			getLocalizedEntryLocalizationId());
+		attributes.put(
+			"localizedEntryLocalizationId", getLocalizedEntryLocalizationId());
 		attributes.put("localizedEntryId", getLocalizedEntryId());
 		attributes.put("languageId", getLanguageId());
 		attributes.put("title", getTitle());
@@ -79,7 +64,7 @@ public class LocalizedEntryLocalizationWrapper
 		}
 
 		Long localizedEntryLocalizationId = (Long)attributes.get(
-				"localizedEntryLocalizationId");
+			"localizedEntryLocalizationId");
 
 		if (localizedEntryLocalizationId != null) {
 			setLocalizedEntryLocalizationId(localizedEntryLocalizationId);
@@ -110,282 +95,154 @@ public class LocalizedEntryLocalizationWrapper
 		}
 	}
 
-	@Override
-	public Object clone() {
-		return new LocalizedEntryLocalizationWrapper((LocalizedEntryLocalization)_localizedEntryLocalization.clone());
-	}
-
-	@Override
-	public int compareTo(LocalizedEntryLocalization localizedEntryLocalization) {
-		return _localizedEntryLocalization.compareTo(localizedEntryLocalization);
-	}
-
 	/**
-	* Returns the content of this localized entry localization.
-	*
-	* @return the content of this localized entry localization
-	*/
+	 * Returns the content of this localized entry localization.
+	 *
+	 * @return the content of this localized entry localization
+	 */
 	@Override
 	public String getContent() {
-		return _localizedEntryLocalization.getContent();
-	}
-
-	@Override
-	public ExpandoBridge getExpandoBridge() {
-		return _localizedEntryLocalization.getExpandoBridge();
+		return model.getContent();
 	}
 
 	/**
-	* Returns the language ID of this localized entry localization.
-	*
-	* @return the language ID of this localized entry localization
-	*/
+	 * Returns the language ID of this localized entry localization.
+	 *
+	 * @return the language ID of this localized entry localization
+	 */
 	@Override
 	public String getLanguageId() {
-		return _localizedEntryLocalization.getLanguageId();
+		return model.getLanguageId();
 	}
 
 	/**
-	* Returns the localized entry ID of this localized entry localization.
-	*
-	* @return the localized entry ID of this localized entry localization
-	*/
+	 * Returns the localized entry ID of this localized entry localization.
+	 *
+	 * @return the localized entry ID of this localized entry localization
+	 */
 	@Override
 	public long getLocalizedEntryId() {
-		return _localizedEntryLocalization.getLocalizedEntryId();
+		return model.getLocalizedEntryId();
 	}
 
 	/**
-	* Returns the localized entry localization ID of this localized entry localization.
-	*
-	* @return the localized entry localization ID of this localized entry localization
-	*/
+	 * Returns the localized entry localization ID of this localized entry localization.
+	 *
+	 * @return the localized entry localization ID of this localized entry localization
+	 */
 	@Override
 	public long getLocalizedEntryLocalizationId() {
-		return _localizedEntryLocalization.getLocalizedEntryLocalizationId();
+		return model.getLocalizedEntryLocalizationId();
 	}
 
 	/**
-	* Returns the mvcc version of this localized entry localization.
-	*
-	* @return the mvcc version of this localized entry localization
-	*/
+	 * Returns the mvcc version of this localized entry localization.
+	 *
+	 * @return the mvcc version of this localized entry localization
+	 */
 	@Override
 	public long getMvccVersion() {
-		return _localizedEntryLocalization.getMvccVersion();
+		return model.getMvccVersion();
 	}
 
 	/**
-	* Returns the primary key of this localized entry localization.
-	*
-	* @return the primary key of this localized entry localization
-	*/
+	 * Returns the primary key of this localized entry localization.
+	 *
+	 * @return the primary key of this localized entry localization
+	 */
 	@Override
 	public long getPrimaryKey() {
-		return _localizedEntryLocalization.getPrimaryKey();
-	}
-
-	@Override
-	public Serializable getPrimaryKeyObj() {
-		return _localizedEntryLocalization.getPrimaryKeyObj();
+		return model.getPrimaryKey();
 	}
 
 	/**
-	* Returns the title of this localized entry localization.
-	*
-	* @return the title of this localized entry localization
-	*/
+	 * Returns the title of this localized entry localization.
+	 *
+	 * @return the title of this localized entry localization
+	 */
 	@Override
 	public String getTitle() {
-		return _localizedEntryLocalization.getTitle();
-	}
-
-	@Override
-	public int hashCode() {
-		return _localizedEntryLocalization.hashCode();
-	}
-
-	@Override
-	public boolean isCachedModel() {
-		return _localizedEntryLocalization.isCachedModel();
-	}
-
-	@Override
-	public boolean isEscapedModel() {
-		return _localizedEntryLocalization.isEscapedModel();
-	}
-
-	@Override
-	public boolean isNew() {
-		return _localizedEntryLocalization.isNew();
-	}
-
-	@Override
-	public void setCachedModel(boolean cachedModel) {
-		_localizedEntryLocalization.setCachedModel(cachedModel);
+		return model.getTitle();
 	}
 
 	/**
-	* Sets the content of this localized entry localization.
-	*
-	* @param content the content of this localized entry localization
-	*/
+	 * Sets the content of this localized entry localization.
+	 *
+	 * @param content the content of this localized entry localization
+	 */
 	@Override
 	public void setContent(String content) {
-		_localizedEntryLocalization.setContent(content);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(
-		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
-		_localizedEntryLocalization.setExpandoBridgeAttributes(baseModel);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ExpandoBridge expandoBridge) {
-		_localizedEntryLocalization.setExpandoBridgeAttributes(expandoBridge);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ServiceContext serviceContext) {
-		_localizedEntryLocalization.setExpandoBridgeAttributes(serviceContext);
+		model.setContent(content);
 	}
 
 	/**
-	* Sets the language ID of this localized entry localization.
-	*
-	* @param languageId the language ID of this localized entry localization
-	*/
+	 * Sets the language ID of this localized entry localization.
+	 *
+	 * @param languageId the language ID of this localized entry localization
+	 */
 	@Override
 	public void setLanguageId(String languageId) {
-		_localizedEntryLocalization.setLanguageId(languageId);
+		model.setLanguageId(languageId);
 	}
 
 	/**
-	* Sets the localized entry ID of this localized entry localization.
-	*
-	* @param localizedEntryId the localized entry ID of this localized entry localization
-	*/
+	 * Sets the localized entry ID of this localized entry localization.
+	 *
+	 * @param localizedEntryId the localized entry ID of this localized entry localization
+	 */
 	@Override
 	public void setLocalizedEntryId(long localizedEntryId) {
-		_localizedEntryLocalization.setLocalizedEntryId(localizedEntryId);
+		model.setLocalizedEntryId(localizedEntryId);
 	}
 
 	/**
-	* Sets the localized entry localization ID of this localized entry localization.
-	*
-	* @param localizedEntryLocalizationId the localized entry localization ID of this localized entry localization
-	*/
+	 * Sets the localized entry localization ID of this localized entry localization.
+	 *
+	 * @param localizedEntryLocalizationId the localized entry localization ID of this localized entry localization
+	 */
 	@Override
 	public void setLocalizedEntryLocalizationId(
 		long localizedEntryLocalizationId) {
-		_localizedEntryLocalization.setLocalizedEntryLocalizationId(localizedEntryLocalizationId);
+
+		model.setLocalizedEntryLocalizationId(localizedEntryLocalizationId);
 	}
 
 	/**
-	* Sets the mvcc version of this localized entry localization.
-	*
-	* @param mvccVersion the mvcc version of this localized entry localization
-	*/
+	 * Sets the mvcc version of this localized entry localization.
+	 *
+	 * @param mvccVersion the mvcc version of this localized entry localization
+	 */
 	@Override
 	public void setMvccVersion(long mvccVersion) {
-		_localizedEntryLocalization.setMvccVersion(mvccVersion);
-	}
-
-	@Override
-	public void setNew(boolean n) {
-		_localizedEntryLocalization.setNew(n);
+		model.setMvccVersion(mvccVersion);
 	}
 
 	/**
-	* Sets the primary key of this localized entry localization.
-	*
-	* @param primaryKey the primary key of this localized entry localization
-	*/
+	 * Sets the primary key of this localized entry localization.
+	 *
+	 * @param primaryKey the primary key of this localized entry localization
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
-		_localizedEntryLocalization.setPrimaryKey(primaryKey);
-	}
-
-	@Override
-	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
-		_localizedEntryLocalization.setPrimaryKeyObj(primaryKeyObj);
+		model.setPrimaryKey(primaryKey);
 	}
 
 	/**
-	* Sets the title of this localized entry localization.
-	*
-	* @param title the title of this localized entry localization
-	*/
+	 * Sets the title of this localized entry localization.
+	 *
+	 * @param title the title of this localized entry localization
+	 */
 	@Override
 	public void setTitle(String title) {
-		_localizedEntryLocalization.setTitle(title);
+		model.setTitle(title);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.model.CacheModel<LocalizedEntryLocalization> toCacheModel() {
-		return _localizedEntryLocalization.toCacheModel();
+	protected LocalizedEntryLocalizationWrapper wrap(
+		LocalizedEntryLocalization localizedEntryLocalization) {
+
+		return new LocalizedEntryLocalizationWrapper(
+			localizedEntryLocalization);
 	}
 
-	@Override
-	public LocalizedEntryLocalization toEscapedModel() {
-		return new LocalizedEntryLocalizationWrapper(_localizedEntryLocalization.toEscapedModel());
-	}
-
-	@Override
-	public String toString() {
-		return _localizedEntryLocalization.toString();
-	}
-
-	@Override
-	public LocalizedEntryLocalization toUnescapedModel() {
-		return new LocalizedEntryLocalizationWrapper(_localizedEntryLocalization.toUnescapedModel());
-	}
-
-	@Override
-	public String toXmlString() {
-		return _localizedEntryLocalization.toXmlString();
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-
-		if (!(obj instanceof LocalizedEntryLocalizationWrapper)) {
-			return false;
-		}
-
-		LocalizedEntryLocalizationWrapper localizedEntryLocalizationWrapper = (LocalizedEntryLocalizationWrapper)obj;
-
-		if (Objects.equals(_localizedEntryLocalization,
-					localizedEntryLocalizationWrapper._localizedEntryLocalization)) {
-			return true;
-		}
-
-		return false;
-	}
-
-	@Override
-	public LocalizedEntryLocalization getWrappedModel() {
-		return _localizedEntryLocalization;
-	}
-
-	@Override
-	public boolean isEntityCacheEnabled() {
-		return _localizedEntryLocalization.isEntityCacheEnabled();
-	}
-
-	@Override
-	public boolean isFinderCacheEnabled() {
-		return _localizedEntryLocalization.isFinderCacheEnabled();
-	}
-
-	@Override
-	public void resetOriginalValues() {
-		_localizedEntryLocalization.resetOriginalValues();
-	}
-
-	private final LocalizedEntryLocalization _localizedEntryLocalization;
 }

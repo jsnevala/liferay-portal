@@ -113,8 +113,8 @@ public class LiferayHttpResourceAccessor extends HttpResourceAccessor {
 				httpResponseResource = _getSHA1ResponseResource(uri, location);
 			}
 		}
-		catch (Exception e) {
-			_logger.error(e.getMessage(), e);
+		catch (Exception exception) {
+			_logger.error(exception.getMessage(), exception);
 		}
 
 		if (httpResponseResource == null) {
@@ -314,8 +314,11 @@ public class LiferayHttpResourceAccessor extends HttpResourceAccessor {
 			HttpHeaders.CONTENT_LENGTH,
 			String.valueOf(byteArrayOutputStream.size()));
 
-		return new HttpResponseResource(
+		HttpClientResponse httpClientResponse = new HttpClientResponse(
 			HttpGet.METHOD_NAME, uri, closeableHttpResponse);
+
+		return new HttpResponseResource(
+			HttpGet.METHOD_NAME, uri, httpClientResponse);
 	}
 
 	private String _getModuleLatestVersion(
@@ -336,8 +339,7 @@ public class LiferayHttpResourceAccessor extends HttpResourceAccessor {
 	private SortedSet<ComparableVersion> _getModuleVersions(
 		File moduleDir, boolean excludeSnapshots) {
 
-		SortedSet<ComparableVersion> moduleVersions =
-			new TreeSet<ComparableVersion>();
+		SortedSet<ComparableVersion> moduleVersions = new TreeSet<>();
 
 		String[] versions = moduleDir.list(DirectoryFileFilter.DIRECTORY);
 
@@ -382,8 +384,11 @@ public class LiferayHttpResourceAccessor extends HttpResourceAccessor {
 			HttpHeaders.LAST_MODIFIED,
 			String.valueOf(cachedArtifactFile.lastModified()));
 
-		return new HttpResponseResource(
+		HttpClientResponse httpClientResponse = new HttpClientResponse(
 			HttpGet.METHOD_NAME, uri, closeableHttpResponse);
+
+		return new HttpResponseResource(
+			HttpGet.METHOD_NAME, uri, httpClientResponse);
 	}
 
 	private boolean _isForcedCacheEnabled() {
@@ -393,8 +398,9 @@ public class LiferayHttpResourceAccessor extends HttpResourceAccessor {
 	private static final String _FILES_CACHE_DIR_NAME =
 		"caches/modules-2/files-2.1";
 
-	private static final String[] _REPOSITORY_URL_PROPERTY_KEYS =
-		{"repository.private.url", "repository.url"};
+	private static final String[] _REPOSITORY_URL_PROPERTY_KEYS = {
+		"repository.private.url", "repository.url"
+	};
 
 	private static final String[] _REPOSITORY_URLS = {
 		"http://cdn.repository.liferay.com/nexus/content/groups/public/",

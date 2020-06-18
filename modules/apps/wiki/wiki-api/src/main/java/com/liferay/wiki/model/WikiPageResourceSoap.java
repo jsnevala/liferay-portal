@@ -14,8 +14,6 @@
 
 package com.liferay.wiki.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,11 +25,12 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class WikiPageResourceSoap implements Serializable {
+
 	public static WikiPageResourceSoap toSoapModel(WikiPageResource model) {
 		WikiPageResourceSoap soapModel = new WikiPageResourceSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setResourcePrimKey(model.getResourcePrimKey());
 		soapModel.setGroupId(model.getGroupId());
@@ -42,8 +41,11 @@ public class WikiPageResourceSoap implements Serializable {
 		return soapModel;
 	}
 
-	public static WikiPageResourceSoap[] toSoapModels(WikiPageResource[] models) {
-		WikiPageResourceSoap[] soapModels = new WikiPageResourceSoap[models.length];
+	public static WikiPageResourceSoap[] toSoapModels(
+		WikiPageResource[] models) {
+
+		WikiPageResourceSoap[] soapModels =
+			new WikiPageResourceSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -54,10 +56,12 @@ public class WikiPageResourceSoap implements Serializable {
 
 	public static WikiPageResourceSoap[][] toSoapModels(
 		WikiPageResource[][] models) {
+
 		WikiPageResourceSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new WikiPageResourceSoap[models.length][models[0].length];
+			soapModels =
+				new WikiPageResourceSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new WikiPageResourceSoap[0][0];
@@ -72,7 +76,9 @@ public class WikiPageResourceSoap implements Serializable {
 
 	public static WikiPageResourceSoap[] toSoapModels(
 		List<WikiPageResource> models) {
-		List<WikiPageResourceSoap> soapModels = new ArrayList<WikiPageResourceSoap>(models.size());
+
+		List<WikiPageResourceSoap> soapModels =
+			new ArrayList<WikiPageResourceSoap>(models.size());
 
 		for (WikiPageResource model : models) {
 			soapModels.add(toSoapModel(model));
@@ -90,6 +96,14 @@ public class WikiPageResourceSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setResourcePrimKey(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -140,10 +154,12 @@ public class WikiPageResourceSoap implements Serializable {
 		_title = title;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _resourcePrimKey;
 	private long _groupId;
 	private long _companyId;
 	private long _nodeId;
 	private String _title;
+
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,11 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portal.service.http.WebsiteServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.portal.service.http.WebsiteServiceSoap
  * @generated
  */
-@ProviderType
 public class WebsiteSoap implements Serializable {
+
 	public static WebsiteSoap toSoapModel(Website model) {
 		WebsiteSoap soapModel = new WebsiteSoap();
 
@@ -80,7 +77,8 @@ public class WebsiteSoap implements Serializable {
 	}
 
 	public static WebsiteSoap[] toSoapModels(List<Website> models) {
-		List<WebsiteSoap> soapModels = new ArrayList<WebsiteSoap>(models.size());
+		List<WebsiteSoap> soapModels = new ArrayList<WebsiteSoap>(
+			models.size());
 
 		for (Website model : models) {
 			soapModels.add(toSoapModel(model));
@@ -230,4 +228,5 @@ public class WebsiteSoap implements Serializable {
 	private long _typeId;
 	private boolean _primary;
 	private Date _lastPublishDate;
+
 }

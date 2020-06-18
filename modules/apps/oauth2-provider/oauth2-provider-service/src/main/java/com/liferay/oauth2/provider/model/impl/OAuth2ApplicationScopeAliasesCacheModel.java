@@ -14,14 +14,10 @@
 
 package com.liferay.oauth2.provider.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.oauth2.provider.model.OAuth2ApplicationScopeAliases;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +30,11 @@ import java.util.Date;
  * The cache model class for representing OAuth2ApplicationScopeAliases in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see OAuth2ApplicationScopeAliases
  * @generated
  */
-@ProviderType
-public class OAuth2ApplicationScopeAliasesCacheModel implements CacheModel<OAuth2ApplicationScopeAliases>,
-	Externalizable {
+public class OAuth2ApplicationScopeAliasesCacheModel
+	implements CacheModel<OAuth2ApplicationScopeAliases>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,10 +45,14 @@ public class OAuth2ApplicationScopeAliasesCacheModel implements CacheModel<OAuth
 			return false;
 		}
 
-		OAuth2ApplicationScopeAliasesCacheModel oAuth2ApplicationScopeAliasesCacheModel =
-			(OAuth2ApplicationScopeAliasesCacheModel)obj;
+		OAuth2ApplicationScopeAliasesCacheModel
+			oAuth2ApplicationScopeAliasesCacheModel =
+				(OAuth2ApplicationScopeAliasesCacheModel)obj;
 
-		if (oAuth2ApplicationScopeAliasesId == oAuth2ApplicationScopeAliasesCacheModel.oAuth2ApplicationScopeAliasesId) {
+		if (oAuth2ApplicationScopeAliasesId ==
+				oAuth2ApplicationScopeAliasesCacheModel.
+					oAuth2ApplicationScopeAliasesId) {
+
 			return true;
 		}
 
@@ -67,7 +66,7 @@ public class OAuth2ApplicationScopeAliasesCacheModel implements CacheModel<OAuth
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(17);
+		StringBundler sb = new StringBundler(13);
 
 		sb.append("{oAuth2ApplicationScopeAliasesId=");
 		sb.append(oAuth2ApplicationScopeAliasesId);
@@ -81,10 +80,6 @@ public class OAuth2ApplicationScopeAliasesCacheModel implements CacheModel<OAuth
 		sb.append(createDate);
 		sb.append(", oAuth2ApplicationId=");
 		sb.append(oAuth2ApplicationId);
-		sb.append(", scopeAliases=");
-		sb.append(scopeAliases);
-		sb.append(", scopeAliasesHash=");
-		sb.append(scopeAliasesHash);
 		sb.append("}");
 
 		return sb.toString();
@@ -92,9 +87,11 @@ public class OAuth2ApplicationScopeAliasesCacheModel implements CacheModel<OAuth
 
 	@Override
 	public OAuth2ApplicationScopeAliases toEntityModel() {
-		OAuth2ApplicationScopeAliasesImpl oAuth2ApplicationScopeAliasesImpl = new OAuth2ApplicationScopeAliasesImpl();
+		OAuth2ApplicationScopeAliasesImpl oAuth2ApplicationScopeAliasesImpl =
+			new OAuth2ApplicationScopeAliasesImpl();
 
-		oAuth2ApplicationScopeAliasesImpl.setOAuth2ApplicationScopeAliasesId(oAuth2ApplicationScopeAliasesId);
+		oAuth2ApplicationScopeAliasesImpl.setOAuth2ApplicationScopeAliasesId(
+			oAuth2ApplicationScopeAliasesId);
 		oAuth2ApplicationScopeAliasesImpl.setCompanyId(companyId);
 		oAuth2ApplicationScopeAliasesImpl.setUserId(userId);
 
@@ -109,19 +106,12 @@ public class OAuth2ApplicationScopeAliasesCacheModel implements CacheModel<OAuth
 			oAuth2ApplicationScopeAliasesImpl.setCreateDate(null);
 		}
 		else {
-			oAuth2ApplicationScopeAliasesImpl.setCreateDate(new Date(createDate));
+			oAuth2ApplicationScopeAliasesImpl.setCreateDate(
+				new Date(createDate));
 		}
 
-		oAuth2ApplicationScopeAliasesImpl.setOAuth2ApplicationId(oAuth2ApplicationId);
-
-		if (scopeAliases == null) {
-			oAuth2ApplicationScopeAliasesImpl.setScopeAliases("");
-		}
-		else {
-			oAuth2ApplicationScopeAliasesImpl.setScopeAliases(scopeAliases);
-		}
-
-		oAuth2ApplicationScopeAliasesImpl.setScopeAliasesHash(scopeAliasesHash);
+		oAuth2ApplicationScopeAliasesImpl.setOAuth2ApplicationId(
+			oAuth2ApplicationId);
 
 		oAuth2ApplicationScopeAliasesImpl.resetOriginalValues();
 
@@ -139,14 +129,10 @@ public class OAuth2ApplicationScopeAliasesCacheModel implements CacheModel<OAuth
 		createDate = objectInput.readLong();
 
 		oAuth2ApplicationId = objectInput.readLong();
-		scopeAliases = objectInput.readUTF();
-
-		scopeAliasesHash = objectInput.readLong();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(oAuth2ApplicationScopeAliasesId);
 
 		objectOutput.writeLong(companyId);
@@ -163,15 +149,6 @@ public class OAuth2ApplicationScopeAliasesCacheModel implements CacheModel<OAuth
 		objectOutput.writeLong(createDate);
 
 		objectOutput.writeLong(oAuth2ApplicationId);
-
-		if (scopeAliases == null) {
-			objectOutput.writeUTF("");
-		}
-		else {
-			objectOutput.writeUTF(scopeAliases);
-		}
-
-		objectOutput.writeLong(scopeAliasesHash);
 	}
 
 	public long oAuth2ApplicationScopeAliasesId;
@@ -180,6 +157,5 @@ public class OAuth2ApplicationScopeAliasesCacheModel implements CacheModel<OAuth
 	public String userName;
 	public long createDate;
 	public long oAuth2ApplicationId;
-	public String scopeAliases;
-	public long scopeAliasesHash;
+
 }

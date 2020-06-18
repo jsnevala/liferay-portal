@@ -17,23 +17,22 @@ package com.liferay.portal.security.membership.policy.organization.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.expando.kernel.service.ExpandoTableLocalServiceUtil;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroupRole;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.membershippolicy.MembershipPolicyException;
 import com.liferay.portal.kernel.service.RoleServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserGroupRoleServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
-import com.liferay.portal.kernel.service.persistence.UserGroupRolePK;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.security.membership.policy.organization.BaseOrganizationMembershipPolicyTestCase;
 import com.liferay.portal.security.membership.policy.test.util.MembershipPolicyTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
 
 import java.util.ArrayList;
@@ -59,7 +58,7 @@ public class OrganizationMembershipPolicyRolesTest
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE,
+			PermissionCheckerMethodTestRule.INSTANCE,
 			SynchronousMailTestRule.INSTANCE);
 
 	@After
@@ -86,11 +85,12 @@ public class OrganizationMembershipPolicyRolesTest
 		long[] userIds = addUsers();
 		long[] forbiddenRoleIds = addForbiddenRoles();
 
-		UserGroupRolePK userGroupRolePK = new UserGroupRolePK(
-			userIds[0], organization.getGroupId(), forbiddenRoleIds[0]);
-
 		UserGroupRole userGroupRole =
-			UserGroupRoleLocalServiceUtil.createUserGroupRole(userGroupRolePK);
+			UserGroupRoleLocalServiceUtil.createUserGroupRole(0);
+
+		userGroupRole.setUserId(userIds[0]);
+		userGroupRole.setGroupId(organization.getGroupId());
+		userGroupRole.setRoleId(forbiddenRoleIds[0]);
 
 		userGroupRoles.add(userGroupRole);
 
@@ -115,11 +115,12 @@ public class OrganizationMembershipPolicyRolesTest
 		long[] userIds = addUsers();
 		long[] standardRoleIds = addStandardRoles();
 
-		UserGroupRolePK userGroupRolePK = new UserGroupRolePK(
-			userIds[0], organization.getGroupId(), standardRoleIds[0]);
-
 		UserGroupRole userGroupRole =
-			UserGroupRoleLocalServiceUtil.createUserGroupRole(userGroupRolePK);
+			UserGroupRoleLocalServiceUtil.createUserGroupRole(0);
+
+		userGroupRole.setUserId(userIds[0]);
+		userGroupRole.setGroupId(organization.getGroupId());
+		userGroupRole.setRoleId(standardRoleIds[0]);
 
 		userGroupRoles.add(userGroupRole);
 
@@ -189,10 +190,10 @@ public class OrganizationMembershipPolicyRolesTest
 		List<UserGroupRole> initialUserGroupRoles =
 			UserGroupRoleLocalServiceUtil.getUserGroupRoles(user.getUserId());
 
-		List<UserGroupRole> emptyNonAbstractList = new ArrayList<>();
+		List<UserGroupRole> emptyNonabstractList = new ArrayList<>();
 
 		MembershipPolicyTestUtil.updateUser(
-			user, null, null, null, null, emptyNonAbstractList);
+			user, null, null, null, null, emptyNonabstractList);
 
 		List<UserGroupRole> currentUserGroupRoles =
 			UserGroupRoleLocalServiceUtil.getUserGroupRoles(user.getUserId());

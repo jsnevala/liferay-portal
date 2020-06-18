@@ -15,13 +15,21 @@
 package com.liferay.configuration.admin.web.internal.portlet.action;
 
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
+import com.liferay.configuration.admin.display.ConfigurationScreen;
 import com.liferay.configuration.admin.web.internal.constants.ConfigurationAdminWebKeys;
+import com.liferay.configuration.admin.web.internal.display.ConfigurationEntry;
+import com.liferay.configuration.admin.web.internal.display.ConfigurationModelConfigurationEntry;
+import com.liferay.configuration.admin.web.internal.display.ConfigurationScreenConfigurationEntry;
+import com.liferay.configuration.admin.web.internal.display.context.ConfigurationScopeDisplayContext;
+import com.liferay.configuration.admin.web.internal.display.context.ConfigurationScopeDisplayContextFactory;
 import com.liferay.configuration.admin.web.internal.model.ConfigurationModel;
+import com.liferay.configuration.admin.web.internal.search.ClusterConfigurationModelIndexer;
 import com.liferay.configuration.admin.web.internal.search.FieldNames;
+import com.liferay.configuration.admin.web.internal.util.ConfigurationEntryIterator;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationEntryRetriever;
-import com.liferay.configuration.admin.web.internal.util.ConfigurationModelIterator;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationModelRetriever;
 import com.liferay.configuration.admin.web.internal.util.ResourceBundleLoaderProvider;
+import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.search.Document;
@@ -30,6 +38,7 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
@@ -49,6 +58,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
+		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
+		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SITE_SETTINGS,
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SYSTEM_SETTINGS,
 		"mvc.command.name=/search"
 	},
@@ -60,6 +71,8 @@ public class SearchMVCRenderCommand implements MVCRenderCommand {
 	public String render(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
+
+		_clusterConfigurationModelIndexer.initialize();
 
 		Indexer indexer = _indexerRegistry.nullSafeGetIndexer(
 			ConfigurationModel.class);
@@ -87,10 +100,15 @@ public class SearchMVCRenderCommand implements MVCRenderCommand {
 
 			Document[] documents = hits.getDocs();
 
-			Map<String, ConfigurationModel> configurationModels =
-				_configurationModelRetriever.getConfigurationModels();
+			ConfigurationScopeDisplayContext configurationScopeDisplayContext =
+				ConfigurationScopeDisplayContextFactory.create(renderRequest);
 
-			List<ConfigurationModel> searchResults = new ArrayList<>(
+			Map<String, ConfigurationModel> configurationModels =
+				_configurationModelRetriever.getConfigurationModels(
+					configurationScopeDisplayContext.getScope(),
+					configurationScopeDisplayContext.getScopePK());
+
+			List<ConfigurationEntry> searchResults = new ArrayList<>(
 				documents.length);
 
 			for (Document document : documents) {
@@ -108,30 +126,64 @@ public class SearchMVCRenderCommand implements MVCRenderCommand {
 						configurationModelFactoryId);
 				}
 
-				if (configurationModel != null) {
-					searchResults.add(configurationModel);
+				if ((configurationModel != null) &&
+					configurationModel.isGenerateUI()) {
+
+					searchResults.add(
+						new ConfigurationModelConfigurationEntry(
+							configurationModel, renderRequest.getLocale(),
+							_resourceBundleLoaderProvider));
 				}
 			}
 
-			ConfigurationModelIterator configurationModelIterator =
-				new ConfigurationModelIterator(searchResults);
+			ExtendedObjectClassDefinition.Scope scope =
+				configurationScopeDisplayContext.getScope();
 
+			for (ConfigurationScreen configurationScreen :
+					_configurationEntryRetriever.getAllConfigurationScreens()) {
+
+				if (!scope.equals(configurationScreen.getScope())) {
+					continue;
+				}
+
+				String configurationScreenKey = StringUtil.toLowerCase(
+					configurationScreen.getKey(), renderRequest.getLocale());
+				String configurationScreenName = StringUtil.toLowerCase(
+					configurationScreen.getName(renderRequest.getLocale()),
+					renderRequest.getLocale());
+
+				String searchReadyKeywords = StringUtil.toLowerCase(
+					keywords, renderRequest.getLocale());
+
+				if (Validator.isNull(keywords) ||
+					configurationScreenKey.contains(searchReadyKeywords) ||
+					configurationScreenName.contains(searchReadyKeywords)) {
+
+					searchResults.add(
+						new ConfigurationScreenConfigurationEntry(
+							configurationScreen, renderRequest.getLocale()));
+				}
+			}
+
+			renderRequest.setAttribute(
+				ConfigurationAdminWebKeys.CONFIGURATION_ENTRY_ITERATOR,
+				new ConfigurationEntryIterator(searchResults));
 			renderRequest.setAttribute(
 				ConfigurationAdminWebKeys.CONFIGURATION_ENTRY_RETRIEVER,
 				_configurationEntryRetriever);
 			renderRequest.setAttribute(
-				ConfigurationAdminWebKeys.CONFIGURATION_MODEL_ITERATOR,
-				configurationModelIterator);
-			renderRequest.setAttribute(
 				ConfigurationAdminWebKeys.RESOURCE_BUNDLE_LOADER_PROVIDER,
 				_resourceBundleLoaderProvider);
 		}
-		catch (Exception e) {
-			throw new PortletException(e);
+		catch (Exception exception) {
+			throw new PortletException(exception);
 		}
 
 		return "/search_results.jsp";
 	}
+
+	@Reference
+	private ClusterConfigurationModelIndexer _clusterConfigurationModelIndexer;
 
 	@Reference
 	private ConfigurationEntryRetriever _configurationEntryRetriever;

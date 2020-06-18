@@ -18,6 +18,7 @@ import com.liferay.document.library.item.selector.web.internal.BaseDLItemSelecto
 import com.liferay.document.library.item.selector.web.internal.constants.DLItemSelectorViewConstants;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
+import com.liferay.item.selector.criteria.DownloadURLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion;
@@ -54,9 +55,8 @@ public class DLFileItemSelectorView
 	private static final List<ItemSelectorReturnType>
 		_supportedItemSelectorReturnTypes = Collections.unmodifiableList(
 			ListUtil.fromArray(
-				new ItemSelectorReturnType[] {
-					new FileEntryItemSelectorReturnType(),
-					new URLItemSelectorReturnType()
-				}));
+				new DownloadURLItemSelectorReturnType(),
+				new FileEntryItemSelectorReturnType(),
+				new URLItemSelectorReturnType()));
 
 }

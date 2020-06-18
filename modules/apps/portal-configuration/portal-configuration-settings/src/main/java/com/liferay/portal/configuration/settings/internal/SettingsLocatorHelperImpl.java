@@ -15,8 +15,7 @@
 package com.liferay.portal.configuration.settings.internal;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
-import com.liferay.portal.configuration.settings.internal.scoped.configuration.ScopeKey;
-import com.liferay.portal.configuration.settings.internal.scoped.configuration.ScopedConfigurationBeanConfigurationListener;
+import com.liferay.portal.configuration.settings.internal.scoped.configuration.ScopedConfigurationManager;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.Group;
@@ -42,6 +41,8 @@ import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.util.PrefsPropsUtil;
+
+import java.io.Serializable;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,8 +73,8 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 		long companyId, String configurationPid, Settings parentSettings) {
 
 		return _getScopedConfigurationBeanSettings(
-			ExtendedObjectClassDefinition.Scope.COMPANY,
-			String.valueOf(companyId), configurationPid, parentSettings);
+			ExtendedObjectClassDefinition.Scope.COMPANY, companyId,
+			configurationPid, parentSettings);
 	}
 
 	public PortletPreferences getCompanyPortletPreferences(
@@ -112,24 +113,12 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 		return configurationBeanSettings;
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #getConfigurationBeanSettings(String)}
-	 */
-	@Deprecated
-	@Override
-	public Settings getConfigurationBeanSettings(
-		String configurationPid, Settings parentSettings) {
-
-		return getConfigurationBeanSettings(configurationPid);
-	}
-
 	@Override
 	public Settings getGroupConfigurationBeanSettings(
 		long groupId, String configurationPid, Settings parentSettings) {
 
 		return _getScopedConfigurationBeanSettings(
-			ExtendedObjectClassDefinition.Scope.GROUP, String.valueOf(groupId),
+			ExtendedObjectClassDefinition.Scope.GROUP, groupId,
 			configurationPid, parentSettings);
 	}
 
@@ -143,8 +132,8 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 				group.getCompanyId(), groupId,
 				PortletKeys.PREFS_OWNER_TYPE_GROUP, 0, settingsId);
 		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
 		}
 	}
 
@@ -162,15 +151,6 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 
 		return new PortletPreferencesSettings(
 			PrefsPropsUtil.getPreferences(companyId), parentSettings);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public Settings getPortalPropertiesSettings() {
-		return _portalPropertiesSettings;
 	}
 
 	@Override
@@ -243,11 +223,18 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 			new ConfigurationBeanDeclarationServiceTracker(bundleContext);
 
 		_configurationBeanDeclarationServiceTracker.open();
+
+		_configurationBeanDeclarationServiceTrackerFactory =
+			new ConfigurationBeanDeclarationServiceTrackerFactory(
+				bundleContext);
+
+		_configurationBeanDeclarationServiceTrackerFactory.open();
 	}
 
 	@Deactivate
 	protected void deactivate() {
 		_configurationBeanDeclarationServiceTracker.close();
+		_configurationBeanDeclarationServiceTrackerFactory.close();
 	}
 
 	@Reference(
@@ -315,28 +302,26 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 	}
 
 	private Settings _getScopedConfigurationBeanSettings(
-		ExtendedObjectClassDefinition.Scope scope, String scopePrimKey,
+		ExtendedObjectClassDefinition.Scope scope, Serializable scopePK,
 		String configurationPid, Settings parentSettings) {
 
-		if (!_configurationBeanClasses.containsKey(configurationPid)) {
+		ScopedConfigurationManager scopedConfigurationManager =
+			_scopedConfigurationManagers.get(configurationPid);
+
+		if (scopedConfigurationManager == null) {
 			return parentSettings;
 		}
 
-		ScopeKey scopeKey = new ScopeKey(
-			_configurationBeanClasses.get(configurationPid), scope,
-			scopePrimKey);
+		Object configurationBean = scopedConfigurationManager.getConfiguration(
+			scope, scopePK);
 
-		Object configuration =
-			_scopedConfigurationBeanConfigurationListener.get(scopeKey);
-
-		if (configuration == null) {
+		if (configurationBean == null) {
 			return parentSettings;
 		}
 
 		return new ConfigurationBeanSettings(
-			_configurationBeanLocationVariableResolvers.get(
-				scopeKey.getObjectClass()),
-			configuration, parentSettings);
+			scopedConfigurationManager.getLocationVariableResolver(),
+			configurationBean, parentSettings);
 	}
 
 	private final ConcurrentMap<String, Class<?>> _configurationBeanClasses =
@@ -344,8 +329,9 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 	private ServiceTracker
 		<ConfigurationBeanDeclaration, ConfigurationBeanManagedService>
 			_configurationBeanDeclarationServiceTracker;
-	private final Map<Class<?>, LocationVariableResolver>
-		_configurationBeanLocationVariableResolvers = new ConcurrentHashMap<>();
+	private ServiceTracker
+		<ConfigurationBeanDeclaration, ScopedConfigurationManager>
+			_configurationBeanDeclarationServiceTrackerFactory;
 	private final Map<Class<?>, Settings> _configurationBeanSettings =
 		new ConcurrentHashMap<>();
 	private GroupLocalService _groupLocalService;
@@ -353,10 +339,8 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 	private Settings _portalPropertiesSettings;
 	private PortletPreferencesFactory _portletPreferencesFactory;
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
-
-	@Reference
-	private ScopedConfigurationBeanConfigurationListener
-		_scopedConfigurationBeanConfigurationListener;
+	private final Map<String, ScopedConfigurationManager>
+		_scopedConfigurationManagers = new ConcurrentHashMap<>();
 
 	private class ConfigurationBeanDeclarationServiceTracker
 		extends ServiceTracker
@@ -376,16 +360,11 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 				new ConfigurationBeanManagedService(
 					context, configurationBeanClass,
 					configurationBean -> {
-						ClassLoader classLoader =
-							configurationBeanClass.getClassLoader();
-
 						LocationVariableResolver locationVariableResolver =
 							new LocationVariableResolver(
-								new ClassLoaderResourceManager(classLoader),
+								new ClassLoaderResourceManager(
+									configurationBeanClass.getClassLoader()),
 								SettingsLocatorHelperImpl.this);
-
-						_configurationBeanLocationVariableResolvers.put(
-							configurationBeanClass, locationVariableResolver);
 
 						_configurationBeanSettings.put(
 							configurationBeanClass,
@@ -415,9 +394,6 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 			Class<?> configurationBeanClass = _configurationBeanClasses.remove(
 				configurationBeanManagedService.getConfigurationPid());
 
-			_configurationBeanLocationVariableResolvers.remove(
-				configurationBeanClass);
-
 			_configurationBeanSettings.remove(configurationBeanClass);
 		}
 
@@ -425,6 +401,60 @@ public class SettingsLocatorHelperImpl implements SettingsLocatorHelper {
 			BundleContext context) {
 
 			super(context, ConfigurationBeanDeclaration.class, null);
+		}
+
+	}
+
+	private class ConfigurationBeanDeclarationServiceTrackerFactory
+		extends ServiceTracker
+			<ConfigurationBeanDeclaration, ScopedConfigurationManager> {
+
+		@Override
+		public ScopedConfigurationManager addingService(
+			ServiceReference<ConfigurationBeanDeclaration> reference) {
+
+			ConfigurationBeanDeclaration configurationBeanDeclaration =
+				context.getService(reference);
+
+			Class<?> configurationBeanClass =
+				configurationBeanDeclaration.getConfigurationBeanClass();
+
+			LocationVariableResolver locationVariableResolver =
+				new LocationVariableResolver(
+					new ClassLoaderResourceManager(
+						configurationBeanClass.getClassLoader()),
+					SettingsLocatorHelperImpl.this);
+
+			ScopedConfigurationManager scopedConfigurationManager =
+				new ScopedConfigurationManager(
+					context, configurationBeanClass, locationVariableResolver);
+
+			scopedConfigurationManager.register();
+
+			_scopedConfigurationManagers.put(
+				scopedConfigurationManager.getName(),
+				scopedConfigurationManager);
+
+			return scopedConfigurationManager;
+		}
+
+		@Override
+		public void removedService(
+			ServiceReference<ConfigurationBeanDeclaration> reference,
+			ScopedConfigurationManager scopedConfigurationManager) {
+
+			context.ungetService(reference);
+
+			_scopedConfigurationManagers.remove(
+				scopedConfigurationManager.getName());
+
+			scopedConfigurationManager.unregister();
+		}
+
+		private ConfigurationBeanDeclarationServiceTrackerFactory(
+			BundleContext bundleContext) {
+
+			super(bundleContext, ConfigurationBeanDeclaration.class, null);
 		}
 
 	}

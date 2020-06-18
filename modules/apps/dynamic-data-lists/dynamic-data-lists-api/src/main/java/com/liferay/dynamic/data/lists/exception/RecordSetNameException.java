@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.lists.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
@@ -24,7 +22,6 @@ import com.liferay.portal.kernel.exception.PortalException;
  *
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class RecordSetNameException extends PortalException {
 
 	public RecordSetNameException() {

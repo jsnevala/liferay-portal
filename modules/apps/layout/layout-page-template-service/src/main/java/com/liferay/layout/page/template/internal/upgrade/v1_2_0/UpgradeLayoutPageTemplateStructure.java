@@ -18,16 +18,16 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.portal.kernel.dao.jdbc.DataAccess;
+import com.liferay.layout.page.template.util.LayoutPageTemplateStructureHelperUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -66,7 +66,7 @@ public class UpgradeLayoutPageTemplateStructure extends UpgradeProcess {
 		long classNameId = PortalUtil.getClassNameId(
 			LayoutPageTemplateEntry.class.getName());
 
-		StringBuilder sb = new StringBuilder(7);
+		StringBundler sb = new StringBundler(7);
 
 		sb.append("select layoutPageTemplateEntryId, groupId, companyId, ");
 		sb.append("userId, userName, createDate from LayoutPageTemplateEntry ");
@@ -76,8 +76,8 @@ public class UpgradeLayoutPageTemplateStructure extends UpgradeProcess {
 		sb.append(LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE);
 		sb.append(")");
 
-		try (PreparedStatement ps =
-				connection.prepareStatement(sb.toString())) {
+		try (PreparedStatement ps = connection.prepareStatement(
+				sb.toString())) {
 
 			try (ResultSet rs = ps.executeQuery()) {
 				while (rs.next()) {
@@ -105,7 +105,8 @@ public class UpgradeLayoutPageTemplateStructure extends UpgradeProcess {
 
 		actionableDynamicQuery.setAddCriteriaMethod(
 			dynamicQuery -> dynamicQuery.add(
-				RestrictionsFactoryUtil.eq("type", "content")));
+				RestrictionsFactoryUtil.eq(
+					"type", LayoutConstants.TYPE_CONTENT)));
 		actionableDynamicQuery.setPerformActionMethod(
 			(Layout layout) -> {
 				Date createDate = layout.getCreateDate();
@@ -125,28 +126,28 @@ public class UpgradeLayoutPageTemplateStructure extends UpgradeProcess {
 			UpgradeLayoutPageTemplateStructure.class.getResourceAsStream(
 				"dependencies/update.sql"));
 
-		runSQLTemplateString(template, false, false);
+		runSQLTemplateString(template, false);
+	}
+
+	private JSONObject _generateLayoutPageTemplateStructureData(
+		long groupId, long classNameId, long classPK) {
+
+		List<FragmentEntryLink> fragmentEntryLinks =
+			_fragmentEntryLinkLocalService.getFragmentEntryLinks(
+				groupId, classNameId, classPK);
+
+		return LayoutPageTemplateStructureHelperUtil.
+			generateContentLayoutStructure(fragmentEntryLinks);
 	}
 
 	private void _updateLayoutPageTemplateStructure(
 		long groupId, long companyId, long userId, String userName,
 		Timestamp createDate, long classNameId, long classPK) {
 
-		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+		JSONObject jsonObject = _generateLayoutPageTemplateStructureData(
+			groupId, classNameId, classPK);
 
-		List<FragmentEntryLink> fragmentEntryLinks =
-			_fragmentEntryLinkLocalService.getFragmentEntryLinks(
-				groupId, classNameId, classPK);
-
-		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
-			jsonArray.put(fragmentEntryLink.getFragmentEntryLinkId());
-		}
-
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("structure", jsonArray);
-
-		StringBuilder sb = new StringBuilder(4);
+		StringBundler sb = new StringBundler(4);
 
 		sb.append("insert into LayoutPageTemplateStructure (uuid_, ");
 		sb.append("layoutPageTemplateStructureId, groupId, companyId, ");
@@ -155,11 +156,7 @@ public class UpgradeLayoutPageTemplateStructure extends UpgradeProcess {
 
 		String sql = sb.toString();
 
-		PreparedStatement ps = null;
-
-		try {
-			ps = connection.prepareStatement(sql);
-
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
 			ps.setString(1, PortalUUIDUtil.generate());
 			ps.setLong(2, increment());
 			ps.setLong(3, groupId);
@@ -174,13 +171,10 @@ public class UpgradeLayoutPageTemplateStructure extends UpgradeProcess {
 
 			ps.executeUpdate();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
+				_log.debug(exception, exception);
 			}
-		}
-		finally {
-			DataAccess.cleanUp(ps);
 		}
 	}
 

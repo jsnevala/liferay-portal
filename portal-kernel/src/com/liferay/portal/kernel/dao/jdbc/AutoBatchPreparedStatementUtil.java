@@ -83,8 +83,9 @@ public class AutoBatchPreparedStatementUtil {
 	private static final int _HIBERNATE_JDBC_BATCH_SIZE = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.HIBERNATE_JDBC_BATCH_SIZE));
 
-	private static final Class<?>[] _INTERFACES =
-		new Class<?>[] {PreparedStatement.class};
+	private static final Class<?>[] _INTERFACES = new Class<?>[] {
+		PreparedStatement.class
+	};
 
 	private static final Method _addBatchMethod;
 	private static final Method _closeMethod;
@@ -100,8 +101,8 @@ public class AutoBatchPreparedStatementUtil {
 			_closeMethod = PreparedStatement.class.getMethod("close");
 			_executeBatch = PreparedStatement.class.getMethod("executeBatch");
 		}
-		catch (NoSuchMethodException nsme) {
-			throw new ExceptionInInitializerError(nsme);
+		catch (NoSuchMethodException noSuchMethodException) {
+			throw new ExceptionInInitializerError(noSuchMethodException);
 		}
 	}
 

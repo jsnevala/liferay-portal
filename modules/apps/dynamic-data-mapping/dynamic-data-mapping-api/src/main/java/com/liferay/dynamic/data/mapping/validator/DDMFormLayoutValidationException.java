@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.validator;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 import java.util.Set;
@@ -23,7 +21,6 @@ import java.util.Set;
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class DDMFormLayoutValidationException extends PortalException {
 
 	public DDMFormLayoutValidationException() {

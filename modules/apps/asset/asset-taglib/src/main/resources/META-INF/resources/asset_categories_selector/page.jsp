@@ -17,117 +17,101 @@
 <%@ include file="/asset_categories_selector/init.jsp" %>
 
 <%
-String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_ui_asset_categories_selector_page") + StringPool.UNDERLINE;
+Map<String, Object> data = (Map<String, Object>)request.getAttribute("liferay-asset:asset-categories-selector:data");
 
-List<String[]> categoryIdsTitles = (List<String[]>)request.getAttribute("liferay-asset:asset-categories-selector:categoryIdsTitles");
-String className = (String)request.getAttribute("liferay-asset:asset-categories-selector:className");
-long classTypePK = GetterUtil.getLong((String)request.getAttribute("liferay-asset:asset-categories-selector:classTypePK"));
-String eventName = (String)request.getAttribute("liferay-asset:asset-categories-selector:eventName");
-String hiddenInput = (String)request.getAttribute("liferay-asset:asset-categories-selector:hiddenInput");
-PortletURL portletURL = (PortletURL)request.getAttribute("liferay-asset:asset-categories-selector:portletURL");
-boolean showRequiredLabel = GetterUtil.getBoolean((String)request.getAttribute("liferay-asset:asset-categories-selector:showRequiredLabel"), true);
-boolean singleSelect = GetterUtil.getBoolean((String)request.getAttribute("liferay-asset:asset-categories-selector:singleSelect"));
-List<AssetVocabulary> vocabularies = (List<AssetVocabulary>)request.getAttribute("liferay-asset:asset-categories-selector:vocabularies");
-
-int maxEntries = GetterUtil.getInteger(PropsUtil.get(PropsKeys.ASSET_CATEGORIES_SELECTOR_MAX_ENTRIES));
+String id = (String)data.get("id");
+String inputName = (String)data.get("inputName");
+List<Map<String, Object>> vocabularies = (List<Map<String, Object>>)data.get("vocabularies");
 %>
 
-<c:choose>
-	<c:when test="<%= Validator.isNotNull(className) %>">
+<div>
+	<div id="<%= id %>">
 
 		<%
-		for (int i = 0; i < vocabularies.size(); i++) {
-			AssetVocabulary vocabulary = vocabularies.get(i);
+		for (Map<String, Object> vocabulary : vocabularies) {
+			String vocabularyId = GetterUtil.getString(vocabulary.get("id"));
 		%>
 
-			<span class="field-content">
-				<label id="<portlet:namespace />assetCategoriesLabel_<%= vocabulary.getVocabularyId() %>">
-					<%= vocabulary.getTitle(locale) %>
+			<div class="field-content">
+				<div class="form-group" id="<%= "namespace_assetCategoriesSelector_" + vocabularyId %>">
+					<c:if test='<%= Validator.isNotNull(vocabulary.get("title")) %>'>
+						<label>
+							<%= vocabulary.get("title") %>
 
-					<c:if test="<%= vocabulary.getGroupId() != themeDisplay.getSiteGroupId() %>">
+							<c:if test='<%= Validator.isNotNull(vocabulary.get("group")) %>'>
+								<%= StringPool.BLANK + "(" + vocabulary.get("group") + ")" %>
+							</c:if>
 
-						<%
-						Group vocabularyGroup = GroupLocalServiceUtil.getGroup(vocabulary.getGroupId());
-						%>
+							<%
+							boolean required = GetterUtil.getBoolean(vocabulary.get("required"));
+							%>
 
-						(<%= HtmlUtil.escape(vocabularyGroup.getDescriptiveName(locale)) %>)
+							<c:if test="<%= required %>">
+								<span class="reference-mark">
+									<clay:icon
+										symbol="asterisk"
+									/>
+
+									<span class="hide-accessible">
+										<liferay-ui:message key="required" />
+									</span>
+								</span>
+							</c:if>
+						</label>
 					</c:if>
 
-					<c:if test="<%= vocabulary.isRequired(PortalUtil.getClassNameId(className), classTypePK) && showRequiredLabel %>">
-						<span class="icon-asterisk text-warning">
-							<span class="hide-accessible"><liferay-ui:message key="required" /></span>
-						</span>
-					</c:if>
-				</label>
+					<div class="input-group">
+						<div class="input-group-item">
+							<div class="form-control form-control-tag-group input-group">
+								<div class="input-group-item">
 
-				<div class="lfr-tags-selector-content" id="<portlet:namespace />assetCategoriesSelector_<%= vocabulary.getVocabularyId() %>">
-					<aui:input name="<%= hiddenInput + StringPool.UNDERLINE + vocabulary.getVocabularyId() %>" type="hidden" />
+									<%
+									List<Map<String, Object>> selectedItems = (List<Map<String, Object>>)vocabulary.get("selectedItems");
+									%>
+
+									<c:if test="<%= Validator.isNotNull(selectedItems) %>">
+
+										<%
+										for (Map<String, Object> selectedItem : selectedItems) {
+											String selectedItemLabel = GetterUtil.getString(selectedItem.get("label"));
+											String selectedItemValue = GetterUtil.getString(selectedItem.get("value"));
+										%>
+
+											<clay:label
+												closeable="<%= true %>"
+												label="<%= selectedItemLabel %>"
+											/>
+
+											<input name="<%= inputName %>" type="hidden" value="<%= selectedItemValue %>" />
+
+										<%
+										}
+										%>
+
+									</c:if>
+
+									<input class="form-control-inset" type="text" value="" />
+								</div>
+							</div>
+						</div>
+
+						<div class="input-group-item input-group-item-shrink">
+							<button class="btn btn-secondary" type="button">
+								<liferay-ui:message key="select" />
+							</button>
+						</div>
+					</div>
 				</div>
-			</span>
-
-			<%
-			String[] categoryIdsTitle = categoryIdsTitles.get(i);
-			%>
-
-			<aui:script use="liferay-asset-taglib-categories-selector">
-				new Liferay.AssetTaglibCategoriesSelector(
-					{
-						categoryIds: '<%= categoryIdsTitle[0] %>',
-						categoryTitles: '<%= HtmlUtil.escapeJS(categoryIdsTitle[1]) %>',
-						contentBox: '#<portlet:namespace />assetCategoriesSelector_<%= vocabulary.getVocabularyId() %>',
-						eventName: '<%= eventName %>',
-						hiddenInput: '#<portlet:namespace /><%= hiddenInput + StringPool.UNDERLINE + vocabulary.getVocabularyId() %>',
-						instanceVar: '<portlet:namespace />',
-						labelNode: '#<portlet:namespace />assetCategoriesLabel_<%= vocabulary.getVocabularyId() %>',
-						maxEntries: <%= maxEntries %>,
-						moreResultsLabel: '<liferay-ui:message key="load-more-results" />',
-
-						<c:if test="<%= portletURL != null %>">
-							portletURL: '<%= portletURL.toString() %>',
-						</c:if>
-
-						singleSelect: <%= !vocabulary.isMultiValued() %>,
-						title: '<liferay-ui:message arguments="<%= vocabulary.getTitle(locale) %>" key="select-x" translateArguments="<%= false %>" />',
-						vocabularyIds: '<%= String.valueOf(vocabulary.getVocabularyId()) %>'
-					}
-				).render();
-			</aui:script>
+			</div>
 
 		<%
 		}
 		%>
 
-	</c:when>
-	<c:otherwise>
+	</div>
 
-		<%
-		String[] categoryIdsTitle = categoryIdsTitles.get(0);
-		%>
-
-		<div class="lfr-tags-selector-content" id="<%= randomNamespace %>assetCategoriesSelector">
-			<aui:input name="<%= hiddenInput %>" type="hidden" />
-		</div>
-
-		<aui:script use="liferay-asset-taglib-categories-selector">
-			new Liferay.AssetTaglibCategoriesSelector(
-				{
-					categoryIds: '<%= categoryIdsTitle[0] %>',
-					categoryTitles: '<%= HtmlUtil.escapeJS(categoryIdsTitle[1]) %>',
-					contentBox: '#<%= randomNamespace %>assetCategoriesSelector',
-					eventName: '<%= eventName %>',
-					hiddenInput: '#<portlet:namespace /><%= hiddenInput %>',
-					instanceVar: '<portlet:namespace />',
-					maxEntries: <%= maxEntries %>,
-					moreResultsLabel: '<liferay-ui:message key="load-more-results" />',
-
-					<c:if test="<%= portletURL != null %>">
-						portletURL: '<%= portletURL.toString() %>',
-					</c:if>
-
-					singleSelect: <%= singleSelect %>,
-					vocabularyIds: '<%= ListUtil.toString(vocabularies, "vocabularyId") %>'
-				}
-			).render();
-		</aui:script>
-	</c:otherwise>
-</c:choose>
+	<react:component
+		data="<%= data %>"
+		module="asset_categories_selector/AssetCategoriesSelectorTag.es"
+	/>
+</div>

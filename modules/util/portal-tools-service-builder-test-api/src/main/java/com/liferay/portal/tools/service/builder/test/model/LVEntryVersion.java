@@ -14,30 +14,32 @@
 
 package com.liferay.portal.tools.service.builder.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the LVEntryVersion service. Represents a row in the &quot;LVEntryVersion&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see LVEntryVersionModel
- * @see com.liferay.portal.tools.service.builder.test.model.impl.LVEntryVersionImpl
- * @see com.liferay.portal.tools.service.builder.test.model.impl.LVEntryVersionModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.portal.tools.service.builder.test.model.impl.LVEntryVersionImpl")
+@ImplementationClassName(
+	"com.liferay.portal.tools.service.builder.test.model.impl.LVEntryVersionImpl"
+)
 @ProviderType
 public interface LVEntryVersion extends LVEntryVersionModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.tools.service.builder.test.model.impl.LVEntryVersionImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.portal.tools.service.builder.test.model.impl.LVEntryVersionImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<LVEntryVersion, Long> LV_ENTRY_VERSION_ID_ACCESSOR =
-		new Accessor<LVEntryVersion, Long>() {
+	public static final Accessor<LVEntryVersion, Long>
+		LV_ENTRY_VERSION_ID_ACCESSOR = new Accessor<LVEntryVersion, Long>() {
+
 			@Override
 			public Long get(LVEntryVersion lvEntryVersion) {
 				return lvEntryVersion.getLvEntryVersionId();
@@ -52,5 +54,7 @@ public interface LVEntryVersion extends LVEntryVersionModel {
 			public Class<LVEntryVersion> getTypeClass() {
 				return LVEntryVersion.class;
 			}
+
 		};
+
 }

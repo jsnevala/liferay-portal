@@ -27,12 +27,13 @@ import com.liferay.portal.kernel.scheduler.Trigger;
 import com.liferay.portal.kernel.scheduler.TriggerFactory;
 import com.liferay.portal.kernel.search.SearchEngineHelperUtil;
 import com.liferay.portal.plugin.PluginPackageUtil;
-import com.liferay.server.admin.web.configuration.PluginRepositoriesConfiguration;
+import com.liferay.server.admin.web.internal.configuration.PluginRepositoriesConfiguration;
 
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
@@ -41,7 +42,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Shuyang Zhou
  * @author Philip Jones
  */
-@Component(immediate = true, service = PluginRepositoriesMessageListener.class)
+@Component(
+	configurationPid = "com.liferay.server.admin.web.internal.configuration.PluginRepositoriesConfiguration",
+	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
+	service = PluginRepositoriesMessageListener.class
+)
 public class PluginRepositoriesMessageListener extends BaseMessageListener {
 
 	@Activate

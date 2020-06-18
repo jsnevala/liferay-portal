@@ -14,7 +14,7 @@
 
 package com.liferay.portal.search.engine.adapter.index;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Dylan Rebelak
@@ -24,6 +24,9 @@ public interface IndexRequestExecutor {
 
 	public AnalyzeIndexResponse executeIndexRequest(
 		AnalyzeIndexRequest analyzeIndexRequest);
+
+	public CloseIndexResponse executeIndexRequest(
+		CloseIndexRequest closeIndexRequest);
 
 	public CreateIndexResponse executeIndexRequest(
 		CreateIndexRequest createIndexRequest);
@@ -45,6 +48,9 @@ public interface IndexRequestExecutor {
 
 	public IndicesExistsIndexResponse executeIndexRequest(
 		IndicesExistsIndexRequest indicesExistsIndexRequest);
+
+	public OpenIndexResponse executeIndexRequest(
+		OpenIndexRequest openIndexRequest);
 
 	public PutMappingIndexResponse executeIndexRequest(
 		PutMappingIndexRequest putMappingIndexRequest);

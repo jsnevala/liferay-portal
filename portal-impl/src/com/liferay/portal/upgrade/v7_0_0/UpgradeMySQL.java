@@ -14,8 +14,10 @@
 
 package com.liferay.portal.upgrade.v7_0_0;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DB;
+import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.log.Log;
@@ -23,7 +25,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PropsValues;
 
@@ -77,9 +78,13 @@ public class UpgradeMySQL extends UpgradeProcess {
 	protected void upgradeDatetimePrecision() throws Exception {
 		DatabaseMetaData databaseMetaData = connection.getMetaData();
 
+		DBInspector dbInspector = new DBInspector(connection);
+
 		try (LoggingTimer loggingTimer = new LoggingTimer();
 			Statement statement = connection.createStatement();
-			ResultSet rs = databaseMetaData.getTables(null, null, null, null)) {
+			ResultSet rs = databaseMetaData.getTables(
+				dbInspector.getCatalog(), dbInspector.getSchema(), null,
+				new String[] {"TABLE"})) {
 
 			while (rs.next()) {
 				String tableName = rs.getString("TABLE_NAME");
@@ -123,9 +128,8 @@ public class UpgradeMySQL extends UpgradeProcess {
 					modifyClause += StringPool.COMMA;
 				}
 
-				modifyClause +=
-					StringBundler.concat(
-						" MODIFY ", columnName, " datetime(6)");
+				modifyClause += StringBundler.concat(
+					" MODIFY ", columnName, " datetime(6)");
 			}
 
 			if (modifyClause.equals(StringPool.BLANK)) {

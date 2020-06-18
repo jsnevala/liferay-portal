@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
@@ -38,6 +39,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
 
 /**
@@ -45,6 +48,16 @@ import java.util.function.ToLongFunction;
  * @author Shuyang Zhou
  */
 public class ListUtil {
+
+	public static <E> List<E> concat(List<? extends E>... lists) {
+		List<E> newList = new ArrayList<>();
+
+		for (List<? extends E> list : lists) {
+			newList.addAll(list);
+		}
+
+		return newList;
+	}
 
 	public static <E> List<E> copy(List<? extends E> master) {
 		if (master == null) {
@@ -67,7 +80,7 @@ public class ListUtil {
 	}
 
 	public static <E> int count(
-		List<? extends E> list, PredicateFilter<E> predicateFilter) {
+		List<? extends E> list, Predicate<E> predicate) {
 
 		if (isEmpty(list)) {
 			return 0;
@@ -76,7 +89,7 @@ public class ListUtil {
 		int count = 0;
 
 		for (E element : list) {
-			if (predicateFilter.filter(element)) {
+			if (predicate.test(element)) {
 				count++;
 			}
 		}
@@ -113,14 +126,14 @@ public class ListUtil {
 	}
 
 	public static <E> boolean exists(
-		List<? extends E> list, PredicateFilter<E> predicateFilter) {
+		List<? extends E> list, Predicate<E> predicate) {
 
 		if (isEmpty(list)) {
 			return false;
 		}
 
 		for (E element : list) {
-			if (predicateFilter.filter(element)) {
+			if (predicate.test(element)) {
 				return true;
 			}
 		}
@@ -130,10 +143,10 @@ public class ListUtil {
 
 	public static <T> List<T> filter(
 		List<? extends T> inputList, List<T> outputList,
-		PredicateFilter<T> predicateFilter) {
+		Predicate<T> predicate) {
 
 		for (T item : inputList) {
-			if (predicateFilter.filter(item)) {
+			if (predicate.test(item)) {
 				outputList.add(item);
 			}
 		}
@@ -142,18 +155,115 @@ public class ListUtil {
 	}
 
 	public static <T> List<T> filter(
-		List<? extends T> inputList, PredicateFilter<T> predicateFilter) {
+		List<? extends T> inputList, Predicate<T> predicate) {
 
-		return filter(
-			inputList, new ArrayList<T>(inputList.size()), predicateFilter);
+		return filter(inputList, new ArrayList<T>(inputList.size()), predicate);
 	}
 
-	public static <E> List<E> fromArray(E[] array) {
+	public static List<Boolean> fromArray(boolean[] array) {
+		if (ArrayUtil.isEmpty(array)) {
+			return new ArrayList<>();
+		}
+
+		List<Boolean> list = new ArrayList<>(array.length);
+
+		for (boolean value : array) {
+			list.add(value);
+		}
+
+		return list;
+	}
+
+	public static List<Character> fromArray(char[] array) {
+		if (ArrayUtil.isEmpty(array)) {
+			return new ArrayList<>();
+		}
+
+		List<Character> list = new ArrayList<>(array.length);
+
+		for (char value : array) {
+			list.add(value);
+		}
+
+		return list;
+	}
+
+	public static List<Double> fromArray(double[] array) {
+		if (ArrayUtil.isEmpty(array)) {
+			return new ArrayList<>();
+		}
+
+		List<Double> list = new ArrayList<>(array.length);
+
+		for (double value : array) {
+			list.add(value);
+		}
+
+		return list;
+	}
+
+	public static <E> List<E> fromArray(E... array) {
 		if (ArrayUtil.isEmpty(array)) {
 			return new ArrayList<>();
 		}
 
 		return new ArrayList<>(Arrays.asList(array));
+	}
+
+	public static List<Float> fromArray(float[] array) {
+		if (ArrayUtil.isEmpty(array)) {
+			return new ArrayList<>();
+		}
+
+		List<Float> list = new ArrayList<>(array.length);
+
+		for (float value : array) {
+			list.add(value);
+		}
+
+		return list;
+	}
+
+	public static List<Integer> fromArray(int[] array) {
+		if (ArrayUtil.isEmpty(array)) {
+			return new ArrayList<>();
+		}
+
+		List<Integer> list = new ArrayList<>(array.length);
+
+		for (int value : array) {
+			list.add(value);
+		}
+
+		return list;
+	}
+
+	public static List<Long> fromArray(long[] array) {
+		if (ArrayUtil.isEmpty(array)) {
+			return new ArrayList<>();
+		}
+
+		List<Long> list = new ArrayList<>(array.length);
+
+		for (long value : array) {
+			list.add(value);
+		}
+
+		return list;
+	}
+
+	public static List<Short> fromArray(short[] array) {
+		if (ArrayUtil.isEmpty(array)) {
+			return new ArrayList<>();
+		}
+
+		List<Short> list = new ArrayList<>(array.length);
+
+		for (short value : array) {
+			list.add(value);
+		}
+
+		return list;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -357,6 +467,11 @@ public class ListUtil {
 		return array;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #fromArray(boolean[])}
+	 */
+	@Deprecated
 	public static List<Boolean> toList(boolean[] array) {
 		if (ArrayUtil.isEmpty(array)) {
 			return new ArrayList<>();
@@ -371,6 +486,11 @@ public class ListUtil {
 		return list;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #fromArray(char[])}
+	 */
+	@Deprecated
 	public static List<Character> toList(char[] array) {
 		if (ArrayUtil.isEmpty(array)) {
 			return new ArrayList<>();
@@ -385,6 +505,11 @@ public class ListUtil {
 		return list;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #fromArray(double[])}
+	 */
+	@Deprecated
 	public static List<Double> toList(double[] array) {
 		if (ArrayUtil.isEmpty(array)) {
 			return new ArrayList<>();
@@ -399,6 +524,15 @@ public class ListUtil {
 		return list;
 	}
 
+	public static <E> List<E> toList(E value) {
+		return new ArrayList<>(Arrays.asList(value));
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #fromArray(E...)}
+	 */
+	@Deprecated
 	public static <E> List<E> toList(E[] array) {
 		if (ArrayUtil.isEmpty(array)) {
 			return new ArrayList<>();
@@ -407,6 +541,11 @@ public class ListUtil {
 		return new ArrayList<>(Arrays.asList(array));
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #fromArray(float[])}
+	 */
+	@Deprecated
 	public static List<Float> toList(float[] array) {
 		if (ArrayUtil.isEmpty(array)) {
 			return new ArrayList<>();
@@ -421,6 +560,11 @@ public class ListUtil {
 		return list;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #fromArray(int[])}
+	 */
+	@Deprecated
 	public static List<Integer> toList(int[] array) {
 		if (ArrayUtil.isEmpty(array)) {
 			return new ArrayList<>();
@@ -459,6 +603,11 @@ public class ListUtil {
 		return new ArrayList<T>(vlist);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #fromArray(long[])}
+	 */
+	@Deprecated
 	public static List<Long> toList(long[] array) {
 		if (ArrayUtil.isEmpty(array)) {
 			return new ArrayList<>();
@@ -473,6 +622,11 @@ public class ListUtil {
 		return list;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #fromArray(short[])}
+	 */
+	@Deprecated
 	public static List<Short> toList(short[] array) {
 		if (ArrayUtil.isEmpty(array)) {
 			return new ArrayList<>();

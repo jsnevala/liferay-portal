@@ -14,7 +14,7 @@
 
 package com.liferay.portal.workflow.kaleo.definition.internal.parser;
 
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -81,9 +81,9 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 
 			return doParse(document);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new WorkflowDefinitionFileException(
-				"Unable to parse definition", e);
+				"Unable to parse definition", exception);
 		}
 	}
 
@@ -94,12 +94,13 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 
 			return doParse(document);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new WorkflowDefinitionFileException(
-				"Unable to parse definition", e);
+				"Unable to parse definition", exception);
 		}
 	}
 
+	@Override
 	public void setValidate(boolean validate) {
 		_validate = validate;
 	}
@@ -182,7 +183,7 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 			return;
 		}
 
-		Set<Action> actions = new HashSet<>(actionElements.size());
+		Set<Action> actions = new HashSet<>();
 
 		for (Element actionElement : actionElements) {
 			String name = actionElement.elementTextTrim("name");
@@ -429,8 +430,7 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 			return;
 		}
 
-		Set<Notification> notifications = new HashSet<>(
-			notificationElements.size());
+		Set<Notification> notifications = new HashSet<>();
 
 		for (Element notificationElement : notificationElements) {
 			String name = notificationElement.elementTextTrim("name");
@@ -720,7 +720,7 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 			return;
 		}
 
-		Set<Timer> timers = new HashSet<>(taskTimerElements.size());
+		Set<Timer> timers = new HashSet<>();
 
 		for (Element timerElement : taskTimerElements) {
 			Timer timer = parseTimerElement(timerElement, true);
@@ -796,7 +796,7 @@ public class XMLWorkflowModelParser implements WorkflowModelParser {
 			return;
 		}
 
-		Set<Timer> timers = new HashSet<>(timerElements.size());
+		Set<Timer> timers = new HashSet<>();
 
 		for (Element timerElement : timerElements) {
 			Timer timer = parseTimerElement(timerElement, false);

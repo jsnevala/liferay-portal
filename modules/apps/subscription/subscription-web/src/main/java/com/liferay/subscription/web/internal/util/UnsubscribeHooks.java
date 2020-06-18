@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.TicketLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SubscriptionSender;
 import com.liferay.subscription.model.Subscription;
@@ -37,7 +38,6 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.internet.InternetAddress;
@@ -67,31 +67,33 @@ public class UnsubscribeHooks {
 
 		InternetAddress[] toAddresses = mailMessage.getTo();
 
-		if (toAddresses.length > 0) {
-			InternetAddress toAddress = toAddresses[0];
+		if (toAddresses.length == 0) {
+			return;
+		}
 
-			User user = _userLocalService.fetchUserByEmailAddress(
-				_subscriptionSender.getCompanyId(), toAddress.getAddress());
+		InternetAddress toAddress = toAddresses[0];
 
-			if (user == null) {
-				return;
+		User user = _userLocalService.fetchUserByEmailAddress(
+			_subscriptionSender.getCompanyId(), toAddress.getAddress());
+
+		if (user == null) {
+			return;
+		}
+
+		Ticket ticket = _userTicketMap.get(user.getUserId());
+
+		if (ticket != null) {
+			try {
+				String unsubscribeURL = _getUnsubscribeURL(user, ticket);
+
+				_addUnsubscribeHeader(mailMessage, unsubscribeURL);
+				_addUnsubscribeLink(mailMessage, unsubscribeURL);
 			}
-
-			Ticket ticket = _userTicketMap.get(user.getUserId());
-
-			if (ticket != null) {
-				try {
-					String unsubscribeURL = _getUnsubscribeURL(user, ticket);
-
-					_addUnsubscribeHeader(mailMessage, unsubscribeURL);
-					_addUnsubscribeLink(mailMessage, unsubscribeURL);
-				}
-				catch (IOException ioe) {
-					throw new RuntimeException(ioe);
-				}
-				finally {
-					_userTicketMap.remove(user.getUserId());
-				}
+			catch (IOException ioException) {
+				throw new RuntimeException(ioException);
+			}
+			finally {
+				_userTicketMap.remove(user.getUserId());
 			}
 		}
 	}
@@ -134,7 +136,7 @@ public class UnsubscribeHooks {
 				mailMessage.getBody(), true);
 
 		String processedBody = bodyMailTemplate.renderAsString(
-			Locale.US, mailTemplateContext);
+			LocaleUtil.US, mailTemplateContext);
 
 		mailMessage.setBody(processedBody);
 	}
@@ -169,8 +171,8 @@ public class UnsubscribeHooks {
 				SubscriptionConstants.TICKET_TYPE, StringPool.BLANK,
 				calendar.getTime());
 		}
-		catch (PortalException pe) {
-			throw new RuntimeException(pe);
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
 		}
 	}
 

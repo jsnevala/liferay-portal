@@ -29,7 +29,7 @@
 				</c:if>
 
 				<c:if test="<%= Validator.isNotNull(filters) %>">
-					<a class="collapsed management-bar-toggle management-bar-toggle-link" data-toggle="collapse" href="#<%= namespace %>managementBarCollapse">
+					<a class="collapsed management-bar-toggle management-bar-toggle-link" data-toggle="liferay-collapse" href="#<%= namespace %>managementBarCollapse">
 						<span class="management-bar-item-title"><liferay-ui:message key="filter-order" /></span>
 
 						<aui:icon image="caret-double-l" markupView="lexicon" />
@@ -88,15 +88,13 @@
 
 <c:if test="<%= Validator.isNotNull(actionButtons) || includeCheckBox %>">
 	<aui:script use="liferay-management-bar">
-		var managementBar = new Liferay.ManagementBar(
-			{
-				namespace: '<%= namespace %>',
-				searchContainerId: '<%= namespace + searchContainerId %>',
-				secondaryBar: '#actionButtons'
-			}
-		);
+		var managementBar = new Liferay.ManagementBar({
+			namespace: '<%= namespace %>',
+			searchContainerId: '<%= namespace + searchContainerId %>',
+			secondaryBar: '#actionButtons',
+		});
 
-		var clearManagementBarHandles = function(event) {
+		var clearManagementBarHandles = function (event) {
 			if (event.portletId === '<%= portletDisplay.getRootPortletId() %>') {
 				managementBar.destroy();
 

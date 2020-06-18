@@ -15,9 +15,9 @@
 package com.liferay.portal.tools;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -122,6 +122,27 @@ public class GitUtil {
 		return fileNames;
 	}
 
+	public static List<String> getModifiedLastDayFileNames(String baseDirName)
+		throws Exception {
+
+		List<String> fileNames = new ArrayList<>();
+
+		UnsyncBufferedReader unsyncBufferedReader = getGitCommandReader(
+			"git diff --diff-filter=AMR --name-only --stat @{last.day}");
+
+		String line = null;
+
+		int gitLevel = getGitLevel(baseDirName);
+
+		while ((line = unsyncBufferedReader.readLine()) != null) {
+			if (StringUtil.count(line, CharPool.SLASH) >= gitLevel) {
+				fileNames.add(getFileName(line, gitLevel));
+			}
+		}
+
+		return fileNames;
+	}
+
 	public static void main(String[] args) throws Exception {
 		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
 
@@ -161,8 +182,8 @@ public class GitUtil {
 				System.out.println(fileName);
 			}
 		}
-		catch (Exception e) {
-			ArgumentsUtil.processMainException(arguments, e);
+		catch (Exception exception) {
+			ArgumentsUtil.processMainException(arguments, exception);
 		}
 	}
 
@@ -240,16 +261,16 @@ public class GitUtil {
 		return dirNames;
 	}
 
-	protected static String getFileContent(String committish, String fileName)
+	protected static String getFileContent(String commitId, String fileName)
 		throws Exception {
 
 		StringBundler sb = new StringBundler();
 
 		String gitCommand = StringBundler.concat(
-			"git show ", committish, ":", fileName);
+			"git show ", commitId, ":", fileName);
 
-		try (UnsyncBufferedReader unsyncBufferedReader =
-				getGitCommandReader(gitCommand)) {
+		try (UnsyncBufferedReader unsyncBufferedReader = getGitCommandReader(
+				gitCommand)) {
 
 			String line = null;
 
@@ -316,15 +337,15 @@ public class GitUtil {
 		try {
 			process = runtime.exec(gitCommand);
 		}
-		catch (IOException ioe) {
-			String errorMessage = ioe.getMessage();
+		catch (IOException ioException) {
+			String errorMessage = ioException.getMessage();
 
 			if (errorMessage.contains("Cannot run program")) {
 				throw new GitException(
 					"Add Git to your PATH system variable first");
 			}
 
-			throw ioe;
+			throw ioException;
 		}
 
 		return new UnsyncBufferedReader(

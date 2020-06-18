@@ -14,16 +14,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>CHOICE_A_FIELD</td>
-	<td>//input[contains(@id,'choiceDescriptiona')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>CHOICE_B_FIELD</td>
-	<td>//input[contains(@id,'choiceDescriptionb')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>CHOICE_C_FIELD</td>
 	<td>//input[contains(@id,'choiceDescriptionc')]</td>
 	<td></td>
@@ -46,11 +36,6 @@
 <tr>
 	<td>ADD_NEW_POLL</td>
 	<td>//span[contains(@class,'btn-link')]//span[contains(.,'Add')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>ADD_QUESTION</td>
-	<td>//div[contains(@class,'lfr-icon-actions')]/span[2]/a</td>
 	<td></td>
 </tr>
 <tr>
@@ -86,7 +71,7 @@
 </tr>
 <tr>
 	<td>POLLS_TABLE_ACTION</td>
-	<td>//tr[contains(.,'${key_pollsQuestionTitle}')]/td[5]//div/a</td>
+	<td>//td/a[contains(.,'${key_pollsQuestionTitle}')]/../../td[6]//div/a</td>
 	<td></td>
 </tr>
 <tr>

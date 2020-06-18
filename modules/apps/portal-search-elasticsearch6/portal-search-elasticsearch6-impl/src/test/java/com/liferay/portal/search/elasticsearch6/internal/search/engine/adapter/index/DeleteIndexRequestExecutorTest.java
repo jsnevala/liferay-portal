@@ -14,11 +14,11 @@
 
 package com.liferay.portal.search.elasticsearch6.internal.search.engine.adapter.index;
 
-import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchConnectionManager;
 import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchFixture;
-import com.liferay.portal.search.elasticsearch6.internal.connection.TestElasticsearchConnectionManager;
 import com.liferay.portal.search.engine.adapter.index.DeleteIndexRequest;
 import com.liferay.portal.search.engine.adapter.index.IndicesOptions;
+
+import java.util.Arrays;
 
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
 
@@ -38,9 +38,6 @@ public class DeleteIndexRequestExecutorTest {
 			DeleteIndexRequestExecutorTest.class.getSimpleName());
 
 		_elasticsearchFixture.setUp();
-
-		_elasticsearchConnectionManager =
-			new TestElasticsearchConnectionManager(_elasticsearchFixture);
 
 		_indicesOptionsTranslator = new IndicesOptionsTranslatorImpl();
 	}
@@ -67,9 +64,8 @@ public class DeleteIndexRequestExecutorTest {
 		DeleteIndexRequestExecutorImpl deleteIndexRequestExecutorImpl =
 			new DeleteIndexRequestExecutorImpl() {
 				{
-					elasticsearchConnectionManager =
-						_elasticsearchConnectionManager;
-					indicesOptionsTranslator = _indicesOptionsTranslator;
+					setElasticsearchClientResolver(_elasticsearchFixture);
+					setIndicesOptionsTranslator(_indicesOptionsTranslator);
 				}
 			};
 
@@ -81,12 +77,11 @@ public class DeleteIndexRequestExecutorTest {
 			elasticsearchDeleteIndexRequest =
 				deleteIndexRequestBuilder.request();
 
-		Assert.assertEquals(
-			2, elasticsearchDeleteIndexRequest.indices().length);
-		Assert.assertEquals(
-			_INDEX_NAME_1, elasticsearchDeleteIndexRequest.indices()[0]);
-		Assert.assertEquals(
-			_INDEX_NAME_2, elasticsearchDeleteIndexRequest.indices()[1]);
+		String[] indices = elasticsearchDeleteIndexRequest.indices();
+
+		Assert.assertEquals(Arrays.toString(indices), 2, indices.length);
+		Assert.assertEquals(_INDEX_NAME_1, indices[0]);
+		Assert.assertEquals(_INDEX_NAME_2, indices[1]);
 
 		org.elasticsearch.action.support.IndicesOptions
 			elasticsearchIndicesOptions =
@@ -114,7 +109,6 @@ public class DeleteIndexRequestExecutorTest {
 
 	private static final String _INDEX_NAME_2 = "test_request_index2";
 
-	private ElasticsearchConnectionManager _elasticsearchConnectionManager;
 	private ElasticsearchFixture _elasticsearchFixture;
 	private IndicesOptionsTranslator _indicesOptionsTranslator;
 

@@ -14,14 +14,11 @@
 
 package com.liferay.blogs.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.blogs.model.BlogsStatsUser;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing BlogsStatsUser in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see BlogsStatsUser
  * @generated
  */
-@ProviderType
-public class BlogsStatsUserCacheModel implements CacheModel<BlogsStatsUser>,
-	Externalizable {
+public class BlogsStatsUserCacheModel
+	implements CacheModel<BlogsStatsUser>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,12 @@ public class BlogsStatsUserCacheModel implements CacheModel<BlogsStatsUser>,
 			return false;
 		}
 
-		BlogsStatsUserCacheModel blogsStatsUserCacheModel = (BlogsStatsUserCacheModel)obj;
+		BlogsStatsUserCacheModel blogsStatsUserCacheModel =
+			(BlogsStatsUserCacheModel)obj;
 
-		if (statsUserId == blogsStatsUserCacheModel.statsUserId) {
+		if ((statsUserId == blogsStatsUserCacheModel.statsUserId) &&
+			(mvccVersion == blogsStatsUserCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +60,28 @@ public class BlogsStatsUserCacheModel implements CacheModel<BlogsStatsUser>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, statsUserId);
+		int hashCode = HashUtil.hash(0, statsUserId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(19);
+		StringBundler sb = new StringBundler(21);
 
-		sb.append("{statsUserId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", statsUserId=");
 		sb.append(statsUserId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -95,6 +108,7 @@ public class BlogsStatsUserCacheModel implements CacheModel<BlogsStatsUser>,
 	public BlogsStatsUser toEntityModel() {
 		BlogsStatsUserImpl blogsStatsUserImpl = new BlogsStatsUserImpl();
 
+		blogsStatsUserImpl.setMvccVersion(mvccVersion);
 		blogsStatsUserImpl.setStatsUserId(statsUserId);
 		blogsStatsUserImpl.setGroupId(groupId);
 		blogsStatsUserImpl.setCompanyId(companyId);
@@ -119,6 +133,8 @@ public class BlogsStatsUserCacheModel implements CacheModel<BlogsStatsUser>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
+
 		statsUserId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -138,8 +154,9 @@ public class BlogsStatsUserCacheModel implements CacheModel<BlogsStatsUser>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		objectOutput.writeLong(statsUserId);
 
 		objectOutput.writeLong(groupId);
@@ -158,6 +175,7 @@ public class BlogsStatsUserCacheModel implements CacheModel<BlogsStatsUser>,
 		objectOutput.writeDouble(ratingsAverageScore);
 	}
 
+	public long mvccVersion;
 	public long statsUserId;
 	public long groupId;
 	public long companyId;
@@ -167,4 +185,5 @@ public class BlogsStatsUserCacheModel implements CacheModel<BlogsStatsUser>,
 	public int ratingsTotalEntries;
 	public double ratingsTotalScore;
 	public double ratingsAverageScore;
+
 }

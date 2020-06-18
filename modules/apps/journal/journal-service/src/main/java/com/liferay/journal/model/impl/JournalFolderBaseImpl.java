@@ -14,13 +14,9 @@
 
 package com.liferay.journal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
-
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 import java.util.ArrayList;
@@ -38,13 +34,13 @@ import java.util.List;
  * @see JournalFolder
  * @generated
  */
-@ProviderType
-public abstract class JournalFolderBaseImpl extends JournalFolderModelImpl
-	implements JournalFolder {
+public abstract class JournalFolderBaseImpl
+	extends JournalFolderModelImpl implements JournalFolder {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a journal folder model instance should use the {@link JournalFolder} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a journal folder model instance should use the <code>JournalFolder</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -66,10 +62,11 @@ public abstract class JournalFolderBaseImpl extends JournalFolderModelImpl
 		while (journalFolder != null) {
 			journalFolders.add(journalFolder);
 
-			journalFolder = JournalFolderLocalServiceUtil.fetchJournalFolder(journalFolder.getParentFolderId());
+			journalFolder = JournalFolderLocalServiceUtil.fetchJournalFolder(
+				journalFolder.getParentFolderId());
 		}
 
-		StringBundler sb = new StringBundler((journalFolders.size() * 2) + 1);
+		StringBundler sb = new StringBundler(journalFolders.size() * 2 + 1);
 
 		sb.append("/");
 
@@ -91,4 +88,5 @@ public abstract class JournalFolderBaseImpl extends JournalFolderModelImpl
 
 		JournalFolderLocalServiceUtil.updateJournalFolder(journalFolder);
 	}
+
 }

@@ -44,19 +44,20 @@ public class JournalSmallImageFormNavigatorEntry
 
 	@Override
 	public String getKey() {
-		return "small-image";
+		return "featured-image";
 	}
 
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			JournalFileUploadsConfiguration.class.getName(),
 			_journalFileUploadsConfiguration);
 
-		super.include(request, response);
+		super.include(httpServletRequest, httpServletResponse);
 	}
 
 	@Override

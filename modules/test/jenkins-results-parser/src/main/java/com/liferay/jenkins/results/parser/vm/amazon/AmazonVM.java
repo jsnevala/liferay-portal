@@ -42,6 +42,7 @@ import java.util.List;
  */
 public abstract class AmazonVM extends VM {
 
+	@Override
 	public void create() {
 		RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
 
@@ -85,6 +86,7 @@ public abstract class AmazonVM extends VM {
 			_getModifyInstanceAttributeRequest());
 	}
 
+	@Override
 	public void delete() {
 		TerminateInstancesRequest terminateInstancesRequest =
 			new TerminateInstancesRequest();
@@ -231,7 +233,7 @@ public abstract class AmazonVM extends VM {
 			JenkinsResultsParserUtil.combine(
 				"Waiting for the EC2 instance state \"", targetState, "\""));
 
-		long timeout = System.currentTimeMillis() + TIMEOUT_DURATION;
+		long timeout = System.currentTimeMillis() + MILLIS_TIMEOUT_DURATION;
 
 		while (!instanceState.equals(targetState)) {
 			if (System.currentTimeMillis() >= timeout) {

@@ -86,11 +86,13 @@ public class PushNotificationMessageSender
 				notificationMessage, executionContext);
 
 		jsonObject.put(
-			PushNotificationsConstants.KEY_BODY, notificationMessage);
-		jsonObject.put(PushNotificationsConstants.KEY_FROM, _fromName);
-		jsonObject.put(
+			PushNotificationsConstants.KEY_BODY, notificationMessage
+		).put(
+			PushNotificationsConstants.KEY_FROM, _fromName
+		).put(
 			PushNotificationsConstants.KEY_TO_USER_IDS,
-			createUserIdsRecipientsJSONArray(notificationRecipients));
+			createUserIdsRecipientsJSONArray(notificationRecipients)
+		);
 
 		return jsonObject;
 	}
@@ -105,8 +107,8 @@ public class PushNotificationMessageSender
 		stream.filter(
 			notificationRecipient -> notificationRecipient.getUserId() > 0
 		).forEach(
-			notificationRecipient ->
-				jsonArray.put(notificationRecipient.getUserId())
+			notificationRecipient -> jsonArray.put(
+				notificationRecipient.getUserId())
 		);
 
 		return jsonArray;

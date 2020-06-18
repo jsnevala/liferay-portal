@@ -30,15 +30,12 @@ public interface TemplateConstants {
 
 	public static final String BUNDLE_SEPARATOR = "_BUNDLE_CONTEXT_";
 
+	public static final String CLASS_LOADER_SEPARATOR =
+		"_CLASS_LOADER_CONTEXT_";
+
 	public static final String CLASS_NAME_ID = "class_name_id";
 
 	public static final String DEFAUT_ENCODING = StringPool.UTF8;
-
-	/**
-	 * @deprecated As of Newton (6.2.x)
-	 */
-	@Deprecated
-	public static final String JOURNAL_SEPARATOR = "_JOURNAL_CONTEXT_";
 
 	public static final String LANG_TYPE_CSS = "css";
 

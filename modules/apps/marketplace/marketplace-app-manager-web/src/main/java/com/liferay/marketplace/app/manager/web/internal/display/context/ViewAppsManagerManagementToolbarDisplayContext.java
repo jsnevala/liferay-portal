@@ -15,7 +15,9 @@
 package com.liferay.marketplace.app.manager.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.marketplace.app.manager.web.internal.constants.BundleStateConstants;
 import com.liferay.marketplace.app.manager.web.internal.util.AppDisplay;
 import com.liferay.marketplace.app.manager.web.internal.util.AppDisplayFactoryUtil;
@@ -34,8 +36,6 @@ import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.osgi.framework.Bundle;
-
 /**
  * @author Pei-Jung Lan
  */
@@ -43,43 +43,94 @@ public class ViewAppsManagerManagementToolbarDisplayContext
 	extends BaseAppManagerManagementToolbarDisplayContext {
 
 	public ViewAppsManagerManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request) {
+		LiferayPortletResponse liferayPortletResponse) {
 
-		super(liferayPortletRequest, liferayPortletResponse, request);
+		super(
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse);
+
+		_searchContainer = _createSearchContainer(liferayPortletRequest);
 	}
 
+	public String getClearResultsURL() {
+		PortletURL removeLabelURL = getPortletURL();
+
+		removeLabelURL.setParameter("category", (String)null);
+		removeLabelURL.setParameter("state", (String)null);
+
+		return removeLabelURL.toString();
+	}
+
+	@Override
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							getCategoryDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(request, "categories"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							getStatusDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(request, "status"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(getCategoryDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(request, "categories"));
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(getStatusDropdownItems());
+				dropdownGroupItem.setLabel(LanguageUtil.get(request, "status"));
+			}
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(request, "order-by"));
+			}
+		).build();
 	}
 
+	public List<LabelItem> getFilterLabelItems() {
+		String category = getCategory();
+		String state = getState();
+
+		return LabelItemListBuilder.add(
+			() -> !category.equals("all-categories"),
+			labelItem -> {
+				PortletURL removeLabelURL = getPortletURL();
+
+				removeLabelURL.setParameter("category", (String)null);
+
+				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+
+				labelItem.setCloseable(true);
+
+				String label = String.format(
+					"%s: %s", LanguageUtil.get(request, "category"),
+					LanguageUtil.get(request, category));
+
+				labelItem.setLabel(label);
+			}
+		).add(
+			() -> !state.equals("all-statuses"),
+			labelItem -> {
+				PortletURL removeLabelURL = getPortletURL();
+
+				removeLabelURL.setParameter("state", (String)null);
+
+				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+
+				labelItem.setCloseable(true);
+
+				String label = String.format(
+					"%s: %s", LanguageUtil.get(request, "state"),
+					LanguageUtil.get(request, state));
+
+				labelItem.setLabel(label);
+			}
+		).build();
+	}
+
+	@Override
+	public int getItemsTotal() {
+		return _searchContainer.getTotal();
+	}
+
+	@Override
 	public PortletURL getPortletURL() {
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
@@ -99,10 +150,13 @@ public class ViewAppsManagerManagementToolbarDisplayContext
 		return portletURL;
 	}
 
-	public SearchContainer getSearchContainer() throws Exception {
-		if (_searchContainer != null) {
-			return _searchContainer;
-		}
+	@Override
+	public SearchContainer getSearchContainer() {
+		return _searchContainer;
+	}
+
+	private SearchContainer _createSearchContainer(
+		LiferayPortletRequest liferayPortletRequest) {
 
 		SearchContainer searchContainer = new SearchContainer(
 			liferayPortletRequest, getPortletURL(), null, "no-apps-were-found");
@@ -116,10 +170,10 @@ public class ViewAppsManagerManagementToolbarDisplayContext
 			category = StringPool.BLANK;
 		}
 
-		List<Bundle> bundles = BundleManagerUtil.getBundles();
-
 		List<AppDisplay> appDisplays = AppDisplayFactoryUtil.getAppDisplays(
-			bundles, category, BundleStateConstants.getState(getState()));
+			BundleManagerUtil.getBundles(), category,
+			BundleStateConstants.getState(getState()),
+			liferayPortletRequest.getLocale());
 
 		appDisplays = ListUtil.sort(
 			appDisplays, new AppDisplayComparator(getOrderByType()));
@@ -135,11 +189,9 @@ public class ViewAppsManagerManagementToolbarDisplayContext
 
 		searchContainer.setTotal(appDisplays.size());
 
-		_searchContainer = searchContainer;
-
-		return _searchContainer;
+		return searchContainer;
 	}
 
-	private SearchContainer _searchContainer;
+	private final SearchContainer _searchContainer;
 
 }

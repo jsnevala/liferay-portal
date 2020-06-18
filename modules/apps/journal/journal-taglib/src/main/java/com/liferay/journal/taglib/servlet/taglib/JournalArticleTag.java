@@ -53,8 +53,12 @@ public class JournalArticleTag extends IncludeTag {
 		PortletResponse portletResponse = (PortletResponse)request.getAttribute(
 			JavaConstants.JAVAX_PORTLET_RESPONSE);
 
-		PortletRequestModel portletRequestModel = new PortletRequestModel(
-			portletRequest, portletResponse);
+		PortletRequestModel portletRequestModel = null;
+
+		if ((portletRequest != null) && (portletResponse != null)) {
+			portletRequestModel = new PortletRequestModel(
+				portletRequest, portletResponse);
+		}
 
 		_article = JournalArticleLocalServiceUtil.fetchLatestArticle(
 			_groupId, _articleId, WorkflowConstants.STATUS_APPROVED);
@@ -65,15 +69,32 @@ public class JournalArticleTag extends IncludeTag {
 				_article.getVersion(), _ddmTemplateKey, Constants.VIEW,
 				getLanguageId(), 1, portletRequestModel, themeDisplay);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("Unable to get journal article display", pe);
+				_log.debug(
+					"Unable to get journal article display", portalException);
 			}
 
 			return SKIP_BODY;
 		}
 
 		return super.doStartTag();
+	}
+
+	public String getArticleId() {
+		return _articleId;
+	}
+
+	public long getGroupId() {
+		return _groupId;
+	}
+
+	public String getWrapperCssClass() {
+		return _wrapperCssClass;
+	}
+
+	public boolean isShowTitle() {
+		return _showTitle;
 	}
 
 	public void setArticleId(String articleId) {
@@ -103,16 +124,22 @@ public class JournalArticleTag extends IncludeTag {
 		_showTitle = showTitle;
 	}
 
+	public void setWrapperCssClass(String wrapperCssClass) {
+		_wrapperCssClass = wrapperCssClass;
+	}
+
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
 
 		_article = null;
+		_articleDisplay = null;
 		_articleId = null;
 		_ddmTemplateKey = null;
 		_groupId = 0;
 		_languageId = null;
 		_showTitle = false;
+		_wrapperCssClass = null;
 	}
 
 	protected String getDdmTemplateKey() {
@@ -137,12 +164,15 @@ public class JournalArticleTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-journal:journal-article:articleDisplay", _articleDisplay);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-journal:journal-article:showTitle",
 			String.valueOf(_showTitle));
+		httpServletRequest.setAttribute(
+			"liferay-journal:journal-article:wrapperCssClass",
+			_wrapperCssClass);
 	}
 
 	private static final String _PAGE = "/journal_article/page.jsp";
@@ -157,5 +187,6 @@ public class JournalArticleTag extends IncludeTag {
 	private long _groupId;
 	private String _languageId;
 	private boolean _showTitle;
+	private String _wrapperCssClass;
 
 }

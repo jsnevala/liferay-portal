@@ -58,7 +58,7 @@ public class UnsyncBufferedInputStreamTest {
 
 		Assert.assertEquals(buffer.length, read);
 
-		for (int i = 1; i < buffer.length + 1; i++) {
+		for (int i = 1; i < (buffer.length + 1); i++) {
 			Assert.assertEquals(i, buffer[i - 1]);
 		}
 
@@ -75,7 +75,7 @@ public class UnsyncBufferedInputStreamTest {
 
 		Assert.assertEquals(buffer.length, read);
 
-		for (int i = 10; i < buffer.length + 10; i++) {
+		for (int i = 10; i < (buffer.length + 10); i++) {
 			Assert.assertEquals(i, buffer[i - 10]);
 		}
 
@@ -90,7 +90,7 @@ public class UnsyncBufferedInputStreamTest {
 
 		Assert.assertEquals(buffer.length, read);
 
-		for (int i = 15; i < buffer.length + 15; i++) {
+		for (int i = 15; i < (buffer.length + 15); i++) {
 			Assert.assertEquals(i, buffer[i - 15]);
 		}
 
@@ -99,7 +99,7 @@ public class UnsyncBufferedInputStreamTest {
 
 		// Leave 5 bytes
 
-		for (int i = 25; i < _SIZE - 5; i++) {
+		for (int i = 25; i < (_SIZE - 5); i++) {
 			Assert.assertEquals(i & 0xff, unsyncBufferedInputStream.read());
 		}
 
@@ -146,7 +146,7 @@ public class UnsyncBufferedInputStreamTest {
 
 			Assert.fail();
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 		}
 
 		try {
@@ -154,7 +154,7 @@ public class UnsyncBufferedInputStreamTest {
 
 			Assert.fail();
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 		}
 
 		try {
@@ -162,7 +162,7 @@ public class UnsyncBufferedInputStreamTest {
 
 			Assert.fail();
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 		}
 
 		try {
@@ -170,7 +170,7 @@ public class UnsyncBufferedInputStreamTest {
 
 			Assert.fail();
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 		}
 
 		try {
@@ -178,7 +178,7 @@ public class UnsyncBufferedInputStreamTest {
 
 			Assert.fail();
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 		}
 
 		unsyncBufferedInputStream.close();
@@ -205,7 +205,7 @@ public class UnsyncBufferedInputStreamTest {
 
 			Assert.fail();
 		}
-		catch (IllegalArgumentException iae) {
+		catch (IllegalArgumentException illegalArgumentException) {
 		}
 
 		try {
@@ -214,7 +214,7 @@ public class UnsyncBufferedInputStreamTest {
 
 			Assert.fail();
 		}
-		catch (IllegalArgumentException iae) {
+		catch (IllegalArgumentException illegalArgumentException) {
 		}
 	}
 
@@ -274,7 +274,7 @@ public class UnsyncBufferedInputStreamTest {
 		Assert.assertEquals(
 			markLimitIndex, unsyncBufferedInputStream.markLimitIndex);
 
-		for (int i = 0; i < bufferSize * 2; i++) {
+		for (int i = 0; i < (bufferSize * 2); i++) {
 			Assert.assertEquals(i, unsyncBufferedInputStream.read());
 		}
 
@@ -288,7 +288,7 @@ public class UnsyncBufferedInputStreamTest {
 
 			Assert.fail();
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 		}
 
 		// Shuffle
@@ -357,7 +357,7 @@ public class UnsyncBufferedInputStreamTest {
 		Assert.assertEquals(_SIZE - size, byteArrayInputStream.available());
 		Assert.assertEquals(_SIZE - 1, unsyncBufferedInputStream.available());
 
-		for (int i = 1; i < size + 1; i++) {
+		for (int i = 1; i < (size + 1); i++) {
 			Assert.assertEquals(i, unsyncBufferedInputStream.read());
 		}
 

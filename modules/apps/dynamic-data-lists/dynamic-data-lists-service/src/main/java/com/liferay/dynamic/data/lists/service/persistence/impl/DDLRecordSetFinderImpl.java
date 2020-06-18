@@ -30,17 +30,23 @@ import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.Iterator;
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Marcellus Tavares
  * @author Connor McKay
  */
+@Component(service = DDLRecordSetFinder.class)
 public class DDLRecordSetFinderImpl
 	extends DDLRecordSetFinderBaseImpl implements DDLRecordSetFinder {
+
+	public static final String COUNT_BY_G_D =
+		DDLRecordSetFinder.class.getName() + ".countByG_D";
 
 	public static final String COUNT_BY_C_G_N_D_S =
 		DDLRecordSetFinder.class.getName() + ".countByC_G_N_D_S";
@@ -53,6 +59,13 @@ public class DDLRecordSetFinderImpl
 		long companyId, long groupId, String keywords, int scope) {
 
 		return doCountByKeywords(companyId, groupId, keywords, scope, false);
+	}
+
+	@Override
+	public int countByG_D(
+		long groupId, long ddmStructureId, boolean andOperator) {
+
+		return doCountByG_D(groupId, ddmStructureId, andOperator, false);
 	}
 
 	@Override
@@ -201,6 +214,69 @@ public class DDLRecordSetFinderImpl
 			inlineSQLHelper);
 	}
 
+	protected int doCountByG_D(
+		long groupId, long ddmStructureId, boolean andOperator,
+		boolean inlineSQLHelper) {
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			String sql = _customSQL.get(getClass(), COUNT_BY_G_D);
+
+			if (inlineSQLHelper) {
+				sql = InlineSQLHelperUtil.replacePermissionCheck(
+					sql, DDLRecordSet.class.getName(),
+					"DDLRecordSet.recordSetId", groupId);
+			}
+
+			if (groupId <= 0) {
+				sql = StringUtil.removeSubstring(
+					sql, "(DDLRecordSet.groupId = ?) AND");
+			}
+
+			if (ddmStructureId <= 0) {
+				sql = StringUtil.removeSubstring(
+					sql, "(DDLRecordSet.DDMStructureId = ?)");
+			}
+
+			sql = _customSQL.replaceAndOperator(sql, andOperator);
+
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
+
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
+
+			if (groupId > 0) {
+				queryPos.add(groupId);
+			}
+
+			if (ddmStructureId > 0) {
+				queryPos.add(ddmStructureId);
+			}
+
+			Iterator<Long> itr = sqlQuery.iterate();
+
+			if (itr.hasNext()) {
+				Long count = itr.next();
+
+				if (count != null) {
+					return count.intValue();
+				}
+			}
+
+			return 0;
+		}
+		catch (Exception exception) {
+			throw new SystemException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
 	protected int doCountByC_G_N_D_S(
 		long companyId, long groupId, String[] names, String[] descriptions,
 		int scope, boolean andOperator, boolean inlineSQLHelper) {
@@ -222,13 +298,13 @@ public class DDLRecordSetFinderImpl
 			}
 
 			if (groupId <= 0) {
-				sql = StringUtil.replace(
-					sql, "(DDLRecordSet.groupId = ?) AND", StringPool.BLANK);
+				sql = StringUtil.removeSubstring(
+					sql, "(DDLRecordSet.groupId = ?) AND");
 			}
 
 			if (scope == DDLRecordSetConstants.SCOPE_ANY) {
-				sql = StringUtil.replace(
-					sql, "(DDLRecordSet.scope = ?) AND", StringPool.BLANK);
+				sql = StringUtil.removeSubstring(
+					sql, "(DDLRecordSet.scope = ?) AND");
 			}
 
 			sql = _customSQL.replaceKeywords(
@@ -238,26 +314,26 @@ public class DDLRecordSetFinderImpl
 				descriptions);
 			sql = _customSQL.replaceAndOperator(sql, andOperator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (groupId > 0) {
-				qPos.add(groupId);
+				queryPos.add(groupId);
 			}
 
 			if (scope != DDLRecordSetConstants.SCOPE_ANY) {
-				qPos.add(scope);
+				queryPos.add(scope);
 			}
 
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -269,8 +345,8 @@ public class DDLRecordSetFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -300,54 +376,54 @@ public class DDLRecordSetFinderImpl
 			}
 
 			if (groupId <= 0) {
-				sql = StringUtil.replace(
-					sql, "(DDLRecordSet.groupId = ?) AND", StringPool.BLANK);
+				sql = StringUtil.removeSubstring(
+					sql, "(DDLRecordSet.groupId = ?) AND");
 			}
 
 			if (scope == DDLRecordSetConstants.SCOPE_ANY) {
-				sql = StringUtil.replace(
-					sql, "(DDLRecordSet.scope = ?) AND", StringPool.BLANK);
+				sql = StringUtil.removeSubstring(
+					sql, "(DDLRecordSet.scope = ?) AND");
 			}
 
 			sql = _customSQL.replaceKeywords(
 				sql, "LOWER(DDLRecordSet.name)", StringPool.LIKE, false, names);
 			sql = _customSQL.replaceKeywords(
-				sql, "DDLRecordSet.description", StringPool.LIKE, true,
+				sql, "LOWER(DDLRecordSet.description)", StringPool.LIKE, true,
 				descriptions);
 			sql = _customSQL.replaceAndOperator(sql, andOperator);
 			sql = _customSQL.replaceOrderBy(sql, orderByComparator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("DDLRecordSet", DDLRecordSetImpl.class);
+			sqlQuery.addEntity("DDLRecordSet", DDLRecordSetImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (groupId > 0) {
-				qPos.add(groupId);
+				queryPos.add(groupId);
 			}
 
 			if (scope != DDLRecordSetConstants.SCOPE_ANY) {
-				qPos.add(scope);
+				queryPos.add(scope);
 			}
 
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
 			return (List<DDLRecordSet>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

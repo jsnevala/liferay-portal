@@ -17,7 +17,7 @@ package com.liferay.roles.admin.web.internal.portlet.configuration.icon;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
@@ -33,8 +33,6 @@ import com.liferay.taglib.security.PermissionsURLTag;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -77,8 +75,9 @@ public class PermissionsPortletConfigurationIcon
 			int[] roleTypes = {role.getType()};
 
 			if (role.getType() != RoleConstants.TYPE_REGULAR) {
-				roleTypes =
-					new int[] {RoleConstants.TYPE_REGULAR, role.getType()};
+				roleTypes = new int[] {
+					RoleConstants.TYPE_REGULAR, role.getType()
+				};
 			}
 
 			url = PermissionsURLTag.doTag(
@@ -88,7 +87,7 @@ public class PermissionsPortletConfigurationIcon
 				LiferayWindowState.POP_UP.toString(), roleTypes,
 				themeDisplay.getRequest());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return url;
@@ -122,7 +121,7 @@ public class PermissionsPortletConfigurationIcon
 
 			return false;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return false;
@@ -139,10 +138,8 @@ public class PermissionsPortletConfigurationIcon
 	}
 
 	private long _getRoleId(PortletRequest portletRequest) {
-		HttpServletRequest request = _portal.getHttpServletRequest(
-			portletRequest);
-
-		return ParamUtil.getLong(request, "roleId");
+		return ParamUtil.getLong(
+			_portal.getHttpServletRequest(portletRequest), "roleId");
 	}
 
 	@Reference

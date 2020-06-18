@@ -38,24 +38,17 @@ public interface DDMFormWebConfiguration {
 
 	@Meta.AD(
 		deflt = "enabled-with-warning", name = "csv-export",
-		optionLabels = {"Enabled", "enabled-with-warning", "Disabled"},
+		optionLabels = {"enabled", "enabled-with-warning", "disabled"},
 		optionValues = {"enabled", "enabled-with-warning", "disabled"},
 		required = false
 	)
 	public String csvExport();
 
 	@Meta.AD(
-		deflt = "descriptive", name = "default-display-view",
+		deflt = "list", name = "default-display-view",
 		optionLabels = {"%list", "%table"},
 		optionValues = {"descriptive", "list"}, required = false
 	)
 	public String defaultDisplayView();
-
-	@Meta.AD(
-		deflt = "false",
-		description = "enable-experimental-interface-description",
-		name = "enable-experimental-interface", required = false
-	)
-	public boolean enableExperimentalInterface();
 
 }

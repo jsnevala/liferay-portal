@@ -14,25 +14,15 @@
 
 package com.liferay.sharing.document.library.internal.frontend.taglib.dynamic.section;
 
-import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.frontend.taglib.dynamic.section.DynamicSection;
-import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.sharing.model.SharingEntry;
-import com.liferay.sharing.model.SharingEntryModel;
-import com.liferay.sharing.service.SharingEntryLocalService;
+import com.liferay.sharing.configuration.SharingConfiguration;
+import com.liferay.sharing.configuration.SharingConfigurationFactory;
 import com.liferay.taglib.servlet.PipingServletResponse;
 
 import java.io.ByteArrayOutputStream;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -55,58 +45,25 @@ public class DLInfoPanelFileEntryOwnerDynamicSection implements DynamicSection {
 
 	@Override
 	public StringBundler modify(StringBundler sb, PageContext pageContext) {
-		HttpServletRequest request =
+		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)pageContext.getRequest();
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		long classNameId = _classNameLocalService.getClassNameId(
-			DLFileEntryConstants.getClassName());
-		FileEntry fileEntry = (FileEntry)request.getAttribute(
-			"info_panel.jsp-fileEntry");
+		SharingConfiguration sharingConfiguration =
+			_sharingConfigurationFactory.getGroupSharingConfiguration(
+				themeDisplay.getSiteGroup());
 
-		int countSharingEntryToUserIds =
-			_sharingEntryLocalService.getFromUserSharingEntriesCount(
-				themeDisplay.getUserId(), classNameId,
-				fileEntry.getFileEntryId());
-
-		if (countSharingEntryToUserIds == 0) {
+		if (!sharingConfiguration.isEnabled()) {
 			return sb;
 		}
-
-		request.setAttribute(
-			"info_panel_file_entry.jsp-countSharingEntryToUserIds",
-			countSharingEntryToUserIds);
-
-		List<SharingEntry> fromUserSharingEntries =
-			_sharingEntryLocalService.getFromUserSharingEntries(
-				themeDisplay.getUserId(), classNameId,
-				fileEntry.getFileEntryId(), 0, 4);
-
-		Stream<SharingEntry> fromUserSharingEntriesStream =
-			fromUserSharingEntries.stream();
-
-		List<User> sharingEntryToUsers = fromUserSharingEntriesStream.map(
-			SharingEntryModel::getToUserId
-		).map(
-			_userLocalService::fetchUserById
-		).filter(
-			user -> user != null
-		).collect(
-			Collectors.toList()
-		);
-
-		request.setAttribute(
-			"info_panel_file_entry.jsp-sharingEntryToUsers",
-			sharingEntryToUsers);
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher(
 				"/META-INF/resources/dynamic_section" +
 					"/info_panel_file_entry.jsp");
-
-		String string = null;
 
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 			HttpServletResponse httpServletResponse = new PipingServletResponse(
@@ -115,17 +72,12 @@ public class DLInfoPanelFileEntryOwnerDynamicSection implements DynamicSection {
 			requestDispatcher.include(
 				pageContext.getRequest(), httpServletResponse);
 
-			string = new String(outputStream.toByteArray());
+			return new StringBundler(new String(outputStream.toByteArray()));
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
 		}
-
-		return new StringBundler(string);
 	}
-
-	@Reference
-	private ClassNameLocalService _classNameLocalService;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.sharing.document.library)"
@@ -133,9 +85,6 @@ public class DLInfoPanelFileEntryOwnerDynamicSection implements DynamicSection {
 	private ServletContext _servletContext;
 
 	@Reference
-	private SharingEntryLocalService _sharingEntryLocalService;
-
-	@Reference
-	private UserLocalService _userLocalService;
+	private SharingConfigurationFactory _sharingConfigurationFactory;
 
 }

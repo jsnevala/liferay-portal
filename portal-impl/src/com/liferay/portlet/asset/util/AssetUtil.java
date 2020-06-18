@@ -33,6 +33,7 @@ import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureManager;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureManagerUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -70,8 +71,6 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PredicateFilter;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -122,9 +121,9 @@ public class AssetUtil {
 	};
 
 	public static Set<String> addLayoutTags(
-		HttpServletRequest request, List<AssetTag> tags) {
+		HttpServletRequest httpServletRequest, List<AssetTag> tags) {
 
-		Set<String> layoutTags = getLayoutTagNames(request);
+		Set<String> layoutTags = getLayoutTagNames(httpServletRequest);
 
 		for (AssetTag tag : tags) {
 			layoutTags.add(tag.getName());
@@ -134,12 +133,13 @@ public class AssetUtil {
 	}
 
 	public static void addPortletBreadcrumbEntries(
-			long assetCategoryId, HttpServletRequest request,
+			long assetCategoryId, HttpServletRequest httpServletRequest,
 			PortletURL portletURL)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
@@ -152,16 +152,18 @@ public class AssetUtil {
 		}
 
 		addPortletBreadcrumbEntries(
-			assetCategoryId, request, portletURL, portletBreadcrumbEntry);
+			assetCategoryId, httpServletRequest, portletURL,
+			portletBreadcrumbEntry);
 	}
 
 	public static void addPortletBreadcrumbEntries(
-			long assetCategoryId, HttpServletRequest request,
+			long assetCategoryId, HttpServletRequest httpServletRequest,
 			PortletURL portletURL, boolean portletBreadcrumbEntry)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		AssetCategory assetCategory = AssetCategoryLocalServiceUtil.getCategory(
 			assetCategoryId);
@@ -175,14 +177,16 @@ public class AssetUtil {
 				"categoryId", String.valueOf(ancestorCategory.getCategoryId()));
 
 			PortalUtil.addPortletBreadcrumbEntry(
-				request, ancestorCategory.getTitle(themeDisplay.getLocale()),
+				httpServletRequest,
+				ancestorCategory.getTitle(themeDisplay.getLocale()),
 				portletURL.toString(), null, portletBreadcrumbEntry);
 		}
 
 		portletURL.setParameter("categoryId", String.valueOf(assetCategoryId));
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, assetCategory.getTitle(themeDisplay.getLocale()),
+			httpServletRequest,
+			assetCategory.getTitle(themeDisplay.getLocale()),
 			portletURL.toString(), null, portletBreadcrumbEntry);
 	}
 
@@ -215,6 +219,10 @@ public class AssetUtil {
 			PermissionChecker permissionChecker, long[] categoryIds)
 		throws PortalException {
 
+		if (permissionChecker == null) {
+			return categoryIds;
+		}
+
 		List<Long> viewableCategoryIds = new ArrayList<>();
 
 		for (long categoryId : categoryIds) {
@@ -229,29 +237,20 @@ public class AssetUtil {
 			}
 		}
 
-		return ArrayUtil.toArray(
-			viewableCategoryIds.toArray(new Long[viewableCategoryIds.size()]));
+		return ArrayUtil.toArray(viewableCategoryIds.toArray(new Long[0]));
 	}
 
 	public static List<AssetVocabulary> filterVocabularies(
 		List<AssetVocabulary> vocabularies, String className,
-		final long classTypePK) {
+		long classTypePK) {
 
-		final long classNameId = PortalUtil.getClassNameId(className);
+		long classNameId = PortalUtil.getClassNameId(className);
 
-		PredicateFilter<AssetVocabulary> predicateFilter =
-			new PredicateFilter<AssetVocabulary>() {
-
-				@Override
-				public boolean filter(AssetVocabulary assetVocabulary) {
-					return
-						assetVocabulary.isAssociatedToClassNameIdAndClassTypePK(
-							classNameId, classTypePK);
-				}
-
-			};
-
-		return ListUtil.filter(vocabularies, predicateFilter);
+		return ListUtil.filter(
+			vocabularies,
+			assetVocabulary ->
+				assetVocabulary.isAssociatedToClassNameIdAndClassTypePK(
+					classNameId, classTypePK));
 	}
 
 	public static long[] filterVocabularyIds(
@@ -268,9 +267,7 @@ public class AssetUtil {
 			}
 		}
 
-		return ArrayUtil.toArray(
-			viewableVocabularyIds.toArray(
-				new Long[viewableVocabularyIds.size()]));
+		return ArrayUtil.toArray(viewableVocabularyIds.toArray(new Long[0]));
 	}
 
 	public static PortletURL getAddPortletURL(
@@ -469,8 +466,6 @@ public class AssetUtil {
 		long groupId, long plid, PortletURL addPortletURL,
 		boolean addDisplayPageParameter, Layout layout) {
 
-		addPortletURL.setParameter(
-			"hideDefaultSuccessMessage", Boolean.TRUE.toString());
 		addPortletURL.setParameter("groupId", String.valueOf(groupId));
 		addPortletURL.setParameter("showHeader", Boolean.FALSE.toString());
 
@@ -523,7 +518,7 @@ public class AssetUtil {
 
 				assetEntries.add(assetEntry);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
@@ -666,12 +661,10 @@ public class AssetUtil {
 	 */
 	@Deprecated
 	public static String getClassNameMessage(String className, Locale locale) {
-		String message = null;
-
 		int pos = className.indexOf(AssetUtil.CLASSNAME_SEPARATOR);
 
 		if (pos != -1) {
-			message = className.substring(
+			String message = className.substring(
 				pos + AssetUtil.CLASSNAME_SEPARATOR.length());
 
 			className = className.substring(0, pos);
@@ -692,14 +685,17 @@ public class AssetUtil {
 			StringPool.BLANK);
 	}
 
-	public static Set<String> getLayoutTagNames(HttpServletRequest request) {
-		Set<String> tagNames = (Set<String>)request.getAttribute(
+	public static Set<String> getLayoutTagNames(
+		HttpServletRequest httpServletRequest) {
+
+		Set<String> tagNames = (Set<String>)httpServletRequest.getAttribute(
 			WebKeys.ASSET_LAYOUT_TAG_NAMES);
 
 		if (tagNames == null) {
 			tagNames = new HashSet<>();
 
-			request.setAttribute(WebKeys.ASSET_LAYOUT_TAG_NAMES, tagNames);
+			httpServletRequest.setAttribute(
+				WebKeys.ASSET_LAYOUT_TAG_NAMES, tagNames);
 		}
 
 		return tagNames;
@@ -753,8 +749,8 @@ public class AssetUtil {
 					if (_log.isDebugEnabled()) {
 						_log.debug(
 							StringBundler.concat(
-								"Word ", word, " is not valid because ",
-								String.valueOf(c), " is not allowed"));
+								"Word ", word, " is not valid because ", c,
+								" is not allowed"));
 					}
 
 					return false;
@@ -766,11 +762,12 @@ public class AssetUtil {
 	}
 
 	public static Hits search(
-			HttpServletRequest request, AssetEntryQuery assetEntryQuery,
-			int start, int end)
+			HttpServletRequest httpServletRequest,
+			AssetEntryQuery assetEntryQuery, int start, int end)
 		throws Exception {
 
-		SearchContext searchContext = SearchContextFactory.getInstance(request);
+		SearchContext searchContext = SearchContextFactory.getInstance(
+			httpServletRequest);
 
 		return search(searchContext, assetEntryQuery, start, end);
 	}
@@ -802,11 +799,12 @@ public class AssetUtil {
 	}
 
 	public static BaseModelSearchResult<AssetEntry> searchAssetEntries(
-			HttpServletRequest request, AssetEntryQuery assetEntryQuery,
-			int start, int end)
+			HttpServletRequest httpServletRequest,
+			AssetEntryQuery assetEntryQuery, int start, int end)
 		throws Exception {
 
-		SearchContext searchContext = SearchContextFactory.getInstance(request);
+		SearchContext searchContext = SearchContextFactory.getInstance(
+			httpServletRequest);
 
 		return searchAssetEntries(searchContext, assetEntryQuery, start, end);
 	}
@@ -821,9 +819,8 @@ public class AssetUtil {
 
 		Hits hits = assetSearcher.search(searchContext);
 
-		List<AssetEntry> assetEntries = getAssetEntries(hits);
-
-		return new BaseModelSearchResult<>(assetEntries, hits.getLength());
+		return new BaseModelSearchResult<>(
+			getAssetEntries(hits), hits.getLength());
 	}
 
 	public static String substituteCategoryPropertyVariables(
@@ -934,6 +931,21 @@ public class AssetUtil {
 		return assetSearcher;
 	}
 
+	protected static boolean getDDMFormFieldLocalizable(String sortField)
+		throws PortalException {
+
+		String[] sortFields = StringUtil.split(
+			sortField, DDMStructureManager.STRUCTURE_INDEXER_FIELD_SEPARATOR);
+
+		long ddmStructureId = GetterUtil.getLong(sortFields[2]);
+
+		DDMStructure ddmStructure = DDMStructureManagerUtil.getStructure(
+			ddmStructureId);
+
+		return GetterUtil.getBoolean(
+			ddmStructure.getFieldProperty(sortFields[3], "localizable"));
+	}
+
 	protected static String getDDMFormFieldType(String sortField)
 		throws PortalException {
 
@@ -950,7 +962,8 @@ public class AssetUtil {
 	}
 
 	protected static String getOrderByCol(
-		String sortField, String fieldType, int sortType, Locale locale) {
+		String sortField, String fieldType, boolean fieldLocalizable,
+		int sortType, Locale locale) {
 
 		if (sortField.startsWith(
 				DDMStructureManager.STRUCTURE_INDEXER_FIELD_PREFIX)) {
@@ -959,8 +972,11 @@ public class AssetUtil {
 
 			sb.append(sortField);
 			sb.append(StringPool.UNDERLINE);
-			sb.append(LocaleUtil.toLanguageId(locale));
-			sb.append(StringPool.UNDERLINE);
+
+			if (fieldLocalizable) {
+				sb.append(LocaleUtil.toLanguageId(locale));
+				sb.append(StringPool.UNDERLINE);
+			}
 
 			String suffix = "String";
 
@@ -987,14 +1003,23 @@ public class AssetUtil {
 		return sortField;
 	}
 
+	protected static String getOrderByCol(
+		String sortField, String fieldType, int sortType, Locale locale) {
+
+		return getOrderByCol(sortField, fieldType, true, sortType, locale);
+	}
+
 	protected static Sort getSort(
 			String orderByType, String sortField, Locale locale)
 		throws Exception {
 
+		boolean ddmFormFieldLocalizable = true;
 		String ddmFormFieldType = sortField;
 
 		if (ddmFormFieldType.startsWith(
 				DDMStructureManager.STRUCTURE_INDEXER_FIELD_PREFIX)) {
+
+			ddmFormFieldLocalizable = getDDMFormFieldLocalizable(sortField);
 
 			ddmFormFieldType = getDDMFormFieldType(ddmFormFieldType);
 		}
@@ -1003,7 +1028,9 @@ public class AssetUtil {
 
 		return SortFactoryUtil.getSort(
 			AssetEntry.class, sortType,
-			getOrderByCol(sortField, ddmFormFieldType, sortType, locale),
+			getOrderByCol(
+				sortField, ddmFormFieldType, ddmFormFieldLocalizable, sortType,
+				locale),
 			!sortField.startsWith(
 				DDMStructureManager.STRUCTURE_INDEXER_FIELD_PREFIX),
 			orderByType);

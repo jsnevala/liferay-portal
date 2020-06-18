@@ -29,14 +29,14 @@ CATALINA_OPTS=&quot;${CATALINA_OPTS} -Djavax.net.ssl.trustStore=${solr.dir}/serv
 
 	<macrodef name="configure-liferay-solr-adapter-osgi-configs">
 		<sequential>
-			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr.configuration.SolrConfiguration.cfg">readURL=http://localhost:8983/solr/liferay
+			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.cfg">readURL=http://localhost:8983/solr/liferay
 writeURL=http://localhost:8983/solr/liferay</echo>
 		</sequential>
 	</macrodef>
 
 	<macrodef name="configure-liferay-solr-solrcloud-osgi-configs">
 		<sequential>
-			<echo append="true" file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr.configuration.SolrConfiguration.cfg">
+			<echo append="true" file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.cfg">
 clientType=CLOUD</echo>
 		</sequential>
 	</macrodef>
@@ -44,16 +44,16 @@ clientType=CLOUD</echo>
 	<macrodef name="configure-liferay-solr-ssl-adapter-properties">
 		<sequential>
 			<replace
-				file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr.configuration.SolrConfiguration.cfg"
+				file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.cfg"
 			>
 				<replacetoken><![CDATA[http://]]></replacetoken>
 				<replacevalue><![CDATA[https://]]></replacevalue>
 			</replace>
 
-			<echo append="true" file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr.configuration.SolrConfiguration.cfg">
+			<echo append="true" file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrConfiguration.cfg">
 authenticationMode=CERT</echo>
 
-			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr.configuration.SolrSSLSocketFactoryConfiguration.cfg">keyStorePath=${solr.dir}/server/etc/solr-ssl.keystore.jks
+			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.solr7.configuration.SolrSSLSocketFactoryConfiguration.cfg">keyStorePath=${solr.dir}/server/etc/solr-ssl.keystore.jks
 trustStorePath=${solr.dir}/server/etc/solr-ssl.keystore.jks</echo>
 		</sequential>
 	</macrodef>
@@ -63,7 +63,7 @@ trustStorePath=${solr.dir}/server/etc/solr-ssl.keystore.jks</echo>
 			<if>
 				<os family="unix" />
 				<then>
-					<echo append="true" file="${solr.dir}/bin/solr.in.sh">SOLR_SSL_KEY_STORE=${solr.dir}/server/etc/solr-ssl.keystore.jks
+					<echo append="true" file="${solr.dir}/bin/solr.in.sh">${line.separator}SOLR_SSL_KEY_STORE=${solr.dir}/server/etc/solr-ssl.keystore.jks
 SOLR_SSL_KEY_STORE_PASSWORD=secret
 SOLR_SSL_TRUST_STORE=${solr.dir}/server/etc/solr-ssl.keystore.jks
 SOLR_SSL_TRUST_STORE_PASSWORD=secret
@@ -72,7 +72,7 @@ SOLR_SSL_WANT_CLIENT_AUTH=true</echo>
 				<elseif>
 					<os family="windows" />
 					<then>
-						<echo append="true" file="${solr.dir}/bin/solr.in.cmd">SOLR_SSL_KEY_STORE=${solr.dir}/server/etc/solr-ssl.keystore.jks
+						<echo append="true" file="${solr.dir}/bin/solr.in.cmd">${line.separator}SOLR_SSL_KEY_STORE=${solr.dir}/server/etc/solr-ssl.keystore.jks
 SOLR_SSL_KEY_STORE_PASSWORD=secret
 SOLR_SSL_TRUST_STORE=${solr.dir}/server/etc/solr-ssl.keystore.jks
 SOLR_SSL_TRUST_STORE_PASSWORD=secret
@@ -90,7 +90,7 @@ SOLR_SSL_WANT_CLIENT_AUTH=true</echo>
 				<then>
 					<exec dir="${solr.dir}/bin" executable="/bin/bash">
 						<arg value="-c" />
-						<arg value="./solr create_core -c liferay -d ${solr.dir}/server/solr/liferay/conf" />
+						<arg value="./solr create_core -c liferay -d ${solr.dir}/server/solr/liferay/conf -force" />
 					</exec>
 				</then>
 				<elseif>
@@ -130,30 +130,25 @@ SOLR_SSL_WANT_CLIENT_AUTH=true</echo>
 				todir="${solr.dir}/server/solr/liferay/conf"
 			>
 				<fileset
-					dir="${solr.dir}/server/solr/configsets/data_driven_schema_configs/conf"
+					dir="${solr.dir}/server/solr/configsets/_default/conf"
 				>
 					<exclude name="solrconfig.xml" />
 				</fileset>
 
 				<fileset
-					dir="modules/apps/portal-search-solr/portal-search-solr/src/main/resources/META-INF/resources"
+					dir="modules/apps/portal-search-solr7/portal-search-solr7-impl/src/main/resources/META-INF/resources"
 				>
 					<include name="schema.xml" />
 					<include name="solrconfig.xml" />
 				</fileset>
 			</copy>
 
-			<replace
-				file="${solr.dir}/server/solr/liferay/conf/solrconfig.xml"
-			>
-				<replacetoken><![CDATA[<maxWarmingSearchers>2</maxWarmingSearchers>]]></replacetoken>
-				<replacevalue><![CDATA[<maxWarmingSearchers>5</maxWarmingSearchers>]]></replacevalue>
-			</replace>
-
 			<echo file="${solr.dir}/server/solr/liferay/core.properties">config=solrconfig.xml
 dataDir=data
 name=liferay
 schema=schema.xml</echo>
+
+			<echo append="true" file="${solr.dir}/bin/solr.in.sh">SOLR_ULIMIT_CHECKS=false</echo>
 		</sequential>
 	</macrodef>
 
@@ -207,17 +202,17 @@ schema=schema.xml</echo>
 
 					<exec dir="${solr.dir}/bin" executable="/bin/bash">
 						<arg value="-c" />
-						<arg value="./solr start -cloud -p 8983 -s ${solr.dir}/example/cloud/node1/solr" />
+						<arg value="./solr start -cloud -p 8983 -s ${solr.dir}/example/cloud/node1/solr -force" />
 					</exec>
 
 					<exec dir="${solr.dir}/bin" executable="/bin/bash">
 						<arg value="-c" />
-						<arg value="./solr start -cloud -p 7574 -s ${solr.dir}/example/cloud/node2/solr -z localhost:9983" />
+						<arg value="./solr start -cloud -p 7574 -s ${solr.dir}/example/cloud/node2/solr -z localhost:9983 -force" />
 					</exec>
 
 					<exec dir="${solr.dir}/bin" executable="/bin/bash">
 						<arg value="-c" />
-						<arg value="./solr create_collection -c liferay -p 8983 -d liferay_configs -shards 2 -replicationFactor 2" />
+						<arg value="./solr create_collection -c liferay -p 8983 -d liferay_configs -shards 2 -replicationFactor 2 -force" />
 					</exec>
 				</then>
 				<elseif>
@@ -269,7 +264,7 @@ schema=schema.xml</echo>
 	</macrodef>
 
 	<target name="deploy-solr">
-		<gradle-execute dir="modules/apps/portal-search-solr/portal-search-solr" task="deploy">
+		<gradle-execute dir="modules/apps/portal-search-solr7" task="deploy">
 			<arg value="clean" />
 		</gradle-execute>
 
@@ -293,7 +288,50 @@ schema=schema.xml</echo>
 		</if>
 	</target>
 
+	<target name="print-solr-indices">
+		<property name="solr.print.query">
+			<![CDATA[
+				'{
+					"query": {
+						"bool": {
+							"must": [
+								{
+									"match": {
+										"userName": "test test"
+									}
+								}
+							],
+							"must_not": [
+								{
+									"match": {
+										"hidden": "true"
+									}
+								}
+							]
+						}
+					}
+				}'
+			]]>
+		</property>
+
+		<exec executable="curl" outputproperty="curl.output.solr.indices">
+			<arg line="http://localhost:8983/solr/liferay/select?q=*:*&amp;wt=json" />
+			<arg value="-d" />
+			<arg value="${solr.print.query}" />
+		</exec>
+
+		<echo></echo>
+		<echo>##</echo>
+		<echo>## Solr Indices</echo>
+		<echo>##</echo>
+		<echo></echo>
+		<echo>${curl.output.solr.indices}</echo>
+		<echo></echo>
+	</target>
+
 	<target name="start-solr">
+		<lstopwatch action="start" name="start.solr" />
+
 		<unzip-solr />
 
 		<prepare-solr-configurations />
@@ -328,9 +366,13 @@ schema=schema.xml</echo>
 				<create-solr-core />
 			</else>
 		</if>
+
+		<lstopwatch action="total" name="start.solr" />
 	</target>
 
 	<target name="start-solr-core">
+		<lstopwatch action="start" name="start.solr.core" />
+
 		<if>
 			<os family="unix" />
 			<then>
@@ -341,7 +383,7 @@ schema=schema.xml</echo>
 
 				<exec dir="${solr.dir}/bin" executable="/bin/bash">
 					<arg value="-c" />
-					<arg value="./solr start -V" />
+					<arg value="./solr start -V -force" />
 				</exec>
 			</then>
 			<elseif>
@@ -361,10 +403,14 @@ schema=schema.xml</echo>
 			<socket port="8983" server="localhost" />
 		</waitfor>
 
+		<lstopwatch action="total" name="start.solr.core" />
+
 		<fail if="solr.server.not.started" message="Solr server failed to initialize." />
 	</target>
 
 	<target name="start-solr-solrcloud">
+		<lstopwatch action="start" name="start.solr.solrcloud" />
+
 		<prepare-solr-solrcloud-configurations />
 
 		<prepare-solr-solrcloud-example />
@@ -372,11 +418,11 @@ schema=schema.xml</echo>
 		<configure-liferay-solr-solrcloud-osgi-configs />
 
 		<start-solr-solrcloud-example />
+
+		<lstopwatch action="total" name="start.solr.solrcloud" />
 	</target>
 
 	<target name="stop-solr-core">
-		<print-file file.name="${solr.dir}/server/logs/solr.log" />
-
 		<if>
 			<os family="unix" />
 			<then>

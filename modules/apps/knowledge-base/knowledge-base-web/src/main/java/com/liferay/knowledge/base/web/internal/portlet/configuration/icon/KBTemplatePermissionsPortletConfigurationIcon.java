@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Ambrin Chaudhary
+ * @author Ambrín Chaudhary
  */
 @Component(
 	immediate = true,
@@ -81,7 +81,7 @@ public class KBTemplatePermissionsPortletConfigurationIcon
 				resourcePrimKey, LiferayWindowState.POP_UP.toString(), null,
 				themeDisplay.getRequest());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return url;
@@ -107,9 +107,9 @@ public class KBTemplatePermissionsPortletConfigurationIcon
 			return _kbTemplateModelResourcePermission.contains(
 				permissionChecker, kbTemplate, KBActionKeys.PERMISSIONS);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(pe, pe);
+				_log.warn(portalException, portalException);
 			}
 		}
 

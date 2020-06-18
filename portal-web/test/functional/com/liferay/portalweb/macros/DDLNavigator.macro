@@ -1,106 +1,95 @@
-<definition>
-	<var name="ddlDataDefinitionName" value="Data Definition Name" />
-	<var name="ddlListName" value="List Name" />
+definition {
 
-	<command name="gotoAddListRecord">
-		<execute function="Click#clickNoMouseOver" locator1="Button#PLUS" />
+	var ddlDataDefinitionName = "Data Definition Name";
+	var ddlListName = "List Name";
 
-		<execute macro="SiteAdmin#viewPortletTitle">
-			<var name="portletTitle" value="New ${ddlDataDefinitionName}" />
-		</execute>
-	</command>
+	macro gotoAddListRecord {
+		Click.clickNoMouseOver(locator1 = "Button#PLUS");
 
-	<command name="gotoDataDefinitionPermissions">
-		<execute macro="DDLNavigator#gotoManageDataDefinitions" />
+		SiteAdmin.viewPortletTitle(portletTitle = "New ${ddlDataDefinitionName}");
+	}
 
-		<execute macro="Search#searchCP">
-			<var name="searchTerm" value="${ddlDataDefinitionName}" />
-		</execute>
+	macro gotoDataDefinitionPermissions {
+		DDLNavigator.gotoManageDataDefinitions();
 
-		<execute function="Click#waitForMenuToggleJSClick" locator1="DDMSelectStructure#DDM_STRUCTURE_ELLIPSIS_1" />
+		Search.searchCP(searchTerm = "${ddlDataDefinitionName}");
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="Permissions" />
-		</execute>
-	</command>
+		Click.waitForMenuToggleJSClick(locator1 = "DDMSelectStructure#DDM_STRUCTURE_ELLIPSIS_1");
 
-	<command name="gotoDDLRecordEditViaWorkflow">
-		<execute function="Click" locator1="WorkflowSubmissionsTask#PREVIEW_EDIT" />
+		MenuItem.click(menuItem = "Permissions");
+	}
 
-		<execute function="SelectFrame" value1="relative=top" />
+	macro gotoDDLRecordEditViaWorkflow {
+		Click(locator1 = "WorkflowSubmissionsTask#PREVIEW_EDIT");
 
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
+		WorkflowAsset.viewDetails(
+			userName = "${userName}",
+			workflowStatus = "${workflowStatus}");
+	}
 
-		<execute macro="WorkflowAsset#viewDetails">
-			<var name="userName" value="${userName}" />
-			<var name="workflowStatus" value="${workflowStatus}" />
-		</execute>
-	</command>
+	macro gotoEdit {
+		Click(locator1 = "DDL#RECORD_TABLE_ELLIPSIS_1");
 
-	<command name="gotoEdit">
-		<execute function="Click" locator1="DDL#RECORD_TABLE_ELLIPSIS_1" />
+		MenuItem.click(menuItem = "Edit");
+	}
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="Edit" />
-		</execute>
-	</command>
+	macro gotoListRecords {
+		var key_ddlListName = "${ddlListName}";
 
-	<command name="gotoListRecords">
-		<var name="key_ddlListName" value="${ddlListName}" />
+		AssertTextEquals(
+			locator1 = "DDL#LIST_TABLE_NAME",
+			value1 = "${ddlListName}");
 
-		<execute function="AssertTextEquals" locator1="DDL#LIST_TABLE_NAME" value1="${ddlListName}" />
+		AssertClick(
+			locator1 = "DDL#LIST_TABLE_NAME",
+			value1 = "${ddlListName}");
 
-		<execute function="AssertClick" locator1="DDL#LIST_TABLE_NAME" value1="${ddlListName}" />
+		SiteAdmin.viewPortletTitle(portletTitle = "${ddlListName}");
+	}
 
-		<execute macro="SiteAdmin#viewPortletTitle">
-			<var name="portletTitle" value="${ddlListName}" />
-		</execute>
-	</command>
+	macro gotoManageDataDefinitions {
+		Pause(locator1 = "5000");
 
-	<command name="gotoManageDataDefinitions">
-		<execute function="Pause" locator1="5000" />
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Manage Data Definitions");
 
-		<execute macro="LexiconEntry#gotoHeaderMenuItem">
-			<var name="menuItem" value="Manage Data Definitions" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "Portlet#HEADER",
+			value1 = "Data Definitions");
+	}
 
-		<execute function="AssertTextEquals" locator1="Portlet#HEADER" value1="Data Definitions" />
-	</command>
+	macro gotoManageTemplates {
+		DDLNavigator.gotoManageDataDefinitions();
 
-	<command name="gotoManageTemplates">
-		<execute macro="DDLNavigator#gotoManageDataDefinitions" />
+		var key_ddlDataDefinitionName = "${ddlDataDefinitionName}";
 
-		<var name="key_ddlDataDefinitionName" value="${ddlDataDefinitionName}" />
+		Click.waitForMenuToggleJSClick(locator1 = "DDMSelectStructure#DDM_STRUCTURE_ELLIPSIS");
 
-		<execute function="Click#waitForMenuToggleJSClick" locator1="DDMSelectStructure#DDM_STRUCTURE_ELLIPSIS" />
+		MenuItem.click(menuItem = "Manage Templates");
+	}
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="Manage Templates" />
-		</execute>
-	</command>
+	macro gotoOptionalConfiguration {
+		SelectFrame(locator1 = "DDLConfiguration#CONFIGURATION_IFRAME");
 
-	<command name="gotoOptionalConfiguration">
-		<execute function="SelectFrame" locator1="DDLConfiguration#CONFIGURATION_IFRAME" />
+		AssertClick(
+			locator1 = "DDLConfiguration#NAVIGATION_OPTIONAL_CONFIGURATION",
+			value1 = "Optional Configuration");
+	}
 
-		<execute function="AssertClick" locator1="DDLConfiguration#NAVIGATION_OPTIONAL_CONFIGURATION" value1="Optional Configuration" />
-	</command>
+	macro gotoSpreadsheetView {
+		AssertTextEquals(
+			key_ddlListName = "${ddlListName}",
+			locator1 = "DDL#LIST_TABLE_NAME",
+			value1 = "${ddlListName}");
 
-	<command name="gotoSpreadsheetView">
-		<execute function="AssertTextEquals" locator1="DDL#LIST_TABLE_NAME" value1="${ddlListName}">
-			<var name="key_ddlListName" value="${ddlListName}" />
-		</execute>
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Spreadsheet View",
+			rowEntry = "${ddlListName}");
+	}
 
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="Spreadsheet View" />
-			<var name="rowEntry" value="${ddlListName}" />
-		</execute>
-	</command>
+	macro gotoView {
+		Click(locator1 = "DDL#RECORD_TABLE_ELLIPSIS_1");
 
-	<command name="gotoView">
-		<execute function="Click" locator1="DDL#RECORD_TABLE_ELLIPSIS_1" />
+		MenuItem.click(menuItem = "View");
+	}
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="View" />
-		</execute>
-	</command>
-</definition>
+}

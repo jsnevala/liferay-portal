@@ -115,11 +115,11 @@ fi
 #
 
 SUBREPO_SEARCH_PARAMETERS=(
-	"7.0.x:../..:modules"
-	"7.0.x-private:../../../liferay-portal-ee:modules/private"
-	"7.1.x:../..:modules"
-	"7.1.x-private:../../../liferay-portal-ee:modules/private"
-	"master-private:../../../liferay-portal-ee:modules/private"
+	"7.0.x:../../../liferay-portal-ee:modules"
+	"7.0.x-private:../../../liferay-portal-ee:modules/dxp"
+	"7.1.x:../../../liferay-portal-ee:modules"
+	"7.1.x-private:../../../liferay-portal-ee:modules/dxp"
+	"master-private:../../../liferay-portal-ee:modules/dxp"
 	"master:../..:modules"
 )
 
@@ -143,7 +143,7 @@ then
 		ALL_GITREPOS=("${ALL_GITREPOS[@]}" "${GITREPO_SEARCH}")
 	done
 
-  ALL_GITREPOS=($(printf '%s\n' "${ALL_GITREPOS[@]}" | sort -u))
+	ALL_GITREPOS=($(printf '%s\n' "${ALL_GITREPOS[@]}" | sort -u))
 
 	if [[ -z "$(echo "${ALL_GITREPOS[@]}" | grep '[a-zA-Z]')" ]]
 	then

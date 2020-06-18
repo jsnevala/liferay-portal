@@ -20,7 +20,6 @@ import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderTracker;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeResponse;
-import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerTracker;
 import com.liferay.dynamic.data.mapping.model.DDMDataProviderInstance;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
@@ -37,6 +36,7 @@ import org.osgi.service.component.annotations.Reference;
 public class DDMDataProviderInstanceSettingsImpl
 	implements DDMDataProviderInstanceSettings {
 
+	@Override
 	public <T> T getSettings(
 		DDMDataProviderInstance ddmDataProviderInstance, Class<T> clazz) {
 
@@ -53,17 +53,13 @@ public class DDMDataProviderInstanceSettingsImpl
 	}
 
 	protected DDMFormValues deserialize(String content, DDMForm ddmForm) {
-		DDMFormValuesDeserializer ddmFormValuesDeserializer =
-			ddmFormValuesDeserializerTracker.getDDMFormValuesDeserializer(
-				"json");
-
 		DDMFormValuesDeserializerDeserializeRequest.Builder builder =
 			DDMFormValuesDeserializerDeserializeRequest.Builder.newBuilder(
 				content, ddmForm);
 
 		DDMFormValuesDeserializerDeserializeResponse
 			ddmFormValuesDeserializerDeserializeResponse =
-				ddmFormValuesDeserializer.deserialize(builder.build());
+				jsonDDMFormValuesDeserializer.deserialize(builder.build());
 
 		return ddmFormValuesDeserializerDeserializeResponse.getDDMFormValues();
 	}
@@ -71,7 +67,7 @@ public class DDMDataProviderInstanceSettingsImpl
 	@Reference
 	protected DDMDataProviderTracker ddmDataProviderTracker;
 
-	@Reference
-	protected DDMFormValuesDeserializerTracker ddmFormValuesDeserializerTracker;
+	@Reference(target = "(ddm.form.values.deserializer.type=json)")
+	protected DDMFormValuesDeserializer jsonDDMFormValuesDeserializer;
 
 }

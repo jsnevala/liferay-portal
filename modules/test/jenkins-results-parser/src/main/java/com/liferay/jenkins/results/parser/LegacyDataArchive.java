@@ -24,17 +24,6 @@ import java.util.List;
  */
 public class LegacyDataArchive {
 
-	public Commit getCommit() {
-		if (_legacyDataArchiveFile.exists()) {
-			List<Commit> commits = _legacyGitWorkingDirectory.log(
-				1, _legacyDataArchiveFile);
-
-			return commits.get(0);
-		}
-
-		return null;
-	}
-
 	public String getDataArchiveType() {
 		return _dataArchiveType;
 	}
@@ -43,27 +32,40 @@ public class LegacyDataArchive {
 		return _legacyDataArchiveFile;
 	}
 
-	public LegacyDataArchiveUtil getLegacyDataArchiveUtil() {
-		return _legacyDataArchiveUtil;
+	public LegacyDataArchiveHelper getLegacyDataArchiveHelper() {
+		return _legacyDataArchiveHelper;
 	}
 
 	public GitWorkingDirectory getLegacyGitWorkingDirectory() {
 		return _legacyGitWorkingDirectory;
 	}
 
-	public boolean isUpdated() {
-		Commit commit = getCommit();
+	public LocalGitCommit getLocalGitCommit() {
+		if (_legacyDataArchiveFile.exists()) {
+			List<LocalGitCommit> localGitCommits =
+				_legacyGitWorkingDirectory.log(1, _legacyDataArchiveFile);
 
-		if (commit == null) {
+			return localGitCommits.get(0);
+		}
+
+		return null;
+	}
+
+	public boolean isUpdated() {
+		LocalGitCommit localGitCommit = getLocalGitCommit();
+
+		if (localGitCommit == null) {
 			return false;
 		}
 
-		Commit latestTestCommit =
-			_legacyDataArchivePortalVersion.getLatestTestCommit();
+		LocalGitCommit latestTestLocalGitCommit =
+			_legacyDataArchivePortalVersion.getLatestTestLocalGitCommit();
 
-		String commitMessage = commit.getMessage();
+		String gitCommitMessage = localGitCommit.getMessage();
 
-		if (commitMessage.contains(latestTestCommit.getAbbreviatedSHA())) {
+		if (gitCommitMessage.contains(
+				latestTestLocalGitCommit.getAbbreviatedSHA())) {
+
 			return true;
 		}
 
@@ -71,23 +73,23 @@ public class LegacyDataArchive {
 	}
 
 	public void stageLegacyDataArchive() throws IOException {
-		String dataArchiveType = _legacyDataArchiveGroup.getDataArchiveType();
 		File generatedArchiveDirectory =
-			_legacyDataArchiveUtil.getGeneratedArchiveDirectory();
-		String portalVersion =
-			_legacyDataArchivePortalVersion.getPortalVersion();
+			_legacyDataArchiveHelper.getGeneratedArchiveDirectory();
 
 		File generatedArchiveFile = new File(
 			JenkinsResultsParserUtil.combine(
-				generatedArchiveDirectory.toString(), "/", portalVersion, "/",
-				dataArchiveType, "-", _databaseName, ".zip"));
+				generatedArchiveDirectory.toString(), "/",
+				_legacyDataArchivePortalVersion.getPortalVersion(), "/",
+				_legacyDataArchiveGroup.getDataArchiveType(), "-",
+				_databaseName, ".zip"));
 
 		if (generatedArchiveFile.exists()) {
 			JenkinsResultsParserUtil.copy(
 				generatedArchiveFile, _legacyDataArchiveFile);
 
 			_legacyGitWorkingDirectory.stageFileInCurrentLocalGitBranch(
-				_legacyDataArchiveFile.getCanonicalPath());
+				JenkinsResultsParserUtil.getCanonicalPath(
+					_legacyDataArchiveFile));
 		}
 	}
 
@@ -100,22 +102,21 @@ public class LegacyDataArchive {
 		_legacyDataArchivePortalVersion =
 			_legacyDataArchiveGroup.getLegacyDataArchivePortalVersion();
 
-		_legacyDataArchiveUtil =
-			_legacyDataArchivePortalVersion.getLegacyDataArchiveUtil();
+		_legacyDataArchiveHelper =
+			_legacyDataArchivePortalVersion.getLegacyDataArchiveHelper();
 
 		_legacyGitWorkingDirectory =
-			_legacyDataArchiveUtil.getLegacyGitWorkingDirectory();
+			_legacyDataArchiveHelper.getLegacyGitWorkingDirectory();
 
 		_dataArchiveType = _legacyDataArchiveGroup.getDataArchiveType();
 
-		String portalVersion =
-			_legacyDataArchivePortalVersion.getPortalVersion();
 		File legacyDataWorkingDirectory =
 			_legacyGitWorkingDirectory.getWorkingDirectory();
 
 		_legacyDataArchiveFile = new File(
 			JenkinsResultsParserUtil.combine(
-				legacyDataWorkingDirectory.toString(), "/", portalVersion,
+				legacyDataWorkingDirectory.toString(), "/",
+				_legacyDataArchivePortalVersion.getPortalVersion(),
 				"/data-archive/", _dataArchiveType, "-", _databaseName,
 				".zip"));
 	}
@@ -124,9 +125,9 @@ public class LegacyDataArchive {
 	private final String _databaseName;
 	private final File _legacyDataArchiveFile;
 	private final LegacyDataArchiveGroup _legacyDataArchiveGroup;
+	private final LegacyDataArchiveHelper _legacyDataArchiveHelper;
 	private final LegacyDataArchivePortalVersion
 		_legacyDataArchivePortalVersion;
-	private final LegacyDataArchiveUtil _legacyDataArchiveUtil;
 	private final GitWorkingDirectory _legacyGitWorkingDirectory;
 
 }

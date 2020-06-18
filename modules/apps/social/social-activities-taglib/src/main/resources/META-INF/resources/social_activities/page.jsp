@@ -19,7 +19,7 @@
 <div class="taglib-social-activities">
 	<c:if test="<%= feedEnabled && !activityDescriptors.isEmpty() %>">
 		<div class="clearfix">
-			<div class="pull-right">
+			<div class="float-right">
 				<liferay-rss:rss
 					delta="<%= feedDelta %>"
 					displayStyle="<%= feedDisplayStyle %>"
@@ -49,7 +49,9 @@
 			continue;
 		}
 
-		int curDaysBetween = DateUtil.getDaysBetween(new Date(activityDescriptor.getCreateDate()), now, timeZone);
+		Date activityDate = new Date(activityDescriptor.getCreateDate());
+
+		int curDaysBetween = DateUtil.getDaysBetween(activityDate, now, timeZone);
 	%>
 
 		<c:if test="<%= curDaysBetween > daysBetween %>">
@@ -66,7 +68,7 @@
 			}
 			%>
 
-			<ul class="list-group-card list-unstyled">
+			<ul class="list-unstyled">
 				<li class="splitter">
 					<c:choose>
 						<c:when test="<%= curDaysBetween == 0 %>">
@@ -75,7 +77,7 @@
 						<c:when test="<%= curDaysBetween == 1 %>">
 							<liferay-ui:message key="yesterday" />
 						</c:when>
-						<c:when test="<%= curDaysBetween < 365 %>">
+						<c:when test="<%= DateUtil.getYear(activityDate) == DateUtil.getYear(now) %>">
 							<%= dateFormatDate.format(activityDescriptor.getCreateDate()) %>
 						</c:when>
 						<c:otherwise>
@@ -87,7 +89,7 @@
 
 		<li class="list-group-item">
 			<div class="card card-horizontal">
-				<div class="card-row card-row-padded">
+				<div class="card-body">
 					<div class="card-col-field">
 						<liferay-ui:user-portrait
 							userId="<%= activityDescriptor.getUserId() %>"

@@ -14,7 +14,6 @@
 
 package com.liferay.portal.cache.ehcache.internal;
 
-import com.liferay.portal.cache.PortalCacheBootstrapLoaderFactory;
 import com.liferay.portal.cache.PortalCacheListenerFactory;
 import com.liferay.portal.cache.PortalCacheManagerListenerFactory;
 import com.liferay.portal.cache.ehcache.internal.configurator.MultiVMEhcachePortalCacheManagerConfigurator;
@@ -22,8 +21,6 @@ import com.liferay.portal.kernel.cache.PortalCacheManager;
 import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.AggregateClassLoader;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
 
@@ -54,27 +51,9 @@ public class MultiVMEhcachePortalCacheManager
 		setClusterAware(true);
 		setConfigFile(props.get(PropsKeys.EHCACHE_MULTI_VM_CONFIG_LOCATION));
 		setDefaultConfigFile(_DEFAULT_CONFIG_FILE_NAME);
-		setMpiOnly(true);
 		setPortalCacheManagerName(PortalCacheManagerNames.MULTI_VM);
 
-		Thread currentThread = Thread.currentThread();
-
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
-		Class<?> clazz = getClass();
-
-		ClassLoaderUtil.setContextClassLoader(
-			AggregateClassLoader.getAggregateClassLoader(
-				contextClassLoader, clazz.getClassLoader()));
-
-		try {
-			initialize();
-
-			initPortalCacheConfiguratorSettingsServiceTracker();
-		}
-		finally {
-			ClassLoaderUtil.setContextClassLoader(contextClassLoader);
-		}
+		initialize();
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Activated " + PortalCacheManagerNames.MULTI_VM);
@@ -93,14 +72,6 @@ public class MultiVMEhcachePortalCacheManager
 
 		baseEhcachePortalCacheManagerConfigurator =
 			multiVMEhcachePortalCacheManagerConfigurator;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortalCacheBootstrapLoaderFactory(
-		PortalCacheBootstrapLoaderFactory portalCacheBootstrapLoaderFactory) {
-
-		this.portalCacheBootstrapLoaderFactory =
-			portalCacheBootstrapLoaderFactory;
 	}
 
 	@Reference(unbind = "-")
@@ -125,7 +96,7 @@ public class MultiVMEhcachePortalCacheManager
 	}
 
 	private static final String _DEFAULT_CONFIG_FILE_NAME =
-		"/ehcache/liferay-multi-vm-clustered.xml";
+		"/ehcache/liferay-multi-vm.xml";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		MultiVMEhcachePortalCacheManager.class);

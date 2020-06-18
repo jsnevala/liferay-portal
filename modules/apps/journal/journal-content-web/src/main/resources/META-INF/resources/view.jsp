@@ -115,12 +115,12 @@ if (journalContentDisplayContext.isShowArticle()) {
 							<liferay-ui:message arguments="<%= HtmlUtil.escape(article.getTitle(locale)) %>" key="x-is-expired" />
 						</div>
 					</c:when>
-					<c:when test="<%= article.isScheduled() %>">
+					<c:when test="<%= article.isScheduled() && !journalContentDisplayContext.isPreview() %>">
 						<div class="alert alert-warning">
 							<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(article.getTitle(locale)), dateFormatDateTime.format(article.getDisplayDate())} %>" key="x-is-scheduled-and-will-be-displayed-on-x" />
 						</div>
 					</c:when>
-					<c:when test="<%= !article.isApproved() %>">
+					<c:when test="<%= !article.isApproved() && !journalContentDisplayContext.isPreview() %>">
 
 						<%
 						AssetRenderer<JournalArticle> assetRenderer = assetRendererFactory.getAssetRenderer(article.getResourcePrimKey());
@@ -129,7 +129,7 @@ if (journalContentDisplayContext.isShowArticle()) {
 						<c:choose>
 							<c:when test="<%= assetRenderer.hasEditPermission(permissionChecker) %>">
 								<div class="alert alert-warning">
-									<a href="<%= assetRenderer.getURLEdit(liferayPortletRequest, liferayPortletResponse, WindowState.MAXIMIZED, currentURLObj) %>">
+									<a href="<%= assetRenderer.getURLEdit(liferayPortletRequest, liferayPortletResponse, WindowState.NORMAL, currentURLObj) %>">
 										<liferay-ui:message arguments="<%= HtmlUtil.escape(article.getTitle(locale)) %>" key="x-is-not-approved" />
 									</a>
 								</div>
@@ -142,35 +142,40 @@ if (journalContentDisplayContext.isShowArticle()) {
 						</c:choose>
 					</c:when>
 					<c:when test="<%= articleDisplay != null %>">
-						<div class="text-right user-tool-asset-addon-entries">
-							<liferay-asset:asset-addon-entry-display
-								assetAddonEntries="<%= journalContentDisplayContext.getSelectedUserToolAssetAddonEntries() %>"
+
+						<%
+						AssetRenderer<JournalArticle> assetRenderer = assetRendererFactory.getAssetRenderer(article.getResourcePrimKey());
+
+						Map<String, Object> data = HashMapBuilder.<String, Object>put(
+							"fragments-editor-item-id", PortalUtil.getClassNameId(JournalArticle.class) + "-" + assetRenderer.getClassPK()
+						).put(
+							"fragments-editor-item-type", "fragments-editor-mapped-item"
+						).build();
+						%>
+
+						<div class="<%= journalContentDisplayContext.isPreview() ? "p-1 preview-asset-entry" : StringPool.BLANK %>" <%= AUIUtil.buildData(data) %>>
+							<liferay-journal:journal-article-display
+								articleDisplay="<%= articleDisplay %>"
 							/>
+
+							<c:if test="<%= articleDisplay.isPaginate() %>">
+
+								<%
+								PortletURL portletURL = renderResponse.createRenderURL();
+								%>
+
+								<liferay-ui:page-iterator
+									cur="<%= articleDisplay.getCurrentPage() %>"
+									curParam="page"
+									delta="<%= 1 %>"
+									id="articleDisplayPages"
+									maxPages="<%= 25 %>"
+									portletURL="<%= portletURL %>"
+									total="<%= articleDisplay.getNumberOfPages() %>"
+									type="article"
+								/>
+							</c:if>
 						</div>
-
-						<liferay-journal:journal-article-display
-							articleDisplay="<%= articleDisplay %>"
-						/>
-
-						<c:if test="<%= articleDisplay.isPaginate() %>">
-
-							<%
-							PortletURL portletURL = renderResponse.createRenderURL();
-							%>
-
-							<liferay-ui:page-iterator
-								cur="<%= articleDisplay.getCurrentPage() %>"
-								curParam='<%= "page" %>'
-								delta="<%= 1 %>"
-								id="articleDisplayPages"
-								maxPages="<%= 25 %>"
-								portletURL="<%= portletURL %>"
-								total="<%= articleDisplay.getNumberOfPages() %>"
-								type="article"
-							/>
-
-							<br />
-						</c:if>
 					</c:when>
 				</c:choose>
 			</c:when>
@@ -179,11 +184,59 @@ if (journalContentDisplayContext.isShowArticle()) {
 </c:choose>
 
 <c:if test="<%= (articleDisplay != null) && journalContentDisplayContext.hasViewPermission() %>">
-	<div class="content-metadata-asset-addon-entries">
-		<liferay-asset:asset-addon-entry-display
-			assetAddonEntries="<%= journalContentDisplayContext.getSelectedContentMetadataAssetAddonEntries() %>"
-		/>
-	</div>
+
+	<%
+	ContentMetadataAssetAddonEntry relatedAssetsContentMetadataAssetAddonEntry = journalContentDisplayContext.getContentMetadataAssetAddonEntry("enableRelatedAssets");
+	%>
+
+	<c:if test="<%= relatedAssetsContentMetadataAssetAddonEntry != null %>">
+		<div class="asset-links content-metadata-asset-addon-entries mb-4">
+			<liferay-asset:asset-addon-entry-display
+				assetAddonEntries="<%= Collections.singletonList(relatedAssetsContentMetadataAssetAddonEntry) %>"
+			/>
+		</div>
+	</c:if>
+
+	<%
+	ContentMetadataAssetAddonEntry ratingsContentMetadataAssetAddonEntry = journalContentDisplayContext.getContentMetadataAssetAddonEntry("enableRatings");
+
+	List<UserToolAssetAddonEntry> selectedUserToolAssetAddonEntries = journalContentDisplayContext.getSelectedUserToolAssetAddonEntries();
+	%>
+
+	<c:if test="<%= ListUtil.isNotEmpty(selectedUserToolAssetAddonEntries) || (ratingsContentMetadataAssetAddonEntry != null) %>">
+		<div class="separator"><!-- --></div>
+
+		<div class="autofit-float autofit-row autofit-row-center mb-4 user-tool-asset-addon-entries">
+
+			<c:if test="<%= ratingsContentMetadataAssetAddonEntry != null %>">
+				<div class="autofit-col">
+					<liferay-asset:asset-addon-entry-display
+						assetAddonEntries="<%= Collections.singletonList(ratingsContentMetadataAssetAddonEntry) %>"
+					/>
+				</div>
+			</c:if>
+
+			<c:if test="<%= ListUtil.isNotEmpty(selectedUserToolAssetAddonEntries) %>">
+				<liferay-asset:asset-addon-entry-display
+					assetAddonEntries="<%= selectedUserToolAssetAddonEntries %>"
+				/>
+			</c:if>
+		</div>
+	</c:if>
+
+	<%
+	List<ContentMetadataAssetAddonEntry> commentsContentMetadataAssetAddonEntries = journalContentDisplayContext.getCommentsContentMetadataAssetAddonEntries();
+	%>
+
+	<c:if test="<%= ListUtil.isNotEmpty(commentsContentMetadataAssetAddonEntries) %>">
+		<div class="separator"><!-- --></div>
+
+		<div class="asset-links content-metadata-asset-addon-entries mb-4">
+			<liferay-asset:asset-addon-entry-display
+				assetAddonEntries="<%= commentsContentMetadataAssetAddonEntries %>"
+			/>
+		</div>
+	</c:if>
 </c:if>
 
 <liferay-util:dynamic-include key="com.liferay.journal.content.web#/view.jsp#post" />

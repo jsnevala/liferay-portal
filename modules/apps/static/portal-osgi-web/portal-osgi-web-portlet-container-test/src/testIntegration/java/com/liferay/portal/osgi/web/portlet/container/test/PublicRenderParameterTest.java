@@ -15,6 +15,7 @@
 package com.liferay.portal.osgi.web.portlet.container.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.layout.test.util.LayoutFriendlyURLRandomizerBumper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.application.type.ApplicationType;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -32,9 +33,8 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.portal.test.randomizerbumpers.FriendlyURLRandomizerBumper;
+import com.liferay.portal.osgi.web.portlet.container.test.util.PortletContainerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.test.PortletContainerTestUtil;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -70,7 +70,7 @@ public class PublicRenderParameterTest extends BasePortletContainerTestCase {
 	public void testWithModuleLayoutTypeController() throws Exception {
 		final String prpName = "categoryId";
 		final String prpValue = RandomTestUtil.randomString(
-			FriendlyURLRandomizerBumper.INSTANCE,
+			LayoutFriendlyURLRandomizerBumper.INSTANCE,
 			NumericStringRandomizerBumper.INSTANCE,
 			UniqueStringRandomizerBumper.INSTANCE);
 		final AtomicBoolean success = new AtomicBoolean(false);
@@ -114,7 +114,7 @@ public class PublicRenderParameterTest extends BasePortletContainerTestCase {
 		Assert.assertFalse(portlet.isUndeployedPortlet());
 
 		String name = RandomTestUtil.randomString(
-			FriendlyURLRandomizerBumper.INSTANCE,
+			LayoutFriendlyURLRandomizerBumper.INSTANCE,
 			NumericStringRandomizerBumper.INSTANCE,
 			UniqueStringRandomizerBumper.INSTANCE);
 
@@ -125,10 +125,10 @@ public class PublicRenderParameterTest extends BasePortletContainerTestCase {
 			StringPool.SLASH + FriendlyURLNormalizerUtil.normalize(name),
 			ServiceContextTestUtil.getServiceContext());
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			layout.getTypeSettingsProperties();
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			"fullPageApplicationPortlet", TEST_PORTLET_ID);
 
 		LayoutLocalServiceUtil.updateLayout(layout);
@@ -161,7 +161,7 @@ public class PublicRenderParameterTest extends BasePortletContainerTestCase {
 	public void testWithPortalLayoutTypeController() throws Exception {
 		final String prpName = "categoryId";
 		final String prpValue = RandomTestUtil.randomString(
-			FriendlyURLRandomizerBumper.INSTANCE,
+			LayoutFriendlyURLRandomizerBumper.INSTANCE,
 			NumericStringRandomizerBumper.INSTANCE,
 			UniqueStringRandomizerBumper.INSTANCE);
 		final AtomicBoolean success = new AtomicBoolean(false);

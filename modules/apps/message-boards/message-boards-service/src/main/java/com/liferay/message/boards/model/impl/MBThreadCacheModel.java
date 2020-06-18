@@ -14,14 +14,10 @@
 
 package com.liferay.message.boards.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.message.boards.model.MBThread;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,11 +30,11 @@ import java.util.Date;
  * The cache model class for representing MBThread in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see MBThread
  * @generated
  */
-@ProviderType
-public class MBThreadCacheModel implements CacheModel<MBThread>, Externalizable {
+public class MBThreadCacheModel
+	implements CacheModel<MBThread>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -65,7 +61,7 @@ public class MBThreadCacheModel implements CacheModel<MBThread>, Externalizable 
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(47);
+		StringBundler sb = new StringBundler(45);
 
 		sb.append("{uuid=");
 		sb.append(uuid);
@@ -93,8 +89,6 @@ public class MBThreadCacheModel implements CacheModel<MBThread>, Externalizable 
 		sb.append(title);
 		sb.append(", messageCount=");
 		sb.append(messageCount);
-		sb.append(", viewCount=");
-		sb.append(viewCount);
 		sb.append(", lastPostByUserId=");
 		sb.append(lastPostByUserId);
 		sb.append(", lastPostDate=");
@@ -167,7 +161,6 @@ public class MBThreadCacheModel implements CacheModel<MBThread>, Externalizable 
 		}
 
 		mbThreadImpl.setMessageCount(messageCount);
-		mbThreadImpl.setViewCount(viewCount);
 		mbThreadImpl.setLastPostByUserId(lastPostByUserId);
 
 		if (lastPostDate == Long.MIN_VALUE) {
@@ -233,8 +226,6 @@ public class MBThreadCacheModel implements CacheModel<MBThread>, Externalizable 
 
 		messageCount = objectInput.readInt();
 
-		viewCount = objectInput.readInt();
-
 		lastPostByUserId = objectInput.readLong();
 		lastPostDate = objectInput.readLong();
 
@@ -251,8 +242,7 @@ public class MBThreadCacheModel implements CacheModel<MBThread>, Externalizable 
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -293,8 +283,6 @@ public class MBThreadCacheModel implements CacheModel<MBThread>, Externalizable 
 
 		objectOutput.writeInt(messageCount);
 
-		objectOutput.writeInt(viewCount);
-
 		objectOutput.writeLong(lastPostByUserId);
 		objectOutput.writeLong(lastPostDate);
 
@@ -330,7 +318,6 @@ public class MBThreadCacheModel implements CacheModel<MBThread>, Externalizable 
 	public long rootMessageUserId;
 	public String title;
 	public int messageCount;
-	public int viewCount;
 	public long lastPostByUserId;
 	public long lastPostDate;
 	public double priority;
@@ -340,4 +327,5 @@ public class MBThreadCacheModel implements CacheModel<MBThread>, Externalizable 
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

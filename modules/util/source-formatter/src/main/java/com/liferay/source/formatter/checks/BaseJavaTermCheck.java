@@ -24,6 +24,11 @@ import com.liferay.source.formatter.parser.JavaStaticBlock;
 import com.liferay.source.formatter.parser.JavaTerm;
 import com.liferay.source.formatter.parser.JavaVariable;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * @author Hugo Huijser
  */
@@ -43,11 +48,25 @@ public abstract class BaseJavaTermCheck
 	}
 
 	protected abstract String doProcess(
-			String filename, String absolutePath, JavaTerm javaTerm,
+			String fileName, String absolutePath, JavaTerm javaTerm,
 			String fileContent)
 		throws Exception;
 
 	protected abstract String[] getCheckableJavaTermNames();
+
+	protected List<String> getImportNames(JavaTerm javaTerm) {
+		JavaClass javaClass = javaTerm.getParentJavaClass();
+
+		while (true) {
+			JavaClass parentJavaClass = javaClass.getParentJavaClass();
+
+			if (parentJavaClass == null) {
+				return javaClass.getImports();
+			}
+
+			javaClass = parentJavaClass;
+		}
+	}
 
 	protected String[] getTernaryOperatorParts(String operator) {
 		int x = -1;
@@ -91,6 +110,30 @@ public abstract class BaseJavaTermCheck
 		}
 
 		return null;
+	}
+
+	protected List<String> getVariableNames(String content) {
+		List<String> variableNames = new ArrayList<>();
+
+		int x = content.indexOf("{\n");
+
+		Matcher matcher = _variableDeclarationPattern.matcher(content);
+
+		while (matcher.find()) {
+			if (matcher.start() < x) {
+				continue;
+			}
+
+			String s = StringUtil.trim(matcher.group(1));
+
+			if (!s.equals("break") && !s.equals("continue") &&
+				!s.equals("return") && !s.equals("throw")) {
+
+				variableNames.add(matcher.group(3));
+			}
+		}
+
+		return variableNames;
 	}
 
 	protected static final String JAVA_CLASS = JavaClass.class.getName();
@@ -172,5 +215,8 @@ public abstract class BaseJavaTermCheck
 
 		return parentContent;
 	}
+
+	private static final Pattern _variableDeclarationPattern = Pattern.compile(
+		"((\t\\w|\\()[\\w<>,\\s]+?)\\s(\\w+)( =\\s|;)");
 
 }

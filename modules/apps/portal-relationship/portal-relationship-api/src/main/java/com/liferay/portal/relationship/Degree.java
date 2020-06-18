@@ -15,7 +15,7 @@
 package com.liferay.portal.relationship;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class Degree {
 
@@ -48,7 +48,7 @@ public class Degree {
 
 			return new Degree(degree);
 		}
-		catch (NumberFormatException nfe) {
+		catch (NumberFormatException numberFormatException) {
 			return one();
 		}
 	}

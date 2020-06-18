@@ -24,13 +24,14 @@ import com.liferay.portal.kernel.search.filter.TermsFilter;
 import com.liferay.portal.kernel.util.ArrayUtil;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  * @author André de Oliveira
  */
 public class FolderSearcher extends BaseSearcher {
 
 	public FolderSearcher() {
 		setDefaultSelectedFieldNames(Field.TITLE, Field.UID);
+		setDefaultSelectedLocalizedFieldNames(Field.TITLE);
 		setFilterSearch(true);
 		setPermissionAware(true);
 	}

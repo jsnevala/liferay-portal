@@ -73,6 +73,8 @@ public class WarsProjectConfigurator extends BaseProjectConfigurator {
 
 		_addTaskDeploy(war, workspaceExtension);
 
+		addTaskDockerDeploy(project, war, workspaceExtension);
+
 		_configureRootTaskDistBundle(war);
 	}
 
@@ -142,6 +144,7 @@ public class WarsProjectConfigurator extends BaseProjectConfigurator {
 		return copy;
 	}
 
+	@SuppressWarnings("serial")
 	private void _configureRootTaskDistBundle(final War war) {
 		Project project = war.getProject();
 

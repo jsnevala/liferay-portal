@@ -19,100 +19,44 @@
 <%
 EditSegmentsEntryDisplayContext editSegmentsEntryDisplayContext = (EditSegmentsEntryDisplayContext)request.getAttribute(SegmentsWebKeys.EDIT_SEGMENTS_ENTRY_DISPLAY_CONTEXT);
 
-String redirect = ParamUtil.getString(request, "redirect", editSegmentsEntryDisplayContext.getRedirect());
-
-String backURL = ParamUtil.getString(request, "backURL", redirect);
-
-SegmentsEntry segmentsEntry = editSegmentsEntryDisplayContext.getSegmentsEntry();
-
-long segmentsEntryId = editSegmentsEntryDisplayContext.getSegmentsEntryId();
+String backURL = editSegmentsEntryDisplayContext.getBackURL();
 
 if (Validator.isNotNull(backURL)) {
 	portletDisplay.setShowBackIcon(true);
 	portletDisplay.setURLBack(backURL);
 }
 
-renderResponse.setTitle(editSegmentsEntryDisplayContext.getSegmentsEntryName(locale));
+renderResponse.setTitle(editSegmentsEntryDisplayContext.getTitle(locale));
 %>
 
-<liferay-util:include page="/edit_segments_entry_tabs.jsp" servletContext="<%= application %>" />
+<liferay-ui:error embed="<%= false %>" exception="<%= SegmentsEntryCriteriaException.class %>" message="invalid-criteria" />
+<liferay-ui:error embed="<%= false %>" exception="<%= SegmentsEntryKeyException.class %>" message="key-is-already-used" />
+<liferay-ui:error embed="<%= false %>" exception="<%= SegmentsEntryNameException.class %>" message="please-enter-a-valid-name" />
 
 <portlet:actionURL name="updateSegmentsEntry" var="updateSegmentsEntryActionURL" />
 
-<aui:form action="<%= updateSegmentsEntryActionURL %>" cssClass="container-fluid-1280" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveSegmentsEntry();" %>'>
-	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
-	<aui:input name="segmentsEntryId" type="hidden" value="<%= segmentsEntryId %>" />
-	<aui:input name="saveAndContinue" type="hidden" />
+<aui:form action="<%= updateSegmentsEntryActionURL %>" method="post" name="editSegmentFm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveSegmentsEntry();" %>'>
+	<aui:input name="redirect" type="hidden" value="<%= editSegmentsEntryDisplayContext.getRedirect() %>" />
+	<aui:input name="segmentsEntryId" type="hidden" value="<%= editSegmentsEntryDisplayContext.getSegmentsEntryId() %>" />
+	<aui:input name="groupId" type="hidden" value="<%= editSegmentsEntryDisplayContext.getGroupId() %>" />
+	<aui:input name="segmentsEntryKey" type="hidden" value="<%= editSegmentsEntryDisplayContext.getSegmentsEntryKey() %>" />
+	<aui:input name="type" type="hidden" value="<%= editSegmentsEntryDisplayContext.getType() %>" />
+	<aui:input name="dynamic" type="hidden" value="<%= true %>" />
 
-	<div class="lfr-form-content">
-		<aui:model-context bean="<%= segmentsEntry %>" model="<%= SegmentsEntry.class %>" />
+	<div id="<%= renderResponse.getNamespace() + "-segment-edit-root" %>">
+		<div class="inline-item my-5 p-5 w-100">
+			<span aria-hidden="true" class="loading-animation"></span>
+		</div>
 
-		<liferay-ui:error exception="<%= SegmentsEntryCriteriaException.class %>" message="invalid-criteria" />
-		<liferay-ui:error exception="<%= SegmentsEntryKeyException.class %>" message="key-is-already-used" />
-
-		<aui:fieldset-group markupView="lexicon">
-			<aui:fieldset>
-				<aui:input autoFocus="<%= true %>" name="name" required="<%= true %>" />
-
-				<aui:input cssClass="lfr-textarea-container" name="description" />
-
-				<aui:input name="key" required="<%= true %>" />
-
-				<aui:input checked="<%= (segmentsEntry == null) ? false : segmentsEntry.isActive() %>" name="active" type="toggle-switch" />
-
-				<aui:select disabled="<%= segmentsEntry != null %>" name="type">
-					<aui:option label="organizations" value="<%= SegmentsConstants.TYPE_ORGANIZATIONS %>" />
-					<aui:option label="users" value="<%= SegmentsConstants.TYPE_USERS %>" />
-				</aui:select>
-
-				<aui:input checked="<%= (segmentsEntry != null) && Validator.isNotNull(segmentsEntry.getCriteria()) %>" disabled="<%= segmentsEntry != null %>" name="dynamic" type="toggle-switch" />
-
-				<div id="<portlet:namespace />criteriaWrapper">
-					<aui:input name="criteria" type="textarea" />
-				</div>
-			</aui:fieldset>
-		</aui:fieldset-group>
+		<react:component
+			data="<%= editSegmentsEntryDisplayContext.getData() %>"
+			module="js/SegmentsApp.es"
+		/>
 	</div>
-
-	<aui:button-row>
-		<aui:button cssClass="btn-lg" type="submit" />
-
-		<aui:button cssClass="btn-lg" onClick='<%= renderResponse.getNamespace() + "saveSegmentsEntryAndContinue();" %>' value="save-and-continue" />
-
-		<aui:button cssClass="btn-lg" href="<%= redirect %>" type="cancel" />
-	</aui:button-row>
 </aui:form>
 
 <aui:script>
-	Liferay.Util.toggleBoxes('<portlet:namespace />dynamic', '<portlet:namespace />criteriaWrapper');
-</aui:script>
-
-<aui:script>
 	function <portlet:namespace />saveSegmentsEntry() {
-		submitForm(document.<portlet:namespace />fm);
-	}
-
-	function <portlet:namespace />saveSegmentsEntryAndContinue() {
-		document.<portlet:namespace />fm.<portlet:namespace />saveAndContinue.value = 'true';
-
-		submitForm(document.<portlet:namespace />fm);
+		submitForm(document.<portlet:namespace />editSegmentFm);
 	}
 </aui:script>
-
-<c:if test="<%= segmentsEntry == null %>">
-	<aui:script sandbox="<%= true %>">
-		var form = $(document.<portlet:namespace />fm);
-
-		var keyInput = form.fm('key');
-		var nameInput = form.fm('name');
-
-		var onNameInput = _.debounce(
-			function(event) {
-				keyInput.val(nameInput.val());
-			},
-			200
-		);
-
-		nameInput.on('input', onNameInput);
-	</aui:script>
-</c:if>

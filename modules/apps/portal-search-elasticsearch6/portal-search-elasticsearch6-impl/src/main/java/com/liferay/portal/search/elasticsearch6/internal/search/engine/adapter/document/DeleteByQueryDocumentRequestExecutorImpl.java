@@ -14,15 +14,13 @@
 
 package com.liferay.portal.search.elasticsearch6.internal.search.engine.adapter.document;
 
-import com.liferay.portal.kernel.search.Query;
-import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.portal.kernel.search.query.QueryTranslator;
+import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.engine.adapter.document.DeleteByQueryDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.DeleteByQueryDocumentResponse;
 
-import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
@@ -51,25 +49,19 @@ public class DeleteByQueryDocumentRequestExecutorImpl
 
 		TimeValue timeValue = bulkByScrollResponse.getTook();
 
-		DeleteByQueryDocumentResponse deleteByQueryDocumentResponse =
-			new DeleteByQueryDocumentResponse(
-				bulkByScrollResponse.getDeleted(), timeValue.getMillis());
-
-		return deleteByQueryDocumentResponse;
+		return new DeleteByQueryDocumentResponse(
+			bulkByScrollResponse.getDeleted(), timeValue.getMillis());
 	}
 
 	protected DeleteByQueryRequestBuilder createDeleteByQueryRequestBuilder(
 		DeleteByQueryDocumentRequest deleteByQueryDocumentRequest) {
 
-		Client client = elasticsearchConnectionManager.getClient();
-
 		DeleteByQueryRequestBuilder deleteByQueryRequestBuilder =
-			DeleteByQueryAction.INSTANCE.newRequestBuilder(client);
+			DeleteByQueryAction.INSTANCE.newRequestBuilder(
+				_elasticsearchClientResolver.getClient());
 
-		Query query = deleteByQueryDocumentRequest.getQuery();
-
-		QueryBuilder queryBuilder = new QueryStringQueryBuilder(
-			query.toString());
+		QueryBuilder queryBuilder = _queryTranslator.translate(
+			deleteByQueryDocumentRequest.getQuery(), null);
 
 		deleteByQueryRequestBuilder.filter(queryBuilder);
 
@@ -81,7 +73,21 @@ public class DeleteByQueryDocumentRequestExecutorImpl
 		return deleteByQueryRequestBuilder;
 	}
 
-	@Reference
-	protected ElasticsearchConnectionManager elasticsearchConnectionManager;
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
+	protected void setQueryTranslator(
+		QueryTranslator<QueryBuilder> queryTranslator) {
+
+		_queryTranslator = queryTranslator;
+	}
+
+	private ElasticsearchClientResolver _elasticsearchClientResolver;
+	private QueryTranslator<QueryBuilder> _queryTranslator;
 
 }

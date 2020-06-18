@@ -14,7 +14,7 @@
 
 package com.liferay.oauth2.provider.rest.internal.endpoint.liferay;
 
-import com.liferay.oauth2.provider.rest.internal.endpoint.constants.OAuth2ProviderRestEndpointConstants;
+import com.liferay.oauth2.provider.rest.internal.endpoint.constants.OAuth2ProviderRESTEndpointConstants;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.cxf.rs.security.oauth2.common.Client;
 import org.apache.cxf.rs.security.oauth2.common.UserSubject;
 import org.apache.cxf.rs.security.oauth2.grants.owner.ResourceOwnerLoginHandler;
 
@@ -46,7 +47,9 @@ public class LiferayResourceOwnerLoginHandler
 	implements ResourceOwnerLoginHandler {
 
 	@Override
-	public UserSubject createSubject(String login, String password) {
+	public UserSubject createSubject(
+		Client client, String login, String password) {
+
 		try {
 			User user = authenticateUser(login, password);
 
@@ -60,13 +63,13 @@ public class LiferayResourceOwnerLoginHandler
 			Map<String, String> properties = userSubject.getProperties();
 
 			properties.put(
-				OAuth2ProviderRestEndpointConstants.PROPERTY_KEY_COMPANY_ID,
+				OAuth2ProviderRESTEndpointConstants.PROPERTY_KEY_COMPANY_ID,
 				String.valueOf(user.getCompanyId()));
 
 			return userSubject;
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 
 			return null;
 		}
@@ -75,9 +78,8 @@ public class LiferayResourceOwnerLoginHandler
 	protected User authenticateUser(String login, String password) {
 		int authResult = Authenticator.FAILURE;
 
-		Long companyId = CompanyThreadLocal.getCompanyId();
-
-		Company company = _companyLocalService.fetchCompany(companyId);
+		Company company = _companyLocalService.fetchCompany(
+			CompanyThreadLocal.getCompanyId());
 
 		String authType = company.getAuthType();
 
@@ -100,8 +102,8 @@ public class LiferayResourceOwnerLoginHandler
 					Collections.emptyMap(), Collections.emptyMap(), resultsMap);
 			}
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 
 			return null;
 		}

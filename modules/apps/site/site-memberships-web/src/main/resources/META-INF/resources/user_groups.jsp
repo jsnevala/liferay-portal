@@ -19,6 +19,8 @@
 <%
 UserGroupsDisplayContext userGroupsDisplayContext = new UserGroupsDisplayContext(request, renderRequest, renderResponse);
 
+UserGroupsManagementToolbarDisplayContext userGroupsManagementToolbarDisplayContext = new UserGroupsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, userGroupsDisplayContext);
+
 Role role = userGroupsDisplayContext.getRole();
 %>
 
@@ -28,20 +30,7 @@ Role role = userGroupsDisplayContext.getRole();
 />
 
 <clay:management-toolbar
-	actionDropdownItems="<%= userGroupsDisplayContext.getActionDropdownItems() %>"
-	clearResultsURL="<%= userGroupsDisplayContext.getClearResultsURL() %>"
-	componentId="userGroupsManagementToolbar"
-	disabled="<%= userGroupsDisplayContext.isDisabledManagementBar() %>"
-	filterDropdownItems="<%= userGroupsDisplayContext.getFilterDropdownItems() %>"
-	itemsTotal="<%= userGroupsDisplayContext.getTotalItems() %>"
-	searchActionURL="<%= userGroupsDisplayContext.getSearchActionURL() %>"
-	searchContainerId="userGroups"
-	searchFormName="searchFm"
-	showCreationMenu="<%= GroupPermissionUtil.contains(permissionChecker, siteMembershipsDisplayContext.getGroupId(), ActionKeys.ASSIGN_MEMBERS) %>"
-	showSearch="<%= userGroupsDisplayContext.isShowSearch() %>"
-	sortingOrder="<%= userGroupsDisplayContext.getOrderByType() %>"
-	sortingURL="<%= userGroupsDisplayContext.getSortingURL() %>"
-	viewTypeItems="<%= userGroupsDisplayContext.getViewTypeItems() %>"
+	displayContext="<%= userGroupsManagementToolbarDisplayContext %>"
 />
 
 <portlet:actionURL name="deleteGroupUserGroups" var="deleteGroupUserGroupsURL">
@@ -80,148 +69,29 @@ Role role = userGroupsDisplayContext.getRole();
 	</liferay-ui:search-container>
 </aui:form>
 
-<portlet:actionURL name="addGroupUserGroups" var="addGroupUserGroupsURL" />
+<portlet:actionURL name="addGroupUserGroups" var="addGroupUserGroupsURL">
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+</portlet:actionURL>
 
 <aui:form action="<%= addGroupUserGroupsURL %>" cssClass="hide" name="addGroupUserGroupsFm">
 	<aui:input name="tabs1" type="hidden" value="user-groups" />
 </aui:form>
 
-<portlet:actionURL name="editUserGroupGroupRole" var="editUserGroupGroupRoleURL" />
+<portlet:actionURL name="addUserGroupGroupRole" var="addUserGroupGroupRoleURL" />
 
-<aui:form action="<%= editUserGroupGroupRoleURL %>" cssClass="hide" name="editUserGroupGroupRoleFm">
+<aui:form action="<%= addUserGroupGroupRoleURL %>" cssClass="hide" name="addUserGroupGroupRoleFm">
 	<aui:input name="tabs1" type="hidden" value="user-groups" />
 	<aui:input name="userGroupId" type="hidden" />
 </aui:form>
 
-<aui:script use="liferay-item-selector-dialog">
-	var form = $(document.<portlet:namespace />fm);
+<portlet:actionURL name="unassignUserGroupGroupRole" var="unassignUserGroupGroupRoleURL" />
 
-	var deleteSelectedUserGroups = function() {
-		if (confirm('<liferay-ui:message key="are-you-sure-you-want-to-delete-this" />')) {
-			submitForm(form);
-		}
-	};
+<aui:form action="<%= unassignUserGroupGroupRoleURL %>" cssClass="hide" name="unassignUserGroupGroupRoleFm">
+	<aui:input name="tabs1" type="hidden" value="user-groups" />
+	<aui:input name="userGroupId" type="hidden" />
+</aui:form>
 
-	var removeUserGroupSiteRole, selectSiteRole;
-
-	<c:if test="<%= GroupPermissionUtil.contains(permissionChecker, scopeGroupId, ActionKeys.ASSIGN_USER_ROLES) %>">
-		<c:if test="<%= role != null %>">
-			removeUserGroupSiteRole = function() {
-				if (confirm('<liferay-ui:message arguments="<%= role.getTitle(themeDisplay.getLocale()) %>" key="are-you-sure-you-want-to-remove-x-role-to-selected-user-groups" translateArguments="<%= false %>" />')) {
-					submitForm(form, '<portlet:actionURL name="removeUserGroupSiteRole" />');
-				}
-			};
-		</c:if>
-
-		<portlet:renderURL var="selectSiteRoleURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-			<portlet:param name="mvcPath" value="/site_roles.jsp" />
-			<portlet:param name="groupId" value="<%= String.valueOf(siteMembershipsDisplayContext.getGroupId()) %>" />
-		</portlet:renderURL>
-
-		selectSiteRole = function() {
-			var itemSelectorDialog = new A.LiferayItemSelectorDialog(
-				{
-					eventName: '<portlet:namespace />selectSiteRole',
-					on: {
-						selectedItemChange: function(event) {
-							var selectedItem = event.newVal;
-
-							if (selectedItem) {
-								form.append(selectedItem);
-
-								submitForm(form, '<portlet:actionURL name="editUserGroupsSiteRoles"><portlet:param name="tabs1" value="user-groups" /></portlet:actionURL>');
-							}
-						}
-					},
-					'strings.add': '<liferay-ui:message key="done" />',
-					title: '<liferay-ui:message key="assign-site-roles" />',
-					url: '<%= selectSiteRoleURL %>'
-				}
-			);
-
-			itemSelectorDialog.open();
-		}
-	</c:if>
-
-	function handleAddClick(event) {
-		event.preventDefault();
-
-		var itemSelectorDialog = new A.LiferayItemSelectorDialog(
-			{
-				eventName: '<portlet:namespace />selectUserGroups',
-				on: {
-					selectedItemChange: function(event) {
-						var selectedItem = event.newVal;
-
-						if (selectedItem) {
-							var addGroupUserGroupsFm = $(document.<portlet:namespace />addGroupUserGroupsFm);
-
-							addGroupUserGroupsFm.append(selectedItem);
-
-							submitForm(addGroupUserGroupsFm);
-						}
-					}
-				},
-				'strings.add': '<liferay-ui:message key="done" />',
-				title: '<liferay-ui:message key="assign-user-groups-to-this-site" />',
-				url: '<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcPath" value="/select_user_groups.jsp" /></portlet:renderURL>'
-			}
-		);
-
-		itemSelectorDialog.open();
-	}
-
-	<portlet:renderURL var="viewRoleURL">
-		<portlet:param name="mvcPath" value="/view.jsp" />
-		<portlet:param name="tabs1" value="user-groups" />
-		<portlet:param name="navigation" value="roles" />
-		<portlet:param name="redirect" value="<%= currentURL %>" />
-		<portlet:param name="groupId" value="<%= String.valueOf(siteMembershipsDisplayContext.getGroupId()) %>" />
-	</portlet:renderURL>
-
-	var selectRoles = function() {
-		Liferay.Util.selectEntity(
-			{
-				dialog: {
-					constrain: true,
-					destroyOnHide: true,
-					modal: true
-				},
-				eventName: '<portlet:namespace />selectSiteRole',
-				title: '<liferay-ui:message key="select-site-role" />',
-				uri: '<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcPath" value="/select_site_role.jsp" /><portlet:param name="groupId" value="<%= String.valueOf(siteMembershipsDisplayContext.getGroupId()) %>" /></portlet:renderURL>'
-			},
-			function(event) {
-				var uri = '<%= viewRoleURL %>';
-
-				uri = Liferay.Util.addParams('<portlet:namespace />roleId=' + event.id, uri);
-
-				location.href = uri;
-			}
-		);
-	};
-
-	var ACTIONS = {
-		'deleteSelectedUserGroups': deleteSelectedUserGroups,
-		'removeUserGroupSiteRole': removeUserGroupSiteRole,
-		'selectRoles': selectRoles,
-		'selectSiteRole': selectSiteRole
-	};
-
-	Liferay.componentReady('userGroupsManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on('creationButtonClicked', handleAddClick);
-
-			managementToolbar.on(
-				['actionItemClicked', 'filterItemClicked'],
-				function(event) {
-					var itemData = event.data.item.data;
-
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action]();
-					}
-				}
-			);
-		}
-	);
-</aui:script>
+<liferay-frontend:component
+	componentId="<%= userGroupsManagementToolbarDisplayContext.getDefaultEventHandler() %>"
+	module="js/UserGroupsManagementToolbarDefaultEventHandler.es"
+/>

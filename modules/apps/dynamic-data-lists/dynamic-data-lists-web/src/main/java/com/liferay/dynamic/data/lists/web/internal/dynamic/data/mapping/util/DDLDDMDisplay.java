@@ -28,13 +28,12 @@ import com.liferay.portal.kernel.util.Portal;
 
 import java.util.Locale;
 import java.util.Objects;
-import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	property = "javax.portlet.name=" + DDLPortletKeys.DYNAMIC_DATA_LISTS,
@@ -81,9 +80,7 @@ public class DDLDDMDisplay extends BaseDDMDisplay {
 
 	@Override
 	public String getStructureName(Locale locale) {
-		ResourceBundle resourceBundle = getResourceBundle(locale);
-
-		return LanguageUtil.get(resourceBundle, "data-definition");
+		return LanguageUtil.get(getResourceBundle(locale), "data-definition");
 	}
 
 	@Override
@@ -100,9 +97,7 @@ public class DDLDDMDisplay extends BaseDDMDisplay {
 
 	@Override
 	public String getTitle(Locale locale) {
-		ResourceBundle resourceBundle = getResourceBundle(locale);
-
-		return LanguageUtil.get(resourceBundle, "data-definitions");
+		return LanguageUtil.get(getResourceBundle(locale), "data-definitions");
 	}
 
 	@Override

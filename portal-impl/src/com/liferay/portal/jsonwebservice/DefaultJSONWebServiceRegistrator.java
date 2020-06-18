@@ -28,11 +28,8 @@ import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceScannerStrategy;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceWrapper;
-import com.liferay.portal.kernel.spring.aop.AdvisedSupport;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.spring.aop.AdvisedSupportProxy;
-import com.liferay.portal.spring.aop.ServiceBeanAopProxy;
+import com.liferay.portal.spring.aop.AopInvocationHandler;
 import com.liferay.portal.util.PropsValues;
 
 import java.lang.reflect.InvocationHandler;
@@ -104,7 +101,7 @@ public class DefaultJSONWebServiceRegistrator
 		try {
 			bean = beanLocator.locate(beanName);
 		}
-		catch (BeanLocatorException ble) {
+		catch (BeanLocatorException beanLocatorException) {
 			return;
 		}
 
@@ -112,31 +109,16 @@ public class DefaultJSONWebServiceRegistrator
 			return;
 		}
 
-		Class<?> targetClass = null;
-
-		try {
-			targetClass = getTargetClass(bean);
-		}
-		catch (Exception e) {
-			_log.error(
-				StringBundler.concat(
-					"Unable to compute target class of bean ", beanName,
-					" with type ", String.valueOf(bean.getClass())),
-				e);
-
-			return;
-		}
-
 		JSONWebService jsonWebService = AnnotationLocator.locate(
-			targetClass, JSONWebService.class);
+			getTargetClass(bean), JSONWebService.class);
 
 		if (jsonWebService != null) {
 			try {
 				onJSONWebServiceBean(
 					contextName, contextPath, bean, jsonWebService);
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 	}
@@ -160,8 +142,8 @@ public class DefaultJSONWebServiceRegistrator
 			onJSONWebServiceBean(
 				contextName, contextPath, bean, jsonWebService);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -169,16 +151,16 @@ public class DefaultJSONWebServiceRegistrator
 		_wireViaUtil = wireViaUtil;
 	}
 
-	protected Class<?> getTargetClass(Object service) throws Exception {
+	protected Class<?> getTargetClass(Object service) {
 		while (ProxyUtil.isProxyClass(service.getClass())) {
 			InvocationHandler invocationHandler =
 				ProxyUtil.getInvocationHandler(service);
 
-			if (invocationHandler instanceof AdvisedSupportProxy) {
-				AdvisedSupport advisedSupport =
-					ServiceBeanAopProxy.getAdvisedSupport(service);
+			if (invocationHandler instanceof AopInvocationHandler) {
+				AopInvocationHandler aopInvocationHandler =
+					(AopInvocationHandler)invocationHandler;
 
-				service = advisedSupport.getTarget();
+				service = aopInvocationHandler.getTarget();
 			}
 			else if (invocationHandler instanceof ClassLoaderBeanHandler) {
 				ClassLoaderBeanHandler classLoaderBeanHandler =
@@ -288,7 +270,7 @@ public class DefaultJSONWebServiceRegistrator
 					method = utilClass.getMethod(
 						method.getName(), method.getParameterTypes());
 				}
-				catch (NoSuchMethodException nsme) {
+				catch (NoSuchMethodException noSuchMethodException) {
 					continue;
 				}
 			}

@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.service.LayoutSetPrototypeLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.sites.kernel.util.SitesUtil;
@@ -48,7 +49,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -61,8 +61,9 @@ import org.osgi.service.component.annotations.Reference;
 public class LayoutSetPrototypeStagedModelDataHandler
 	extends BaseStagedModelDataHandler<LayoutSetPrototype> {
 
-	public static final String[] CLASS_NAMES =
-		{LayoutSetPrototype.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		LayoutSetPrototype.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(LayoutSetPrototype layoutSetPrototype)
@@ -91,13 +92,9 @@ public class LayoutSetPrototypeStagedModelDataHandler
 	public List<LayoutSetPrototype> fetchStagedModelsByUuidAndCompanyId(
 		String uuid, long companyId) {
 
-		List<LayoutSetPrototype> layoutSetPrototypes = new ArrayList<>();
-
-		layoutSetPrototypes.add(
+		return ListUtil.fromArray(
 			_layoutSetPrototypeLocalService.
 				fetchLayoutSetPrototypeByUuidAndCompanyId(uuid, companyId));
-
-		return layoutSetPrototypes;
 	}
 
 	@Override
@@ -140,11 +137,11 @@ public class LayoutSetPrototypeStagedModelDataHandler
 		long userId = portletDataContext.getUserId(
 			layoutSetPrototype.getUserUuid());
 
-		UnicodeProperties settingsProperties =
+		UnicodeProperties settingsUnicodeProperties =
 			layoutSetPrototype.getSettingsProperties();
 
 		boolean layoutsUpdateable = GetterUtil.getBoolean(
-			settingsProperties.getProperty("layoutsUpdateable"), true);
+			settingsUnicodeProperties.getProperty("layoutsUpdateable"), true);
 
 		ServiceContext serviceContext = portletDataContext.createServiceContext(
 			layoutSetPrototype);
@@ -228,12 +225,11 @@ public class LayoutSetPrototypeStagedModelDataHandler
 			"layout_set_prototypes", "page-templates");
 
 		for (Layout layout : layouts) {
-			String layoutPrototypeUuid = layout.getLayoutPrototypeUuid();
-
 			LayoutPrototype layoutPrototype =
 				_layoutPrototypeLocalService.
 					getLayoutPrototypeByUuidAndCompanyId(
-						layoutPrototypeUuid, portletDataContext.getCompanyId());
+						layout.getLayoutPrototypeUuid(),
+						portletDataContext.getCompanyId());
 
 			portletDataContext.addReferenceElement(
 				layout, layoutSetPrototypeElement, layoutPrototype,
@@ -322,9 +318,9 @@ public class LayoutSetPrototypeStagedModelDataHandler
 			SitesUtil.importLayoutSetPrototype(
 				importedLayoutSetPrototype, inputStream, serviceContext);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioe, ioe);
+				_log.warn(ioException, ioException);
 			}
 		}
 	}

@@ -33,6 +33,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -42,7 +43,6 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletBag;
 import com.liferay.portal.kernel.portlet.PortletBagPool;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
@@ -99,15 +99,16 @@ public class AssetHelperImpl implements AssetHelper {
 
 	@Override
 	public Set<String> addLayoutTags(
-		HttpServletRequest request, List<AssetTag> tags) {
+		HttpServletRequest httpServletRequest, List<AssetTag> tags) {
 
-		Set<String> tagNames = (Set<String>)request.getAttribute(
+		Set<String> tagNames = (Set<String>)httpServletRequest.getAttribute(
 			WebKeys.ASSET_LAYOUT_TAG_NAMES);
 
 		if (tagNames == null) {
 			tagNames = new HashSet<>();
 
-			request.setAttribute(WebKeys.ASSET_LAYOUT_TAG_NAMES, tagNames);
+			httpServletRequest.setAttribute(
+				WebKeys.ASSET_LAYOUT_TAG_NAMES, tagNames);
 		}
 
 		for (AssetTag tag : tags) {
@@ -223,7 +224,6 @@ public class AssetHelperImpl implements AssetHelper {
 		}
 
 		addPortletURL.setPortletMode(PortletMode.VIEW);
-		addPortletURL.setWindowState(LiferayWindowState.POP_UP);
 
 		return addPortletURL;
 	}
@@ -233,10 +233,7 @@ public class AssetHelperImpl implements AssetHelper {
 		long groupId, long plid, PortletURL addPortletURL,
 		boolean addDisplayPageParameter, Layout layout) {
 
-		addPortletURL.setParameter(
-			"hideDefaultSuccessMessage", Boolean.TRUE.toString());
 		addPortletURL.setParameter("groupId", String.valueOf(groupId));
-		addPortletURL.setParameter("showHeader", Boolean.FALSE.toString());
 
 		if (addDisplayPageParameter && (layout != null)) {
 			addPortletURL.setParameter("layoutUuid", layout.getUuid());
@@ -319,7 +316,9 @@ public class AssetHelperImpl implements AssetHelper {
 				AssetRendererFactoryRegistryUtil.
 					getAssetRendererFactoryByClassName(className);
 
-			if (Validator.isNull(assetRendererFactory.getPortletId())) {
+			if ((assetRendererFactory == null) ||
+				Validator.isNull(assetRendererFactory.getPortletId())) {
+
 				continue;
 			}
 
@@ -424,11 +423,12 @@ public class AssetHelperImpl implements AssetHelper {
 
 	@Override
 	public Hits search(
-			HttpServletRequest request, AssetEntryQuery assetEntryQuery,
-			int start, int end)
+			HttpServletRequest httpServletRequest,
+			AssetEntryQuery assetEntryQuery, int start, int end)
 		throws Exception {
 
-		SearchContext searchContext = SearchContextFactory.getInstance(request);
+		SearchContext searchContext = SearchContextFactory.getInstance(
+			httpServletRequest);
 
 		return search(searchContext, assetEntryQuery, start, end);
 	}
@@ -463,11 +463,12 @@ public class AssetHelperImpl implements AssetHelper {
 
 	@Override
 	public BaseModelSearchResult<AssetEntry> searchAssetEntries(
-			HttpServletRequest request, AssetEntryQuery assetEntryQuery,
-			int start, int end)
+			HttpServletRequest httpServletRequest,
+			AssetEntryQuery assetEntryQuery, int start, int end)
 		throws Exception {
 
-		SearchContext searchContext = SearchContextFactory.getInstance(request);
+		SearchContext searchContext = SearchContextFactory.getInstance(
+			httpServletRequest);
 
 		return searchAssetEntries(searchContext, assetEntryQuery, start, end);
 	}
@@ -483,9 +484,20 @@ public class AssetHelperImpl implements AssetHelper {
 
 		Hits hits = assetSearcher.search(searchContext);
 
-		List<AssetEntry> assetEntries = getAssetEntries(hits);
+		return new BaseModelSearchResult<>(
+			getAssetEntries(hits), hits.getLength());
+	}
 
-		return new BaseModelSearchResult<>(assetEntries, hits.getLength());
+	@Override
+	public long searchCount(
+			SearchContext searchContext, AssetEntryQuery assetEntryQuery)
+		throws Exception {
+
+		AssetSearcher assetSearcher = _getAssetSearcher(
+			searchContext, assetEntryQuery, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
+
+		return assetSearcher.searchCount(searchContext);
 	}
 
 	private AssetSearcher _getAssetSearcher(
@@ -549,6 +561,21 @@ public class AssetHelperImpl implements AssetHelper {
 		return assetSearcher;
 	}
 
+	private boolean _getDDMFormFieldLocalizable(String sortField)
+		throws PortalException {
+
+		String[] sortFields = StringUtil.split(
+			sortField, DDMStructureManager.STRUCTURE_INDEXER_FIELD_SEPARATOR);
+
+		long ddmStructureId = GetterUtil.getLong(sortFields[2]);
+
+		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
+			ddmStructureId);
+
+		return GetterUtil.getBoolean(
+			ddmStructure.getFieldProperty(sortFields[3], "localizable"));
+	}
+
 	private String _getDDMFormFieldType(String sortField)
 		throws PortalException {
 
@@ -565,7 +592,8 @@ public class AssetHelperImpl implements AssetHelper {
 	}
 
 	private String _getOrderByCol(
-		String sortField, String fieldType, int sortType, Locale locale) {
+		String sortField, String fieldType, boolean fieldLocalizable,
+		int sortType, Locale locale) {
 
 		if (sortField.startsWith(
 				DDMStructureManager.STRUCTURE_INDEXER_FIELD_PREFIX)) {
@@ -574,8 +602,11 @@ public class AssetHelperImpl implements AssetHelper {
 
 			sb.append(sortField);
 			sb.append(StringPool.UNDERLINE);
-			sb.append(LocaleUtil.toLanguageId(locale));
-			sb.append(StringPool.UNDERLINE);
+
+			if (fieldLocalizable) {
+				sb.append(LocaleUtil.toLanguageId(locale));
+				sb.append(StringPool.UNDERLINE);
+			}
 
 			String suffix = "String";
 
@@ -605,10 +636,13 @@ public class AssetHelperImpl implements AssetHelper {
 	private Sort _getSort(String orderByType, String sortField, Locale locale)
 		throws Exception {
 
+		boolean ddmFormFieldLocalizable = true;
 		String ddmFormFieldType = sortField;
 
 		if (ddmFormFieldType.startsWith(
 				DDMStructureManager.STRUCTURE_INDEXER_FIELD_PREFIX)) {
+
+			ddmFormFieldLocalizable = _getDDMFormFieldLocalizable(sortField);
 
 			ddmFormFieldType = _getDDMFormFieldType(ddmFormFieldType);
 		}
@@ -617,7 +651,9 @@ public class AssetHelperImpl implements AssetHelper {
 
 		return SortFactoryUtil.getSort(
 			AssetEntry.class, sortType,
-			_getOrderByCol(sortField, ddmFormFieldType, sortType, locale),
+			_getOrderByCol(
+				sortField, ddmFormFieldType, ddmFormFieldLocalizable, sortType,
+				locale),
 			!sortField.startsWith(
 				DDMStructureManager.STRUCTURE_INDEXER_FIELD_PREFIX),
 			orderByType);
@@ -652,7 +688,9 @@ public class AssetHelperImpl implements AssetHelper {
 
 			sortType = Sort.DOUBLE_TYPE;
 		}
-		else if (fieldType.equals("ddm-integer")) {
+		else if (fieldType.equals("ddm-integer") ||
+				 fieldType.equals("viewCount")) {
+
 			sortType = Sort.INT_TYPE;
 		}
 

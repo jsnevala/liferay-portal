@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -35,6 +36,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 
 /**
  * @author Brian Wing Shun Chan
@@ -831,7 +833,7 @@ public class ArrayUtil {
 		return true;
 	}
 
-	public static <T> int count(T[] array, PredicateFilter<T> predicateFilter) {
+	public static <T> int count(T[] array, Predicate<T> predicate) {
 		if (isEmpty(array)) {
 			return 0;
 		}
@@ -839,7 +841,7 @@ public class ArrayUtil {
 		int count = 0;
 
 		for (T t : array) {
-			if (predicateFilter.filter(t)) {
+			if (predicate.test(t)) {
 				count++;
 			}
 		}
@@ -871,18 +873,16 @@ public class ArrayUtil {
 			set.add(s);
 		}
 
-		return set.toArray(new String[set.size()]);
+		return set.toArray(new String[0]);
 	}
 
-	public static <T> boolean exists(
-		T[] array, PredicateFilter<T> predicateFilter) {
-
+	public static <T> boolean exists(T[] array, Predicate<T> predicate) {
 		if (isEmpty(array)) {
 			return false;
 		}
 
 		for (T t : array) {
-			if (predicateFilter.filter(t)) {
+			if (predicate.test(t)) {
 				return true;
 			}
 		}
@@ -891,7 +891,7 @@ public class ArrayUtil {
 	}
 
 	public static boolean[] filter(
-		boolean[] array, PredicateFilter<Boolean> predicateFilter) {
+		boolean[] array, Predicate<Boolean> predicate) {
 
 		if (isEmpty(array)) {
 			return array;
@@ -900,17 +900,15 @@ public class ArrayUtil {
 		List<Boolean> filteredList = new ArrayList<>();
 
 		for (boolean b : array) {
-			if (predicateFilter.filter(b)) {
+			if (predicate.test(b)) {
 				filteredList.add(b);
 			}
 		}
 
-		return toArray(filteredList.toArray(new Boolean[filteredList.size()]));
+		return toArray(filteredList.toArray(new Boolean[0]));
 	}
 
-	public static byte[] filter(
-		byte[] array, PredicateFilter<Byte> predicateFilter) {
-
+	public static byte[] filter(byte[] array, Predicate<Byte> predicate) {
 		if (isEmpty(array)) {
 			return array;
 		}
@@ -918,17 +916,15 @@ public class ArrayUtil {
 		List<Byte> filteredList = new ArrayList<>();
 
 		for (byte b : array) {
-			if (predicateFilter.filter(b)) {
+			if (predicate.test(b)) {
 				filteredList.add(b);
 			}
 		}
 
-		return toArray(filteredList.toArray(new Byte[filteredList.size()]));
+		return toArray(filteredList.toArray(new Byte[0]));
 	}
 
-	public static char[] filter(
-		char[] array, PredicateFilter<Character> predicateFilter) {
-
+	public static char[] filter(char[] array, Predicate<Character> predicate) {
 		if (isEmpty(array)) {
 			return array;
 		}
@@ -936,18 +932,15 @@ public class ArrayUtil {
 		List<Character> filteredList = new ArrayList<>();
 
 		for (char c : array) {
-			if (predicateFilter.filter(c)) {
+			if (predicate.test(c)) {
 				filteredList.add(c);
 			}
 		}
 
-		return toArray(
-			filteredList.toArray(new Character[filteredList.size()]));
+		return toArray(filteredList.toArray(new Character[0]));
 	}
 
-	public static double[] filter(
-		double[] array, PredicateFilter<Double> predicateFilter) {
-
+	public static double[] filter(double[] array, Predicate<Double> predicate) {
 		if (isEmpty(array)) {
 			return array;
 		}
@@ -955,17 +948,15 @@ public class ArrayUtil {
 		List<Double> filteredList = new ArrayList<>();
 
 		for (double d : array) {
-			if (predicateFilter.filter(d)) {
+			if (predicate.test(d)) {
 				filteredList.add(d);
 			}
 		}
 
-		return toArray(filteredList.toArray(new Double[filteredList.size()]));
+		return toArray(filteredList.toArray(new Double[0]));
 	}
 
-	public static float[] filter(
-		float[] array, PredicateFilter<Float> predicateFilter) {
-
+	public static float[] filter(float[] array, Predicate<Float> predicate) {
 		if (isEmpty(array)) {
 			return array;
 		}
@@ -973,17 +964,15 @@ public class ArrayUtil {
 		List<Float> filteredList = new ArrayList<>();
 
 		for (float f : array) {
-			if (predicateFilter.filter(f)) {
+			if (predicate.test(f)) {
 				filteredList.add(f);
 			}
 		}
 
-		return toArray(filteredList.toArray(new Float[filteredList.size()]));
+		return toArray(filteredList.toArray(new Float[0]));
 	}
 
-	public static int[] filter(
-		int[] array, PredicateFilter<Integer> predicateFilter) {
-
+	public static int[] filter(int[] array, Predicate<Integer> predicate) {
 		if (isEmpty(array)) {
 			return array;
 		}
@@ -991,17 +980,15 @@ public class ArrayUtil {
 		List<Integer> filteredList = new ArrayList<>();
 
 		for (int i : array) {
-			if (predicateFilter.filter(i)) {
+			if (predicate.test(i)) {
 				filteredList.add(i);
 			}
 		}
 
-		return toArray(filteredList.toArray(new Integer[filteredList.size()]));
+		return toArray(filteredList.toArray(new Integer[0]));
 	}
 
-	public static long[] filter(
-		long[] array, PredicateFilter<Long> predicateFilter) {
-
+	public static long[] filter(long[] array, Predicate<Long> predicate) {
 		if (isEmpty(array)) {
 			return array;
 		}
@@ -1009,17 +996,15 @@ public class ArrayUtil {
 		List<Long> filteredList = new ArrayList<>();
 
 		for (long l : array) {
-			if (predicateFilter.filter(l)) {
+			if (predicate.test(l)) {
 				filteredList.add(l);
 			}
 		}
 
-		return toArray(filteredList.toArray(new Long[filteredList.size()]));
+		return toArray(filteredList.toArray(new Long[0]));
 	}
 
-	public static short[] filter(
-		short[] array, PredicateFilter<Short> predicateFilter) {
-
+	public static short[] filter(short[] array, Predicate<Short> predicate) {
 		if (isEmpty(array)) {
 			return array;
 		}
@@ -1027,17 +1012,16 @@ public class ArrayUtil {
 		List<Short> filteredList = new ArrayList<>();
 
 		for (short s : array) {
-			if (predicateFilter.filter(s)) {
+			if (predicate.test(s)) {
 				filteredList.add(s);
 			}
 		}
 
-		return toArray(filteredList.toArray(new Short[filteredList.size()]));
+		return toArray(filteredList.toArray(new Short[0]));
 	}
 
-	public static <T> T[] filter(
-		T[] array, PredicateFilter<T> filterPredicate) {
-
+	@SuppressWarnings("unchecked")
+	public static <T> T[] filter(T[] array, Predicate<T> filterPredicate) {
 		if (isEmpty(array)) {
 			return array;
 		}
@@ -1045,15 +1029,15 @@ public class ArrayUtil {
 		List<T> filteredList = new ArrayList<>();
 
 		for (T t : array) {
-			if (filterPredicate.filter(t)) {
+			if (filterPredicate.test(t)) {
 				filteredList.add(t);
 			}
 		}
 
-		Object[] filteredArray = filteredList.toArray();
+		Class<?> arrayClass = array.getClass();
 
-		return (T[])Arrays.copyOf(
-			filteredArray, filteredArray.length, array.getClass());
+		return filteredList.toArray(
+			(T[])Array.newInstance(arrayClass.getComponentType(), 0));
 	}
 
 	public static int getLength(Object[] array) {
@@ -1193,7 +1177,7 @@ public class ArrayUtil {
 			}
 		}
 
-		return toArray(list.toArray(new Boolean[list.size()]));
+		return toArray(list.toArray(new Boolean[0]));
 	}
 
 	public static byte[] remove(byte[] array, byte value) {
@@ -1209,7 +1193,7 @@ public class ArrayUtil {
 			}
 		}
 
-		return toArray(list.toArray(new Byte[list.size()]));
+		return toArray(list.toArray(new Byte[0]));
 	}
 
 	public static char[] remove(char[] array, char value) {
@@ -1225,7 +1209,7 @@ public class ArrayUtil {
 			}
 		}
 
-		return toArray(list.toArray(new Character[list.size()]));
+		return toArray(list.toArray(new Character[0]));
 	}
 
 	public static double[] remove(double[] array, double value) {
@@ -1241,7 +1225,7 @@ public class ArrayUtil {
 			}
 		}
 
-		return toArray(list.toArray(new Double[list.size()]));
+		return toArray(list.toArray(new Double[0]));
 	}
 
 	public static float[] remove(float[] array, float value) {
@@ -1257,7 +1241,7 @@ public class ArrayUtil {
 			}
 		}
 
-		return toArray(list.toArray(new Float[list.size()]));
+		return toArray(list.toArray(new Float[0]));
 	}
 
 	public static int[] remove(int[] array, int value) {
@@ -1273,7 +1257,7 @@ public class ArrayUtil {
 			}
 		}
 
-		return toArray(list.toArray(new Integer[list.size()]));
+		return toArray(list.toArray(new Integer[0]));
 	}
 
 	public static long[] remove(long[] array, long value) {
@@ -1289,7 +1273,7 @@ public class ArrayUtil {
 			}
 		}
 
-		return toArray(list.toArray(new Long[list.size()]));
+		return toArray(list.toArray(new Long[0]));
 	}
 
 	public static short[] remove(short[] array, short value) {
@@ -1305,7 +1289,7 @@ public class ArrayUtil {
 			}
 		}
 
-		return toArray(list.toArray(new Short[list.size()]));
+		return toArray(list.toArray(new Short[0]));
 	}
 
 	public static String[] remove(String[] array, String value) {
@@ -1321,7 +1305,7 @@ public class ArrayUtil {
 			}
 		}
 
-		return list.toArray(new String[list.size()]);
+		return list.toArray(new String[0]);
 	}
 
 	public static <T> T[] remove(T[] array, T value) {
@@ -1344,7 +1328,7 @@ public class ArrayUtil {
 		Class<?> arrayClass = array.getClass();
 
 		return list.toArray(
-			(T[])Array.newInstance(arrayClass.getComponentType(), list.size()));
+			(T[])Array.newInstance(arrayClass.getComponentType(), 0));
 	}
 
 	public static String[] removeByPrefix(String[] array, String prefix) {
@@ -1356,7 +1340,7 @@ public class ArrayUtil {
 			}
 		}
 
-		return list.toArray(new String[list.size()]);
+		return list.toArray(new String[0]);
 	}
 
 	public static void replace(
@@ -1444,6 +1428,132 @@ public class ArrayUtil {
 			array[left] = array[right];
 			array[right] = value;
 		}
+	}
+
+	public static byte[] sortedUnique(byte[] array) {
+		Arrays.sort(array);
+
+		int index = 0;
+
+		for (int i = 1; i < array.length; i++) {
+			if ((array[index] != array[i]) && (++index != i)) {
+				array[index] = array[i];
+			}
+		}
+
+		if (++index != array.length) {
+			return Arrays.copyOf(array, index);
+		}
+
+		return array;
+	}
+
+	public static double[] sortedUnique(double[] array) {
+		Arrays.sort(array);
+
+		int index = 0;
+
+		for (int i = 1; i < array.length; i++) {
+			if ((array[index] != array[i]) && (++index != i)) {
+				array[index] = array[i];
+			}
+		}
+
+		if (++index != array.length) {
+			return Arrays.copyOf(array, index);
+		}
+
+		return array;
+	}
+
+	public static float[] sortedUnique(float[] array) {
+		Arrays.sort(array);
+
+		int index = 0;
+
+		for (int i = 1; i < array.length; i++) {
+			if ((array[index] != array[i]) && (++index != i)) {
+				array[index] = array[i];
+			}
+		}
+
+		if (++index != array.length) {
+			return Arrays.copyOf(array, index);
+		}
+
+		return array;
+	}
+
+	public static int[] sortedUnique(int[] array) {
+		Arrays.sort(array);
+
+		int index = 0;
+
+		for (int i = 1; i < array.length; i++) {
+			if ((array[index] != array[i]) && (++index != i)) {
+				array[index] = array[i];
+			}
+		}
+
+		if (++index != array.length) {
+			return Arrays.copyOf(array, index);
+		}
+
+		return array;
+	}
+
+	public static long[] sortedUnique(long[] array) {
+		Arrays.sort(array);
+
+		int index = 0;
+
+		for (int i = 1; i < array.length; i++) {
+			if ((array[index] != array[i]) && (++index != i)) {
+				array[index] = array[i];
+			}
+		}
+
+		if (++index != array.length) {
+			return Arrays.copyOf(array, index);
+		}
+
+		return array;
+	}
+
+	public static short[] sortedUnique(short[] array) {
+		Arrays.sort(array);
+
+		int index = 0;
+
+		for (int i = 1; i < array.length; i++) {
+			if ((array[index] != array[i]) && (++index != i)) {
+				array[index] = array[i];
+			}
+		}
+
+		if (++index != array.length) {
+			return Arrays.copyOf(array, index);
+		}
+
+		return array;
+	}
+
+	public static String[] sortedUnique(String[] array) {
+		Arrays.sort(array, Comparator.nullsLast(Comparator.naturalOrder()));
+
+		int index = 0;
+
+		for (int i = 1; i < array.length; i++) {
+			if (!Objects.equals(array[index], array[i]) && (++index != i)) {
+				array[index] = array[i];
+			}
+		}
+
+		if (++index != array.length) {
+			return Arrays.copyOf(array, index);
+		}
+
+		return array;
 	}
 
 	public static Object split(Object array, int splitSize) {
@@ -1755,14 +1865,12 @@ public class ArrayUtil {
 		return newArray;
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public static String[] toArray(String[] array) {
-		String[] newArray = new String[array.length];
-
-		for (int i = 0; i < array.length; i++) {
-			newArray[i] = array[i].toString();
-		}
-
-		return newArray;
+		return array.clone();
 	}
 
 	public static <T, A> A[] toArray(T[] list, Accessor<T, A> accessor) {
@@ -2183,7 +2291,11 @@ public class ArrayUtil {
 			set.add(b);
 		}
 
-		return toArray(set.toArray(new Byte[set.size()]));
+		if (array.length == set.size()) {
+			return array;
+		}
+
+		return toArray(set.toArray(new Byte[0]));
 	}
 
 	public static double[] unique(double[] array) {
@@ -2193,7 +2305,11 @@ public class ArrayUtil {
 			set.add(d);
 		}
 
-		return toArray(set.toArray(new Double[set.size()]));
+		if (array.length == set.size()) {
+			return array;
+		}
+
+		return toArray(set.toArray(new Double[0]));
 	}
 
 	public static float[] unique(float[] array) {
@@ -2203,7 +2319,11 @@ public class ArrayUtil {
 			set.add(f);
 		}
 
-		return toArray(set.toArray(new Float[set.size()]));
+		if (array.length == set.size()) {
+			return array;
+		}
+
+		return toArray(set.toArray(new Float[0]));
 	}
 
 	public static int[] unique(int[] array) {
@@ -2213,7 +2333,11 @@ public class ArrayUtil {
 			set.add(i);
 		}
 
-		return toArray(set.toArray(new Integer[set.size()]));
+		if (array.length == set.size()) {
+			return array;
+		}
+
+		return toArray(set.toArray(new Integer[0]));
 	}
 
 	public static long[] unique(long[] array) {
@@ -2223,7 +2347,11 @@ public class ArrayUtil {
 			set.add(l);
 		}
 
-		return toArray(set.toArray(new Long[set.size()]));
+		if (array.length == set.size()) {
+			return array;
+		}
+
+		return toArray(set.toArray(new Long[0]));
 	}
 
 	public static short[] unique(short[] array) {
@@ -2233,7 +2361,11 @@ public class ArrayUtil {
 			set.add(s);
 		}
 
-		return toArray(set.toArray(new Short[set.size()]));
+		if (array.length == set.size()) {
+			return array;
+		}
+
+		return toArray(set.toArray(new Short[0]));
 	}
 
 	public static String[] unique(String[] array) {
@@ -2243,7 +2375,11 @@ public class ArrayUtil {
 			set.add(s);
 		}
 
-		return toArray(set.toArray(new String[set.size()]));
+		if (array.length == set.size()) {
+			return array;
+		}
+
+		return set.toArray(new String[0]);
 	}
 
 }

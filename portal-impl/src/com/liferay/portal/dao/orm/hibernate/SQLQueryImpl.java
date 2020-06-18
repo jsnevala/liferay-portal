@@ -14,6 +14,7 @@
 
 package com.liferay.portal.dao.orm.hibernate;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.CacheMode;
 import com.liferay.portal.kernel.dao.orm.LockMode;
 import com.liferay.portal.kernel.dao.orm.ORMException;
@@ -22,7 +23,6 @@ import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.ScrollableResults;
 import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.Serializable;
 
@@ -123,8 +123,8 @@ public class SQLQueryImpl implements SQLQuery {
 		try {
 			return _sqlQuery.executeUpdate();
 		}
-		catch (Exception e) {
-			throw ExceptionTranslator.translate(e);
+		catch (Exception exception) {
+			throw ExceptionTranslator.translate(exception);
 		}
 	}
 
@@ -138,10 +138,12 @@ public class SQLQueryImpl implements SQLQuery {
 	@SuppressWarnings("rawtypes")
 	public Iterator iterate(boolean unmodifiable) throws ORMException {
 		try {
-			return list(unmodifiable).iterator();
+			List<?> list = list(unmodifiable);
+
+			return list.iterator();
 		}
-		catch (Exception e) {
-			throw ExceptionTranslator.translate(e);
+		catch (Exception exception) {
+			throw ExceptionTranslator.translate(exception);
 		}
 	}
 
@@ -182,8 +184,8 @@ public class SQLQueryImpl implements SQLQuery {
 
 			return list;
 		}
-		catch (Exception e) {
-			throw ExceptionTranslator.translate(e);
+		catch (Exception exception) {
+			throw ExceptionTranslator.translate(exception);
 		}
 	}
 
@@ -192,8 +194,8 @@ public class SQLQueryImpl implements SQLQuery {
 		try {
 			return new ScrollableResultsImpl(_sqlQuery.scroll());
 		}
-		catch (Exception e) {
-			throw ExceptionTranslator.translate(e);
+		catch (Exception exception) {
+			throw ExceptionTranslator.translate(exception);
 		}
 	}
 
@@ -439,8 +441,8 @@ public class SQLQueryImpl implements SQLQuery {
 		try {
 			return _sqlQuery.uniqueResult();
 		}
-		catch (Exception e) {
-			throw ExceptionTranslator.translate(e);
+		catch (Exception exception) {
+			throw ExceptionTranslator.translate(exception);
 		}
 	}
 

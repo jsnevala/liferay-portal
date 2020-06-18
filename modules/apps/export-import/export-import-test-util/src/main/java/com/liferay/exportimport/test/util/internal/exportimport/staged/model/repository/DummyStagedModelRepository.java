@@ -50,6 +50,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -106,7 +107,8 @@ public class DummyStagedModelRepository
 
 		_dummies.removeIf(
 			dummy ->
-				dummy.getUuid().equals(uuid) && dummy.getGroupId() == groupId);
+				Objects.equals(dummy.getUuid(), uuid) &&
+				(dummy.getGroupId() == groupId));
 	}
 
 	@Override
@@ -153,8 +155,8 @@ public class DummyStagedModelRepository
 
 		List<Dummy> dummies = dummiesStream.filter(
 			dummy ->
-				dummy.getUuid().equals(uuid) &&
-				dummy.getGroupId() == groupId
+				Objects.equals(dummy.getUuid(), uuid) &&
+				(dummy.getGroupId() == groupId)
 		).collect(
 			Collectors.toList()
 		);
@@ -174,8 +176,8 @@ public class DummyStagedModelRepository
 
 		return dummiesStream.filter(
 			dummy ->
-				dummy.getUuid().equals(uuid) &&
-				dummy.getCompanyId() == companyId
+				Objects.equals(dummy.getUuid(), uuid) &&
+				(dummy.getCompanyId() == companyId)
 		).collect(
 			Collectors.toList()
 		);
@@ -317,10 +319,8 @@ public class DummyStagedModelRepository
 			portletDataContext.getScopeGroupId());
 
 		exportActionableDynamicQuery.setPerformActionMethod(
-			(Dummy dummy) -> {
-				StagedModelDataHandlerUtil.exportStagedModel(
-					portletDataContext, dummy);
-			});
+			(Dummy dummy) -> StagedModelDataHandlerUtil.exportStagedModel(
+				portletDataContext, dummy));
 
 		exportActionableDynamicQuery.setStagedModelType(
 			new StagedModelType(
@@ -361,8 +361,10 @@ public class DummyStagedModelRepository
 	public class DummyBaseLocalServiceImpl extends BaseLocalServiceImpl {
 
 		public List<Dummy> dynamicQuery(DynamicQuery dynamicQuery) {
+			DynamicQueryImpl dynamicQueryImpl = (DynamicQueryImpl)dynamicQuery;
+
 			DetachedCriteria detachedCriteria =
-				((DynamicQueryImpl)dynamicQuery).getDetachedCriteria();
+				dynamicQueryImpl.getDetachedCriteria();
 
 			Class<?> detachedCriteriaClass = detachedCriteria.getClass();
 
@@ -377,12 +379,11 @@ public class DummyStagedModelRepository
 				CriteriaImpl detachedCriteriaImpl = (CriteriaImpl)method.invoke(
 					detachedCriteria);
 
-				Iterator iterator =
+				Iterator<CriteriaImpl.CriterionEntry> iterator =
 					detachedCriteriaImpl.iterateExpressionEntries();
 
 				while (iterator.hasNext()) {
-					CriteriaImpl.CriterionEntry criteriaImpl =
-						(CriteriaImpl.CriterionEntry)iterator.next();
+					CriteriaImpl.CriterionEntry criteriaImpl = iterator.next();
 
 					Stream<Dummy> dummiesStream = result.stream();
 
@@ -393,8 +394,8 @@ public class DummyStagedModelRepository
 					);
 				}
 			}
-			catch (Exception e) {
-				throw new RuntimeException(e);
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
 			}
 
 			return result;
@@ -408,8 +409,9 @@ public class DummyStagedModelRepository
 
 		public Predicate<? super Dummy> getPredicate(String expression) {
 			if (expression.contains("groupId=")) {
-				return d -> d.getGroupId() == Long.valueOf(
-					expression.substring("groupId=".length()));
+				return d ->
+					d.getGroupId() == Long.valueOf(
+						expression.substring("groupId=".length()));
 			}
 
 			if (expression.contains("id>-1")) {
@@ -418,9 +420,8 @@ public class DummyStagedModelRepository
 
 			if (expression.contains("companyId=")) {
 				return d ->
-					d.getCompanyId() ==
-						Long.valueOf(
-							expression.substring("companyId=".length()));
+					d.getCompanyId() == Long.valueOf(
+						expression.substring("companyId=".length()));
 			}
 
 			return d -> true;

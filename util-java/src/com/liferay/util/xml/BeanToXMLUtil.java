@@ -15,7 +15,6 @@
 package com.liferay.util.xml;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -54,8 +53,8 @@ public class BeanToXMLUtil {
 			if (methodName.startsWith("get") &&
 				!methodName.equals("getClass")) {
 
-				String memberName = StringUtil.replace(
-					methodName, "get", StringPool.BLANK);
+				String memberName = StringUtil.removeSubstring(
+					methodName, "get");
 
 				memberName = TextFormatter.format(memberName, TextFormatter.I);
 				memberName = TextFormatter.format(memberName, TextFormatter.K);
@@ -76,9 +75,9 @@ public class BeanToXMLUtil {
 						_add(parentEl, memberName, returnValue.toString());
 					}
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(e.getMessage());
+						_log.warn(exception.getMessage());
 					}
 				}
 			}

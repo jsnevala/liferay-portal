@@ -20,7 +20,9 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Sergio González
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
+@Deprecated
 public class SitesDirectoryTag extends IncludeTag {
 
 	public static final String SITES_CHILDREN = "children";
@@ -30,6 +32,14 @@ public class SitesDirectoryTag extends IncludeTag {
 	public static final String SITES_SIBLINGS = "siblings";
 
 	public static final String SITES_TOP_LEVEL = "top-level";
+
+	public String getDisplayStyle() {
+		return _displayStyle;
+	}
+
+	public String getSites() {
+		return _sites;
+	}
 
 	public void setDisplayStyle(String displayStyle) {
 		_displayStyle = displayStyle;
@@ -53,10 +63,10 @@ public class SitesDirectoryTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-ui:sites-directory:displayStyle", _displayStyle);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-ui:sites-directory:sites", String.valueOf(_sites));
 	}
 

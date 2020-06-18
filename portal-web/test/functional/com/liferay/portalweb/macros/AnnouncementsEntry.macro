@@ -1,247 +1,285 @@
-<definition>
-	<command name="addEntryWithFutureDate">
-		<execute function="AssertClick" locator1="Button#ADD_ANNOUNCEMENT" value1="Add Announcement" />
-
-		<execute function="AssertElementPresent" locator1="AlloyEditor#EDITOR">
-			<var name="key_editor" value="title" />
-		</execute>
-
-		<execute macro="AlloyEditor#addTitleAndContent">
-			<var name="content" value="${entryContent}" />
-			<var name="title" value="${entryTitle}" />
-		</execute>
+definition {
 
-		<execute macro="Panel#expandPanel">
-			<var name="panel" value="Configuration" />
-		</execute>
+	macro addEntryWithFutureDate {
+		AssertClick(
+			locator1 = "Button#ADD_ANNOUNCEMENT",
+			value1 = "Add Announcement");
 
-		<execute function="Select" locator1="AnnouncementsManageEntries#DISTRIBUTION_SCOPE_SELECT" value1="${distributionScope}" />
+		AssertElementPresent(locator1 = "TextInput#TITLE");
 
-		<execute function="Type" locator1="TextInput#URL" value1="${entryURL}" />
+		Type(
+			locator1 = "TextInput#TITLE",
+			value1 = "${entryTitle}");
 
-		<execute function="ScrollWebElementIntoView" locator1="Button#SAVE" />
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
-		<execute function="Uncheck" locator1="Checkbox#DISPLAY_IMMEDIATELY" />
+		KeyPress(
+			locator1 = "CKEditor#BODY",
+			value1 = "${entryContent}");
 
-		<var method="selenium#getAttribute('//input[contains(@id,\'displayDateHour\')]@value')" name="displayDateHour" />
-		<var method="StringUtil#length('${displayDateHour}')" name="displayDateHourLength" />
+		SelectFrame(value1 = "relative=top");
 
-		<if>
-			<equals arg1="${displayDateHourLength}" arg2="1" />
-			<then>
-				<var name="displayDateHour" value="0${displayDateHour}" />
-			</then>
-		</if>
+		Panel.expandPanel(panel = "Configuration");
 
-		<var method="selenium#getAttribute('//input[contains(@id,\'displayDateAmPm\')]@value')" name="displayDateAMPM" />
-		<var method="StringUtil#replace('${displayDateAMPM}', '0', 'AM')" name="displayDateAMPM" />
-		<var method="StringUtil#replace('${displayDateAMPM}', '1', 'PM')" name="displayDateAMPM" />
+		Select(
+			locator1 = "AnnouncementsManageEntries#DISTRIBUTION_SCOPE_SELECT",
+			value1 = "${distributionScope}");
 
-		<var method="selenium#getAttribute('//input[contains(@id,\'displayDateMinute\')]@value')" name="displayDateMinute" />
-		<var method="MathUtil#sum('${displayDateMinute}', '2')" name="displayDateMinuteFuture" />
-		<var method="StringUtil#length('${displayDateMinuteFuture}')" name="displayDateMinuteFutureLength" />
+		Type(
+			locator1 = "TextInput#URL",
+			value1 = "${entryURL}");
 
-		<if>
-			<equals arg1="${displayDateMinuteFutureLength}" arg2="1" />
-			<then>
-				<var name="displayDateMinuteFuture" value="0${displayDateMinuteFuture}" />
-			</then>
-		</if>
+		ScrollWebElementIntoView(locator1 = "Button#SAVE");
 
-		<var name="displayDate" value="${displayDateHour}:${displayDateMinuteFuture} ${displayDateAMPM}" />
+		Uncheck(locator1 = "Checkbox#DISPLAY_IMMEDIATELY");
 
-		<execute function="Type" locator1="TextInput#DISPLAY_DATE_TIME" value1="${displayDate}" />
+		var displayDateHour = selenium.getAttribute("//input[contains(@id,'displayDateHour')]@value");
+		var displayDateHourLength = StringUtil.length("${displayDateHour}");
 
-		<execute macro="Button#clickSave" />
-	</command>
+		if ("${displayDateHourLength}" == "1") {
+			var displayDateHour = "0${displayDateHour}";
+		}
 
-	<command name="addPG">
-		<execute function="AssertClick" locator1="Button#ADD_ANNOUNCEMENT" value1="Add Announcement" />
+		var displayDateAMPM = selenium.getAttribute("//input[contains(@id,'displayDateAmPm')]@value");
+		var displayDateAMPM = StringUtil.replace("${displayDateAMPM}", "0", "AM");
+		var displayDateAMPM = StringUtil.replace("${displayDateAMPM}", "1", "PM");
+		var displayDateMinute = selenium.getAttribute("//input[contains(@id,'displayDateMinute')]@value");
+		var displayDateMinuteFuture = ${displayDateMinute} + 2;
+		var displayDateMinuteFutureLength = StringUtil.length("${displayDateMinuteFuture}");
 
-		<execute function="AssertElementPresent" locator1="AlloyEditor#EDITOR">
-			<var name="key_editor" value="title" />
-		</execute>
+		if ("${displayDateMinuteFutureLength}" == "1") {
+			var displayDateMinuteFuture = "0${displayDateMinuteFuture}";
+		}
 
-		<execute macro="AlloyEditor#addTitleAndContent">
-			<var name="content" value="${entryContent}" />
-			<var name="title" value="${entryTitle}" />
-		</execute>
+		var displayDate = "${displayDateHour}:${displayDateMinuteFuture} ${displayDateAMPM}";
 
-		<execute macro="Panel#expandPanel">
-			<var name="panel" value="Configuration" />
-		</execute>
+		Type(
+			locator1 = "TextInput#DISPLAY_DATE_TIME",
+			value1 = "${displayDate}");
 
-		<execute function="Select" locator1="AnnouncementsManageEntries#DISTRIBUTION_SCOPE_SELECT" value1="${distributionScope}" />
+		Button.clickSave();
+	}
 
-		<execute function="Type" locator1="TextInput#URL" value1="${entryURL}" />
+	macro addPG {
+		AssertClick(
+			locator1 = "Button#ADD_ANNOUNCEMENT",
+			value1 = "Add Announcement");
 
-		<if>
-			<isset var="priority" />
-			<then>
-				<execute function="Select" locator1="Announcements#PRIORITY_SELECT" value1="${priority}" />
-			</then>
-		</if>
+		AssertElementPresent(locator1 = "TextInput#TITLE");
 
-		<if>
-			<isset var="expirationDate" />
-			<then>
-				<execute function="ScrollWebElementIntoView" locator1="Button#SAVE" />
+		Type(
+			locator1 = "TextInput#TITLE",
+			value1 = "${entryTitle}");
 
-				<execute function="Type" locator1="TextInput#EXPIRATION_DATE" value1="${expirationDate}" />
-				<execute macro="Button#clickSave" />
-			</then>
-		</if>
+		CKEditor.addContent(content = "${entryContent}");
 
-		<if>
-			<isset var="pastDate" />
-			<then>
-				<execute macro="Alert#viewRequestFailedToComplete" />
-			</then>
-			<else>
-				<execute macro="PortletEntry#save" />
-			</else>
-		</if>
-	</command>
+		Panel.expandPanel(panel = "Configuration");
 
-	<command name="deletePG">
-		<var name="key_distributionScope" value="${distributionScope}" />
-		<var name="key_entryTitle" value="${entryTitle}" />
+		Select(
+			locator1 = "AnnouncementsManageEntries#DISTRIBUTION_SCOPE_SELECT",
+			value1 = "${distributionScope}");
 
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_TITLE" value1="${entryTitle}" />
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_SCOPE" value1="${distributionScope}" />
+		Type(
+			locator1 = "TextInput#URL",
+			value1 = "${entryURL}");
 
-		<var name="key_entryContent" value="${entryContent}" />
+		if (isSet(priority)) {
+			Select(
+				locator1 = "Announcements#PRIORITY_SELECT",
+				value1 = "${priority}");
+		}
 
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_CONTENT" value1="${entryContent}" />
+		if (isSet(expirationDate)) {
+			ScrollWebElementIntoView(locator1 = "Button#SAVE");
 
-		<execute macro="LexiconEntry#gotoEllipsisMenuItemNoError">
-			<var name="menuItem" value="Delete" />
-		</execute>
+			Type(
+				locator1 = "TextInput#EXPIRATION_DATE",
+				value1 = "${expirationDate}");
 
-		<execute function="AssertConfirm" value1="Are you sure you want to delete this? It will be deleted immediately." />
+			Button.clickSave();
+		}
 
-		<execute function="AssertTextNotPresent" value1="{entryTitle}" />
-		<execute function="AssertTextNotPresent" value1="{entryContent}" />
-	</command>
+		if (isSet(pastDate)) {
+			Alert.viewRequestFailedToComplete();
+		}
+		else {
+			PortletEntry.save();
+		}
+	}
 
-	<command name="editPG">
-		<var name="key_distributionScope" value="${distributionScope}" />
-		<var name="key_entryTitle" value="${entryTitle}" />
+	macro deletePG {
+		var key_distributionScope = "${distributionScope}";
+		var key_entryTitle = "${entryTitle}";
 
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_TITLE" value1="${entryTitle}" />
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_SCOPE" value1="${distributionScope}" />
+		AssertTextEquals(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_TITLE",
+			value1 = "${entryTitle}");
 
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_CONTENT" value1="${entryContent}">
-			<var name="key_entryContent" value="${entryContent}" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_SCOPE",
+			value1 = "${distributionScope}");
 
-		<execute macro="LexiconEntry#gotoEllipsisMenuItem">
-			<var name="menuItem" value="Edit" />
-		</execute>
+		var key_entryContent = "${entryContent}";
 
-		<execute function="AssertTextEquals" locator1="AlloyEditor#EDITOR" value1="${entryTitle}">
-			<var name="key_editor" value="title" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_CONTENT",
+			value1 = "${entryContent}");
 
-		<execute macro="AlloyEditor#addTitleAndContent">
-			<var name="content" value="${entryContentEdit}" />
-			<var name="title" value="${entryTitleEdit}" />
-		</execute>
+		LexiconEntry.gotoEllipsisMenuItemNoError(menuItem = "Delete");
 
-		<execute macro="Panel#expandPanel">
-			<var name="panel" value="Configuration" />
-		</execute>
+		AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
 
-		<execute function="Type" locator1="TextInput#URL" value1="${entryURLEdit}" />
+		AssertTextNotPresent(value1 = "${entryTitle}");
 
-		<execute macro="Button#clickSave" />
-	</command>
+		AssertTextNotPresent(value1 = "${entryContent}");
+	}
 
-	<command name="markAsReadPG">
-		<var name="key_entryContent" value="${entryContent}" />
+	macro editPG {
+		var key_distributionScope = "${distributionScope}";
+		var key_entryTitle = "${entryTitle}";
 
-		<execute function="AssertVisible" locator1="Announcements#CARD_VIEW_ENTRY_CONTENT" />
+		AssertTextEquals(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_TITLE",
+			value1 = "${entryTitle}");
 
-		<execute macro="LexiconEntry#gotoEllipsisMenuItem">
-			<var name="menuItem" value="Mark as Read" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_SCOPE",
+			value1 = "${distributionScope}");
 
-		<execute function="AssertElementNotPresent" locator1="Announcements#CARD_VIEW_ENTRY_CONTENT" />
-	</command>
+		AssertTextEquals(
+			key_entryContent = "${entryContent}",
+			locator1 = "Announcements#CARD_VIEW_ENTRY_CONTENT",
+			value1 = "${entryContent}");
 
-	<command name="tearDownPG">
-		<execute function="Click" locator1="Announcements#NAVIGATION_MANAGE_ENTRIES" />
+		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Edit");
 
-		<execute function="Select" locator1="AnnouncementsManageEntries#DISTRIBUTION_SCOPE_SELECT" value1="General" />
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "${entryTitle}");
 
-		<while>
-			<condition function="IsElementPresent" locator1="AnnouncementsManageEntries#ENTRY_TABLE_ACTIONS_GENERIC" />
-			<then>
-				<execute function="Click" locator1="AnnouncementsManageEntries#ENTRY_TABLE_ACTIONS_GENERIC" />
+		Type(
+			locator1 = "TextInput#TITLE",
+			value1 = "${entryTitleEdit}");
 
-				<execute macro="MenuItem#clickNoError">
-					<var name="menuItem" value="Delete" />
-				</execute>
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
-				<execute function="AssertConfirm" value1="Are you sure you want to delete this? It will be deleted immediately." />
-			</then>
-		</while>
-	</command>
+		Type(
+			locator1 = "CKEditor#BODY",
+			value1 = "${entryContentEdit}");
 
-	<command name="viewDeletePG">
-		<execute function="AssertTextNotPresent" value1="{entryTitle}" />
-		<execute function="AssertTextNotPresent" value1="{entryContent}" />
-	</command>
+		SelectFrame(value1 = "relative=top");
 
-	<command name="viewList">
-		<var name="key_entryTitle" value="${entryTitle}" />
+		Panel.expandPanel(panel = "Configuration");
 
-		<execute function="AssertTextEquals" locator1="AnnouncementsManageEntries#ENTRY_TABLE_TITLE" value1="${entryTitle}" />
+		Type(
+			locator1 = "TextInput#URL",
+			value1 = "${entryURLEdit}");
 
-		<execute function="AssertTextEquals" locator1="AnnouncementsManageEntries#ENTRY_TABLE_TYPE" value1="${distributionScope}" />
-	</command>
+		Button.clickSave();
+	}
 
-	<command name="viewNoPG">
-		<var name="key_entryTitle" value="${entryTitle}" />
+	macro markAsReadPG {
+		var key_entryContent = "${entryContent}";
 
-		<execute function="AssertTextNotPresent" locator1="Announcements#CARD_VIEW_ENTRY_TITLE" value1="${entryTitle}" />
-	</command>
+		AssertVisible(locator1 = "Announcements#CARD_VIEW_ENTRY_CONTENT");
 
-	<command name="viewPG">
-		<var name="key_distributionScope" value="${distributionScope}" />
-		<var name="key_entryTitle" value="${entryTitle}" />
+		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Mark as Read");
 
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_TITLE" value1="${entryTitle}" />
+		AssertElementNotPresent(locator1 = "Announcements#CARD_VIEW_ENTRY_CONTENT");
+	}
 
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_SCOPE" value1="${distributionScope}" />
+	macro tearDownPG {
+		Click(locator1 = "Announcements#NAVIGATION_MANAGE_ENTRIES");
 
-		<var name="key_entryContent" value="${entryContent}" />
+		Select(
+			locator1 = "AnnouncementsManageEntries#DISTRIBUTION_SCOPE_SELECT",
+			value1 = "General");
 
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_CONTENT" value1="${entryContent}" />
-	</command>
+		while (IsElementPresent(locator1 = "AnnouncementsManageEntries#ENTRY_TABLE_ACTIONS_GENERIC")) {
+			Click(locator1 = "AnnouncementsManageEntries#ENTRY_TABLE_ACTIONS_GENERIC");
 
-	<command name="viewReadPG">
-		<execute function="Click" locator1="Announcements#NAVIGATION_ENTRIES_READ" value1="Read" />
+			MenuItem.clickNoError(menuItem = "Delete");
 
-		<execute macro="AnnouncementsEntry#viewPG">
-			<var name="announcementType" value="${announcementType}" />
-			<var name="distributionScope" value="${distributionScope}" />
-			<var name="entryContent" value="${entryContent}" />
-			<var name="entryTitle" value="${entryTitle}" />
-			<var name="key_distributionScope" value="${distributionScope}" />
-			<var name="key_entryTitle" value="${entryTitle}" />
-		</execute>
-	</command>
+			AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
+		}
+	}
 
-	<command name="viewViaEntriesPG">
-		<var name="key_distributionScope" value="${distributionScope}" />
-		<var name="key_entryTitle" value="${entryTitle}" />
+	macro viewDeletePG {
+		AssertTextNotPresent(value1 = "${entryTitle}");
 
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_TITLE" value1="${entryTitle}" />
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_SCOPE" value1="${distributionScope}" />
+		AssertTextNotPresent(value1 = "${entryContent}");
+	}
 
-		<var name="key_entryContent" value="${entryContent}" />
+	macro viewList {
+		var key_entryTitle = "${entryTitle}";
 
-		<execute function="AssertTextEquals" locator1="Announcements#CARD_VIEW_ENTRY_CONTENT" value1="${entryContent}" />
-	</command>
-</definition>
+		AssertTextEquals(
+			locator1 = "Blogs#ENTRY_TABLE_TITLE",
+			value1 = "${entryTitle}");
+
+		AssertTextEquals(
+			locator1 = "Blogs#ENTRY_TABLE_AUTHOR",
+			value1 = "${distributionScope}");
+	}
+
+	macro viewNoPG {
+		var key_entryTitle = "${entryTitle}";
+
+		AssertTextNotPresent(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_TITLE",
+			value1 = "${entryTitle}");
+	}
+
+	macro viewPG {
+		var key_distributionScope = "${distributionScope}";
+		var key_entryTitle = "${entryTitle}";
+
+		AssertTextEquals(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_TITLE",
+			value1 = "${entryTitle}");
+
+		AssertTextEquals(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_SCOPE",
+			value1 = "${distributionScope}");
+
+		var key_entryContent = "${entryContent}";
+
+		AssertTextEquals(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_CONTENT",
+			value1 = "${entryContent}");
+	}
+
+	macro viewReadPG {
+		Click(
+			locator1 = "Announcements#NAVIGATION_ENTRIES_READ",
+			value1 = "Read");
+
+		AnnouncementsEntry.viewPG(
+			announcementType = "${announcementType}",
+			distributionScope = "${distributionScope}",
+			entryContent = "${entryContent}",
+			entryTitle = "${entryTitle}",
+			key_distributionScope = "${distributionScope}",
+			key_entryTitle = "${entryTitle}");
+	}
+
+	macro viewViaEntriesPG {
+		var key_distributionScope = "${distributionScope}";
+		var key_entryTitle = "${entryTitle}";
+
+		AssertTextEquals(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_TITLE",
+			value1 = "${entryTitle}");
+
+		AssertTextEquals(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_SCOPE",
+			value1 = "${distributionScope}");
+
+		var key_entryContent = "${entryContent}";
+
+		AssertTextEquals(
+			locator1 = "Announcements#CARD_VIEW_ENTRY_CONTENT",
+			value1 = "${entryContent}");
+	}
+
+}

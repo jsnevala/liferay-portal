@@ -34,13 +34,14 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.SearchContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -63,7 +64,7 @@ public class CalendarSearcherTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -200,13 +201,13 @@ public class CalendarSearcherTest {
 		assertSearch("\"The Bloggs\"", 3);
 	}
 
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
 	protected static SearchContext getSearchContext(Group group)
 		throws Exception {
 
-		SearchContext searchContext = SearchContextTestUtil.getSearchContext(
-			group.getGroupId());
-
-		return searchContext;
+		return SearchContextTestUtil.getSearchContext(group.getGroupId());
 	}
 
 	protected void addCalendar(String name) throws PortalException {
@@ -222,13 +223,13 @@ public class CalendarSearcherTest {
 			CalendarResourceUtil.getGroupCalendarResource(
 				_group.getGroupId(), serviceContext);
 
-		Map<Locale, String> nameMap = new HashMap<>();
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), name
+		).build();
 
-		nameMap.put(LocaleUtil.getDefault(), name);
-
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.getDefault(), description);
+		Map<Locale, String> descriptionMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), description
+		).build();
 
 		CalendarLocalServiceUtil.addCalendar(
 			_user.getUserId(), _group.getGroupId(),

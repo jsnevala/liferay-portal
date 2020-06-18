@@ -15,10 +15,9 @@
 package com.liferay.source.formatter.checks.util;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
@@ -28,6 +27,11 @@ import java.io.File;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -85,44 +89,6 @@ public class SourceUtil {
 		return sb.toString();
 	}
 
-	public static int getLevel(String s) {
-		return getLevel(
-			s, new String[] {StringPool.OPEN_PARENTHESIS},
-			new String[] {StringPool.CLOSE_PARENTHESIS}, 0);
-	}
-
-	public static int getLevel(
-		String s, String increaseLevelString, String decreaseLevelString) {
-
-		return getLevel(
-			s, new String[] {increaseLevelString},
-			new String[] {decreaseLevelString}, 0);
-	}
-
-	public static int getLevel(
-		String s, String[] increaseLevelStrings,
-		String[] decreaseLevelStrings) {
-
-		return getLevel(s, increaseLevelStrings, decreaseLevelStrings, 0);
-	}
-
-	public static int getLevel(
-		String s, String[] increaseLevelStrings, String[] decreaseLevelStrings,
-		int startLevel) {
-
-		int level = startLevel;
-
-		for (String increaseLevelString : increaseLevelStrings) {
-			level = _adjustLevel(level, s, increaseLevelString, 1);
-		}
-
-		for (String decreaseLevelString : decreaseLevelStrings) {
-			level = _adjustLevel(level, s, decreaseLevelString, -1);
-		}
-
-		return level;
-	}
-
 	public static String getLine(String content, int lineNumber) {
 		int nextLineStartPos = getLineStartPos(content, lineNumber);
 
@@ -153,7 +119,7 @@ public class SourceUtil {
 			return 0;
 		}
 
-		int x = 0;
+		int x = -1;
 
 		for (int i = 1; i < lineNumber; i++) {
 			x = content.indexOf(CharPool.NEW_LINE, x + 1);
@@ -166,7 +132,28 @@ public class SourceUtil {
 		return x + 1;
 	}
 
-	public static String getTitleCase(String s, String[] exceptions) {
+	public static int[] getMultiLinePositions(
+		String content, Pattern multiLinePattern) {
+
+		List<Integer> multiLinePositions = new ArrayList<>();
+
+		Matcher matcher = multiLinePattern.matcher(content);
+
+		while (matcher.find()) {
+			multiLinePositions.add(getLineNumber(content, matcher.start()));
+			multiLinePositions.add(getLineNumber(content, matcher.end() - 1));
+		}
+
+		return ArrayUtil.toIntArray(multiLinePositions);
+	}
+
+	public static String getTitleCase(
+		String s, boolean allowDash, String... exceptions) {
+
+		if (!allowDash) {
+			s = StringUtil.replace(s, CharPool.DASH, CharPool.SPACE);
+		}
+
 		String[] words = s.split("\\s+");
 
 		if (ArrayUtil.isEmpty(words)) {
@@ -221,6 +208,33 @@ public class SourceUtil {
 		return sb.toString();
 	}
 
+	public static boolean isInsideMultiLines(
+		int lineNumber, int[] multiLinePositions) {
+
+		for (int i = 0; i < (multiLinePositions.length - 1); i += 2) {
+			if (lineNumber < multiLinePositions[i]) {
+				return false;
+			}
+
+			if (lineNumber <= multiLinePositions[i + 1]) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean isXML(String content) {
+		try {
+			readXML(content);
+
+			return true;
+		}
+		catch (DocumentException documentException) {
+			return false;
+		}
+	}
+
 	public static Document readXML(File file) throws DocumentException {
 		SAXReader saxReader = SAXReaderFactory.getSAXReader(null, false, false);
 
@@ -233,53 +247,11 @@ public class SourceUtil {
 		return saxReader.read(new UnsyncStringReader(content));
 	}
 
-	private static int _adjustLevel(
-		int level, String text, String s, int diff) {
-
-		boolean multiLineComment = false;
-
-		forLoop:
-		for (String line : StringUtil.splitLines(text)) {
-			line = StringUtil.trim(line);
-
-			if (line.startsWith("/*")) {
-				multiLineComment = true;
-			}
-
-			if (multiLineComment) {
-				if (line.endsWith("*/")) {
-					multiLineComment = false;
-				}
-
-				continue;
-			}
-
-			if (line.startsWith("//") || line.startsWith("*")) {
-				continue;
-			}
-
-			int x = -1;
-
-			while (true) {
-				x = line.indexOf(s, x + 1);
-
-				if (x == -1) {
-					continue forLoop;
-				}
-
-				if (!ToolsUtil.isInsideQuotes(line, x)) {
-					level += diff;
-				}
-			}
-		}
-
-		return level;
-	}
-
 	private static final String[] _ARTICLES = {"a", "an", "the"};
 
-	private static final String[] _CONJUNCTIONS =
-		{"and", "but", "for", "nor", "or", "yet"};
+	private static final String[] _CONJUNCTIONS = {
+		"and", "but", "for", "nor", "or", "yet"
+	};
 
 	private static final String[] _PREPOSITIONS = {
 		"a", "abaft", "aboard", "about", "above", "absent", "across", "afore",

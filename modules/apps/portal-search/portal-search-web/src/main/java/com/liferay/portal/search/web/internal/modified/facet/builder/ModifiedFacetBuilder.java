@@ -52,7 +52,7 @@ public class ModifiedFacetBuilder {
 
 		facet.setFacetConfiguration(buildFacetConfiguration(facet));
 
-		String rangeString = _getSelectedRangeString();
+		String rangeString = _getSelectedRangeString(facet);
 
 		if (!Validator.isBlank(rangeString)) {
 			facet.select(rangeString);
@@ -110,8 +110,11 @@ public class ModifiedFacetBuilder {
 			(key, value) -> {
 				JSONObject range = _jsonFactory.createJSONObject();
 
-				range.put("label", key);
-				range.put("range", value);
+				range.put(
+					"label", key
+				).put(
+					"range", value
+				);
 
 				rangesJSONArray.put(range);
 			});
@@ -141,12 +144,16 @@ public class ModifiedFacetBuilder {
 		return rangesMap;
 	}
 
-	private String _getSelectedRangeString() {
+	private String _getSelectedRangeString(Facet facet) {
 		if (!Validator.isBlank(_customRangeFrom) &&
 			!Validator.isBlank(_customRangeTo)) {
 
-			return _dateRangeFactory.getRangeString(
+			String rangeString = _dateRangeFactory.getRangeString(
 				_customRangeFrom, _customRangeTo);
+
+			_searchContext.setAttribute(facet.getFieldId(), rangeString);
+
+			return rangeString;
 		}
 
 		if (!ArrayUtil.isEmpty(_selectedRanges)) {

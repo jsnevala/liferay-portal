@@ -82,8 +82,8 @@ public class LegacyExternalRepositoryDefiner extends BaseRepositoryDefiner {
 
 			return _repositoryConfiguration;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
@@ -100,8 +100,8 @@ public class LegacyExternalRepositoryDefiner extends BaseRepositoryDefiner {
 			ProcessorCapability.class,
 			_portalCapabilityLocator.getProcessorCapability(
 				capabilityRegistry.getTarget(),
-				ProcessorCapability.
-					ResourceGenerationStrategy.ALWAYS_GENERATE));
+				ProcessorCapability.ResourceGenerationStrategy.
+					ALWAYS_GENERATE));
 	}
 
 	@Override

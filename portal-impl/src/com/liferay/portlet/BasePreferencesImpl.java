@@ -37,13 +37,13 @@ import javax.portlet.ValidatorException;
 public abstract class BasePreferencesImpl implements Serializable {
 
 	public BasePreferencesImpl(
-		long ownerId, int ownerType, String xml,
-		Map<String, Preference> preferences) {
+		long ownerId, int ownerType, String originalXML,
+		Map<String, Preference> originalPreferences) {
 
 		_ownerId = ownerId;
 		_ownerType = ownerType;
-		_originalXML = xml;
-		_originalPreferences = preferences;
+		_originalXML = originalXML;
+		_originalPreferences = originalPreferences;
 	}
 
 	public Map<String, String[]> getMap() {
@@ -170,13 +170,12 @@ public abstract class BasePreferencesImpl implements Serializable {
 		if (preference.isReadOnly()) {
 			throw new ReadOnlyException(key);
 		}
-		else {
-			preference = (Preference)preference.clone();
 
-			modifiedPreferences.put(key, preference);
+		preference = (Preference)preference.clone();
 
-			preference.setValues(new String[] {value});
-		}
+		modifiedPreferences.put(key, preference);
+
+		preference.setValues(new String[] {value});
 	}
 
 	public void setValues(String key, String[] values)
@@ -203,13 +202,12 @@ public abstract class BasePreferencesImpl implements Serializable {
 		if (preference.isReadOnly()) {
 			throw new ReadOnlyException(key);
 		}
-		else {
-			preference = (Preference)preference.clone();
 
-			modifiedPreferences.put(key, preference);
+		preference = (Preference)preference.clone();
 
-			preference.setValues(values);
-		}
+		modifiedPreferences.put(key, preference);
+
+		preference.setValues(values);
 	}
 
 	public int size() {

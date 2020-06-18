@@ -14,11 +14,11 @@
 
 package com.liferay.portal.verify;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portlet.documentlibrary.store.StoreFactory;
@@ -60,9 +60,10 @@ public class VerifyProperties extends VerifyProcess {
 		try {
 			return classLoader.getResourceAsStream(resourceName);
 		}
-		catch (RuntimeException re) {
+		catch (RuntimeException runtimeException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to get resource " + resourceName, re);
+				_log.warn(
+					"Unable to get resource " + resourceName, runtimeException);
 			}
 
 			return null;
@@ -78,6 +79,12 @@ public class VerifyProperties extends VerifyProcess {
 		propertiesResourceNames.add(0, "portal.properties");
 
 		for (String propertyResourceName : propertiesResourceNames) {
+			if (propertyResourceName.contains("${") &&
+				propertyResourceName.contains("}")) {
+
+				continue;
+			}
+
 			try (InputStream inputStream = getPropertiesResourceAsStream(
 					propertyResourceName)) {
 
@@ -85,9 +92,10 @@ public class VerifyProperties extends VerifyProcess {
 					properties.load(inputStream);
 				}
 			}
-			catch (IOException ioe) {
+			catch (IOException ioException) {
 				_log.error(
-					"Unable to load property " + propertyResourceName, ioe);
+					"Unable to load property " + propertyResourceName,
+					ioException);
 			}
 		}
 
@@ -538,6 +546,16 @@ public class VerifyProperties extends VerifyProcess {
 		},
 
 		{
+			"blogs.image.max.size", "blogs.image.max.size",
+			"com.liferay.blogs.api"
+		},
+
+		{
+			"blogs.image.extensions", "blogs.image.extensions",
+			"com.liferay.blogs.api"
+		},
+
+		{
 			"blogs.linkback.job.interval", "linkback.job.interval",
 			"com.liferay.blogs.web"
 		},
@@ -663,6 +681,23 @@ public class VerifyProperties extends VerifyProcess {
 			"com.liferay.currency.converter.web"
 		},
 
+		// Discussion
+
+		{
+			"discussion.email.body", "discussion.email.body",
+			"com.liferay.comment.api"
+		},
+
+		{
+			"discussion.email.comments.added.enabled",
+			"discussion.email.comments.added.enabled", "com.liferay.comment.api"
+		},
+
+		{
+			"discussion.email.subject", "discussion.email.subject",
+			"com.liferay.comment.api"
+		},
+
 		// Document Library
 
 		{
@@ -686,36 +721,8 @@ public class VerifyProperties extends VerifyProcess {
 			"com.liferay.portal.store.filesystem"
 		},
 		{
-			"dl.store.cmis.credentials.username", "credentials.username",
-			"com.liferay.portal.store.cmis"
-		},
-		{
-			"dl.store.cmis.credentials.password", "credentials.password",
-			"com.liferay.portal.store.cmis"
-		},
-		{
-			"dl.store.cmis.repository.url", "repository.url",
-			"com.liferay.portal.store.cmis"
-		},
-		{
-			"dl.store.cmis.system.root.dir", "system.root.dir",
-			"com.liferay.portal.store.cmis"
-		},
-		{
 			"dl.store.file.system.root.dir", "root.dir",
 			"com.liferay.portal.store.filesystem"
-		},
-		{
-			"dl.store.jcr.fetch.delay", "fetch.delay",
-			"com.liferay.portal.store.jcr"
-		},
-		{
-			"dl.store.jcr.fetch.max.failures", "fetch.max.failures",
-			"com.liferay.portal.store.jcr"
-		},
-		{
-			"dl.store.jcr.move.version.labels", "move.version.labels",
-			"com.liferay.portal.store.jcr"
 		},
 		{
 			"dl.store.s3.access.key", "access.key",
@@ -902,42 +909,6 @@ public class VerifyProperties extends VerifyProcess {
 			"iframe.hidden-variables", "hidden.variables",
 			"com.liferay.iframe.web"
 		},
-
-		// JCR
-
-		{
-			"jcr.initialize.on.startup", "initialize.on.startup",
-			"com.liferay.portal.store.jcr"
-		},
-		{
-			"jcr.jackrabbit.config.file.path", "jackrabbit.config.file.path",
-			"com.liferay.portal.store.jcr"
-		},
-		{
-			"jcr.jackrabbit.credentials.password",
-			"jackrabbit.credentials.password", "com.liferay.portal.store.jcr"
-		},
-		{
-			"jcr.jackrabbit.credentials.username",
-			"jackrabbit.credentials.username", "com.liferay.portal.store.jcr"
-		},
-		{
-			"jcr.jackrabbit.repository.home", "repository.home",
-			"com.liferay.portal.store.jcr"
-		},
-		{
-			"jcr.jackrabbit.repository.root", "repository.root",
-			"com.liferay.portal.store.jcr"
-		},
-		{
-			"jcr.node.documentlibrary", "node.documentlibrary",
-			"com.liferay.portal.store.jcr"
-		},
-		{
-			"jcr.workspace.name", "workspace.name",
-			"com.liferay.portal.store.jcr"
-		},
-		{"jcr.wrap.session", "wrap.session", "com.liferay.portal.store.jcr"},
 
 		// Journal
 
@@ -1634,7 +1605,8 @@ public class VerifyProperties extends VerifyProcess {
 		"auth.max.failures.limit", "auto.deploy.blacklist.threshold",
 		"blogs.image.small.max.size", "breadcrumb.display.style.options",
 		"buffered.increment.parallel.queue.size",
-		"buffered.increment.serial.queue.size", "captcha.max.challenges",
+		"buffered.increment.serial.queue.size",
+		"cache.clear.on.context.initialization", "captcha.max.challenges",
 		"captcha.check.portal.create_account",
 		"captcha.check.portal.send_password",
 		"captcha.check.portlet.message_boards.edit_category",
@@ -1676,8 +1648,18 @@ public class VerifyProperties extends VerifyProcess {
 		"discussion.subscribe.by.default", "discussion.thread.view",
 		"dl.file.entry.image.exif.metadata.rotation.enabled",
 		"dl.file.entry.previewable.processor.max.size",
-		"dl.file.entry.read.count.enabled", "dl.file.extensions",
-		"dl.file.max.size", "dl.file.rank.enabled", "dl.folder.menu.visible",
+		"dl.file.entry.read.count.enabled",
+		"dl.file.entry.type.ig.image.auto.create.on.upgrade",
+		"dl.file.extensions", "dl.file.max.size", "dl.file.rank.enabled",
+		"dl.folder.menu.visible", "dl.hook.cmis.credentials.password",
+		"dl.hook.cmis.credentials.username", "dl.hook.cmis.repository.url",
+		"dl.hook.cmis.system.root.dir", "dl.hook.file.system.root.dir",
+		"dl.hook.jcr.fetch.delay", "dl.hook.jcr.fetch.max.failures",
+		"dl.hook.jcr.move.version.labels", "dl.store.cmis.credentials.username",
+		"dl.store.cmis.credentials.password", "dl.store.cmis.repository.url",
+		"dl.store.cmis.system.root.dir", "dl.store.file.system.root.dir",
+		"dl.store.jcr.fetch.delay", "dl.store.jcr.fetch.max.failures",
+		"dl.store.jcr.move.version.labels", "dl.tabs.visible",
 		"dockbar.add.portlets", "dockbar.administrative.links.show.in.pop.up",
 		"dynamic.data.lists.record.set.force.autogenerate.key",
 		"dynamic.data.lists.template.language.parser[ftl]",
@@ -1705,14 +1687,25 @@ public class VerifyProperties extends VerifyProcess {
 			"jsp",
 		"editor.wysiwyg.portal-web.docroot.html.portlet.message_boards." +
 			"configuration.jsp",
+		"editor.wysiwyg.portal-web.docroot.html.portlet.message_boards." +
+			"edit_message.bb_code.jsp",
+		"editor.wysiwyg.portal-web.docroot.html.portlet.message_boards." +
+			"edit_message.html.jsp",
 		"editor.wysiwyg.portal-web.docroot.html.portlet.portal_settings." +
 			"email_notifications.jsp",
+		"ehcache.bootstrap.cache.loader.enabled",
 		"ehcache.bootstrap.cache.loader.factory",
+		"ehcache.bootstrap.cache.loader.properties",
+		"ehcache.bootstrap.cache.loader.properties.default",
 		"ehcache.cache.event.listener.factory",
 		"ehcache.cache.manager.peer.listener.factory",
 		"ehcache.cache.manager.peer.provider.factory",
 		"ehcache.cache.manager.statistics.thread.pool.size",
 		"ehcache.multi.vm.config.location.peerProviderProperties",
+		"ehcache.rmi.peer.listener.factory.class",
+		"ehcache.rmi.peer.listener.factory.properties",
+		"ehcache.rmi.peer.provider.factory.class",
+		"ehcache.rmi.peer.provider.factory.properties",
 		"ehcache.statistics.enabled",
 		"hot.deploy.hook.custom.jsp.verification.enabled",
 		"hibernate.cache.region.factory_class",
@@ -1724,10 +1717,16 @@ public class VerifyProperties extends VerifyProcess {
 		"index.read.only", "invitation.email.max.recipients",
 		"invitation.email.message.body", "invitation.email.message.subject",
 		"invoker.filter.chain.cache.size", "javax.persistence.validation.mode",
-		"jbi.workflow.url", "json.deserializer.strict.mode",
-		"journal.article.form.add", "journal.article.form.default.values",
-		"journal.article.form.update", "journal.article.form.translate",
-		"journal.article.types", "journal.articles.page.delta.values",
+		"jbi.workflow.url", "jcr.initialize.on.startup",
+		"jcr.jackrabbit.config.file.path",
+		"jcr.jackrabbit.credentials.password",
+		"jcr.jackrabbit.credentials.username", "jcr.jackrabbit.repository.home",
+		"jcr.jackrabbit.repository.root", "jcr.node.documentlibrary",
+		"jcr.workspace.name", "jcr.wrap.session",
+		"json.deserializer.strict.mode", "journal.article.form.add",
+		"journal.article.form.default.values", "journal.article.form.update",
+		"journal.article.form.translate", "journal.article.types",
+		"journal.articles.page.delta.values",
 		"journal.browse.by.structures.sorted.by.name",
 		"journal.image.extensions", "journal.image.small.max.size",
 		"journal.template.language.parser[css]",
@@ -1740,24 +1739,43 @@ public class VerifyProperties extends VerifyProcess {
 		"jpa.provider.property.eclipselink.logging.level",
 		"jpa.provider.property.eclipselink.logging.timestamp",
 		"language.display.style.options",
+		"layout.configuration.action.update[embedded]",
 		"layout.configuration.action.update[link_to_layout]",
+		"layout.configuration.action.update[url]",
+		"layout.configuration.action.delete[embedded]",
 		"layout.configuration.action.delete[link_to_layout]",
-		"layout.edit.page[control_panel]", "layout.edit.page[link_to_layout]",
-		"layout.first.pageable[control_panel]",
-		"layout.first.pageable[link_to_layout]", "layout.form.add",
-		"layout.form.update",
+		"layout.configuration.action.delete[url]",
+		"layout.edit.page[control_panel]", "layout.edit.page[embedded]",
+		"layout.edit.page[link_to_layout]", "layout.edit.page[panel]",
+		"layout.edit.page[url]", "layout.first.pageable[control_panel]",
+		"layout.first.pageable[embedded]",
+		"layout.first.pageable[link_to_layout]", "layout.first.pageable[panel]",
+		"layout.first.pageable[url]", "layout.form.add", "layout.form.update",
+		"layout.parallel.render.enable",
 		"layout.parallel.render.thread.pool.allow.core.thread.timeout",
-		"layout.parentable[control_panel]", "layout.parentable[link_to_layout]",
+		"layout.parallel.render.thread.pool.core.thread.count",
+		"layout.parallel.render.thread.pool.keep.alive.time",
+		"layout.parallel.render.thread.pool.max.queue.size",
+		"layout.parallel.render.thread.pool.max.thread.count",
+		"layout.parallel.render.timeout", "layout.parentable[control_panel]",
+		"layout.parentable[embedded]", "layout.parentable[link_to_layout]",
+		"layout.parentable[panel]", "layout.parentable[url]",
 		"layout.reset.portlet.ids", "layout.set.form.update",
-		"layout.sitemapable[link_to_layout]", "layout.types",
-		"layout.url[control_panel]", "layout.url[link_to_layout]",
+		"layout.sitemapable[embedded]", "layout.sitemapable[link_to_layout]",
+		"layout.sitemapable[url]", "layout.types", "layout.url[control_panel]",
+		"layout.url[embedded]", "layout.url[link_to_layout]",
+		"layout.url[panel]", "layout.url[url]",
 		"layout.url.friendliable[control_panel]",
+		"layout.url.friendliable[embedded]",
 		"layout.url.friendliable[link_to_layout]",
-		"layout.view.page[control_panel]", "layout.view.page[link_to_layout]",
-		"library.download.url.resin.jar", "library.download.url.script-10.jar",
-		"lucene.analyzer", "lucene.cluster.index.loading.sync.timeout",
-		"lucene.file.extractor", "lucene.file.extractor.regexp.strip",
-		"lucene.replicate.write", "lucene.store.jdbc.auto.clean.up",
+		"layout.url.friendliable[panel]", "layout.url.friendliable[url]",
+		"layout.view.page[control_panel]", "layout.view.page[embedded]",
+		"layout.view.page[link_to_layout]", "layout.view.page[panel]",
+		"layout.view.page[url]", "library.download.url.resin.jar",
+		"library.download.url.script-10.jar", "lucene.analyzer",
+		"lucene.cluster.index.loading.sync.timeout", "lucene.file.extractor",
+		"lucene.file.extractor.regexp.strip", "lucene.replicate.write",
+		"lucene.store.jdbc.auto.clean.up",
 		"lucene.store.jdbc.auto.clean.up.enabled",
 		"lucene.store.jdbc.auto.clean.up.interval",
 		"lucene.store.jdbc.dialect.db2", "lucene.store.jdbc.dialect.derby",
@@ -1778,6 +1796,7 @@ public class VerifyProperties extends VerifyProcess {
 		"microsoft.translator.client.id", "microsoft.translator.client.secret",
 		"minifier.inline.content.cache.size",
 		"mobile.device.styling.wap.enabled", "module.framework.initial.bundles",
+		"module.framework.properties.lpkg.index.validator.enabled",
 		"module.framework.register.liferay.services", "msn.login",
 		"msn.password", "multicast.group.address[\"hibernate\"]",
 		"multicast.group.port[\"hibernate\"]",
@@ -1795,6 +1814,8 @@ public class VerifyProperties extends VerifyProcess {
 		"organizations.indexer.enabled", "organizations.rootable",
 		"organizations.types", "portal.cache.manager.type.multi.vm",
 		"portal.cache.manager.type.single.vm", "portal.ctx",
+		"portal.resiliency.enabled", "portal.resiliency.portlet.show.footer",
+		"portal.resiliency.spi.agent.client.pool.max.size",
 		"portal.security.manager.enable",
 		"permissions.inline.sql.resource.block.query.threshold",
 		"permissions.list.filter", "permissions.thread.local.cache.max.size",
@@ -1816,9 +1837,15 @@ public class VerifyProperties extends VerifyProcess {
 		"social.activity.sets.bundling.enabled", "social.activity.sets.enabled",
 		"social.bookmark.display.styles", "social.bookmark.types",
 		"spring.hibernate.data.source", "spring.hibernate.session.factory",
+		"spring.portlet.configs", "spring.remoting.servlet.hosts.allowed",
+		"spring.remoting.servlet.https.required",
+		"staging.delete.temp.lar.on.failure",
+		"staging.delete.temp.lar.on.success",
 		"struts.portlet.ignored.parameters.regexp",
 		"struts.portlet.request.processor",
 		"table.mapper.cache.mapping.table.names", "tck.url",
+		"transaction.manager.impl",
+		"user.groups.copy.layouts.to.user.personal.site",
 		"user.groups.indexer.enabled", "users.form.add.identification",
 		"users.indexer.enabled", "users.form.add.main",
 		"users.form.add.miscellaneous", "users.form.my.account.identification",
@@ -1828,7 +1855,8 @@ public class VerifyProperties extends VerifyProcess {
 		"users.image.default.use.initials", "users.image.max.height",
 		"users.image.max.size", "users.image.max.width",
 		"vaadin.resources.path", "vaadin.theme", "vaadin.widgetset",
-		"value.object.finder.blocking.cache", "webdav.storage.class",
+		"value.object.finder.blocking.cache", "verify.database.transactions",
+		"verify.frequency", "verify.processes", "webdav.storage.class",
 		"webdav.storage.show.edit.url", "webdav.storage.show.view.url",
 		"webdav.storage.tokens", "wiki.email.page.added.signature",
 		"wiki.email.page.updated.signature", "xss.allow", "ym.login",
@@ -1870,29 +1898,9 @@ public class VerifyProperties extends VerifyProcess {
 			"default.user.layout.template.id",
 			"default.user.public.layout.template.id"
 		},
-		{
-			"default.user.private.layout.lar",
-			"default.user.private.layouts.lar"
-		},
+		{"default.user.private.layout.lar", "default.user.private.layouts.lar"},
 		{"default.user.public.layout.lar", "default.user.public.layouts.lar"},
-		{
-			"dl.hook.cmis.credentials.password",
-			"dl.store.cmis.credentials.password"
-		},
-		{
-			"dl.hook.cmis.credentials.username",
-			"dl.store.cmis.credentials.username"
-		},
-		{"dl.hook.cmis.repository.url", "dl.store.cmis.repository.url"},
-		{"dl.hook.cmis.system.root.dir", "dl.store.cmis.system.root.dir"},
-		{"dl.hook.file.system.root.dir", "dl.store.file.system.root.dir"},
 		{"dl.hook.impl", "dl.store.impl"},
-		{"dl.hook.jcr.fetch.delay", "dl.store.jcr.fetch.delay"},
-		{"dl.hook.jcr.fetch.max.failures", "dl.store.jcr.fetch.max.failures"},
-		{
-			"dl.hook.jcr.move.version.labels",
-			"dl.store.jcr.move.version.labels"
-		},
 		{"dl.hook.s3.access.key", "dl.store.s3.access.key"},
 		{"dl.hook.s3.bucket.name", "dl.store.s3.bucket.name"},
 		{"dl.hook.s3.secret.key", "dl.store.s3.secret.key"},

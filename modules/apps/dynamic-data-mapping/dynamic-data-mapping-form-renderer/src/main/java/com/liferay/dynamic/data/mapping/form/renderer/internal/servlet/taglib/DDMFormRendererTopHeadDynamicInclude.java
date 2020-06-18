@@ -14,6 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.form.renderer.internal.servlet.taglib;
 
+import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderer;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -37,33 +38,27 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = DynamicInclude.class)
 public class DDMFormRendererTopHeadDynamicInclude extends BaseDynamicInclude {
 
-	@Activate
-	public void activate() {
-		_postfix = _portal.getPathProxy();
-
-		if (_postfix.isEmpty()) {
-			_postfix = _servletContext.getContextPath();
-		}
-		else {
-			_postfix = _postfix.concat(_servletContext.getContextPath());
-		}
-	}
-
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response,
-			String key)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		PrintWriter printWriter = response.getWriter();
+		PrintWriter printWriter = httpServletResponse.getWriter();
 
 		String cdnBaseURL = themeDisplay.getCDNBaseURL();
 
 		String staticResourceURL = _portal.getStaticResourceURL(
-			request, cdnBaseURL.concat(_postfix).concat("/css/main.css"));
+			httpServletRequest,
+			cdnBaseURL.concat(
+				_postfix
+			).concat(
+				"/css/main.css"
+			));
 
 		String content = "<link href=\"".concat(staticResourceURL);
 
@@ -73,7 +68,20 @@ public class DDMFormRendererTopHeadDynamicInclude extends BaseDynamicInclude {
 
 	@Override
 	public void register(DynamicIncludeRegistry dynamicIncludeRegistry) {
-		dynamicIncludeRegistry.register("/html/common/themes/top_head.jsp#pre");
+		dynamicIncludeRegistry.register(
+			DDMFormRenderer.class.getName() + "#formRendered");
+	}
+
+	@Activate
+	protected void activate() {
+		_postfix = _portal.getPathProxy();
+
+		if (_postfix.isEmpty()) {
+			_postfix = _servletContext.getContextPath();
+		}
+		else {
+			_postfix = _postfix.concat(_servletContext.getContextPath());
+		}
 	}
 
 	@Reference

@@ -14,6 +14,8 @@
 
 package com.liferay.poshi.runner.elements;
 
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -37,7 +39,8 @@ public class NotPoshiElement extends PoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		if (_isElementType(parentPoshiElement, poshiScript)) {
 			return new NotPoshiElement(parentPoshiElement, poshiScript);
@@ -47,10 +50,21 @@ public class NotPoshiElement extends PoshiElement {
 	}
 
 	@Override
-	public void parsePoshiScript(String poshiScript) {
-		add(
-			PoshiNodeFactory.newPoshiNode(
-				this, getParentheticalContent(poshiScript)));
+	public void parsePoshiScript(String poshiScript)
+		throws PoshiScriptParserException {
+
+		if (poshiScript.contains("!=")) {
+			List<String> nestedConditions = getNestedConditions(
+				poshiScript, "!=");
+
+			poshiScript =
+				nestedConditions.get(0) + "==" + nestedConditions.get(1);
+		}
+		else {
+			poshiScript = getParentheticalContent(poshiScript);
+		}
+
+		add(PoshiNodeFactory.newPoshiNode(this, poshiScript));
 	}
 
 	@Override
@@ -80,7 +94,8 @@ public class NotPoshiElement extends PoshiElement {
 	}
 
 	protected NotPoshiElement(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}
@@ -104,6 +119,6 @@ public class NotPoshiElement extends PoshiElement {
 	private static final String _ELEMENT_NAME = "not";
 
 	private static final Pattern _conditionPattern = Pattern.compile(
-		"^![\\s\\S]*$");
+		"^(![\\s\\S]*|\"[\\s\\S]*\"[\\s]*!=[\\s]*\"[\\s\\S]*\")$");
 
 }

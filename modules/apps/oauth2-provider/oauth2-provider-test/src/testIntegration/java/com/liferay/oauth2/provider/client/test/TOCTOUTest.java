@@ -14,18 +14,21 @@
 
 package com.liferay.oauth2.provider.client.test;
 
+import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.oauth2.provider.constants.GrantType;
+import com.liferay.oauth2.provider.internal.test.TestRunnablePostHandlingApplication;
 import com.liferay.oauth2.provider.model.OAuth2Application;
-import com.liferay.oauth2.provider.model.OAuth2ApplicationScopeAliases;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalService;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationScopeAliasesLocalService;
-import com.liferay.oauth2.provider.test.internal.TestRunnablePostHandlingApplication;
-import com.liferay.oauth2.provider.test.internal.activator.BaseTestPreparatorBundleActivator;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.test.log.CaptureAppender;
+import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Collections;
 import java.util.Dictionary;
@@ -34,30 +37,29 @@ import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.Archive;
+import org.apache.log4j.Level;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.osgi.framework.BundleActivator;
 import org.osgi.framework.ServiceReference;
 
 /**
  * @author Stian Sigvartsen
  */
-@RunAsClient
 @RunWith(Arquillian.class)
 public class TOCTOUTest extends BaseClientTestCase {
 
-	@Deployment
-	public static Archive<?> getDeployment() throws Exception {
-		return BaseClientTestCase.getArchive(
-			SecurityTestPreparatorBundleActivator.class);
-	}
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new LiferayIntegrationTestRule();
 
 	/**
 	 * OAUTH2-101 / OAUTH2-102
@@ -93,14 +95,20 @@ public class TOCTOUTest extends BaseClientTestCase {
 		Invocation.Builder webTarget2InvocationBuilder = authorize(
 			webTarget2.request(), token);
 
-		try {
+		try (CaptureAppender captureAppender =
+				Log4JLoggerTestUtil.configureLog4JLogger(
+					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
+
 			webTarget2InvocationBuilder.get(String.class);
+
 			Assert.fail(
 				"Expected request GET /annotated2 to fail through admin & " +
 					"end-user TOCTOU protection");
 		}
-		catch (ClientErrorException cee) {
-			Assert.assertEquals(403, cee.getResponse().getStatus());
+		catch (ClientErrorException clientErrorException) {
+			Response response = clientErrorException.getResponse();
+
+			Assert.assertEquals(403, response.getStatus());
 		}
 
 		// Try again with a fresh narrowed down token for "everything.read".
@@ -114,14 +122,20 @@ public class TOCTOUTest extends BaseClientTestCase {
 
 		webTarget2InvocationBuilder = authorize(webTarget2.request(), token);
 
-		try {
+		try (CaptureAppender captureAppender =
+				Log4JLoggerTestUtil.configureLog4JLogger(
+					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
+
 			webTarget2InvocationBuilder.get(String.class);
+
 			Assert.fail(
 				"Expected request GET /annotated2 to fail through admin " +
 					"TOCTOU protection");
 		}
-		catch (ClientErrorException cee) {
-			Assert.assertEquals(403, cee.getResponse().getStatus());
+		catch (ClientErrorException clientErrorException) {
+			Response response = clientErrorException.getResponse();
+
+			Assert.assertEquals(403, response.getStatus());
 		}
 
 		// Resave the OAuth2 app scope assignment
@@ -131,14 +145,20 @@ public class TOCTOUTest extends BaseClientTestCase {
 		// Fail to use the token from [4] on JAX-RS app 2 (end-user TOCTOU
 		// protection when OAuth2 app scope assignment grows)
 
-		try {
+		try (CaptureAppender captureAppender =
+				Log4JLoggerTestUtil.configureLog4JLogger(
+					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
+
 			webTarget2InvocationBuilder.get(String.class);
+
 			Assert.fail(
 				"Expected request GET /annotated2 to fail through end-user " +
 					"TOCTOU protection");
 		}
-		catch (ClientErrorException cee) {
-			Assert.assertEquals(403, cee.getResponse().getStatus());
+		catch (ClientErrorException clientErrorException) {
+			Response response = clientErrorException.getResponse();
+
+			Assert.assertEquals(403, response.getStatus());
 		}
 
 		// Try again with a fresh token (implicitly for "everything.read"). It
@@ -182,20 +202,14 @@ public class TOCTOUTest extends BaseClientTestCase {
 						oAuth2AScopeAliasesLocalServiceServiceReference);
 
 			try {
-				OAuth2ApplicationScopeAliases oAuth2ApplicationScopeAliases =
+				return oAuth2ApplicationLocalService.updateScopeAliases(
+					oAuth2Application.getUserId(),
+					oAuth2Application.getUserName(),
+					oAuth2Application.getOAuth2ApplicationId(),
 					oAuth2ApplicationScopeAliasesLocalService.
-						getOAuth2ApplicationScopeAliases(
+						getScopeAliasesList(
 							oAuth2Application.
-								getOAuth2ApplicationScopeAliasesId());
-
-				oAuth2Application =
-					oAuth2ApplicationLocalService.updateScopeAliases(
-						oAuth2Application.getUserId(),
-						oAuth2Application.getUserName(),
-						oAuth2Application.getOAuth2ApplicationId(),
-						oAuth2ApplicationScopeAliases.getScopeAliasesList());
-
-				return oAuth2Application;
+								getOAuth2ApplicationScopeAliasesId()));
 			}
 			finally {
 				bundleContext.ungetService(
@@ -222,26 +236,29 @@ public class TOCTOUTest extends BaseClientTestCase {
 					try {
 						updateOAuth2ApplicationScopeAliases(oAuth2Application);
 					}
-					catch (PortalException pe) {
-						throw new RuntimeException(pe);
+					catch (PortalException portalException) {
+						throw new RuntimeException(portalException);
 					}
 				});
 
 			Dictionary<String, Object> properties = new HashMapDictionary<>();
 
-			properties.put("oauth2.scopechecker.type", "annotations");
+			properties.put("oauth2.scope.checker.type", "annotations");
 
 			registerJaxRsApplication(
 				new TestRunnablePostHandlingApplication(
-					() -> {
-						registerJaxRsApplication(
-							application, "annotated2", properties);
-					}),
+					() -> registerJaxRsApplication(
+						application, "annotated2", properties)),
 				"annotated", properties);
 
 			updateOAuth2ApplicationScopeAliases(oAuth2Application);
 		}
 
+	}
+
+	@Override
+	protected BundleActivator getBundleActivator() {
+		return new SecurityTestPreparatorBundleActivator();
 	}
 
 }

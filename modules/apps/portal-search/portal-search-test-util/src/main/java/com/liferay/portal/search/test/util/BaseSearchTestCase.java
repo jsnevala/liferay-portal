@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.test.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManagerUtil;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -41,17 +42,18 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.test.randomizerbumpers.BBCodeRandomizerBumper;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -85,10 +87,11 @@ public abstract class BaseSearchTestCase {
 		BaseModel<?> parentBaseModel = getParentBaseModel(
 			group, serviceContext);
 
-		Map<Locale, String> keywordsMap = new HashMap<>();
-
-		keywordsMap.put(LocaleUtil.getDefault(), "entity title");
-		keywordsMap.put(LocaleUtil.HUNGARY, "entitas neve");
+		Map<Locale, String> keywordsMap = HashMapBuilder.put(
+			LocaleUtil.getDefault(), "entity title"
+		).put(
+			LocaleUtil.HUNGARY, "entitas neve"
+		).build();
 
 		baseModel = addBaseModelWithWorkflow(
 			parentBaseModel, true, keywordsMap, serviceContext);
@@ -149,7 +152,12 @@ public abstract class BaseSearchTestCase {
 
 	@Test
 	public void testSearchComments() throws Exception {
-		searchComments();
+		searchComments(false);
+	}
+
+	@Test
+	public void testSearchCommentsByKeywords() throws Exception {
+		searchComments(true);
 	}
 
 	@Test
@@ -192,6 +200,9 @@ public abstract class BaseSearchTestCase {
 		searchWithinDDMStructure();
 	}
 
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
 	protected void addAttachment(ClassedModel classedModel) throws Exception {
 	}
 
@@ -205,10 +216,8 @@ public abstract class BaseSearchTestCase {
 		try {
 			WorkflowThreadLocal.setEnabled(true);
 
-			BaseModel<?> baseModel = addBaseModelWithWorkflow(
+			return addBaseModelWithWorkflow(
 				parentBaseModel, approved, keywords, serviceContext);
-
-			return baseModel;
 		}
 		finally {
 			WorkflowThreadLocal.setEnabled(workflowEnabled);
@@ -622,9 +631,9 @@ public abstract class BaseSearchTestCase {
 		String keyword6 = getSearchKeywords() + 6;
 		String keyword7 = getSearchKeywords() + 7;
 
-		String combinedKeywords =
-			keyword1 + " " + keyword2 + " " + keyword3 + " " + keyword4 + " " +
-				keyword5 + " " + keyword6 + " " + keyword7;
+		String combinedKeywords = StringBundler.concat(
+			keyword1, " ", keyword2, " ", keyword3, " ", keyword4, " ",
+			keyword5, " ", keyword6, " ", keyword7);
 
 		searchContext.setKeywords(combinedKeywords);
 
@@ -643,21 +652,24 @@ public abstract class BaseSearchTestCase {
 		searchContext = SearchContextTestUtil.getSearchContext(
 			group.getGroupId());
 
-		searchContext.setKeywords("\"" + keyword1 + " " + keyword2 + "\"");
+		searchContext.setKeywords(
+			StringBundler.concat("\"", keyword1, " ", keyword2, "\""));
 
 		assertBaseModelsCount(initialBaseModelsSearchCount + 1, searchContext);
 
 		searchContext = SearchContextTestUtil.getSearchContext(
 			group.getGroupId());
 
-		searchContext.setKeywords("\"" + keyword2 + " " + keyword1 + "\"");
+		searchContext.setKeywords(
+			StringBundler.concat("\"", keyword2, " ", keyword1, "\""));
 
 		assertBaseModelsCount(initialBaseModelsSearchCount, searchContext);
 
 		searchContext = SearchContextTestUtil.getSearchContext(
 			group.getGroupId());
 
-		searchContext.setKeywords("\"" + keyword2 + " " + keyword4 + "\"");
+		searchContext.setKeywords(
+			StringBundler.concat("\"", keyword2, " ", keyword4, "\""));
 
 		assertBaseModelsCount(initialBaseModelsSearchCount, searchContext);
 
@@ -665,7 +677,8 @@ public abstract class BaseSearchTestCase {
 			group.getGroupId());
 
 		searchContext.setKeywords(
-			keyword1 + " \"" + keyword2 + " " + keyword3 + "\"");
+			StringBundler.concat(
+				keyword1, " \"", keyword2, " ", keyword3, "\""));
 
 		assertBaseModelsCount(initialBaseModelsSearchCount + 1, searchContext);
 
@@ -673,19 +686,21 @@ public abstract class BaseSearchTestCase {
 			group.getGroupId());
 
 		searchContext.setKeywords(
-			RandomTestUtil.randomString() + " \"" + keyword2 + " " + keyword3 +
-				"\" " + keyword5);
+			StringBundler.concat(
+				RandomTestUtil.randomString(), " \"", keyword2, " ", keyword3,
+				"\" ", keyword5));
 
 		assertBaseModelsCount(initialBaseModelsSearchCount + 1, searchContext);
 
 		searchContext.setKeywords(
-			RandomTestUtil.randomString() + " \"" + keyword2 + " " + keyword5 +
-				"\" " + RandomTestUtil.randomString());
+			StringBundler.concat(
+				RandomTestUtil.randomString(), " \"", keyword2, " ", keyword5,
+				"\" ", RandomTestUtil.randomString()));
 
 		assertBaseModelsCount(initialBaseModelsSearchCount, searchContext);
 	}
 
-	protected void searchComments() throws Exception {
+	protected void searchComments(boolean searchByKeywords) throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(group.getGroupId());
 
@@ -709,7 +724,13 @@ public abstract class BaseSearchTestCase {
 
 		addComment(baseModel, getSearchKeywords(), serviceContext);
 
-		assertBaseModelsCount(initialBaseModelsSearchCount + 2, searchContext);
+		if (searchByKeywords) {
+			searchContext.setKeywords(getSearchKeywords());
+		}
+
+		assertBaseModelsCount(
+			initialBaseModelsSearchCount + (searchByKeywords ? 1 : 2),
+			searchContext);
 
 		moveBaseModelToTrash((Long)baseModel.getPrimaryKeyObj());
 
@@ -789,13 +810,13 @@ public abstract class BaseSearchTestCase {
 
 			serviceContext.setUserId(user1.getUserId());
 
-			baseModel = addBaseModel(
+			addBaseModel(
 				parentBaseModel1, true, RandomTestUtil.randomString(),
 				serviceContext);
-			baseModel = addBaseModel(
+			addBaseModel(
 				parentBaseModel1, true, RandomTestUtil.randomString(),
 				serviceContext);
-			baseModel = addBaseModel(
+			addBaseModel(
 				parentBaseModel2, true, RandomTestUtil.randomString(),
 				serviceContext);
 
@@ -803,9 +824,10 @@ public abstract class BaseSearchTestCase {
 
 			serviceContext.setUserId(user2.getUserId());
 
-			baseModel = addBaseModel(
+			addBaseModel(
 				parentBaseModel1, true, RandomTestUtil.randomString(),
 				serviceContext);
+
 			baseModel = addBaseModel(
 				parentBaseModel2, true, RandomTestUtil.randomString(),
 				serviceContext);
@@ -858,13 +880,13 @@ public abstract class BaseSearchTestCase {
 
 			PrincipalThreadLocal.setName(user1.getUserId());
 
-			baseModel = addBaseModel(
+			addBaseModel(
 				parentBaseModel1, true, RandomTestUtil.randomString(),
 				serviceContext);
-			baseModel = addBaseModel(
+			addBaseModel(
 				parentBaseModel1, true, RandomTestUtil.randomString(),
 				serviceContext);
-			baseModel = addBaseModel(
+			addBaseModel(
 				parentBaseModel2, true, RandomTestUtil.randomString(),
 				serviceContext);
 
@@ -872,9 +894,10 @@ public abstract class BaseSearchTestCase {
 
 			PrincipalThreadLocal.setName(user2.getUserId());
 
-			baseModel = addBaseModel(
+			addBaseModel(
 				parentBaseModel1, true, RandomTestUtil.randomString(),
 				serviceContext);
+
 			baseModel = addBaseModel(
 				parentBaseModel2, true, RandomTestUtil.randomString(),
 				serviceContext);

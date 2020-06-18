@@ -47,7 +47,6 @@ MailTemplatesHelper mailTemplatesHelper = new MailTemplatesHelper(wikiRequestHel
 		<liferay-ui:tabs
 			names="<%= tabs2Names %>"
 			refresh="<%= false %>"
-			type="tabs nav-tabs-default"
 		>
 			<liferay-ui:error key="emailFromAddress" message="please-enter-a-valid-email-address" />
 			<liferay-ui:error key="emailFromName" message="please-enter-a-valid-name" />
@@ -100,11 +99,11 @@ MailTemplatesHelper mailTemplatesHelper = new MailTemplatesHelper(wikiRequestHel
 			<liferay-ui:section>
 				<liferay-frontend:fieldset-group>
 					<liferay-frontend:email-notification-settings
-						emailBody="<%= wikiGroupServiceOverriddenConfiguration.emailPageAddedBodyXml() %>"
+						emailBodyLocalizedValuesMap="<%= wikiGroupServiceOverriddenConfiguration.emailPageAddedBody() %>"
 						emailDefinitionTerms="<%= definitionTerms %>"
 						emailEnabled="<%= wikiGroupServiceOverriddenConfiguration.emailPageAddedEnabled() %>"
 						emailParam="emailPageAdded"
-						emailSubject="<%= wikiGroupServiceOverriddenConfiguration.emailPageAddedSubjectXml() %>"
+						emailSubjectLocalizedValuesMap="<%= wikiGroupServiceOverriddenConfiguration.emailPageAddedSubject() %>"
 					/>
 				</liferay-frontend:fieldset-group>
 			</liferay-ui:section>
@@ -112,11 +111,11 @@ MailTemplatesHelper mailTemplatesHelper = new MailTemplatesHelper(wikiRequestHel
 			<liferay-ui:section>
 				<liferay-frontend:fieldset-group>
 					<liferay-frontend:email-notification-settings
-						emailBody="<%= wikiGroupServiceOverriddenConfiguration.emailPageUpdatedBodyXml() %>"
+						emailBodyLocalizedValuesMap="<%= wikiGroupServiceOverriddenConfiguration.emailPageUpdatedBody() %>"
 						emailDefinitionTerms="<%= definitionTerms %>"
 						emailEnabled="<%= wikiGroupServiceOverriddenConfiguration.emailPageUpdatedEnabled() %>"
 						emailParam="emailPageUpdated"
-						emailSubject="<%= wikiGroupServiceOverriddenConfiguration.emailPageUpdatedSubjectXml() %>"
+						emailSubjectLocalizedValuesMap="<%= wikiGroupServiceOverriddenConfiguration.emailPageUpdatedSubject() %>"
 					/>
 				</liferay-frontend:fieldset-group>
 			</liferay-ui:section>

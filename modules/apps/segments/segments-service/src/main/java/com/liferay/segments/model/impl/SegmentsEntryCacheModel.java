@@ -14,13 +14,10 @@
 
 package com.liferay.segments.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.segments.model.SegmentsEntry;
 
 import java.io.Externalizable;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing SegmentsEntry in entity cache.
  *
  * @author Eduardo Garcia
- * @see SegmentsEntry
  * @generated
  */
-@ProviderType
-public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
-	Externalizable {
+public class SegmentsEntryCacheModel
+	implements CacheModel<SegmentsEntry>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,12 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 			return false;
 		}
 
-		SegmentsEntryCacheModel segmentsEntryCacheModel = (SegmentsEntryCacheModel)obj;
+		SegmentsEntryCacheModel segmentsEntryCacheModel =
+			(SegmentsEntryCacheModel)obj;
 
-		if (segmentsEntryId == segmentsEntryCacheModel.segmentsEntryId) {
+		if ((segmentsEntryId == segmentsEntryCacheModel.segmentsEntryId) &&
+			(mvccVersion == segmentsEntryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +60,30 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, segmentsEntryId);
+		int hashCode = HashUtil.hash(0, segmentsEntryId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(27);
+		StringBundler sb = new StringBundler(35);
 
-		sb.append("{segmentsEntryId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
+		sb.append(uuid);
+		sb.append(", segmentsEntryId=");
 		sb.append(segmentsEntryId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -82,6 +97,8 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
+		sb.append(", segmentsEntryKey=");
+		sb.append(segmentsEntryKey);
 		sb.append(", name=");
 		sb.append(name);
 		sb.append(", description=");
@@ -90,10 +107,12 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 		sb.append(active);
 		sb.append(", criteria=");
 		sb.append(criteria);
-		sb.append(", key=");
-		sb.append(key);
+		sb.append(", source=");
+		sb.append(source);
 		sb.append(", type=");
 		sb.append(type);
+		sb.append(", lastPublishDate=");
+		sb.append(lastPublishDate);
 		sb.append("}");
 
 		return sb.toString();
@@ -102,6 +121,15 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 	@Override
 	public SegmentsEntry toEntityModel() {
 		SegmentsEntryImpl segmentsEntryImpl = new SegmentsEntryImpl();
+
+		segmentsEntryImpl.setMvccVersion(mvccVersion);
+
+		if (uuid == null) {
+			segmentsEntryImpl.setUuid("");
+		}
+		else {
+			segmentsEntryImpl.setUuid(uuid);
+		}
 
 		segmentsEntryImpl.setSegmentsEntryId(segmentsEntryId);
 		segmentsEntryImpl.setGroupId(groupId);
@@ -129,6 +157,13 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 			segmentsEntryImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
+		if (segmentsEntryKey == null) {
+			segmentsEntryImpl.setSegmentsEntryKey("");
+		}
+		else {
+			segmentsEntryImpl.setSegmentsEntryKey(segmentsEntryKey);
+		}
+
 		if (name == null) {
 			segmentsEntryImpl.setName("");
 		}
@@ -152,11 +187,11 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 			segmentsEntryImpl.setCriteria(criteria);
 		}
 
-		if (key == null) {
-			segmentsEntryImpl.setKey("");
+		if (source == null) {
+			segmentsEntryImpl.setSource("");
 		}
 		else {
-			segmentsEntryImpl.setKey(key);
+			segmentsEntryImpl.setSource(source);
 		}
 
 		if (type == null) {
@@ -166,13 +201,25 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 			segmentsEntryImpl.setType(type);
 		}
 
+		if (lastPublishDate == Long.MIN_VALUE) {
+			segmentsEntryImpl.setLastPublishDate(null);
+		}
+		else {
+			segmentsEntryImpl.setLastPublishDate(new Date(lastPublishDate));
+		}
+
 		segmentsEntryImpl.resetOriginalValues();
 
 		return segmentsEntryImpl;
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
+		uuid = objectInput.readUTF();
+
 		segmentsEntryId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -183,18 +230,28 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 		userName = objectInput.readUTF();
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
+		segmentsEntryKey = objectInput.readUTF();
 		name = objectInput.readUTF();
 		description = objectInput.readUTF();
 
 		active = objectInput.readBoolean();
-		criteria = objectInput.readUTF();
-		key = objectInput.readUTF();
+		criteria = (String)objectInput.readObject();
+		source = objectInput.readUTF();
 		type = objectInput.readUTF();
+		lastPublishDate = objectInput.readLong();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		if (uuid == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uuid);
+		}
+
 		objectOutput.writeLong(segmentsEntryId);
 
 		objectOutput.writeLong(groupId);
@@ -213,6 +270,13 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
 
+		if (segmentsEntryKey == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(segmentsEntryKey);
+		}
+
 		if (name == null) {
 			objectOutput.writeUTF("");
 		}
@@ -230,17 +294,17 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 		objectOutput.writeBoolean(active);
 
 		if (criteria == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(criteria);
+			objectOutput.writeObject(criteria);
 		}
 
-		if (key == null) {
+		if (source == null) {
 			objectOutput.writeUTF("");
 		}
 		else {
-			objectOutput.writeUTF(key);
+			objectOutput.writeUTF(source);
 		}
 
 		if (type == null) {
@@ -249,8 +313,12 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 		else {
 			objectOutput.writeUTF(type);
 		}
+
+		objectOutput.writeLong(lastPublishDate);
 	}
 
+	public long mvccVersion;
+	public String uuid;
 	public long segmentsEntryId;
 	public long groupId;
 	public long companyId;
@@ -258,10 +326,13 @@ public class SegmentsEntryCacheModel implements CacheModel<SegmentsEntry>,
 	public String userName;
 	public long createDate;
 	public long modifiedDate;
+	public String segmentsEntryKey;
 	public String name;
 	public String description;
 	public boolean active;
 	public String criteria;
-	public String key;
+	public String source;
 	public String type;
+	public long lastPublishDate;
+
 }

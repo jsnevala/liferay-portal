@@ -21,6 +21,7 @@ import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileShortcutLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFolderServiceUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.model.Group;
@@ -44,7 +45,7 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.repository.liferayrepository.LiferayRepository;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.InputStream;
 
@@ -66,7 +67,7 @@ public class RepositoryTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -142,7 +143,7 @@ public class RepositoryTest {
 				Assert.fail(
 					"Should not be able to access repository " + repositoryId);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 	}
@@ -208,10 +209,11 @@ public class RepositoryTest {
 				localRepository.getFileEntry(fileEntryId);
 
 				Assert.fail(
-					"Should not be able to get file entry " + fileEntryId +
-						" from repository " + dlRepository.getRepositoryId());
+					StringBundler.concat(
+						"Should not be able to get file entry ", fileEntryId,
+						" from repository ", dlRepository.getRepositoryId()));
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 	}
@@ -293,7 +295,7 @@ public class RepositoryTest {
 				"Should not be able to get file entry from repository " +
 					_group.getGroupId());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		LocalRepository localRepository =
@@ -350,7 +352,7 @@ public class RepositoryTest {
 				"Should be able to get file entry from repository " +
 					repository2.getRepositoryId());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		LocalRepository localRepository =

@@ -32,7 +32,7 @@
 
 								<h3 class="title">
 									<a class="title-link" href="${viewEntryPortletURL.toString()}">
-									${blogsEntryUtil.getDisplayTitle(resourceBundle, curBlogEntry)}</a>
+									${htmlUtil.escape(blogsEntryUtil.getDisplayTitle(resourceBundle, curBlogEntry))}</a>
 								</h3>
 							</div>
 
@@ -42,7 +42,7 @@
 										direction="left-side"
 										icon=""
 										markupView="lexicon"
-										message=""
+										message="actions"
 										showWhenSingleIcon=true
 									>
 										<#if blogsEntryPermission.contains(permissionChecker, curBlogEntry, "UPDATE")>
@@ -92,6 +92,7 @@
 						<div class="autofit-row widget-metadata">
 							<div class="autofit-col inline-item-before">
 								<@liferay_ui["user-portrait"]
+									size="lg"
 									userId=curBlogEntry.userId
 									userName=curBlogEntry.userName
 								/>
@@ -140,10 +141,16 @@
 							</div>
 						</div>
 
-						<#if cardImage>
-							<p class="widget-resume">${stringUtil.shorten(htmlUtil.stripHtml(curBlogEntry.getContent()), 150)}</p>
+						<#if validator.isNotNull(curBlogEntry.getDescription())>
+							<#assign content = curBlogEntry.getDescription() />
 						<#else>
-							<p class="widget-resume">${stringUtil.shorten(htmlUtil.stripHtml(curBlogEntry.getContent()), 400)}</p>
+							<#assign content = curBlogEntry.getContent() />
+						</#if>
+
+						<#if cardImage>
+							<p class="widget-resume">${stringUtil.shorten(htmlUtil.stripHtml(content), 150)}</p>
+						<#else>
+							<p class="widget-resume">${stringUtil.shorten(htmlUtil.stripHtml(content), 400)}</p>
 						</#if>
 					</div>
 
@@ -163,7 +170,7 @@
 											${viewCommentsPortletURL.setParameter("entryId", curBlogEntry.getEntryId()?string)}
 										</#if>
 
-										<a class="btn btn-outline-borderless btn-outline-secondary btn-sm" href="${viewCommentsPortletURL.toString()}">
+										<a class="btn btn-outline-borderless btn-outline-secondary btn-sm" href="${viewCommentsPortletURL.toString()}" title="${language.get(locale, "comments")}">
 											<span class="inline-item inline-item-before">
 												<@clay["icon"] symbol="comments" />
 											</span> ${commentManager.getCommentsCount("com.liferay.blogs.model.BlogsEntry", curBlogEntry.getEntryId())}

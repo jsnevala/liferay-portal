@@ -14,9 +14,12 @@
 
 package com.liferay.frontend.taglib.clay.servlet.taglib.util;
 
+import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+
 import java.util.HashMap;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * @author Carlos Lancha
@@ -27,36 +30,67 @@ public class CreationMenu extends HashMap {
 		put("primaryItems", _primaryDropdownItems);
 	}
 
-	public void addDropdownItem(Consumer<DropdownItem> consumer) {
-		addPrimaryDropdownItem(consumer);
+	public CreationMenu addDropdownItem(
+		UnsafeConsumer<DropdownItem, Exception> unsafeConsumer) {
+
+		addPrimaryDropdownItem(unsafeConsumer);
+
+		return this;
 	}
 
-	public void addFavoriteDropdownItem(Consumer<DropdownItem> consumer) {
+	public CreationMenu addFavoriteDropdownItem(
+		UnsafeConsumer<DropdownItem, Exception> unsafeConsumer) {
+
 		DropdownItem dropdownItem = new DropdownItem();
 
-		consumer.accept(dropdownItem);
+		try {
+			unsafeConsumer.accept(dropdownItem);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
 
 		_favoriteDropdownItems.add(dropdownItem);
 
 		put("secondaryItems", _buildSecondaryDropdownItems());
+
+		return this;
 	}
 
-	public void addPrimaryDropdownItem(Consumer<DropdownItem> consumer) {
+	public CreationMenu addPrimaryDropdownItem(
+		UnsafeConsumer<DropdownItem, Exception> unsafeConsumer) {
+
 		DropdownItem dropdownItem = new DropdownItem();
 
-		consumer.accept(dropdownItem);
+		try {
+			unsafeConsumer.accept(dropdownItem);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
 
 		_primaryDropdownItems.add(dropdownItem);
+
+		return this;
 	}
 
-	public void addRestDropdownItem(Consumer<DropdownItem> consumer) {
+	public CreationMenu addRestDropdownItem(
+		UnsafeConsumer<DropdownItem, Exception> unsafeConsumer) {
+
 		DropdownItem dropdownItem = new DropdownItem();
 
-		consumer.accept(dropdownItem);
+		try {
+			unsafeConsumer.accept(dropdownItem);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
 
 		_restDropdownItems.add(dropdownItem);
 
 		put("secondaryItems", _buildSecondaryDropdownItems());
+
+		return this;
 	}
 
 	public void setCaption(String caption) {
@@ -65,6 +99,10 @@ public class CreationMenu extends HashMap {
 
 	public void setHelpText(String helpText) {
 		put("helpText", helpText);
+	}
+
+	public void setItemsIconAlignment(String itemsIconAlignment) {
+		put("itemsIconAlignment", itemsIconAlignment);
 	}
 
 	public void setViewMoreURL(String viewMoreURL) {
@@ -78,7 +116,9 @@ public class CreationMenu extends HashMap {
 			secondaryDropdownItemList.addGroup(
 				dropdownGroupItem -> {
 					dropdownGroupItem.setDropdownItems(_favoriteDropdownItems);
-					dropdownGroupItem.setLabel("favorites");
+					dropdownGroupItem.setLabel(
+						LanguageUtil.get(
+							LocaleUtil.getMostRelevantLocale(), "favorites"));
 
 					if (!_restDropdownItems.isEmpty()) {
 						dropdownGroupItem.setSeparator(true);
@@ -88,9 +128,8 @@ public class CreationMenu extends HashMap {
 
 		if (!_restDropdownItems.isEmpty()) {
 			secondaryDropdownItemList.addGroup(
-				dropdownGroupItem -> {
-					dropdownGroupItem.setDropdownItems(_restDropdownItems);
-				});
+				dropdownGroupItem -> dropdownGroupItem.setDropdownItems(
+					_restDropdownItems));
 		}
 
 		return secondaryDropdownItemList;

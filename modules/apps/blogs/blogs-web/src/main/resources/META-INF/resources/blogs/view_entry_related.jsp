@@ -20,10 +20,14 @@
 String redirect = ParamUtil.getString(request, "redirect");
 
 BlogsEntry blogsEntry = (BlogsEntry)request.getAttribute("view_entry_related.jsp-blogs_entry");
+
+BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortletInstanceConfigurationUtil.getBlogsPortletInstanceConfiguration(themeDisplay);
 %>
 
 <c:if test="<%= blogsEntry != null %>">
-	<div class="col-lg-6">
+	<clay:col
+		lg="6"
+	>
 		<div class="card">
 
 			<%
@@ -85,7 +89,7 @@ BlogsEntry blogsEntry = (BlogsEntry)request.getAttribute("view_entry_related.jsp
 						<div class="autofit-row">
 							<div class="autofit-col autofit-col-expand">
 								<div class="text-truncate-inline">
-									<a class="text-truncate username" href="<%= blogsEntryUserURL %>"><%= blogsEntry.getUserName() %></a>
+									<a class="text-truncate username" href="<%= blogsEntryUserURL %>"><%= HtmlUtil.escape(blogsEntry.getUserName()) %></a>
 								</div>
 
 								<div class="text-secondary">
@@ -114,5 +118,5 @@ BlogsEntry blogsEntry = (BlogsEntry)request.getAttribute("view_entry_related.jsp
 				</div>
 			</div>
 		</div>
-	</div>
+	</clay:col>
 </c:if>

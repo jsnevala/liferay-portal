@@ -14,10 +14,12 @@
 
 package com.liferay.document.library.web.internal.display.context;
 
+import com.liferay.document.library.kernel.versioning.VersioningStrategy;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.document.library.web.internal.display.context.logic.DLPortletInstanceSettingsHelper;
 import com.liferay.document.library.web.internal.display.context.logic.UIItemsBuilder;
 import com.liferay.document.library.web.internal.display.context.util.IGRequestHelper;
-import com.liferay.document.library.web.internal.util.DLTrashUtil;
+import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.image.gallery.display.kernel.display.context.IGViewFileVersionDisplayContext;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
@@ -40,44 +42,53 @@ public class DefaultIGViewFileVersionDisplayContext
 	implements IGViewFileVersionDisplayContext {
 
 	public DefaultIGViewFileVersionDisplayContext(
-			HttpServletRequest request, HttpServletResponse response,
-			FileShortcut fileShortcut, ResourceBundle resourceBundle,
-			DLTrashUtil dlTrashUtil)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FileShortcut fileShortcut,
+			ResourceBundle resourceBundle, DLTrashHelper dlTrashHelper,
+			VersioningStrategy versioningStrategy, DLURLHelper dlURLHelper)
 		throws PortalException {
 
 		this(
-			request, response, fileShortcut.getFileVersion(), fileShortcut,
-			resourceBundle, dlTrashUtil);
+			httpServletRequest, httpServletResponse,
+			fileShortcut.getFileVersion(), fileShortcut, resourceBundle,
+			dlTrashHelper, versioningStrategy, dlURLHelper);
 	}
 
 	public DefaultIGViewFileVersionDisplayContext(
-			HttpServletRequest request, HttpServletResponse response,
-			FileVersion fileVersion, FileShortcut fileShortcut,
-			ResourceBundle resourceBundle, DLTrashUtil dlTrashUtil)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FileVersion fileVersion,
+			FileShortcut fileShortcut, ResourceBundle resourceBundle,
+			DLTrashHelper dlTrashHelper, VersioningStrategy versioningStrategy,
+			DLURLHelper dlURLHelper)
 		throws PortalException {
 
-		_igRequestHelper = new IGRequestHelper(request);
+		_igRequestHelper = new IGRequestHelper(httpServletRequest);
 
 		_dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(
 			_igRequestHelper);
 
 		if (fileShortcut == null) {
 			_uiItemsBuilder = new UIItemsBuilder(
-				request, fileVersion, resourceBundle, dlTrashUtil);
+				httpServletRequest, fileVersion, resourceBundle, dlTrashHelper,
+				versioningStrategy, dlURLHelper);
 		}
 		else {
 			_uiItemsBuilder = new UIItemsBuilder(
-				request, fileShortcut, resourceBundle, dlTrashUtil);
+				httpServletRequest, fileShortcut, resourceBundle, dlTrashHelper,
+				versioningStrategy, dlURLHelper);
 		}
 	}
 
 	public DefaultIGViewFileVersionDisplayContext(
-			HttpServletRequest request, HttpServletResponse response,
-			FileVersion fileVersion, ResourceBundle resourceBundle,
-			DLTrashUtil dlTrashUtil)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FileVersion fileVersion,
+			ResourceBundle resourceBundle, DLTrashHelper dlTrashHelper,
+			VersioningStrategy versioningStrategy, DLURLHelper dlURLHelper)
 		throws PortalException {
 
-		this(request, response, fileVersion, null, resourceBundle, dlTrashUtil);
+		this(
+			httpServletRequest, httpServletResponse, fileVersion, null,
+			resourceBundle, dlTrashHelper, versioningStrategy, dlURLHelper);
 	}
 
 	@Override

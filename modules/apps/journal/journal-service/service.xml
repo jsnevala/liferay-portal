@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.1.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_1_0.dtd">
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.3.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_3_0.dtd">
 
-<service-builder auto-import-default-references="false" auto-namespace-tables="false" package-path="com.liferay.journal">
+<service-builder auto-import-default-references="false" auto-namespace-tables="false" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.journal">
 	<namespace>Journal</namespace>
-	<entity local-service="true" name="JournalArticle" remote-service="true" trash-enabled="true" uuid="true">
+	<entity change-tracking-enabled="true" local-service="true" name="JournalArticle" remote-service="true" trash-enabled="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -213,7 +213,6 @@
 
 		<reference entity="JournalArticleLocalization" package-path="com.liferay.journal" />
 		<reference entity="JournalArticleResource" package-path="com.liferay.journal" />
-		<reference entity="JournalContentSearch" package-path="com.liferay.journal" />
 		<reference entity="JournalFolder" package-path="com.liferay.journal" />
 		<reference entity="ClassName" package-path="com.liferay.portal" />
 		<reference entity="Company" package-path="com.liferay.portal" />
@@ -230,10 +229,8 @@
 		<reference entity="DLApp" package-path="com.liferay.portlet.documentlibrary" />
 		<reference entity="ExpandoRow" package-path="com.liferay.portlet.expando" />
 		<reference entity="RatingsStats" package-path="com.liferay.portlet.ratings" />
-		<reference entity="TrashEntry" package-path="com.liferay.portlet.trash" />
-		<reference entity="TrashVersion" package-path="com.liferay.portlet.trash" />
 	</entity>
-	<entity local-service="false" name="JournalArticleLocalization" remote-service="false">
+	<entity change-tracking-enabled="true" local-service="false" name="JournalArticleLocalization" remote-service="false">
 
 		<!-- PK fields -->
 
@@ -259,8 +256,19 @@
 			<finder-column name="articlePK" />
 			<finder-column name="languageId" />
 		</finder>
+		<finder name="C_A_L" return-type="JournalArticleLocalization" unique="true">
+			<finder-column name="companyId" />
+			<finder-column name="articlePK" />
+			<finder-column name="languageId" />
+		</finder>
+		<finder name="C_A_T_L" return-type="JournalArticleLocalization" unique="true">
+			<finder-column name="companyId" />
+			<finder-column name="articlePK" />
+			<finder-column name="title" />
+			<finder-column name="languageId" />
+		</finder>
 	</entity>
-	<entity local-service="true" name="JournalArticleResource" remote-service="false" uuid="true">
+	<entity change-tracking-enabled="true" local-service="true" name="JournalArticleResource" remote-service="false" uuid="true">
 
 		<!-- PK fields -->
 
@@ -288,7 +296,7 @@
 			<finder-column name="articleId" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="JournalContentSearch" remote-service="false">
+	<entity local-service="true" name="JournalContentSearch" plural-name="JournalContentSearchs" remote-service="false">
 
 		<!-- PK fields -->
 
@@ -311,6 +319,9 @@
 
 		<!-- Finder methods -->
 
+		<finder name="CompanyId" return-type="Collection">
+			<finder-column name="companyId" />
+		</finder>
 		<finder name="PortletId" return-type="Collection">
 			<finder-column name="portletId" />
 		</finder>
@@ -414,7 +425,7 @@
 		<reference entity="User" package-path="com.liferay.portal" />
 		<reference entity="ExpandoValue" package-path="com.liferay.portlet.expando" />
 	</entity>
-	<entity local-service="true" name="JournalFolder" remote-service="true" trash-enabled="true" uuid="true">
+	<entity change-tracking-enabled="true" local-service="true" name="JournalFolder" remote-service="true" trash-enabled="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -506,8 +517,6 @@
 		<reference entity="AssetLink" package-path="com.liferay.portlet.asset" />
 		<reference entity="ExpandoValue" package-path="com.liferay.portlet.expando" />
 		<reference entity="RatingsStats" package-path="com.liferay.portlet.ratings" />
-		<reference entity="TrashEntry" package-path="com.liferay.portlet.trash" />
-		<reference entity="TrashVersion" package-path="com.liferay.portlet.trash" />
 	</entity>
 	<exceptions>
 		<exception>ArticleContent</exception>
@@ -530,5 +539,6 @@
 		<exception>FeedTargetPortletId</exception>
 		<exception>FolderName</exception>
 		<exception>InvalidDDMStructure</exception>
+		<exception>InvalidFolder</exception>
 	</exceptions>
 </service-builder>

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.runtime;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
@@ -27,6 +25,8 @@ import java.io.Serializable;
 
 import java.util.List;
 import java.util.Map;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Michael C. Han
@@ -41,17 +41,6 @@ public interface WorkflowEngine {
 
 	public void deleteWorkflowInstance(
 			long workflowInstanceId, ServiceContext serviceContext)
-		throws WorkflowException;
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #deployWorkflowDefinition(String, String, InputStream,
-	 *             ServiceContext)}
-	 */
-	@Deprecated
-	public WorkflowDefinition deployWorkflowDefinition(
-			String title, InputStream inputStream,
-			ServiceContext serviceContext)
 		throws WorkflowException;
 
 	public default WorkflowDefinition deployWorkflowDefinition(
@@ -118,6 +107,12 @@ public interface WorkflowEngine {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link #search(Long,
+	 *             String, String, String, String, String, Boolean, int, int,
+	 *             OrderByComparator, ServiceContext)}
+	 */
+	@Deprecated
 	public List<WorkflowInstance> search(
 			Long userId, String assetClassName, String nodeName,
 			String kaleoDefinitionName, Boolean completed, int start, int end,
@@ -125,11 +120,38 @@ public interface WorkflowEngine {
 			ServiceContext serviceContext)
 		throws WorkflowException;
 
+	public default List<WorkflowInstance> search(
+			Long userId, String assetClassName, String assetTitle,
+			String assetDescription, String nodeName,
+			String kaleoDefinitionName, Boolean completed, int start, int end,
+			OrderByComparator<WorkflowInstance> orderByComparator,
+			ServiceContext serviceContext)
+		throws WorkflowException {
+
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link #searchCount(Long,
+	 *             String, String, String, String, String, Boolean,
+	 *             ServiceContext)}
+	 */
+	@Deprecated
 	public int searchCount(
 			Long userId, String assetClassName, String nodeName,
 			String kaleoDefinitionName, Boolean completed,
 			ServiceContext serviceContext)
 		throws WorkflowException;
+
+	public default int searchCount(
+			Long userId, String assetClassName, String assetTitle,
+			String assetDescription, String nodeName,
+			String kaleoDefinitionName, Boolean completed,
+			ServiceContext serviceContext)
+		throws WorkflowException {
+
+		throw new UnsupportedOperationException();
+	}
 
 	public WorkflowInstance signalWorkflowInstance(
 			long workflowInstanceId, String transitionName,

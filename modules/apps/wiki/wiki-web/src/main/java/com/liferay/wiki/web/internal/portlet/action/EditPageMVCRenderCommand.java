@@ -17,10 +17,14 @@ package com.liferay.wiki.web.internal.portlet.action;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.wiki.configuration.WikiGroupServiceConfiguration;
 import com.liferay.wiki.constants.WikiPortletKeys;
 import com.liferay.wiki.constants.WikiWebKeys;
@@ -71,9 +75,8 @@ public class EditPageMVCRenderCommand implements MVCRenderCommand {
 			renderRequest.setAttribute(
 				WikiWebKeys.WIKI_PAGE_TITLE_VALIDATOR, _wikiPageTitleValidator);
 
-			WikiNode node = ActionUtil.getNode(renderRequest);
-
-			renderRequest.setAttribute(WikiWebKeys.WIKI_NODE, node);
+			renderRequest.setAttribute(
+				WikiWebKeys.WIKI_NODE, ActionUtil.getNode(renderRequest));
 
 			if (!SessionErrors.contains(
 					renderRequest, DuplicatePageException.class.getName())) {
@@ -81,20 +84,24 @@ public class EditPageMVCRenderCommand implements MVCRenderCommand {
 				getPage(renderRequest);
 			}
 		}
-		catch (Exception e) {
-			if (e instanceof NoSuchNodeException ||
-				e instanceof PageTitleException ||
-				e instanceof PrincipalException) {
+		catch (Exception exception) {
+			if (exception instanceof NoSuchNodeException ||
+				exception instanceof PageTitleException ||
+				exception instanceof PrincipalException) {
 
-				SessionErrors.add(renderRequest, e.getClass());
+				SessionErrors.add(renderRequest, exception.getClass());
+
+				if (exception instanceof PrincipalException) {
+					return "/wiki/error.jsp";
+				}
 			}
-			else if (e instanceof NoSuchPageException) {
+			else if (exception instanceof NoSuchPageException) {
 
 				// Let edit_page.jsp handle this case
 
 			}
 			else {
-				throw new PortletException(e);
+				throw new PortletException(exception);
 			}
 		}
 
@@ -133,11 +140,11 @@ public class EditPageMVCRenderCommand implements MVCRenderCommand {
 				page = _wikiPageService.getPage(nodeId, title, version);
 			}
 		}
-		catch (NoSuchPageException nspe1) {
+		catch (NoSuchPageException noSuchPageException1) {
 			try {
 				page = _wikiPageService.getPage(nodeId, title, false);
 			}
-			catch (NoSuchPageException nspe2) {
+			catch (NoSuchPageException noSuchPageException2) {
 				WikiWebComponentProvider wikiWebComponentProvider =
 					WikiWebComponentProvider.getWikiWebComponentProvider();
 
@@ -155,7 +162,7 @@ public class EditPageMVCRenderCommand implements MVCRenderCommand {
 						serviceContext);
 				}
 				else {
-					throw nspe2;
+					throw noSuchPageException2;
 				}
 			}
 		}
@@ -164,6 +171,12 @@ public class EditPageMVCRenderCommand implements MVCRenderCommand {
 			page.setContent(StringPool.BLANK);
 			page.setRedirectTitle(StringPool.BLANK);
 		}
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		_wikiPageModelResourcePermission.check(
+			themeDisplay.getPermissionChecker(), page, ActionKeys.UPDATE);
 
 		renderRequest.setAttribute(WikiWebKeys.WIKI_PAGE, page);
 	}
@@ -188,6 +201,15 @@ public class EditPageMVCRenderCommand implements MVCRenderCommand {
 	}
 
 	private WikiEngineRenderer _wikiEngineRenderer;
+
+	@Reference(target = "(model.class.name=com.liferay.wiki.model.WikiNode)")
+	private volatile ModelResourcePermission<WikiNode>
+		_wikiNodeModelResourcePermission;
+
+	@Reference(target = "(model.class.name=com.liferay.wiki.model.WikiPage)")
+	private volatile ModelResourcePermission<WikiPage>
+		_wikiPageModelResourcePermission;
+
 	private WikiPageService _wikiPageService;
 	private WikiPageTitleValidator _wikiPageTitleValidator;
 

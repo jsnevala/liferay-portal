@@ -14,50 +14,55 @@
 
 package com.liferay.mobile.device.rules.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the MDRRuleGroupInstance service. Represents a row in the &quot;MDRRuleGroupInstance&quot; database table, with each column mapped to a property of this class.
  *
  * @author Edward C. Han
  * @see MDRRuleGroupInstanceModel
- * @see com.liferay.mobile.device.rules.model.impl.MDRRuleGroupInstanceImpl
- * @see com.liferay.mobile.device.rules.model.impl.MDRRuleGroupInstanceModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.mobile.device.rules.model.impl.MDRRuleGroupInstanceImpl")
+@ImplementationClassName(
+	"com.liferay.mobile.device.rules.model.impl.MDRRuleGroupInstanceImpl"
+)
 @ProviderType
-public interface MDRRuleGroupInstance extends MDRRuleGroupInstanceModel,
-	PersistedModel {
+public interface MDRRuleGroupInstance
+	extends MDRRuleGroupInstanceModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.mobile.device.rules.model.impl.MDRRuleGroupInstanceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.mobile.device.rules.model.impl.MDRRuleGroupInstanceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<MDRRuleGroupInstance, Long> RULE_GROUP_INSTANCE_ID_ACCESSOR =
-		new Accessor<MDRRuleGroupInstance, Long>() {
-			@Override
-			public Long get(MDRRuleGroupInstance mdrRuleGroupInstance) {
-				return mdrRuleGroupInstance.getRuleGroupInstanceId();
-			}
+	public static final Accessor<MDRRuleGroupInstance, Long>
+		RULE_GROUP_INSTANCE_ID_ACCESSOR =
+			new Accessor<MDRRuleGroupInstance, Long>() {
 
-			@Override
-			public Class<Long> getAttributeClass() {
-				return Long.class;
-			}
+				@Override
+				public Long get(MDRRuleGroupInstance mdrRuleGroupInstance) {
+					return mdrRuleGroupInstance.getRuleGroupInstanceId();
+				}
 
-			@Override
-			public Class<MDRRuleGroupInstance> getTypeClass() {
-				return MDRRuleGroupInstance.class;
-			}
-		};
+				@Override
+				public Class<Long> getAttributeClass() {
+					return Long.class;
+				}
+
+				@Override
+				public Class<MDRRuleGroupInstance> getTypeClass() {
+					return MDRRuleGroupInstance.class;
+				}
+
+			};
 
 	public java.util.List<MDRAction> getActions();
 
 	public MDRRuleGroup getRuleGroup()
 		throws com.liferay.portal.kernel.exception.PortalException;
+
 }

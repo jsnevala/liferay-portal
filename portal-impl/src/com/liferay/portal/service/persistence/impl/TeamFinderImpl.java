@@ -14,6 +14,7 @@
 
 package com.liferay.portal.service.persistence.impl;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.persistence.TeamFinder;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.TeamImpl;
@@ -122,21 +122,21 @@ public class TeamFinderImpl extends TeamFinderBaseImpl implements TeamFinder {
 			sql = StringUtil.replace(sql, "[$JOIN$]", getJoin(params));
 			sql = StringUtil.replace(sql, "[$WHERE$]", getWhere(params));
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			setJoin(qPos, params);
+			setJoin(queryPos, params);
 
-			qPos.add(groupId);
-			qPos.add(name);
-			qPos.add(name);
-			qPos.add(description);
-			qPos.add(description);
+			queryPos.add(groupId);
+			queryPos.add(name);
+			queryPos.add(name);
+			queryPos.add(description);
+			queryPos.add(description);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -148,8 +148,8 @@ public class TeamFinderImpl extends TeamFinderBaseImpl implements TeamFinder {
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -169,20 +169,21 @@ public class TeamFinderImpl extends TeamFinderBaseImpl implements TeamFinder {
 
 			sql = CustomSQLUtil.replaceOrderBy(sql, obc);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("Team", TeamImpl.class);
+			sqlQuery.addEntity("Team", TeamImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(userId);
-			qPos.add(userId);
+			queryPos.add(groupId);
+			queryPos.add(userId);
+			queryPos.add(userId);
 
-			return (List<Team>)QueryUtil.list(q, getDialect(), start, end);
+			return (List<Team>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -213,24 +214,25 @@ public class TeamFinderImpl extends TeamFinderBaseImpl implements TeamFinder {
 			sql = StringUtil.replace(sql, "[$WHERE$]", getWhere(params));
 			sql = CustomSQLUtil.replaceOrderBy(sql, obc);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("Team", TeamImpl.class);
+			sqlQuery.addEntity("Team", TeamImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			setJoin(qPos, params);
+			setJoin(queryPos, params);
 
-			qPos.add(groupId);
-			qPos.add(name);
-			qPos.add(name);
-			qPos.add(description);
-			qPos.add(description);
+			queryPos.add(groupId);
+			queryPos.add(name);
+			queryPos.add(name);
+			queryPos.add(description);
+			queryPos.add(description);
 
-			return (List<Team>)QueryUtil.list(q, getDialect(), start, end);
+			return (List<Team>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -245,11 +247,8 @@ public class TeamFinderImpl extends TeamFinderBaseImpl implements TeamFinder {
 		StringBundler sb = new StringBundler(params.size());
 
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
-
-			if (Validator.isNotNull(value)) {
-				sb.append(getJoin(key));
+			if (Validator.isNotNull(entry.getValue())) {
+				sb.append(getJoin(entry.getKey()));
 			}
 		}
 
@@ -285,11 +284,8 @@ public class TeamFinderImpl extends TeamFinderBaseImpl implements TeamFinder {
 		StringBundler sb = new StringBundler(params.size());
 
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
-
-			if (Validator.isNotNull(value)) {
-				sb.append(getWhere(key));
+			if (Validator.isNotNull(entry.getValue())) {
+				sb.append(getWhere(entry.getKey()));
 			}
 		}
 
@@ -310,7 +306,9 @@ public class TeamFinderImpl extends TeamFinderBaseImpl implements TeamFinder {
 			int pos = join.indexOf("WHERE");
 
 			if (pos != -1) {
-				join = join.substring(pos + 5).concat(" AND ");
+				join = join.substring(pos + 5);
+
+				join = join.concat(" AND ");
 			}
 			else {
 				join = StringPool.BLANK;
@@ -321,7 +319,7 @@ public class TeamFinderImpl extends TeamFinderBaseImpl implements TeamFinder {
 	}
 
 	protected void setJoin(
-		QueryPos qPos, LinkedHashMap<String, Object> params) {
+		QueryPos queryPos, LinkedHashMap<String, Object> params) {
 
 		if (params == null) {
 			return;
@@ -334,7 +332,7 @@ public class TeamFinderImpl extends TeamFinderBaseImpl implements TeamFinder {
 				Long valueLong = (Long)value;
 
 				if (Validator.isNotNull(valueLong)) {
-					qPos.add(valueLong);
+					queryPos.add(valueLong);
 				}
 			}
 		}

@@ -29,13 +29,13 @@ Pattern pattern = Pattern.compile(".*");
 
 Matcher matcher = pattern.matcher(newCategoryPath);
 
-StringBundler divId = new StringBundler();
+StringBundler sb = new StringBundler();
 
 while (matcher.find()) {
-	divId.append(matcher.group());
+	sb.append(matcher.group());
 }
 
-newCategoryPath = divId.toString();
+newCategoryPath = sb.toString();
 
 if (Validator.isNotNull(oldCategoryPath)) {
 	newCategoryPath = oldCategoryPath + ":" + newCategoryPath;
@@ -82,10 +82,10 @@ if (!categories.isEmpty() || !portlets.isEmpty()) {
 	String title = Validator.isNotNull(externalPortletCategory) ? externalPortletCategory : LanguageUtil.get(request, portletCategory.getName());
 %>
 
-	<input id="<portlet:namespace />portletCategory<%= portletCategoryIndex %>CategoryPath" type="hidden" value="<%= newCategoryPath.replace(':', '-') %>" />
+	<input id="<portlet:namespace />portletCategory<%= portletCategoryIndex %>CategoryPath" type="hidden" value="<%= StringUtil.replace(newCategoryPath, ':', '-') %>" />
 
 	<div class="lfr-content-category panel-page-category">
-		<a class="collapse-icon collapse-icon-middle collapsed list-group-heading panel-header panel-header-link" data-toggle="collapse" href="#<%= panelId %>">
+		<a class="collapse-icon collapse-icon-middle collapsed list-group-heading panel-header panel-header-link" data-toggle="liferay-collapse" href="#<%= panelId %>">
 			<%= title %>
 
 			<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />
@@ -113,22 +113,22 @@ if (!categories.isEmpty() || !portlets.isEmpty()) {
 					}
 
 					for (Portlet portlet : portlets) {
-						divId.setIndex(0);
+						sb.setIndex(0);
 
-						divId.append(newCategoryPath);
-						divId.append(":");
+						sb.append(newCategoryPath);
+						sb.append(":");
 
 						matcher = pattern.matcher(PortalUtil.getPortletTitle(portlet, application, locale));
 
 						while (matcher.find()) {
-							divId.append(matcher.group());
+							sb.append(matcher.group());
 						}
 
 						boolean portletInstanceable = portlet.isInstanceable();
 
 						boolean portletUsed = layoutTypePortlet.hasPortletId(portlet.getPortletId());
 
-						boolean portletLocked = (!portletInstanceable && portletUsed);
+						boolean portletLocked = !portletInstanceable && portletUsed;
 
 						if (portletInstanceable && layout.isTypePanel()) {
 							continue;
@@ -139,15 +139,21 @@ if (!categories.isEmpty() || !portlets.isEmpty()) {
 							<c:when test="<%= layout.isTypePortlet() %>">
 
 								<%
-								Map<String, Object> data = new HashMap<String, Object>();
-
-								data.put("draggable", true);
-								data.put("id", renderResponse.getNamespace() + "portletItem" + portlet.getPortletId());
-								data.put("instanceable", portletInstanceable);
-								data.put("plid", plid);
-								data.put("portlet-id", portlet.getPortletId());
-								data.put("search", divId.toString().replace(':', '-'));
-								data.put("title", PortalUtil.getPortletTitle(portlet, application, locale));
+								Map<String, Object> data = HashMapBuilder.<String, Object>put(
+									"draggable", true
+								).put(
+									"id", renderResponse.getNamespace() + "portletItem" + portlet.getPortletId()
+								).put(
+									"instanceable", portletInstanceable
+								).put(
+									"plid", plid
+								).put(
+									"portlet-id", portlet.getPortletId()
+								).put(
+									"search", sb.toString().replace(':', '-')
+								).put(
+									"title", PortalUtil.getPortletTitle(portlet, application, locale)
+								).build();
 
 								String cssClass = "drag-content-item";
 
@@ -163,7 +169,7 @@ if (!categories.isEmpty() || !portlets.isEmpty()) {
 									data.remove("draggable");
 									%>
 
-									<a href="javascript:;" class='add-content-item <%= portletLocked ? "lfr-portlet-used" : StringPool.BLANK %> sr-only sr-only-focusable' <%= AUIUtil.buildData(data) %>>
+									<a class="add-content-item <%= portletLocked ? "lfr-portlet-used" : StringPool.BLANK %> sr-only sr-only-focusable" href="javascript:;" <%= AUIUtil.buildData(data) %>>
 										<liferay-ui:message key="add" />
 
 										<span class="sr-only"><%= PortalUtil.getPortletTitle(portlet, application, locale) %></span>
@@ -179,29 +185,36 @@ if (!categories.isEmpty() || !portlets.isEmpty()) {
 
 										<%
 										for (PortletItem portletItem : portletItems) {
-											divId.setIndex(0);
+											sb.setIndex(0);
 
-											divId.append(newCategoryPath);
-											divId.append(":");
-											divId.append(PortalUtil.getPortletTitle(portlet, application, locale));
-											divId.append(":");
+											sb.append(newCategoryPath);
+											sb.append(":");
+											sb.append(PortalUtil.getPortletTitle(portlet, application, locale));
+											sb.append(":");
 
 											matcher = pattern.matcher(HtmlUtil.escape(portletItem.getName()));
 
 											while (matcher.find()) {
-												divId.append(matcher.group());
+												sb.append(matcher.group());
 											}
 
-											Map<String, Object> portletItemData = new HashMap<String, Object>();
-
-											portletItemData.put("draggable", true);
-											portletItemData.put("id", renderResponse.getNamespace() + "portletItem" + portletItem.getPortletItemId());
-											portletItemData.put("instanceable", portletInstanceable);
-											portletItemData.put("plid", plid);
-											portletItemData.put("portlet-id", portlet.getPortletId());
-											portletItemData.put("portlet-item-id", portletItem.getPortletItemId());
-											portletItemData.put("search", divId.toString().replace(':', '-'));
-											portletItemData.put("title", HtmlUtil.escape(portletItem.getName()));
+											Map<String, Object> portletItemData = HashMapBuilder.<String, Object>put(
+												"draggable", true
+											).put(
+												"id", renderResponse.getNamespace() + "portletItem" + portletItem.getPortletItemId()
+											).put(
+												"instanceable", portletInstanceable
+											).put(
+												"plid", plid
+											).put(
+												"portlet-id", portlet.getPortletId()
+											).put(
+												"portlet-item-id", portletItem.getPortletItemId()
+											).put(
+												"search", sb.toString().replace(':', '-')
+											).put(
+												"title", HtmlUtil.escape(portletItem.getName())
+											).build();
 										%>
 
 											<li class="lfr-archived-setup lfr-content-item" role="presentation">

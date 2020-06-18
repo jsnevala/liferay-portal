@@ -29,7 +29,7 @@ import java.util.List;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = XStreamConfigurator.class)
 public class MobileDeviceRulesXStreamConfigurator
@@ -42,7 +42,7 @@ public class MobileDeviceRulesXStreamConfigurator
 
 	@Override
 	public List<XStreamAlias> getXStreamAliases() {
-		return ListUtil.toList(_xStreamAliases);
+		return ListUtil.fromArray(_xStreamAliases);
 	}
 
 	@Override

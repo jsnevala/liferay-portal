@@ -14,8 +14,6 @@
 
 package com.liferay.portal.instances.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.cluster.Clusterable;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -29,6 +27,8 @@ import java.sql.SQLException;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Provides the local service interface for PortalInstances. Methods of this
  * service will not have security checks based on the propagated JAAS
@@ -37,23 +37,24 @@ import javax.servlet.http.HttpServletRequest;
  *
  * @author Michael C. Han
  * @see PortalInstancesLocalServiceUtil
- * @see com.liferay.portal.instances.service.base.PortalInstancesLocalServiceBaseImpl
- * @see com.liferay.portal.instances.service.impl.PortalInstancesLocalServiceImpl
  * @generated
  */
 @ProviderType
-@Transactional(isolation = Isolation.PORTAL, rollbackFor =  {
-	PortalException.class, SystemException.class})
+@Transactional(
+	isolation = Isolation.PORTAL,
+	rollbackFor = {PortalException.class, SystemException.class}
+)
 public interface PortalInstancesLocalService extends BaseLocalService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link PortalInstancesLocalServiceUtil} to access the portal instances local service. Add custom service methods to {@link com.liferay.portal.instances.service.impl.PortalInstancesLocalServiceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify or reference this interface directly. Always use {@link PortalInstancesLocalServiceUtil} to access the portal instances local service. Add custom service methods to <code>com.liferay.portal.instances.service.impl.PortalInstancesLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
 	public void addCompanyId(long companyId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public long getCompanyId(HttpServletRequest request);
+	public long getCompanyId(HttpServletRequest httpServletRequest);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long[] getCompanyIds();
@@ -65,17 +66,17 @@ public interface PortalInstancesLocalService extends BaseLocalService {
 	public long getDefaultCompanyId();
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	public String getOSGiServiceIdentifier();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public String[] getWebIds();
 
-	public void initializePortalInstance(ServletContext servletContext,
-		String webId);
+	public void initializePortalInstance(
+		ServletContext servletContext, String webId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public boolean isAutoLoginIgnoreHost(String host);
@@ -98,4 +99,5 @@ public interface PortalInstancesLocalService extends BaseLocalService {
 
 	@Clusterable
 	public void synchronizePortalInstances();
+
 }

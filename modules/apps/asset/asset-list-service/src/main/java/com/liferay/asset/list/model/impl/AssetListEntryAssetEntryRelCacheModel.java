@@ -14,14 +14,11 @@
 
 package com.liferay.asset.list.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.list.model.AssetListEntryAssetEntryRel;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,12 @@ import java.util.Date;
  * The cache model class for representing AssetListEntryAssetEntryRel in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see AssetListEntryAssetEntryRel
  * @generated
  */
-@ProviderType
-public class AssetListEntryAssetEntryRelCacheModel implements CacheModel<AssetListEntryAssetEntryRel>,
-	Externalizable {
+public class AssetListEntryAssetEntryRelCacheModel
+	implements CacheModel<AssetListEntryAssetEntryRel>, Externalizable,
+			   MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,10 +47,16 @@ public class AssetListEntryAssetEntryRelCacheModel implements CacheModel<AssetLi
 			return false;
 		}
 
-		AssetListEntryAssetEntryRelCacheModel assetListEntryAssetEntryRelCacheModel =
-			(AssetListEntryAssetEntryRelCacheModel)obj;
+		AssetListEntryAssetEntryRelCacheModel
+			assetListEntryAssetEntryRelCacheModel =
+				(AssetListEntryAssetEntryRelCacheModel)obj;
 
-		if (assetListEntryAssetEntryRelId == assetListEntryAssetEntryRelCacheModel.assetListEntryAssetEntryRelId) {
+		if ((assetListEntryAssetEntryRelId ==
+				assetListEntryAssetEntryRelCacheModel.
+					assetListEntryAssetEntryRelId) &&
+			(mvccVersion ==
+				assetListEntryAssetEntryRelCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -62,14 +65,30 @@ public class AssetListEntryAssetEntryRelCacheModel implements CacheModel<AssetLi
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, assetListEntryAssetEntryRelId);
+		int hashCode = HashUtil.hash(0, assetListEntryAssetEntryRelId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(25);
+		StringBundler sb = new StringBundler(31);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", assetListEntryAssetEntryRelId=");
 		sb.append(assetListEntryAssetEntryRelId);
@@ -89,6 +108,8 @@ public class AssetListEntryAssetEntryRelCacheModel implements CacheModel<AssetLi
 		sb.append(assetListEntryId);
 		sb.append(", assetEntryId=");
 		sb.append(assetEntryId);
+		sb.append(", segmentsEntryId=");
+		sb.append(segmentsEntryId);
 		sb.append(", position=");
 		sb.append(position);
 		sb.append(", lastPublishDate=");
@@ -100,7 +121,11 @@ public class AssetListEntryAssetEntryRelCacheModel implements CacheModel<AssetLi
 
 	@Override
 	public AssetListEntryAssetEntryRel toEntityModel() {
-		AssetListEntryAssetEntryRelImpl assetListEntryAssetEntryRelImpl = new AssetListEntryAssetEntryRelImpl();
+		AssetListEntryAssetEntryRelImpl assetListEntryAssetEntryRelImpl =
+			new AssetListEntryAssetEntryRelImpl();
+
+		assetListEntryAssetEntryRelImpl.setMvccVersion(mvccVersion);
+		assetListEntryAssetEntryRelImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			assetListEntryAssetEntryRelImpl.setUuid("");
@@ -109,7 +134,8 @@ public class AssetListEntryAssetEntryRelCacheModel implements CacheModel<AssetLi
 			assetListEntryAssetEntryRelImpl.setUuid(uuid);
 		}
 
-		assetListEntryAssetEntryRelImpl.setAssetListEntryAssetEntryRelId(assetListEntryAssetEntryRelId);
+		assetListEntryAssetEntryRelImpl.setAssetListEntryAssetEntryRelId(
+			assetListEntryAssetEntryRelId);
 		assetListEntryAssetEntryRelImpl.setGroupId(groupId);
 		assetListEntryAssetEntryRelImpl.setCompanyId(companyId);
 		assetListEntryAssetEntryRelImpl.setUserId(userId);
@@ -132,20 +158,21 @@ public class AssetListEntryAssetEntryRelCacheModel implements CacheModel<AssetLi
 			assetListEntryAssetEntryRelImpl.setModifiedDate(null);
 		}
 		else {
-			assetListEntryAssetEntryRelImpl.setModifiedDate(new Date(
-					modifiedDate));
+			assetListEntryAssetEntryRelImpl.setModifiedDate(
+				new Date(modifiedDate));
 		}
 
 		assetListEntryAssetEntryRelImpl.setAssetListEntryId(assetListEntryId);
 		assetListEntryAssetEntryRelImpl.setAssetEntryId(assetEntryId);
+		assetListEntryAssetEntryRelImpl.setSegmentsEntryId(segmentsEntryId);
 		assetListEntryAssetEntryRelImpl.setPosition(position);
 
 		if (lastPublishDate == Long.MIN_VALUE) {
 			assetListEntryAssetEntryRelImpl.setLastPublishDate(null);
 		}
 		else {
-			assetListEntryAssetEntryRelImpl.setLastPublishDate(new Date(
-					lastPublishDate));
+			assetListEntryAssetEntryRelImpl.setLastPublishDate(
+				new Date(lastPublishDate));
 		}
 
 		assetListEntryAssetEntryRelImpl.resetOriginalValues();
@@ -155,6 +182,9 @@ public class AssetListEntryAssetEntryRelCacheModel implements CacheModel<AssetLi
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		assetListEntryAssetEntryRelId = objectInput.readLong();
@@ -172,13 +202,18 @@ public class AssetListEntryAssetEntryRelCacheModel implements CacheModel<AssetLi
 
 		assetEntryId = objectInput.readLong();
 
+		segmentsEntryId = objectInput.readLong();
+
 		position = objectInput.readInt();
 		lastPublishDate = objectInput.readLong();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -208,10 +243,14 @@ public class AssetListEntryAssetEntryRelCacheModel implements CacheModel<AssetLi
 
 		objectOutput.writeLong(assetEntryId);
 
+		objectOutput.writeLong(segmentsEntryId);
+
 		objectOutput.writeInt(position);
 		objectOutput.writeLong(lastPublishDate);
 	}
 
+	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long assetListEntryAssetEntryRelId;
 	public long groupId;
@@ -222,6 +261,8 @@ public class AssetListEntryAssetEntryRelCacheModel implements CacheModel<AssetLi
 	public long modifiedDate;
 	public long assetListEntryId;
 	public long assetEntryId;
+	public long segmentsEntryId;
 	public int position;
 	public long lastPublishDate;
+
 }

@@ -40,9 +40,9 @@ long userId = user2.getUserId();
 
 	<c:if test="<%= hasUpdatePermission %>">
 		<portlet:renderURL var="editUserURL">
+			<portlet:param name="p_u_i_d" value="<%= String.valueOf(userId) %>" />
 			<portlet:param name="mvcRenderCommandName" value="/users_admin/edit_user" />
 			<portlet:param name="backURL" value="<%= currentURL %>" />
-			<portlet:param name="p_u_i_d" value="<%= String.valueOf(userId) %>" />
 		</portlet:renderURL>
 
 		<liferay-ui:icon
@@ -159,10 +159,21 @@ long userId = user2.getUserId();
 		for (UserActionContributor userActionContributor : filteredUserActionContributors) {
 		%>
 
-			<liferay-ui:icon
-				message="<%= userActionContributor.getMessage(liferayPortletRequest) %>"
-				url="<%= userActionContributor.getURL(liferayPortletRequest, liferayPortletResponse, user, user2) %>"
-			/>
+			<c:choose>
+				<c:when test="<%= userActionContributor.isShowConfirmationMessage(user2) %>">
+					<liferay-ui:icon-delete
+						confirmation="<%= userActionContributor.getConfirmationMessage(liferayPortletRequest) %>"
+						message="<%= userActionContributor.getMessage(liferayPortletRequest) %>"
+						url="<%= userActionContributor.getURL(liferayPortletRequest, liferayPortletResponse, user, user2) %>"
+					/>
+				</c:when>
+				<c:otherwise>
+					<liferay-ui:icon
+						message="<%= userActionContributor.getMessage(liferayPortletRequest) %>"
+						url="<%= userActionContributor.getURL(liferayPortletRequest, liferayPortletResponse, user, user2) %>"
+					/>
+				</c:otherwise>
+			</c:choose>
 
 		<%
 		}

@@ -14,8 +14,6 @@
 
 package com.liferay.xstream.configurator;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.xstream.XStreamAliasRegistryUtil;
 import com.liferay.portal.kernel.util.AggregateClassLoader;
 
@@ -24,6 +22,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -34,10 +33,9 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = {})
-@ProviderType
 public class XStreamConfiguratorRegistryUtil {
 
 	public static ClassLoader getConfiguratorsClassLoader(
@@ -64,12 +62,15 @@ public class XStreamConfiguratorRegistryUtil {
 		}
 
 		return AggregateClassLoader.getAggregateClassLoader(
-			masterClassLoader,
-			classLoaders.toArray(new ClassLoader[classLoaders.size()]));
+			masterClassLoader, classLoaders.toArray(new ClassLoader[0]));
+	}
+
+	public static long getModifiedCount() {
+		return _modifiedCount.get();
 	}
 
 	public static Set<XStreamConfigurator> getXStreamConfigurators() {
-		return new HashSet<>(_xStreamConfigurators);
+		return _xStreamConfigurators;
 	}
 
 	@Activate
@@ -88,6 +89,7 @@ public class XStreamConfiguratorRegistryUtil {
 		_serviceTracker.close();
 	}
 
+	private static final AtomicLong _modifiedCount = new AtomicLong(0);
 	private static final Set<XStreamConfigurator> _xStreamConfigurators =
 		Collections.newSetFromMap(new ConcurrentHashMap<>());
 
@@ -107,6 +109,8 @@ public class XStreamConfiguratorRegistryUtil {
 				serviceReference);
 
 			_xStreamConfigurators.add(xStreamConfigurator);
+
+			_modifiedCount.getAndIncrement();
 
 			return xStreamConfigurator;
 		}
@@ -129,6 +133,8 @@ public class XStreamConfiguratorRegistryUtil {
 			_bundleContext.ungetService(serviceReference);
 
 			_xStreamConfigurators.remove(xStreamConfigurator);
+
+			_modifiedCount.getAndIncrement();
 		}
 
 	}

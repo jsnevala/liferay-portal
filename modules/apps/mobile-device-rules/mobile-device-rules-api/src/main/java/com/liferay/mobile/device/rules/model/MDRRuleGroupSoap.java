@@ -14,8 +14,6 @@
 
 package com.liferay.mobile.device.rules.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,14 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.mobile.device.rules.service.http.MDRRuleGroupServiceSoap}.
  *
  * @author Edward C. Han
- * @see com.liferay.mobile.device.rules.service.http.MDRRuleGroupServiceSoap
  * @generated
  */
-@ProviderType
 public class MDRRuleGroupSoap implements Serializable {
+
 	public static MDRRuleGroupSoap toSoapModel(MDRRuleGroup model) {
 		MDRRuleGroupSoap soapModel = new MDRRuleGroupSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setRuleGroupId(model.getRuleGroupId());
 		soapModel.setGroupId(model.getGroupId());
@@ -77,7 +75,8 @@ public class MDRRuleGroupSoap implements Serializable {
 	}
 
 	public static MDRRuleGroupSoap[] toSoapModels(List<MDRRuleGroup> models) {
-		List<MDRRuleGroupSoap> soapModels = new ArrayList<MDRRuleGroupSoap>(models.size());
+		List<MDRRuleGroupSoap> soapModels = new ArrayList<MDRRuleGroupSoap>(
+			models.size());
 
 		for (MDRRuleGroup model : models) {
 			soapModels.add(toSoapModel(model));
@@ -95,6 +94,14 @@ public class MDRRuleGroupSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setRuleGroupId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -185,6 +192,7 @@ public class MDRRuleGroupSoap implements Serializable {
 		_lastPublishDate = lastPublishDate;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _ruleGroupId;
 	private long _groupId;
@@ -196,4 +204,5 @@ public class MDRRuleGroupSoap implements Serializable {
 	private String _name;
 	private String _description;
 	private Date _lastPublishDate;
+
 }

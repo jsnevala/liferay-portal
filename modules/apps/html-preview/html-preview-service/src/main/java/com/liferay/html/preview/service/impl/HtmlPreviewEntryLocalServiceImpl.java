@@ -20,21 +20,28 @@ import com.liferay.html.preview.model.HtmlPreviewEntry;
 import com.liferay.html.preview.processor.HtmlPreviewProcessor;
 import com.liferay.html.preview.processor.HtmlPreviewProcessorTracker;
 import com.liferay.html.preview.service.base.HtmlPreviewEntryLocalServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.File;
 
 import java.util.Date;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Pavel Savinov
  */
+@Component(
+	property = "model.class.name=com.liferay.html.preview.model.HtmlPreviewEntry",
+	service = AopService.class
+)
 public class HtmlPreviewEntryLocalServiceImpl
 	extends HtmlPreviewEntryLocalServiceBaseImpl {
 
@@ -70,9 +77,7 @@ public class HtmlPreviewEntryLocalServiceImpl
 			htmlPreviewEntry.setFileEntryId(fileEntry.getFileEntryId());
 		}
 
-		htmlPreviewEntryPersistence.update(htmlPreviewEntry);
-
-		return htmlPreviewEntry;
+		return htmlPreviewEntryPersistence.update(htmlPreviewEntry);
 	}
 
 	@Override
@@ -120,9 +125,7 @@ public class HtmlPreviewEntryLocalServiceImpl
 			htmlPreviewEntry.setFileEntryId(fileEntry.getFileEntryId());
 		}
 
-		htmlPreviewEntryPersistence.update(htmlPreviewEntry);
-
-		return htmlPreviewEntry;
+		return htmlPreviewEntryPersistence.update(htmlPreviewEntry);
 	}
 
 	private FileEntry _getFileEntry(
@@ -169,7 +172,7 @@ public class HtmlPreviewEntryLocalServiceImpl
 			String.valueOf(htmlPreviewEntryId), mimeType, false);
 	}
 
-	@ServiceReference(type = HtmlPreviewProcessorTracker.class)
+	@Reference
 	private HtmlPreviewProcessorTracker _htmlPreviewProcessorTracker;
 
 }

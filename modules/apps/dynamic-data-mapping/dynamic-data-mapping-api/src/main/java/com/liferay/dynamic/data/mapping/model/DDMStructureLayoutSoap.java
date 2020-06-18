@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -23,16 +21,17 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * This class is used by SOAP remote services.
+ * This class is used by SOAP remote services, specifically {@link com.liferay.dynamic.data.mapping.service.http.DDMStructureLayoutServiceSoap}.
  *
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class DDMStructureLayoutSoap implements Serializable {
+
 	public static DDMStructureLayoutSoap toSoapModel(DDMStructureLayout model) {
 		DDMStructureLayoutSoap soapModel = new DDMStructureLayoutSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setStructureLayoutId(model.getStructureLayoutId());
 		soapModel.setGroupId(model.getGroupId());
@@ -41,7 +40,11 @@ public class DDMStructureLayoutSoap implements Serializable {
 		soapModel.setUserName(model.getUserName());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
+		soapModel.setClassNameId(model.getClassNameId());
+		soapModel.setStructureLayoutKey(model.getStructureLayoutKey());
 		soapModel.setStructureVersionId(model.getStructureVersionId());
+		soapModel.setName(model.getName());
+		soapModel.setDescription(model.getDescription());
 		soapModel.setDefinition(model.getDefinition());
 
 		return soapModel;
@@ -49,7 +52,9 @@ public class DDMStructureLayoutSoap implements Serializable {
 
 	public static DDMStructureLayoutSoap[] toSoapModels(
 		DDMStructureLayout[] models) {
-		DDMStructureLayoutSoap[] soapModels = new DDMStructureLayoutSoap[models.length];
+
+		DDMStructureLayoutSoap[] soapModels =
+			new DDMStructureLayoutSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -60,10 +65,12 @@ public class DDMStructureLayoutSoap implements Serializable {
 
 	public static DDMStructureLayoutSoap[][] toSoapModels(
 		DDMStructureLayout[][] models) {
+
 		DDMStructureLayoutSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new DDMStructureLayoutSoap[models.length][models[0].length];
+			soapModels =
+				new DDMStructureLayoutSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new DDMStructureLayoutSoap[0][0];
@@ -78,13 +85,16 @@ public class DDMStructureLayoutSoap implements Serializable {
 
 	public static DDMStructureLayoutSoap[] toSoapModels(
 		List<DDMStructureLayout> models) {
-		List<DDMStructureLayoutSoap> soapModels = new ArrayList<DDMStructureLayoutSoap>(models.size());
+
+		List<DDMStructureLayoutSoap> soapModels =
+			new ArrayList<DDMStructureLayoutSoap>(models.size());
 
 		for (DDMStructureLayout model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new DDMStructureLayoutSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new DDMStructureLayoutSoap[soapModels.size()]);
 	}
 
 	public DDMStructureLayoutSoap() {
@@ -96,6 +106,14 @@ public class DDMStructureLayoutSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setStructureLayoutId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -162,12 +180,44 @@ public class DDMStructureLayoutSoap implements Serializable {
 		_modifiedDate = modifiedDate;
 	}
 
+	public long getClassNameId() {
+		return _classNameId;
+	}
+
+	public void setClassNameId(long classNameId) {
+		_classNameId = classNameId;
+	}
+
+	public String getStructureLayoutKey() {
+		return _structureLayoutKey;
+	}
+
+	public void setStructureLayoutKey(String structureLayoutKey) {
+		_structureLayoutKey = structureLayoutKey;
+	}
+
 	public long getStructureVersionId() {
 		return _structureVersionId;
 	}
 
 	public void setStructureVersionId(long structureVersionId) {
 		_structureVersionId = structureVersionId;
+	}
+
+	public String getName() {
+		return _name;
+	}
+
+	public void setName(String name) {
+		_name = name;
+	}
+
+	public String getDescription() {
+		return _description;
+	}
+
+	public void setDescription(String description) {
+		_description = description;
 	}
 
 	public String getDefinition() {
@@ -178,6 +228,7 @@ public class DDMStructureLayoutSoap implements Serializable {
 		_definition = definition;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _structureLayoutId;
 	private long _groupId;
@@ -186,6 +237,11 @@ public class DDMStructureLayoutSoap implements Serializable {
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
+	private long _classNameId;
+	private String _structureLayoutKey;
 	private long _structureVersionId;
+	private String _name;
+	private String _description;
 	private String _definition;
+
 }

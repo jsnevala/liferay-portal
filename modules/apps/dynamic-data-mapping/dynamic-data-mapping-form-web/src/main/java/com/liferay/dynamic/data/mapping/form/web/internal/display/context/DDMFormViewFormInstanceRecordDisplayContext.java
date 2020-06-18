@@ -58,17 +58,19 @@ public class DDMFormViewFormInstanceRecordDisplayContext {
 	public DDMFormViewFormInstanceRecordDisplayContext(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse,
-		DDMFormInstanceRecordLocalService formInstanceRecordLocalService,
-		DDMFormInstanceVersionLocalService formInstanceVersionLocalService,
-		DDMFormRenderer formRenderer, DDMFormValuesFactory formValuesFactory,
-		DDMFormValuesMerger formValuesMerger) {
+		DDMFormInstanceRecordLocalService ddmFormInstanceRecordLocalService,
+		DDMFormInstanceVersionLocalService ddmFormInstanceVersionLocalService,
+		DDMFormRenderer ddmFormRenderer,
+		DDMFormValuesFactory ddmFormValuesFactory,
+		DDMFormValuesMerger ddmFormValuesMerger) {
 
 		_httpServletResponse = httpServletResponse;
-		_ddmFormInstanceRecordLocalService = formInstanceRecordLocalService;
-		_ddmFormInstanceVersionLocalService = formInstanceVersionLocalService;
-		_ddmFormRenderer = formRenderer;
-		_ddmFormValuesFactory = formValuesFactory;
-		_ddmFormValuesMerger = formValuesMerger;
+		_ddmFormInstanceRecordLocalService = ddmFormInstanceRecordLocalService;
+		_ddmFormInstanceVersionLocalService =
+			ddmFormInstanceVersionLocalService;
+		_ddmFormRenderer = ddmFormRenderer;
+		_ddmFormValuesFactory = ddmFormValuesFactory;
+		_ddmFormValuesMerger = ddmFormValuesMerger;
 
 		_ddmFormAdminRequestHelper = new DDMFormAdminRequestHelper(
 			httpServletRequest);
@@ -89,7 +91,9 @@ public class DDMFormViewFormInstanceRecordDisplayContext {
 			formInstanceVersion.getStructureVersion();
 
 		DDMFormRenderingContext formRenderingContext =
-			createDDMFormRenderingContext(structureVersion.getDDMForm());
+			createDDMFormRenderingContext(
+				structureVersion.getDDMForm(),
+				ParamUtil.getBoolean(renderRequest, "readOnly", true));
 
 		DDMFormValues formValues = getDDMFormValues(
 			renderRequest, formInstanceRecord, structureVersion);
@@ -116,7 +120,7 @@ public class DDMFormViewFormInstanceRecordDisplayContext {
 	}
 
 	protected DDMFormRenderingContext createDDMFormRenderingContext(
-		DDMForm ddmForm) {
+		DDMForm ddmForm, boolean readOnly) {
 
 		DDMFormRenderingContext formRenderingContext =
 			new DDMFormRenderingContext();
@@ -138,7 +142,8 @@ public class DDMFormViewFormInstanceRecordDisplayContext {
 		formRenderingContext.setPortletNamespace(
 			PortalUtil.getPortletNamespace(
 				DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN));
-		formRenderingContext.setReadOnly(true);
+		formRenderingContext.setReadOnly(readOnly);
+		formRenderingContext.setViewMode(true);
 
 		return formRenderingContext;
 	}
@@ -157,12 +162,8 @@ public class DDMFormViewFormInstanceRecordDisplayContext {
 				formInstanceRecordId);
 		}
 
-		DDMFormInstanceRecord formInstanceRecord =
-			(DDMFormInstanceRecord)
-				httpServletRequest.getAttribute(
-					DDMFormWebKeys.DYNAMIC_DATA_MAPPING_FORM_INSTANCE_RECORD);
-
-		return formInstanceRecord;
+		return (DDMFormInstanceRecord)httpServletRequest.getAttribute(
+			DDMFormWebKeys.DYNAMIC_DATA_MAPPING_FORM_INSTANCE_RECORD);
 	}
 
 	protected DDMFormValues getDDMFormValues(

@@ -16,8 +16,10 @@ package com.liferay.jenkins.results.parser;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
@@ -59,8 +61,41 @@ public abstract class BaseTopLevelBuildData
 	}
 
 	@Override
+	public List<BuildData> getDownstreamBuildDataList() {
+		List<BuildData> downstreamBuildDataList = new ArrayList<>();
+
+		String downstreamRunIDs = optString("downstream_run_ids");
+
+		if (downstreamRunIDs == null) {
+			return downstreamBuildDataList;
+		}
+
+		for (String downstreamRunID : downstreamRunIDs.split(",")) {
+			if ((downstreamRunID == null) || downstreamRunID.isEmpty()) {
+				continue;
+			}
+
+			downstreamBuildDataList.add(
+				BuildDataFactory.newBatchBuildData(
+					downstreamRunID, getJobName() + "-batch", null));
+		}
+
+		return downstreamBuildDataList;
+	}
+
+	@Override
+	public TopLevelBuildData getTopLevelBuildData() {
+		return this;
+	}
+
+	@Override
 	public Integer getTopLevelBuildNumber() {
 		return getBuildNumber();
+	}
+
+	@Override
+	public Map<String, String> getTopLevelBuildParameters() {
+		return getBuildParameters();
 	}
 
 	@Override
@@ -78,6 +113,15 @@ public abstract class BaseTopLevelBuildData
 		return getRunID();
 	}
 
+	@Override
+	public void setDistNodes(List<String> distNodes) {
+		if (distNodes == null) {
+			throw new RuntimeException("Dist nodes is null");
+		}
+
+		put("dist_nodes", JenkinsResultsParserUtil.join(",", distNodes));
+	}
+
 	protected BaseTopLevelBuildData(
 		String runID, String jobName, String buildURL) {
 
@@ -87,7 +131,7 @@ public abstract class BaseTopLevelBuildData
 		put("dist_path", _getDistPath());
 		put("top_level_run_id", getRunID());
 
-		validateKeys(_REQUIRED_KEYS);
+		validateKeys(_KEYS_REQUIRED);
 	}
 
 	private static String _getDefaultRunID(String runID) {
@@ -106,17 +150,18 @@ public abstract class BaseTopLevelBuildData
 		Properties buildProperties = null;
 
 		try {
-			buildProperties = JenkinsResultsParserUtil.getBuildProperties();
+			buildProperties = JenkinsResultsParserUtil.getBuildProperties(
+				false);
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 
 		String cohortName = getCohortName();
 
 		List<JenkinsMaster> jenkinsMasters =
 			JenkinsResultsParserUtil.getJenkinsMasters(
-				buildProperties, cohortName);
+				buildProperties, JenkinsMaster.SLAVE_RAM_DEFAULT, cohortName);
 
 		List<String> slaves = JenkinsResultsParserUtil.getSlaves(
 			buildProperties, cohortName + "-[1-9]{1}[0-9]?");
@@ -129,11 +174,12 @@ public abstract class BaseTopLevelBuildData
 
 	private String _getDistPath() {
 		return JenkinsResultsParserUtil.combine(
-			BuildData.DIST_ROOT_PATH, "/", getMasterHostname(), "/",
+			BuildData.FILE_PATH_DIST_ROOT, "/", getMasterHostname(), "/",
 			getJobName(), "/", String.valueOf(getBuildNumber()), "/dist");
 	}
 
-	private static final String[] _REQUIRED_KEYS =
-		{"dist_nodes", "dist_path", "top_level_run_id"};
+	private static final String[] _KEYS_REQUIRED = {
+		"dist_nodes", "dist_path", "top_level_run_id"
+	};
 
 }

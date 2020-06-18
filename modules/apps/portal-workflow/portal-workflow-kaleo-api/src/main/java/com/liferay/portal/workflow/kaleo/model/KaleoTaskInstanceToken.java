@@ -14,47 +14,51 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the KaleoTaskInstanceToken service. Represents a row in the &quot;KaleoTaskInstanceToken&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see KaleoTaskInstanceTokenModel
- * @see com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskInstanceTokenImpl
- * @see com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskInstanceTokenModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskInstanceTokenImpl")
+@ImplementationClassName(
+	"com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskInstanceTokenImpl"
+)
 @ProviderType
-public interface KaleoTaskInstanceToken extends KaleoTaskInstanceTokenModel,
-	PersistedModel {
+public interface KaleoTaskInstanceToken
+	extends KaleoTaskInstanceTokenModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskInstanceTokenImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskInstanceTokenImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<KaleoTaskInstanceToken, Long> KALEO_TASK_INSTANCE_TOKEN_ID_ACCESSOR =
-		new Accessor<KaleoTaskInstanceToken, Long>() {
-			@Override
-			public Long get(KaleoTaskInstanceToken kaleoTaskInstanceToken) {
-				return kaleoTaskInstanceToken.getKaleoTaskInstanceTokenId();
-			}
+	public static final Accessor<KaleoTaskInstanceToken, Long>
+		KALEO_TASK_INSTANCE_TOKEN_ID_ACCESSOR =
+			new Accessor<KaleoTaskInstanceToken, Long>() {
 
-			@Override
-			public Class<Long> getAttributeClass() {
-				return Long.class;
-			}
+				@Override
+				public Long get(KaleoTaskInstanceToken kaleoTaskInstanceToken) {
+					return kaleoTaskInstanceToken.getKaleoTaskInstanceTokenId();
+				}
 
-			@Override
-			public Class<KaleoTaskInstanceToken> getTypeClass() {
-				return KaleoTaskInstanceToken.class;
-			}
-		};
+				@Override
+				public Class<Long> getAttributeClass() {
+					return Long.class;
+				}
+
+				@Override
+				public Class<KaleoTaskInstanceToken> getTypeClass() {
+					return KaleoTaskInstanceToken.class;
+				}
+
+			};
 
 	public KaleoTaskAssignmentInstance getFirstKaleoTaskAssignmentInstance();
 
@@ -64,5 +68,7 @@ public interface KaleoTaskInstanceToken extends KaleoTaskInstanceTokenModel,
 	public KaleoTask getKaleoTask()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	public java.util.List<KaleoTaskAssignmentInstance> getKaleoTaskAssignmentInstances();
+	public java.util.List<KaleoTaskAssignmentInstance>
+		getKaleoTaskAssignmentInstances();
+
 }

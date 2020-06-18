@@ -22,8 +22,11 @@ import com.liferay.dynamic.data.mapping.util.DDMFormFieldValueTransformer;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -63,8 +66,18 @@ public class ImageExportDDMFormFieldValueTransformer
 		for (Locale locale : value.getAvailableLocales()) {
 			String valueString = value.getString(locale);
 
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-				valueString);
+			JSONObject jsonObject = null;
+
+			try {
+				jsonObject = JSONFactoryUtil.createJSONObject(valueString);
+			}
+			catch (JSONException jsonException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug("Unable to parse JSON", jsonException);
+				}
+
+				continue;
+			}
 
 			long groupId = GetterUtil.getLong(jsonObject.get("groupId"));
 			String uuid = jsonObject.getString("uuid");
@@ -73,15 +86,22 @@ public class ImageExportDDMFormFieldValueTransformer
 				continue;
 			}
 
-			FileEntry fileEntry = _dlAppService.getFileEntryByUuidAndGroupId(
-				uuid, groupId);
+			try {
+				FileEntry fileEntry =
+					_dlAppService.getFileEntryByUuidAndGroupId(uuid, groupId);
 
-			if (_exportReferencedContent) {
-				StagedModelDataHandlerUtil.exportReferenceStagedModel(
-					_portletDataContext, _stagedModel, fileEntry,
-					_portletDataContext.REFERENCE_TYPE_DEPENDENCY);
-			}
-			else {
+				if (fileEntry.isInTrash()) {
+					continue;
+				}
+
+				if (_exportReferencedContent) {
+					StagedModelDataHandlerUtil.exportReferenceStagedModel(
+						_portletDataContext, _stagedModel, fileEntry,
+						_portletDataContext.REFERENCE_TYPE_DEPENDENCY);
+
+					continue;
+				}
+
 				Element entityElement =
 					_portletDataContext.getExportDataElement(_stagedModel);
 
@@ -89,8 +109,16 @@ public class ImageExportDDMFormFieldValueTransformer
 					_stagedModel, entityElement, fileEntry,
 					PortletDataContext.REFERENCE_TYPE_DEPENDENCY, true);
 			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portalException, portalException);
+				}
+			}
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ImageExportDDMFormFieldValueTransformer.class);
 
 	private final DLAppService _dlAppService;
 	private final boolean _exportReferencedContent;

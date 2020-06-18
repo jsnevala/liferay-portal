@@ -14,12 +14,10 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.workflow.kaleo.model.KaleoNotification;
 
 import java.io.Externalizable;
@@ -33,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing KaleoNotification in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see KaleoNotification
  * @generated
  */
-@ProviderType
-public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification>,
-	Externalizable {
+public class KaleoNotificationCacheModel
+	implements CacheModel<KaleoNotification>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -49,9 +46,13 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 			return false;
 		}
 
-		KaleoNotificationCacheModel kaleoNotificationCacheModel = (KaleoNotificationCacheModel)obj;
+		KaleoNotificationCacheModel kaleoNotificationCacheModel =
+			(KaleoNotificationCacheModel)obj;
 
-		if (kaleoNotificationId == kaleoNotificationCacheModel.kaleoNotificationId) {
+		if ((kaleoNotificationId ==
+				kaleoNotificationCacheModel.kaleoNotificationId) &&
+			(mvccVersion == kaleoNotificationCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -60,14 +61,28 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, kaleoNotificationId);
+		int hashCode = HashUtil.hash(0, kaleoNotificationId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(35);
+		StringBundler sb = new StringBundler(39);
 
-		sb.append("{kaleoNotificationId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", kaleoNotificationId=");
 		sb.append(kaleoNotificationId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -85,6 +100,8 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 		sb.append(kaleoClassName);
 		sb.append(", kaleoClassPK=");
 		sb.append(kaleoClassPK);
+		sb.append(", kaleoDefinitionId=");
+		sb.append(kaleoDefinitionId);
 		sb.append(", kaleoDefinitionVersionId=");
 		sb.append(kaleoDefinitionVersionId);
 		sb.append(", kaleoNodeName=");
@@ -108,8 +125,10 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 
 	@Override
 	public KaleoNotification toEntityModel() {
-		KaleoNotificationImpl kaleoNotificationImpl = new KaleoNotificationImpl();
+		KaleoNotificationImpl kaleoNotificationImpl =
+			new KaleoNotificationImpl();
 
+		kaleoNotificationImpl.setMvccVersion(mvccVersion);
 		kaleoNotificationImpl.setKaleoNotificationId(kaleoNotificationId);
 		kaleoNotificationImpl.setGroupId(groupId);
 		kaleoNotificationImpl.setCompanyId(companyId);
@@ -144,7 +163,9 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 		}
 
 		kaleoNotificationImpl.setKaleoClassPK(kaleoClassPK);
-		kaleoNotificationImpl.setKaleoDefinitionVersionId(kaleoDefinitionVersionId);
+		kaleoNotificationImpl.setKaleoDefinitionId(kaleoDefinitionId);
+		kaleoNotificationImpl.setKaleoDefinitionVersionId(
+			kaleoDefinitionVersionId);
 
 		if (kaleoNodeName == null) {
 			kaleoNotificationImpl.setKaleoNodeName("");
@@ -201,7 +222,11 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
+
 		kaleoNotificationId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -216,19 +241,22 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 
 		kaleoClassPK = objectInput.readLong();
 
+		kaleoDefinitionId = objectInput.readLong();
+
 		kaleoDefinitionVersionId = objectInput.readLong();
 		kaleoNodeName = objectInput.readUTF();
 		name = objectInput.readUTF();
 		description = objectInput.readUTF();
 		executionType = objectInput.readUTF();
-		template = objectInput.readUTF();
+		template = (String)objectInput.readObject();
 		templateLanguage = objectInput.readUTF();
 		notificationTypes = objectInput.readUTF();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		objectOutput.writeLong(kaleoNotificationId);
 
 		objectOutput.writeLong(groupId);
@@ -255,6 +283,8 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 		}
 
 		objectOutput.writeLong(kaleoClassPK);
+
+		objectOutput.writeLong(kaleoDefinitionId);
 
 		objectOutput.writeLong(kaleoDefinitionVersionId);
 
@@ -287,10 +317,10 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 		}
 
 		if (template == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(template);
+			objectOutput.writeObject(template);
 		}
 
 		if (templateLanguage == null) {
@@ -308,6 +338,7 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 		}
 	}
 
+	public long mvccVersion;
 	public long kaleoNotificationId;
 	public long groupId;
 	public long companyId;
@@ -317,6 +348,7 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 	public long modifiedDate;
 	public String kaleoClassName;
 	public long kaleoClassPK;
+	public long kaleoDefinitionId;
 	public long kaleoDefinitionVersionId;
 	public String kaleoNodeName;
 	public String name;
@@ -325,4 +357,5 @@ public class KaleoNotificationCacheModel implements CacheModel<KaleoNotification
 	public String template;
 	public String templateLanguage;
 	public String notificationTypes;
+
 }

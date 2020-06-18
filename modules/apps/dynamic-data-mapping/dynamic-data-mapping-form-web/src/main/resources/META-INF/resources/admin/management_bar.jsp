@@ -16,10 +16,6 @@
 
 <%@ include file="/admin/init.jsp" %>
 
-<%
-String currentTab = ParamUtil.getString(request, "currentTab", "forms");
-%>
-
 <clay:management-toolbar
 	actionDropdownItems="<%= ddmFormAdminDisplayContext.getActionItemsDropdownItems() %>"
 	clearResultsURL="<%= ddmFormAdminDisplayContext.getClearResultsURL() %>"
@@ -38,49 +34,87 @@ String currentTab = ParamUtil.getString(request, "currentTab", "forms");
 />
 
 <aui:script sandbox="<%= true %>">
-	var deleteFormInstances = function() {
-		if (confirm('<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>')) {
-			var form = AUI.$(document.<portlet:namespace />searchContainerForm);
+	var deleteFormInstances = function () {
+		if (
+			confirm(
+				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
+			)
+		) {
+			var searchContainer = document.getElementById(
+				'<portlet:namespace /><%= ddmFormAdminDisplayContext.getSearchContainerId() %>'
+			);
 
-			var searchContainer = AUI.$('#<portlet:namespace /><%= ddmFormAdminDisplayContext.getSearchContainerId() %>', form);
+			if (searchContainer) {
+				Liferay.Util.postForm(
+					document.<portlet:namespace />searchContainerForm,
+					{
+						data: {
+							deleteFormInstanceIds: Liferay.Util.listCheckedExcept(
+								searchContainer,
+								'<portlet:namespace />allRowIds'
+							),
+						},
 
-			form.attr('method', 'post');
-			form.fm('deleteFormInstanceIds').val(Liferay.Util.listCheckedExcept(searchContainer, '<portlet:namespace />allRowIds'));
+						<portlet:actionURL name="deleteFormInstance" var="deleteFormInstanceURL">
+							<portlet:param name="mvcPath" value="/admin/view.jsp" />
+							<portlet:param name="redirect" value="<%= currentURL %>" />
+						</portlet:actionURL>
 
-			submitForm(form, '<portlet:actionURL name="deleteFormInstance"><portlet:param name="mvcPath" value="/admin/view.jsp" /><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>');
+						url: '<%= deleteFormInstanceURL %>',
+					}
+				);
+			}
 		}
 	};
 
-	var deleteStructures = function() {
-		if (confirm('<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>')) {
-			var form = AUI.$(document.<portlet:namespace />searchContainerForm);
+	var deleteStructures = function () {
+		if (
+			confirm(
+				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
+			)
+		) {
+			var searchContainer = document.getElementById(
+				'<portlet:namespace /><%= ddmFormAdminDisplayContext.getSearchContainerId() %>'
+			);
 
-			var searchContainer = AUI.$('#<portlet:namespace /><%= ddmFormAdminDisplayContext.getSearchContainerId() %>', form);
+			if (searchContainer) {
+				Liferay.Util.postForm(
+					document.<portlet:namespace />searchContainerForm,
+					{
+						data: {
+							deleteStructureIds: Liferay.Util.listCheckedExcept(
+								searchContainer,
+								'<portlet:namespace />allRowIds'
+							),
+						},
 
-			form.attr('method', 'post');
-			form.fm('deleteStructureIds').val(Liferay.Util.listCheckedExcept(searchContainer, '<portlet:namespace />allRowIds'));
+						<portlet:actionURL name="deleteStructure" var="deleteStructureURL">
+							<portlet:param name="mvcPath" value="/admin/view.jsp" />
+							<portlet:param name="currentTab" value="element-set" />
+							<portlet:param name="redirect" value="<%= currentURL %>" />
+						</portlet:actionURL>
 
-			submitForm(form, '<portlet:actionURL name="deleteStructure"><portlet:param name="mvcPath" value="/admin/view.jsp" /><portlet:param name="currentTab" value="element-set" /><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>');
+						url: '<%= deleteStructureURL %>',
+					}
+				);
+			}
 		}
 	};
 
 	var ACTIONS = {
-		'deleteFormInstances': deleteFormInstances,
-		'deleteStructures': deleteStructures
+		deleteFormInstances: deleteFormInstances,
+		deleteStructures: deleteStructures,
 	};
 
-	Liferay.componentReady('ddmFormManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				['actionItemClicked'],
-				function(event) {
-					var itemData = event.data.item.data;
+	Liferay.componentReady('ddmFormManagementToolbar').then(function (
+		managementToolbar
+	) {
+		managementToolbar.on(['actionItemClicked'], function (event) {
+			var itemData = event.data.item.data;
 
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action]();
-					}
-				}
-			);
-		}
-	);
+			if (itemData && itemData.action && ACTIONS[itemData.action]) {
+				ACTIONS[itemData.action]();
+			}
+		});
+	});
 </aui:script>

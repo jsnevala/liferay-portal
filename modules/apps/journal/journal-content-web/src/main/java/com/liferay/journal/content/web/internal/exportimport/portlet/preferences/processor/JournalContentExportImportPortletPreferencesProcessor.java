@@ -48,8 +48,10 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portlet.PortletPreferencesImpl;
 
 import java.util.List;
 import java.util.Map;
@@ -61,7 +63,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -73,18 +75,14 @@ public class JournalContentExportImportPortletPreferencesProcessor
 
 	@Override
 	public List<Capability> getExportCapabilities() {
-		return ListUtil.toList(
-			new Capability[] {
-				_journalContentMetadataExporterImporterCapability
-			});
+		return ListUtil.fromArray(
+			_journalContentMetadataExporterImporterCapability);
 	}
 
 	@Override
 	public List<Capability> getImportCapabilities() {
-		return ListUtil.toList(
-			new Capability[] {
-				_journalContentMetadataExporterImporterCapability, _capability
-			});
+		return ListUtil.fromArray(
+			_journalContentMetadataExporterImporterCapability, _capability);
 	}
 
 	@Override
@@ -99,13 +97,16 @@ public class JournalContentExportImportPortletPreferencesProcessor
 			portletDataContext.addPortletPermissions(
 				JournalConstants.RESOURCE_NAME);
 		}
-		catch (PortalException pe) {
-			PortletDataException pde = new PortletDataException(pe);
+		catch (PortalException portalException) {
+			PortletDataException portletDataException =
+				new PortletDataException(portalException);
 
-			pde.setPortletId(JournalContentPortletKeys.JOURNAL_CONTENT);
-			pde.setType(PortletDataException.EXPORT_PORTLET_PERMISSIONS);
+			portletDataException.setPortletId(
+				JournalContentPortletKeys.JOURNAL_CONTENT);
+			portletDataException.setType(
+				PortletDataException.EXPORT_PORTLET_PERMISSIONS);
 
-			throw pde;
+			throw portletDataException;
 		}
 
 		String articleId = portletPreferences.getValue("articleId", null);
@@ -133,6 +134,14 @@ public class JournalContentExportImportPortletPreferencesProcessor
 		}
 
 		Group group = _groupLocalService.fetchGroup(articleGroupId);
+
+		if (group == null) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("No group found with group ID " + articleGroupId);
+			}
+
+			return portletPreferences;
+		}
 
 		if (ExportImportThreadLocal.isStagingInProcess() &&
 			!group.isStagedPortlet(JournalPortletKeys.JOURNAL)) {
@@ -230,13 +239,16 @@ public class JournalContentExportImportPortletPreferencesProcessor
 					portletDataContext, article, ddmTemplate,
 					PortletDataContext.REFERENCE_TYPE_STRONG);
 			}
-			catch (PortalException | ReadOnlyException e) {
-				PortletDataException pde = new PortletDataException(e);
+			catch (PortalException | ReadOnlyException exception) {
+				PortletDataException portletDataException =
+					new PortletDataException(exception);
 
-				pde.setPortletId(JournalContentPortletKeys.JOURNAL_CONTENT);
-				pde.setType(PortletDataException.EXPORT_REFERENCED_TEMPLATE);
+				portletDataException.setPortletId(
+					JournalContentPortletKeys.JOURNAL_CONTENT);
+				portletDataException.setType(
+					PortletDataException.EXPORT_REFERENCED_TEMPLATE);
 
-				throw pde;
+				throw portletDataException;
 			}
 		}
 
@@ -255,13 +267,16 @@ public class JournalContentExportImportPortletPreferencesProcessor
 			portletDataContext.importPortletPermissions(
 				JournalConstants.RESOURCE_NAME);
 		}
-		catch (PortalException pe) {
-			PortletDataException pde = new PortletDataException(pe);
+		catch (PortalException portalException) {
+			PortletDataException portletDataException =
+				new PortletDataException(portalException);
 
-			pde.setPortletId(JournalContentPortletKeys.JOURNAL_CONTENT);
-			pde.setType(PortletDataException.IMPORT_PORTLET_PERMISSIONS);
+			portletDataException.setPortletId(
+				JournalContentPortletKeys.JOURNAL_CONTENT);
+			portletDataException.setType(
+				PortletDataException.IMPORT_PORTLET_PERMISSIONS);
 
-			throw pde;
+			throw portletDataException;
 		}
 
 		long previousScopeGroupId = portletDataContext.getScopeGroupId();
@@ -294,9 +309,17 @@ public class JournalContentExportImportPortletPreferencesProcessor
 		portletDataContext.setScopeGroupId(groupId);
 
 		try {
-			if (Validator.isNotNull(articleId)) {
-				Group importedArticleGroup = _groupLocalService.getGroup(
+			if (Validator.isNotNull(articleId) && (groupId != 0)) {
+				Group importedArticleGroup = _groupLocalService.fetchGroup(
 					groupId);
+
+				if (importedArticleGroup == null) {
+					if (_log.isDebugEnabled()) {
+						_log.debug("No group found with group ID " + groupId);
+					}
+
+					return portletPreferences;
+				}
 
 				if (!ExportImportThreadLocal.isStagingInProcess() ||
 					importedArticleGroup.isStagedPortlet(
@@ -332,7 +355,19 @@ public class JournalContentExportImportPortletPreferencesProcessor
 						}
 					}
 
-					if (portletDataContext.getPlid() > 0) {
+					int prefOwnerType = -1;
+
+					if (portletPreferences instanceof PortletPreferencesImpl) {
+						PortletPreferencesImpl portletPreferencesImpl =
+							(PortletPreferencesImpl)portletPreferences;
+
+						prefOwnerType = portletPreferencesImpl.getOwnerType();
+					}
+
+					if ((portletDataContext.getPlid() > 0) &&
+						(prefOwnerType !=
+							PortletKeys.PREFS_OWNER_TYPE_ARCHIVED)) {
+
 						Layout layout = _layoutLocalService.fetchLayout(
 							portletDataContext.getPlid());
 
@@ -359,22 +394,27 @@ public class JournalContentExportImportPortletPreferencesProcessor
 				portletPreferences.setValue("ddmTemplateKey", ddmTemplateKey);
 			}
 		}
-		catch (PortalException pe) {
-			PortletDataException pde = new PortletDataException(pe);
+		catch (PortalException portalException) {
+			PortletDataException portletDataException =
+				new PortletDataException(portalException);
 
-			pde.setPortletId(JournalContentPortletKeys.JOURNAL_CONTENT);
-			pde.setType(
+			portletDataException.setPortletId(
+				JournalContentPortletKeys.JOURNAL_CONTENT);
+			portletDataException.setType(
 				PortletDataException.UPDATE_JOURNAL_CONTENT_SEARCH_DATA);
 
-			throw pde;
+			throw portletDataException;
 		}
-		catch (ReadOnlyException roe) {
-			PortletDataException pde = new PortletDataException(roe);
+		catch (ReadOnlyException readOnlyException) {
+			PortletDataException portletDataException =
+				new PortletDataException(readOnlyException);
 
-			pde.setPortletId(JournalContentPortletKeys.JOURNAL_CONTENT);
-			pde.setType(PortletDataException.UPDATE_PORTLET_PREFERENCES);
+			portletDataException.setPortletId(
+				JournalContentPortletKeys.JOURNAL_CONTENT);
+			portletDataException.setType(
+				PortletDataException.UPDATE_PORTLET_PREFERENCES);
 
-			throw pde;
+			throw portletDataException;
 		}
 
 		portletDataContext.setScopeGroupId(previousScopeGroupId);

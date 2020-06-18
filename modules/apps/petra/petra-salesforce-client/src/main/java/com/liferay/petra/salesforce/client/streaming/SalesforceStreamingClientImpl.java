@@ -16,6 +16,8 @@ package com.liferay.petra.salesforce.client.streaming;
 
 import com.liferay.petra.salesforce.client.BaseSalesforceClientImpl;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
@@ -33,11 +35,11 @@ import org.cometd.client.BayeuxClient;
 import org.cometd.client.transport.ClientTransport;
 import org.cometd.client.transport.LongPollingTransport;
 
-import org.eclipse.jetty.client.ContentExchange;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.Request;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.FormattingTuple;
+import org.slf4j.helpers.MessageFormatter;
 
 /**
  * @author Brian Wing Shun Chan
@@ -66,8 +68,12 @@ public class SalesforceStreamingClientImpl
 		boolean connected = _bayeuxClient.waitFor(
 			10000, BayeuxClient.State.CONNECTED);
 
-		if (_logger.isInfoEnabled()) {
-			_logger.info("Connected: {}", connected);
+		if (_log.isInfoEnabled()) {
+			FormattingTuple formattingTuple = MessageFormatter.format(
+				"Connected: {}", connected);
+
+			_log.info(
+				formattingTuple.getMessage(), formattingTuple.getThrowable());
 		}
 
 		return connected;
@@ -85,8 +91,8 @@ public class SalesforceStreamingClientImpl
 		try {
 			_httpClient.stop();
 		}
-		catch (Exception e) {
-			_logger.error("Unable to stop http client", e);
+		catch (Exception exception) {
+			_log.error("Unable to stop http client", exception);
 		}
 	}
 
@@ -101,8 +107,12 @@ public class SalesforceStreamingClientImpl
 		boolean disconnected = _bayeuxClient.waitFor(
 			10000, BayeuxClient.State.DISCONNECTED);
 
-		if (_logger.isInfoEnabled()) {
-			_logger.info("Disconnected: {}", disconnected);
+		if (_log.isInfoEnabled()) {
+			FormattingTuple formattingTuple = MessageFormatter.format(
+				"Disconnected: {}", disconnected);
+
+			_log.info(
+				formattingTuple.getMessage(), formattingTuple.getThrowable());
 		}
 
 		return disconnected;
@@ -135,7 +145,8 @@ public class SalesforceStreamingClientImpl
 			Map<String, Object> options = new HashMap<>();
 
 			options.put(
-				ClientTransport.TIMEOUT_OPTION, _transportTimeout * 6000);
+				ClientTransport.MAX_NETWORK_DELAY_OPTION,
+				_transportTimeout * 6000);
 
 			_httpClient.start();
 
@@ -165,12 +176,12 @@ public class SalesforceStreamingClientImpl
 			subscribeClientSessionChannel.addListener(
 				new SalesforceMessageListener());
 		}
-		catch (Exception e) {
-			_logger.error(e.getMessage(), e);
+		catch (Exception exception) {
+			_log.error(exception.getMessage(), exception);
 		}
 	}
 
-	private static final Logger _logger = LoggerFactory.getLogger(
+	private static final Log _log = LogFactoryUtil.getLog(
 		SalesforceStreamingClientImpl.class);
 
 	private BayeuxClient _bayeuxClient;
@@ -184,21 +195,26 @@ public class SalesforceStreamingClientImpl
 		public void onMessage(
 			ClientSessionChannel clientSessionChannel, Message message) {
 
-			if (_logger.isInfoEnabled()) {
-				_logger.info("Received message: {}", message);
+			if (_log.isInfoEnabled()) {
+				FormattingTuple formattingTuple = MessageFormatter.format(
+					"Received message: {}", message);
+
+				_log.info(
+					formattingTuple.getMessage(),
+					formattingTuple.getThrowable());
 			}
 
 			if (!message.isSuccessful()) {
-				_logger.error("Unable to send message");
+				_log.error("Unable to send message");
 
 				if (message.get("error") != null) {
-					_logger.error((String)message.get("error"));
+					_log.error((String)message.get("error"));
 				}
 
 				if (message.get("exception") != null) {
-					Exception e = (Exception)message.get("exception");
+					Exception exception = (Exception)message.get("exception");
 
-					e.printStackTrace();
+					_log.error(exception.getMessage(), exception);
 				}
 
 				_bayeuxClient.disconnect();
@@ -219,10 +235,10 @@ public class SalesforceStreamingClientImpl
 		}
 
 		@Override
-		protected void customize(ContentExchange exchange) {
-			super.customize(exchange);
+		protected void customize(Request request) {
+			super.customize(request);
 
-			exchange.addRequestHeader("Authorization", "OAuth " + _sessionId);
+			request.header("Authorization", "OAuth " + _sessionId);
 		}
 
 		private final String _sessionId;

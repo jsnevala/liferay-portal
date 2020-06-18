@@ -9,7 +9,7 @@
 	.task-content-actions {
 		float: right;
 
-		.btn-default {
+		.btn-secondary {
 			padding: 0;
 		}
 	}
@@ -25,7 +25,10 @@
 }
 
 .workflow-instance-container {
-	.asset-type, .status, .definition, .end-date {
+	.asset-type,
+	.status,
+	.definition,
+	.end-date {
 		margin-right: 20px;
 	}
 }

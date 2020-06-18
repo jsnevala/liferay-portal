@@ -19,14 +19,14 @@
 <%
 JournalArticle article = journalDisplayContext.getArticle();
 
-boolean smallImage = BeanParamUtil.getBoolean(article, request, "smallImage");
+JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalEditArticleDisplayContext(request, liferayPortletResponse, article);
 
-boolean changeStructure = GetterUtil.getBoolean(request.getAttribute("edit_article.jsp-changeStructure"));
+String smallImageSource = journalEditArticleDisplayContext.getSmallImageSource();
 %>
 
 <liferay-ui:error-marker
 	key="<%= WebKeys.ERROR_SECTION %>"
-	value="small_image"
+	value="featured-image"
 />
 
 <aui:model-context bean="<%= article %>" model="<%= JournalArticle.class %>" />
@@ -36,116 +36,48 @@ JournalFileUploadsConfiguration journalFileUploadsConfiguration = (JournalFileUp
 %>
 
 <liferay-ui:error exception="<%= ArticleSmallImageNameException.class %>">
-
-	<%
-	String[] imageExtensions = journalFileUploadsConfiguration.imageExtensions();
-	%>
-
-	<liferay-ui:message key="image-names-must-end-with-one-of-the-following-extensions" /> <%= HtmlUtil.escape(StringUtil.merge(imageExtensions, ", ")) %>.
+	<liferay-ui:message key="image-names-must-end-with-one-of-the-following-extensions" /> <%= HtmlUtil.escape(StringUtil.merge(journalFileUploadsConfiguration.imageExtensions(), ", ")) %>.
 </liferay-ui:error>
 
 <liferay-ui:error exception="<%= ArticleSmallImageSizeException.class %>">
-
-	<%
-	long imageMaxSize = journalFileUploadsConfiguration.smallImageMaxSize();
-	%>
-
-	<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(imageMaxSize, locale) %>" key="please-enter-a-small-image-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
+	<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(journalFileUploadsConfiguration.smallImageMaxSize(), locale) %>" key="please-enter-a-small-image-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
 </liferay-ui:error>
 
-<div id="<portlet:namespace />smallImageContainer">
-	<div class="lfr-journal-small-image-header">
-		<aui:input id="useSmallImage" label="use-small-image" name="smallImage" />
-	</div>
+<aui:select ignoreRequestValue="<%= journalEditArticleDisplayContext.isChangeStructure() %>" label="" name="smallImageSource" value="<%= smallImageSource %>" wrapperCssClass="mb-3">
+	<aui:option label="no-image" value="none" />
+	<aui:option label="from-url" value="url" />
+	<aui:option label="from-your-computer" value="file" />
+</aui:select>
 
-	<div class="lfr-journal-small-image-content toggler-content-collapsed">
-		<aui:row>
-			<c:if test="<%= smallImage && (article != null) %>">
-				<aui:col width="<%= 50 %>">
-					<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="preview" />" class="img-responsive lfr-journal-small-image-preview" src="<%= HtmlUtil.escapeAttribute(article.getArticleImageURL(themeDisplay)) %>" />
-				</aui:col>
-			</c:if>
+<div class="<%= Objects.equals(smallImageSource, "url") ? "" : "hide" %>" id="<portlet:namespace/>smallImageURLContainer">
+	<c:if test="<%= (article != null) && Validator.isNotNull(article.getArticleImageURL(themeDisplay)) %>">
+		<div class="aspect-ratio aspect-ratio-16-to-9">
+			<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="preview" />" class="aspect-ratio-item-fluid" src="<%= HtmlUtil.escapeAttribute(article.getArticleImageURL(themeDisplay)) %>" />
+		</div>
+	</c:if>
 
-			<aui:col width="<%= (smallImage && (article != null)) ? 50 : 100 %>">
-				<liferay-frontend:fieldset>
-					<aui:input cssClass="lfr-journal-small-image-type" ignoreRequestValue="<%= changeStructure %>" inlineField="<%= true %>" label="small-image-url" name="smallImageType" type="radio" />
-
-					<aui:input cssClass="lfr-journal-small-image-value" ignoreRequestValue="<%= changeStructure %>" inlineField="<%= true %>" label="" name="smallImageURL" title="small-image-url" />
-				</liferay-frontend:fieldset>
-
-				<liferay-frontend:fieldset>
-					<aui:input cssClass="lfr-journal-small-image-type" ignoreRequestValue="<%= changeStructure %>" inlineField="<%= true %>" label="small-image" name="smallImageType" type="radio" />
-
-					<aui:input cssClass="lfr-journal-small-image-value" ignoreRequestValue="<%= changeStructure %>" inlineField="<%= true %>" label="" name="smallFile" type="file" />
-				</liferay-frontend:fieldset>
-			</aui:col>
-		</aui:row>
-	</div>
+	<aui:input ignoreRequestValue="<%= journalEditArticleDisplayContext.isChangeStructure() %>" label="" name="smallImageURL" title="small-image-url" wrapperCssClass="mb-3" />
 </div>
 
-<aui:script use="aui-toggler">
-	var container = A.one('#<portlet:namespace />smallImageContainer');
+<div class="<%= Objects.equals(smallImageSource, "file") ? "" : "hide" %>" id="<portlet:namespace/>smallFileContainer">
+	<c:if test="<%= (article != null) && Validator.isNotNull(article.getArticleImageURL(themeDisplay)) %>">
+		<div class="aspect-ratio aspect-ratio-16-to-9">
+			<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="preview" />" class="aspect-ratio-item-fluid" src="<%= HtmlUtil.escapeAttribute(article.getArticleImageURL(themeDisplay)) %>" />
+		</div>
+	</c:if>
 
-	var types = container.all('.lfr-journal-small-image-type');
-	var values = container.all('.lfr-journal-small-image-value');
+	<aui:input ignoreRequestValue="<%= journalEditArticleDisplayContext.isChangeStructure() %>" label="" name="smallFile" type="file" wrapperCssClass="mb-3" />
+</div>
 
-	var selectSmallImageType = function(index) {
-		types.attr('checked', false);
-
-		types.item(index).attr('checked', true);
-
-		values.attr('disabled', true);
-
-		values.item(index).attr('disabled', false);
-	};
-
-	container.delegate(
-		'change',
-		function(event) {
-			var index = types.indexOf(event.currentTarget);
-
-			selectSmallImageType(index);
-		},
-		'.lfr-journal-small-image-type'
+<aui:script>
+	Liferay.Util.toggleSelectBox(
+		'<portlet:namespace />smallImageSource',
+		'url',
+		'<portlet:namespace />smallImageURLContainer'
 	);
-
-	new A.Toggler(
-		{
-			animated: true,
-			content: '#<portlet:namespace />smallImageContainer .lfr-journal-small-image-content',
-			expanded: <%= smallImage %>,
-			header: '#<portlet:namespace />smallImageContainer .lfr-journal-small-image-header',
-			on: {
-				animatingChange: function(event) {
-					var instance = this;
-
-					var expanded = !instance.get('expanded');
-
-					A.one('#<portlet:namespace />useSmallImage').attr('checked', expanded);
-
-					if (expanded) {
-						types.each(
-							function(item, index) {
-								if (item.get('checked')) {
-									values.item(index).attr('disabled', false);
-								}
-							}
-						);
-					}
-					else {
-						values.attr('disabled', true);
-					}
-				}
-			}
-		}
-	);
-
-	// LPS-51306
-
-	setTimeout(
-		function() {
-			selectSmallImageType('<%= ((article != null) && Validator.isNotNull(article.getSmallImageURL())) ? 0 : 1 %>');
-		},
-		0
+	Liferay.Util.toggleSelectBox(
+		'<portlet:namespace />smallImageSource',
+		'file',
+		'<portlet:namespace />smallFileContainer'
 	);
 </aui:script>

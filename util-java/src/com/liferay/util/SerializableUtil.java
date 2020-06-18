@@ -42,26 +42,26 @@ public class SerializableUtil {
 
 			return objectInputStream.readObject();
 		}
-		catch (ClassNotFoundException cnfe) {
-			throw new RuntimeException(cnfe);
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new RuntimeException(classNotFoundException);
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 
 	public static Object deserialize(byte[] bytes, ClassLoader classLoader) {
 		try (ObjectInputStream objectInputStream =
 				new ProtectedClassLoaderObjectInputStream(
-					new UnsyncByteArrayInputStream(bytes), classLoader);) {
+					new UnsyncByteArrayInputStream(bytes), classLoader)) {
 
 			return objectInputStream.readObject();
 		}
-		catch (ClassNotFoundException cnfe) {
-			throw new RuntimeException(cnfe);
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new RuntimeException(classNotFoundException);
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 
@@ -74,8 +74,8 @@ public class SerializableUtil {
 
 			objectOutputStream.writeObject(object);
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 
 		return unsyncByteArrayOutputStream.toByteArray();

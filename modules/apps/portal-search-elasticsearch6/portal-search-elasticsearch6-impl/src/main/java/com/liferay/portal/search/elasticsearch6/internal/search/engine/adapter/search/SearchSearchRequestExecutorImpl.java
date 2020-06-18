@@ -14,14 +14,16 @@
 
 package com.liferay.portal.search.elasticsearch6.internal.search.engine.adapter.search;
 
-import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 
 import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.Client;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -29,7 +31,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Michael C. Han
  */
-@Component(immediate = true, service = SearchSearchRequestExecutor.class)
+@Component(service = SearchSearchRequestExecutor.class)
 public class SearchSearchRequestExecutorImpl
 	implements SearchSearchRequestExecutor {
 
@@ -37,34 +39,58 @@ public class SearchSearchRequestExecutorImpl
 	public SearchSearchResponse execute(
 		SearchSearchRequest searchSearchRequest) {
 
-		Client client = elasticsearchConnectionManager.getClient();
-
 		SearchRequestBuilder searchRequestBuilder =
-			SearchAction.INSTANCE.newRequestBuilder(client);
+			SearchAction.INSTANCE.newRequestBuilder(
+				_elasticsearchClientResolver.getClient());
 
-		searchSearchRequestAssembler.assemble(
+		_searchSearchRequestAssembler.assemble(
 			searchRequestBuilder, searchSearchRequest);
 
 		SearchResponse searchResponse = searchRequestBuilder.get();
 
 		SearchSearchResponse searchSearchResponse = new SearchSearchResponse();
 
-		String searchRequestBuilderString = searchRequestBuilder.toString();
+		_searchSearchResponseAssembler.assemble(
+			searchRequestBuilder, searchResponse, searchSearchRequest,
+			searchSearchResponse);
 
-		searchSearchResponseAssembler.assemble(
-			searchResponse, searchSearchResponse, searchSearchRequest,
-			searchRequestBuilderString);
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				StringBundler.concat(
+					"The search engine processed ",
+					searchSearchResponse.getSearchRequestString(), " in ",
+					searchSearchResponse.getExecutionTime(), " ms"));
+		}
 
 		return searchSearchResponse;
 	}
 
-	@Reference
-	protected ElasticsearchConnectionManager elasticsearchConnectionManager;
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
 
-	@Reference
-	protected SearchSearchRequestAssembler searchSearchRequestAssembler;
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
 
-	@Reference
-	protected SearchSearchResponseAssembler searchSearchResponseAssembler;
+	@Reference(unbind = "-")
+	protected void setSearchSearchRequestAssembler(
+		SearchSearchRequestAssembler searchSearchRequestAssembler) {
+
+		_searchSearchRequestAssembler = searchSearchRequestAssembler;
+	}
+
+	@Reference(unbind = "-")
+	protected void setSearchSearchResponseAssembler(
+		SearchSearchResponseAssembler searchSearchResponseAssembler) {
+
+		_searchSearchResponseAssembler = searchSearchResponseAssembler;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SearchSearchRequestExecutorImpl.class);
+
+	private ElasticsearchClientResolver _elasticsearchClientResolver;
+	private SearchSearchRequestAssembler _searchSearchRequestAssembler;
+	private SearchSearchResponseAssembler _searchSearchResponseAssembler;
 
 }

@@ -4,24 +4,27 @@
 	<#assign hasConjunction = true />
 </#if>
 
-if (${entityColumn.name} == null) {
+<#if !entityColumn.isConvertNull()>
+	if (${entityColumn.name} == null) {
+		<#if hasConjunction>
+			sb.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_4${finderFieldSuffix});
+		<#else>
+			sb.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_1${finderFieldSuffix});
+		</#if>
+	}
+	else
+</#if>
+if (${entityColumn.name}.isEmpty()) {
 	<#if hasConjunction>
-		query.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_4${finderFieldSuffix});
+		sb.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_6${finderFieldSuffix});
 	<#else>
-		query.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_1${finderFieldSuffix});
-	</#if>
-}
-else if (${entityColumn.name}.equals("")) {
-	<#if hasConjunction>
-		query.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_6${finderFieldSuffix});
-	<#else>
-		query.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_3${finderFieldSuffix});
+		sb.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_3${finderFieldSuffix});
 	</#if>
 }
 else {
 	<#if hasConjunction>
-		query.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_5${finderFieldSuffix});
+		sb.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_5${finderFieldSuffix});
 	<#else>
-		query.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_2${finderFieldSuffix});
+		sb.append(_FINDER_COLUMN_${entityFinder.name?upper_case}_${entityColumn.name?upper_case}_2${finderFieldSuffix});
 	</#if>
 }

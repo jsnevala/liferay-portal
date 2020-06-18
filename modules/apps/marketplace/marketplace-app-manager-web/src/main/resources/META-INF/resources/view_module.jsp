@@ -29,7 +29,7 @@ else {
 	backURL.setParameter("app", app);
 }
 
-ViewModuleManagementToolbarDisplayContext viewModuleManagementToolbarDisplayContext = new ViewModuleManagementToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request);
+ViewModuleManagementToolbarDisplayContext viewModuleManagementToolbarDisplayContext = new ViewModuleManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
 
 AppDisplay appDisplay = viewModuleManagementToolbarDisplayContext.getAppDisplay();
 Bundle bundle = viewModuleManagementToolbarDisplayContext.getBundle();
@@ -41,7 +41,7 @@ portletDisplay.setURLBack(backURL.toString());
 
 Dictionary<String, String> headers = bundle.getHeaders(StringPool.BLANK);
 
-String bundleName = GetterUtil.getString(headers.get(BundleConstants.BUNDLE_NAME));
+String bundleName = GetterUtil.getString(headers.get(Constants.BUNDLE_NAME));
 
 renderResponse.setTitle(bundleName);
 

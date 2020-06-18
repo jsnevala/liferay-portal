@@ -15,7 +15,7 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.checks.util.SourceUtil;
 
@@ -62,8 +62,7 @@ public class XMLServiceEntityNameCheck extends BaseFileCheck {
 					fileName,
 					StringBundler.concat(
 						"Do not use entity '", entityName,
-						"' when package is '", packagePathName, "'"),
-					"entity_naming.markdown");
+						"' when package is '", packagePathName, "'"));
 			}
 		}
 

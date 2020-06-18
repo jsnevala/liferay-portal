@@ -14,11 +14,10 @@
 
 package com.liferay.portal.template.soy.internal;
 
-import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
-import com.liferay.portal.template.TemplateContextHelper;
+import com.liferay.petra.io.unsync.UnsyncStringWriter;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.template.soy.constants.SoyTemplateConstants;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,9 +25,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.mockito.Mockito;
-import org.mockito.internal.util.collections.Sets;
 
 /**
  * @author Bruno Basto
@@ -52,25 +48,9 @@ public class SoyTemplateTest {
 		soyTemplate.put("key1", "value1");
 		soyTemplate.put("key2", "value2");
 
-		soyTemplate.putInjectedData("injectedKey", "injectedValue");
-
 		soyTemplate.clear();
 
-		SoyTemplateRecord soyTemplateRecord =
-			soyTemplate.getSoyTemplateRecord();
-
-		Set<String> keys = soyTemplateRecord.keys();
-
-		Assert.assertEquals(keys.toString(), 0, keys.size());
-
-		keys = soyTemplate.keySet();
-
-		Assert.assertEquals(keys.toString(), 0, keys.size());
-
-		SoyTemplateRecord injectedSoyTemplateRecord =
-			soyTemplate.getInjectedSoyTemplateRecord();
-
-		keys = injectedSoyTemplateRecord.keys();
+		Set<String> keys = soyTemplate.keySet();
 
 		Assert.assertEquals(keys.toString(), 0, keys.size());
 	}
@@ -84,9 +64,9 @@ public class SoyTemplateTest {
 
 		soyTemplate.put("namespace", "soy.test.ijdata");
 
-		Map<String, Object> injectedData = new HashMap<>();
-
-		injectedData.put("hasData", true);
+		Map<String, Object> injectedData = HashMapBuilder.<String, Object>put(
+			"hasData", true
+		).build();
 
 		soyTemplate.put(SoyTemplateConstants.INJECTED_DATA, injectedData);
 
@@ -102,57 +82,21 @@ public class SoyTemplateTest {
 	public void testPut() {
 		SoyTemplate soyTemplate = _soyTestHelper.getSoyTemplate("ijdata.soy");
 
-		SoyTemplateRecord soyTemplateRecord =
-			soyTemplate.getSoyTemplateRecord();
-
 		soyTemplate.put("key", "value");
 
-		Assert.assertEquals("value", soyTemplateRecord.get("key"));
-	}
-
-	@Test
-	public void testPutRestrictedVariable() {
-		SoyTemplate soyTemplate = Mockito.spy(
-			_soyTestHelper.getSoyTemplate("ijdata.soy"));
-
-		TemplateContextHelper templateContextHelper = Mockito.mock(
-			TemplateContextHelper.class);
-
-		Mockito.when(
-			soyTemplate.getTemplateContextHelper()
-		).thenReturn(
-			templateContextHelper
-		);
-
-		Mockito.when(
-			templateContextHelper.getRestrictedVariables()
-		).thenReturn(
-			Sets.newSet("restrictedKey")
-		);
-
-		soyTemplate.put("restrictedKey", "restrictedValue");
-
-		SoyTemplateRecord soyTemplateRecord =
-			soyTemplate.getSoyTemplateRecord();
-
-		Assert.assertNull(
-			"restrictedValue", soyTemplateRecord.get("restrictedKey"));
+		Assert.assertEquals("value", soyTemplate.get("key"));
 	}
 
 	@Test
 	public void testPutWithSameValue() {
-		SoyTemplate soyTemplate = Mockito.spy(
-			_soyTestHelper.getSoyTemplate("ijdata.soy"));
+		SoyTemplate soyTemplate = _soyTestHelper.getSoyTemplate("ijdata.soy");
 
 		String value = "value";
 
 		soyTemplate.put("key", value);
 		soyTemplate.put("key", value);
 
-		SoyTemplateRecord soyTemplateRecord =
-			soyTemplate.getSoyTemplateRecord();
-
-		Assert.assertEquals("value", soyTemplateRecord.get("key"));
+		Assert.assertEquals("value", soyTemplate.get("key"));
 	}
 
 	@Test
@@ -162,37 +106,12 @@ public class SoyTemplateTest {
 		soyTemplate.put("key1", "value1");
 		soyTemplate.put("key2", "value2");
 
-		soyTemplate.putInjectedData("injectedKey", "injectedValue");
-
 		soyTemplate.remove("key2");
 
-		SoyTemplateRecord soyTemplateRecord =
-			soyTemplate.getSoyTemplateRecord();
+		Assert.assertTrue(soyTemplate.containsKey("key1"));
+		Assert.assertEquals("value1", soyTemplate.get("key1"));
 
-		Assert.assertTrue(soyTemplateRecord.hasField("key1"));
-		Assert.assertEquals("value1", soyTemplateRecord.get("key1"));
-
-		SoyTemplateRecord injectedSoyTemplateRecord =
-			soyTemplate.getInjectedSoyTemplateRecord();
-
-		Assert.assertEquals(
-			"injectedValue", injectedSoyTemplateRecord.get("injectedKey"));
-	}
-
-	@Test
-	public void testRemoveInjectedData() {
-		SoyTemplate soyTemplate = _soyTestHelper.getSoyTemplate("ijdata.soy");
-
-		soyTemplate.putInjectedData("injectedKey", "injectedValue");
-
-		soyTemplate.remove(SoyTemplateConstants.INJECTED_DATA);
-
-		SoyTemplateRecord injectedSoyTemplateRecord =
-			soyTemplate.getInjectedSoyTemplateRecord();
-
-		Set<String> keys = injectedSoyTemplateRecord.keys();
-
-		Assert.assertEquals(keys.toString(), 0, keys.size());
+		Assert.assertFalse(soyTemplate.containsKey("key2"));
 	}
 
 	private final SoyTestHelper _soyTestHelper = new SoyTestHelper();

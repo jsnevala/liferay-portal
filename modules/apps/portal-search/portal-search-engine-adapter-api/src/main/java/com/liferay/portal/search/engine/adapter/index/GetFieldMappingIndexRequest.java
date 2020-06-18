@@ -14,14 +14,14 @@
 
 package com.liferay.portal.search.engine.adapter.index;
 
-import aQute.bnd.annotation.ProviderType;
+import com.liferay.portal.search.engine.adapter.ccr.CrossClusterRequest;
 
 /**
  * @author Dylan Rebelak
  */
-@ProviderType
 public class GetFieldMappingIndexRequest
-	implements IndexRequest<GetFieldMappingIndexResponse> {
+	extends CrossClusterRequest
+	implements MappingIndexRequest<GetFieldMappingIndexResponse> {
 
 	public GetFieldMappingIndexRequest(
 		String[] indexNames, String mappingName, String[] fields) {
@@ -47,6 +47,7 @@ public class GetFieldMappingIndexRequest
 		return _indexNames;
 	}
 
+	@Override
 	public String getMappingName() {
 		return _mappingName;
 	}

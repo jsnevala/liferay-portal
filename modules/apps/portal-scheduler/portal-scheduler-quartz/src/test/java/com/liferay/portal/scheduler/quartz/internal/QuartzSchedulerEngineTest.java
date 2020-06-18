@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.scheduler.messaging.SchedulerResponse;
 import com.liferay.portal.kernel.security.SecureRandomUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.Props;
@@ -51,6 +52,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -675,15 +677,7 @@ public class QuartzSchedulerEngineTest {
 	}
 
 	protected Props setUpProps() {
-		Props props = Mockito.mock(Props.class);
-
-		Mockito.when(
-			props.get(PropsKeys.SCHEDULER_ENABLED)
-		).thenReturn(
-			"true"
-		);
-
-		return props;
+		return PropsTestUtil.setProps(PropsKeys.SCHEDULER_ENABLED, "true");
 	}
 
 	private static final int _DEFAULT_INTERVAL = 10;
@@ -848,7 +842,7 @@ public class QuartzSchedulerEngineTest {
 			Set<JobKey> jobKeys = new HashSet<>();
 
 			for (JobKey jobKey : _jobs.keySet()) {
-				if (jobKey.getGroup().equals(groupName)) {
+				if (Objects.equals(jobKey.getGroup(), groupName)) {
 					jobKeys.add(jobKey);
 				}
 			}
@@ -972,7 +966,7 @@ public class QuartzSchedulerEngineTest {
 			String groupName = groupMatcher.getCompareToValue();
 
 			for (JobKey jobKey : _jobs.keySet()) {
-				if (jobKey.getGroup().equals(groupName)) {
+				if (Objects.equals(jobKey.getGroup(), groupName)) {
 					pauseJob(jobKey);
 				}
 			}
@@ -1030,7 +1024,7 @@ public class QuartzSchedulerEngineTest {
 			String groupName = groupMatcher.getCompareToValue();
 
 			for (JobKey jobKey : _jobs.keySet()) {
-				if (jobKey.getGroup().equals(groupName)) {
+				if (Objects.equals(jobKey.getGroup(), groupName)) {
 					resumeJob(jobKey);
 				}
 			}

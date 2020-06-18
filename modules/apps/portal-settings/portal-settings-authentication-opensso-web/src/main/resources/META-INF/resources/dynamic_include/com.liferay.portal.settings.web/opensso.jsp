@@ -54,58 +54,61 @@ String version = openSSOConfiguration.version();
 	<aui:input cssClass="lfr-input-text-container" label="email-address-attribute" name='<%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE + "emailAddressAttr" %>' type="text" value="<%= emailAddressAttr %>" />
 
 	<%@ include file="/dynamic_include/com.liferay.portal.settings.web/opensso_user_name.jspf" %>
-
-	<aui:button-row>
-		<aui:button onClick='<%= renderResponse.getNamespace() + "testOpenSSOSettings();" %>' value="test-opensso-configuration" />
-
-		<portlet:actionURL name="/portal_settings/opensso_delete" var="resetValuesURL">
-			<portlet:param name="tabs1" value="opensso" />
-		</portlet:actionURL>
-
-		<%
-		String taglibOnClick = "if (confirm('" + UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-reset-the-configured-values") + "')) {submitForm(document.hrefFm, '" + resetValuesURL.toString() + "');}";
-		%>
-
-		<aui:button onClick="<%= taglibOnClick %>" value="reset-values" />
-	</aui:button-row>
 </aui:fieldset>
 
 <aui:script>
 	Liferay.provide(
 		window,
 		'<portlet:namespace />testOpenSSOSettings',
-		function() {
+		function () {
 			var A = AUI();
 
 			var data = {};
 
-			data.<portlet:namespace />openSsoLoginURL = document.<portlet:namespace />fm['<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>loginURL'].value;
-			data.<portlet:namespace />openSsoLogoutURL = document.<portlet:namespace />fm['<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>logoutURL'].value;
-			data.<portlet:namespace />openSsoServiceURL = document.<portlet:namespace />fm['<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>serviceURL'].value;
-			data.<portlet:namespace />openSsoScreenNameAttr = document.<portlet:namespace />fm['<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>screenNameAttr'].value;
-			data.<portlet:namespace />openSsoEmailAddressAttr = document.<portlet:namespace />fm['<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>emailAddressAttr'].value;
-			data.<portlet:namespace />openSsoFirstNameAttr = document.<portlet:namespace />fm['<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>firstNameAttr'].value;
-			data.<portlet:namespace />openSsoLastNameAttr = document.<portlet:namespace />fm['<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>lastNameAttr'].value;
+			data.<portlet:namespace />openSsoLoginURL =
+				document.<portlet:namespace />fm[
+					'<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>loginURL'
+				].value;
+			data.<portlet:namespace />openSsoLogoutURL =
+				document.<portlet:namespace />fm[
+					'<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>logoutURL'
+				].value;
+			data.<portlet:namespace />openSsoServiceURL =
+				document.<portlet:namespace />fm[
+					'<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>serviceURL'
+				].value;
+			data.<portlet:namespace />openSsoScreenNameAttr =
+				document.<portlet:namespace />fm[
+					'<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>screenNameAttr'
+				].value;
+			data.<portlet:namespace />openSsoEmailAddressAttr =
+				document.<portlet:namespace />fm[
+					'<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>emailAddressAttr'
+				].value;
+			data.<portlet:namespace />openSsoFirstNameAttr =
+				document.<portlet:namespace />fm[
+					'<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>firstNameAttr'
+				].value;
+			data.<portlet:namespace />openSsoLastNameAttr =
+				document.<portlet:namespace />fm[
+					'<portlet:namespace /><%= PortalSettingsOpenSSOConstants.FORM_PARAMETER_NAMESPACE %>lastNameAttr'
+				].value;
 
-			var url = '<portlet:renderURL windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcRenderCommandName" value="/portal_settings/test_opensso" /></portlet:renderURL>';
+			var url =
+				'<portlet:renderURL windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcRenderCommandName" value="/portal_settings/test_opensso" /></portlet:renderURL>';
 
-			var dialog = Liferay.Util.Window.getWindow(
-				{
-					dialog: {
-						destroyOnHide: true
-					},
-					title: '<%= UnicodeLanguageUtil.get(request, "opensso") %>'
-				}
-			);
+			var dialog = Liferay.Util.Window.getWindow({
+				dialog: {
+					destroyOnHide: true,
+				},
+				title: '<%= UnicodeLanguageUtil.get(request, "opensso") %>',
+			});
 
-			dialog.plug(
-				A.Plugin.IO,
-				{
-					data: data,
-					uri: url
-				}
-			);
+			dialog.plug(A.Plugin.IO, {
+				data: data,
+				uri: url,
+			});
 		},
-		['aui-io-plugin-deprecated', 'aui-io-request', 'liferay-util-window']
+		['aui-io-plugin-deprecated', 'liferay-util-window']
 	);
 </aui:script>

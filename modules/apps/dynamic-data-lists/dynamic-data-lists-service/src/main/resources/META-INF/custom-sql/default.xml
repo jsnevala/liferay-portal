@@ -69,6 +69,17 @@
 				DDLRecord.recordId DESC
 		]]>
 	</sql>
+	<sql id="com.liferay.dynamic.data.lists.service.persistence.DDLRecordSetFinder.countByG_D">
+		<![CDATA[
+			SELECT
+				COUNT(DISTINCT DDLRecordSet.recordSetId) AS COUNT_VALUE
+			FROM
+				DDLRecordSet
+			WHERE
+				(DDLRecordSet.groupId = ?) AND
+				(DDLRecordSet.DDMStructureId = ?)
+		]]>
+	</sql>
 	<sql id="com.liferay.dynamic.data.lists.service.persistence.DDLRecordSetFinder.countByC_G_N_D_S">
 		<![CDATA[
 			SELECT
@@ -101,7 +112,7 @@
 						(DDLRecordSet.scope = ?) AND
 						(
 							(LOWER(DDLRecordSet.name) LIKE ? [$AND_OR_NULL_CHECK$]) [$AND_OR_CONNECTOR$]
-							(DDLRecordSet.description LIKE ? [$AND_OR_NULL_CHECK$])
+							(LOWER(DDLRecordSet.description) LIKE ? [$AND_OR_NULL_CHECK$])
 						)
 				)
 				TEMP_TABLE

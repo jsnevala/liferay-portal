@@ -14,14 +14,28 @@
 
 package com.liferay.fragment.internal.exportimport.data.handler;
 
+import com.liferay.document.library.kernel.exception.NoSuchFileException;
+import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
+import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
+import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Element;
+import com.liferay.portlet.documentlibrary.lar.FileEntryUtil;
+
+import java.io.InputStream;
+
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -33,8 +47,9 @@ import org.osgi.service.component.annotations.Reference;
 public class FragmentCollectionStagedModelDataHandler
 	extends BaseStagedModelDataHandler<FragmentCollection> {
 
-	public static final String[] CLASS_NAMES =
-		{FragmentCollection.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		FragmentCollection.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(FragmentCollection fragmentCollection)
@@ -75,6 +90,12 @@ public class FragmentCollectionStagedModelDataHandler
 			fragmentCollectionElement,
 			ExportImportPathUtil.getModelPath(fragmentCollection),
 			fragmentCollection);
+
+		for (FileEntry fileEntry : fragmentCollection.getResources()) {
+			StagedModelDataHandlerUtil.exportReferenceStagedModel(
+				portletDataContext, fragmentCollection, fileEntry,
+				PortletDataContext.REFERENCE_TYPE_WEAK);
+		}
 	}
 
 	@Override
@@ -101,12 +122,63 @@ public class FragmentCollectionStagedModelDataHandler
 				portletDataContext, importedFragmentCollection);
 		}
 		else {
+			importedFragmentCollection.setMvccVersion(
+				existingFragmentCollection.getMvccVersion());
 			importedFragmentCollection.setFragmentCollectionId(
 				existingFragmentCollection.getFragmentCollectionId());
 
 			importedFragmentCollection =
 				_stagedModelRepository.updateStagedModel(
 					portletDataContext, importedFragmentCollection);
+		}
+
+		if (existingFragmentCollection != null) {
+			for (FileEntry fileEntry :
+					existingFragmentCollection.getResources()) {
+
+				PortletFileRepositoryUtil.deletePortletFileEntry(
+					fileEntry.getFileEntryId());
+			}
+		}
+
+		long userId = portletDataContext.getUserId(
+			fragmentCollection.getUserUuid());
+
+		List<Element> resourceElements =
+			portletDataContext.getReferenceDataElements(
+				fragmentCollection, DLFileEntry.class,
+				PortletDataContext.REFERENCE_TYPE_WEAK);
+
+		for (Element resourceElement : resourceElements) {
+			String path = resourceElement.attributeValue("path");
+
+			FileEntry fileEntry =
+				(FileEntry)portletDataContext.getZipEntryAsObject(path);
+
+			String binPath = resourceElement.attributeValue("bin-path");
+
+			try (InputStream inputStream = _getResourceInputStream(
+					binPath, portletDataContext, fileEntry)) {
+
+				if (inputStream == null) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to import resource for file entry " +
+								fileEntry.getFileEntryId());
+					}
+
+					continue;
+				}
+
+				PortletFileRepositoryUtil.addPortletFileEntry(
+					importedFragmentCollection.getGroupId(), userId,
+					FragmentCollection.class.getName(),
+					importedFragmentCollection.getFragmentCollectionId(),
+					FragmentPortletKeys.FRAGMENT,
+					importedFragmentCollection.getResourcesFolderId(),
+					inputStream, fileEntry.getFileName(),
+					fileEntry.getMimeType(), false);
+			}
 		}
 
 		portletDataContext.importClassedModel(
@@ -119,6 +191,32 @@ public class FragmentCollectionStagedModelDataHandler
 
 		return _stagedModelRepository;
 	}
+
+	private InputStream _getResourceInputStream(
+			String binPath, PortletDataContext portletDataContext,
+			FileEntry fileEntry)
+		throws Exception {
+
+		if (Validator.isNull(binPath) &&
+			portletDataContext.isPerformDirectBinaryImport()) {
+
+			try {
+				return FileEntryUtil.getContentStream(fileEntry);
+			}
+			catch (NoSuchFileException noSuchFileException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(noSuchFileException, noSuchFileException);
+				}
+
+				return null;
+			}
+		}
+
+		return portletDataContext.getZipEntryAsInputStream(binPath);
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentCollectionStagedModelDataHandler.class);
 
 	@Reference(
 		target = "(model.class.name=com.liferay.fragment.model.FragmentCollection)",

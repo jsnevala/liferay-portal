@@ -15,9 +15,10 @@
 package com.liferay.knowledge.base.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.SafeConsumer;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.model.KBTemplate;
 import com.liferay.knowledge.base.model.KBTemplateSearchDisplay;
@@ -32,15 +33,14 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -56,55 +56,50 @@ import javax.servlet.http.HttpServletRequest;
 public class KBTemplatesManagementToolbarDisplayContext {
 
 	public KBTemplatesManagementToolbarDisplayContext(
+			HttpServletRequest httpServletRequest,
 			LiferayPortletRequest liferayPortletRequest,
-			LiferayPortletResponse liferayPortletResponse,
-			HttpServletRequest request, String templatePath)
+			LiferayPortletResponse liferayPortletResponse, String templatePath)
 		throws PortalException {
 
+		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
-		_request = request;
 		_templatePath = templatePath;
 
 		_currentURLObj = PortletURLUtil.getCurrent(
 			_liferayPortletRequest, _liferayPortletResponse);
 
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_createSearchContainer();
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData("action", "deleteKBTemplates");
-						dropdownItem.setIcon("times");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "deleteKBTemplates");
+				dropdownItem.setIcon("times-circle");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "delete"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
-	public List<String> getAvailableActionDropdownItems(KBTemplate kbTemplate)
+	public List<String> getAvailableActions(KBTemplate kbTemplate)
 		throws PortalException {
 
-		List<String> availableActionDropdownItems = new ArrayList<>();
-
-		PermissionChecker permissionChecker =
-			_themeDisplay.getPermissionChecker();
+		List<String> availableActions = new ArrayList<>();
 
 		if (KBTemplatePermission.contains(
-				permissionChecker, kbTemplate, ActionKeys.DELETE)) {
+				_themeDisplay.getPermissionChecker(), kbTemplate,
+				ActionKeys.DELETE)) {
 
-			availableActionDropdownItems.add("deleteKBTemplates");
+			availableActions.add("deleteKBTemplates");
 		}
 
-		return availableActionDropdownItems;
+		return availableActions;
 	}
 
 	public CreationMenu getCreationMenu() {
@@ -117,39 +112,32 @@ public class KBTemplatesManagementToolbarDisplayContext {
 			return null;
 		}
 
-		return new CreationMenu() {
-			{
-				addDropdownItem(
-					dropdownItem -> {
-						PortletURL addKBTemplateURL =
-							_liferayPortletResponse.createRenderURL();
+		return CreationMenuBuilder.addDropdownItem(
+			dropdownItem -> {
+				PortletURL addKBTemplateURL =
+					_liferayPortletResponse.createRenderURL();
 
-						addKBTemplateURL.setParameter(
-							"mvcPath", _templatePath + "edit_template.jsp");
-						addKBTemplateURL.setParameter(
-							"redirect", PortalUtil.getCurrentURL(_request));
+				addKBTemplateURL.setParameter(
+					"mvcPath", _templatePath + "edit_template.jsp");
+				addKBTemplateURL.setParameter(
+					"redirect", PortalUtil.getCurrentURL(_httpServletRequest));
 
-						dropdownItem.setHref(addKBTemplateURL);
+				dropdownItem.setHref(addKBTemplateURL);
 
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "add-template"));
-					});
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "add-template"));
 			}
-		};
+		).build();
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
 			}
-		};
+		).build();
 	}
 
 	public String getOrderByType() {
@@ -229,7 +217,7 @@ public class KBTemplatesManagementToolbarDisplayContext {
 	}
 
 	private String _getKeywords() {
-		return ParamUtil.getString(_request, "keywords");
+		return ParamUtil.getString(_httpServletRequest, "keywords");
 	}
 
 	private String _getOrderByCol() {
@@ -239,39 +227,42 @@ public class KBTemplatesManagementToolbarDisplayContext {
 	private List<DropdownItem> _getOrderByDropdownItems() {
 		return new DropdownItemList() {
 			{
-				final Map<String, String> orderColumnsMap = new HashMap<>();
-
-				orderColumnsMap.put("create-date", "create-date");
-				orderColumnsMap.put("modified-date", "modified-date");
-				orderColumnsMap.put("title", "title");
-				orderColumnsMap.put("user-name", "user-name");
+				final Map<String, String> orderColumnsMap = HashMapBuilder.put(
+					"create-date", "create-date"
+				).put(
+					"modified-date", "modified-date"
+				).put(
+					"title", "title"
+				).put(
+					"user-name", "user-name"
+				).build();
 
 				for (Map.Entry<String, String> orderByColEntry :
 						orderColumnsMap.entrySet()) {
 
 					add(
-						SafeConsumer.ignore(
-							dropdownItem -> {
-								String orderByCol = orderByColEntry.getKey();
+						dropdownItem -> {
+							String orderByCol = orderByColEntry.getKey();
 
-								dropdownItem.setActive(
-									orderByCol.equals(_getOrderByCol()));
+							dropdownItem.setActive(
+								orderByCol.equals(_getOrderByCol()));
 
-								dropdownItem.setHref(
-									_getCurrentSortingURL(), "orderByCol",
-									orderByColEntry.getValue());
-								dropdownItem.setLabel(
-									LanguageUtil.get(_request, orderByCol));
-							}));
+							dropdownItem.setHref(
+								_getCurrentSortingURL(), "orderByCol",
+								orderByColEntry.getValue());
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, orderByCol));
+						});
 				}
 			}
 		};
 	}
 
 	private final PortletURL _currentURLObj;
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
-	private final HttpServletRequest _request;
 	private SearchContainer _searchContainer;
 	private final String _templatePath;
 	private final ThemeDisplay _themeDisplay;

@@ -15,16 +15,14 @@
 package com.liferay.portal.search.web.internal.search.bar.portlet;
 
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.constants.SearchContextAttributes;
-import com.liferay.portal.search.web.internal.search.bar.constants.SearchBarPortletKeys;
-import com.liferay.portal.search.web.internal.util.SearchOptionalUtil;
+import com.liferay.portal.search.searcher.SearchRequest;
+import com.liferay.portal.search.searcher.SearchResponse;
+import com.liferay.portal.search.web.constants.SearchBarPortletKeys;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchResponse;
 import com.liferay.portal.search.web.search.request.SearchSettings;
@@ -50,7 +48,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.css-class-wrapper=portlet-search-bar",
 		"com.liferay.portlet.display-category=category.search",
-		"com.liferay.portlet.header-portlet-css=/search/bar/css/main.css",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.icon=/icons/search.png",
 		"com.liferay.portlet.instanceable=true",
 		"com.liferay.portlet.layout-cacheable=true",
@@ -65,8 +63,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/search/bar/view.jsp",
 		"javax.portlet.name=" + SearchBarPortletKeys.SEARCH_BAR,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=guest,power-user,user"
 	},
 	service = Portlet.class
 )
@@ -86,13 +83,13 @@ public class SearchBarPortlet extends MVCPortlet {
 
 		SearchBarPortletDisplayContext searchBarPortletDisplayContext =
 			buildDisplayContext(
-				searchBarPortletPreferences, portletSharedSearchResponse,
-				renderRequest);
+				portletSharedSearchResponse, renderRequest,
+				searchBarPortletPreferences);
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, searchBarPortletDisplayContext);
 
-		if (searchBarPortletDisplayContext.isDestinationUnreachable()) {
+		if (searchBarPortletDisplayContext.isRenderNothing()) {
 			renderRequest.setAttribute(
 				WebKeys.PORTLET_CONFIGURATOR_VISIBILITY, Boolean.TRUE);
 		}
@@ -101,50 +98,48 @@ public class SearchBarPortlet extends MVCPortlet {
 	}
 
 	protected SearchBarPortletDisplayContext buildDisplayContext(
-		SearchBarPortletPreferences searchBarPortletPreferences,
-		PortletSharedSearchResponse portletSharedSearchResponse,
-		RenderRequest renderRequest) {
+			PortletSharedSearchResponse portletSharedSearchResponse,
+			RenderRequest renderRequest,
+			SearchBarPortletPreferences searchBarPortletPreferences)
+		throws PortletException {
 
 		SearchBarPortletDisplayBuilder searchBarPortletDisplayBuilder =
 			new SearchBarPortletDisplayBuilder(
-				http, layoutLocalService, portal);
-
-		searchBarPortletDisplayBuilder.setDestination(
-			searchBarPortletPreferences.getDestinationString());
-
-		SearchOptionalUtil.copy(
-			portletSharedSearchResponse::getKeywordsOptional,
-			searchBarPortletDisplayBuilder::setKeywords);
-
-		SearchSettings searchSettings =
-			portletSharedSearchResponse.getSearchSettings();
+				http, layoutLocalService, portal, renderRequest);
 
 		ThemeDisplay themeDisplay = portletSharedSearchResponse.getThemeDisplay(
 			renderRequest);
 
-		searchBarPortletDisplayBuilder.setKeywordsParameterName(
-			getKeywordsParameterName(
-				searchSettings, searchBarPortletPreferences, themeDisplay));
+		String keywordsParameterName = getKeywordsParameterName(
+			portletSharedSearchResponse.getSearchSettings(),
+			searchBarPortletPreferences, themeDisplay);
 
-		String scopeParameterName =
-			searchBarPortletPreferences.getScopeParameterName();
+		String scopeParameterName = getScopeParameterName(
+			portletSharedSearchResponse.getSearchSettings(),
+			searchBarPortletPreferences, themeDisplay);
 
-		searchBarPortletDisplayBuilder.setScopeParameterName(
-			scopeParameterName);
-
-		SearchOptionalUtil.copy(
-			() -> portletSharedSearchResponse.getParameter(
-				scopeParameterName, renderRequest),
-			searchBarPortletDisplayBuilder::setScopeParameterValue);
-
-		searchBarPortletDisplayBuilder.setSearchScopePreference(
-			searchBarPortletPreferences.getSearchScopePreference());
-		searchBarPortletDisplayBuilder.setThemeDisplay(themeDisplay);
-
-		searchBarPortletDisplayBuilder.setEmptySearchEnabled(
-			isEmptySearchEnabled(searchSettings));
-
-		return searchBarPortletDisplayBuilder.build();
+		return searchBarPortletDisplayBuilder.setDestination(
+			searchBarPortletPreferences.getDestinationString()
+		).setEmptySearchEnabled(
+			isEmptySearchEnabled(portletSharedSearchResponse)
+		).setInvisible(
+			searchBarPortletPreferences.isInvisible()
+		).setKeywords(
+			portletSharedSearchResponse.getKeywordsOptional()
+		).setKeywordsParameterName(
+			keywordsParameterName
+		).setPaginationStartParameterName(
+			getPaginationStartParameterName(portletSharedSearchResponse)
+		).setScopeParameterName(
+			scopeParameterName
+		).setScopeParameterValue(
+			portletSharedSearchResponse.getParameter(
+				scopeParameterName, renderRequest)
+		).setSearchScopePreference(
+			searchBarPortletPreferences.getSearchScopePreference()
+		).setThemeDisplay(
+			themeDisplay
+		).build();
 	}
 
 	protected String getKeywordsParameterName(
@@ -164,17 +159,43 @@ public class SearchBarPortlet extends MVCPortlet {
 			searchBarPortletPreferences.getKeywordsParameterName());
 	}
 
-	protected boolean isEmptySearchEnabled(SearchSettings searchSettings) {
-		SearchContext searchContext = searchSettings.getSearchContext();
+	protected String getPaginationStartParameterName(
+		PortletSharedSearchResponse portletSharedSearchResponse) {
 
-		if (GetterUtil.getBoolean(
-				searchContext.getAttribute(
-					SearchContextAttributes.ATTRIBUTE_KEY_EMPTY_SEARCH))) {
+		SearchResponse searchResponse =
+			portletSharedSearchResponse.getSearchResponse();
 
-			return true;
-		};
+		SearchRequest request = searchResponse.getRequest();
 
-		return false;
+		return request.getPaginationStartParameterName();
+	}
+
+	protected String getScopeParameterName(
+		SearchSettings searchSettings,
+		SearchBarPortletPreferences searchBarPortletPreferences,
+		ThemeDisplay themeDisplay) {
+
+		if (!SearchBarPortletDestinationUtil.isSameDestination(
+				searchBarPortletPreferences, themeDisplay)) {
+
+			return searchBarPortletPreferences.getScopeParameterName();
+		}
+
+		Optional<String> optional = searchSettings.getScopeParameterName();
+
+		return optional.orElse(
+			searchBarPortletPreferences.getScopeParameterName());
+	}
+
+	protected boolean isEmptySearchEnabled(
+		PortletSharedSearchResponse portletSharedSearchResponse) {
+
+		SearchResponse searchResponse =
+			portletSharedSearchResponse.getSearchResponse();
+
+		SearchRequest request = searchResponse.getRequest();
+
+		return request.isEmptySearchEnabled();
 	}
 
 	@Reference

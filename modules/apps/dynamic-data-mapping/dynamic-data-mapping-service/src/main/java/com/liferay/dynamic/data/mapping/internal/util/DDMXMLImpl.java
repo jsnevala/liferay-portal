@@ -77,9 +77,9 @@ public class DDMXMLImpl implements DDMXML {
 		try {
 			document = _saxReader.read(xml);
 		}
-		catch (DocumentException de) {
+		catch (DocumentException documentException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(de.getMessage(), de);
+				_log.debug(documentException.getMessage(), documentException);
 			}
 
 			return null;
@@ -185,8 +185,8 @@ public class DDMXMLImpl implements DDMXML {
 
 			return document.formattedString();
 		}
-		catch (IOException ioe) {
-			throw new SystemException(ioe);
+		catch (IOException ioException) {
+			throw new SystemException(ioException);
 		}
 	}
 
@@ -197,13 +197,13 @@ public class DDMXMLImpl implements DDMXML {
 
 	public XMLSchema getXMLSchema() {
 		if (_xmlSchema == null) {
-			XMLSchemaImpl xmlSchema = new XMLSchemaImpl();
+			XMLSchemaImpl xmlSchemaImpl = new XMLSchemaImpl();
 
-			xmlSchema.setSchemaLanguage("http://www.w3.org/2001/XMLSchema");
-			xmlSchema.setSystemId(
+			xmlSchemaImpl.setSchemaLanguage("http://www.w3.org/2001/XMLSchema");
+			xmlSchemaImpl.setSystemId(
 				"http://www.liferay.com/dtd/liferay-ddm-structure_6_2_0.xsd");
 
-			_xmlSchema = xmlSchema;
+			_xmlSchema = xmlSchemaImpl;
 		}
 
 		return _xmlSchema;
@@ -218,18 +218,21 @@ public class DDMXMLImpl implements DDMXML {
 
 			return document.asXML();
 		}
-		catch (StructureDefinitionException sde) {
-			throw sde;
+		catch (StructureDefinitionException structureDefinitionException) {
+			throw structureDefinitionException;
 		}
-		catch (StructureDuplicateElementException sdee) {
-			throw sdee;
+		catch (StructureDuplicateElementException
+					structureDuplicateElementException) {
+
+			throw structureDuplicateElementException;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("Invalid XML content " + e.getMessage(), e);
+				_log.debug(
+					"Invalid XML content " + exception.getMessage(), exception);
 			}
 
-			throw new StructureDefinitionException(e);
+			throw new StructureDefinitionException(exception);
 		}
 	}
 
@@ -260,7 +263,11 @@ public class DDMXMLImpl implements DDMXML {
 		name = HtmlUtil.escapeXPathAttribute(name);
 
 		XPath xPathSelector = _saxReader.createXPath(
-			"//dynamic-element[@name=".concat(name).concat("]"));
+			"//dynamic-element[@name=".concat(
+				name
+			).concat(
+				"]"
+			));
 
 		return xPathSelector.selectNodes(document);
 	}

@@ -18,6 +18,7 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.expando.kernel.model.CustomAttributesDisplay;
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.atom.AtomCollectionAdapter;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
 import com.liferay.portal.kernel.notifications.UserNotificationHandler;
@@ -31,20 +32,22 @@ import com.liferay.portal.kernel.portlet.PortletLayoutListener;
 import com.liferay.portal.kernel.scheduler.messaging.SchedulerEventMessageListener;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.OpenSearch;
-import com.liferay.portal.kernel.security.permission.PermissionPropagator;
+import com.liferay.portal.kernel.security.permission.propagator.PermissionPropagator;
 import com.liferay.portal.kernel.servlet.URLEncoder;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.webdav.WebDAVStorage;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.xmlrpc.Method;
 import com.liferay.registry.Filter;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
+import com.liferay.registry.ServiceReference;
 import com.liferay.registry.ServiceRegistration;
+import com.liferay.registry.ServiceTracker;
+import com.liferay.registry.ServiceTrackerCustomizer;
 import com.liferay.registry.collections.ServiceTrackerCollections;
 import com.liferay.social.kernel.model.SocialActivityInterpreter;
 import com.liferay.social.kernel.model.SocialRequestInterpreter;
@@ -93,12 +96,17 @@ public class PortletBagImpl implements PortletBag {
 	public Object clone() {
 		return new PortletBagImpl(
 			getPortletName(), getServletContext(), getPortletInstance(),
-			getResourceBundleBaseName(), getFriendlyURLMapperTracker(),
-			_serviceRegistrations);
+			getResourceBundleBaseName(), getFriendlyURLMapperTracker(), null);
 	}
 
 	@Override
 	public void destroy() {
+		if (_serviceRegistrations == null) {
+			return;
+		}
+
+		_friendlyURLMapperTracker.close();
+
 		for (ServiceRegistration<?> serviceRegistration :
 				_serviceRegistrations) {
 
@@ -115,8 +123,8 @@ public class PortletBagImpl implements PortletBag {
 				if (_assetRendererFactoryInstances == null) {
 					_assetRendererFactoryInstances =
 						ServiceTrackerCollections.openList(
-							(Class<AssetRendererFactory<?>>)(Class<?>)
-								AssetRendererFactory.class,
+							(Class<AssetRendererFactory<?>>)
+								(Class<?>)AssetRendererFactory.class,
 							_filter, _properties);
 				}
 			}
@@ -132,8 +140,8 @@ public class PortletBagImpl implements PortletBag {
 				if (_atomCollectionAdapterInstances == null) {
 					_atomCollectionAdapterInstances =
 						ServiceTrackerCollections.openList(
-							(Class<AtomCollectionAdapter<?>>)(Class<?>)
-								AtomCollectionAdapter.class,
+							(Class<AtomCollectionAdapter<?>>)
+								(Class<?>)AtomCollectionAdapter.class,
 							_filter, _properties);
 				}
 			}
@@ -424,8 +432,8 @@ public class PortletBagImpl implements PortletBag {
 				if (_stagedModelDataHandlerInstances == null) {
 					_stagedModelDataHandlerInstances =
 						ServiceTrackerCollections.openList(
-							(Class<StagedModelDataHandler<?>>)(Class<?>)
-								StagedModelDataHandler.class,
+							(Class<StagedModelDataHandler<?>>)
+								(Class<?>)StagedModelDataHandler.class,
 							_filter, _properties);
 				}
 			}
@@ -533,8 +541,8 @@ public class PortletBagImpl implements PortletBag {
 				if (_workflowHandlerInstances == null) {
 					_workflowHandlerInstances =
 						ServiceTrackerCollections.openList(
-							(Class<WorkflowHandler<?>>)(Class<?>)
-								WorkflowHandler.class,
+							(Class<WorkflowHandler<?>>)
+								(Class<?>)WorkflowHandler.class,
 							_filter, _properties);
 				}
 			}
@@ -618,5 +626,62 @@ public class PortletBagImpl implements PortletBag {
 	private volatile List<WebDAVStorage> _webDAVStorageInstances;
 	private volatile List<WorkflowHandler<?>> _workflowHandlerInstances;
 	private volatile List<Method> _xmlRpcMethodInstances;
+
+	@SuppressWarnings("deprecation")
+	private static class PermissionPropagatorServiceTrackerCustomizer
+		implements ServiceTrackerCustomizer
+			<com.liferay.portal.kernel.security.permission.PermissionPropagator,
+			 ServiceRegistration<PermissionPropagator>> {
+
+		@Override
+		public ServiceRegistration<PermissionPropagator> addingService(
+			ServiceReference
+				<com.liferay.portal.kernel.security.permission.
+					PermissionPropagator> serviceReference) {
+
+			Registry registry = RegistryUtil.getRegistry();
+
+			return registry.registerService(
+				PermissionPropagator.class,
+				registry.getService(serviceReference),
+				serviceReference.getProperties());
+		}
+
+		@Override
+		public void modifiedService(
+			ServiceReference
+				<com.liferay.portal.kernel.security.permission.
+					PermissionPropagator> serviceReference,
+			ServiceRegistration<PermissionPropagator> serviceRegistration) {
+
+			serviceRegistration.setProperties(serviceReference.getProperties());
+		}
+
+		@Override
+		public void removedService(
+			ServiceReference
+				<com.liferay.portal.kernel.security.permission.
+					PermissionPropagator> serviceReference,
+			ServiceRegistration<PermissionPropagator> serviceRegistration) {
+
+			serviceRegistration.unregister();
+
+			Registry registry = RegistryUtil.getRegistry();
+
+			registry.ungetService(serviceReference);
+		}
+
+	}
+
+	static {
+		Registry registry = RegistryUtil.getRegistry();
+
+		ServiceTracker<?, ?> serviceTracker = registry.trackServices(
+			com.liferay.portal.kernel.security.permission.PermissionPropagator.
+				class,
+			new PermissionPropagatorServiceTrackerCustomizer());
+
+		serviceTracker.open();
+	}
 
 }

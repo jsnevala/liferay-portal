@@ -20,13 +20,14 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.version.VersionedModel;
 import com.liferay.staging.model.listener.StagingModelListener;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = StagingModelListener.class)
 public class StagingModelListenerImpl<T extends BaseModel<T>>
@@ -34,32 +35,70 @@ public class StagingModelListenerImpl<T extends BaseModel<T>>
 
 	@Override
 	public void onAfterCreate(T model) throws ModelListenerException {
+		if (!_checkVersionedModel(model)) {
+			return;
+		}
+
 		try {
 			_staging.addModelToChangesetCollection(model);
 		}
-		catch (PortalException pe) {
-			_log.error("Unable to add created model to the changeset", pe);
+		catch (PortalException portalException) {
+			_log.error(
+				"Unable to add created model to the changeset",
+				portalException);
 		}
 	}
 
 	@Override
 	public void onAfterRemove(T model) throws ModelListenerException {
+		if (!_checkVersionedModel(model)) {
+			return;
+		}
+
 		try {
 			_staging.removeModelFromChangesetCollection(model);
 		}
-		catch (PortalException pe) {
-			_log.error("Unable to remove model from the changeset", pe);
+		catch (PortalException portalException) {
+			_log.error(
+				"Unable to remove model from the changeset", portalException);
 		}
 	}
 
 	@Override
 	public void onAfterUpdate(T model) throws ModelListenerException {
+		if (!_checkVersionedModel(model)) {
+			return;
+		}
+
 		try {
 			_staging.addModelToChangesetCollection(model);
 		}
-		catch (PortalException pe) {
-			_log.error("Unable to add updated model to the changeset", pe);
+		catch (PortalException portalException) {
+			_log.error(
+				"Unable to add updated model to the changeset",
+				portalException);
 		}
+	}
+
+	private boolean _checkVersionedModel(T model) {
+		if (model == null) {
+			return false;
+		}
+
+		boolean checkedModel = false;
+
+		if (model instanceof VersionedModel) {
+			VersionedModel versionedModel = (VersionedModel)model;
+
+			if (versionedModel.isHead()) {
+				checkedModel = true;
+			}
+		}
+		else {
+			checkedModel = true;
+		}
+
+		return checkedModel;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -24,6 +24,7 @@ import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFolderLocalServiceUtil;
+import com.liferay.document.library.test.util.DLTestUtil;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -41,9 +42,8 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.documentlibrary.util.RepositoryModelUtil;
-import com.liferay.portlet.documentlibrary.util.test.DLTestUtil;
 
 import java.util.List;
 
@@ -65,7 +65,7 @@ public class RepositoryModelUtilTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -142,7 +142,8 @@ public class RepositoryModelUtilTest {
 		for (int i = 0; i < 5; i++) {
 			dlFileEntry.setTitle(RandomTestUtil.randomString());
 
-			DLFileEntryLocalServiceUtil.updateDLFileEntry(dlFileEntry);
+			dlFileEntry = DLFileEntryLocalServiceUtil.updateDLFileEntry(
+				dlFileEntry);
 		}
 
 		dlFileEntry = DLFileEntryLocalServiceUtil.getFileEntry(

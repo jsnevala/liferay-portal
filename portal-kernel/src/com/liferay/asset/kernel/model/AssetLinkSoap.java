@@ -14,8 +14,6 @@
 
 package com.liferay.asset.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,11 +26,13 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class AssetLinkSoap implements Serializable {
+
 	public static AssetLinkSoap toSoapModel(AssetLink model) {
 		AssetLinkSoap soapModel = new AssetLinkSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setLinkId(model.getLinkId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setUserId(model.getUserId());
@@ -74,7 +74,8 @@ public class AssetLinkSoap implements Serializable {
 	}
 
 	public static AssetLinkSoap[] toSoapModels(List<AssetLink> models) {
-		List<AssetLinkSoap> soapModels = new ArrayList<AssetLinkSoap>(models.size());
+		List<AssetLinkSoap> soapModels = new ArrayList<AssetLinkSoap>(
+			models.size());
 
 		for (AssetLink model : models) {
 			soapModels.add(toSoapModel(model));
@@ -92,6 +93,22 @@ public class AssetLinkSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setLinkId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public long getLinkId() {
@@ -166,6 +183,8 @@ public class AssetLinkSoap implements Serializable {
 		_weight = weight;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _linkId;
 	private long _companyId;
 	private long _userId;
@@ -175,4 +194,5 @@ public class AssetLinkSoap implements Serializable {
 	private long _entryId2;
 	private int _type;
 	private int _weight;
+
 }

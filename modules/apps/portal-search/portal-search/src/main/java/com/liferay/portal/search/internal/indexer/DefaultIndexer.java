@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.internal.indexer;
 
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -24,12 +25,10 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerPostProcessor;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.search.indexer.IndexerDocumentBuilder;
 import com.liferay.portal.search.indexer.IndexerPermissionPostFilter;
@@ -41,7 +40,6 @@ import com.liferay.portal.search.spi.model.registrar.ModelSearchSettings;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -101,11 +99,6 @@ public class DefaultIndexer<T extends BaseModel<?>> implements Indexer<T> {
 	}
 
 	@Override
-	public String[] getClassNames() {
-		return getSearchClassNames();
-	}
-
-	@Override
 	public Document getDocument(T baseModel) throws SearchException {
 		return _indexerDocumentBuilder.getDocument(baseModel);
 	}
@@ -127,15 +120,7 @@ public class DefaultIndexer<T extends BaseModel<?>> implements Indexer<T> {
 
 	@Override
 	public IndexerPostProcessor[] getIndexerPostProcessors() {
-		Stream<IndexerPostProcessor> stream =
-			_indexerPostProcessorsHolder.stream();
-
-		return stream.toArray(IndexerPostProcessor[]::new);
-	}
-
-	@Override
-	public String getPortletId() {
-		return StringPool.BLANK;
+		return _indexerPostProcessorsHolder.toArray();
 	}
 
 	@Override
@@ -145,24 +130,12 @@ public class DefaultIndexer<T extends BaseModel<?>> implements Indexer<T> {
 
 	@Override
 	public String getSearchEngineId() {
-		return SearchEngineHelper.SYSTEM_ENGINE_ID;
+		return _modelSearchSettings.getSearchEngineId();
 	}
 
 	@Override
 	public String getSortField(String orderByCol) {
 		return StringPool.BLANK;
-	}
-
-	@Override
-	public String getSortField(String orderByCol, int sortType) {
-		return StringPool.BLANK;
-	}
-
-	@Override
-	public Summary getSummary(Document document, Locale locale, String snippet)
-		throws SearchException {
-
-		return getSummary(document, snippet, null, null);
 	}
 
 	@Override
@@ -205,7 +178,7 @@ public class DefaultIndexer<T extends BaseModel<?>> implements Indexer<T> {
 
 	@Override
 	public boolean isFilterSearch() {
-		return isPermissionAware();
+		return !_modelSearchSettings.isSearchResultPermissionFilterSuppressed();
 	}
 
 	@Override
@@ -226,13 +199,6 @@ public class DefaultIndexer<T extends BaseModel<?>> implements Indexer<T> {
 	@Override
 	public boolean isVisible(long classPK, int status) throws Exception {
 		return _indexerPermissionPostFilter.isVisible(classPK, status);
-	}
-
-	@Override
-	public boolean isVisibleRelatedEntry(long classPK, int status)
-		throws Exception {
-
-		return true;
 	}
 
 	@Override

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,8 +26,8 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class ReleaseSoap implements Serializable {
+
 	public static ReleaseSoap toSoapModel(Release model) {
 		ReleaseSoap soapModel = new ReleaseSoap();
 
@@ -76,7 +74,8 @@ public class ReleaseSoap implements Serializable {
 	}
 
 	public static ReleaseSoap[] toSoapModels(List<Release> models) {
-		List<ReleaseSoap> soapModels = new ArrayList<ReleaseSoap>(models.size());
+		List<ReleaseSoap> soapModels = new ArrayList<ReleaseSoap>(
+			models.size());
 
 		for (Release model : models) {
 			soapModels.add(toSoapModel(model));
@@ -199,4 +198,5 @@ public class ReleaseSoap implements Serializable {
 	private boolean _verified;
 	private int _state;
 	private String _testString;
+
 }

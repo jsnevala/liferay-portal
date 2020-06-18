@@ -25,7 +25,7 @@ import javax.portlet.PortletPreferences;
  * Provides utility methods used for the Asset Publisher's export and import
  * capabilities.
  *
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class AssetPublisherExportImportPortletPreferencesProcessorUtil {
 
@@ -41,7 +41,7 @@ public class AssetPublisherExportImportPortletPreferencesProcessorUtil {
 				return portletPreferences.getValue("displayStyle", null);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return null;
@@ -60,7 +60,7 @@ public class AssetPublisherExportImportPortletPreferencesProcessorUtil {
 					portletPreferences.getValue("displayStyleGroupId", null));
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return 0;

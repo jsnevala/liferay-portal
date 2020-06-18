@@ -32,12 +32,13 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 /**
-* @author Rafael Praxedes
-*/
+ * @author Rafael Praxedes
+ */
 public class DDMFormEvaluatorExpressionFieldAccessor
 	implements DDMExpressionFieldAccessor {
 
@@ -111,16 +112,16 @@ public class DDMFormEvaluatorExpressionFieldAccessor
 
 		Value ddmFormFieldValueValue = ddmFormFieldValue.getValue();
 
-		Locale locale = ddmFormFieldValueValue.getDefaultLocale();
-
-		if (ddmFormFieldValueValue.isLocalized()) {
-			locale = _locale;
-		}
-
 		DDMFormFieldValueAccessor<?> ddmFormFieldValueAccessor =
 			getDDMFormFieldValueAccessor(ddmFormFieldContextKey.getName());
 
-		return ddmFormFieldValueAccessor.getValue(ddmFormFieldValue, locale);
+		return ddmFormFieldValueAccessor.getValue(
+			ddmFormFieldValue,
+			Optional.ofNullable(
+				_locale
+			).orElse(
+				ddmFormFieldValueValue.getDefaultLocale()
+			));
 	}
 
 	@Override

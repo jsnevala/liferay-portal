@@ -103,7 +103,11 @@ public class StringUtil {
 			s = s.concat(delimiter);
 		}
 
-		String dtd = delimiter.concat(text).concat(delimiter);
+		String dtd = delimiter.concat(
+			text
+		).concat(
+			delimiter
+		);
 
 		int pos = s.indexOf(dtd);
 
@@ -121,6 +125,10 @@ public class StringUtil {
 	}
 
 	public static int count(String s, String text) {
+		return count(s, text, s.length());
+	}
+
+	public static int count(String s, String text, int index) {
 		if ((s == null) || (s.length() == 0) || (text == null) ||
 			(text.length() == 0)) {
 
@@ -131,7 +139,7 @@ public class StringUtil {
 
 		int pos = s.indexOf(text);
 
-		while (pos != -1) {
+		while ((pos != -1) && (pos < index)) {
 			pos = s.indexOf(text, pos + text.length());
 
 			count++;
@@ -141,8 +149,7 @@ public class StringUtil {
 	}
 
 	public static int countStartingNewLines(String s) {
-		String[] snippets = s.split(
-			System.getProperty("line.separator") + "\\h*", -1);
+		String[] snippets = s.split("\n\\h*", -1);
 
 		if (snippets.length == 1) {
 			return 0;
@@ -175,9 +182,8 @@ public class StringUtil {
 		if (equalsIgnoreCase(temp, end)) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	public static boolean equalsIgnoreCase(String s1, String s2) {
@@ -271,9 +277,8 @@ public class StringUtil {
 		if (index < 0) {
 			return null;
 		}
-		else {
-			return s.substring(0, index);
-		}
+
+		return s.substring(0, index);
 	}
 
 	public static String extractLast(String s, String delimiter) {
@@ -286,9 +291,8 @@ public class StringUtil {
 		if (index < 0) {
 			return null;
 		}
-		else {
-			return s.substring(index + delimiter.length());
-		}
+
+		return s.substring(index + delimiter.length());
 	}
 
 	public static String extractLeadingDigits(String s) {
@@ -472,7 +476,11 @@ public class StringUtil {
 			return null;
 		}
 
-		return quote.concat(s).concat(quote);
+		return quote.concat(
+			s
+		).concat(
+			quote
+		);
 	}
 
 	public static String randomString(String length) {
@@ -485,22 +493,197 @@ public class StringUtil {
 
 			String uuidString = randomUUID.toString();
 
-			sb.append(uuidString.replace("-", ""));
+			sb.append(replace(uuidString, "-", ""));
 		}
 
 		return sb.substring(0, lengthInt);
+	}
+
+	public static String regexReplaceAll(
+		String s, String regex, String replacement) {
+
+		return s.replaceAll(regex, replacement);
+	}
+
+	public static String regexReplaceFirst(
+		String s, String regex, String replacement) {
+
+		return s.replaceFirst(regex, replacement);
 	}
 
 	public static String removeSpaces(String s) {
 		return s.replaceAll(" ", "");
 	}
 
-	public static String replace(String s, String oldSub, String newSub) {
+	public static String replace(String s, char oldSub, char newSub) {
 		if (s == null) {
 			return null;
 		}
 
 		return s.replace(oldSub, newSub);
+	}
+
+	public static String replace(String s, char oldSub, String newSub) {
+		if ((s == null) || (newSub == null)) {
+			return null;
+		}
+
+		int index = s.indexOf(oldSub);
+
+		if (index == -1) {
+			return s;
+		}
+
+		int previousIndex = index;
+
+		StringBuilder sb = new StringBuilder();
+
+		if (previousIndex != 0) {
+			sb.append(s.substring(0, previousIndex));
+		}
+
+		sb.append(newSub);
+
+		while ((index = s.indexOf(oldSub, previousIndex + 1)) != -1) {
+			sb.append(s.substring(previousIndex + 1, index));
+			sb.append(newSub);
+
+			previousIndex = index;
+		}
+
+		index = previousIndex + 1;
+
+		if (index < s.length()) {
+			sb.append(s.substring(index));
+		}
+
+		return sb.toString();
+	}
+
+	public static String replace(String s, char[] oldSubs, char[] newSubs) {
+		if ((s == null) || (oldSubs == null) || (newSubs == null)) {
+			return null;
+		}
+
+		if (oldSubs.length != newSubs.length) {
+			return s;
+		}
+
+		StringBuilder sb = new StringBuilder(s.length());
+
+		sb.append(s);
+
+		boolean modified = false;
+
+		for (int i = 0; i < sb.length(); i++) {
+			char c = sb.charAt(i);
+
+			for (int j = 0; j < oldSubs.length; j++) {
+				if (c == oldSubs[j]) {
+					sb.setCharAt(i, newSubs[j]);
+
+					modified = true;
+
+					break;
+				}
+			}
+		}
+
+		if (modified) {
+			return sb.toString();
+		}
+
+		return s;
+	}
+
+	public static String replace(String s, char[] oldSubs, String[] newSubs) {
+		if ((s == null) || (oldSubs == null) || (newSubs == null)) {
+			return null;
+		}
+
+		if (oldSubs.length != newSubs.length) {
+			return s;
+		}
+
+		StringBuilder sb = null;
+
+		int lastReplacementIndex = 0;
+
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+
+			for (int j = 0; j < oldSubs.length; j++) {
+				if (c == oldSubs[j]) {
+					if (sb == null) {
+						sb = new StringBuilder();
+					}
+
+					if (i > lastReplacementIndex) {
+						sb.append(s.substring(lastReplacementIndex, i));
+					}
+
+					sb.append(newSubs[j]);
+
+					lastReplacementIndex = i + 1;
+
+					break;
+				}
+			}
+		}
+
+		if (sb == null) {
+			return s;
+		}
+
+		if (lastReplacementIndex < s.length()) {
+			sb.append(s.substring(lastReplacementIndex));
+		}
+
+		return sb.toString();
+	}
+
+	public static String replace(String s, String oldSub, String newSub) {
+		return replace(s, oldSub, newSub, 0);
+	}
+
+	public static String replace(
+		String s, String oldSub, String newSub, int fromIndex) {
+
+		if (s == null) {
+			return null;
+		}
+
+		if ((oldSub == null) || oldSub.equals(StringPool.BLANK)) {
+			return s;
+		}
+
+		if (newSub == null) {
+			newSub = StringPool.BLANK;
+		}
+
+		int y = s.indexOf(oldSub, fromIndex);
+
+		if (y >= 0) {
+			StringBuilder sb = new StringBuilder();
+
+			int length = oldSub.length();
+			int x = 0;
+
+			while (x <= y) {
+				sb.append(s.substring(x, y));
+				sb.append(newSub);
+
+				x = y + length;
+
+				y = s.indexOf(oldSub, x);
+			}
+
+			sb.append(s.substring(x));
+
+			return sb.toString();
+		}
+
+		return s;
 	}
 
 	public static String replace(String s, String[] oldSubs, String[] newSubs) {
@@ -514,6 +697,28 @@ public class StringUtil {
 
 		for (int i = 0; i < oldSubs.length; i++) {
 			s = replace(s, oldSubs[i], newSubs[i]);
+		}
+
+		return s;
+	}
+
+	public static String replace(
+		String s, String[] oldSubs, String[] newSubs, boolean exactMatch) {
+
+		if ((s == null) || (oldSubs == null) || (newSubs == null)) {
+			return null;
+		}
+
+		if (oldSubs.length != newSubs.length) {
+			return s;
+		}
+
+		if (!exactMatch) {
+			return replace(s, oldSubs, newSubs);
+		}
+
+		for (int i = 0; i < oldSubs.length; i++) {
+			s = s.replaceAll("\\b" + oldSubs[i] + "\\b", newSubs[i]);
 		}
 
 		return s;
@@ -553,12 +758,16 @@ public class StringUtil {
 		int y = s.indexOf(oldSub, fromIndex);
 
 		if (y >= 0) {
-			return s.substring(0, y).concat(newSub).concat(
-				s.substring(y + oldSub.length()));
+			return s.substring(
+				0, y
+			).concat(
+				newSub
+			).concat(
+				s.substring(y + oldSub.length())
+			);
 		}
-		else {
-			return s;
-		}
+
+		return s;
 	}
 
 	public static String replaceFirst(
@@ -626,8 +835,7 @@ public class StringUtil {
 			}
 		}
 
-		Integer[] splitIndexArray = splitIndexSet.toArray(
-			new Integer[splitIndexSet.size()]);
+		Integer[] splitIndexArray = splitIndexSet.toArray(new Integer[0]);
 
 		Arrays.sort(splitIndexArray);
 
@@ -667,9 +875,8 @@ public class StringUtil {
 		if (equalsIgnoreCase(temp, start)) {
 			return true;
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	public static String stripBetween(String s, String begin, String end) {
@@ -693,14 +900,31 @@ public class StringUtil {
 
 				break;
 			}
-			else {
-				sb.append(s.substring(pos, x));
 
-				pos = y + end.length();
-			}
+			sb.append(s.substring(pos, x));
+
+			pos = y + end.length();
 		}
 
 		return sb.toString();
+	}
+
+	public static String substring(
+		String s, String startIndex, String endIndex) {
+
+		if (s == null) {
+			return StringPool.BLANK;
+		}
+
+		try {
+			return s.substring(
+				Integer.parseInt(startIndex), Integer.parseInt(endIndex));
+		}
+		catch (IndexOutOfBoundsException | NumberFormatException exception) {
+			exception.printStackTrace();
+
+			return s;
+		}
 	}
 
 	public static String toLowerCase(String s) {
@@ -880,7 +1104,7 @@ public class StringUtil {
 			stringList.add(string);
 		}
 
-		return stringList.toArray(new String[stringList.size()]);
+		return stringList.toArray(new String[0]);
 	}
 
 }

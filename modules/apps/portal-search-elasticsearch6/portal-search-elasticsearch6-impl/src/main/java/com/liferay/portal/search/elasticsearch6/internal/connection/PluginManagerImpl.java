@@ -29,6 +29,7 @@ import java.nio.file.Path;
 
 import org.apache.commons.collections.IteratorUtils;
 
+import org.elasticsearch.Version;
 import org.elasticsearch.cli.Terminal;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
@@ -52,8 +53,8 @@ public class PluginManagerImpl implements PluginManager {
 			return new Path[0];
 		}
 
-		try (DirectoryStream<Path> directoryStream =
-				Files.newDirectoryStream(_environment.pluginsFile())) {
+		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
+				_environment.pluginsFile())) {
 
 			return (Path[])IteratorUtils.toArray(
 				directoryStream.iterator(), Path.class);
@@ -75,31 +76,33 @@ public class PluginManagerImpl implements PluginManager {
 					try {
 						main(args);
 					}
-					catch (Exception e) {
-						throw new SystemException(e);
+					catch (Exception exception) {
+						throw new SystemException(exception);
 					}
 				});
 		}
-		catch (SystemException se) {
-			throw (Exception)se.getCause();
+		catch (SystemException systemException) {
+			throw (Exception)systemException.getCause();
 		}
 	}
 
 	@Override
 	public boolean isCurrentVersion(Path path) throws IOException {
 		try {
-			PluginInfo.readFromProperties(path);
+			PluginInfo pluginInfo = PluginInfo.readFromProperties(path);
 
-			return true;
+			Version pluginVersion = pluginInfo.getElasticsearchVersion();
+
+			return pluginVersion.equals(Version.CURRENT);
 		}
-		catch (IllegalArgumentException iae) {
-			String message = iae.getMessage();
+		catch (IllegalArgumentException illegalArgumentException) {
+			String message = illegalArgumentException.getMessage();
 
 			if ((message != null) && message.contains("designed for version")) {
 				return false;
 			}
 
-			throw iae;
+			throw illegalArgumentException;
 		}
 	}
 

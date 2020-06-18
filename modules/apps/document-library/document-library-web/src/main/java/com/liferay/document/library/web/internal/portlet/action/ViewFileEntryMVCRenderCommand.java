@@ -14,6 +14,7 @@
 
 package com.liferay.document.library.web.internal.portlet.action;
 
+import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.exception.NoSuchFileVersionException;
@@ -24,9 +25,13 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderConstants;
 import com.liferay.portal.kernel.repository.Repository;
 import com.liferay.portal.kernel.repository.RepositoryProviderUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 
@@ -34,7 +39,10 @@ import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Iván Zaera
@@ -78,24 +86,47 @@ public class ViewFileEntryMVCRenderCommand
 					return MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH;
 				}
 			}
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
+
+			String assetDisplayPageFriendlyURL =
+				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
+					FileEntry.class.getName(), fileEntryId, themeDisplay);
+
+			if (assetDisplayPageFriendlyURL != null) {
+				HttpServletResponse httpServletResponse =
+					_portal.getHttpServletResponse(renderResponse);
+
+				httpServletResponse.sendRedirect(assetDisplayPageFriendlyURL);
+
+				return MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH;
+			}
+
+			return super.render(renderRequest, renderResponse);
 		}
 		catch (NoSuchFileEntryException | NoSuchFileVersionException |
-			   NoSuchRepositoryEntryException | PrincipalException e) {
+			   NoSuchRepositoryEntryException | PrincipalException exception) {
 
-			SessionErrors.add(renderRequest, e.getClass());
+			SessionErrors.add(renderRequest, exception.getClass());
 
 			return "/document_library/error.jsp";
 		}
-		catch (IOException | PortalException e) {
-			throw new PortletException(e);
+		catch (IOException | PortalException exception) {
+			throw new PortletException(exception);
 		}
-
-		return super.render(renderRequest, renderResponse);
 	}
 
 	@Override
 	protected String getPath() {
 		return "/document_library/view_file_entry.jsp";
 	}
+
+	@Reference
+	private AssetDisplayPageFriendlyURLProvider
+		_assetDisplayPageFriendlyURLProvider;
+
+	@Reference
+	private Portal _portal;
 
 }

@@ -16,18 +16,20 @@ package com.liferay.item.selector.taglib.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.SafeConsumer;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.item.selector.taglib.servlet.taglib.RepositoryEntryBrowserTag;
+import com.liferay.item.selector.taglib.servlet.taglib.util.RepositoryEntryBrowserTagUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.PortalPreferences;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -43,35 +45,41 @@ import javax.servlet.http.HttpServletRequest;
 public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 
 	public ItemSelectorRepositoryEntryManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request) {
+		LiferayPortletResponse liferayPortletResponse) {
+
+		_httpServletRequest = httpServletRequest;
 
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
-		_request = request;
 
 		_currentURLObj = PortletURLUtil.getCurrent(
 			_liferayPortletRequest, _liferayPortletResponse);
+
+		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
+			liferayPortletRequest);
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					SafeConsumer.ignore(
-						dropdownGroupItem -> {
-							dropdownGroupItem.setDropdownItems(
-								_getOrderByDropdownItems());
-							dropdownGroupItem.setLabel(
-								LanguageUtil.get(_request, "order-by"));
-						}));
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
 			}
-		};
+		).build();
 	}
 
 	public String getOrderByType() {
-		return ParamUtil.getString(_request, "orderByType", "asc");
+		if (_orderByType != null) {
+			return _orderByType;
+		}
+
+		_orderByType = RepositoryEntryBrowserTagUtil.getOrderByType(
+			_httpServletRequest, _portalPreferences);
+
+		return _orderByType;
 	}
 
 	public PortletURL getSearchURL() throws PortletException {
@@ -87,10 +95,9 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 	public PortletURL getSortingURL() throws PortletException {
 		PortletURL sortingURL = _getCurrentSortingURL();
 
-		String orderByType = getOrderByType();
-
 		sortingURL.setParameter(
-			"orderByType", Objects.equals(orderByType, "asc") ? "desc" : "asc");
+			"orderByType",
+			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
 
 		return sortingURL;
 	}
@@ -101,15 +108,15 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 
 		return new ViewTypeItemList(displayStyleURL, _getDisplayStyle()) {
 			{
-				if (ArrayUtil.contains(_getDisplayViews(), "icon")) {
+				if (ArrayUtil.contains(_getDisplayStyles(), "icon")) {
 					addCardViewTypeItem();
 				}
 
-				if (ArrayUtil.contains(_getDisplayViews(), "descriptive")) {
+				if (ArrayUtil.contains(_getDisplayStyles(), "descriptive")) {
 					addListViewTypeItem();
 				}
 
-				if (ArrayUtil.contains(_getDisplayViews(), "list")) {
+				if (ArrayUtil.contains(_getDisplayStyles(), "list")) {
 					addTableViewTypeItem();
 				}
 			}
@@ -132,59 +139,70 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 
 	private String _getDisplayStyle() {
 		return GetterUtil.getString(
-			_request.getAttribute(
+			_httpServletRequest.getAttribute(
 				"liferay-item-selector:repository-entry-browser:displayStyle"));
 	}
 
-	private String[] _getDisplayViews() {
+	private String[] _getDisplayStyles() {
 		return RepositoryEntryBrowserTag.DISPLAY_STYLES;
 	}
 
 	private String _getOrderByCol() {
-		return ParamUtil.getString(_request, "orderByCol", "title");
+		if (_orderByCol != null) {
+			return _orderByCol;
+		}
+
+		_orderByCol = RepositoryEntryBrowserTagUtil.getOrderByCol(
+			_httpServletRequest, _portalPreferences);
+
+		return _orderByCol;
 	}
 
 	private List<DropdownItem> _getOrderByDropdownItems() {
 		return new DropdownItemList() {
 			{
-				Map<String, String> orderColumnsMap = new HashMap<>();
-
-				orderColumnsMap.put("modifiedDate", "modified-date");
-				orderColumnsMap.put("size", "size");
-				orderColumnsMap.put("title", "title");
+				Map<String, String> orderColumnsMap = HashMapBuilder.put(
+					"modifiedDate", "modified-date"
+				).put(
+					"size", "size"
+				).put(
+					"title", "title"
+				).build();
 
 				for (Map.Entry<String, String> orderByColEntry :
 						orderColumnsMap.entrySet()) {
 
 					add(
-						SafeConsumer.ignore(
-							dropdownItem -> {
-								String orderByCol = orderByColEntry.getKey();
+						dropdownItem -> {
+							String orderByCol = orderByColEntry.getKey();
 
-								dropdownItem.setActive(
-									orderByCol.equals(_getOrderByCol()));
+							dropdownItem.setActive(
+								orderByCol.equals(_getOrderByCol()));
+							dropdownItem.setHref(
+								_getCurrentSortingURL(), "orderByCol",
+								orderByCol);
 
-								dropdownItem.setHref(
-									_getCurrentSortingURL(), "orderByCol",
-									orderByCol);
-
-								dropdownItem.setLabel(
-									LanguageUtil.get(
-										_request, orderByColEntry.getValue()));
-							}));
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest,
+									orderByColEntry.getValue()));
+						});
 				}
 			}
 		};
 	}
 
 	private PortletURL _getPortletURL() {
-		return (PortletURL)_request.getAttribute(
+		return (PortletURL)_httpServletRequest.getAttribute(
 			"liferay-item-selector:repository-entry-browser:portletURL");
 	}
 
 	private final PortletURL _currentURLObj;
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
-	private final HttpServletRequest _request;
+	private String _orderByCol;
+	private String _orderByType;
+	private final PortalPreferences _portalPreferences;
 
 }

@@ -15,18 +15,21 @@
 package com.liferay.layout.admin.web.internal.portlet;
 
 import com.liferay.application.list.GroupProvider;
-import com.liferay.application.list.constants.ApplicationListWebKeys;
-import com.liferay.asset.display.contributor.AssetDisplayContributorTracker;
 import com.liferay.asset.kernel.exception.AssetCategoryException;
-import com.liferay.item.selector.ItemSelector;
+import com.liferay.document.library.kernel.service.DLAppService;
+import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
-import com.liferay.layout.admin.web.internal.configuration.LayoutAdminWebConfiguration;
+import com.liferay.layout.admin.web.internal.configuration.LayoutConverterConfiguration;
 import com.liferay.layout.admin.web.internal.constants.LayoutAdminWebKeys;
+import com.liferay.layout.admin.web.internal.display.context.LayoutsAdminDisplayContext;
+import com.liferay.layout.admin.web.internal.display.context.MillerColumnsDisplayContext;
 import com.liferay.layout.page.template.exception.DuplicateLayoutPageTemplateCollectionException;
 import com.liferay.layout.page.template.exception.LayoutPageTemplateCollectionNameException;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.util.LayoutCopyHelper;
+import com.liferay.layout.util.template.LayoutConverterRegistry;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.GroupInheritContentException;
@@ -57,18 +60,20 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.staging.StagingGroupHelper;
 
 import java.io.IOException;
 
 import java.util.List;
 import java.util.Map;
 
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
+import javax.portlet.MutableRenderParameters;
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -79,7 +84,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Jorge Ferrer
  */
 @Component(
-	configurationPid = "com.liferay.layout.admin.web.configuration.LayoutAdminWebConfiguration",
+	configurationPid = "com.liferay.layout.admin.web.internal.configuration.LayoutConverterConfiguration",
 	immediate = true,
 	property = {
 		"com.liferay.portlet.add-default-resource=true",
@@ -98,20 +103,32 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.supported-public-render-parameter=layoutSetBranchId",
-		"javax.portlet.supported-public-render-parameter=privateLayout",
-		"javax.portlet.supported-public-render-parameter=selPlid",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.supported-public-render-parameter=layoutSetBranchId"
 	},
 	service = Portlet.class
 )
 public class GroupPagesPortlet extends MVCPortlet {
 
+	@Override
+	public void processAction(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws IOException, PortletException {
+
+		super.processAction(actionRequest, actionResponse);
+
+		if (!SessionErrors.isEmpty(actionRequest)) {
+			MutableRenderParameters renderParameters =
+				actionResponse.getRenderParameters();
+
+			renderParameters.setValue("checkboxNames", StringPool.BLANK);
+		}
+	}
+
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
-		_layoutAdminWebConfiguration = ConfigurableUtil.createConfigurable(
-			LayoutAdminWebConfiguration.class, properties);
+		_layoutConverterConfiguration = ConfigurableUtil.createConfigurable(
+			LayoutConverterConfiguration.class, properties);
 	}
 
 	@Override
@@ -119,10 +136,12 @@ public class GroupPagesPortlet extends MVCPortlet {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
 
-		HttpServletRequest request = _portal.getHttpServletRequest(
-			renderRequest);
+		Group group = _groupProvider.getGroup(
+			_portal.getHttpServletRequest(renderRequest));
 
-		Group group = _groupProvider.getGroup(request);
+		if (group.isCompany()) {
+			throw new PortletException();
+		}
 
 		renderRequest.setAttribute(WebKeys.GROUP, group);
 
@@ -147,7 +166,7 @@ public class GroupPagesPortlet extends MVCPortlet {
 
 					if (layoutPageTemplateEntry == null) {
 						_layoutPageTemplateEntryLocalService.
-							addLayoutPageTemplateEntry(layoutPrototype);
+							addGlobalLayoutPageTemplateEntry(layoutPrototype);
 					}
 				}
 
@@ -156,25 +175,30 @@ public class GroupPagesPortlet extends MVCPortlet {
 
 				ServiceContextThreadLocal.pushServiceContext(serviceContext);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(e, e);
+					_log.warn(exception, exception);
 				}
 			}
 
+			LayoutsAdminDisplayContext layoutsAdminDisplayContext =
+				new LayoutsAdminDisplayContext(
+					_layoutConverterConfiguration, _layoutConverterRegistry,
+					_layoutCopyHelper,
+					_portal.getLiferayPortletRequest(renderRequest),
+					_portal.getLiferayPortletResponse(renderResponse),
+					_stagingGroupHelper);
+
 			renderRequest.setAttribute(
-				LayoutAdminWebConfiguration.class.getName(),
-				_layoutAdminWebConfiguration);
+				LayoutAdminWebKeys.LAYOUT_PAGE_LAYOUT_ADMIN_DISPLAY_CONTEXT,
+				layoutsAdminDisplayContext);
+
 			renderRequest.setAttribute(
-				LayoutAdminWebKeys.ASSET_DISPLAY_CONTRIBUTOR_TRACKER,
-				_assetDisplayContributorTracker);
-			renderRequest.setAttribute(
-				ApplicationListWebKeys.GROUP_PROVIDER, _groupProvider);
-			renderRequest.setAttribute(
-				LayoutAdminWebKeys.ITEM_SELECTOR, _itemSelector);
-			renderRequest.setAttribute(
-				LayoutAdminWebKeys.LAYOUT_PAGE_TEMPLATE_COLLECTION_SERVICE,
-				_layoutPageTemplateCollectionService);
+				LayoutAdminWebKeys.MILLER_COLUMNS_DISPLAY_CONTEXT,
+				new MillerColumnsDisplayContext(
+					layoutsAdminDisplayContext,
+					_portal.getLiferayPortletRequest(renderRequest),
+					_portal.getLiferayPortletResponse(renderResponse)));
 
 			super.doDispatch(renderRequest, renderResponse);
 		}
@@ -188,6 +212,7 @@ public class GroupPagesPortlet extends MVCPortlet {
 	@Override
 	protected boolean isSessionErrorException(Throwable cause) {
 		if (cause instanceof AssetCategoryException ||
+			cause instanceof DDMFormValuesValidationException ||
 			cause instanceof DuplicateLayoutPageTemplateCollectionException ||
 			cause instanceof GroupInheritContentException ||
 			cause instanceof ImageTypeException ||
@@ -217,19 +242,18 @@ public class GroupPagesPortlet extends MVCPortlet {
 		GroupPagesPortlet.class);
 
 	@Reference
-	private AssetDisplayContributorTracker _assetDisplayContributorTracker;
+	private DLAppService _dlAppService;
 
 	@Reference
 	private GroupProvider _groupProvider;
 
-	@Reference
-	private ItemSelector _itemSelector;
-
-	private volatile LayoutAdminWebConfiguration _layoutAdminWebConfiguration;
+	private volatile LayoutConverterConfiguration _layoutConverterConfiguration;
 
 	@Reference
-	private LayoutPageTemplateCollectionService
-		_layoutPageTemplateCollectionService;
+	private LayoutConverterRegistry _layoutConverterRegistry;
+
+	@Reference
+	private LayoutCopyHelper _layoutCopyHelper;
 
 	@Reference
 	private LayoutPageTemplateEntryLocalService
@@ -240,5 +264,8 @@ public class GroupPagesPortlet extends MVCPortlet {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private StagingGroupHelper _stagingGroupHelper;
 
 }

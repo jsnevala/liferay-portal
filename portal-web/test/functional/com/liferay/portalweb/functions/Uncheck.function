@@ -1,79 +1,90 @@
-<definition default="clickAt">
-	<command name="clickAt">
-		<execute function="WaitForSPARefresh" />
+@default = "clickAt"
+definition {
 
-		<execute selenium="waitForVisible" />
+	function clickAt {
+		WaitForSPARefresh();
 
-		<execute selenium="mouseOver" />
+		selenium.waitForVisible();
 
-		<if>
-			<condition selenium="isChecked" />
-			<then>
-				<execute selenium="clickAt" />
-			</then>
-		</if>
+		selenium.mouseOver();
 
-		<execute function="AssertNotChecked#assertNotChecked" />
+		if (selenium.isChecked()) {
+			selenium.clickAt();
+		}
 
-		<execute selenium="assertJavaScriptErrors" />
+		AssertNotChecked.assertNotChecked();
 
-		<execute selenium="assertLiferayErrors" />
-	</command>
+		selenium.assertJavaScriptErrors();
 
-	<command name="uncheckHiddenToggleSwitch">
-		<execute function="WaitForSPARefresh" />
+		selenium.assertLiferayErrors();
+	}
 
-		<execute selenium="waitForElementPresent" />
+	function uncheckHiddenToggleSwitch {
+		WaitForSPARefresh();
 
-		<execute selenium="mouseOver" />
+		selenium.waitForElementPresent();
 
-		<if>
-			<condition argument1="xpath=(${locator1})/../../input" selenium="isChecked" />
-			<then>
-				<execute selenium="clickAt" />
-			</then>
-		</if>
+		selenium.mouseOver();
 
-		<execute function="AssertNotChecked#assertNotCheckedHiddenToggleSwitch" />
+		if (selenium.isChecked("xpath=(${locator1})/../../input")) {
+			selenium.clickAt();
+		}
 
-		<execute selenium="assertJavaScriptErrors" />
+		AssertNotChecked.assertNotCheckedHiddenToggleSwitch();
 
-		<execute selenium="assertLiferayErrors" />
-	</command>
+		selenium.assertJavaScriptErrors();
 
-	<command name="uncheckToggleSwitch">
-		<execute function="WaitForSPARefresh" />
+		selenium.assertLiferayErrors();
+	}
 
-		<execute selenium="waitForElementPresent" />
+	function uncheckToggleSwitch {
+		WaitForSPARefresh();
 
-		<execute selenium="mouseOver" />
+		selenium.waitForElementPresent();
 
-		<if>
-			<condition selenium="isChecked" />
-			<then>
-				<execute selenium="clickAt" />
-			</then>
-		</if>
+		selenium.mouseOver();
 
-		<execute function="AssertNotChecked#assertNotCheckedNotVisible" />
+		if (selenium.isChecked()) {
+			selenium.clickAt();
+		}
 
-		<execute selenium="assertJavaScriptErrors" />
+		AssertNotChecked.assertNotCheckedNotVisible();
 
-		<execute selenium="assertLiferayErrors" />
-	</command>
+		selenium.assertJavaScriptErrors();
 
-	<command name="uncheckToggleSwitchNoErrorNoAssert">
-		<execute function="WaitForSPARefresh" />
+		selenium.assertLiferayErrors();
+	}
 
-		<execute selenium="waitForElementPresent" />
+	function uncheckToggleSwitchAndPause {
+		WaitForSPARefresh();
 
-		<execute selenium="mouseOver" />
+		selenium.waitForElementPresent();
 
-		<if>
-			<condition selenium="isChecked" />
-			<then>
-				<execute selenium="clickAt" />
-			</then>
-		</if>
-	</command>
-</definition>
+		selenium.mouseOver();
+
+		if (selenium.isChecked()) {
+			selenium.clickAt();
+		}
+
+		selenium.pause("1000");
+
+		AssertNotChecked.assertNotCheckedNotVisible();
+
+		selenium.assertJavaScriptErrors();
+
+		selenium.assertLiferayErrors();
+	}
+
+	function uncheckToggleSwitchNoErrorNoAssert {
+		WaitForSPARefresh();
+
+		selenium.waitForElementPresent();
+
+		selenium.mouseOver();
+
+		if (selenium.isChecked()) {
+			selenium.clickAt();
+		}
+	}
+
+}

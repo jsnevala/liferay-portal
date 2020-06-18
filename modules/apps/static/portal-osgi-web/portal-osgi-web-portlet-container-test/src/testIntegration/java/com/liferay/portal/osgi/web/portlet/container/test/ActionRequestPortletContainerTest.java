@@ -15,21 +15,23 @@
 package com.liferay.portal.osgi.web.portlet.container.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.security.auth.AuthToken;
 import com.liferay.portal.kernel.security.auth.AuthTokenWhitelist;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.osgi.web.portlet.container.test.util.PortletContainerTestUtil;
 import com.liferay.portal.security.auth.AuthTokenWhitelistImpl;
 import com.liferay.portal.security.auth.SessionAuthToken;
 import com.liferay.portal.test.log.CaptureAppender;
 import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.test.PortletContainerTestUtil;
 import com.liferay.portlet.SecurityPortletContainerWrapper;
 
 import java.io.IOException;
@@ -37,7 +39,6 @@ import java.io.PrintWriter;
 
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -211,12 +212,15 @@ public class ActionRequestPortletContainerTest
 			LoggingEvent loggingEvent = loggingEvents.get(0);
 
 			Assert.assertEquals(
-				"User 0 is not allowed to access URL " +
-					url.substring(0, url.indexOf('?')) + " and portlet " +
-						TEST_PORTLET_ID,
+				StringBundler.concat(
+					"User 0 is not allowed to access URL ",
+					url.substring(0, url.indexOf('?')), " and portlet ",
+					TEST_PORTLET_ID, ": User 0 did not provide a valid CSRF ",
+					"token for ",
+					"com.liferay.portlet.SecurityPortletContainerWrapper"),
 				loggingEvent.getMessage());
 
-			Assert.assertEquals(200, response.getCode());
+			Assert.assertEquals(403, response.getCode());
 			Assert.assertFalse(testPortlet.isCalledAction());
 		}
 	}
@@ -341,11 +345,12 @@ public class ActionRequestPortletContainerTest
 
 		url = HttpUtil.removeParameter(url, "p_auth");
 
-		Map<String, List<String>> headers = new HashMap<>();
-
-		headers.put("Cookie", response.getCookies());
-		headers.put(
-			"X-CSRF-Token", Collections.singletonList(response.getBody()));
+		Map<String, List<String>> headers =
+			HashMapBuilder.<String, List<String>>put(
+				"Cookie", response.getCookies()
+			).put(
+				"X-CSRF-Token", Collections.singletonList(response.getBody())
+			).build();
 
 		response = PortletContainerTestUtil.request(url, headers);
 
@@ -385,11 +390,13 @@ public class ActionRequestPortletContainerTest
 
 		@Override
 		public void addCSRFToken(
-			HttpServletRequest request, LiferayPortletURL liferayPortletURL) {
+			HttpServletRequest httpServletRequest,
+			LiferayPortletURL liferayPortletURL) {
 		}
 
 		@Override
-		public void checkCSRFToken(HttpServletRequest request, String origin) {
+		public void checkCSRFToken(
+			HttpServletRequest httpServletRequest, String origin) {
 		}
 
 	}

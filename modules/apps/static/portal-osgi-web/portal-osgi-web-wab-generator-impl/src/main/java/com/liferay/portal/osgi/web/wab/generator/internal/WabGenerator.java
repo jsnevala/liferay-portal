@@ -91,7 +91,7 @@ public class WabGenerator
 	}
 
 	@Activate
-	public void start(BundleContext bundleContext) throws Exception {
+	protected void activate(BundleContext bundleContext) throws Exception {
 		registerURLStreamHandlerService(bundleContext);
 
 		registerArtifactUrlTransformer(bundleContext);
@@ -164,7 +164,7 @@ public class WabGenerator
 	}
 
 	@Deactivate
-	public void stop(BundleContext bundleContext) throws Exception {
+	protected void deactivate(BundleContext bundleContext) throws Exception {
 		_serviceRegistration.unregister();
 
 		_serviceRegistration = null;
@@ -175,8 +175,8 @@ public class WabGenerator
 
 		Set<String> contextPaths = new HashSet<>();
 
-		try (DirectoryStream<Path> directoryStream =
-				Files.newDirectoryStream(path.toRealPath(), "*.war")) {
+		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
+				path.toRealPath(), "*.war")) {
 
 			for (Path warPath : directoryStream) {
 				URI uri = warPath.toUri();

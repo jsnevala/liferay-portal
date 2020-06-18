@@ -55,7 +55,7 @@ public class GogoShellClient implements AutoCloseable {
 			_inputStream.close();
 			_outputStream.close();
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 		}
 	}
 
@@ -148,7 +148,7 @@ public class GogoShellClient implements AutoCloseable {
 
 			int code = _inputStream.read();
 
-			_assertCondition(code == 0 || code == 1);
+			_assertCondition((code == 0) || (code == 1));
 
 			bytes.add(code);
 

@@ -17,8 +17,10 @@
 <%@ include file="/init.jsp" %>
 
 <%
+int aspectRatio = ParamUtil.getInteger(request, "aspectRatio");
 String currentImageURL = ParamUtil.getString(request, "currentLogoURL");
 long maxFileSize = ParamUtil.getLong(request, "maxFileSize");
+boolean preserveRatio = ParamUtil.getBoolean(request, "preserveRatio");
 String tempImageFileName = ParamUtil.getString(request, "tempImageFileName");
 String randomNamespace = ParamUtil.getString(request, "randomNamespace");
 %>
@@ -39,7 +41,10 @@ String randomNamespace = ParamUtil.getString(request, "randomNamespace");
 
 		<aui:script>
 			<c:if test="<%= fileEntry != null %>">
-				Liferay.Util.getOpener().<%= HtmlUtil.escapeJS(randomNamespace) %>changeLogo('<%= previewURL %>', '<%= fileEntry.getFileEntryId() %>');
+				Liferay.Util.getOpener().<%= HtmlUtil.escapeJS(randomNamespace) %>changeLogo(
+					'<%= previewURL %>',
+					'<%= fileEntry.getFileEntryId() %>'
+				);
 			</c:if>
 
 			Liferay.Util.getWindow().hide();
@@ -54,6 +59,7 @@ String randomNamespace = ParamUtil.getString(request, "randomNamespace");
 		<aui:form action="<%= uploadImageURL %>" enctype="multipart/form-data" method="post" name="fm">
 			<aui:input name="cropRegion" type="hidden" />
 			<aui:input name="currentLogoURL" type="hidden" value="<%= currentImageURL %>" />
+			<aui:input name="preserveRatio" type="hidden" value="<%= String.valueOf(preserveRatio) %>" />
 			<aui:input name="previewURL" type="hidden" value="<%= previewURL %>" />
 			<aui:input name="randomNamespace" type="hidden" value="<%= randomNamespace %>" />
 			<aui:input name="tempImageFileName" type="hidden" value="<%= tempImageFileName %>" />
@@ -71,20 +77,20 @@ String randomNamespace = ParamUtil.getString(request, "randomNamespace");
 					</liferay-ui:error>
 
 					<liferay-ui:error exception="<%= FileSizeException.class %>">
-						<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(maxFileSize, locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
+						<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(maxFileSize, locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
 					</liferay-ui:error>
 
 					<liferay-ui:error exception="<%= NoSuchFileException.class %>" message="an-unexpected-error-occurred-while-uploading-your-file" />
 					<liferay-ui:error exception="<%= UploadException.class %>" message="an-unexpected-error-occurred-while-uploading-your-file" />
 
 					<liferay-ui:error exception="<%= UploadRequestSizeException.class %>">
-						<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(maxFileSize, locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
+						<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(maxFileSize, locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
 					</liferay-ui:error>
 
 					<aui:fieldset-group markupView="lexicon">
 						<aui:fieldset cssClass="lfr-portrait-editor">
 							<h4 class="text-default">
-								<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(maxFileSize, locale) %>" key="upload-images-no-larger-than-x" />
+								<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(maxFileSize, locale) %>" key="upload-images-no-larger-than-x" />
 							</h4>
 
 							<div class="lfr-change-logo lfr-portrait-preview" id="<portlet:namespace />portraitPreview">
@@ -98,7 +104,7 @@ String randomNamespace = ParamUtil.getString(request, "randomNamespace");
 							</c:if>
 
 							<div class="button-holder">
-								<label class="btn btn-default" for="<portlet:namespace />fileName" id="uploadImage" tabindex="0"><liferay-ui:message key="select" /></label>
+								<label class="btn btn-secondary" for="<portlet:namespace />fileName" id="<portlet:namespace />uploadImage" tabindex="0"><liferay-ui:message key="select" /></label>
 
 								<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) || windowState.equals(LiferayWindowState.POP_UP) %>" cssClass="hide" label="" name="fileName" type="file">
 									<aui:validator name="acceptFiles">
@@ -118,54 +124,63 @@ String randomNamespace = ParamUtil.getString(request, "randomNamespace");
 			</aui:button-row>
 		</aui:form>
 
-		<aui:script>
-			var uploadImage = $('#uploadImage');
+		<script>
+			(function () {
+				var uploadImageButton = document.getElementById(
+					'<portlet:namespace />uploadImage'
+				);
 
-			uploadImage.on(
-				'keypress',
-				function(event) {
-					event.preventDefault();
+				if (uploadImageButton) {
+					uploadImageButton.addEventListener('keydown', function (event) {
+						event.preventDefault();
 
-					if (event.which == 13 || event.which == 32) {
-						uploadImage.trigger('click');
-					}
+						if (event.key == 'Enter' || event.key == ' ') {
+							uploadImageButton.click();
+						}
+					});
 				}
-			);
-		</aui:script>
+			})();
+		</script>
 
 		<aui:script use="liferay-logo-editor">
 			<portlet:actionURL name="/image_uploader/view" var="addTempImageURL">
 				<portlet:param name="mvcRenderCommandName" value="/image_uploader/view" />
 				<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.ADD_TEMP %>" />
+				<portlet:param name="aspectRatio" value="<%= String.valueOf(aspectRatio) %>" />
 				<portlet:param name="maxFileSize" value="<%= String.valueOf(maxFileSize) %>" />
+				<portlet:param name="preserveRatio" value="<%= String.valueOf(preserveRatio) %>" />
 			</portlet:actionURL>
 
 			var imageUploadedInput = A.one('#<portlet:namespace />imageUploaded');
 
-			var logoEditor = new Liferay.LogoEditor(
-				{
+			var logoEditor = new Liferay.LogoEditor({
+				aspectRatio: <%= aspectRatio %>,
 
-					<%
-					DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance(locale);
-					%>
+				<%
+				DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance(locale);
+				%>
 
-					decimalSeparator: '<%= decimalFormatSymbols.getDecimalSeparator() %>',
+				decimalSeparator: '<%= decimalFormatSymbols.getDecimalSeparator() %>',
 
-					maxFileSize: <%= maxFileSize %>,
-					namespace: '<portlet:namespace />',
-					on: {
-						uploadComplete: A.bind('val', imageUploadedInput, true)
-					},
-					previewURL: '<%= previewURL %>',
-					uploadURL: '<%= addTempImageURL %>'
-				}
-			);
+				maxFileSize: <%= maxFileSize %>,
+				namespace: '<portlet:namespace />',
+				on: {
+					uploadComplete: A.bind('val', imageUploadedInput, true),
+				},
+				preserveRatio: <%= preserveRatio %>,
+				previewURL: '<%= previewURL %>',
+				uploadURL: '<%= addTempImageURL %>',
+			});
 
 			if (Liferay.Util.getTop() !== A.config.win) {
 				var dialog = Liferay.Util.getWindow();
 
 				if (dialog) {
-					dialog.on(['resize:end', 'resize:resize', 'resize:start'], logoEditor.resize, logoEditor);
+					dialog.on(
+						['resize:end', 'resize:resize', 'resize:start'],
+						logoEditor.resize,
+						logoEditor
+					);
 				}
 			}
 		</aui:script>

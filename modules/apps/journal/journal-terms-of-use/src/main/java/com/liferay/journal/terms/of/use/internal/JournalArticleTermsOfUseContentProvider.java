@@ -14,8 +14,7 @@
 
 package com.liferay.journal.terms.of.use.internal;
 
-import com.liferay.journal.model.JournalArticle;
-import com.liferay.portal.kernel.util.TermsOfUseContentProvider;
+import com.liferay.portal.kernel.terms.of.use.TermsOfUseContentProvider;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -26,41 +25,34 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
-@Component(
-	immediate = true,
-	property = "model.class.name=com.liferay.journal.model.JournalArticle",
-	service = TermsOfUseContentProvider.class
-)
+@Component(immediate = true, service = TermsOfUseContentProvider.class)
 public class JournalArticleTermsOfUseContentProvider
 	implements TermsOfUseContentProvider {
 
 	@Override
-	public String getClassName() {
-		return JournalArticle.class.getName();
-	}
-
-	@Override
 	public void includeConfig(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher(_JSP_PATH_CONFIGURATION);
 
-		requestDispatcher.include(request, response);
+		requestDispatcher.include(httpServletRequest, httpServletResponse);
 	}
 
 	@Override
 	public void includeView(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws Exception {
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher(_JSP_PATH_VIEW);
 
-		requestDispatcher.include(request, response);
+		requestDispatcher.include(httpServletRequest, httpServletResponse);
 	}
 
 	@Reference(

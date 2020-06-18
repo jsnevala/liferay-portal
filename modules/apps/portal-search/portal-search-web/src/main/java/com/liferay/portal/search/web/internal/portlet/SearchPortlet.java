@@ -15,6 +15,7 @@
 package com.liferay.portal.search.web.internal.portlet;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.search.OpenSearch;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
@@ -23,7 +24,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.PortalOpenSearchImpl;
 import com.liferay.portal.search.web.constants.SearchPortletKeys;
 import com.liferay.portal.search.web.internal.display.context.SearchDisplayContext;
 import com.liferay.portal.search.web.internal.display.context.SearchDisplayContextFactory;
@@ -66,8 +66,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + SearchPortletKeys.SEARCH,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=guest,power-user,user"
 	},
 	service = Portlet.class
 )
@@ -97,23 +96,25 @@ public class SearchPortlet extends MVCPortlet {
 			resourceRequest.getResourceID());
 
 		if (resourceID.equals("getOpenSearchXML")) {
-			HttpServletRequest request = _portal.getHttpServletRequest(
-				resourceRequest);
+			HttpServletRequest httpServletRequest =
+				_portal.getHttpServletRequest(resourceRequest);
 
-			HttpServletResponse response = _portal.getHttpServletResponse(
-				resourceResponse);
+			HttpServletResponse httpServletResponse =
+				_portal.getHttpServletResponse(resourceResponse);
 
 			try {
 				byte[] xml = getXML(resourceRequest, resourceResponse);
 
 				ServletResponseUtil.sendFile(
-					request, response, null, xml, ContentTypes.TEXT_XML_UTF8);
+					httpServletRequest, httpServletResponse, null, xml,
+					ContentTypes.TEXT_XML_UTF8);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				try {
-					_portal.sendError(e, request, response);
+					_portal.sendError(
+						exception, httpServletRequest, httpServletResponse);
 				}
-				catch (ServletException se) {
+				catch (ServletException servletException) {
 				}
 			}
 		}
@@ -145,15 +146,22 @@ public class SearchPortlet extends MVCPortlet {
 			openSearchResourceURL.toString(),
 			openSearchDescriptionXMLURL.toString());
 
-		HttpServletRequest request = _portal.getHttpServletRequest(
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			resourceRequest);
 
 		String xml = openSearch.search(
-			request,
+			httpServletRequest,
 			openSearchResourceURL.toString() + StringPool.QUESTION +
-				request.getQueryString());
+				httpServletRequest.getQueryString());
 
 		return xml.getBytes();
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.portal.search.web)(&(release.schema.version>=2.0.0)(!(release.schema.version>=3.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
 	}
 
 	@Reference

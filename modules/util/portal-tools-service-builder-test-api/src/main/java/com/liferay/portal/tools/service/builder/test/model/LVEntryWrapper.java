@@ -14,18 +14,11 @@
 
 package com.liferay.portal.tools.service.builder.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
-import com.liferay.portal.kernel.service.ServiceContext;
-
-import java.io.Serializable;
+import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * <p>
@@ -36,20 +29,12 @@ import java.util.Objects;
  * @see LVEntry
  * @generated
  */
-@ProviderType
-public class LVEntryWrapper implements LVEntry, ModelWrapper<LVEntry> {
+public class LVEntryWrapper
+	extends BaseModelWrapper<LVEntry>
+	implements LVEntry, ModelWrapper<LVEntry> {
+
 	public LVEntryWrapper(LVEntry lvEntry) {
-		_lvEntry = lvEntry;
-	}
-
-	@Override
-	public Class<?> getModelClass() {
-		return LVEntry.class;
-	}
-
-	@Override
-	public String getModelClassName() {
-		return LVEntry.class.getName();
+		super(lvEntry);
 	}
 
 	@Override
@@ -57,10 +42,13 @@ public class LVEntryWrapper implements LVEntry, ModelWrapper<LVEntry> {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
 		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("uuid", getUuid());
 		attributes.put("headId", getHeadId());
 		attributes.put("defaultLanguageId", getDefaultLanguageId());
 		attributes.put("lvEntryId", getLvEntryId());
+		attributes.put("companyId", getCompanyId());
 		attributes.put("groupId", getGroupId());
+		attributes.put("uniqueGroupKey", getUniqueGroupKey());
 
 		return attributes;
 	}
@@ -71,6 +59,12 @@ public class LVEntryWrapper implements LVEntry, ModelWrapper<LVEntry> {
 
 		if (mvccVersion != null) {
 			setMvccVersion(mvccVersion);
+		}
+
+		String uuid = (String)attributes.get("uuid");
+
+		if (uuid != null) {
+			setUuid(uuid);
 		}
 
 		Long headId = (Long)attributes.get("headId");
@@ -91,337 +85,278 @@ public class LVEntryWrapper implements LVEntry, ModelWrapper<LVEntry> {
 			setLvEntryId(lvEntryId);
 		}
 
+		Long companyId = (Long)attributes.get("companyId");
+
+		if (companyId != null) {
+			setCompanyId(companyId);
+		}
+
 		Long groupId = (Long)attributes.get("groupId");
 
 		if (groupId != null) {
 			setGroupId(groupId);
 		}
-	}
 
-	@Override
-	public Object clone() {
-		return new LVEntryWrapper((LVEntry)_lvEntry.clone());
-	}
+		String uniqueGroupKey = (String)attributes.get("uniqueGroupKey");
 
-	@Override
-	public int compareTo(LVEntry lvEntry) {
-		return _lvEntry.compareTo(lvEntry);
+		if (uniqueGroupKey != null) {
+			setUniqueGroupKey(uniqueGroupKey);
+		}
 	}
 
 	@Override
 	public String[] getAvailableLanguageIds() {
-		return _lvEntry.getAvailableLanguageIds();
+		return model.getAvailableLanguageIds();
+	}
+
+	/**
+	 * Returns the company ID of this lv entry.
+	 *
+	 * @return the company ID of this lv entry
+	 */
+	@Override
+	public long getCompanyId() {
+		return model.getCompanyId();
 	}
 
 	@Override
 	public String getContent() {
-		return _lvEntry.getContent();
+		return model.getContent();
 	}
 
 	@Override
 	public String getContent(String languageId) {
-		return _lvEntry.getContent(languageId);
+		return model.getContent(languageId);
 	}
 
 	@Override
 	public String getContent(String languageId, boolean useDefault) {
-		return _lvEntry.getContent(languageId, useDefault);
+		return model.getContent(languageId, useDefault);
 	}
 
 	@Override
 	public String getContentMapAsXML() {
-		return _lvEntry.getContentMapAsXML();
+		return model.getContentMapAsXML();
 	}
 
 	/**
-	* Returns the default language ID of this lv entry.
-	*
-	* @return the default language ID of this lv entry
-	*/
+	 * Returns the default language ID of this lv entry.
+	 *
+	 * @return the default language ID of this lv entry
+	 */
 	@Override
 	public String getDefaultLanguageId() {
-		return _lvEntry.getDefaultLanguageId();
-	}
-
-	@Override
-	public ExpandoBridge getExpandoBridge() {
-		return _lvEntry.getExpandoBridge();
+		return model.getDefaultLanguageId();
 	}
 
 	/**
-	* Returns the group ID of this lv entry.
-	*
-	* @return the group ID of this lv entry
-	*/
+	 * Returns the group ID of this lv entry.
+	 *
+	 * @return the group ID of this lv entry
+	 */
 	@Override
 	public long getGroupId() {
-		return _lvEntry.getGroupId();
+		return model.getGroupId();
 	}
 
 	/**
-	* Returns the head ID of this lv entry.
-	*
-	* @return the head ID of this lv entry
-	*/
+	 * Returns the head ID of this lv entry.
+	 *
+	 * @return the head ID of this lv entry
+	 */
 	@Override
 	public long getHeadId() {
-		return _lvEntry.getHeadId();
+		return model.getHeadId();
 	}
 
 	@Override
 	public Map<String, String> getLanguageIdToContentMap() {
-		return _lvEntry.getLanguageIdToContentMap();
+		return model.getLanguageIdToContentMap();
 	}
 
 	@Override
 	public Map<String, String> getLanguageIdToTitleMap() {
-		return _lvEntry.getLanguageIdToTitleMap();
+		return model.getLanguageIdToTitleMap();
 	}
 
 	/**
-	* Returns the lv entry ID of this lv entry.
-	*
-	* @return the lv entry ID of this lv entry
-	*/
+	 * Returns the lv entry ID of this lv entry.
+	 *
+	 * @return the lv entry ID of this lv entry
+	 */
 	@Override
 	public long getLvEntryId() {
-		return _lvEntry.getLvEntryId();
+		return model.getLvEntryId();
 	}
 
 	/**
-	* Returns the mvcc version of this lv entry.
-	*
-	* @return the mvcc version of this lv entry
-	*/
+	 * Returns the mvcc version of this lv entry.
+	 *
+	 * @return the mvcc version of this lv entry
+	 */
 	@Override
 	public long getMvccVersion() {
-		return _lvEntry.getMvccVersion();
+		return model.getMvccVersion();
 	}
 
 	/**
-	* Returns the primary key of this lv entry.
-	*
-	* @return the primary key of this lv entry
-	*/
+	 * Returns the primary key of this lv entry.
+	 *
+	 * @return the primary key of this lv entry
+	 */
 	@Override
 	public long getPrimaryKey() {
-		return _lvEntry.getPrimaryKey();
-	}
-
-	@Override
-	public Serializable getPrimaryKeyObj() {
-		return _lvEntry.getPrimaryKeyObj();
+		return model.getPrimaryKey();
 	}
 
 	@Override
 	public String getTitle() {
-		return _lvEntry.getTitle();
+		return model.getTitle();
 	}
 
 	@Override
 	public String getTitle(String languageId) {
-		return _lvEntry.getTitle(languageId);
+		return model.getTitle(languageId);
 	}
 
 	@Override
 	public String getTitle(String languageId, boolean useDefault) {
-		return _lvEntry.getTitle(languageId, useDefault);
+		return model.getTitle(languageId, useDefault);
 	}
 
 	@Override
 	public String getTitleMapAsXML() {
-		return _lvEntry.getTitleMapAsXML();
+		return model.getTitleMapAsXML();
 	}
 
+	/**
+	 * Returns the unique group key of this lv entry.
+	 *
+	 * @return the unique group key of this lv entry
+	 */
 	@Override
-	public int hashCode() {
-		return _lvEntry.hashCode();
+	public String getUniqueGroupKey() {
+		return model.getUniqueGroupKey();
 	}
 
+	/**
+	 * Returns the uuid of this lv entry.
+	 *
+	 * @return the uuid of this lv entry
+	 */
 	@Override
-	public boolean isCachedModel() {
-		return _lvEntry.isCachedModel();
-	}
-
-	@Override
-	public boolean isEscapedModel() {
-		return _lvEntry.isEscapedModel();
-	}
-
-	@Override
-	public boolean isNew() {
-		return _lvEntry.isNew();
+	public String getUuid() {
+		return model.getUuid();
 	}
 
 	@Override
 	public void persist() {
-		_lvEntry.persist();
-	}
-
-	@Override
-	public void setCachedModel(boolean cachedModel) {
-		_lvEntry.setCachedModel(cachedModel);
+		model.persist();
 	}
 
 	/**
-	* Sets the default language ID of this lv entry.
-	*
-	* @param defaultLanguageId the default language ID of this lv entry
-	*/
+	 * Sets the company ID of this lv entry.
+	 *
+	 * @param companyId the company ID of this lv entry
+	 */
+	@Override
+	public void setCompanyId(long companyId) {
+		model.setCompanyId(companyId);
+	}
+
+	/**
+	 * Sets the default language ID of this lv entry.
+	 *
+	 * @param defaultLanguageId the default language ID of this lv entry
+	 */
 	@Override
 	public void setDefaultLanguageId(String defaultLanguageId) {
-		_lvEntry.setDefaultLanguageId(defaultLanguageId);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(
-		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
-		_lvEntry.setExpandoBridgeAttributes(baseModel);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ExpandoBridge expandoBridge) {
-		_lvEntry.setExpandoBridgeAttributes(expandoBridge);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ServiceContext serviceContext) {
-		_lvEntry.setExpandoBridgeAttributes(serviceContext);
+		model.setDefaultLanguageId(defaultLanguageId);
 	}
 
 	/**
-	* Sets the group ID of this lv entry.
-	*
-	* @param groupId the group ID of this lv entry
-	*/
+	 * Sets the group ID of this lv entry.
+	 *
+	 * @param groupId the group ID of this lv entry
+	 */
 	@Override
 	public void setGroupId(long groupId) {
-		_lvEntry.setGroupId(groupId);
+		model.setGroupId(groupId);
 	}
 
 	/**
-	* Sets the head ID of this lv entry.
-	*
-	* @param headId the head ID of this lv entry
-	*/
+	 * Sets the head ID of this lv entry.
+	 *
+	 * @param headId the head ID of this lv entry
+	 */
 	@Override
 	public void setHeadId(long headId) {
-		_lvEntry.setHeadId(headId);
+		model.setHeadId(headId);
 	}
 
 	/**
-	* Sets the lv entry ID of this lv entry.
-	*
-	* @param lvEntryId the lv entry ID of this lv entry
-	*/
+	 * Sets the lv entry ID of this lv entry.
+	 *
+	 * @param lvEntryId the lv entry ID of this lv entry
+	 */
 	@Override
 	public void setLvEntryId(long lvEntryId) {
-		_lvEntry.setLvEntryId(lvEntryId);
+		model.setLvEntryId(lvEntryId);
 	}
 
 	/**
-	* Sets the mvcc version of this lv entry.
-	*
-	* @param mvccVersion the mvcc version of this lv entry
-	*/
+	 * Sets the mvcc version of this lv entry.
+	 *
+	 * @param mvccVersion the mvcc version of this lv entry
+	 */
 	@Override
 	public void setMvccVersion(long mvccVersion) {
-		_lvEntry.setMvccVersion(mvccVersion);
-	}
-
-	@Override
-	public void setNew(boolean n) {
-		_lvEntry.setNew(n);
+		model.setMvccVersion(mvccVersion);
 	}
 
 	/**
-	* Sets the primary key of this lv entry.
-	*
-	* @param primaryKey the primary key of this lv entry
-	*/
+	 * Sets the primary key of this lv entry.
+	 *
+	 * @param primaryKey the primary key of this lv entry
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
-		_lvEntry.setPrimaryKey(primaryKey);
+		model.setPrimaryKey(primaryKey);
 	}
 
+	/**
+	 * Sets the unique group key of this lv entry.
+	 *
+	 * @param uniqueGroupKey the unique group key of this lv entry
+	 */
 	@Override
-	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
-		_lvEntry.setPrimaryKeyObj(primaryKeyObj);
+	public void setUniqueGroupKey(String uniqueGroupKey) {
+		model.setUniqueGroupKey(uniqueGroupKey);
 	}
 
+	/**
+	 * Sets the uuid of this lv entry.
+	 *
+	 * @param uuid the uuid of this lv entry
+	 */
 	@Override
-	public com.liferay.portal.kernel.model.CacheModel<LVEntry> toCacheModel() {
-		return _lvEntry.toCacheModel();
-	}
-
-	@Override
-	public LVEntry toEscapedModel() {
-		return new LVEntryWrapper(_lvEntry.toEscapedModel());
-	}
-
-	@Override
-	public String toString() {
-		return _lvEntry.toString();
-	}
-
-	@Override
-	public LVEntry toUnescapedModel() {
-		return new LVEntryWrapper(_lvEntry.toUnescapedModel());
-	}
-
-	@Override
-	public String toXmlString() {
-		return _lvEntry.toXmlString();
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-
-		if (!(obj instanceof LVEntryWrapper)) {
-			return false;
-		}
-
-		LVEntryWrapper lvEntryWrapper = (LVEntryWrapper)obj;
-
-		if (Objects.equals(_lvEntry, lvEntryWrapper._lvEntry)) {
-			return true;
-		}
-
-		return false;
+	public void setUuid(String uuid) {
+		model.setUuid(uuid);
 	}
 
 	@Override
 	public boolean isHead() {
-		return _lvEntry.isHead();
+		return model.isHead();
 	}
 
 	@Override
 	public void populateVersionModel(LVEntryVersion lvEntryVersion) {
-		_lvEntry.populateVersionModel(lvEntryVersion);
+		model.populateVersionModel(lvEntryVersion);
 	}
 
 	@Override
-	public LVEntry getWrappedModel() {
-		return _lvEntry;
+	protected LVEntryWrapper wrap(LVEntry lvEntry) {
+		return new LVEntryWrapper(lvEntry);
 	}
 
-	@Override
-	public boolean isEntityCacheEnabled() {
-		return _lvEntry.isEntityCacheEnabled();
-	}
-
-	@Override
-	public boolean isFinderCacheEnabled() {
-		return _lvEntry.isFinderCacheEnabled();
-	}
-
-	@Override
-	public void resetOriginalValues() {
-		_lvEntry.resetOriginalValues();
-	}
-
-	private final LVEntry _lvEntry;
 }

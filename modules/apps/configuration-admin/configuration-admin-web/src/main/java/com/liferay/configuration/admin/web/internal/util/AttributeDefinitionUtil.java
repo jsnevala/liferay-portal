@@ -47,7 +47,7 @@ public class AttributeDefinitionUtil {
 		return StringUtil.split(defaultValues[0], StringPool.PIPE);
 	}
 
-	public static String[] getProperty(
+	public static Object getPropertyObject(
 		AttributeDefinition attributeDefinition, Configuration configuration) {
 
 		Dictionary<String, Object> properties = configuration.getProperties();
@@ -61,21 +61,32 @@ public class AttributeDefinitionUtil {
 		int cardinality = attributeDefinition.getCardinality();
 
 		if (cardinality == 0) {
-			return new String[] {String.valueOf(property)};
+			return String.valueOf(property);
 		}
 
 		if (cardinality > 0) {
 			if (property instanceof Object[]) {
 				return ArrayUtil.toStringArray((Object[])property);
 			}
-			else {
-				return new String[] {String.valueOf(property)};
-			}
+
+			return String.valueOf(property);
 		}
 
 		Vector<?> vector = (Vector<?>)property;
 
 		return ArrayUtil.toStringArray(vector.toArray());
+	}
+
+	public static String[] getPropertyStringArray(
+		AttributeDefinition attributeDefinition, Configuration configuration) {
+
+		Object value = getPropertyObject(attributeDefinition, configuration);
+
+		if (value instanceof String[]) {
+			return (String[])value;
+		}
+
+		return new String[] {String.valueOf(value)};
 	}
 
 }

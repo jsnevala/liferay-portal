@@ -17,6 +17,7 @@ package com.liferay.adaptive.media.image.internal.finder;
 import com.liferay.adaptive.media.AMAttribute;
 import com.liferay.adaptive.media.AMDistanceComparator;
 import com.liferay.adaptive.media.AdaptiveMedia;
+import com.liferay.adaptive.media.exception.AMRuntimeException;
 import com.liferay.adaptive.media.finder.AMFinder;
 import com.liferay.adaptive.media.finder.AMQuery;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
@@ -33,11 +34,15 @@ import com.liferay.adaptive.media.image.service.AMImageEntryLocalService;
 import com.liferay.adaptive.media.image.url.AMImageURLFactory;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.util.ContentTypes;
+
+import java.io.InputStream;
 
 import java.net.URI;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -87,6 +92,12 @@ public class AMImageFinderImpl implements AMImageFinder {
 			return Stream.empty();
 		}
 
+		String mimeType = fileVersion.getMimeType();
+
+		if (mimeType.equals(ContentTypes.IMAGE_SVG_XML)) {
+			return Stream.of(new SVGAdaptiveMedia(fileVersion));
+		}
+
 		BiFunction<FileVersion, AMImageConfigurationEntry, URI> uriFactory =
 			_getURIFactory(amImageQueryBuilderImpl);
 
@@ -112,37 +123,11 @@ public class AMImageFinderImpl implements AMImageFinder {
 				filter.test(amImageConfigurationEntry) &&
 				_hasAdaptiveMedia(fileVersion, amImageConfigurationEntry)
 		).map(
-			amImageConfigurationEntry ->
-				_createMedia(fileVersion, uriFactory, amImageConfigurationEntry)
+			amImageConfigurationEntry -> _createMedia(
+				fileVersion, uriFactory, amImageConfigurationEntry)
 		).sorted(
 			amDistanceComparator.toComparator()
 		);
-	}
-
-	@Reference(unbind = "-")
-	public void setAMImageConfigurationHelper(
-		AMImageConfigurationHelper amImageConfigurationHelper) {
-
-		_amImageConfigurationHelper = amImageConfigurationHelper;
-	}
-
-	@Reference(unbind = "-")
-	public void setAMImageEntryLocalService(
-		AMImageEntryLocalService amImageEntryLocalService) {
-
-		_amImageEntryLocalService = amImageEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	public void setAMImageMimeTypeProvider(
-		AMImageMimeTypeProvider amImageMimeTypeProvider) {
-
-		_amImageMimeTypeProvider = amImageMimeTypeProvider;
-	}
-
-	@Reference(unbind = "-")
-	public void setAMImageURLFactory(AMImageURLFactory amImageURLFactory) {
-		_amImageURLFactory = amImageURLFactory;
 	}
 
 	private AdaptiveMedia<AMImageProcessor> _createMedia(
@@ -234,9 +219,49 @@ public class AMImageFinderImpl implements AMImageFinder {
 		return true;
 	}
 
+	@Reference
 	private AMImageConfigurationHelper _amImageConfigurationHelper;
+
+	@Reference
 	private AMImageEntryLocalService _amImageEntryLocalService;
+
+	@Reference
 	private AMImageMimeTypeProvider _amImageMimeTypeProvider;
+
+	@Reference
 	private AMImageURLFactory _amImageURLFactory;
+
+	private static class SVGAdaptiveMedia
+		implements AdaptiveMedia<AMImageProcessor> {
+
+		public SVGAdaptiveMedia(FileVersion fileVersion) {
+			_fileVersion = fileVersion;
+		}
+
+		@Override
+		public InputStream getInputStream() {
+			try {
+				return _fileVersion.getContentStream(false);
+			}
+			catch (PortalException portalException) {
+				throw new AMRuntimeException.IOException(portalException);
+			}
+		}
+
+		@Override
+		public URI getURI() {
+			return null;
+		}
+
+		@Override
+		public <V> Optional<V> getValueOptional(
+			AMAttribute<AMImageProcessor, V> amAttribute) {
+
+			return Optional.empty();
+		}
+
+		private final FileVersion _fileVersion;
+
+	}
 
 }

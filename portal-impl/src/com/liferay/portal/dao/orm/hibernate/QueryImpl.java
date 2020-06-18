@@ -14,13 +14,13 @@
 
 package com.liferay.portal.dao.orm.hibernate;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.CacheMode;
 import com.liferay.portal.kernel.dao.orm.LockMode;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.ScrollableResults;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.Serializable;
 
@@ -61,8 +61,8 @@ public class QueryImpl implements Query {
 		try {
 			return _query.executeUpdate();
 		}
-		catch (Exception e) {
-			throw ExceptionTranslator.translate(e);
+		catch (Exception exception) {
+			throw ExceptionTranslator.translate(exception);
 		}
 	}
 
@@ -74,10 +74,12 @@ public class QueryImpl implements Query {
 	@Override
 	public Iterator<?> iterate(boolean unmodifiable) throws ORMException {
 		try {
-			return list(unmodifiable).iterator();
+			List<?> list = list(unmodifiable);
+
+			return list.iterator();
 		}
-		catch (Exception e) {
-			throw ExceptionTranslator.translate(e);
+		catch (Exception exception) {
+			throw ExceptionTranslator.translate(exception);
 		}
 	}
 
@@ -118,8 +120,8 @@ public class QueryImpl implements Query {
 
 			return list;
 		}
-		catch (Exception e) {
-			throw ExceptionTranslator.translate(e);
+		catch (Exception exception) {
+			throw ExceptionTranslator.translate(exception);
 		}
 	}
 
@@ -128,8 +130,8 @@ public class QueryImpl implements Query {
 		try {
 			return new ScrollableResultsImpl(_query.scroll());
 		}
-		catch (Exception e) {
-			throw ExceptionTranslator.translate(e);
+		catch (Exception exception) {
+			throw ExceptionTranslator.translate(exception);
 		}
 	}
 
@@ -382,8 +384,8 @@ public class QueryImpl implements Query {
 		try {
 			return _query.uniqueResult();
 		}
-		catch (Exception e) {
-			throw ExceptionTranslator.translate(e);
+		catch (Exception exception) {
+			throw ExceptionTranslator.translate(exception);
 		}
 	}
 

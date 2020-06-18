@@ -54,7 +54,6 @@ import com.liferay.portal.kernel.xml.Element;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.portlet.PortletPreferences;
@@ -64,7 +63,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Akos Thurzo
  */
 @Component(
@@ -116,10 +115,18 @@ public class ChangesetPortletDataHandler extends BasePortletDataHandler {
 		setDataAlwaysStaged(true);
 	}
 
+	@Override
 	protected String doExportData(
 			PortletDataContext portletDataContext, String portletId,
 			PortletPreferences portletPreferences)
 		throws Exception {
+
+		String[] portletResourceNames = _getPortletResourceNames(
+			portletDataContext);
+
+		for (String portletResourceName : portletResourceNames) {
+			portletDataContext.addPortletPermissions(portletResourceName);
+		}
 
 		Element rootElement = addExportDataRootElement(portletDataContext);
 
@@ -165,14 +172,12 @@ public class ChangesetPortletDataHandler extends BasePortletDataHandler {
 			_exportChangesetCollection(portletDataContext, changesetCollection);
 		}
 		else {
-			Optional<Changeset> changesetOptional =
-				_changesetManager.popChangeset(changesetUuid);
+			Changeset changeset = _changesetManager.removeChangeset(
+				changesetUuid);
 
-			if (!changesetOptional.isPresent()) {
+			if (changeset == null) {
 				return getExportDataRootElementString(rootElement);
 			}
-
-			Changeset changeset = changesetOptional.get();
 
 			Stream<StagedModel> stream = changeset.stream();
 
@@ -184,8 +189,9 @@ public class ChangesetPortletDataHandler extends BasePortletDataHandler {
 						StagedModelDataHandlerUtil.exportStagedModel(
 							portletDataContext, stagedModel);
 					}
-					catch (PortletDataException pde) {
-						throw new ExportImportRuntimeException(pde);
+					catch (PortletDataException portletDataException) {
+						throw new ExportImportRuntimeException(
+							portletDataException);
 					}
 				}
 			);
@@ -214,6 +220,15 @@ public class ChangesetPortletDataHandler extends BasePortletDataHandler {
 				StagedModelDataHandlerUtil.importStagedModel(
 					portletDataContext, entityElement);
 			}
+		}
+
+		String[] portletResourceNames = _getPortletResourceNames(
+			portletDataContext);
+
+		for (String portletResourceName : portletResourceNames) {
+			portletDataContext.importPermissions(
+				portletResourceName, portletDataContext.getSourceGroupId(),
+				portletDataContext.getGroupId());
 		}
 
 		return portletPreferences;
@@ -312,6 +327,15 @@ public class ChangesetPortletDataHandler extends BasePortletDataHandler {
 			portletDataContext, stagedModel);
 
 		return true;
+	}
+
+	private String[] _getPortletResourceNames(
+		PortletDataContext portletDataContext) {
+
+		Map<String, String[]> parameterMap =
+			portletDataContext.getParameterMap();
+
+		return parameterMap.getOrDefault("portletResourceNames", new String[0]);
 	}
 
 	private boolean _isExportModel(

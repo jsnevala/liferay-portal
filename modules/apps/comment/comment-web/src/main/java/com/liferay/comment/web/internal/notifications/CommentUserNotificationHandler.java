@@ -56,12 +56,12 @@ public class CommentUserNotificationHandler
 		try {
 			return _mbDiscussionLocalService.fetchDiscussion(classPK);
 		}
-		catch (SystemException se) {
+		catch (SystemException systemException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(se, se);
+				_log.debug(systemException, systemException);
 			}
 
 			return null;
@@ -82,7 +82,7 @@ public class CommentUserNotificationHandler
 
 	@Override
 	protected String getBodyContent(JSONObject jsonObject) {
-		return HtmlUtil.stripHtml(super.getBodyContent(jsonObject));
+		return HtmlUtil.extractText(super.getBodyContent(jsonObject));
 	}
 
 	@Override
@@ -147,16 +147,10 @@ public class CommentUserNotificationHandler
 		return message;
 	}
 
-	@Reference(unbind = "-")
-	protected void setMBDiscussionLocalService(
-		MBDiscussionLocalService mbDiscussionLocalService) {
-
-		_mbDiscussionLocalService = mbDiscussionLocalService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommentUserNotificationHandler.class);
 
+	@Reference
 	private MBDiscussionLocalService _mbDiscussionLocalService;
 
 	@Reference

@@ -18,18 +18,12 @@
 
 <%
 String referringPortletResource = ParamUtil.getString(request, "referringPortletResource");
-
-SearchContainer articleSearchContainer = journalDisplayContext.getSearchContainer(false);
-
-String displayStyle = journalDisplayContext.getDisplayStyle();
-
-String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 %>
 
 <liferay-ui:search-container
 	emptyResultsMessage="no-web-content-was-found"
-	id="<%= searchContainerId %>"
-	searchContainer="<%= articleSearchContainer %>"
+	id="articles"
+	searchContainer="<%= journalDisplayContext.getSearchContainer() %>"
 >
 	<liferay-ui:search-container-row
 		className="Object"
@@ -47,7 +41,7 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 			curFolder = (JournalFolder)result;
 		}
 		else {
-			curArticle = (JournalArticle)result;
+			curArticle = journalDisplayContext.getLatestArticle((JournalArticle)result);
 		}
 		%>
 
@@ -55,10 +49,19 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 			<c:when test="<%= curArticle != null %>">
 
 				<%
-				Map<String, Object> rowData = new HashMap<String, Object>();
+				String title = curArticle.getTitle(locale);
 
-				rowData.put("draggable", JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.DELETE) || JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.UPDATE));
-				rowData.put("title", HtmlUtil.escape(curArticle.getTitle(locale)));
+				if (Validator.isNull(title)) {
+					title = curArticle.getTitle(LocaleUtil.fromLanguageId(curArticle.getDefaultLanguageId()));
+				}
+
+				Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+					"actions", journalDisplayContext.getAvailableActions(curArticle)
+				).put(
+					"draggable", !BrowserSnifferUtil.isMobile(request) && (JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.DELETE) || JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.UPDATE))
+				).put(
+					"title", HtmlUtil.escape(title)
+				).build();
 
 				row.setData(rowData);
 
@@ -82,7 +85,7 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 				%>
 
 				<c:choose>
-					<c:when test='<%= displayStyle.equals("descriptive") %>'>
+					<c:when test='<%= Objects.equals(journalDisplayContext.getDisplayStyle(), "descriptive") %>'>
 						<liferay-ui:search-container-column-text>
 							<liferay-ui:user-portrait
 								userId="<%= curArticle.getUserId() %>"
@@ -99,75 +102,56 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 							String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true);
 							%>
 
-							<h6 class="text-default">
+							<span class="text-default">
 								<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(curArticle.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
-							</h6>
+							</span>
 
-							<h5>
+							<p class="font-weight-bold h5">
 								<aui:a href="<%= editURL %>">
-									<%= HtmlUtil.escape(curArticle.getTitle(locale)) %>
+									<%= HtmlUtil.escape(title) %>
 								</aui:a>
-							</h5>
+							</p>
 
-							<c:if test="<%= journalDisplayContext.isSearch() %>">
+							<c:if test="<%= journalDisplayContext.isSearch() && ((curArticle.getFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curArticle.getFolder(), ActionKeys.VIEW)) %>">
 								<h5>
 									<%= JournalHelperUtil.getAbsolutePath(liferayPortletRequest, curArticle.getFolderId()) %>
 								</h5>
 							</c:if>
 
-							<h6 class="text-default">
-								<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= curArticle.getStatus() %>" />
-							</h6>
+							<span class="text-default">
+								<c:if test="<%= !curArticle.isApproved() && curArticle.hasApprovedVersion() %>">
+									<span class="label label-success text-uppercase">
+										<liferay-ui:message key="approved" />
+									</span>
+								</c:if>
+
+								<span class="label label-<%= WorkflowConstants.getStatusStyle(curArticle.getStatus()) %> text-uppercase">
+									<liferay-ui:message key="<%= WorkflowConstants.getStatusLabel(curArticle.getStatus()) %>" />
+								</span>
+							</span>
 						</liferay-ui:search-container-column-text>
 
-						<liferay-ui:search-container-column-jsp
-							path="/article_action.jsp"
-						/>
+						<liferay-ui:search-container-column-text>
+							<clay:dropdown-actions
+								defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+								dropdownItems="<%= journalDisplayContext.getArticleActionDropdownItems(curArticle) %>"
+							/>
+						</liferay-ui:search-container-column-text>
 					</c:when>
-					<c:when test='<%= displayStyle.equals("icon") %>'>
+					<c:when test='<%= Objects.equals(journalDisplayContext.getDisplayStyle(), "icon") %>'>
 
 						<%
 						row.setCssClass("entry-card lfr-asset-item " + row.getCssClass());
 						%>
 
 						<liferay-ui:search-container-column-text>
-
-							<%
-							String articleImageURL = curArticle.getArticleImageURL(themeDisplay);
-							%>
-
-							<c:choose>
-								<c:when test="<%= Validator.isNotNull(articleImageURL) %>">
-									<liferay-frontend:vertical-card
-										actionJsp="/article_action.jsp"
-										actionJspServletContext="<%= application %>"
-										imageUrl="<%= HtmlUtil.escape(articleImageURL) %>"
-										resultRow="<%= row %>"
-										rowChecker="<%= articleSearchContainer.getRowChecker() %>"
-										title="<%= curArticle.getTitle(locale) %>"
-										url="<%= editURL %>"
-									>
-										<%@ include file="/article_vertical_card.jspf" %>
-									</liferay-frontend:vertical-card>
-								</c:when>
-								<c:otherwise>
-									<liferay-frontend:icon-vertical-card
-										actionJsp="/article_action.jsp"
-										actionJspServletContext="<%= application %>"
-										icon="web-content"
-										resultRow="<%= row %>"
-										rowChecker="<%= articleSearchContainer.getRowChecker() %>"
-										title="<%= curArticle.getTitle(locale) %>"
-										url="<%= editURL %>"
-									>
-										<%@ include file="/article_vertical_card.jspf" %>
-									</liferay-frontend:icon-vertical-card>
-								</c:otherwise>
-							</c:choose>
+							<clay:vertical-card
+								verticalCard="<%= new JournalArticleVerticalCard(curArticle, renderRequest, renderResponse, searchContainer.getRowChecker(), assetDisplayPageFriendlyURLProvider, trashHelper) %>"
+							/>
 						</liferay-ui:search-container-column-text>
 					</c:when>
 					<c:otherwise>
-						<c:if test="<%= !journalWebConfiguration.journalArticleForceAutogenerateId() %>">
+						<c:if test="<%= !journalWebConfiguration.journalArticleForceAutogenerateId() || journalWebConfiguration.journalArticleShowId() %>">
 							<liferay-ui:search-container-column-text
 								name="id"
 								value="<%= HtmlUtil.escape(curArticle.getArticleId()) %>"
@@ -187,7 +171,7 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 							value="<%= StringUtil.shorten(HtmlUtil.stripHtml(curArticle.getDescription(locale)), 200) %>"
 						/>
 
-						<c:if test="<%= journalDisplayContext.isSearch() %>">
+						<c:if test="<%= journalDisplayContext.isSearch() && ((curArticle.getFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curArticle.getFolder(), ActionKeys.VIEW)) %>">
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-expand-smallest table-cell-minw-200"
 								name="path"
@@ -201,9 +185,20 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 							value="<%= HtmlUtil.escape(PortalUtil.getUserName(curArticle)) %>"
 						/>
 
-						<liferay-ui:search-container-column-status
+						<liferay-ui:search-container-column-text
+							cssClass="text-nowrap"
 							name="status"
-						/>
+						>
+							<c:if test="<%= !curArticle.isApproved() && curArticle.hasApprovedVersion() %>">
+								<span class="label label-success text-uppercase">
+									<liferay-ui:message key="approved" />
+								</span>
+							</c:if>
+
+							<span class="label label-<%= WorkflowConstants.getStatusStyle(curArticle.getStatus()) %> text-uppercase">
+								<liferay-ui:message key="<%= WorkflowConstants.getStatusLabel(curArticle.getStatus()) %>" />
+							</span>
+						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-date
 							cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
@@ -218,7 +213,7 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 						/>
 
 						<%
-						DDMStructure ddmStructure = DDMStructureLocalServiceUtil.getStructure(scopeGroupId, PortalUtil.getClassNameId(JournalArticle.class), curArticle.getDDMStructureKey(), true);
+						DDMStructure ddmStructure = curArticle.getDDMStructure();
 						%>
 
 						<liferay-ui:search-container-column-text
@@ -227,35 +222,42 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 							value="<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>"
 						/>
 
-						<liferay-ui:search-container-column-jsp
-							path="/article_action.jsp"
-						/>
+						<liferay-ui:search-container-column-text>
+							<clay:dropdown-actions
+								defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+								dropdownItems="<%= journalDisplayContext.getArticleActionDropdownItems(curArticle) %>"
+							/>
+						</liferay-ui:search-container-column-text>
 					</c:otherwise>
 				</c:choose>
 			</c:when>
 			<c:when test="<%= curFolder != null %>">
 
 				<%
-				Map<String, Object> rowData = new HashMap<String, Object>();
-
-				rowData.put("draggable", JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.DELETE) || JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.UPDATE));
-				rowData.put("folder", true);
-				rowData.put("folder-id", curFolder.getFolderId());
-				rowData.put("title", HtmlUtil.escape(curFolder.getName()));
+				Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+					"actions", journalDisplayContext.getAvailableActions(curFolder)
+				).put(
+					"draggable", !BrowserSnifferUtil.isMobile(request) && (JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.DELETE) || JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.UPDATE))
+				).put(
+					"folder", true
+				).put(
+					"folder-id", curFolder.getFolderId()
+				).put(
+					"title", HtmlUtil.escape(curFolder.getName())
+				).build();
 
 				row.setData(rowData);
 				row.setPrimaryKey(String.valueOf(curFolder.getPrimaryKey()));
 
 				PortletURL rowURL = liferayPortletResponse.createRenderURL();
 
-				rowURL.setParameter("redirect", currentURL);
 				rowURL.setParameter("groupId", String.valueOf(curFolder.getGroupId()));
 				rowURL.setParameter("folderId", String.valueOf(curFolder.getFolderId()));
-				rowURL.setParameter("displayStyle", displayStyle);
+				rowURL.setParameter("displayStyle", journalDisplayContext.getDisplayStyle());
 				%>
 
 				<c:choose>
-					<c:when test='<%= displayStyle.equals("descriptive") %>'>
+					<c:when test='<%= Objects.equals(journalDisplayContext.getDisplayStyle(), "descriptive") %>'>
 						<liferay-ui:search-container-column-icon
 							icon="folder"
 							toggleRowChecker="<%= true %>"
@@ -271,26 +273,35 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 							String createDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true);
 							%>
 
-							<h6 class="text-default">
+							<span class="text-default">
 								<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(curFolder.getUserName()), createDateDescription} %>" key="x-modified-x-ago" />
-							</h6>
+							</span>
 
-							<h5>
-								<aui:a href="<%= (rowURL != null) ? rowURL.toString() : null %>">
+							<p class="font-weight-bold h5">
+								<aui:a href="<%= rowURL.toString() %>">
 									<%= HtmlUtil.escape(curFolder.getName()) %>
 								</aui:a>
-							</h5>
+							</p>
 
-							<h6 class="text-default">
+							<c:if test="<%= journalDisplayContext.isSearch() && ((curFolder.getParentFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curFolder.getParentFolder(), ActionKeys.VIEW)) %>">
+								<h5>
+									<%= JournalHelperUtil.getAbsolutePath(liferayPortletRequest, curFolder.getParentFolderId()) %>
+								</h5>
+							</c:if>
+
+							<span class="text-default">
 								<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= curFolder.getStatus() %>" />
-							</h6>
+							</span>
 						</liferay-ui:search-container-column-text>
 
-						<liferay-ui:search-container-column-jsp
-							path="/folder_action.jsp"
-						/>
+						<liferay-ui:search-container-column-text>
+							<clay:dropdown-actions
+								defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+								dropdownItems="<%= journalDisplayContext.getFolderActionDropdownItems(curFolder) %>"
+							/>
+						</liferay-ui:search-container-column-text>
 					</c:when>
-					<c:when test='<%= displayStyle.equals("icon") %>'>
+					<c:when test='<%= Objects.equals(journalDisplayContext.getDisplayStyle(), "icon") %>'>
 
 						<%
 						row.setCssClass("entry-card lfr-asset-folder " + row.getCssClass());
@@ -299,24 +310,13 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 						<liferay-ui:search-container-column-text
 							colspan="<%= 2 %>"
 						>
-							<liferay-frontend:horizontal-card
-								actionJsp="/folder_action.jsp"
-								actionJspServletContext="<%= application %>"
-								resultRow="<%= row %>"
-								rowChecker="<%= articleSearchContainer.getRowChecker() %>"
-								text="<%= HtmlUtil.escape(curFolder.getName()) %>"
-								url="<%= rowURL.toString() %>"
-							>
-								<liferay-frontend:horizontal-card-col>
-									<liferay-frontend:horizontal-card-icon
-										icon="folder"
-									/>
-								</liferay-frontend:horizontal-card-col>
-							</liferay-frontend:horizontal-card>
+							<clay:horizontal-card
+								horizontalCard="<%= new JournalFolderHorizontalCard(curFolder, journalDisplayContext.getDisplayStyle(), renderRequest, renderResponse, searchContainer.getRowChecker(), trashHelper) %>"
+							/>
 						</liferay-ui:search-container-column-text>
 					</c:when>
 					<c:otherwise>
-						<c:if test="<%= !journalWebConfiguration.journalArticleForceAutogenerateId() %>">
+						<c:if test="<%= !journalWebConfiguration.journalArticleForceAutogenerateId() || journalWebConfiguration.journalArticleShowId() %>">
 							<liferay-ui:search-container-column-text
 								name="id"
 								value="<%= HtmlUtil.escape(String.valueOf(curFolder.getFolderId())) %>"
@@ -335,6 +335,14 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 							name="description"
 							value="<%= HtmlUtil.escape(curFolder.getDescription()) %>"
 						/>
+
+						<c:if test="<%= journalDisplayContext.isSearch() && ((curFolder.getParentFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curFolder.getParentFolder(), ActionKeys.VIEW)) %>">
+							<liferay-ui:search-container-column-text
+								cssClass="table-cell-expand-smallest table-cell-minw-200"
+								name="path"
+								value="<%= JournalHelperUtil.getAbsolutePath(liferayPortletRequest, curFolder.getParentFolderId()) %>"
+							/>
+						</c:if>
 
 						<liferay-ui:search-container-column-text
 							cssClass="table-cell-expand-smallest table-cell-minw-150"
@@ -365,9 +373,12 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 							value='<%= LanguageUtil.get(request, "folder") %>'
 						/>
 
-						<liferay-ui:search-container-column-jsp
-							path="/folder_action.jsp"
-						/>
+						<liferay-ui:search-container-column-text>
+							<clay:dropdown-actions
+								defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+								dropdownItems="<%= journalDisplayContext.getFolderActionDropdownItems(curFolder) %>"
+							/>
+						</liferay-ui:search-container-column-text>
 					</c:otherwise>
 				</c:choose>
 			</c:when>
@@ -375,9 +386,39 @@ String searchContainerId = ParamUtil.getString(request, "searchContainerId");
 	</liferay-ui:search-container-row>
 
 	<liferay-ui:search-iterator
-		displayStyle="<%= displayStyle %>"
+		displayStyle="<%= journalDisplayContext.getDisplayStyle() %>"
 		markupView="lexicon"
 		resultRowSplitter="<%= journalDisplayContext.isSearch() ? null : new JournalResultRowSplitter() %>"
-		searchContainer="<%= articleSearchContainer %>"
+		searchContainer="<%= searchContainer %>"
 	/>
 </liferay-ui:search-container>
+
+<liferay-frontend:component
+	componentId="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+	context="<%= journalDisplayContext.getComponentContext() %>"
+	module="js/ElementsDefaultEventHandler.es"
+/>
+
+<aui:script use="liferay-journal-navigation">
+	var journalNavigation = new Liferay.Portlet.JournalNavigation({
+		editEntryUrl: '<portlet:actionURL />',
+		form: {
+			method: 'POST',
+			node: A.one(document.<portlet:namespace />fm),
+		},
+		moveEntryUrl:
+			'<portlet:renderURL><portlet:param name="mvcPath" value="/move_entries.jsp" /><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:renderURL>',
+		namespace: '<portlet:namespace />',
+		searchContainerId: 'articles',
+	});
+
+	var clearJournalNavigationHandles = function (event) {
+		if (event.portletId === '<%= portletDisplay.getRootPortletId() %>') {
+			journalNavigation.destroy();
+
+			Liferay.detach('destroyPortlet', clearJournalNavigationHandles);
+		}
+	};
+
+	Liferay.on('destroyPortlet', clearJournalNavigationHandles);
+</aui:script>

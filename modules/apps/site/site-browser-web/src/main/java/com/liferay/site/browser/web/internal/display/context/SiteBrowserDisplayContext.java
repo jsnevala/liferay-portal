@@ -14,16 +14,10 @@
 
 package com.liferay.site.browser.web.internal.display.context;
 
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.SafeConsumer;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
-import com.liferay.petra.string.StringPool;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -36,8 +30,7 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicyUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -45,22 +38,21 @@ import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.usersadmin.search.GroupSearch;
 import com.liferay.portlet.usersadmin.search.GroupSearchTerms;
-import com.liferay.site.browser.web.internal.constants.SiteBrowserPortletKeys;
 import com.liferay.sites.kernel.util.SitesUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -71,20 +63,16 @@ import javax.servlet.http.HttpServletRequest;
 public class SiteBrowserDisplayContext {
 
 	public SiteBrowserDisplayContext(
-		HttpServletRequest request, LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse) {
+			HttpServletRequest httpServletRequest,
+			LiferayPortletRequest liferayPortletRequest,
+			LiferayPortletResponse liferayPortletResponse)
+		throws PortalException {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
-	}
 
-	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		_selUser = PortalUtil.getSelectedUser(_httpServletRequest);
 	}
 
 	public String getDisplayStyle() {
@@ -92,40 +80,32 @@ public class SiteBrowserDisplayContext {
 			return _displayStyle;
 		}
 
-		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(_request);
-
-		_displayStyle = portalPreferences.getValue(
-			SiteBrowserPortletKeys.SITE_BROWSER, "display-style", "list");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "list");
 
 		return _displayStyle;
 	}
 
-	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
+	public String getEventName() {
+		if (_eventName != null) {
+			return _eventName;
+		}
 
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
-			}
-		};
+		_eventName = ParamUtil.getString(
+			_httpServletRequest, "eventName",
+			_liferayPortletResponse.getNamespace() + "selectSite");
+
+		return _eventName;
 	}
 
 	public GroupSearch getGroupSearch() throws Exception {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		if (_groupSearch != null) {
+			return _groupSearch;
+		}
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Company company = themeDisplay.getCompany();
 
@@ -141,15 +121,28 @@ public class SiteBrowserDisplayContext {
 		int total = 0;
 
 		boolean includeCompany = ParamUtil.getBoolean(
-			_request, "includeCompany");
+			_httpServletRequest, "includeCompany");
+		boolean includeFormsSite = ParamUtil.getBoolean(
+			_httpServletRequest, "includeFormsSite");
 		boolean includeUserPersonalSite = ParamUtil.getBoolean(
-			_request, "includeUserPersonalSite");
+			_httpServletRequest, "includeUserPersonalSite");
 
 		long[] classNameIds = _CLASS_NAME_IDS;
 
 		if (includeCompany) {
 			classNameIds = ArrayUtil.append(
 				classNameIds, PortalUtil.getClassNameId(Company.class));
+		}
+
+		if (includeFormsSite) {
+			if (groupSearch.getStart() == 0) {
+				Group formsSite = GroupLocalServiceUtil.getGroup(
+					company.getCompanyId(), GroupConstants.FORMS);
+
+				results.add(formsSite);
+			}
+
+			additionalSites++;
 		}
 
 		if (includeUserPersonalSite) {
@@ -235,39 +228,37 @@ public class SiteBrowserDisplayContext {
 
 		groupSearch.setResults(results);
 
-		return groupSearch;
+		_groupSearch = groupSearch;
+
+		return _groupSearch;
 	}
 
 	public List<NavigationItem> getNavigationItems() {
 		String[] types = _getTypes();
 
 		if (types.length == 1) {
-			return new NavigationItemList() {
-				{
-					add(
-						navigationItem -> {
-							navigationItem.setActive(true);
-							navigationItem.setHref(
-								_liferayPortletResponse.createRenderURL());
-							navigationItem.setLabel(
-								LanguageUtil.get(_request, "sites"));
-						});
+			return NavigationItemListBuilder.add(
+				navigationItem -> {
+					navigationItem.setActive(true);
+					navigationItem.setHref(
+						_liferayPortletResponse.createRenderURL());
+					navigationItem.setLabel(
+						LanguageUtil.get(_httpServletRequest, "sites"));
 				}
-			};
+			).build();
 		}
 		else if (types.length > 1) {
 			return new NavigationItemList() {
 				{
 					for (String curType : types) {
 						add(
-							SafeConsumer.ignore(
-								navigationItem -> {
-									navigationItem.setActive(
-										curType.equals(getType()));
-									navigationItem.setHref(
-										getPortletURL(), "type", curType);
-									navigationItem.setLabel(curType);
-								}));
+							navigationItem -> {
+								navigationItem.setActive(
+									curType.equals(getType()));
+								navigationItem.setHref(
+									getPortletURL(), "type", curType);
+								navigationItem.setLabel(curType);
+							});
 					}
 				}
 			};
@@ -281,7 +272,8 @@ public class SiteBrowserDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
 	}
@@ -292,11 +284,11 @@ public class SiteBrowserDisplayContext {
 		User selUser = null;
 
 		try {
-			selUser = PortalUtil.getSelectedUser(_request);
+			selUser = PortalUtil.getSelectedUser(_httpServletRequest);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 
@@ -305,22 +297,26 @@ public class SiteBrowserDisplayContext {
 				"p_u_i_d", String.valueOf(selUser.getUserId()));
 		}
 
+		boolean filterManageableGroups = ParamUtil.getBoolean(
+			_httpServletRequest, "filterManageableGroups", true);
 		boolean includeCompany = ParamUtil.getBoolean(
-			_request, "includeCompany");
+			_httpServletRequest, "includeCompany");
 		boolean includeCurrentGroup = ParamUtil.getBoolean(
-			_request, "includeCurrentGroup", true);
+			_httpServletRequest, "includeCurrentGroup", true);
 		boolean includeUserPersonalSite = ParamUtil.getBoolean(
-			_request, "includeUserPersonalSite");
+			_httpServletRequest, "includeUserPersonalSite");
 		String eventName = ParamUtil.getString(
-			_request, "eventName",
+			_httpServletRequest, "eventName",
 			_liferayPortletResponse.getNamespace() + "selectSite");
-		String target = ParamUtil.getString(_request, "target");
+		String target = ParamUtil.getString(_httpServletRequest, "target");
 
 		portletURL.setParameter("groupId", String.valueOf(_getGroupId()));
 		portletURL.setParameter("type", getType());
 		portletURL.setParameter("types", _getTypes());
 		portletURL.setParameter("displayStyle", getDisplayStyle());
 		portletURL.setParameter("filter", _getFilter());
+		portletURL.setParameter(
+			"filterManageableGroups", String.valueOf(filterManageableGroups));
 		portletURL.setParameter(
 			"includeCompany", String.valueOf(includeCompany));
 		portletURL.setParameter(
@@ -337,26 +333,18 @@ public class SiteBrowserDisplayContext {
 		return portletURL;
 	}
 
-	public String getSearchActionURL() {
-		PortletURL searchActionURL = getPortletURL();
-
-		return searchActionURL.toString();
+	public User getSelUser() {
+		return _selUser;
 	}
 
-	public String getSortingURL() {
-		PortletURL sortingURL = getPortletURL();
+	public String getTarget() {
+		if (_target != null) {
+			return _target;
+		}
 
-		sortingURL.setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
+		_target = ParamUtil.getString(_httpServletRequest, "target");
 
-		return sortingURL.toString();
-	}
-
-	public int getTotalItems() throws Exception {
-		SearchContainer groupSearch = getGroupSearch();
-
-		return groupSearch.getTotal();
+		return _target;
 	}
 
 	public String getType() {
@@ -364,7 +352,7 @@ public class SiteBrowserDisplayContext {
 			return _type;
 		}
 
-		_type = ParamUtil.getString(_request, "type");
+		_type = ParamUtil.getString(_httpServletRequest, "type");
 
 		if (Validator.isNull(_type)) {
 			String[] types = _getTypes();
@@ -375,20 +363,25 @@ public class SiteBrowserDisplayContext {
 		return _type;
 	}
 
-	public List<ViewTypeItem> getViewTypeItems() {
-		PortletURL portletURL = _liferayPortletResponse.createActionURL();
+	public boolean isShowLink(Group group) {
+		try {
+			long userId = 0;
 
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "changeDisplayStyle");
-		portletURL.setParameter("redirect", PortalUtil.getCurrentURL(_request));
-
-		return new ViewTypeItemList(portletURL, getDisplayStyle()) {
-			{
-				addCardViewTypeItem();
-				addListViewTypeItem();
-				addTableViewTypeItem();
+			if (_selUser != null) {
+				userId = _selUser.getUserId();
 			}
-		};
+
+			if (Validator.isNull(_getPuid()) ||
+				SiteMembershipPolicyUtil.isMembershipAllowed(
+					userId, group.getGroupId())) {
+
+				return true;
+			}
+		}
+		catch (Exception exception) {
+		}
+
+		return false;
 	}
 
 	private List<Group> _filterGroups(
@@ -396,7 +389,7 @@ public class SiteBrowserDisplayContext {
 		throws PortalException {
 
 		boolean filterManageableGroups = ParamUtil.getBoolean(
-			_request, "filterManageableGroups", true);
+			_httpServletRequest, "filterManageableGroups", true);
 
 		List<Group> filteredGroups = new ArrayList<>();
 
@@ -459,23 +452,9 @@ public class SiteBrowserDisplayContext {
 			return _filter;
 		}
 
-		_filter = ParamUtil.getString(_request, "filter");
+		_filter = ParamUtil.getString(_httpServletRequest, "filter");
 
 		return _filter;
-	}
-
-	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(getPortletURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
-			}
-		};
 	}
 
 	private long _getGroupId() {
@@ -483,7 +462,7 @@ public class SiteBrowserDisplayContext {
 			return _groupId;
 		}
 
-		_groupId = ParamUtil.getLong(_request, "groupId");
+		_groupId = ParamUtil.getLong(_httpServletRequest, "groupId");
 
 		return _groupId;
 	}
@@ -495,28 +474,29 @@ public class SiteBrowserDisplayContext {
 			return _groupParams;
 		}
 
-		long groupId = ParamUtil.getLong(_request, "groupId");
+		long groupId = ParamUtil.getLong(_httpServletRequest, "groupId");
 		boolean includeCurrentGroup = ParamUtil.getBoolean(
-			_request, "includeCurrentGroup", true);
+			_httpServletRequest, "includeCurrentGroup", true);
 
 		String type = getType();
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PermissionChecker permissionChecker =
 			themeDisplay.getPermissionChecker();
 
 		boolean filterManageableGroups = ParamUtil.getBoolean(
-			_request, "filterManageableGroups", true);
+			_httpServletRequest, "filterManageableGroups", true);
 
 		if (permissionChecker.isCompanyAdmin()) {
 			filterManageableGroups = false;
 		}
 
-		_groupParams = new LinkedHashMap<>();
-
-		_groupParams.put("active", Boolean.TRUE);
+		_groupParams = LinkedHashMapBuilder.<String, Object>put(
+			"active", Boolean.TRUE
+		).build();
 
 		if (_isManualMembership()) {
 			_groupParams.put("manualMembership", Boolean.TRUE);
@@ -525,11 +505,7 @@ public class SiteBrowserDisplayContext {
 		if (type.equals("child-sites")) {
 			Group parentGroup = GroupLocalServiceUtil.getGroup(groupId);
 
-			List<Group> parentGroups = new ArrayList<>();
-
-			parentGroups.add(parentGroup);
-
-			_groupParams.put("groupsTree", parentGroups);
+			_groupParams.put("groupsTree", ListUtil.fromArray(parentGroup));
 		}
 		else if (filterManageableGroups) {
 			User user = themeDisplay.getUser();
@@ -562,34 +538,20 @@ public class SiteBrowserDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol", "name");
+		_orderByCol = ParamUtil.getString(
+			_httpServletRequest, "orderByCol", "name");
 
 		return _orderByCol;
 	}
 
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(_getOrderByCol(), "name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "name"));
-					});
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(_getOrderByCol(), "type"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "type");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "type"));
-					});
-			}
-		};
+	private String _getPuid() {
+		if (_puid != null) {
+			return _puid;
+		}
+
+		_puid = ParamUtil.getString(_httpServletRequest, "p_u_i_d");
+
+		return _puid;
 	}
 
 	private String[] _getTypes() {
@@ -597,7 +559,7 @@ public class SiteBrowserDisplayContext {
 			return _types;
 		}
 
-		_types = ParamUtil.getParameterValues(_request, "types");
+		_types = ParamUtil.getParameterValues(_httpServletRequest, "types");
 
 		if (_types.length == 0) {
 			_types = new String[] {"sites-that-i-administer"};
@@ -611,7 +573,8 @@ public class SiteBrowserDisplayContext {
 			return _manualMembership;
 		}
 
-		_manualMembership = ParamUtil.getBoolean(_request, "manualMembership");
+		_manualMembership = ParamUtil.getBoolean(
+			_httpServletRequest, "manualMembership");
 
 		return _manualMembership;
 	}
@@ -621,7 +584,8 @@ public class SiteBrowserDisplayContext {
 			return _privateLayout;
 		}
 
-		_privateLayout = ParamUtil.getBoolean(_request, "privateLayout");
+		_privateLayout = ParamUtil.getBoolean(
+			_httpServletRequest, "privateLayout");
 
 		return _privateLayout;
 	}
@@ -635,16 +599,21 @@ public class SiteBrowserDisplayContext {
 		SiteBrowserDisplayContext.class);
 
 	private String _displayStyle;
+	private String _eventName;
 	private String _filter;
 	private Long _groupId;
 	private LinkedHashMap<String, Object> _groupParams;
+	private GroupSearch _groupSearch;
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private Boolean _manualMembership;
 	private String _orderByCol;
 	private String _orderByType;
 	private Boolean _privateLayout;
-	private final HttpServletRequest _request;
+	private String _puid;
+	private final User _selUser;
+	private String _target;
 	private String _type;
 	private String[] _types;
 

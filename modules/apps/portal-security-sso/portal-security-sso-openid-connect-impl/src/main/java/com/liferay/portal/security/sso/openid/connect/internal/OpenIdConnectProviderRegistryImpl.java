@@ -14,6 +14,7 @@
 
 package com.liferay.portal.security.sso.openid.connect.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectProvider;
@@ -48,8 +49,8 @@ import org.osgi.service.component.annotations.Component;
 )
 public class OpenIdConnectProviderRegistryImpl
 	implements ManagedServiceFactory,
-			OpenIdConnectProviderRegistry
-		<OIDCClientMetadata, OIDCProviderMetadata> {
+			   OpenIdConnectProviderRegistry
+				   <OIDCClientMetadata, OIDCProviderMetadata> {
 
 	@Override
 	public void deleted(String factoryPid) {
@@ -149,6 +150,8 @@ public class OpenIdConnectProviderRegistryImpl
 				openIdConnectMetadataFactory =
 					new OpenIdConnectMetadataFactoryImpl(
 						openIdConnectProviderConfiguration.providerName(),
+						openIdConnectProviderConfiguration.
+							idTokenSigningAlgValues(),
 						openIdConnectProviderConfiguration.issuerURL(),
 						openIdConnectProviderConfiguration.subjectTypes(),
 						openIdConnectProviderConfiguration.jwksURI(),
@@ -158,23 +161,22 @@ public class OpenIdConnectProviderRegistryImpl
 						openIdConnectProviderConfiguration.userInfoEndPoint());
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new ConfigurationException(
 				null,
-				"Unable to instantiate provider metadata factory for " +
-					openIdConnectProviderConfiguration.providerName(),
-				e);
+				StringBundler.concat(
+					"Unable to instantiate provider metadata factory for ",
+					openIdConnectProviderConfiguration.providerName(), ": ",
+					exception.getMessage()),
+				exception);
 		}
 
-		OpenIdConnectProvider<OIDCClientMetadata, OIDCProviderMetadata>
-			openIdConnectProvider = new OpenIdConnectProviderImpl(
-				openIdConnectProviderConfiguration.providerName(),
-				openIdConnectProviderConfiguration.openIdConnectClientId(),
-				openIdConnectProviderConfiguration.openIdConnectClientSecret(),
-				openIdConnectProviderConfiguration.scopes(),
-				openIdConnectMetadataFactory);
-
-		return openIdConnectProvider;
+		return new OpenIdConnectProviderImpl(
+			openIdConnectProviderConfiguration.providerName(),
+			openIdConnectProviderConfiguration.openIdConnectClientId(),
+			openIdConnectProviderConfiguration.openIdConnectClientSecret(),
+			openIdConnectProviderConfiguration.scopes(),
+			openIdConnectMetadataFactory);
 	}
 
 	protected void removeOpenConnectIdProvider(String factoryPid) {

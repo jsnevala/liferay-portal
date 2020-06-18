@@ -14,6 +14,9 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.json.JSONObject;
 
 /**
@@ -32,13 +35,55 @@ public class PortalBatchBuildData
 	}
 
 	@Override
+	public String getPortalGitHubBranchName() {
+		return getGitHubBranchName(getPortalGitHubURL());
+	}
+
+	@Override
+	public String getPortalGitHubRepositoryName() {
+		return getGitHubRepositoryName(getPortalGitHubURL());
+	}
+
+	@Override
 	public String getPortalGitHubURL() {
-		return getString("portal_github_url");
+		TopLevelBuildData topLevelBuildData = getTopLevelBuildData();
+
+		if (!(topLevelBuildData instanceof PortalTopLevelBuildData)) {
+			throw new RuntimeException("Invalid top level build data");
+		}
+
+		PortalTopLevelBuildData portalTopLevelBuildData =
+			(PortalTopLevelBuildData)topLevelBuildData;
+
+		return portalTopLevelBuildData.getPortalGitHubURL();
+	}
+
+	@Override
+	public String getPortalGitHubUsername() {
+		return getGitHubUsername(getPortalGitHubURL());
 	}
 
 	@Override
 	public String getPortalUpstreamBranchName() {
-		return getString("portal_upstream_branch_name");
+		TopLevelBuildData topLevelBuildData = getTopLevelBuildData();
+
+		if (!(topLevelBuildData instanceof PortalTopLevelBuildData)) {
+			throw new RuntimeException("Invalid top level build data");
+		}
+
+		PortalTopLevelBuildData portalTopLevelBuildData =
+			(PortalTopLevelBuildData)topLevelBuildData;
+
+		return portalTopLevelBuildData.getPortalUpstreamBranchName();
+	}
+
+	@Override
+	public void put(String key, Object value) {
+		if (_forbiddenKeys.contains(key)) {
+			throw new IllegalArgumentException(key + " may not be set");
+		}
+
+		super.put(key, value);
 	}
 
 	@Override
@@ -60,11 +105,6 @@ public class PortalBatchBuildData
 		String runID, String jobName, String buildURL) {
 
 		super(runID, jobName, buildURL);
-
-		setPortalGitHubURL(DEFAULT_PORTAL_GITHUB_URL);
-		setPortalUpstreamBranchName(DEFAULT_PORTAL_UPSTREAM_BRANCH_NAME);
-
-		validateKeys(_REQUIRED_KEYS);
 	}
 
 	@Override
@@ -72,9 +112,9 @@ public class PortalBatchBuildData
 		return _TYPE;
 	}
 
-	private static final String[] _REQUIRED_KEYS =
-		{"portal_github_url", "portal_upstream_branch_name"};
-
 	private static final String _TYPE = "portal_batch";
+
+	private static final List<String> _forbiddenKeys = Arrays.asList(
+		"portal_github_url", "portal_upstream_branch_name");
 
 }

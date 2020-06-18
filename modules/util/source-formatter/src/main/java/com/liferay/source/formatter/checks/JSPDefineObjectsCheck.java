@@ -14,7 +14,7 @@
 
 package com.liferay.source.formatter.checks;
 
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -95,7 +95,7 @@ public class JSPDefineObjectsCheck extends BaseFileCheck {
 
 			addMessage(
 				fileName, "Use '" + tag + ":defineObjects' or rename var",
-				"jsp_code_duplication.markdown", getLineNumber(content, x));
+				getLineNumber(content, x));
 		}
 	}
 
@@ -144,10 +144,7 @@ public class JSPDefineObjectsCheck extends BaseFileCheck {
 			"ResourceBundleUtil.getBundle(\"content.Language\", locale, " +
 				"getClass()"
 		},
-		{
-			"WindowState", "windowState",
-			"liferayPortletRequest.getWindowState()"
-		}
+		{"WindowState", "windowState", "liferayPortletRequest.getWindowState()"}
 	};
 
 	private static final String[][] _LIFERAY_THEME_DEFINE_OBJECTS = {

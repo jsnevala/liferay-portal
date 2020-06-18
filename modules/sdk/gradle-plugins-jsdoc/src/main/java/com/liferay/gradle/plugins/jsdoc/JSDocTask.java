@@ -28,20 +28,26 @@ import java.util.List;
 import java.util.Set;
 
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.resources.TextResource;
+import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.util.GUtil;
 
 /**
  * @author Andrea Di Giorgi
  */
+@CacheableTask
 public class JSDocTask extends ExecuteNodeScriptTask {
 
 	public JSDocTask() {
@@ -52,6 +58,22 @@ public class JSDocTask extends ExecuteNodeScriptTask {
 		if (packageJsonFile.exists()) {
 			setPackageJsonFile(packageJsonFile);
 		}
+
+		onlyIf(
+			new Spec<Task>() {
+
+				@Override
+				public boolean isSatisfiedBy(Task task) {
+					for (File sourceDir : getSourceDirs()) {
+						if (sourceDir.exists()) {
+							return true;
+						}
+					}
+
+					return false;
+				}
+
+			});
 	}
 
 	@Nested
@@ -67,17 +89,20 @@ public class JSDocTask extends ExecuteNodeScriptTask {
 
 	@InputFile
 	@Optional
+	@PathSensitive(PathSensitivity.RELATIVE)
 	public File getPackageJsonFile() {
 		return GradleUtil.toFile(getProject(), _packageJsonFile);
 	}
 
 	@InputFile
 	@Optional
+	@PathSensitive(PathSensitivity.RELATIVE)
 	public File getReadmeFile() {
 		return GradleUtil.toFile(getProject(), _readmeFile);
 	}
 
 	@InputFiles
+	@PathSensitive(PathSensitivity.RELATIVE)
 	public FileCollection getSourceDirs() {
 		Project project = getProject();
 
@@ -86,6 +111,7 @@ public class JSDocTask extends ExecuteNodeScriptTask {
 
 	@InputDirectory
 	@Optional
+	@PathSensitive(PathSensitivity.RELATIVE)
 	public File getTutorialsDir() {
 		return GradleUtil.toFile(getProject(), _tutorialsDir);
 	}

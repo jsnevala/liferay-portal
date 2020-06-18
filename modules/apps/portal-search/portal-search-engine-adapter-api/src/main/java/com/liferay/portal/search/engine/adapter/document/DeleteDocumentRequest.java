@@ -14,21 +14,20 @@
 
 package com.liferay.portal.search.engine.adapter.document;
 
-import aQute.bnd.annotation.ProviderType;
+import com.liferay.portal.search.engine.adapter.ccr.CrossClusterRequest;
 
 import java.util.function.Consumer;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class DeleteDocumentRequest
+	extends CrossClusterRequest
 	implements BulkableDocumentRequest<DeleteDocumentRequest>,
 			   DocumentRequest<DeleteDocumentResponse> {
 
-	public DeleteDocumentRequest(String indexName, String type, String uid) {
+	public DeleteDocumentRequest(String indexName, String uid) {
 		_indexName = indexName;
-		_type = type;
 		_uid = uid;
 	}
 
@@ -64,9 +63,13 @@ public class DeleteDocumentRequest
 		_refresh = refresh;
 	}
 
+	public void setType(String type) {
+		_type = type;
+	}
+
 	private final String _indexName;
 	private boolean _refresh;
-	private final String _type;
+	private String _type;
 	private final String _uid;
 
 }

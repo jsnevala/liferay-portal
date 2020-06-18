@@ -14,14 +14,10 @@
 
 package com.liferay.changeset.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.changeset.model.ChangesetCollection;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +30,11 @@ import java.util.Date;
  * The cache model class for representing ChangesetCollection in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see ChangesetCollection
  * @generated
  */
-@ProviderType
-public class ChangesetCollectionCacheModel implements CacheModel<ChangesetCollection>,
-	Externalizable {
+public class ChangesetCollectionCacheModel
+	implements CacheModel<ChangesetCollection>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +45,12 @@ public class ChangesetCollectionCacheModel implements CacheModel<ChangesetCollec
 			return false;
 		}
 
-		ChangesetCollectionCacheModel changesetCollectionCacheModel = (ChangesetCollectionCacheModel)obj;
+		ChangesetCollectionCacheModel changesetCollectionCacheModel =
+			(ChangesetCollectionCacheModel)obj;
 
-		if (changesetCollectionId == changesetCollectionCacheModel.changesetCollectionId) {
+		if (changesetCollectionId ==
+				changesetCollectionCacheModel.changesetCollectionId) {
+
 			return true;
 		}
 
@@ -93,7 +91,8 @@ public class ChangesetCollectionCacheModel implements CacheModel<ChangesetCollec
 
 	@Override
 	public ChangesetCollection toEntityModel() {
-		ChangesetCollectionImpl changesetCollectionImpl = new ChangesetCollectionImpl();
+		ChangesetCollectionImpl changesetCollectionImpl =
+			new ChangesetCollectionImpl();
 
 		changesetCollectionImpl.setChangesetCollectionId(changesetCollectionId);
 		changesetCollectionImpl.setGroupId(groupId);
@@ -157,8 +156,7 @@ public class ChangesetCollectionCacheModel implements CacheModel<ChangesetCollec
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(changesetCollectionId);
 
 		objectOutput.writeLong(groupId);
@@ -201,4 +199,5 @@ public class ChangesetCollectionCacheModel implements CacheModel<ChangesetCollec
 	public long modifiedDate;
 	public String name;
 	public String description;
+
 }

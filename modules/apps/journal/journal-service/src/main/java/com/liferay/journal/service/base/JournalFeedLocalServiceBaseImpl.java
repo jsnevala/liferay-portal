@@ -14,22 +14,17 @@
 
 package com.liferay.journal.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.expando.kernel.service.persistence.ExpandoValuePersistence;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
 import com.liferay.journal.model.JournalFeed;
 import com.liferay.journal.service.JournalFeedLocalService;
 import com.liferay.journal.service.persistence.JournalFeedFinder;
 import com.liferay.journal.service.persistence.JournalFeedPersistence;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -48,19 +43,19 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
-import com.liferay.portal.kernel.service.persistence.ClassNamePersistence;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
 import java.util.List;
 
 import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the base implementation for the journal feed local service.
@@ -71,17 +66,16 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.journal.service.impl.JournalFeedLocalServiceImpl
- * @see com.liferay.journal.service.JournalFeedLocalServiceUtil
  * @generated
  */
-@ProviderType
 public abstract class JournalFeedLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements JournalFeedLocalService,
-		IdentifiableOSGiService {
+	extends BaseLocalServiceImpl
+	implements AopService, IdentifiableOSGiService, JournalFeedLocalService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.journal.service.JournalFeedLocalServiceUtil} to access the journal feed local service.
+	 * Never modify or reference this class directly. Use <code>JournalFeedLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.journal.service.JournalFeedLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -136,11 +130,16 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	}
 
 	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return journalFeedPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(JournalFeed.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			JournalFeed.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -158,7 +157,7 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.journal.model.impl.JournalFeedModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.journal.model.impl.JournalFeedModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -167,17 +166,18 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return journalFeedPersistence.findWithDynamicQuery(dynamicQuery, start,
-			end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return journalFeedPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.journal.model.impl.JournalFeedModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.journal.model.impl.JournalFeedModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -187,10 +187,12 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return journalFeedPersistence.findWithDynamicQuery(dynamicQuery, start,
-			end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return journalFeedPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -212,10 +214,11 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return journalFeedPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return journalFeedPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
@@ -231,8 +234,9 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	 * @return the matching journal feed, or <code>null</code> if a matching journal feed could not be found
 	 */
 	@Override
-	public JournalFeed fetchJournalFeedByUuidAndGroupId(String uuid,
-		long groupId) {
+	public JournalFeed fetchJournalFeedByUuidAndGroupId(
+		String uuid, long groupId) {
+
 		return journalFeedPersistence.fetchByUUID_G(uuid, groupId);
 	}
 
@@ -250,7 +254,8 @@ public abstract class JournalFeedLocalServiceBaseImpl
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
 		actionableDynamicQuery.setBaseLocalService(journalFeedLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
@@ -262,10 +267,14 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(journalFeedLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			journalFeedLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(JournalFeed.class);
 
@@ -276,6 +285,7 @@ public abstract class JournalFeedLocalServiceBaseImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
+
 		actionableDynamicQuery.setBaseLocalService(journalFeedLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(JournalFeed.class);
@@ -286,51 +296,67 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
-		final ExportActionableDynamicQuery exportActionableDynamicQuery = new ExportActionableDynamicQuery() {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
 				@Override
 				public long performCount() throws PortalException {
-					ManifestSummary manifestSummary = portletDataContext.getManifestSummary();
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
 
 					StagedModelType stagedModelType = getStagedModelType();
 
 					long modelAdditionCount = super.performCount();
 
-					manifestSummary.addModelAdditionCount(stagedModelType,
-						modelAdditionCount);
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
 
-					long modelDeletionCount = ExportImportHelperUtil.getModelDeletionCount(portletDataContext,
-							stagedModelType);
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
 
-					manifestSummary.addModelDeletionCount(stagedModelType,
-						modelDeletionCount);
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
 
 					return modelAdditionCount;
 				}
+
 			};
 
 		initActionableDynamicQuery(exportActionableDynamicQuery);
 
-		exportActionableDynamicQuery.setAddCriteriaMethod(new ActionableDynamicQuery.AddCriteriaMethod() {
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
 				@Override
 				public void addCriteria(DynamicQuery dynamicQuery) {
-					portletDataContext.addDateRangeCriteria(dynamicQuery,
-						"modifiedDate");
+					portletDataContext.addDateRangeCriteria(
+						dynamicQuery, "modifiedDate");
 				}
+
 			});
 
-		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setGroupId(portletDataContext.getScopeGroupId());
+		exportActionableDynamicQuery.setGroupId(
+			portletDataContext.getScopeGroupId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<JournalFeed>() {
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<JournalFeed>() {
+
 				@Override
 				public void performAction(JournalFeed journalFeed)
 					throws PortalException {
-					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
-						journalFeed);
+
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, journalFeed);
 				}
+
 			});
-		exportActionableDynamicQuery.setStagedModelType(new StagedModelType(
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
 				PortalUtil.getClassNameId(JournalFeed.class.getName())));
 
 		return exportActionableDynamicQuery;
@@ -339,15 +365,34 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return journalFeedPersistence.create(((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
-		return journalFeedLocalService.deleteJournalFeed((JournalFeed)persistedModel);
+
+		return journalFeedLocalService.deleteJournalFeed(
+			(JournalFeed)persistedModel);
 	}
 
+	public BasePersistence<JournalFeed> getBasePersistence() {
+		return journalFeedPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return journalFeedPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -359,8 +404,9 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	 * @return the matching journal feeds, or an empty list if no matches were found
 	 */
 	@Override
-	public List<JournalFeed> getJournalFeedsByUuidAndCompanyId(String uuid,
-		long companyId) {
+	public List<JournalFeed> getJournalFeedsByUuidAndCompanyId(
+		String uuid, long companyId) {
+
 		return journalFeedPersistence.findByUuid_C(uuid, companyId);
 	}
 
@@ -375,11 +421,12 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	 * @return the range of matching journal feeds, or an empty list if no matches were found
 	 */
 	@Override
-	public List<JournalFeed> getJournalFeedsByUuidAndCompanyId(String uuid,
-		long companyId, int start, int end,
+	public List<JournalFeed> getJournalFeedsByUuidAndCompanyId(
+		String uuid, long companyId, int start, int end,
 		OrderByComparator<JournalFeed> orderByComparator) {
-		return journalFeedPersistence.findByUuid_C(uuid, companyId, start, end,
-			orderByComparator);
+
+		return journalFeedPersistence.findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -393,6 +440,7 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	@Override
 	public JournalFeed getJournalFeedByUuidAndGroupId(String uuid, long groupId)
 		throws PortalException {
+
 		return journalFeedPersistence.findByUUID_G(uuid, groupId);
 	}
 
@@ -400,7 +448,7 @@ public abstract class JournalFeedLocalServiceBaseImpl
 	 * Returns a range of all the journal feeds.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.journal.model.impl.JournalFeedModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.journal.model.impl.JournalFeedModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of journal feeds
@@ -434,221 +482,17 @@ public abstract class JournalFeedLocalServiceBaseImpl
 		return journalFeedPersistence.update(journalFeed);
 	}
 
-	/**
-	 * Returns the journal feed local service.
-	 *
-	 * @return the journal feed local service
-	 */
-	public JournalFeedLocalService getJournalFeedLocalService() {
-		return journalFeedLocalService;
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			JournalFeedLocalService.class, IdentifiableOSGiService.class,
+			PersistedModelLocalService.class
+		};
 	}
 
-	/**
-	 * Sets the journal feed local service.
-	 *
-	 * @param journalFeedLocalService the journal feed local service
-	 */
-	public void setJournalFeedLocalService(
-		JournalFeedLocalService journalFeedLocalService) {
-		this.journalFeedLocalService = journalFeedLocalService;
-	}
-
-	/**
-	 * Returns the journal feed persistence.
-	 *
-	 * @return the journal feed persistence
-	 */
-	public JournalFeedPersistence getJournalFeedPersistence() {
-		return journalFeedPersistence;
-	}
-
-	/**
-	 * Sets the journal feed persistence.
-	 *
-	 * @param journalFeedPersistence the journal feed persistence
-	 */
-	public void setJournalFeedPersistence(
-		JournalFeedPersistence journalFeedPersistence) {
-		this.journalFeedPersistence = journalFeedPersistence;
-	}
-
-	/**
-	 * Returns the journal feed finder.
-	 *
-	 * @return the journal feed finder
-	 */
-	public JournalFeedFinder getJournalFeedFinder() {
-		return journalFeedFinder;
-	}
-
-	/**
-	 * Sets the journal feed finder.
-	 *
-	 * @param journalFeedFinder the journal feed finder
-	 */
-	public void setJournalFeedFinder(JournalFeedFinder journalFeedFinder) {
-		this.journalFeedFinder = journalFeedFinder;
-	}
-
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
-		return counterLocalService;
-	}
-
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
-		this.counterLocalService = counterLocalService;
-	}
-
-	/**
-	 * Returns the class name local service.
-	 *
-	 * @return the class name local service
-	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService getClassNameLocalService() {
-		return classNameLocalService;
-	}
-
-	/**
-	 * Sets the class name local service.
-	 *
-	 * @param classNameLocalService the class name local service
-	 */
-	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService) {
-		this.classNameLocalService = classNameLocalService;
-	}
-
-	/**
-	 * Returns the class name persistence.
-	 *
-	 * @return the class name persistence
-	 */
-	public ClassNamePersistence getClassNamePersistence() {
-		return classNamePersistence;
-	}
-
-	/**
-	 * Sets the class name persistence.
-	 *
-	 * @param classNamePersistence the class name persistence
-	 */
-	public void setClassNamePersistence(
-		ClassNamePersistence classNamePersistence) {
-		this.classNamePersistence = classNamePersistence;
-	}
-
-	/**
-	 * Returns the resource local service.
-	 *
-	 * @return the resource local service
-	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService getResourceLocalService() {
-		return resourceLocalService;
-	}
-
-	/**
-	 * Sets the resource local service.
-	 *
-	 * @param resourceLocalService the resource local service
-	 */
-	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService) {
-		this.resourceLocalService = resourceLocalService;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService getUserLocalService() {
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	/**
-	 * Returns the expando value local service.
-	 *
-	 * @return the expando value local service
-	 */
-	public com.liferay.expando.kernel.service.ExpandoValueLocalService getExpandoValueLocalService() {
-		return expandoValueLocalService;
-	}
-
-	/**
-	 * Sets the expando value local service.
-	 *
-	 * @param expandoValueLocalService the expando value local service
-	 */
-	public void setExpandoValueLocalService(
-		com.liferay.expando.kernel.service.ExpandoValueLocalService expandoValueLocalService) {
-		this.expandoValueLocalService = expandoValueLocalService;
-	}
-
-	/**
-	 * Returns the expando value persistence.
-	 *
-	 * @return the expando value persistence
-	 */
-	public ExpandoValuePersistence getExpandoValuePersistence() {
-		return expandoValuePersistence;
-	}
-
-	/**
-	 * Sets the expando value persistence.
-	 *
-	 * @param expandoValuePersistence the expando value persistence
-	 */
-	public void setExpandoValuePersistence(
-		ExpandoValuePersistence expandoValuePersistence) {
-		this.expandoValuePersistence = expandoValuePersistence;
-	}
-
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.journal.model.JournalFeed",
-			journalFeedLocalService);
-	}
-
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.journal.model.JournalFeed");
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		journalFeedLocalService = (JournalFeedLocalService)aopProxy;
 	}
 
 	/**
@@ -683,38 +527,42 @@ public abstract class JournalFeedLocalServiceBaseImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = JournalFeedLocalService.class)
 	protected JournalFeedLocalService journalFeedLocalService;
-	@BeanReference(type = JournalFeedPersistence.class)
+
+	@Reference
 	protected JournalFeedPersistence journalFeedPersistence;
-	@BeanReference(type = JournalFeedFinder.class)
+
+	@Reference
 	protected JournalFeedFinder journalFeedFinder;
-	@ServiceReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ClassNameLocalService.class)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService;
-	@ServiceReference(type = ClassNamePersistence.class)
-	protected ClassNamePersistence classNamePersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ResourceLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.UserLocalService.class)
-	protected com.liferay.portal.kernel.service.UserLocalService userLocalService;
-	@ServiceReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-	@ServiceReference(type = com.liferay.expando.kernel.service.ExpandoValueLocalService.class)
-	protected com.liferay.expando.kernel.service.ExpandoValueLocalService expandoValueLocalService;
-	@ServiceReference(type = ExpandoValuePersistence.class)
-	protected ExpandoValuePersistence expandoValuePersistence;
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+
+	@Reference
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.ClassNameLocalService
+		classNameLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.ResourceLocalService
+		resourceLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.UserLocalService
+		userLocalService;
+
+	@Reference
+	protected com.liferay.expando.kernel.service.ExpandoValueLocalService
+		expandoValueLocalService;
+
 }

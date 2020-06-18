@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
-* @author Rafael Praxedes
-*/
+ * @author Rafael Praxedes
+ */
 public class DDMFormEvaluatorFormValuesHelper {
 
 	public DDMFormEvaluatorFormValuesHelper(DDMFormValues ddmFormValues) {
@@ -88,8 +88,8 @@ public class DDMFormEvaluatorFormValuesHelper {
 		}
 	}
 
-	private final
-		Map<String, Map<DDMFormEvaluatorFieldContextKey, DDMFormFieldValue>>
+	private final Map
+		<String, Map<DDMFormEvaluatorFieldContextKey, DDMFormFieldValue>>
 			_ddmFormFieldValuesMap = new HashMap<>();
 
 }

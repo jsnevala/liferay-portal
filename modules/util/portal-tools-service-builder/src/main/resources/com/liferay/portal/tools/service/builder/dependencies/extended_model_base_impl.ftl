@@ -1,10 +1,11 @@
 package ${packagePath}.model.impl;
 
+import ${serviceBuilder.getCompatJavaClassName("StringBundler")};
+
 import ${apiPackagePath}.model.${entity.name};
 
 <#if entity.hasLocalService() && entity.hasEntityColumns()>
 	import ${apiPackagePath}.service.${entity.name}LocalServiceUtil;
-	import ${serviceBuilder.getCompatProperty("StringBundler")};
 
 	import com.liferay.portal.kernel.exception.PortalException;
 	import com.liferay.portal.kernel.exception.SystemException;
@@ -13,8 +14,6 @@ import ${apiPackagePath}.model.${entity.name};
 	import java.util.ArrayList;
 	import java.util.List;
 </#if>
-
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * The extended model base implementation for the ${entity.name} service. Represents a row in the &quot;${entity.table}&quot; database table, with each column mapped to a property of this class.
@@ -35,17 +34,15 @@ import aQute.bnd.annotation.ProviderType;
 <#if classDeprecated>
 	@Deprecated
 </#if>
-
-@ProviderType
 public abstract class ${entity.name}BaseImpl extends ${entity.name}ModelImpl implements ${entity.name} {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a ${entity.humanName} model instance should use the {@link ${entity.name}} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a ${entity.humanName} model instance should use the <code>${entity.name}</code> interface instead.
 	 */
 
-	<#if entity.hasLocalService() && entity.hasEntityColumns()>
+	<#if entity.hasLocalService() && entity.hasEntityColumns() && entity.hasPersistence()>
 		@Override
 		public void persist() {
 			if (this.isNew()) {
@@ -56,8 +53,8 @@ public abstract class ${entity.name}BaseImpl extends ${entity.name}ModelImpl imp
 					try {
 						${entity.name}LocalServiceUtil.update${entity.name}(this);
 					}
-					catch (PortalException pe) {
-						throw new SystemException(pe);
+					catch (PortalException portalException) {
+						throw new SystemException(portalException);
 					}
 				<#else>
 					${entity.name}LocalServiceUtil.update${entity.name}(this);
@@ -72,22 +69,22 @@ public abstract class ${entity.name}BaseImpl extends ${entity.name}ModelImpl imp
 				@Override
 				@SuppressWarnings("unused")
 				public String buildTreePath() throws PortalException {
-					List<${entity.name}> ${entity.varNames} = new ArrayList<${entity.name}>();
+					List<${entity.name}> ${entity.pluralVarName} = new ArrayList<${entity.name}>();
 
 					${entity.name} ${entity.varName} = this;
 
 					while (${entity.varName} != null) {
-						${entity.varNames}.add(${entity.varName});
+						${entity.pluralVarName}.add(${entity.varName});
 
 						${entity.varName} = ${entity.name}LocalServiceUtil.fetch${entity.name}(${entity.varName}.getParent${pkEntityColumn.methodName}());
 					}
 
-					StringBundler sb = new StringBundler(${entity.varNames}.size() * 2 + 1);
+					StringBundler sb = new StringBundler(${entity.pluralVarName}.size() * 2 + 1);
 
 					sb.append("/");
 
-					for (int i = ${entity.varNames}.size() - 1; i >= 0; i--) {
-						${entity.varName} = ${entity.varNames}.get(i);
+					for (int i = ${entity.pluralVarName}.size() - 1; i >= 0; i--) {
+						${entity.varName} = ${entity.pluralVarName}.get(i);
 
 						sb.append(${entity.varName}.get${entity.PKEntityColumns[0].methodName}());
 						sb.append("/");
@@ -107,8 +104,8 @@ public abstract class ${entity.name}BaseImpl extends ${entity.name}ModelImpl imp
 					try {
 						${entity.name}LocalServiceUtil.update${entity.name}(${entity.varName});
 					}
-					catch (PortalException pe) {
-						throw new SystemException(pe);
+					catch (PortalException portalException) {
+						throw new SystemException(portalException);
 					}
 				<#else>
 					${entity.name}LocalServiceUtil.update${entity.name}(${entity.varName});

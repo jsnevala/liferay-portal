@@ -68,9 +68,13 @@ public class UpgradeDDMFormInstanceSettings extends UpgradeProcess {
 
 		JSONObject settingJSONObject = _jsonFactory.createJSONObject();
 
-		settingJSONObject.put("instanceId", StringUtil.randomString());
-		settingJSONObject.put("name", propertyName);
-		settingJSONObject.put("value", value);
+		settingJSONObject.put(
+			"instanceId", StringUtil.randomString()
+		).put(
+			"name", propertyName
+		).put(
+			"value", value
+		);
 
 		return settingJSONObject;
 	}
@@ -113,7 +117,7 @@ public class UpgradeDDMFormInstanceSettings extends UpgradeProcess {
 		}
 	}
 
-	protected JSONObject getFieldValue(
+	protected JSONObject getFieldValueJSONObject(
 		String fieldName, JSONArray fieldValues) {
 
 		for (int i = 0; i < fieldValues.length(); i++) {
@@ -124,16 +128,17 @@ public class UpgradeDDMFormInstanceSettings extends UpgradeProcess {
 			}
 		}
 
-		return null;
+		return _jsonFactory.createJSONObject();
 	}
 
 	protected void updateSettings(JSONObject settingsJSONObject) {
 		JSONArray fieldValues = settingsJSONObject.getJSONArray("fieldValues");
 
 		convertToJSONArrayValue(
-			getFieldValue("storageType", fieldValues), "json");
+			getFieldValueJSONObject("storageType", fieldValues), "json");
 		convertToJSONArrayValue(
-			getFieldValue("workflowDefinition", fieldValues), "no-workflow");
+			getFieldValueJSONObject("workflowDefinition", fieldValues),
+			"no-workflow");
 	}
 
 	private final JSONFactory _jsonFactory;

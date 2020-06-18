@@ -30,11 +30,12 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.xml.Element;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -137,7 +138,7 @@ public class CalendarStagedModelDataHandler
 			portletDataContext, calendar, calendarResource,
 			PortletDataContext.REFERENCE_TYPE_STRONG);
 
-		String calendarName = calendar.getName(LocaleUtil.getDefault());
+		String calendarName = calendar.getName(LocaleUtil.getSiteDefault());
 
 		Group group = _groupLocalService.getGroup(calendar.getGroupId());
 
@@ -255,27 +256,17 @@ public class CalendarStagedModelDataHandler
 			return calendar.getNameMap();
 		}
 
-		Map<Locale, String> calendarNameMap = new HashMap<>();
-
 		Group scopeGroup = _groupLocalService.getGroup(
 			portletDataContext.getScopeGroupId());
 
-		calendarNameMap.put(
-			LocaleUtil.getDefault(), scopeGroup.getDescriptiveName());
+		Map<Locale, String> calendarNameMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), scopeGroup.getDescriptiveName()
+		).build();
 
-		return calendarNameMap;
-	}
-
-	@Reference(unbind = "-")
-	protected void setCalendarLocalService(
-		CalendarLocalService calendarLocalService) {
-
-		_calendarLocalService = calendarLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
+		return LocalizationUtil.populateLocalizationMap(
+			calendarNameMap,
+			LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()),
+			scopeGroup.getGroupId());
 	}
 
 	protected boolean validateMissingReference(
@@ -295,7 +286,10 @@ public class CalendarStagedModelDataHandler
 		return true;
 	}
 
+	@Reference
 	private CalendarLocalService _calendarLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 }

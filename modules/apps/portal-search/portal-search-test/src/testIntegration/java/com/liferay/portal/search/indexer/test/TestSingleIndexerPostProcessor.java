@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = "indexer.class.name=com.liferay.portlet.usersadmin.util.OrganizationIndexer",
+	property = "indexer.class.name=com.liferay.portal.kernel.model.Organization",
 	service = IndexerPostProcessor.class
 )
 public class TestSingleIndexerPostProcessor implements IndexerPostProcessor {
@@ -38,16 +38,6 @@ public class TestSingleIndexerPostProcessor implements IndexerPostProcessor {
 	@Override
 	public void postProcessContextBooleanFilter(
 			BooleanFilter booleanFilter, SearchContext searchContext)
-		throws Exception {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public void postProcessContextQuery(
-			BooleanQuery contextQuery, SearchContext searchContext)
 		throws Exception {
 	}
 
@@ -66,16 +56,6 @@ public class TestSingleIndexerPostProcessor implements IndexerPostProcessor {
 	public void postProcessSearchQuery(
 			BooleanQuery searchQuery, BooleanFilter booleanFilter,
 			SearchContext searchContext)
-		throws Exception {
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public void postProcessSearchQuery(
-			BooleanQuery searchQuery, SearchContext searchContext)
 		throws Exception {
 	}
 

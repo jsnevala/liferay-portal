@@ -17,11 +17,10 @@ package com.liferay.dynamic.data.mapping.form.builder.internal.servlet;
 import com.liferay.dynamic.data.mapping.annotations.DDMForm;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProvider;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderParameterSettings;
+import com.liferay.dynamic.data.mapping.internal.io.DDMFormValuesJSONDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeResponse;
-import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerTracker;
-import com.liferay.dynamic.data.mapping.io.internal.DDMFormValuesJSONDeserializer;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.util.DDMFormFactory;
 import com.liferay.portal.json.JSONFactoryImpl;
@@ -30,7 +29,9 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PortalImpl;
@@ -39,14 +40,13 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.mockito.Matchers;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -61,7 +61,8 @@ import org.skyscreamer.jsonassert.JSONAssert;
  */
 @PrepareForTest(ResourceBundleUtil.class)
 @RunWith(PowerMockRunner.class)
-public class DDMDataProviderInstanceParameterSettingsServletTest {
+public class DDMDataProviderInstanceParameterSettingsServletTest
+	extends PowerMockito {
 
 	@Before
 	public void setUp() throws Exception {
@@ -70,6 +71,7 @@ public class DDMDataProviderInstanceParameterSettingsServletTest {
 		setUpGetDataProviderParametersSettingsMVCResourceCommand();
 		setUpJSONFactoryUtil();
 		setUpLanguageUtil();
+		setUpPortalUtil();
 		setUpResourceBundleUtil();
 	}
 
@@ -173,13 +175,6 @@ public class DDMDataProviderInstanceParameterSettingsServletTest {
 		_ddmDataProviderInstanceParameterSettingsServlet =
 			new DDMDataProviderInstanceParameterSettingsServlet();
 
-		Mockito.when(
-			_ddmFormValuesDeserializerTracker.getDDMFormValuesDeserializer(
-				Mockito.anyString())
-		).thenReturn(
-			_ddmFormValuesJSONDeserializer
-		);
-
 		PowerMockito.field(
 			_ddmDataProviderInstanceParameterSettingsServlet.getClass(),
 			"_jsonFactory"
@@ -189,10 +184,10 @@ public class DDMDataProviderInstanceParameterSettingsServletTest {
 
 		PowerMockito.field(
 			_ddmDataProviderInstanceParameterSettingsServlet.getClass(),
-			"_ddmFormValuesDeserializerTracker"
+			"_jsonDDMFormValuesDeserializer"
 		).set(
 			_ddmDataProviderInstanceParameterSettingsServlet,
-			_ddmFormValuesDeserializerTracker
+			_ddmFormValuesJSONDeserializer
 		);
 	}
 
@@ -214,6 +209,22 @@ public class DDMDataProviderInstanceParameterSettingsServletTest {
 		PortalClassLoaderUtil.setClassLoader(PortalImpl.class.getClassLoader());
 	}
 
+	protected void setUpPortalUtil() {
+		PortalUtil portalUtil = new PortalUtil();
+
+		Portal portal = mock(Portal.class);
+
+		ResourceBundle resourceBundle = mock(ResourceBundle.class);
+
+		when(
+			portal.getResourceBundle(Matchers.any(Locale.class))
+		).thenReturn(
+			resourceBundle
+		);
+
+		portalUtil.setPortal(portal);
+	}
+
 	protected void setUpResourceBundleUtil() {
 		PowerMockito.mockStatic(ResourceBundleUtil.class);
 
@@ -229,10 +240,6 @@ public class DDMDataProviderInstanceParameterSettingsServletTest {
 	private DDMDataProvider _ddmDataProvider;
 	private DDMDataProviderInstanceParameterSettingsServlet
 		_ddmDataProviderInstanceParameterSettingsServlet;
-
-	@Mock
-	private DDMFormValuesDeserializerTracker _ddmFormValuesDeserializerTracker;
-
 	private final DDMFormValuesDeserializer _ddmFormValuesJSONDeserializer =
 		new DDMFormValuesJSONDeserializer();
 	private final JSONFactory _jsonFactory = new JSONFactoryImpl();

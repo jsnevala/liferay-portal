@@ -19,6 +19,7 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.service.persistence.AssetCategoryFinder;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -28,7 +29,6 @@ import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portlet.asset.model.impl.AssetCategoryImpl;
 import com.liferay.util.dao.orm.CustomSQLUtil;
@@ -72,18 +72,18 @@ public class AssetCategoryFinderImpl
 
 			String sql = CustomSQLUtil.get(COUNT_BY_G_C_N);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(classNameId);
-			qPos.add(name);
-			qPos.add(name);
+			queryPos.add(groupId);
+			queryPos.add(classNameId);
+			queryPos.add(name);
+			queryPos.add(name);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -95,8 +95,8 @@ public class AssetCategoryFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -114,19 +114,19 @@ public class AssetCategoryFinderImpl
 
 			String sql = CustomSQLUtil.get(COUNT_BY_G_N_P);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			setJoin(qPos, categoryProperties);
+			setJoin(queryPos, categoryProperties);
 
-			qPos.add(groupId);
-			qPos.add(name);
-			qPos.add(name);
+			queryPos.add(groupId);
+			queryPos.add(name);
+			queryPos.add(name);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -138,8 +138,8 @@ public class AssetCategoryFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -189,23 +189,23 @@ public class AssetCategoryFinderImpl
 
 			String sql = CustomSQLUtil.get(FIND_BY_G_N);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("AssetCategory", AssetCategoryImpl.class);
+			sqlQuery.addEntity("AssetCategory", AssetCategoryImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(name);
+			queryPos.add(groupId);
+			queryPos.add(name);
 
-			List<AssetCategory> categories = q.list();
+			List<AssetCategory> categories = sqlQuery.list();
 
 			if (!categories.isEmpty()) {
 				return categories.get(0);
 			}
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -252,23 +252,23 @@ public class AssetCategoryFinderImpl
 			sql = StringUtil.replace(
 				sql, "[$JOIN$]", getJoin(categoryProperties));
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("AssetCategory", AssetCategoryImpl.class);
+			sqlQuery.addEntity("AssetCategory", AssetCategoryImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			setJoin(qPos, categoryProperties);
+			setJoin(queryPos, categoryProperties);
 
-			qPos.add(groupId);
-			qPos.add(name);
-			qPos.add(name);
+			queryPos.add(groupId);
+			queryPos.add(name);
+			queryPos.add(name);
 
 			return (List<AssetCategory>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -291,16 +291,16 @@ public class AssetCategoryFinderImpl
 					"AssetCategory.categoryId");
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(classNameId);
-			qPos.add(classPK);
+			queryPos.add(classNameId);
+			queryPos.add(classPK);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -312,8 +312,8 @@ public class AssetCategoryFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -337,20 +337,20 @@ public class AssetCategoryFinderImpl
 					"AssetCategory.categoryId");
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("AssetCategory", AssetCategoryImpl.class);
+			sqlQuery.addEntity("AssetCategory", AssetCategoryImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(classNameId);
-			qPos.add(classPK);
+			queryPos.add(classNameId);
+			queryPos.add(classPK);
 
 			return (List<AssetCategory>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -380,7 +380,7 @@ public class AssetCategoryFinderImpl
 		return sb.toString();
 	}
 
-	protected void setJoin(QueryPos qPos, String[] categoryProperties) {
+	protected void setJoin(QueryPos queryPos, String[] categoryProperties) {
 		for (String categoryProperty : categoryProperties) {
 			String[] categoryPropertyArray = StringUtil.split(
 				categoryProperty,
@@ -403,8 +403,8 @@ public class AssetCategoryFinderImpl
 				value = GetterUtil.getString(categoryPropertyArray[1]);
 			}
 
-			qPos.add(key);
-			qPos.add(value);
+			queryPos.add(key);
+			queryPos.add(value);
 		}
 	}
 

@@ -40,6 +40,10 @@ public class DescriptiveNameTag extends IncludeTag {
 		_group = null;
 	}
 
+	public Group getGroup() {
+		return _group;
+	}
+
 	public void setGroup(Group group) {
 		_group = group;
 	}
@@ -74,9 +78,9 @@ public class DescriptiveNameTag extends IncludeTag {
 				sb.append(StringPool.CLOSE_PARENTHESIS);
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 

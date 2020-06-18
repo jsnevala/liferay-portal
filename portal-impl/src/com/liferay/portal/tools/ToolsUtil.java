@@ -15,6 +15,7 @@
 package com.liferay.portal.tools;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
@@ -141,9 +142,8 @@ public class ToolsUtil {
 			throw new IllegalArgumentException(
 				"The namespace element is required");
 		}
-		else {
-			rootElement.add(namespaceElement);
-		}
+
+		rootElement.add(namespaceElement);
 
 		_addElements(rootElement, entityElements);
 
@@ -154,6 +154,44 @@ public class ToolsUtil {
 		}
 
 		return document.asXML();
+	}
+
+	public static int getLevel(String s) {
+		return getLevel(
+			s, new String[] {StringPool.OPEN_PARENTHESIS},
+			new String[] {StringPool.CLOSE_PARENTHESIS}, 0);
+	}
+
+	public static int getLevel(
+		String s, String increaseLevelString, String decreaseLevelString) {
+
+		return getLevel(
+			s, new String[] {increaseLevelString},
+			new String[] {decreaseLevelString}, 0);
+	}
+
+	public static int getLevel(
+		String s, String[] increaseLevelStrings,
+		String[] decreaseLevelStrings) {
+
+		return getLevel(s, increaseLevelStrings, decreaseLevelStrings, 0);
+	}
+
+	public static int getLevel(
+		String s, String[] increaseLevelStrings, String[] decreaseLevelStrings,
+		int startLevel) {
+
+		int level = startLevel;
+
+		for (String increaseLevelString : increaseLevelStrings) {
+			level = _adjustLevel(level, s, increaseLevelString, 1);
+		}
+
+		for (String decreaseLevelString : decreaseLevelStrings) {
+			level = _adjustLevel(level, s, decreaseLevelString, -1);
+		}
+
+		return level;
 	}
 
 	public static String getPackagePath(File file) {
@@ -240,24 +278,12 @@ public class ToolsUtil {
 		return false;
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #stripFullyQualifiedClassNames(String, String)}
-	 */
-	@Deprecated
-	public static String stripFullyQualifiedClassNames(String content)
-		throws IOException {
-
-		return stripFullyQualifiedClassNames(content, null);
-	}
-
 	public static String stripFullyQualifiedClassNames(
 			String content, String packagePath)
 		throws IOException {
 
-		String imports = JavaImportsFormatter.getImports(content);
-
-		return stripFullyQualifiedClassNames(content, imports, packagePath);
+		return stripFullyQualifiedClassNames(
+			content, JavaImportsFormatter.getImports(content), packagePath);
 	}
 
 	public static String stripFullyQualifiedClassNames(
@@ -270,13 +296,13 @@ public class ToolsUtil {
 
 		String afterImportsContent = null;
 
-		int pos = content.indexOf(imports);
+		int pos = content.lastIndexOf("\nimport ");
 
 		if (pos == -1) {
 			afterImportsContent = content;
 		}
 		else {
-			pos += imports.length();
+			pos = content.indexOf("\n", pos + 1);
 
 			afterImportsContent = content.substring(pos);
 		}
@@ -305,48 +331,51 @@ public class ToolsUtil {
 					continue;
 				}
 
+				Pattern pattern = Pattern.compile(
+					StringBundler.concat(
+						"[^\\w.](",
+						StringUtil.replace(
+							importPackageAndClassName, CharPool.PERIOD,
+							"\\.\\s*"),
+						")\\W"));
+
+				outerLoop:
 				while (true) {
-					x = afterImportsContent.indexOf(
-						importPackageAndClassName, x + 1);
+					Matcher matcher = pattern.matcher(afterImportsContent);
 
-					if (x == -1) {
-						break;
+					while (matcher.find()) {
+						x = matcher.start();
+
+						int y = afterImportsContent.lastIndexOf(
+							CharPool.NEW_LINE, x);
+
+						if (y == -1) {
+							y = 0;
+						}
+
+						String s = afterImportsContent.substring(y, x + 1);
+
+						if (isInsideQuotes(s, x - y)) {
+							continue;
+						}
+
+						s = StringUtil.trim(s);
+
+						if (s.startsWith("//")) {
+							continue;
+						}
+
+						int z = importPackageAndClassName.lastIndexOf(
+							StringPool.PERIOD);
+
+						afterImportsContent = StringUtil.replaceFirst(
+							afterImportsContent, matcher.group(1),
+							importPackageAndClassName.substring(z + 1), x);
+
+						continue outerLoop;
 					}
 
-					char nextChar = afterImportsContent.charAt(
-						x + importPackageAndClassName.length());
-
-					if (Character.isLetterOrDigit(nextChar)) {
-						continue;
-					}
-
-					int y = afterImportsContent.lastIndexOf(
-						CharPool.NEW_LINE, x);
-
-					if (y == -1) {
-						y = 0;
-					}
-
-					String s = afterImportsContent.substring(y, x + 1);
-
-					if (isInsideQuotes(s, x - y)) {
-						continue;
-					}
-
-					s = StringUtil.trim(s);
-
-					if (s.startsWith("//")) {
-						continue;
-					}
-
-					String importClassName =
-						importPackageAndClassName.substring(
-							importPackageAndClassName.lastIndexOf(
-								StringPool.PERIOD) + 1);
-
-					afterImportsContent = StringUtil.replaceFirst(
-						afterImportsContent, importPackageAndClassName,
-						importClassName, x);
+					break;
 				}
 			}
 
@@ -553,6 +582,49 @@ public class ToolsUtil {
 		}
 	}
 
+	private static int _adjustLevel(
+		int level, String text, String s, int diff) {
+
+		boolean multiLineComment = false;
+
+		forLoop:
+		for (String line : StringUtil.splitLines(text)) {
+			line = StringUtil.trim(line);
+
+			if (line.startsWith("/*")) {
+				multiLineComment = true;
+			}
+
+			if (multiLineComment) {
+				if (line.endsWith("*/")) {
+					multiLineComment = false;
+				}
+
+				continue;
+			}
+
+			if (line.startsWith("//") || line.startsWith("*")) {
+				continue;
+			}
+
+			int x = -1;
+
+			while (true) {
+				x = line.indexOf(s, x + 1);
+
+				if (x == -1) {
+					continue forLoop;
+				}
+
+				if (!isInsideQuotes(line, x)) {
+					level += diff;
+				}
+			}
+		}
+
+		return level;
+	}
+
 	private static Document _getContentDocument(String fileName)
 		throws Exception {
 
@@ -628,8 +700,10 @@ public class ToolsUtil {
 		String imports, String afterImportsContent, String packagePath) {
 
 		Pattern pattern1 = Pattern.compile(
-			"\n(.*)" + StringUtil.replace(packagePath, CharPool.PERIOD, "\\.") +
-				"\\.([A-Z]\\w+)\\W");
+			StringBundler.concat(
+				"\n(.*)(",
+				StringUtil.replace(packagePath, CharPool.PERIOD, "\\.\\s*"),
+				"\\.\\s*)([A-Z]\\w+)\\W"));
 
 		outerLoop:
 		while (true) {
@@ -644,7 +718,7 @@ public class ToolsUtil {
 					continue;
 				}
 
-				String className = matcher1.group(2);
+				String className = matcher1.group(3);
 
 				Pattern pattern2 = Pattern.compile(
 					"import [\\w.]+\\." + className + ";");
@@ -656,7 +730,7 @@ public class ToolsUtil {
 				}
 
 				afterImportsContent = StringUtil.replaceFirst(
-					afterImportsContent, packagePath + ".", StringPool.BLANK,
+					afterImportsContent, matcher1.group(2), StringPool.BLANK,
 					matcher1.start());
 
 				continue outerLoop;

@@ -14,6 +14,10 @@
 
 package com.liferay.gradle.plugins.workspace.configurators;
 
+import com.liferay.gradle.plugins.LiferayBasePlugin;
+import com.liferay.gradle.plugins.extensions.AppServer;
+import com.liferay.gradle.plugins.extensions.LiferayExtension;
+import com.liferay.gradle.plugins.extensions.TomcatAppServer;
 import com.liferay.gradle.plugins.workspace.ProjectConfigurator;
 import com.liferay.gradle.plugins.workspace.WorkspaceExtension;
 import com.liferay.gradle.plugins.workspace.WorkspacePlugin;
@@ -25,10 +29,14 @@ import java.io.File;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.gradle.api.GradleException;
+import org.gradle.api.NamedDomainObjectCollection;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.initialization.Settings;
+import org.gradle.api.tasks.Copy;
 
 /**
  * @author Andrea Di Giorgi
@@ -74,9 +82,83 @@ public abstract class BaseProjectConfigurator implements ProjectConfigurator {
 
 			return doGetProjectDirs(rootDir);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new GradleException(
-				"Unable to get project directories from " + rootDir, e);
+				"Unable to get project directories from " + rootDir, exception);
+		}
+	}
+
+	protected Copy addTaskDockerDeploy(
+		Project project, Object sourcePath,
+		WorkspaceExtension workspaceExtension) {
+
+		Copy copy = GradleUtil.addTask(
+			project, RootProjectConfigurator.DOCKER_DEPLOY_TASK_NAME,
+			Copy.class);
+
+		copy.from(sourcePath);
+
+		final File dockerDir = workspaceExtension.getDockerDir();
+
+		copy.into(
+			new Callable<File>() {
+
+				@Override
+				public File call() throws Exception {
+					return new File(dockerDir, "deploy");
+				}
+
+			});
+
+		copy.setDescription(
+			"Assembles the project and deploys it to the Liferay Docker " +
+				"container.");
+
+		copy.setGroup(RootProjectConfigurator.DOCKER_GROUP);
+
+		Task deployTask = GradleUtil.getTask(
+			project, LiferayBasePlugin.DEPLOY_TASK_NAME);
+
+		deployTask.finalizedBy(copy);
+
+		Task buildDockerImageTask = GradleUtil.getTask(
+			project.getRootProject(),
+			RootProjectConfigurator.BUILD_DOCKER_IMAGE_TASK_NAME);
+
+		buildDockerImageTask.dependsOn(deployTask);
+
+		return copy;
+	}
+
+	protected void configureLiferay(
+		Project project, WorkspaceExtension workspaceExtension) {
+
+		LiferayExtension liferayExtension = GradleUtil.getExtension(
+			project, LiferayExtension.class);
+
+		liferayExtension.setAppServerParentDir(workspaceExtension.getHomeDir());
+
+		String version = GradleUtil.getProperty(
+			project, "app.server.tomcat.version", (String)null);
+
+		File dir = workspaceExtension.getHomeDir();
+
+		if ((version == null) && dir.exists()) {
+			for (String fileName : dir.list()) {
+				if (fileName.startsWith("tomcat-")) {
+					version = fileName.substring(fileName.indexOf("-") + 1);
+
+					NamedDomainObjectCollection<AppServer>
+						namedDomainObjectCollection =
+							liferayExtension.getAppServers();
+
+					TomcatAppServer tomcatAppServer =
+						(TomcatAppServer)namedDomainObjectCollection.getByName(
+							"tomcat");
+
+					tomcatAppServer.setVersion(version);
+				}
+			}
 		}
 	}
 

@@ -79,6 +79,7 @@ import java.util.TreeSet;
  * @author Brian Wing Shun Chan
  * @author Wesley Gong
  */
+@JSON(strict = true)
 public class JournalArticleImpl extends JournalArticleBaseImpl {
 
 	public static String getContentByLocale(
@@ -102,26 +103,6 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 		return document.asXML();
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #getContentByLocale(Document, String)}
-	 */
-	@Deprecated
-	public static String getContentByLocale(
-		String content, boolean templateDriven, String languageId) {
-
-		try {
-			return getContentByLocale(SAXReaderUtil.read(content), languageId);
-		}
-		catch (DocumentException de) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(de, de);
-			}
-
-			return content;
-		}
-	}
-
 	@Override
 	public Folder addImagesFolder() throws PortalException {
 		if (_imagesFolderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
@@ -137,7 +118,8 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 			getGroupId(), JournalConstants.SERVICE_NAME, serviceContext);
 
 		Folder folder = PortletFileRepositoryUtil.addPortletFolder(
-			getUserId(), repository.getRepositoryId(),
+			PortalUtil.getValidUserId(getCompanyId(), getUserId()),
+			repository.getRepositoryId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			String.valueOf(getResourcePrimKey()), serviceContext);
 
@@ -159,12 +141,13 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 
 	@Override
 	public Object clone() {
-		JournalArticleImpl journalArticle = (JournalArticleImpl)super.clone();
+		JournalArticleImpl journalArticleImpl =
+			(JournalArticleImpl)super.clone();
 
-		journalArticle.setDescriptionMap(getDescriptionMap());
-		journalArticle.setTitleMap(getTitleMap());
+		journalArticleImpl.setDescriptionMap(getDescriptionMap());
+		journalArticleImpl.setTitleMap(getTitleMap());
 
-		return journalArticle;
+		return journalArticleImpl;
 	}
 
 	@Override
@@ -214,8 +197,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 			}
 		}
 
-		return availableLanguageIds.toArray(
-			new String[availableLanguageIds.size()]);
+		return availableLanguageIds.toArray(new String[0]);
 	}
 
 	@Override
@@ -245,7 +227,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 	public DDMTemplate getDDMTemplate() {
 		return DDMTemplateLocalServiceUtil.fetchTemplate(
 			PortalUtil.getSiteGroupId(getGroupId()),
-			ClassNameLocalServiceUtil.getClassNameId(JournalArticle.class),
+			ClassNameLocalServiceUtil.getClassNameId(DDMStructure.class),
 			getDDMTemplateKey(), true);
 	}
 
@@ -306,6 +288,14 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 		return StringPool.BLANK;
 	}
 
+	@JSON
+	@Override
+	public String getDescriptionCurrentValue() {
+		Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
+
+		return getDescription(locale, true);
+	}
+
 	@Override
 	public Map<Locale, String> getDescriptionMap() {
 		if (_descriptionMap != null) {
@@ -318,6 +308,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 		return _descriptionMap;
 	}
 
+	@JSON
 	@Override
 	public String getDescriptionMapAsXML() {
 		return LocalizationUtil.updateLocalization(
@@ -325,6 +316,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 			getDefaultLanguageId());
 	}
 
+	@JSON
 	@Override
 	public Date getDisplayDate() {
 		if (!PropsValues.SCHEDULER_ENABLED) {
@@ -340,9 +332,9 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 			try {
 				_document = SAXReaderUtil.read(getContent());
 			}
-			catch (DocumentException de) {
+			catch (DocumentException documentException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(de, de);
+					_log.warn(documentException, documentException);
 				}
 			}
 		}
@@ -350,6 +342,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 		return _document;
 	}
 
+	@JSON
 	@Override
 	public Date getExpirationDate() {
 		if (!PropsValues.SCHEDULER_ENABLED) {
@@ -419,10 +412,8 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 
 	@Override
 	public String getFriendlyURLsXML() throws PortalException {
-		Map<Locale, String> friendlyURLMap = getFriendlyURLMap();
-
 		return LocalizationUtil.updateLocalization(
-			friendlyURLMap, StringPool.BLANK, "FriendlyURL",
+			getFriendlyURLMap(), StringPool.BLANK, "FriendlyURL",
 			LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()));
 	}
 
@@ -488,7 +479,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 
 			_imagesFolderId = folder.getFolderId();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("Unable to get folder for " + getResourcePrimKey());
 			}
@@ -507,6 +498,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
+	@Override
 	public String getLegacyDescription() {
 		return _description;
 	}
@@ -515,10 +507,12 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
+	@Override
 	public String getLegacyTitle() {
 		return _title;
 	}
 
+	@JSON
 	@Override
 	public Date getReviewDate() {
 		if (!PropsValues.SCHEDULER_ENABLED) {
@@ -638,6 +632,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 		return _titleMap;
 	}
 
+	@JSON
 	@Override
 	public String getTitleMapAsXML() {
 		return LocalizationUtil.updateLocalization(
@@ -649,6 +644,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 		return getResourcePrimKey();
 	}
 
+	@Override
 	public String getUrlTitle(Locale locale) throws PortalException {
 		String urlTitle = getFriendlyURLMap().get(locale);
 
@@ -693,10 +689,12 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
+	@Override
 	public void setDescription(String description) {
 		_description = description;
 	}
 
+	@Override
 	public void setDescriptionMap(Map<Locale, String> descriptionMap) {
 		_descriptionMap = descriptionMap;
 	}
@@ -740,10 +738,12 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 	 * @deprecated As of Judson (7.1.x)
 	 */
 	@Deprecated
+	@Override
 	public void setTitle(String title) {
 		_title = title;
 	}
 
+	@Override
 	public void setTitleMap(Map<Locale, String> titleMap) {
 		_titleMap = titleMap;
 	}

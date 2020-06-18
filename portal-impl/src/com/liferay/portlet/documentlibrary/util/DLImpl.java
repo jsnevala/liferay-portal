@@ -14,10 +14,10 @@
 
 package com.liferay.portlet.documentlibrary.util;
 
+import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
-import com.liferay.document.library.kernel.model.DLFileShortcut;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
@@ -33,6 +33,7 @@ import com.liferay.document.library.kernel.util.comparator.RepositoryModelReadCo
 import com.liferay.document.library.kernel.util.comparator.RepositoryModelSizeComparator;
 import com.liferay.document.library.kernel.util.comparator.RepositoryModelTitleComparator;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -42,8 +43,8 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutConstants;
-import com.liferay.portal.kernel.model.Subscription;
 import com.liferay.portal.kernel.portlet.PortletLayoutFinder;
+import com.liferay.portal.kernel.portlet.PortletLayoutFinderRegistryUtil;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
@@ -55,23 +56,24 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.SubscriptionLocalServiceUtil;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
@@ -80,8 +82,6 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.documentlibrary.webdav.DLWebDAVUtil;
-import com.liferay.registry.collections.ServiceTrackerCollections;
-import com.liferay.registry.collections.ServiceTrackerList;
 import com.liferay.trash.kernel.util.TrashUtil;
 
 import java.io.Serializable;
@@ -91,7 +91,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -141,7 +140,6 @@ public class DLImpl implements DL {
 	}
 
 	public void destroy() {
-		_serviceTrackerList.close();
 	}
 
 	@Override
@@ -164,14 +162,15 @@ public class DLImpl implements DL {
 		StringBundler sb = new StringBundler((folders.size() * 3) + 5);
 
 		sb.append(themeDisplay.translate("home"));
-		sb.append(StringPool.SPACE);
 
 		for (Folder curFolder : folders) {
+			sb.append(StringPool.SPACE);
 			sb.append(StringPool.RAQUO_CHAR);
 			sb.append(StringPool.SPACE);
 			sb.append(curFolder.getName());
 		}
 
+		sb.append(StringPool.SPACE);
 		sb.append(StringPool.RAQUO_CHAR);
 		sb.append(StringPool.SPACE);
 		sb.append(folder.getName());
@@ -227,6 +226,12 @@ public class DLImpl implements DL {
 		return sb.toString();
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getFileEntryControlPanelLink(
+	 *             PortletRequest, long)}
+	 */
+	@Deprecated
 	@Override
 	public String getDLFileEntryControlPanelLink(
 		PortletRequest portletRequest, long fileEntryId) {
@@ -244,6 +249,12 @@ public class DLImpl implements DL {
 		return portletURL.toString();
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getFolderControlPanelLink(
+	 *             PortletRequest, long)}
+	 */
+	@Deprecated
 	@Override
 	public String getDLFolderControlPanelLink(
 		PortletRequest portletRequest, long folderId) {
@@ -268,6 +279,12 @@ public class DLImpl implements DL {
 		return portletURL.toString();
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getDownloadURL(
+	 *             FileEntry, FileVersion, ThemeDisplay, String)}
+	 */
+	@Deprecated
 	@Override
 	public String getDownloadURL(
 		FileEntry fileEntry, FileVersion fileVersion, ThemeDisplay themeDisplay,
@@ -277,6 +294,13 @@ public class DLImpl implements DL {
 			fileEntry, fileVersion, themeDisplay, queryString, true, true);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getDownloadURL(
+	 *             FileEntry, FileVersion, ThemeDisplay, String, boolean,
+	 *             boolean)}
+	 */
+	@Deprecated
 	@Override
 	public String getDownloadURL(
 		FileEntry fileEntry, FileVersion fileVersion, ThemeDisplay themeDisplay,
@@ -297,75 +321,77 @@ public class DLImpl implements DL {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Map<String, String> definitionTerms = new LinkedHashMap<>();
-
-		definitionTerms.put(
+		return LinkedHashMapBuilder.put(
 			"[$COMPANY_ID$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(),
-				"the-company-id-associated-with-the-document"));
-		definitionTerms.put(
+				"the-company-id-associated-with-the-document")
+		).put(
 			"[$COMPANY_MX$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(),
-				"the-company-mx-associated-with-the-document"));
-		definitionTerms.put(
+				"the-company-mx-associated-with-the-document")
+		).put(
 			"[$COMPANY_NAME$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(),
-				"the-company-name-associated-with-the-document"));
-		definitionTerms.put(
+				"the-company-name-associated-with-the-document")
+		).put(
 			"[$DOCUMENT_TITLE$]",
-			LanguageUtil.get(themeDisplay.getLocale(), "the-document-title"));
-		definitionTerms.put(
+			LanguageUtil.get(themeDisplay.getLocale(), "the-document-title")
+		).put(
 			"[$DOCUMENT_TYPE$]",
-			LanguageUtil.get(themeDisplay.getLocale(), "the-document-type"));
-		definitionTerms.put(
+			LanguageUtil.get(themeDisplay.getLocale(), "the-document-type")
+		).put(
 			"[$DOCUMENT_URL$]",
-			LanguageUtil.get(themeDisplay.getLocale(), "the-document-url"));
-		definitionTerms.put(
+			LanguageUtil.get(themeDisplay.getLocale(), "the-document-url")
+		).put(
 			"[$DOCUMENT_USER_ADDRESS$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(),
-				"the-email-address-of-the-user-who-added-the-document"));
-		definitionTerms.put(
+				"the-email-address-of-the-user-who-added-the-document")
+		).put(
 			"[$DOCUMENT_USER_NAME$]",
 			LanguageUtil.get(
-				themeDisplay.getLocale(), "the-user-who-added-the-document"));
-		definitionTerms.put(
+				themeDisplay.getLocale(), "the-user-who-added-the-document")
+		).put(
 			"[$FOLDER_NAME$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(),
-				"the-folder-in-which-the-document-has-been-added"));
-		definitionTerms.put(
-			"[$FROM_ADDRESS$]", HtmlUtil.escape(emailFromAddress));
-		definitionTerms.put("[$FROM_NAME$]", HtmlUtil.escape(emailFromName));
+				"the-folder-in-which-the-document-has-been-added")
+		).put(
+			"[$FROM_ADDRESS$]", HtmlUtil.escape(emailFromAddress)
+		).put(
+			"[$FROM_NAME$]", HtmlUtil.escape(emailFromName)
+		).put(
+			"[$PORTAL_URL$]",
+			() -> {
+				Company company = themeDisplay.getCompany();
 
-		Company company = themeDisplay.getCompany();
+				return company.getVirtualHostname();
+			}
+		).put(
+			"[$PORTLET_NAME$]",
+			() -> {
+				PortletDisplay portletDisplay =
+					themeDisplay.getPortletDisplay();
 
-		definitionTerms.put("[$PORTAL_URL$]", company.getVirtualHostname());
-
-		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-
-		definitionTerms.put(
-			"[$PORTLET_NAME$]", HtmlUtil.escape(portletDisplay.getTitle()));
-
-		definitionTerms.put(
+				return HtmlUtil.escape(portletDisplay.getTitle());
+			}
+		).put(
 			"[$SITE_NAME$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(),
-				"the-site-name-associated-with-the-document"));
-		definitionTerms.put(
+				"the-site-name-associated-with-the-document")
+		).put(
 			"[$TO_ADDRESS$]",
 			LanguageUtil.get(
-				themeDisplay.getLocale(),
-				"the-address-of-the-email-recipient"));
-		definitionTerms.put(
+				themeDisplay.getLocale(), "the-address-of-the-email-recipient")
+		).put(
 			"[$TO_NAME$]",
 			LanguageUtil.get(
-				themeDisplay.getLocale(), "the-name-of-the-email-recipient"));
-
-		return definitionTerms;
+				themeDisplay.getLocale(), "the-name-of-the-email-recipient")
+		).build();
 	}
 
 	@Override
@@ -376,49 +402,48 @@ public class DLImpl implements DL {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Map<String, String> definitionTerms = new LinkedHashMap<>();
-
-		definitionTerms.put(
+		return LinkedHashMapBuilder.put(
 			"[$COMPANY_ID$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(),
-				"the-company-id-associated-with-the-document"));
-		definitionTerms.put(
+				"the-company-id-associated-with-the-document")
+		).put(
 			"[$COMPANY_MX$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(),
-				"the-company-mx-associated-with-the-document"));
-		definitionTerms.put(
+				"the-company-mx-associated-with-the-document")
+		).put(
 			"[$COMPANY_NAME$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(),
-				"the-company-name-associated-with-the-document"));
-		definitionTerms.put(
+				"the-company-name-associated-with-the-document")
+		).put(
 			"[$DOCUMENT_STATUS_BY_USER_NAME$]",
 			LanguageUtil.get(
-				themeDisplay.getLocale(), "the-user-who-updated-the-document"));
-		definitionTerms.put(
+				themeDisplay.getLocale(), "the-user-who-updated-the-document")
+		).put(
 			"[$DOCUMENT_USER_ADDRESS$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(),
-				"the-email-address-of-the-user-who-added-the-document"));
-		definitionTerms.put(
+				"the-email-address-of-the-user-who-added-the-document")
+		).put(
 			"[$DOCUMENT_USER_NAME$]",
 			LanguageUtil.get(
-				themeDisplay.getLocale(), "the-user-who-added-the-document"));
+				themeDisplay.getLocale(), "the-user-who-added-the-document")
+		).put(
+			"[$PORTLET_NAME$]",
+			() -> {
+				PortletDisplay portletDisplay =
+					themeDisplay.getPortletDisplay();
 
-		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-
-		definitionTerms.put(
-			"[$PORTLET_NAME$]", HtmlUtil.escape(portletDisplay.getTitle()));
-
-		definitionTerms.put(
+				return HtmlUtil.escape(portletDisplay.getTitle());
+			}
+		).put(
 			"[$SITE_NAME$]",
 			LanguageUtil.get(
 				themeDisplay.getLocale(),
-				"the-site-name-associated-with-the-document"));
-
-		return definitionTerms;
+				"the-site-name-associated-with-the-document")
+		).build();
 	}
 
 	@Override
@@ -430,12 +455,9 @@ public class DLImpl implements DL {
 				document.get(Field.ENTRY_CLASS_PK));
 
 			try {
-				FileEntry fileEntry = DLAppLocalServiceUtil.getFileEntry(
-					fileEntryId);
-
-				entries.add(fileEntry);
+				entries.add(DLAppLocalServiceUtil.getFileEntry(fileEntryId));
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						"Documents and Media search index is stale and " +
@@ -460,25 +482,6 @@ public class DLImpl implements DL {
 		sb.append(".png\" style=\"border-width: 0; text-align: left;\">");
 
 		return sb.toString();
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public Set<Long> getFileEntryTypeSubscriptionClassPKs(long userId) {
-		List<Subscription> subscriptions =
-			SubscriptionLocalServiceUtil.getUserSubscriptions(
-				userId, DLFileEntryType.class.getName());
-
-		Set<Long> classPKs = new HashSet<>(subscriptions.size());
-
-		for (Subscription subscription : subscriptions) {
-			classPKs.add(subscription.getClassPK());
-		}
-
-		return classPKs;
 	}
 
 	@Override
@@ -506,6 +509,12 @@ public class DLImpl implements DL {
 		return genericName;
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getImagePreviewURL(
+	 *             FileEntry, FileVersion, ThemeDisplay)}
+	 */
+	@Deprecated
 	@Override
 	public String getImagePreviewURL(
 		FileEntry fileEntry, FileVersion fileVersion,
@@ -515,6 +524,13 @@ public class DLImpl implements DL {
 			fileEntry, fileVersion, themeDisplay, null, true, true);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getImagePreviewURL(
+	 *             FileEntry, FileVersion, ThemeDisplay, String, boolean,
+	 *             boolean)}
+	 */
+	@Deprecated
 	@Override
 	public String getImagePreviewURL(
 		FileEntry fileEntry, FileVersion fileVersion, ThemeDisplay themeDisplay,
@@ -545,6 +561,12 @@ public class DLImpl implements DL {
 			appendVersion, absoluteURL);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getImagePreviewURL(
+	 *             FileEntry, FileVersion, ThemeDisplay)}
+	 */
+	@Deprecated
 	@Override
 	public String getImagePreviewURL(
 			FileEntry fileEntry, ThemeDisplay themeDisplay)
@@ -554,6 +576,12 @@ public class DLImpl implements DL {
 			fileEntry, fileEntry.getFileVersion(), themeDisplay);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getPreviewURL(
+	 *             FileEntry, FileVersion, ThemeDisplay, String)}
+	 */
+	@Deprecated
 	@Override
 	public String getPreviewURL(
 		FileEntry fileEntry, FileVersion fileVersion, ThemeDisplay themeDisplay,
@@ -563,6 +591,13 @@ public class DLImpl implements DL {
 			fileEntry, fileVersion, themeDisplay, queryString, true, true);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getPreviewURL(
+	 *             FileEntry, FileVersion, ThemeDisplay, String, boolean,
+	 *             boolean)}
+	 */
+	@Deprecated
 	@Override
 	public String getPreviewURL(
 		FileEntry fileEntry, FileVersion fileVersion, ThemeDisplay themeDisplay,
@@ -653,8 +688,12 @@ public class DLImpl implements DL {
 			orderByComparator = new RepositoryModelSizeComparator<>(
 				orderByAsc, orderByModel);
 		}
-		else {
+		else if (orderByCol.equals("title")) {
 			orderByComparator = new RepositoryModelTitleComparator<>(
+				orderByAsc, orderByModel);
+		}
+		else {
+			orderByComparator = new RepositoryModelModifiedDateComparator<>(
 				orderByAsc, orderByModel);
 		}
 
@@ -695,7 +734,13 @@ public class DLImpl implements DL {
 	@Override
 	public String getTempFileId(long id, String version, String languageId) {
 		if (Validator.isNull(languageId)) {
-			return String.valueOf(id).concat(StringPool.PERIOD).concat(version);
+			return String.valueOf(
+				id
+			).concat(
+				StringPool.PERIOD
+			).concat(
+				version
+			);
 		}
 
 		StringBundler sb = new StringBundler(5);
@@ -710,34 +755,11 @@ public class DLImpl implements DL {
 	}
 
 	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #getThumbnailSrc(FileEntry, ThemeDisplay)}
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getThumbnailSrc(
+	 *             FileEntry, FileVersion, ThemeDisplay)}
 	 */
 	@Deprecated
-	@Override
-	public String getThumbnailSrc(
-			FileEntry fileEntry, DLFileShortcut dlFileShortcut,
-			ThemeDisplay themeDisplay)
-		throws Exception {
-
-		return getThumbnailSrc(
-			fileEntry, fileEntry.getFileVersion(), themeDisplay);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #getThumbnailSrc(FileEntry, FileVersion, ThemeDisplay)}
-	 */
-	@Deprecated
-	@Override
-	public String getThumbnailSrc(
-			FileEntry fileEntry, FileVersion fileVersion,
-			DLFileShortcut dlFileShortcut, ThemeDisplay themeDisplay)
-		throws Exception {
-
-		return getThumbnailSrc(fileEntry, fileVersion, themeDisplay);
-	}
-
 	@Override
 	public String getThumbnailSrc(
 			FileEntry fileEntry, FileVersion fileVersion,
@@ -762,6 +784,12 @@ public class DLImpl implements DL {
 			fileEntry, fileVersion, themeDisplay, thumbnailQueryString);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getThumbnailSrc(
+	 *             FileEntry, ThemeDisplay)}
+	 */
+	@Deprecated
 	@Override
 	public String getThumbnailSrc(
 			FileEntry fileEntry, ThemeDisplay themeDisplay)
@@ -821,10 +849,8 @@ public class DLImpl implements DL {
 
 	@Override
 	public String getTitleWithExtension(FileEntry fileEntry) {
-		String title = fileEntry.getTitle();
-		String extension = fileEntry.getExtension();
-
-		return getTitleWithExtension(title, extension);
+		return getTitleWithExtension(
+			fileEntry.getTitle(), fileEntry.getExtension());
 	}
 
 	@Override
@@ -854,7 +880,7 @@ public class DLImpl implements DL {
 				uniqueFileName = FileUtil.appendParentheticalSuffix(
 					fileName, String.valueOf(i));
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				break;
 			}
 		}
@@ -862,6 +888,12 @@ public class DLImpl implements DL {
 		return uniqueFileName;
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getWebDavURL(
+	 *             ThemeDisplay, Folder, FileEntry)}
+	 */
+	@Deprecated
 	@Override
 	public String getWebDavURL(
 			ThemeDisplay themeDisplay, Folder folder, FileEntry fileEntry)
@@ -870,6 +902,12 @@ public class DLImpl implements DL {
 		return getWebDavURL(themeDisplay, folder, fileEntry, false);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getWebDavURL(
+	 *             ThemeDisplay, Folder, FileEntry, boolean)}
+	 */
+	@Deprecated
 	@Override
 	public String getWebDavURL(
 			ThemeDisplay themeDisplay, Folder folder, FileEntry fileEntry,
@@ -880,6 +918,12 @@ public class DLImpl implements DL {
 			themeDisplay, folder, fileEntry, manualCheckInRequired, false);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link
+	 *             com.liferay.document.library.util.DLURLHelper#getWebDavURL(
+	 *             ThemeDisplay, Folder, FileEntry, boolean, boolean)}
+	 */
+	@Deprecated
 	@Override
 	public String getWebDavURL(
 			ThemeDisplay themeDisplay, Folder folder, FileEntry fileEntry,
@@ -955,8 +999,7 @@ public class DLImpl implements DL {
 
 	@Override
 	public boolean hasWorkflowDefinitionLink(
-			long companyId, long groupId, long folderId, long fileEntryTypeId)
-		throws Exception {
+		long companyId, long groupId, long folderId, long fileEntryTypeId) {
 
 		while (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 			DLFolder dlFolder = DLFolderLocalServiceUtil.fetchDLFolder(
@@ -1004,79 +1047,6 @@ public class DLImpl implements DL {
 		return ArrayUtil.contains(_MICROSOFT_OFFICE_EXTENSIONS, extension);
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             com.liferay.document.library.web.internal.util.
-	 *             DLSubscriptionUtil#isSubscribedToFileEntryType(long, long,
-	 *             long, long)}
-	 */
-	@Deprecated
-	@Override
-	public boolean isSubscribedToFileEntryType(
-		long companyId, long groupId, long userId, long fileEntryTypeId) {
-
-		if (fileEntryTypeId ==
-				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT) {
-
-			fileEntryTypeId = groupId;
-		}
-
-		return SubscriptionLocalServiceUtil.isSubscribed(
-			companyId, userId, DLFileEntryType.class.getName(),
-			fileEntryTypeId);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             com.liferay.document.library.web.internal.util.
-	 *             DLSubscriptionUtil#isSubscribedToFolder(long, long, long,
-	 *             long)}
-	 */
-	@Deprecated
-	@Override
-	public boolean isSubscribedToFolder(
-			long companyId, long groupId, long userId, long folderId)
-		throws PortalException {
-
-		return isSubscribedToFolder(companyId, groupId, userId, folderId, true);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             com.liferay.document.library.web.internal.util.
-	 *             DLSubscriptionUtil#isSubscribedToFolder(long, long, long,
-	 *             long, boolean)}
-	 */
-	@Deprecated
-	@Override
-	public boolean isSubscribedToFolder(
-			long companyId, long groupId, long userId, long folderId,
-			boolean recursive)
-		throws PortalException {
-
-		List<Long> ancestorFolderIds = new ArrayList<>();
-
-		if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-			Folder folder = DLAppLocalServiceUtil.getFolder(folderId);
-
-			ancestorFolderIds.add(folderId);
-
-			if (recursive) {
-				ancestorFolderIds.addAll(folder.getAncestorFolderIds());
-
-				ancestorFolderIds.add(groupId);
-			}
-		}
-		else {
-			ancestorFolderIds.add(groupId);
-		}
-
-		long[] folderIdsArray = ArrayUtil.toLongArray(ancestorFolderIds);
-
-		return SubscriptionLocalServiceUtil.isSubscribed(
-			companyId, userId, DLFolder.class.getName(), folderIdsArray);
-	}
-
 	@Override
 	public boolean isValidVersion(String version) {
 		if (version.equals(DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION)) {
@@ -1104,12 +1074,13 @@ public class DLImpl implements DL {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		Map<String, Serializable> workflowContext = new HashMap<>();
-
-		workflowContext.put(
-			WorkflowConstants.CONTEXT_URL,
-			getEntryURL(dlFileVersion, serviceContext));
-		workflowContext.put("event", syncEventType);
+		Map<String, Serializable> workflowContext =
+			HashMapBuilder.<String, Serializable>put(
+				WorkflowConstants.CONTEXT_URL,
+				getEntryURL(dlFileVersion, serviceContext)
+			).put(
+				"event", syncEventType
+			).build();
 
 		WorkflowHandlerRegistryUtil.startWorkflowInstance(
 			dlFileVersion.getCompanyId(), dlFileVersion.getGroupId(), userId,
@@ -1137,10 +1108,10 @@ public class DLImpl implements DL {
 			return entryURL;
 		}
 
-		HttpServletRequest request = serviceContext.getRequest();
+		HttpServletRequest httpServletRequest = serviceContext.getRequest();
 		ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
 
-		if ((request == null) || (themeDisplay == null)) {
+		if ((httpServletRequest == null) || (themeDisplay == null)) {
 			return StringPool.BLANK;
 		}
 
@@ -1152,35 +1123,30 @@ public class DLImpl implements DL {
 		String portletId = PortletProviderUtil.getPortletId(
 			FileEntry.class.getName(), PortletProvider.Action.VIEW);
 
-		for (PortletLayoutFinder portletLayoutFinder : _serviceTrackerList) {
-			try {
-				PortletLayoutFinder.Result result = portletLayoutFinder.find(
-					themeDisplay, themeDisplay.getSiteGroupId());
+		DLFileEntry fileEntry = dlFileVersion.getFileEntry();
 
-				portletId = result.getPortletId();
-				plid = result.getPlid();
+		PortletLayoutFinder portletLayoutFinder =
+			PortletLayoutFinderRegistryUtil.getPortletLayoutFinder(
+				DLFileEntryConstants.getClassName());
 
-				break;
-			}
-			catch (PortalException pe) {
+		PortletLayoutFinder.Result result = portletLayoutFinder.find(
+			themeDisplay, fileEntry.getGroupId());
 
-				// LPS-52675
-
-				if (_log.isDebugEnabled()) {
-					_log.debug(pe, pe);
-				}
-			}
+		if (result != null) {
+			portletId = result.getPortletId();
+			plid = result.getPlid();
 		}
 
 		if ((plid == controlPanelPlid) ||
 			(plid == LayoutConstants.DEFAULT_PLID)) {
 
 			portletURL = PortalUtil.getControlPanelPortletURL(
-				request, portletId, PortletRequest.RENDER_PHASE);
+				httpServletRequest, portletId, PortletRequest.RENDER_PHASE);
 		}
 		else {
 			portletURL = PortletURLFactoryUtil.create(
-				request, portletId, plid, PortletRequest.RENDER_PHASE);
+				httpServletRequest, portletId, plid,
+				PortletRequest.RENDER_PHASE);
 		}
 
 		portletURL.setParameter(
@@ -1262,6 +1228,7 @@ public class DLImpl implements DL {
 					SetUtil.fromArray(
 						PropsUtil.getArray(
 							PropsKeys.DL_FILE_ENTRY_PREVIEW_IMAGE_MIME_TYPES)));
+				add(ContentTypes.IMAGE_SVG_XML);
 			}
 		};
 
@@ -1272,9 +1239,9 @@ public class DLImpl implements DL {
 			try {
 				fileIcons = PropsUtil.getArray(PropsKeys.DL_FILE_ICONS);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(e, e);
+					_log.debug(exception, exception);
 				}
 
 				fileIcons = new String[] {StringPool.BLANK};
@@ -1310,10 +1277,5 @@ public class DLImpl implements DL {
 			_populateGenericNamesMap(genericName);
 		}
 	}
-
-	private final ServiceTrackerList<PortletLayoutFinder> _serviceTrackerList =
-		ServiceTrackerCollections.openList(
-			PortletLayoutFinder.class,
-			"(model.class.name=" + FileEntry.class.getName() + ")");
 
 }

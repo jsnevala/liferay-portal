@@ -20,7 +20,6 @@
 String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_ui_repository_entry_browse_page") + StringPool.UNDERLINE;
 
 String displayStyle = GetterUtil.getString(request.getAttribute("liferay-item-selector:repository-entry-browser:displayStyle"));
-DLMimeTypeDisplayContext dlMimeTypeDisplayContext = (DLMimeTypeDisplayContext)request.getAttribute("liferay-item-selector:repository-entry-browser:dlMimeTypeDisplayContext");
 String emptyResultsMessage = GetterUtil.getString(request.getAttribute("liferay-item-selector:repository-entry-browser:emptyResultsMessage"));
 ItemSelectorReturnType existingFileEntryReturnType = (ItemSelectorReturnType)request.getAttribute("liferay-item-selector:repository-entry-browser:existingFileEntryReturnType");
 List<String> extensions = (List)request.getAttribute("liferay-item-selector:repository-entry-browser:extensions");
@@ -52,7 +51,7 @@ if (Validator.isNotNull(keywords)) {
 </liferay-util:html-top>
 
 <%
-ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositoryEntryManagementToolbarDisplayContext = new ItemSelectorRepositoryEntryManagementToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request);
+ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositoryEntryManagementToolbarDisplayContext = new ItemSelectorRepositoryEntryManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
 %>
 
 <clay:management-toolbar
@@ -71,10 +70,12 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 	viewTypeItems="<%= itemSelectorRepositoryEntryManagementToolbarDisplayContext.getViewTypes() %>"
 />
 
-<div class="container-fluid container-fluid-max-xl lfr-item-viewer" id="<%= randomNamespace %>ItemSelectorContainer">
+<div class="container-fluid container-fluid-max-xl item-selector lfr-item-viewer" id="<%= randomNamespace %>ItemSelectorContainer">
 	<c:if test="<%= showSearchInfo %>">
 		<liferay-util:include page="/repository_entry_browser/search_info.jsp" servletContext="<%= application %>" />
 	</c:if>
+
+	<div class="message-container"></div>
 
 	<%
 	long folderId = ParamUtil.getLong(request, "folderId");
@@ -98,12 +99,12 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 		<liferay-util:buffer
 			var="selectFileHTML"
 		>
-			<label class="btn btn-default" for="<%= randomNamespace %>InputFile"><liferay-ui:message key="select-file" /></label>
+			<input accept="<%= ListUtil.isEmpty(extensions) ? "*" : StringUtil.merge(extensions) %>" class="input-file" id="<%= randomNamespace %>InputFile" type="file" />
 
-			<input accept="<%= ListUtil.isEmpty(extensions) ? "*" : StringUtil.merge(extensions) %>" class="hide" id="<%= randomNamespace %>InputFile" type="file" />
+			<label class="btn btn-secondary" for="<%= randomNamespace %>InputFile"><liferay-ui:message key="select-file" /></label>
 		</liferay-util:buffer>
 
-		<div class="drop-enabled drop-zone no-border">
+		<div class="drop-enabled drop-zone">
 			<c:choose>
 				<c:when test="<%= BrowserSnifferUtil.isMobile(request) %>">
 					<%= selectFileHTML %>
@@ -117,6 +118,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 
 	<c:if test="<%= (existingFileEntryReturnType != null) || (itemSelectorReturnTypeResolver != null) %>">
 		<liferay-ui:search-container
+			cssClass='<%= displayStyle.equals("list") ? "main-content-body" : StringPool.BLANK %>'
 			searchContainer="<%= searchContainer %>"
 			total="<%= repositoryEntriesCount %>"
 			var="listSearchContainer"
@@ -156,20 +158,23 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 
 							JSONObject itemMedatadaJSONObject = ItemSelectorRepositoryEntryBrowserUtil.getItemMetadataJSONObject(fileEntry, locale);
 
-							String thumbnailSrc = DLUtil.getThumbnailSrc(fileEntry, themeDisplay);
+							String thumbnailSrc = DLURLHelperUtil.getThumbnailSrc(fileEntry, themeDisplay);
 						%>
 
 							<liferay-ui:search-container-column-text
 								name="title"
 							>
-								<a class="item-preview" data-metadata="<%= HtmlUtil.escapeAttribute(itemMedatadaJSONObject.toString()) %>" data-returnType="<%= HtmlUtil.escapeAttribute(ItemSelectorRepositoryEntryBrowserUtil.getItemSelectorReturnTypeClassName(itemSelectorReturnTypeResolver, existingFileEntryReturnType)) %>" data-url="<%= HtmlUtil.escapeAttribute(DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, StringPool.BLANK)) %>" data-value="<%= HtmlUtil.escapeAttribute(ItemSelectorRepositoryEntryBrowserUtil.getValue(itemSelectorReturnTypeResolver, existingFileEntryReturnType, fileEntry, themeDisplay)) %>" href="<%= Validator.isNotNull(thumbnailSrc) ? HtmlUtil.escapeHREF(DLUtil.getImagePreviewURL(fileEntry, themeDisplay)) : themeDisplay.getPathThemeImages() + "/file_system/large/default.png" %>" title="<%= HtmlUtil.escapeAttribute(title) %>">
+								<a class="item-preview" data-metadata="<%= HtmlUtil.escapeAttribute(itemMedatadaJSONObject.toString()) %>" data-returnType="<%= HtmlUtil.escapeAttribute(ItemSelectorRepositoryEntryBrowserUtil.getItemSelectorReturnTypeClassName(itemSelectorReturnTypeResolver, existingFileEntryReturnType)) %>" data-url="<%= HtmlUtil.escapeAttribute(DLURLHelperUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, StringPool.BLANK)) %>" data-value="<%= HtmlUtil.escapeAttribute(ItemSelectorRepositoryEntryBrowserUtil.getValue(itemSelectorReturnTypeResolver, existingFileEntryReturnType, fileEntry, themeDisplay)) %>" href="<%= Validator.isNotNull(thumbnailSrc) ? HtmlUtil.escapeHREF(DLURLHelperUtil.getImagePreviewURL(fileEntry, themeDisplay)) : themeDisplay.getPathThemeImages() + "/file_system/large/default.png" %>" title="<%= HtmlUtil.escapeAttribute(title) %>">
 
 									<%
 									String iconCssClass = DLUtil.getFileIconCssClass(fileEntry.getExtension());
 									%>
 
 									<c:if test="<%= Validator.isNotNull(iconCssClass) %>">
-										<i class="<%= iconCssClass %>"></i>
+										<liferay-ui:icon
+											icon="<%= iconCssClass %>"
+											markupView="lexicon"
+										/>
 									</c:if>
 
 									<span class="taglib-text">
@@ -180,7 +185,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 
 							<liferay-ui:search-container-column-text
 								name="size"
-								value="<%= TextFormatter.formatStorageSize(fileEntry.getSize(), locale) %>"
+								value="<%= LanguageUtil.formatStorageSize(fileEntry.getSize(), locale) %>"
 							/>
 
 							<liferay-ui:search-container-column-status
@@ -192,6 +197,15 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 								name="modified-date"
 							>
 								<liferay-ui:message arguments="<%= new String[] {LanguageUtil.getTimeDescription(locale, System.currentTimeMillis() - fileEntry.getModifiedDate().getTime(), true), HtmlUtil.escape(fileEntry.getUserName())} %>" key="x-ago-by-x" translateArguments="<%= false %>" />
+							</liferay-ui:search-container-column-text>
+
+							<liferay-ui:search-container-column-text>
+								<clay:button
+									elementClasses="btn-outline-borderless btn-outline-secondary component-action icon-view"
+									icon="view"
+									monospaced="<%= true %>"
+									style="outline-secondary"
+								/>
 							</liferay-ui:search-container-column-text>
 
 						<%
@@ -207,7 +221,10 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 								name="title"
 							>
 								<a href="<%= HtmlUtil.escapeHREF(viewFolderURL.toString()) %>" title="<%= HtmlUtil.escapeAttribute(folder.getName()) %>">
-									<i class="icon-folder-open"></i>
+									<liferay-ui:icon
+										icon="folder"
+										markupView="lexicon"
+									/>
 
 									<span class="taglib-text">
 										<%= HtmlUtil.escape(folder.getName()) %>
@@ -230,6 +247,10 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 							>
 								<liferay-ui:message arguments="<%= new String[] {LanguageUtil.getTimeDescription(locale, System.currentTimeMillis() - folder.getModifiedDate().getTime(), true), HtmlUtil.escape(folder.getUserName())} %>" key="x-ago-by-x" translateArguments="<%= false %>" />
 							</liferay-ui:search-container-column-text>
+
+							<liferay-ui:search-container-column-text
+								value="--"
+							/>
 
 						<%
 						}
@@ -271,6 +292,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 										colspan="<%= 3 %>"
 									>
 										<liferay-frontend:horizontal-card
+											cardCssClass="card-interactive card-interactive-secondary"
 											resultRow="<%= row %>"
 											text="<%= folder.getName() %>"
 											url="<%= viewFolderURL.toString() %>"
@@ -293,12 +315,16 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 
 									JSONObject itemMedatadaJSONObject = ItemSelectorRepositoryEntryBrowserUtil.getItemMetadataJSONObject(fileEntry, locale);
 
-									Map<String, Object> data = new HashMap<String, Object>();
+									Map<String, Object> data = HashMapBuilder.<String, Object>put(
+										"description", fileEntry.getDescription()
+									).put(
+										"fileEntryId", fileEntry.getFileEntryId()
+									).build();
 
-									String thumbnailSrc = DLUtil.getThumbnailSrc(fileEntry, themeDisplay);
+									String thumbnailSrc = DLURLHelperUtil.getThumbnailSrc(fileEntry, themeDisplay);
 
 									if (Validator.isNotNull(thumbnailSrc)) {
-										data.put("href", DLUtil.getImagePreviewURL(fileEntry, themeDisplay));
+										data.put("href", DLURLHelperUtil.getImagePreviewURL(fileEntry, themeDisplay));
 									}
 									else {
 										data.put("href", themeDisplay.getPathThemeImages() + "/file_system/large/default.png");
@@ -307,45 +333,45 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 									data.put("metadata", itemMedatadaJSONObject.toString());
 									data.put("returnType", ItemSelectorRepositoryEntryBrowserUtil.getItemSelectorReturnTypeClassName(itemSelectorReturnTypeResolver, existingFileEntryReturnType));
 									data.put("title", title);
-									data.put("url", DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, StringPool.BLANK));
+									data.put("url", DLURLHelperUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, StringPool.BLANK));
 									data.put("value", ItemSelectorRepositoryEntryBrowserUtil.getValue(itemSelectorReturnTypeResolver, existingFileEntryReturnType, fileEntry, themeDisplay));
-
-									String stickerCssClass = "file-icon-color-0";
-
-									String fileExtensionSticker = StringUtil.shorten(StringUtil.upperCase(fileEntry.getExtension()), 3, StringPool.BLANK);
-
-									if (Validator.isNotNull(dlMimeTypeDisplayContext)) {
-										stickerCssClass = dlMimeTypeDisplayContext.getCssClassFileMimeType(fileEntry.getMimeType());
-									}
 								%>
 
 									<liferay-ui:search-container-column-text>
 										<c:choose>
 											<c:when test="<%= Validator.isNull(thumbnailSrc) %>">
 												<liferay-frontend:icon-vertical-card
-													cssClass="item-preview"
+													actionJsp="/repository_entry_browser/action_button_preview.jsp"
+													actionJspServletContext="<%= application %>"
+													cardCssClass="card-interactive"
+													cssClass="file-card form-check form-check-card item-preview"
 													data="<%= data %>"
 													icon="documents-and-media"
 													title="<%= title %>"
 												>
 													<liferay-frontend:vertical-card-sticker-bottom>
-														<div class="sticker sticker-secondary sticker-bottom-left <%= stickerCssClass %>">
-															<%= fileExtensionSticker %>
-														</div>
+														<liferay-document-library:mime-type-sticker
+															cssClass="sticker-bottom-left sticker-secondary"
+															fileVersion="<%= latestFileVersion %>"
+														/>
 													</liferay-frontend:vertical-card-sticker-bottom>
 												</liferay-frontend:icon-vertical-card>
 											</c:when>
 											<c:otherwise>
 												<liferay-frontend:vertical-card
-													cssClass="item-preview"
+													actionJsp="/repository_entry_browser/action_button_preview.jsp"
+													actionJspServletContext="<%= application %>"
+													cardCssClass="card-interactive"
+													cssClass="form-check form-check-card image-card item-preview"
 													data="<%= data %>"
 													imageUrl="<%= thumbnailSrc %>"
 													title="<%= title %>"
 												>
 													<liferay-frontend:vertical-card-sticker-bottom>
-														<div class="sticker sticker-bottom <%= stickerCssClass %>">
-															<%= fileExtensionSticker %>
-														</div>
+														<liferay-document-library:mime-type-sticker
+															cssClass="sticker-bottom-left sticker-secondary"
+															fileVersion="<%= latestFileVersion %>"
+														/>
 													</liferay-frontend:vertical-card-sticker-bottom>
 												</liferay-frontend:vertical-card>
 											</c:otherwise>
@@ -372,8 +398,8 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 									}
 								%>
 
-									<liferay-ui:search-container-column-image
-										src='<%= themeDisplay.getPathThemeImages() + "/file_system/large/" + folderImage + ".png" %>'
+									<liferay-ui:search-container-column-icon
+										icon="folder"
 									/>
 
 									<liferay-ui:search-container-column-text
@@ -397,39 +423,36 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 								}
 
 								if (fileEntry != null) {
+									row.setCssClass("item-selector-list-row " + row.getCssClass());
+
 									FileVersion latestFileVersion = fileEntry.getLatestFileVersion();
 
 									String title = DLUtil.getTitleWithExtension(fileEntry);
 
 									JSONObject itemMedatadaJSONObject = ItemSelectorRepositoryEntryBrowserUtil.getItemMetadataJSONObject(fileEntry, locale);
 
-									String thumbnailSrc = DLUtil.getThumbnailSrc(fileEntry, themeDisplay);
+									String thumbnailSrc = DLURLHelperUtil.getThumbnailSrc(fileEntry, themeDisplay);
 								%>
 
 									<c:choose>
 										<c:when test="<%= Validator.isNotNull(thumbnailSrc) %>">
 											<liferay-ui:search-container-column-image
-												src="<%= DLUtil.getThumbnailSrc(fileEntry, themeDisplay) %>"
+												src="<%= DLURLHelperUtil.getThumbnailSrc(fileEntry, themeDisplay) %>"
 											/>
-										</c:when>
-										<c:when test="<%= (dlMimeTypeDisplayContext != null) && Validator.isNotNull(latestFileVersion.getExtension()) %>">
-											<liferay-ui:search-container-column-text>
-												<div class="sticker <%= dlMimeTypeDisplayContext.getCssClassFileMimeType(fileEntry.getMimeType()) %>">
-													<%= StringUtil.shorten(StringUtil.upperCase(latestFileVersion.getExtension()), 3, StringPool.BLANK) %>
-												</div>
-											</liferay-ui:search-container-column-text>
 										</c:when>
 										<c:otherwise>
-											<liferay-ui:search-container-column-icon
-												icon="documents-and-media"
-											/>
+											<liferay-ui:search-container-column-text>
+												<liferay-document-library:mime-type-sticker
+													fileVersion="<%= latestFileVersion %>"
+												/>
+											</liferay-ui:search-container-column-text>
 										</c:otherwise>
 									</c:choose>
 
 									<liferay-ui:search-container-column-text
 										colspan="<%= 2 %>"
 									>
-										<div class="item-preview" data-href="<%= Validator.isNotNull(thumbnailSrc) ? HtmlUtil.escapeHREF(DLUtil.getImagePreviewURL(fileEntry, themeDisplay)) : themeDisplay.getPathThemeImages() + "/file_system/large/default.png" %>" data-metadata="<%= HtmlUtil.escapeAttribute(itemMedatadaJSONObject.toString()) %>" data-returnType="<%= HtmlUtil.escapeAttribute(ItemSelectorRepositoryEntryBrowserUtil.getItemSelectorReturnTypeClassName(itemSelectorReturnTypeResolver, existingFileEntryReturnType)) %>" data-title="<%= HtmlUtil.escapeAttribute(title) %>" data-url="<%= HtmlUtil.escapeAttribute(DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, StringPool.BLANK)) %>" data-value="<%= HtmlUtil.escapeAttribute(ItemSelectorRepositoryEntryBrowserUtil.getValue(itemSelectorReturnTypeResolver, existingFileEntryReturnType, fileEntry, themeDisplay)) %>">
+										<div class="item-preview" data-href="<%= Validator.isNotNull(thumbnailSrc) ? HtmlUtil.escapeHREF(DLURLHelperUtil.getImagePreviewURL(fileEntry, themeDisplay)) : themeDisplay.getPathThemeImages() + "/file_system/large/default.png" %>" data-metadata="<%= HtmlUtil.escapeAttribute(itemMedatadaJSONObject.toString()) %>" data-returnType="<%= HtmlUtil.escapeAttribute(ItemSelectorRepositoryEntryBrowserUtil.getItemSelectorReturnTypeClassName(itemSelectorReturnTypeResolver, existingFileEntryReturnType)) %>" data-title="<%= HtmlUtil.escapeAttribute(title) %>" data-url="<%= HtmlUtil.escapeAttribute(DLURLHelperUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, StringPool.BLANK)) %>" data-value="<%= HtmlUtil.escapeAttribute(ItemSelectorRepositoryEntryBrowserUtil.getValue(itemSelectorReturnTypeResolver, existingFileEntryReturnType, fileEntry, themeDisplay)) %>">
 											<liferay-ui:app-view-entry
 												assetCategoryClassName="<%= DLFileEntry.class.getName() %>"
 												assetCategoryClassPK="<%= fileEntry.getFileEntryId() %>"
@@ -448,6 +471,15 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 												version="<%= String.valueOf(fileEntry.getVersion()) %>"
 											/>
 										</div>
+									</liferay-ui:search-container-column-text>
+
+									<liferay-ui:search-container-column-text>
+										<clay:button
+											elementClasses="btn-outline-borderless btn-outline-secondary component-action icon-view"
+											icon="view"
+											monospaced="<%= true %>"
+											style="outline-secondary"
+										/>
 									</liferay-ui:search-container-column-text>
 
 								<%
@@ -474,48 +506,53 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 			/>
 		</c:if>
 	</c:if>
+
+	<div class="item-selector-preview-container"></div>
 </div>
 
-<aui:script use="liferay-item-selector-repository-entry-browser">
-	new Liferay.ItemSelectorRepositoryEntryBrowser(
-		{
-			closeCaption: '<%= UnicodeLanguageUtil.get(request, tabName) %>',
+<aui:script require='<%= npmResolvedPackageName + "/repository_entry_browser/js/ItemSelectorRepositoryEntryBrowser.es as ItemSelectorRepositoryEntryBrowser" %>'>
+	var itemSelector = new ItemSelectorRepositoryEntryBrowser.default({
+		closeCaption: '<%= UnicodeLanguageUtil.get(request, tabName) %>',
 
-			<c:if test="<%= uploadURL != null %>">
+		<c:if test="<%= uploadURL != null %>">
 
-				<%
-				String imageEditorPortletId = PortletProviderUtil.getPortletId(Image.class.getName(), PortletProvider.Action.EDIT);
-				%>
+			<%
+			String imageEditorPortletId = PortletProviderUtil.getPortletId(Image.class.getName(), PortletProvider.Action.EDIT);
+			%>
 
-				<c:if test="<%= Validator.isNotNull(imageEditorPortletId) %>">
-					<liferay-portlet:renderURL portletName="<%= imageEditorPortletId %>" var="viewImageEditorURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-						<liferay-portlet:param name="mvcRenderCommandName" value="/image_editor/view" />
-					</liferay-portlet:renderURL>
+			<c:if test="<%= Validator.isNotNull(imageEditorPortletId) %>">
+				<liferay-portlet:renderURL portletName="<%= imageEditorPortletId %>" var="viewImageEditorURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+					<liferay-portlet:param name="mvcRenderCommandName" value="/image_editor/view" />
+				</liferay-portlet:renderURL>
 
-					editItemURL: '<%= viewImageEditorURL.toString() %>',
-				</c:if>
+				editItemURL: '<%= viewImageEditorURL.toString() %>',
 			</c:if>
+		</c:if>
 
-			maxFileSize: '<%= maxFileSize %>',
-			on: {
-				selectedItem: function(event) {
-					Liferay.Util.getOpener().Liferay.fire('<%= itemSelectedEventName %>', event);
-				}
-			},
-			rootNode: '#<%= randomNamespace %>ItemSelectorContainer',
-			validExtensions: '<%= ListUtil.isEmpty(extensions) ? "*" : StringUtil.merge(extensions) %>'
+		maxFileSize: '<%= maxFileSize %>',
 
-			<c:if test="<%= uploadURL != null %>">
+		rootNode: '#<%= randomNamespace %>ItemSelectorContainer',
 
-				<%
-				String returnType = ItemSelectorRepositoryEntryBrowserUtil.getItemSelectorReturnTypeClassName(itemSelectorReturnTypeResolver, existingFileEntryReturnType);
+		validExtensions:
+			'<%= ListUtil.isEmpty(extensions) ? "*" : StringUtil.merge(extensions) %>',
 
-				uploadURL.setParameter("returnType", returnType);
-				%>
+		<c:if test="<%= uploadURL != null %>">
 
-				, uploadItemReturnType: '<%= HtmlUtil.escapeAttribute(returnType) %>',
-				uploadItemURL: '<%= uploadURL.toString() %>'
-			</c:if>
-		}
-	);
+			<%
+			String returnType = ItemSelectorRepositoryEntryBrowserUtil.getItemSelectorReturnTypeClassName(itemSelectorReturnTypeResolver, existingFileEntryReturnType);
+
+			uploadURL.setParameter("returnType", returnType);
+			%>
+
+			uploadItemReturnType: '<%= HtmlUtil.escapeAttribute(returnType) %>',
+			uploadItemURL: '<%= uploadURL.toString() %>',
+		</c:if>
+	});
+
+	itemSelector.on('selectedItem', function (event) {
+		Liferay.Util.getOpener().Liferay.fire(
+			'<%= itemSelectedEventName %>',
+			event
+		);
+	});
 </aui:script>

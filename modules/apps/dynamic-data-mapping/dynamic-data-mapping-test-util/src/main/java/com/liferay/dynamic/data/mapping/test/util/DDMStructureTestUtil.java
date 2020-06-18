@@ -28,6 +28,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -106,9 +107,9 @@ public class DDMStructureTestUtil {
 			ServiceContext serviceContext)
 		throws Exception {
 
-		Map<Locale, String> nameMap = new HashMap<>();
-
-		nameMap.put(defaultLocale, "Test Structure");
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			defaultLocale, "Test Structure"
+		).build();
 
 		DDMFormLayout ddmFormLayout = DDMUtil.getDefaultDDMFormLayout(ddmForm);
 
@@ -283,9 +284,9 @@ public class DDMStructureTestUtil {
 	public static String getSampleStructuredContent(
 		String name, String keywords) {
 
-		Map<Locale, String> contents = new HashMap<>();
-
-		contents.put(Locale.US, keywords);
+		Map<Locale, String> contents = HashMapBuilder.put(
+			LocaleUtil.US, keywords
+		).build();
 
 		return getSampleStructuredContent(
 			name, Collections.singletonList(contents), "en_US");
@@ -305,9 +306,9 @@ public class DDMStructureTestUtil {
 		for (Node node : nodes) {
 			Element dynamicElementElement = (Element)node;
 
-			String elementName = getElementName(dynamicElementElement);
-
-			map.put(elementName, getElementMap(dynamicElementElement));
+			map.put(
+				getElementName(dynamicElementElement),
+				getElementMap(dynamicElementElement));
 		}
 
 		return map;
@@ -378,9 +379,13 @@ public class DDMStructureTestUtil {
 		Element parentElement = element.getParent();
 
 		while (true) {
-			if ((parentElement == null) ||
-				parentElement.getName().equals("root")) {
+			if (parentElement == null) {
+				break;
+			}
 
+			String parentName = parentElement.getName();
+
+			if (parentName.equals("root")) {
 				break;
 			}
 

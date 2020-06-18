@@ -14,14 +14,11 @@
 
 package com.liferay.friendly.url.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class FriendlyURLLengthException extends PortalException {
 
 	public FriendlyURLLengthException() {

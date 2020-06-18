@@ -14,14 +14,11 @@
 
 package com.liferay.calendar.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Eduardo Lundgren
  */
-@ProviderType
 public class CalendarBookingRecurrenceException extends PortalException {
 
 	public CalendarBookingRecurrenceException() {

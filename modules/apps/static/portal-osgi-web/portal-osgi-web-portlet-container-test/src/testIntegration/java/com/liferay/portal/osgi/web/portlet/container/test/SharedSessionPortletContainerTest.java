@@ -21,8 +21,8 @@ import com.liferay.portal.kernel.events.LifecycleEvent;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.osgi.web.portlet.container.test.util.PortletContainerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.test.PortletContainerTestUtil;
 
 import java.io.IOException;
 
@@ -96,9 +96,10 @@ public class SharedSessionPortletContainerTest
 			public void processLifecycleEvent(LifecycleEvent lifecycleEvent)
 				throws ActionException {
 
-				HttpServletRequest request = lifecycleEvent.getRequest();
+				HttpServletRequest httpServletRequest =
+					lifecycleEvent.getRequest();
 
-				HttpSession session = request.getSession(true);
+				HttpSession session = httpServletRequest.getSession(true);
 
 				session.setAttribute(attributeKey, attributeValue);
 			}
@@ -165,9 +166,10 @@ public class SharedSessionPortletContainerTest
 			public void processLifecycleEvent(LifecycleEvent lifecycleEvent)
 				throws ActionException {
 
-				HttpServletRequest request = lifecycleEvent.getRequest();
+				HttpServletRequest httpServletRequest =
+					lifecycleEvent.getRequest();
 
-				HttpSession session = request.getSession(true);
+				HttpSession session = httpServletRequest.getSession(true);
 
 				Object value = session.getAttribute(attributeKey);
 
@@ -234,9 +236,10 @@ public class SharedSessionPortletContainerTest
 			public void processLifecycleEvent(LifecycleEvent lifecycleEvent)
 				throws ActionException {
 
-				HttpServletRequest request = lifecycleEvent.getRequest();
+				HttpServletRequest httpServletRequest =
+					lifecycleEvent.getRequest();
 
-				HttpSession session = request.getSession(true);
+				HttpSession session = httpServletRequest.getSession(true);
 
 				session.setAttribute(attributeKey, attributeValue);
 			}
@@ -303,9 +306,10 @@ public class SharedSessionPortletContainerTest
 			public void processLifecycleEvent(LifecycleEvent lifecycleEvent)
 				throws ActionException {
 
-				HttpServletRequest request = lifecycleEvent.getRequest();
+				HttpServletRequest httpServletRequest =
+					lifecycleEvent.getRequest();
 
-				HttpSession session = request.getSession(true);
+				HttpSession session = httpServletRequest.getSession(true);
 
 				session.setAttribute(attributeKey, attributeValue);
 			}
@@ -369,9 +373,10 @@ public class SharedSessionPortletContainerTest
 			public void processLifecycleEvent(LifecycleEvent lifecycleEvent)
 				throws ActionException {
 
-				HttpServletRequest request = lifecycleEvent.getRequest();
+				HttpServletRequest httpServletRequest =
+					lifecycleEvent.getRequest();
 
-				HttpSession session = request.getSession(true);
+				HttpSession session = httpServletRequest.getSession(true);
 
 				Object value = session.getAttribute(attributeKey);
 

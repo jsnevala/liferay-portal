@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,11 +25,13 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class DDMStructureLinkSoap implements Serializable {
+
 	public static DDMStructureLinkSoap toSoapModel(DDMStructureLink model) {
 		DDMStructureLinkSoap soapModel = new DDMStructureLinkSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setStructureLinkId(model.getStructureLinkId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setClassNameId(model.getClassNameId());
@@ -41,8 +41,11 @@ public class DDMStructureLinkSoap implements Serializable {
 		return soapModel;
 	}
 
-	public static DDMStructureLinkSoap[] toSoapModels(DDMStructureLink[] models) {
-		DDMStructureLinkSoap[] soapModels = new DDMStructureLinkSoap[models.length];
+	public static DDMStructureLinkSoap[] toSoapModels(
+		DDMStructureLink[] models) {
+
+		DDMStructureLinkSoap[] soapModels =
+			new DDMStructureLinkSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -53,10 +56,12 @@ public class DDMStructureLinkSoap implements Serializable {
 
 	public static DDMStructureLinkSoap[][] toSoapModels(
 		DDMStructureLink[][] models) {
+
 		DDMStructureLinkSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new DDMStructureLinkSoap[models.length][models[0].length];
+			soapModels =
+				new DDMStructureLinkSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new DDMStructureLinkSoap[0][0];
@@ -71,7 +76,9 @@ public class DDMStructureLinkSoap implements Serializable {
 
 	public static DDMStructureLinkSoap[] toSoapModels(
 		List<DDMStructureLink> models) {
-		List<DDMStructureLinkSoap> soapModels = new ArrayList<DDMStructureLinkSoap>(models.size());
+
+		List<DDMStructureLinkSoap> soapModels =
+			new ArrayList<DDMStructureLinkSoap>(models.size());
 
 		for (DDMStructureLink model : models) {
 			soapModels.add(toSoapModel(model));
@@ -89,6 +96,22 @@ public class DDMStructureLinkSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setStructureLinkId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public long getStructureLinkId() {
@@ -131,9 +154,12 @@ public class DDMStructureLinkSoap implements Serializable {
 		_structureId = structureId;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _structureLinkId;
 	private long _companyId;
 	private long _classNameId;
 	private long _classPK;
 	private long _structureId;
+
 }

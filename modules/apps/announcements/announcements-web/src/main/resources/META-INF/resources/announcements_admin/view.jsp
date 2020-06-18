@@ -42,12 +42,12 @@ announcementsEntriesSearchContainer.setRowChecker(new AnnouncementsEntryChecker(
 announcementsEntriesSearchContainer.setTotal(AnnouncementsEntryLocalServiceUtil.getEntriesCount(themeDisplay.getCompanyId(), classNameId, classPK, navigation.equals("alerts")));
 announcementsEntriesSearchContainer.setResults(AnnouncementsEntryLocalServiceUtil.getEntries(themeDisplay.getCompanyId(), classNameId, classPK, navigation.equals("alerts"), announcementsEntriesSearchContainer.getStart(), announcementsEntriesSearchContainer.getEnd()));
 
-AnnouncementsAdminViewManagementToolbarDisplayContext announcementsAdminViewManagementToolbarDisplayContext = new AnnouncementsAdminViewManagementToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request, announcementsEntriesSearchContainer);
+AnnouncementsAdminViewManagementToolbarDisplayContext announcementsAdminViewManagementToolbarDisplayContext = new AnnouncementsAdminViewManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, announcementsEntriesSearchContainer);
 %>
 
 <clay:navigation-bar
 	inverted="<%= true %>"
-	navigationItems="<%=
+	navigationItems='<%=
 		new JSPNavigationItemList(pageContext) {
 			{
 				add(
@@ -65,15 +65,17 @@ AnnouncementsAdminViewManagementToolbarDisplayContext announcementsAdminViewMana
 
 			}
 		}
-	%>"
+	%>'
 />
 
 <clay:management-toolbar
 	actionDropdownItems="<%= announcementsAdminViewManagementToolbarDisplayContext.getActionDropdownItems() %>"
+	clearResultsURL="<%= announcementsAdminViewManagementToolbarDisplayContext.getClearResultsURL() %>"
 	componentId="announcementsAdminViewManagementToolbar"
 	creationMenu="<%= announcementsAdminViewManagementToolbarDisplayContext.getCreationMenu() %>"
 	disabled="<%= announcementsAdminViewManagementToolbarDisplayContext.isDisabled() %>"
 	filterDropdownItems="<%= announcementsAdminViewManagementToolbarDisplayContext.getFilterDropdownItems() %>"
+	filterLabelItems="<%= announcementsAdminViewManagementToolbarDisplayContext.getFilterLabelItems() %>"
 	itemsTotal="<%= announcementsAdminViewManagementToolbarDisplayContext.getTotal() %>"
 	searchContainerId="announcementsEntries"
 	selectable="<%= true %>"
@@ -101,9 +103,9 @@ AnnouncementsAdminViewManagementToolbarDisplayContext announcementsAdminViewMana
 			>
 
 				<%
-				Map<String, Object> rowData = new HashMap<String, Object>();
-
-				rowData.put("actions", String.join(StringPool.COMMA, announcementsAdminViewManagementToolbarDisplayContext.getAvailableActionDropdownItems(entry)));
+				Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+					"actions", StringUtil.merge(announcementsAdminViewManagementToolbarDisplayContext.getAvailableActions(entry))
+				).build();
 
 				row.setData(rowData);
 
@@ -155,40 +157,46 @@ AnnouncementsAdminViewManagementToolbarDisplayContext announcementsAdminViewMana
 </div>
 
 <aui:script>
-	var deleteEntries = function() {
-		if (confirm('<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-entries" />')) {
+	var deleteEntries = function () {
+		if (
+			confirm(
+				'<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-entries" />'
+			)
+		) {
 			var form = document.getElementById('<portlet:namespace />fm');
 
 			if (form) {
 				form.setAttribute('method', 'post');
 
-				var cmd = form.querySelector('#<portlet:namespace /><%= Constants.CMD %>');
+				var cmd = form.querySelector(
+					'#<portlet:namespace /><%= Constants.CMD %>'
+				);
 
 				if (cmd) {
 					cmd.setAttribute('value', '<%= Constants.DELETE %>');
 				}
 
-				submitForm(form, '<portlet:actionURL name="/announcements/edit_entry" />');
+				submitForm(
+					form,
+					'<portlet:actionURL name="/announcements/edit_entry" />'
+				);
 			}
 		}
 	};
 
 	var ACTIONS = {
-		'deleteEntries': deleteEntries
+		deleteEntries: deleteEntries,
 	};
 
 	Liferay.componentReady('announcementsAdminViewManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				'actionItemClicked',
-				function(event) {
-					var itemData = event.data.item.data;
+		function (managementToolbar) {
+			managementToolbar.on('actionItemClicked', function (event) {
+				var itemData = event.data.item.data;
 
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action]();
-					}
+				if (itemData && itemData.action && ACTIONS[itemData.action]) {
+					ACTIONS[itemData.action]();
 				}
-			);
+			});
 		}
 	);
 </aui:script>

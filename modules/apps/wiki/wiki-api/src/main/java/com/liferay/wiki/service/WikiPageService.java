@@ -14,8 +14,6 @@
 
 package com.liferay.wiki.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -23,13 +21,11 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.OrderByComparator;
-
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
 
@@ -39,6 +35,8 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * Provides the remote service interface for WikiPage. Methods of this
  * service are expected to have security checks based on the propagated JAAS
@@ -46,61 +44,62 @@ import java.util.Locale;
  *
  * @author Brian Wing Shun Chan
  * @see WikiPageServiceUtil
- * @see com.liferay.wiki.service.base.WikiPageServiceBaseImpl
- * @see com.liferay.wiki.service.impl.WikiPageServiceImpl
  * @generated
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(property =  {
-	"json.web.service.context.name=wiki", "json.web.service.context.path=WikiPage"}, service = WikiPageService.class)
 @ProviderType
-@Transactional(isolation = Isolation.PORTAL, rollbackFor =  {
-	PortalException.class, SystemException.class})
+@Transactional(
+	isolation = Isolation.PORTAL,
+	rollbackFor = {PortalException.class, SystemException.class}
+)
 public interface WikiPageService extends BaseService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link WikiPageServiceUtil} to access the wiki page remote service. Add custom service methods to {@link com.liferay.wiki.service.impl.WikiPageServiceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify or reference this interface directly. Always use {@link WikiPageServiceUtil} to access the wiki page remote service. Add custom service methods to <code>com.liferay.wiki.service.impl.WikiPageServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public WikiPage addPage(long nodeId, String title, String content,
-		String summary, boolean minorEdit, ServiceContext serviceContext)
+	public WikiPage addPage(
+			long nodeId, String title, String content, String summary,
+			boolean minorEdit, ServiceContext serviceContext)
 		throws PortalException;
 
-	public WikiPage addPage(long nodeId, String title, String content,
-		String summary, boolean minorEdit, String format, String parentTitle,
-		String redirectTitle, ServiceContext serviceContext)
+	public WikiPage addPage(
+			long nodeId, String title, String content, String summary,
+			boolean minorEdit, String format, String parentTitle,
+			String redirectTitle, ServiceContext serviceContext)
 		throws PortalException;
 
-	public FileEntry addPageAttachment(long nodeId, String title,
-		String fileName, File file, String mimeType) throws PortalException;
-
-	public FileEntry addPageAttachment(long nodeId, String title,
-		String fileName, InputStream inputStream, String mimeType)
+	public FileEntry addPageAttachment(
+			long nodeId, String title, String fileName, File file,
+			String mimeType)
 		throws PortalException;
 
-	public List<FileEntry> addPageAttachments(long nodeId, String title,
-		List<ObjectValuePair<String, InputStream>> inputStreamOVPs)
+	public FileEntry addPageAttachment(
+			long nodeId, String title, String fileName, InputStream inputStream,
+			String mimeType)
 		throws PortalException;
 
-	public FileEntry addTempFileEntry(long nodeId, String folderName,
-		String fileName, InputStream inputStream, String mimeType)
+	public List<FileEntry> addPageAttachments(
+			long nodeId, String title,
+			List<ObjectValuePair<String, InputStream>> inputStreamOVPs)
 		throws PortalException;
 
-	/**
-	* @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	#addTempFileEntry(long, String, String, InputStream, String)}
-	*/
-	@Deprecated
-	public void addTempPageAttachment(long nodeId, String fileName,
-		String tempFolderName, InputStream inputStream, String mimeType)
+	public FileEntry addTempFileEntry(
+			long nodeId, String folderName, String fileName,
+			InputStream inputStream, String mimeType)
 		throws PortalException;
 
-	public void changeParent(long nodeId, String title, String newParentTitle,
-		ServiceContext serviceContext) throws PortalException;
+	public void changeParent(
+			long nodeId, String title, String newParentTitle,
+			ServiceContext serviceContext)
+		throws PortalException;
 
-	public void copyPageAttachments(long templateNodeId, String templateTitle,
-		long nodeId, String title) throws PortalException;
+	public void copyPageAttachments(
+			long templateNodeId, String templateTitle, long nodeId,
+			String title)
+		throws PortalException;
 
 	public void deletePage(long nodeId, String title) throws PortalException;
 
@@ -110,8 +109,9 @@ public interface WikiPageService extends BaseService {
 	public void deletePageAttachments(long nodeId, String title)
 		throws PortalException;
 
-	public void deleteTempFileEntry(long nodeId, String folderName,
-		String fileName) throws PortalException;
+	public void deleteTempFileEntry(
+			long nodeId, String folderName, String fileName)
+		throws PortalException;
 
 	public void deleteTrashPageAttachments(long nodeId, String title)
 		throws PortalException;
@@ -124,8 +124,9 @@ public interface WikiPageService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<WikiPage> getChildren(long groupId, long nodeId, boolean head,
-		String parentTitle) throws PortalException;
+	public List<WikiPage> getChildren(
+			long groupId, long nodeId, boolean head, String parentTitle)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public WikiPage getDraftPage(long nodeId, String title)
@@ -136,27 +137,20 @@ public interface WikiPageService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public String getNodePagesRSS(long nodeId, int max, String type,
-		double version, String displayStyle, String feedURL, String entryURL,
-		String attachmentURLPrefix) throws PortalException;
-
-	/**
-	* @deprecated As of Judson (7.1.x), replaced by {@link
-	#getOrphans(WikiNode)}
-	*/
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<WikiPage> getOrphans(long groupId, long nodeId)
+	public String getNodePagesRSS(
+			long nodeId, int max, String type, double version,
+			String displayStyle, String feedURL, String entryURL,
+			String attachmentURLPrefix)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<WikiPage> getOrphans(WikiNode node) throws PortalException;
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	public String getOSGiServiceIdentifier();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -167,8 +161,7 @@ public interface WikiPageService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public WikiPage getPage(long nodeId, String title)
-		throws PortalException;
+	public WikiPage getPage(long nodeId, String title) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public WikiPage getPage(long nodeId, String title, Boolean head)
@@ -179,26 +172,32 @@ public interface WikiPageService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<WikiPage> getPages(long groupId, long nodeId, boolean head,
-		int status, int start, int end, OrderByComparator<WikiPage> obc)
+	public List<WikiPage> getPages(
+			long groupId, long nodeId, boolean head, int status, int start,
+			int end, OrderByComparator<WikiPage> obc)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<WikiPage> getPages(long groupId, long nodeId, boolean head,
-		long userId, boolean includeOwner, int status, int start, int end,
-		OrderByComparator<WikiPage> obc) throws PortalException;
+	public List<WikiPage> getPages(
+			long groupId, long nodeId, boolean head, long userId,
+			boolean includeOwner, int status, int start, int end,
+			OrderByComparator<WikiPage> obc)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<WikiPage> getPages(long groupId, long userId, long nodeId,
-		int status, int start, int end) throws PortalException;
+	public List<WikiPage> getPages(
+			long groupId, long userId, long nodeId, int status, int start,
+			int end)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getPagesCount(long groupId, long nodeId, boolean head)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getPagesCount(long groupId, long nodeId, boolean head,
-		long userId, boolean includeOwner, int status)
+	public int getPagesCount(
+			long groupId, long nodeId, boolean head, long userId,
+			boolean includeOwner, int status)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -206,13 +205,16 @@ public interface WikiPageService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public String getPagesRSS(long nodeId, String title, int max, String type,
-		double version, String displayStyle, String feedURL, String entryURL,
-		String attachmentURLPrefix, Locale locale) throws PortalException;
+	public String getPagesRSS(
+			long nodeId, String title, int max, String type, double version,
+			String displayStyle, String feedURL, String entryURL,
+			String attachmentURLPrefix, Locale locale)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<WikiPage> getRecentChanges(long groupId, long nodeId,
-		int start, int end) throws PortalException;
+	public List<WikiPage> getRecentChanges(
+			long groupId, long nodeId, int start, int end)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getRecentChangesCount(long groupId, long nodeId)
@@ -222,8 +224,9 @@ public interface WikiPageService extends BaseService {
 	public String[] getTempFileNames(long nodeId, String folderName)
 		throws PortalException;
 
-	public FileEntry movePageAttachmentToTrash(long nodeId, String title,
-		String fileName) throws PortalException;
+	public FileEntry movePageAttachmentToTrash(
+			long nodeId, String title, String fileName)
+		throws PortalException;
 
 	public WikiPage movePageToTrash(long nodeId, String title)
 		throws PortalException;
@@ -231,26 +234,33 @@ public interface WikiPageService extends BaseService {
 	public WikiPage movePageToTrash(long nodeId, String title, double version)
 		throws PortalException;
 
-	public void renamePage(long nodeId, String title, String newTitle,
-		ServiceContext serviceContext) throws PortalException;
+	public void renamePage(
+			long nodeId, String title, String newTitle,
+			ServiceContext serviceContext)
+		throws PortalException;
 
-	public void restorePageAttachmentFromTrash(long nodeId, String title,
-		String fileName) throws PortalException;
+	public void restorePageAttachmentFromTrash(
+			long nodeId, String title, String fileName)
+		throws PortalException;
 
 	public void restorePageFromTrash(long resourcePrimKey)
 		throws PortalException;
 
-	public WikiPage revertPage(long nodeId, String title, double version,
-		ServiceContext serviceContext) throws PortalException;
-
-	public void subscribePage(long nodeId, String title)
+	public WikiPage revertPage(
+			long nodeId, String title, double version,
+			ServiceContext serviceContext)
 		throws PortalException;
+
+	public void subscribePage(long nodeId, String title) throws PortalException;
 
 	public void unsubscribePage(long nodeId, String title)
 		throws PortalException;
 
-	public WikiPage updatePage(long nodeId, String title, double version,
-		String content, String summary, boolean minorEdit, String format,
-		String parentTitle, String redirectTitle, ServiceContext serviceContext)
+	public WikiPage updatePage(
+			long nodeId, String title, double version, String content,
+			String summary, boolean minorEdit, String format,
+			String parentTitle, String redirectTitle,
+			ServiceContext serviceContext)
 		throws PortalException;
+
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,11 +26,12 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class KaleoNotificationSoap implements Serializable {
+
 	public static KaleoNotificationSoap toSoapModel(KaleoNotification model) {
 		KaleoNotificationSoap soapModel = new KaleoNotificationSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setKaleoNotificationId(model.getKaleoNotificationId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -42,7 +41,9 @@ public class KaleoNotificationSoap implements Serializable {
 		soapModel.setModifiedDate(model.getModifiedDate());
 		soapModel.setKaleoClassName(model.getKaleoClassName());
 		soapModel.setKaleoClassPK(model.getKaleoClassPK());
-		soapModel.setKaleoDefinitionVersionId(model.getKaleoDefinitionVersionId());
+		soapModel.setKaleoDefinitionId(model.getKaleoDefinitionId());
+		soapModel.setKaleoDefinitionVersionId(
+			model.getKaleoDefinitionVersionId());
 		soapModel.setKaleoNodeName(model.getKaleoNodeName());
 		soapModel.setName(model.getName());
 		soapModel.setDescription(model.getDescription());
@@ -56,7 +57,9 @@ public class KaleoNotificationSoap implements Serializable {
 
 	public static KaleoNotificationSoap[] toSoapModels(
 		KaleoNotification[] models) {
-		KaleoNotificationSoap[] soapModels = new KaleoNotificationSoap[models.length];
+
+		KaleoNotificationSoap[] soapModels =
+			new KaleoNotificationSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -67,10 +70,12 @@ public class KaleoNotificationSoap implements Serializable {
 
 	public static KaleoNotificationSoap[][] toSoapModels(
 		KaleoNotification[][] models) {
+
 		KaleoNotificationSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new KaleoNotificationSoap[models.length][models[0].length];
+			soapModels =
+				new KaleoNotificationSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new KaleoNotificationSoap[0][0];
@@ -85,7 +90,9 @@ public class KaleoNotificationSoap implements Serializable {
 
 	public static KaleoNotificationSoap[] toSoapModels(
 		List<KaleoNotification> models) {
-		List<KaleoNotificationSoap> soapModels = new ArrayList<KaleoNotificationSoap>(models.size());
+
+		List<KaleoNotificationSoap> soapModels =
+			new ArrayList<KaleoNotificationSoap>(models.size());
 
 		for (KaleoNotification model : models) {
 			soapModels.add(toSoapModel(model));
@@ -103,6 +110,14 @@ public class KaleoNotificationSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setKaleoNotificationId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getKaleoNotificationId() {
@@ -177,6 +192,14 @@ public class KaleoNotificationSoap implements Serializable {
 		_kaleoClassPK = kaleoClassPK;
 	}
 
+	public long getKaleoDefinitionId() {
+		return _kaleoDefinitionId;
+	}
+
+	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		_kaleoDefinitionId = kaleoDefinitionId;
+	}
+
 	public long getKaleoDefinitionVersionId() {
 		return _kaleoDefinitionVersionId;
 	}
@@ -241,6 +264,7 @@ public class KaleoNotificationSoap implements Serializable {
 		_notificationTypes = notificationTypes;
 	}
 
+	private long _mvccVersion;
 	private long _kaleoNotificationId;
 	private long _groupId;
 	private long _companyId;
@@ -250,6 +274,7 @@ public class KaleoNotificationSoap implements Serializable {
 	private Date _modifiedDate;
 	private String _kaleoClassName;
 	private long _kaleoClassPK;
+	private long _kaleoDefinitionId;
 	private long _kaleoDefinitionVersionId;
 	private String _kaleoNodeName;
 	private String _name;
@@ -258,4 +283,5 @@ public class KaleoNotificationSoap implements Serializable {
 	private String _template;
 	private String _templateLanguage;
 	private String _notificationTypes;
+
 }

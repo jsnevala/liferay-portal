@@ -14,8 +14,6 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
-import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
-
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
@@ -31,16 +29,17 @@ public class StringBundlerNamingCheck extends BaseCheck {
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		String typeName = DetailASTUtil.getTypeName(detailAST, false);
+		String typeName = getTypeName(detailAST, false);
 
 		if (!typeName.equals("StringBundler")) {
 			return;
 		}
 
-		DetailAST modifiersAST = detailAST.findFirstToken(TokenTypes.MODIFIERS);
+		DetailAST modifiersDetailAST = detailAST.findFirstToken(
+			TokenTypes.MODIFIERS);
 
-		if (modifiersAST.branchContains(TokenTypes.LITERAL_PROTECTED) ||
-			modifiersAST.branchContains(TokenTypes.LITERAL_PUBLIC)) {
+		if (modifiersDetailAST.branchContains(TokenTypes.LITERAL_PROTECTED) ||
+			modifiersDetailAST.branchContains(TokenTypes.LITERAL_PUBLIC)) {
 
 			return;
 		}
@@ -55,9 +54,9 @@ public class StringBundlerNamingCheck extends BaseCheck {
 	}
 
 	private String _getName(DetailAST detailAST) {
-		DetailAST nameAST = detailAST.findFirstToken(TokenTypes.IDENT);
+		DetailAST nameDetailAST = detailAST.findFirstToken(TokenTypes.IDENT);
 
-		return nameAST.getText();
+		return nameDetailAST.getText();
 	}
 
 	private String _getTokenTypeName(DetailAST detailAST) {

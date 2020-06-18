@@ -35,8 +35,6 @@ SearchContainer searchContainer = viewRolesManagementToolbarDisplayContext.getSe
 PortletURL portletURL = viewRolesManagementToolbarDisplayContext.getPortletURL();
 %>
 
-<liferay-ui:error exception="<%= RequiredRoleException.class %>" message="you-cannot-delete-a-system-role" />
-
 <clay:navigation-bar
 	inverted="<%= true %>"
 	navigationItems="<%= roleDisplayContext.getViewRoleNavigationItems(liferayPortletResponse, portletURL) %>"
@@ -61,6 +59,8 @@ PortletURL portletURL = viewRolesManagementToolbarDisplayContext.getPortletURL()
 />
 
 <aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl container-form-view" method="get" name="fm">
+	<liferay-ui:error exception="<%= RequiredRoleException.class %>" message="you-cannot-delete-a-system-role" />
+
 	<aui:input name="deleteRoleIds" type="hidden" />
 
 	<liferay-ui:search-container
@@ -84,7 +84,7 @@ PortletURL portletURL = viewRolesManagementToolbarDisplayContext.getPortletURL()
 
 				rowURL.setParameter("mvcPath", "/edit_role.jsp");
 				rowURL.setParameter("tabs1", "details");
-				rowURL.setParameter("redirect", roleSearchContainer.getIteratorURL().toString());
+				rowURL.setParameter("backURL", roleSearchContainer.getIteratorURL().toString());
 				rowURL.setParameter("roleId", String.valueOf(role.getRoleId()));
 			}
 			%>
@@ -100,42 +100,52 @@ PortletURL portletURL = viewRolesManagementToolbarDisplayContext.getPortletURL()
 </aui:form>
 
 <aui:script sandbox="<%= true %>">
-	var deleteRoles = function(deleteRoleIds) {
-		var form = $(document.<portlet:namespace />fm);
+	var deleteRoles = function (deleteRoleIds) {
+		var form = document.<portlet:namespace />fm;
 
-		form.attr('method', 'post');
-
-		form.fm('deleteRoleIds').val(deleteRoleIds);
-
-		var p_p_lifecycle = document.<portlet:namespace />fm.p_p_lifecycle;
+		var p_p_lifecycle = form.p_p_lifecycle;
 
 		if (p_p_lifecycle) {
 			p_p_lifecycle.value = '1';
 		}
 
-		if (confirm('<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this-role") %>')) {
-			submitForm(form, '<portlet:actionURL name="deleteRoles"><portlet:param name="redirect" value="<%= portletURL.toString() %>" /></portlet:actionURL>');
+		if (
+			confirm(
+				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this-role") %>'
+			)
+		) {
+			Liferay.Util.postForm(form, {
+				data: {
+					deleteRoleIds: deleteRoleIds,
+				},
+
+				<portlet:actionURL name="deleteRoles" var="deleteRolesURL">
+					<portlet:param name="redirect" value="<%= portletURL.toString() %>" />
+				</portlet:actionURL>
+
+				url: '<%= deleteRolesURL %>',
+			});
 		}
 	};
 
 	var ACTIONS = {
-		'deleteRoles': deleteRoles
+		deleteRoles: deleteRoles,
 	};
 
-	Liferay.componentReady('viewRolesManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				'actionItemClicked',
-				function(event) {
-					var itemData = event.data.item.data;
+	Liferay.componentReady('viewRolesManagementToolbar').then(function (
+		managementToolbar
+	) {
+		managementToolbar.on('actionItemClicked', function (event) {
+			var itemData = event.data.item.data;
 
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action](
-							Liferay.Util.listCheckedExcept(document.<portlet:namespace />fm, '<portlet:namespace />allRowIds')
-						);
-					}
-				}
-			);
-		}
-	);
+			if (itemData && itemData.action && ACTIONS[itemData.action]) {
+				ACTIONS[itemData.action](
+					Liferay.Util.listCheckedExcept(
+						document.<portlet:namespace />fm,
+						'<portlet:namespace />allRowIds'
+					)
+				);
+			}
+		});
+	});
 </aui:script>

@@ -44,13 +44,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
 
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -88,17 +88,8 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 		long layoutId = ParamUtil.getLong(actionRequest, "layoutId");
 		Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
 			actionRequest, "name");
-		Map<Locale, String> titleMap = LocalizationUtil.getLocalizationMap(
-			actionRequest, "title");
-		Map<Locale, String> descriptionMap =
-			LocalizationUtil.getLocalizationMap(actionRequest, "description");
-		Map<Locale, String> keywordsMap = LocalizationUtil.getLocalizationMap(
-			actionRequest, "keywords");
-		Map<Locale, String> robotsMap = LocalizationUtil.getLocalizationMap(
-			actionRequest, "robots");
 		String type = ParamUtil.getString(uploadPortletRequest, "type");
-		boolean showInMenu = ParamUtil.getBoolean(
-			uploadPortletRequest, "showInMenu");
+		boolean hidden = ParamUtil.getBoolean(uploadPortletRequest, "hidden");
 		Map<Locale, String> friendlyURLMap =
 			LocalizationUtil.getLocalizationMap(actionRequest, "friendlyURL");
 		boolean deleteLogo = ParamUtil.getBoolean(actionRequest, "deleteLogo");
@@ -114,26 +105,59 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			iconBytes = FileUtil.getBytes(fileEntry.getContentStream());
 		}
 
+		long masterLayoutPlid = ParamUtil.getLong(
+			uploadPortletRequest, "masterLayoutPlid");
+
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			Layout.class.getName(), actionRequest);
 
 		Layout layout = _layoutLocalService.getLayout(
 			groupId, privateLayout, layoutId);
 
+		String oldFriendlyURL = layout.getFriendlyURL();
+
+		Collection<String> values = friendlyURLMap.values();
+
+		values.removeIf(value -> Validator.isNull(value));
+
+		if (friendlyURLMap.isEmpty()) {
+			friendlyURLMap = layout.getFriendlyURLMap();
+		}
+
 		String currentType = layout.getType();
+
+		if (layout.isTypeAssetDisplay()) {
+			serviceContext.setAttribute(
+				"layout.instanceable.allowed", Boolean.TRUE);
+		}
 
 		layout = _layoutService.updateLayout(
 			groupId, privateLayout, layoutId, layout.getParentLayoutId(),
-			nameMap, titleMap, descriptionMap, keywordsMap, robotsMap, type,
-			!showInMenu, friendlyURLMap, !deleteLogo, iconBytes,
+			nameMap, layout.getTitleMap(), layout.getDescriptionMap(),
+			layout.getKeywordsMap(), layout.getRobotsMap(), type, hidden,
+			friendlyURLMap, !deleteLogo, iconBytes, masterLayoutPlid,
 			serviceContext);
+
+		Layout draftLayout = _layoutLocalService.fetchLayout(
+			_portal.getClassNameId(Layout.class), layout.getPlid());
+
+		if (draftLayout != null) {
+			_layoutService.updateLayout(
+				groupId, privateLayout, draftLayout.getLayoutId(),
+				draftLayout.getParentLayoutId(), nameMap,
+				draftLayout.getTitleMap(), draftLayout.getDescriptionMap(),
+				draftLayout.getKeywordsMap(), draftLayout.getRobotsMap(), type,
+				draftLayout.isHidden(), draftLayout.getFriendlyURLMap(),
+				!deleteLogo, iconBytes, draftLayout.getMasterLayoutPlid(),
+				serviceContext);
+		}
 
 		themeDisplay.clearLayoutFriendlyURL(layout);
 
-		UnicodeProperties layoutTypeSettingsProperties =
+		UnicodeProperties layoutTypeSettingsUnicodeProperties =
 			layout.getTypeSettingsProperties();
 
-		UnicodeProperties formTypeSettingsProperties =
+		UnicodeProperties formTypeSettingsUnicodeProperties =
 			PropertiesParamUtil.getProperties(
 				actionRequest, "TypeSettingsProperties--");
 
@@ -144,7 +168,7 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			Layout linkToLayout = _layoutService.getLayoutByUuidAndGroupId(
 				linkToLayoutUuid, groupId, privateLayout);
 
-			formTypeSettingsProperties.put(
+			formTypeSettingsUnicodeProperties.put(
 				"linkToLayoutId", String.valueOf(linkToLayout.getLayoutId()));
 		}
 
@@ -159,20 +183,21 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			layoutTypePortlet.setLayoutTemplateId(
 				themeDisplay.getUserId(), layoutTemplateId);
 
-			layoutTypeSettingsProperties.putAll(formTypeSettingsProperties);
+			layoutTypeSettingsUnicodeProperties.putAll(
+				formTypeSettingsUnicodeProperties);
 
 			boolean layoutCustomizable = GetterUtil.getBoolean(
-				layoutTypeSettingsProperties.get(
+				layoutTypeSettingsUnicodeProperties.get(
 					LayoutConstants.CUSTOMIZABLE_LAYOUT));
 
 			if (!layoutCustomizable) {
 				layoutTypePortlet.removeCustomization(
-					layoutTypeSettingsProperties);
+					layoutTypeSettingsUnicodeProperties);
 			}
 
 			layout = _layoutService.updateLayout(
 				groupId, privateLayout, layoutId,
-				layoutTypeSettingsProperties.toString());
+				layoutTypeSettingsUnicodeProperties.toString());
 
 			if (!currentType.equals(LayoutConstants.TYPE_PORTLET)) {
 				_portletPreferencesLocalService.deletePortletPreferences(
@@ -180,32 +205,34 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 		else {
-			layoutTypeSettingsProperties.putAll(formTypeSettingsProperties);
+			layoutTypeSettingsUnicodeProperties.putAll(
+				formTypeSettingsUnicodeProperties);
 
-			layoutTypeSettingsProperties.putAll(
+			layoutTypeSettingsUnicodeProperties.putAll(
 				layout.getTypeSettingsProperties());
 
 			layout = _layoutService.updateLayout(
 				groupId, privateLayout, layoutId,
-				layoutTypeSettingsProperties.toString());
+				layoutTypeSettingsUnicodeProperties.toString());
 		}
-
-		HttpServletResponse response = _portal.getHttpServletResponse(
-			actionResponse);
 
 		EventsProcessorUtil.process(
 			PropsKeys.LAYOUT_CONFIGURATION_ACTION_UPDATE,
 			layoutTypePortlet.getConfigurationActionUpdate(),
-			uploadPortletRequest, response);
+			uploadPortletRequest,
+			_portal.getHttpServletResponse(actionResponse));
 
-		_actionUtil.updateLookAndFeel(
+		ActionUtil.updateLookAndFeel(
 			actionRequest, themeDisplay.getCompanyId(), liveGroupId,
 			stagingGroupId, privateLayout, layout.getLayoutId(),
 			layout.getTypeSettingsProperties());
 
 		String redirect = ParamUtil.getString(actionRequest, "redirect");
 
-		if (Validator.isNull(redirect)) {
+		if (Validator.isNull(redirect) ||
+			(redirect.contains(oldFriendlyURL) &&
+			 !Objects.equals(layout.getFriendlyURL(), oldFriendlyURL))) {
+
 			redirect = _portal.getLayoutFullURL(layout, themeDisplay);
 		}
 
@@ -217,9 +244,6 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 
 		actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
 	}
-
-	@Reference
-	private ActionUtil _actionUtil;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;

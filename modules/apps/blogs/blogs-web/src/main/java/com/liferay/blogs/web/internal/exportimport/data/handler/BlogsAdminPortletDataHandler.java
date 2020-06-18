@@ -71,6 +71,11 @@ public class BlogsAdminPortletDataHandler extends BasePortletDataHandler {
 	}
 
 	@Override
+	public String getResourceName() {
+		return BlogsConstants.RESOURCE_NAME;
+	}
+
+	@Override
 	public String getSchemaVersion() {
 		return SCHEMA_VERSION;
 	}
@@ -208,21 +213,10 @@ public class BlogsAdminPortletDataHandler extends BasePortletDataHandler {
 		actionableDynamicQuery.performCount();
 	}
 
-	@Reference(unbind = "-")
-	protected void setBlogsEntryLocalService(
-		BlogsEntryLocalService blogsEntryLocalService) {
-
-		_blogsEntryLocalService = blogsEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setBlogsStatsUserLocalService(
-		BlogsStatsUserLocalService blogsStatsUserLocalService) {
-
-		_blogsStatsUserLocalService = blogsStatsUserLocalService;
-	}
-
+	@Reference
 	private BlogsEntryLocalService _blogsEntryLocalService;
+
+	@Reference
 	private BlogsStatsUserLocalService _blogsStatsUserLocalService;
 
 	@Reference

@@ -63,8 +63,8 @@ public class FormatSourceTask extends Task {
 				SourceFormatterArgs.OUTPUT_KEY_MODIFIED_FILES,
 				modifiedFileNames);
 		}
-		catch (Exception e) {
-			throw new BuildException(e);
+		catch (Exception exception) {
+			throw new BuildException(exception);
 		}
 	}
 
@@ -136,12 +136,12 @@ public class FormatSourceTask extends Task {
 			DirectoryScanner directoryScanner = fileSet.getDirectoryScanner(
 				getProject());
 
-			File baseDir = directoryScanner.getBasedir();
+			File basedir = directoryScanner.getBasedir();
 
 			String[] includedFiles = directoryScanner.getIncludedFiles();
 
 			for (int i = 0; i < includedFiles.length; i++) {
-				File file = new File(baseDir, includedFiles[i]);
+				File file = new File(basedir, includedFiles[i]);
 
 				includedFiles[i] = file.getAbsolutePath();
 			}

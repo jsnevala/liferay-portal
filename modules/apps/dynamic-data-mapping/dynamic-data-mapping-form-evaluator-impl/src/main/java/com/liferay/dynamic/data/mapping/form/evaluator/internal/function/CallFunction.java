@@ -14,7 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.form.evaluator.internal.function;
 
-import com.liferay.dynamic.data.mapping.constants.DDMConstants;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderInvoker;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderRequest;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderResponse;
@@ -44,22 +43,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Leonardo Barros
  */
-@Component(
-	factory = DDMConstants.EXPRESSION_FUNCTION_FACTORY_NAME,
-	service = {
-		DDMExpressionFieldAccessorAware.class,
-		DDMExpressionFunction.Function3.class, DDMExpressionObserverAware.class
-	}
-)
 public class CallFunction
-	implements DDMExpressionFunction.Function3<String, String, String, Boolean>,
-			   DDMExpressionFieldAccessorAware, DDMExpressionObserverAware {
+	implements DDMExpressionFieldAccessorAware,
+			   DDMExpressionFunction.Function3<String, String, String, Boolean>,
+			   DDMExpressionObserverAware {
+
+	public static final String NAME = "call";
+
+	public CallFunction(
+		DDMDataProviderInvoker ddmDataProviderInvoker,
+		JSONFactory jsonFactory) {
+
+		this.ddmDataProviderInvoker = ddmDataProviderInvoker;
+		this.jsonFactory = jsonFactory;
+	}
 
 	@Override
 	public Boolean apply(
@@ -94,9 +94,9 @@ public class CallFunction
 
 			setDDMFormFieldValues(ddmDataProviderResponse, resultMap);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
+				_log.debug(exception, exception);
 			}
 		}
 
@@ -105,7 +105,7 @@ public class CallFunction
 
 	@Override
 	public String getName() {
-		return "call";
+		return NAME;
 	}
 
 	@Override
@@ -136,11 +136,10 @@ public class CallFunction
 		}
 
 		if (_ddmExpressionFieldAccessor.isField(parameterValue)) {
-			parameters.put(parameterName, getDDMFormFieldValue(parameterValue));
+			parameterValue = getDDMFormFieldValue(parameterValue);
 		}
-		else {
-			parameters.put(parameterName, parameterValue);
-		}
+
+		parameters.put(parameterName, parameterValue);
 	}
 
 	protected Map<String, String> extractParameters(String expression) {
@@ -214,9 +213,9 @@ public class CallFunction
 
 			return (String)jsonArray.get(0);
 		}
-		catch (JSONException jsone) {
+		catch (JSONException jsonException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(jsone, jsone);
+				_log.debug(jsonException, jsonException);
 			}
 
 			return String.valueOf(value);
@@ -231,19 +230,6 @@ public class CallFunction
 				field, "options", options);
 
 		_ddmExpressionObserver.updateFieldProperty(builder.build());
-
-		if (options.size() == 1) {
-			KeyValuePair keyValuePair = options.get(0);
-
-			JSONArray valueJSONArray = jsonFactory.createJSONArray();
-
-			valueJSONArray.put(keyValuePair.getValue());
-
-			builder = UpdateFieldPropertyRequest.Builder.newBuilder(
-				field, "value", valueJSONArray);
-
-			_ddmExpressionObserver.updateFieldProperty(builder.build());
-		}
 	}
 
 	protected void setDDMFormFieldValue(String field, String value) {
@@ -284,10 +270,7 @@ public class CallFunction
 		}
 	}
 
-	@Reference
 	protected DDMDataProviderInvoker ddmDataProviderInvoker;
-
-	@Reference
 	protected JSONFactory jsonFactory;
 
 	private static final Log _log = LogFactoryUtil.getLog(CallFunction.class);

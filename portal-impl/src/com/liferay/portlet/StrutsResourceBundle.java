@@ -85,7 +85,7 @@ public class StrutsResourceBundle extends ResourceBundle {
 			try {
 				return parent.getObject(key);
 			}
-			catch (MissingResourceException mre) {
+			catch (MissingResourceException missingResourceException) {
 				return null;
 			}
 		}
@@ -94,7 +94,11 @@ public class StrutsResourceBundle extends ResourceBundle {
 	}
 
 	private String _buildKey(String key) {
-		return key.concat(StringPool.PERIOD).concat(_portletName);
+		return key.concat(
+			StringPool.PERIOD
+		).concat(
+			_portletName
+		);
 	}
 
 	private static final Set<String> _keys = SetUtil.fromArray(

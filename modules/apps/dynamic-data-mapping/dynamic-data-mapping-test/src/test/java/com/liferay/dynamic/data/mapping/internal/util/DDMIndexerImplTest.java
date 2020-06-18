@@ -15,10 +15,10 @@
 package com.liferay.dynamic.data.mapping.internal.util;
 
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
+import com.liferay.dynamic.data.mapping.internal.io.DDMFormJSONSerializer;
 import com.liferay.dynamic.data.mapping.internal.test.util.DDMFixture;
 import com.liferay.dynamic.data.mapping.io.DDMFormSerializerSerializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormSerializerSerializeResponse;
-import com.liferay.dynamic.data.mapping.io.internal.DDMFormJSONSerializer;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
@@ -33,7 +33,10 @@ import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
@@ -41,10 +44,10 @@ import com.liferay.portal.search.test.util.indexing.DocumentFixture;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,8 +57,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.mockito.Matchers;
 import org.mockito.Mockito;
 
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareOnlyThisForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -80,6 +85,7 @@ public class DDMIndexerImplTest {
 	public void setUp() throws Exception {
 		ddmFixture.setUp();
 		documentFixture.setUp();
+		setUpPortalUtil();
 	}
 
 	@After
@@ -205,12 +211,11 @@ public class DDMIndexerImplTest {
 		ddmIndexer.addAttributes(document, ddmStructure, ddmFormValues);
 
 		Map<String, String> map = _withSortableValues(
-			new HashMap<String, String>() {
-				{
-					put("ddm__text__NNNNN__text1_ja_JP", fieldValueJP);
-					put("ddm__text__NNNNN__text1_en_US", fieldValueUS);
-				}
-			});
+			HashMapBuilder.put(
+				"ddm__text__NNNNN__text1_en_US", fieldValueUS
+			).put(
+				"ddm__text__NNNNN__text1_ja_JP", fieldValueJP
+			).build());
 
 		FieldValuesAssert.assertFieldValues(
 			_replaceKeys(
@@ -222,7 +227,7 @@ public class DDMIndexerImplTest {
 		String fieldName, String indexType) {
 
 		DDMFormField ddmFormField = DDMFormTestUtil.createTextDDMFormField(
-			fieldName, false, false, true);
+			fieldName, true, false, true);
 
 		ddmFormField.setIndexType(indexType);
 
@@ -302,6 +307,22 @@ public class DDMIndexerImplTest {
 			ddmFormJSONSerializer.serialize(builder.build());
 
 		return ddmFormSerializerSerializeResponse.getContent();
+	}
+
+	protected void setUpPortalUtil() {
+		PortalUtil portalUtil = new PortalUtil();
+
+		Portal portal = PowerMockito.mock(Portal.class);
+
+		ResourceBundle resourceBundle = PowerMockito.mock(ResourceBundle.class);
+
+		PowerMockito.when(
+			portal.getResourceBundle(Matchers.any(Locale.class))
+		).thenReturn(
+			resourceBundle
+		);
+
+		portalUtil.setPortal(portal);
 	}
 
 	protected final DDMFixture ddmFixture = new DDMFixture();

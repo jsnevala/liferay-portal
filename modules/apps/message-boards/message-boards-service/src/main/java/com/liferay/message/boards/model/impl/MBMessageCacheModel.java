@@ -14,14 +14,10 @@
 
 package com.liferay.message.boards.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.message.boards.model.MBMessage;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +30,11 @@ import java.util.Date;
  * The cache model class for representing MBMessage in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see MBMessage
  * @generated
  */
-@ProviderType
-public class MBMessageCacheModel implements CacheModel<MBMessage>,
-	Externalizable {
+public class MBMessageCacheModel
+	implements CacheModel<MBMessage>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -66,7 +61,7 @@ public class MBMessageCacheModel implements CacheModel<MBMessage>,
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(53);
+		StringBundler sb = new StringBundler(57);
 
 		sb.append("{uuid=");
 		sb.append(uuid);
@@ -96,8 +91,12 @@ public class MBMessageCacheModel implements CacheModel<MBMessage>,
 		sb.append(rootMessageId);
 		sb.append(", parentMessageId=");
 		sb.append(parentMessageId);
+		sb.append(", treePath=");
+		sb.append(treePath);
 		sb.append(", subject=");
 		sb.append(subject);
+		sb.append(", urlSubject=");
+		sb.append(urlSubject);
 		sb.append(", body=");
 		sb.append(body);
 		sb.append(", format=");
@@ -169,11 +168,25 @@ public class MBMessageCacheModel implements CacheModel<MBMessage>,
 		mbMessageImpl.setRootMessageId(rootMessageId);
 		mbMessageImpl.setParentMessageId(parentMessageId);
 
+		if (treePath == null) {
+			mbMessageImpl.setTreePath("");
+		}
+		else {
+			mbMessageImpl.setTreePath(treePath);
+		}
+
 		if (subject == null) {
 			mbMessageImpl.setSubject("");
 		}
 		else {
 			mbMessageImpl.setSubject(subject);
+		}
+
+		if (urlSubject == null) {
+			mbMessageImpl.setUrlSubject("");
+		}
+		else {
+			mbMessageImpl.setUrlSubject(urlSubject);
 		}
 
 		if (body == null) {
@@ -225,7 +238,9 @@ public class MBMessageCacheModel implements CacheModel<MBMessage>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		uuid = objectInput.readUTF();
 
 		messageId = objectInput.readLong();
@@ -250,8 +265,10 @@ public class MBMessageCacheModel implements CacheModel<MBMessage>,
 		rootMessageId = objectInput.readLong();
 
 		parentMessageId = objectInput.readLong();
+		treePath = objectInput.readUTF();
 		subject = objectInput.readUTF();
-		body = objectInput.readUTF();
+		urlSubject = objectInput.readUTF();
+		body = (String)objectInput.readObject();
 		format = objectInput.readUTF();
 
 		anonymous = objectInput.readBoolean();
@@ -271,8 +288,7 @@ public class MBMessageCacheModel implements CacheModel<MBMessage>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -310,6 +326,13 @@ public class MBMessageCacheModel implements CacheModel<MBMessage>,
 
 		objectOutput.writeLong(parentMessageId);
 
+		if (treePath == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(treePath);
+		}
+
 		if (subject == null) {
 			objectOutput.writeUTF("");
 		}
@@ -317,11 +340,18 @@ public class MBMessageCacheModel implements CacheModel<MBMessage>,
 			objectOutput.writeUTF(subject);
 		}
 
-		if (body == null) {
+		if (urlSubject == null) {
 			objectOutput.writeUTF("");
 		}
 		else {
-			objectOutput.writeUTF(body);
+			objectOutput.writeUTF(urlSubject);
+		}
+
+		if (body == null) {
+			objectOutput.writeObject("");
+		}
+		else {
+			objectOutput.writeObject(body);
 		}
 
 		if (format == null) {
@@ -368,7 +398,9 @@ public class MBMessageCacheModel implements CacheModel<MBMessage>,
 	public long threadId;
 	public long rootMessageId;
 	public long parentMessageId;
+	public String treePath;
 	public String subject;
+	public String urlSubject;
 	public String body;
 	public String format;
 	public boolean anonymous;
@@ -380,4 +412,5 @@ public class MBMessageCacheModel implements CacheModel<MBMessage>,
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

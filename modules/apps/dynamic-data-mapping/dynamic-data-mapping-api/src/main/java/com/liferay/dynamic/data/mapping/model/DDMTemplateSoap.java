@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,15 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.dynamic.data.mapping.service.http.DDMTemplateServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.dynamic.data.mapping.service.http.DDMTemplateServiceSoap
  * @generated
  */
-@ProviderType
 public class DDMTemplateSoap implements Serializable {
+
 	public static DDMTemplateSoap toSoapModel(DDMTemplate model) {
 		DDMTemplateSoap soapModel = new DDMTemplateSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setTemplateId(model.getTemplateId());
 		soapModel.setGroupId(model.getGroupId());
@@ -92,7 +91,8 @@ public class DDMTemplateSoap implements Serializable {
 	}
 
 	public static DDMTemplateSoap[] toSoapModels(List<DDMTemplate> models) {
-		List<DDMTemplateSoap> soapModels = new ArrayList<DDMTemplateSoap>(models.size());
+		List<DDMTemplateSoap> soapModels = new ArrayList<DDMTemplateSoap>(
+			models.size());
 
 		for (DDMTemplate model : models) {
 			soapModels.add(toSoapModel(model));
@@ -110,6 +110,22 @@ public class DDMTemplateSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setTemplateId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public String getUuid() {
@@ -328,6 +344,8 @@ public class DDMTemplateSoap implements Serializable {
 		_lastPublishDate = lastPublishDate;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _templateId;
 	private long _groupId;
@@ -354,4 +372,5 @@ public class DDMTemplateSoap implements Serializable {
 	private long _smallImageId;
 	private String _smallImageURL;
 	private Date _lastPublishDate;
+
 }

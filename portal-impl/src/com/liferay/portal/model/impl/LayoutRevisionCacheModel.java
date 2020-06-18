@@ -14,14 +14,11 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.MVCCModel;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing LayoutRevision in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see LayoutRevision
  * @generated
  */
-@ProviderType
-public class LayoutRevisionCacheModel implements CacheModel<LayoutRevision>,
-	Externalizable, MVCCModel {
+public class LayoutRevisionCacheModel
+	implements CacheModel<LayoutRevision>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,10 +46,12 @@ public class LayoutRevisionCacheModel implements CacheModel<LayoutRevision>,
 			return false;
 		}
 
-		LayoutRevisionCacheModel layoutRevisionCacheModel = (LayoutRevisionCacheModel)obj;
+		LayoutRevisionCacheModel layoutRevisionCacheModel =
+			(LayoutRevisionCacheModel)obj;
 
 		if ((layoutRevisionId == layoutRevisionCacheModel.layoutRevisionId) &&
-				(mvccVersion == layoutRevisionCacheModel.mvccVersion)) {
+			(mvccVersion == layoutRevisionCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -271,7 +269,9 @@ public class LayoutRevisionCacheModel implements CacheModel<LayoutRevision>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		mvccVersion = objectInput.readLong();
 
 		layoutRevisionId = objectInput.readLong();
@@ -303,12 +303,12 @@ public class LayoutRevisionCacheModel implements CacheModel<LayoutRevision>,
 		description = objectInput.readUTF();
 		keywords = objectInput.readUTF();
 		robots = objectInput.readUTF();
-		typeSettings = objectInput.readUTF();
+		typeSettings = (String)objectInput.readObject();
 
 		iconImageId = objectInput.readLong();
 		themeId = objectInput.readUTF();
 		colorSchemeId = objectInput.readUTF();
-		css = objectInput.readUTF();
+		css = (String)objectInput.readObject();
 
 		status = objectInput.readInt();
 
@@ -318,8 +318,7 @@ public class LayoutRevisionCacheModel implements CacheModel<LayoutRevision>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
 		objectOutput.writeLong(layoutRevisionId);
@@ -390,10 +389,10 @@ public class LayoutRevisionCacheModel implements CacheModel<LayoutRevision>,
 		}
 
 		if (typeSettings == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(typeSettings);
+			objectOutput.writeObject(typeSettings);
 		}
 
 		objectOutput.writeLong(iconImageId);
@@ -413,10 +412,10 @@ public class LayoutRevisionCacheModel implements CacheModel<LayoutRevision>,
 		}
 
 		if (css == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(css);
+			objectOutput.writeObject(css);
 		}
 
 		objectOutput.writeInt(status);
@@ -462,4 +461,5 @@ public class LayoutRevisionCacheModel implements CacheModel<LayoutRevision>,
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

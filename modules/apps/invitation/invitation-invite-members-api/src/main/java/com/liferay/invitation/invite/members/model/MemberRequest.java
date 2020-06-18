@@ -14,31 +14,33 @@
 
 package com.liferay.invitation.invite.members.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the MemberRequest service. Represents a row in the &quot;IM_MemberRequest&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see MemberRequestModel
- * @see com.liferay.invitation.invite.members.model.impl.MemberRequestImpl
- * @see com.liferay.invitation.invite.members.model.impl.MemberRequestModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.invitation.invite.members.model.impl.MemberRequestImpl")
+@ImplementationClassName(
+	"com.liferay.invitation.invite.members.model.impl.MemberRequestImpl"
+)
 @ProviderType
 public interface MemberRequest extends MemberRequestModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.invitation.invite.members.model.impl.MemberRequestImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.invitation.invite.members.model.impl.MemberRequestImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<MemberRequest, Long> MEMBER_REQUEST_ID_ACCESSOR =
-		new Accessor<MemberRequest, Long>() {
+	public static final Accessor<MemberRequest, Long>
+		MEMBER_REQUEST_ID_ACCESSOR = new Accessor<MemberRequest, Long>() {
+
 			@Override
 			public Long get(MemberRequest memberRequest) {
 				return memberRequest.getMemberRequestId();
@@ -53,5 +55,7 @@ public interface MemberRequest extends MemberRequestModel, PersistedModel {
 			public Class<MemberRequest> getTypeClass() {
 				return MemberRequest.class;
 			}
+
 		};
+
 }

@@ -16,70 +16,83 @@ package com.liferay.fragment.service.persistence.impl;
 
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.persistence.FragmentEntryLinkPersistence;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.fragment.service.persistence.impl.constants.FragmentPersistenceConstants;
+import com.liferay.portal.kernel.configuration.Configuration;
+import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-
-import java.lang.reflect.Field;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Brian Wing Shun Chan
  * @generated
  */
-public class FragmentEntryLinkFinderBaseImpl extends BasePersistenceImpl<FragmentEntryLink> {
+public abstract class FragmentEntryLinkFinderBaseImpl
+	extends BasePersistenceImpl<FragmentEntryLink> {
+
 	public FragmentEntryLinkFinderBaseImpl() {
 		setModelClass(FragmentEntryLink.class);
 
-		try {
-			Field field = BasePersistenceImpl.class.getDeclaredField(
-					"_dbColumnNames");
+		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
-			field.setAccessible(true);
+		dbColumnNames.put("uuid", "uuid_");
 
-			Map<String, String> dbColumnNames = new HashMap<String, String>();
-
-			dbColumnNames.put("uuid", "uuid_");
-
-			field.set(this, dbColumnNames);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-		}
+		setDBColumnNames(dbColumnNames);
 	}
 
 	@Override
 	public Set<String> getBadColumnNames() {
-		return getFragmentEntryLinkPersistence().getBadColumnNames();
+		return fragmentEntryLinkPersistence.getBadColumnNames();
 	}
 
-	/**
-	 * Returns the fragment entry link persistence.
-	 *
-	 * @return the fragment entry link persistence
-	 */
-	public FragmentEntryLinkPersistence getFragmentEntryLinkPersistence() {
-		return fragmentEntryLinkPersistence;
+	@Override
+	@Reference(
+		target = FragmentPersistenceConstants.SERVICE_CONFIGURATION_FILTER,
+		unbind = "-"
+	)
+	public void setConfiguration(Configuration configuration) {
+		super.setConfiguration(configuration);
 	}
 
-	/**
-	 * Sets the fragment entry link persistence.
-	 *
-	 * @param fragmentEntryLinkPersistence the fragment entry link persistence
-	 */
-	public void setFragmentEntryLinkPersistence(
-		FragmentEntryLinkPersistence fragmentEntryLinkPersistence) {
-		this.fragmentEntryLinkPersistence = fragmentEntryLinkPersistence;
+	@Override
+	@Reference(
+		target = FragmentPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
 	}
 
-	@BeanReference(type = FragmentEntryLinkPersistence.class)
+	@Override
+	@Reference(
+		target = FragmentPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		super.setSessionFactory(sessionFactory);
+	}
+
+	@Reference
 	protected FragmentEntryLinkPersistence fragmentEntryLinkPersistence;
-	private static final Log _log = LogFactoryUtil.getLog(FragmentEntryLinkFinderBaseImpl.class);
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentEntryLinkFinderBaseImpl.class);
+
+	static {
+		try {
+			Class.forName(FragmentPersistenceConstants.class.getName());
+		}
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new ExceptionInInitializerError(classNotFoundException);
+		}
+	}
+
 }

@@ -8,20 +8,31 @@
 <tr><td rowspan="1" colspan="3">Staging</td></tr>
 </thead>
 <tbody>
+<!--DELETIONS-->
+<tr>
+	<td>REPLICATE_INDIVIDUAL_DELETIONS</td>
+	<td>//span[contains(.,'Replicate Individual Deletions:')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td></td>
+	<td></td>
+	<td></td>
+</tr>
 <!--PROCESSES-->
 <tr>
 	<td>PROCESS_SUCCESSFUL</td>
-	<td>//h6[contains(.,'Successful')]</td>
+	<td>//*[@data-qa-id='processResult'][contains(.,'Successful')] | //h6[contains(.,'Successful')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PROCESS_FAILED</td>
-	<td>//h6[contains(.,'Failed')]</td>
+	<td>//*[@data-qa-id='processResult'][contains(.,'Failed')] | //h6[contains(.,'Failed')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PROCESS_RESULT</td>
-	<td>//span[contains(@data-qa-id,'processResult')]</td>
+	<td>//*[@data-qa-id='processResult'] | //h6[contains(@class,'background-task-status-row')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -34,12 +45,12 @@
 	<td>//div[contains(@class,'process-summary-section')]//div[contains(.,'Pages Option:')]</td>
 	<td></td>
 </tr>
-<!--STAGING-->
 <tr>
-	<td>STAGING_NEW_PUBLICATION_PROCESS_NAVIGATION</td>
-	<td>//ul[contains(@class,'nav-tabs')]/li/a[contains(.,'New Publication Process')]</td>
+	<td></td>
+	<td></td>
 	<td></td>
 </tr>
+<!--STAGING-->
 <tr>
 	<td>STAGING_CONTENT_COUNT</td>
 	<td>//span[contains(@class,'badge-info')]</td>
@@ -51,13 +62,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>STAGING_STATUS</td>
-	<td>xpath=(//h6[contains(text(),'Successful')])[1]</td>
+	<td>STAGING_STATUS_PORTLET</td>
+	<td>//h5[contains(text(),'Successful')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>STAGING_STATUS_PORTLET</td>
-	<td>//h5[contains(text(),'Successful')]</td>
+	<td>STAGING_PUBLISH_PAGE_FIRST_MESSAGE</td>
+	<td>//div[@class='portlet-body']/div[2]</td>
 	<td></td>
 </tr>
 <tr>
@@ -66,24 +77,39 @@
 	<td></td>
 </tr>
 <tr>
+	<td>STAGING_PUBLISH_TO_LIVE_CUSTOM_PUBLICATION</td>
+	<td>//button[contains(.,'Publish to Live')]/span</td>
+	<td></td>
+</tr>
+<tr>
+	<td>STAGING_PUBLISH_TO_REMOTE_LIVE_BUTTON</td>
+	<td>//button[contains(.,'Publish to Remote Live')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>COPY_FROM_LIVE</td>
 	<td>//a/span[contains(.,'Copy from Live')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>STAGING_CONTENT_CHECKBOX</td>
+	<td>//input[(@type='checkbox') and contains(@id,'${key_contentName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>STAGING_CONTENT_DELETIONS</td>
+	<td>//span[contains(@class,'badge-warning') and contains(.,'Deletions')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td></td>
+	<td></td>
 	<td></td>
 </tr>
 <!--PG-->
 <tr>
 	<td>LIVE_BUTTON</td>
 	<td>//a[contains(@value,'live')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>LIVE_VIEW</td>
-	<td>//body[contains(@class,'live-view')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>STAGING_BUTTON</td>
-	<td>//a[contains(@value,'staging')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -94,6 +120,16 @@
 <tr>
 	<td>STAGING_VIEW</td>
 	<td>//body[contains(@class,'local-staging')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>STAGING_CONNECTION_TOOLTIP</td>
+	<td>//span[contains(@class,'lfr-portal-tooltip') and contains(@title,'${key_connectionInfo}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>STAGING_LINK_LIVE</td>
+	<td>//a[contains(@data-qa-id,'live')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -108,12 +144,12 @@
 </tr>
 <tr>
 	<td>SITE_PAGES_VARIATION_DROPDOWN</td>
-	<td>//a[contains(@class,'staging-variation-selector') and contains(.,'${key_sitePagesVariationName}')]/span</td>
+	<td>//a[contains(@class,'staging-variation-selector') and contains(.,'${key_sitePagesVariationName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PAGE_VARIATION_DROPDOWN</td>
-	<td>//a[contains(@class,'staging-variation-selector') and contains(.,'${key_pageVariationName}')]/span</td>
+	<td>//a[contains(@class,'staging-variation-selector') and contains(.,'${key_pageVariationName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -128,11 +164,6 @@
 </tr>
 <tr>
 	<td>VARIATIONS_SELECTOR</td>
-	<td>//select[contains(@id,'variationsSelector')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>VARIATIONS_SELECTOR_DROPDOWN</td>
 	<td>//select[contains(@id,'variationsSelector')]</td>
 	<td></td>
 </tr>
@@ -175,6 +206,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>HISTORY_VERSION_2</td>
+	<td>xpath=(//a[contains(@class,'layout-revision')])[2]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>HISTORY_VERSION_ANCHOR</td>
 	<td>//a[contains(@class,'layout-revision')]</td>
 	<td></td>
@@ -191,11 +227,6 @@
 </tr>
 <!--LIVE_MENU-->
 <tr>
-	<td>LIVE_MENU_SITE</td>
-	<td>//span[@class='staging-live-group-name']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>LIVE_MENU_MESSAGE</td>
 	<td>//span[@class='last-publication-branch']</td>
 	<td></td>
@@ -203,6 +234,37 @@
 <tr>
 	<td></td>
 	<td></td>
+	<td></td>
+</tr>
+<!--PUBLICATION_SUMMARY-->
+<tr>
+	<td>PUBLICATION_CONTENT</td>
+	<td>//div[@class='process-summary-section' and contains(.,'${key_contentName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PUBLICATION_DATE</td>
+	<td>//div[@class='process-summary-section' and contains(.,'${key_dateRestrictionOption}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PUBLICATION_DELETIONS</td>
+	<td>//div[@class='sheet-subtitle' and contains(.,'Deletions')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PUBLICATION_LOOK_AND_FEEL</td>
+	<td>//div[@class='process-summary-subsection' and contains(.,'${key_lookAndFeel}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PUBLICATION_PAGE_OPTION</td>
+	<td>//div[@class='process-summary-subsection' and contains(.,'Pages Option')]//span</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PUBLICATION_PERMISSION</td>
+	<td>//div[@class='process-summary-subsection' and contains(.,'Publish Permissions')]</td>
 	<td></td>
 </tr>
 <!--STAGING_MENU-->
@@ -214,11 +276,6 @@
 <tr>
 	<td>STAGING_MENU_SUBMIT_FOR_PUBLICATION</td>
 	<td>//a[contains(@id,'submitLink') and contains(.,'Submit for Publication')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>STAGING_MENU_SUBMIT_FOR_PUBLICATION_DISABLED</td>
-	<td>//span[contains(@class,'label') and contains(@class,'label-submit')]/span[contains(.,'Submit for Publication')]</td>
 	<td></td>
 </tr>
 <tr>

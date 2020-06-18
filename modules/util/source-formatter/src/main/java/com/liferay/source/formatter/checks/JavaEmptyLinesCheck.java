@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 /**
  * @author Hugo Huijser
  */
-public class JavaEmptyLinesCheck extends EmptyLinesCheck {
+public class JavaEmptyLinesCheck extends BaseEmptyLinesCheck {
 
 	@Override
 	protected String doProcess(
@@ -33,10 +33,6 @@ public class JavaEmptyLinesCheck extends EmptyLinesCheck {
 		content = fixMissingEmptyLinesAroundComments(content);
 
 		content = fixRedundantEmptyLines(content);
-
-		content = fixIncorrectEmptyLineAfterOpenCurlyBrace(content);
-
-		content = fixIncorrectEmptyLineBeforeCloseCurlyBrace(content);
 
 		content = fixMissingEmptyLineAfterSettingVariable(content);
 

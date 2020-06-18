@@ -51,23 +51,29 @@ renderResponse.setTitle(categoryDisplayName);
 %>
 
 <div class="container-fluid container-fluid-max-xl">
-	<div class="col-12">
+	<clay:col
+		size="12"
+	>
 		<liferay-ui:breadcrumb
 			showCurrentGroup="<%= false %>"
 			showGuestGroup="<%= false %>"
 			showLayout="<%= false %>"
 			showParentGroups="<%= false %>"
 		/>
-	</div>
+	</clay:col>
 </div>
 
 <div class="container-fluid container-fluid-max-xl">
-	<div class="row">
-		<div class="col-md-3">
+	<clay:row>
+		<clay:col
+			md="3"
+		>
 			<liferay-util:include page="/configuration_category_menu.jsp" servletContext="<%= application %>" />
-		</div>
+		</clay:col>
 
-		<div class="col-md-9">
+		<clay:col
+			md="9"
+		>
 			<div class="sheet sheet-lg">
 				<div class="autofit-row">
 					<div class="autofit-col">
@@ -108,7 +114,7 @@ renderResponse.setTitle(categoryDisplayName);
 							<portlet:renderURL var="createFactoryConfigURL">
 								<portlet:param name="mvcRenderCommandName" value="/edit_configuration" />
 								<portlet:param name="redirect" value="<%= currentURL %>" />
-								<portlet:param name="factoryPid" value="<%= configurationModel.getID() %>" />
+								<portlet:param name="factoryPid" value="<%= configurationModel.getFactoryPid() %>" />
 							</portlet:renderURL>
 
 							<a class="btn btn-secondary btn-sm" href="<%= createFactoryConfigURL %>"><liferay-ui:message key="add" /></a>
@@ -155,6 +161,10 @@ renderResponse.setTitle(categoryDisplayName);
 							if (attributeDefinition != null) {
 								columnLabel = attributeDefinition.getName();
 							}
+						}
+
+						if (componentResourceBundle != null) {
+							columnLabel = LanguageUtil.get(componentResourceBundle, columnLabel);
 						}
 						%>
 
@@ -214,6 +224,6 @@ renderResponse.setTitle(categoryDisplayName);
 					/>
 				</liferay-ui:search-container>
 			</div>
-		</div>
-	</div>
+		</clay:col>
+	</clay:row>
 </div>

@@ -14,33 +14,27 @@
 
 package com.liferay.portal.kernel.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.lang.CentralizedThreadLocal;
-import com.liferay.petra.lang.ClassLoaderPool;
-
-import javax.servlet.ServletContext;
+import com.liferay.portal.kernel.servlet.ServletContextClassLoaderPool;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class PortletClassLoaderUtil {
 
 	public static ClassLoader getClassLoader() {
-		return ClassLoaderPool.getClassLoader(getServletContextName());
-	}
+		String servletContextName = getServletContextName();
 
-	public static ClassLoader getClassLoader(String portletId) {
-		PortletBag portletBag = PortletBagPool.get(portletId);
+		ClassLoader classLoader = ServletContextClassLoaderPool.getClassLoader(
+			servletContextName);
 
-		if (portletBag == null) {
-			return null;
+		if (classLoader == null) {
+			throw new IllegalStateException(
+				"Unable to find the class loader for servlet context " +
+					servletContextName);
 		}
 
-		ServletContext servletContext = portletBag.getServletContext();
-
-		return servletContext.getClassLoader();
+		return classLoader;
 	}
 
 	public static String getServletContextName() {

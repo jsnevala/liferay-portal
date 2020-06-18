@@ -22,7 +22,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.util.LocaleThreadLocal;
 
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -39,16 +41,12 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 public class PortalInstanceLifecycleListenerManagerImpl
 	implements PortalInstanceLifecycleManager {
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
 	@Override
-	public void preregisterCompany(long companyId) {
+	public void preunregisterCompany(Company company) {
 		for (PortalInstanceLifecycleListener portalInstanceLifecycleListener :
 				_portalInstanceLifecycleListeners) {
 
-			preregisterCompany(portalInstanceLifecycleListener, companyId);
+			preunregisterCompany(portalInstanceLifecycleListener, company);
 		}
 	}
 
@@ -93,9 +91,9 @@ public class PortalInstanceLifecycleListenerManagerImpl
 		}
 	}
 
-	protected void preregisterCompany(
+	protected void preunregisterCompany(
 		PortalInstanceLifecycleListener portalInstanceLifecycleListener,
-		long companyId) {
+		Company company) {
 
 		if (!(portalInstanceLifecycleListener instanceof Clusterable) &&
 			!clusterMasterExecutor.isMaster()) {
@@ -107,7 +105,17 @@ public class PortalInstanceLifecycleListenerManagerImpl
 			return;
 		}
 
-		portalInstanceLifecycleListener.portalInstancePreregistered(companyId);
+		try {
+			portalInstanceLifecycleListener.portalInstancePreunregistered(
+				company);
+		}
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Unable to preunregister portal instance " + company,
+					exception);
+			}
+		}
 	}
 
 	protected void registerCompany(
@@ -125,19 +133,23 @@ public class PortalInstanceLifecycleListenerManagerImpl
 		}
 
 		Long companyId = CompanyThreadLocal.getCompanyId();
+		Locale siteDefaultLocale = LocaleThreadLocal.getSiteDefaultLocale();
 
 		try {
 			CompanyThreadLocal.setCompanyId(company.getCompanyId());
+			LocaleThreadLocal.setSiteDefaultLocale(null);
 
 			portalInstanceLifecycleListener.portalInstanceRegistered(company);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to register portal instance " + company, e);
+				_log.warn(
+					"Unable to register portal instance " + company, exception);
 			}
 		}
 		finally {
 			CompanyThreadLocal.setCompanyId(companyId);
+			LocaleThreadLocal.setSiteDefaultLocale(siteDefaultLocale);
 		}
 	}
 
@@ -175,9 +187,11 @@ public class PortalInstanceLifecycleListenerManagerImpl
 		try {
 			portalInstanceLifecycleListener.portalInstanceUnregistered(company);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to register portal instance " + company, e);
+				_log.warn(
+					"Unable to unregister portal instance " + company,
+					exception);
 			}
 		}
 	}

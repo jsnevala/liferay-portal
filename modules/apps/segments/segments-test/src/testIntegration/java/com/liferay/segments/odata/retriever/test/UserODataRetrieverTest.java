@@ -17,14 +17,22 @@ package com.liferay.segments.odata.retriever.test;
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.test.util.AssetTestUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.ContactLocalService;
+import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.TeamLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -41,10 +49,15 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
-import com.liferay.segments.odata.retriever.UserODataRetriever;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.odata.retriever.ODataRetriever;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -68,13 +81,12 @@ public class UserODataRetrieverTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
 		_group1 = GroupTestUtil.addGroup();
 		_group2 = GroupTestUtil.addGroup();
-		_organizations = new ArrayList<>();
 	}
 
 	@Test
@@ -91,26 +103,229 @@ public class UserODataRetrieverTest {
 		Organization parentOrganization =
 			OrganizationTestUtil.addOrganization();
 
-		Organization childOrganization = OrganizationTestUtil.addOrganization(
+		Organization organization = OrganizationTestUtil.addOrganization(
 			parentOrganization.getOrganizationId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomBoolean());
 
-		_organizations.add(childOrganization);
+		_organizations.add(organization);
 
 		_organizations.add(parentOrganization);
 
 		_userLocalService.addOrganizationUser(
-			childOrganization.getOrganizationId(), _user1);
+			organization.getOrganizationId(), _user1);
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(firstName eq '%s') and (ancestorOrganizationIds eq '%s')",
-				firstName, parentOrganization.getOrganizationId()),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(firstName eq '%s') and (ancestorOrganizationIds eq '%s')",
+			firstName, parentOrganization.getOrganizationId());
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
+	}
+
+	@Test
+	public void testGetUsersFilterByAssetTagIds() throws Exception {
+		String firstName = RandomTestUtil.randomString();
+
+		_user1 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+		_user2 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+
+		Company company = _companyLocalService.getCompany(
+			_user1.getCompanyId());
+
+		AssetTag tag = AssetTestUtil.addTag(company.getGroupId(), "tag1");
+
+		_assetTags.add(tag);
+
+		_userLocalService.updateAsset(
+			TestPropsValues.getUserId(), _user1, new long[0],
+			new String[] {tag.getName()});
+
+		String filterString = String.format(
+			"(firstName eq '%s') and (assetTagIds eq '%s')", firstName,
+			tag.getTagId());
+
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
+		Assert.assertEquals(_user1, users.get(0));
+	}
+
+	@Test
+	public void testGetUsersFilterByBirthDateEquals() throws Exception {
+		String firstName = RandomTestUtil.randomString();
+
+		_user1 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+		_user2 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+
+		Date birthDate = _user1.getBirthday();
+
+		Instant instant = birthDate.toInstant();
+
+		_updateUserBirthday(
+			_user2, Date.from(instant.plus(2, ChronoUnit.DAYS)));
+
+		String filterString = String.format(
+			"(birthDate eq %s) and (firstName eq '%s')", _toISOFormat(instant),
+			firstName);
+
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
+		Assert.assertEquals(_user1, users.get(0));
+	}
+
+	@Test
+	public void testGetUsersFilterByBirthDateGreater() throws Exception {
+		String firstName = RandomTestUtil.randomString();
+
+		_user1 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+		_user2 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+
+		Date birthDate = _user1.getBirthday();
+
+		Instant instant = birthDate.toInstant();
+
+		_updateUserBirthday(
+			_user2, Date.from(instant.plus(2, ChronoUnit.DAYS)));
+
+		String filterString = String.format(
+			"(birthDate gt %s) and (firstName eq '%s')", _toISOFormat(instant),
+			firstName);
+
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
+		Assert.assertEquals(_user2, users.get(0));
+	}
+
+	@Test
+	public void testGetUsersFilterByBirthDateGreaterOrEquals()
+		throws Exception {
+
+		String firstName = RandomTestUtil.randomString();
+
+		_user1 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+		_user2 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+
+		Date birthDate = _user1.getBirthday();
+
+		Instant instant = birthDate.toInstant();
+
+		_updateUserBirthday(
+			_user2, Date.from(instant.plus(2, ChronoUnit.DAYS)));
+
+		String filterString = String.format(
+			"(birthDate ge %s) and (firstName eq '%s')", _toISOFormat(instant),
+			firstName);
+
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(2, count);
+	}
+
+	@Test
+	public void testGetUsersFilterByBirthDateLower() throws Exception {
+		String firstName = RandomTestUtil.randomString();
+
+		_user1 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+		_user2 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+
+		Date birthDate = _user1.getBirthday();
+
+		Instant instant = birthDate.toInstant();
+
+		_updateUserBirthday(
+			_user2, Date.from(instant.minus(2, ChronoUnit.DAYS)));
+
+		String filterString = String.format(
+			"(birthDate lt %s) and (firstName eq '%s')", _toISOFormat(instant),
+			firstName);
+
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
+		Assert.assertEquals(_user2, users.get(0));
+	}
+
+	@Test
+	public void testGetUsersFilterByBirthDateLowerOrEquals() throws Exception {
+		String firstName = RandomTestUtil.randomString();
+
+		_user1 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+		_user2 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+
+		Date birthDate = _user1.getBirthday();
+
+		Instant instant = birthDate.toInstant();
+
+		_updateUserBirthday(
+			_user2, Date.from(instant.minus(2, ChronoUnit.DAYS)));
+
+		String filterString = String.format(
+			"(birthDate le %s) and (firstName eq '%s')", _toISOFormat(instant),
+			firstName);
+
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(2, count);
 	}
 
 	@Test
@@ -121,14 +336,19 @@ public class UserODataRetrieverTest {
 			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
 			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(firstName eq '%s') and (companyId eq '%s')", firstName,
-				_group1.getCompanyId()),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(firstName eq '%s') and (companyId eq '%s')", firstName,
+			_group1.getCompanyId());
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -151,14 +371,19 @@ public class UserODataRetrieverTest {
 
 		_userLocalService.updateUser(_user2);
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(dateModified eq %s) and (firstName eq '%s')",
-				ISO8601Utils.format(_user1.getModifiedDate()), firstName),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(dateModified eq %s) and (firstName eq '%s')",
+			ISO8601Utils.format(_user1.getModifiedDate()), firstName);
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -181,14 +406,19 @@ public class UserODataRetrieverTest {
 
 		_userLocalService.updateUser(_user2);
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(dateModified gt %s) and (firstName eq '%s')",
-				ISO8601Utils.format(_user1.getModifiedDate()), firstName),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(dateModified gt %s) and (firstName eq '%s')",
+			ISO8601Utils.format(_user1.getModifiedDate()), firstName);
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user2, users.get(0));
 	}
 
@@ -213,14 +443,19 @@ public class UserODataRetrieverTest {
 
 		_userLocalService.updateUser(_user2);
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(dateModified ge %s) and (firstName eq '%s')",
-				ISO8601Utils.format(_user2.getModifiedDate()), firstName),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(dateModified ge %s) and (firstName eq '%s')",
+			ISO8601Utils.format(_user2.getModifiedDate()), firstName);
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user2, users.get(0));
 	}
 
@@ -243,14 +478,19 @@ public class UserODataRetrieverTest {
 
 		_userLocalService.updateUser(_user2);
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(dateModified lt %s) and (firstName eq '%s')",
-				ISO8601Utils.format(_user2.getModifiedDate()), firstName),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(dateModified lt %s) and (firstName eq '%s')",
+			ISO8601Utils.format(_user2.getModifiedDate()), firstName);
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -275,14 +515,19 @@ public class UserODataRetrieverTest {
 
 		_userLocalService.updateUser(_user2);
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(dateModified le %s) and (firstName eq '%s')",
-				ISO8601Utils.format(modifiedDate), firstName),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(dateModified le %s) and (firstName eq '%s')",
+			ISO8601Utils.format(modifiedDate), firstName);
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -290,12 +535,18 @@ public class UserODataRetrieverTest {
 	public void testGetUsersFilterByEmailAddress() throws Exception {
 		_user1 = UserTestUtil.addUser(_group1.getGroupId());
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(emailAddress eq '" + _user1.getEmailAddress() + "')",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString =
+			"(emailAddress eq '" + _user1.getEmailAddress() + "')";
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -303,12 +554,17 @@ public class UserODataRetrieverTest {
 	public void testGetUsersFilterByFirstName() throws Exception {
 		_user1 = UserTestUtil.addUser(_group1.getGroupId());
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(firstName eq '" + _user1.getFirstName() + "')",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = "(firstName eq '" + _user1.getFirstName() + "')";
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -316,14 +572,51 @@ public class UserODataRetrieverTest {
 	public void testGetUsersFilterByFirstNameAndLastName() throws Exception {
 		_user1 = UserTestUtil.addUser(_group1.getGroupId());
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(firstName eq '" + _user1.getFirstName() + "') and (lastName eq " +
-				"'" + _user1.getLastName() + "') ",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = StringBundler.concat(
+			"(firstName eq '", _user1.getFirstName(), "') and (lastName eq ",
+			"'", _user1.getLastName(), "')");
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
+	}
+
+	@Test
+	public void testGetUsersFilterByFirstNameAndNotTeamIds() throws Exception {
+		String firstName = RandomTestUtil.randomString();
+
+		_user1 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+		_user2 = UserTestUtil.addUser(
+			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
+			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+
+		_team = _addTeam();
+
+		_userLocalService.addTeamUser(_team.getTeamId(), _user1);
+
+		String filterString = String.format(
+			"(firstName eq '%s') and (not (teamIds eq '%s'))", firstName,
+			_team.getTeamId());
+
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			1);
+
+		Assert.assertEquals(_user2, users.get(0));
 	}
 
 	@Test
@@ -331,13 +624,21 @@ public class UserODataRetrieverTest {
 		_user1 = UserTestUtil.addUser(_group1.getGroupId());
 		_user2 = UserTestUtil.addUser(_group1.getGroupId());
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(firstName eq '" + _user1.getFirstName() + "') or (lastName eq '" +
-				_user2.getLastName() + "') ",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = StringBundler.concat(
+			"(firstName eq '", _user1.getFirstName(), "') or (lastName eq '",
+			_user2.getLastName(), "')");
 
-		Assert.assertEquals(users.toString(), 2, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(2, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
+		Assert.assertTrue(users.contains(_user1));
+		Assert.assertTrue(users.contains(_user2));
 	}
 
 	@Test
@@ -346,13 +647,19 @@ public class UserODataRetrieverTest {
 
 		_user1 = UserTestUtil.addUser(_group1.getGroupId());
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(firstName eq '" + _user1.getFirstName() +
-				"') or (lastName eq 'nonexistentLastName') ",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = StringBundler.concat(
+			"(firstName eq '", _user1.getFirstName(), "') or (lastName eq ",
+			"'nonexistentLastName')");
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -362,13 +669,19 @@ public class UserODataRetrieverTest {
 
 		_user1 = UserTestUtil.addUser(_group1.getGroupId());
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(firstName eq '" + _user1.getFirstName() + "') or (lastName eq '" +
-				_user1.getLastName() + "') ",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = StringBundler.concat(
+			"(firstName eq '", _user1.getFirstName(), "') or (lastName eq '",
+			_user1.getLastName(), "')");
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -384,13 +697,19 @@ public class UserODataRetrieverTest {
 			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
 			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(firstName eq '" + firstName + "') and (groupId eq '" +
-				_group2.getGroupId() + "')",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = StringBundler.concat(
+			"(firstName eq '", firstName, "') and (groupId eq '",
+			_group2.getGroupId(), "')");
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -406,13 +725,19 @@ public class UserODataRetrieverTest {
 			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
 			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(firstName eq '" + firstName + "') and (groupIds eq '" +
-				_group2.getGroupId() + "')",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = StringBundler.concat(
+			"(firstName eq '", firstName, "') and (groupIds eq '",
+			_group2.getGroupId(), "')");
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -428,14 +753,22 @@ public class UserODataRetrieverTest {
 			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
 			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(firstName eq '" + firstName + "') and ((groupIds eq '" +
-				_group2.getGroupId() + "') or (groupIds eq '" +
-					_group1.getGroupId() + "'))",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = StringBundler.concat(
+			"(firstName eq '", firstName, "') and ((groupIds eq '",
+			_group2.getGroupId(), "') or (groupIds eq '", _group1.getGroupId(),
+			"'))");
 
-		Assert.assertEquals(users.toString(), 2, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(2, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
+		Assert.assertTrue(users.contains(_user1));
+		Assert.assertTrue(users.contains(_user2));
 	}
 
 	@Test
@@ -450,15 +783,19 @@ public class UserODataRetrieverTest {
 			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
 			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(firstName eq '%s') and (groupId eq '%s') and (groupId eq '" +
-					"%s')",
-				firstName, _group1.getGroupId(), _group2.getGroupId()),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(firstName eq '%s') and (groupId eq '%s') and (groupId eq '%s')",
+			firstName, _group1.getGroupId(), _group2.getGroupId());
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -473,9 +810,36 @@ public class UserODataRetrieverTest {
 		_user2 = UserTestUtil.addUser(
 			_group1.getGroupId(), LocaleUtil.getDefault());
 
-		List<User> users = _userODataRetriever.getUsers(
+		String filterString = "(jobTitle eq '" + _user1.getJobTitle() + "')";
+
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
+		Assert.assertEquals(_user1, users.get(0));
+	}
+
+	@Test
+	public void testGetUsersFilterByJobTitleContains() throws Exception {
+		_user1 = UserTestUtil.addUser(_group1.getGroupId());
+
+		String jobTitlePrefix = RandomTestUtil.randomString();
+
+		_user1.setJobTitle(jobTitlePrefix + RandomTestUtil.randomString());
+
+		_userLocalService.updateUser(_user1);
+
+		_user2 = UserTestUtil.addUser(
+			_group1.getGroupId(), LocaleUtil.getDefault());
+
+		List<User> users = _oDataRetriever.getResults(
 			_group1.getCompanyId(),
-			"(jobTitle eq '" + _user1.getJobTitle() + "')",
+			"contains(jobTitle, '" + jobTitlePrefix + "')",
 			LocaleUtil.getDefault(), 0, 2);
 
 		Assert.assertEquals(users.toString(), 1, users.size());
@@ -487,12 +851,17 @@ public class UserODataRetrieverTest {
 		_user1 = UserTestUtil.addUser(_group1.getGroupId());
 		_user2 = UserTestUtil.addUser(_group1.getGroupId());
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(lastName eq '" + _user1.getLastName() + "')",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = "(lastName eq '" + _user1.getLastName() + "')";
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -508,51 +877,20 @@ public class UserODataRetrieverTest {
 			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
 			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(firstName eq '" + firstName + "') and (groupIds eq '" +
-				_group2.getGroupId() + "') and (groupIds eq '" +
-					_group1.getGroupId() + "')",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = StringBundler.concat(
+			"(firstName eq '", firstName, "') and (groupIds eq '",
+			_group2.getGroupId(), "') and (groupIds eq '", _group1.getGroupId(),
+			"')");
 
-		Assert.assertEquals(users.toString(), 1, users.size());
-		Assert.assertEquals(_user1, users.get(0));
-	}
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
 
-	@Test
-	public void testGetUsersFilterByOrganizationCount() throws Exception {
-		String firstName = RandomTestUtil.randomString();
+		Assert.assertEquals(1, count);
 
-		_user1 = UserTestUtil.addUser(
-			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
-			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
-		_user2 = UserTestUtil.addUser(
-			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
-			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
 
-		Organization organization1 = OrganizationTestUtil.addOrganization();
-
-		_organizations.add(organization1);
-
-		_userLocalService.addOrganizationUsers(
-			organization1.getOrganizationId(),
-			new long[] {_user1.getUserId(), _user2.getUserId()});
-
-		Organization organization2 = OrganizationTestUtil.addOrganization();
-
-		_organizations.add(organization2);
-
-		_userLocalService.addOrganizationUser(
-			organization2.getOrganizationId(), _user1);
-
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(firstName eq '%s') and (organizationCount eq '%s')",
-				firstName, 2),
-			LocaleUtil.getDefault(), 0, 2);
-
-		Assert.assertEquals(users.toString(), 1, users.size());
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -574,14 +912,19 @@ public class UserODataRetrieverTest {
 		_userLocalService.addOrganizationUsers(
 			organization.getOrganizationId(), new long[] {_user1.getUserId()});
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(firstName eq '%s') and (organizationIds eq '%s')", firstName,
-				organization.getOrganizationId()),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(firstName eq '%s') and (organizationIds eq '%s')", firstName,
+			organization.getOrganizationId());
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -600,14 +943,19 @@ public class UserODataRetrieverTest {
 
 		_userLocalService.addRoleUser(_role.getRoleId(), _user1);
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(firstName eq '%s') and (roleIds eq '%s')", firstName,
-				_role.getRoleId()),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(firstName eq '%s') and (roleIds eq '%s')", firstName,
+			_role.getRoleId());
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -623,13 +971,19 @@ public class UserODataRetrieverTest {
 			RandomTestUtil.randomString(), LocaleUtil.getDefault(), firstName,
 			RandomTestUtil.randomString(), new long[] {_group1.getGroupId()});
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(firstName eq '" + firstName + "') and (scopeGroupId eq '" +
-				_group2.getGroupId() + "')",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = StringBundler.concat(
+			"(firstName eq '", firstName, "') and (scopeGroupId eq '",
+			_group2.getGroupId(), "')");
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -638,12 +992,18 @@ public class UserODataRetrieverTest {
 		_user1 = UserTestUtil.addUser(_group1.getGroupId());
 		_user2 = UserTestUtil.addUser(_group1.getGroupId());
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			"(screenName eq '" + _user1.getScreenName() + "')",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString =
+			"(screenName eq '" + _user1.getScreenName() + "')";
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -662,14 +1022,19 @@ public class UserODataRetrieverTest {
 
 		_userLocalService.addTeamUser(_team.getTeamId(), _user1);
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(firstName eq '%s') and (teamIds eq '%s')", firstName,
-				_team.getTeamId()),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(firstName eq '%s') and (teamIds eq '%s')", firstName,
+			_team.getTeamId());
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -688,14 +1053,19 @@ public class UserODataRetrieverTest {
 
 		_userLocalService.addUserGroupUser(_userGroup.getUserGroupId(), _user1);
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
-			String.format(
-				"(firstName eq '%s') and (userGroupIds eq '%s')", firstName,
-				_userGroup.getUserGroupId()),
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = String.format(
+			"(firstName eq '%s') and (userGroupIds eq '%s')", firstName,
+			_userGroup.getUserGroupId());
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -703,11 +1073,17 @@ public class UserODataRetrieverTest {
 	public void testGetUsersFilterByUserId() throws Exception {
 		_user1 = UserTestUtil.addUser(_group1.getGroupId());
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(), "(userId eq '" + _user1.getUserId() + "')",
-			LocaleUtil.getDefault(), 0, 2);
+		String filterString = "(userId eq '" + _user1.getUserId() + "')";
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -716,13 +1092,19 @@ public class UserODataRetrieverTest {
 		_user1 = UserTestUtil.addUser(_group1.getGroupId());
 		_user2 = UserTestUtil.addUser(_group1.getGroupId());
 
-		List<User> users = _userODataRetriever.getUsers(
-			_group1.getCompanyId(),
+		String filterString =
 			"(userName eq '" + StringUtil.toLowerCase(_user1.getFullName()) +
-				"')",
-			LocaleUtil.getDefault(), 0, 2);
+				"')";
 
-		Assert.assertEquals(users.toString(), 1, users.size());
+		int count = _oDataRetriever.getResultsCount(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault());
+
+		Assert.assertEquals(1, count);
+
+		List<User> users = _oDataRetriever.getResults(
+			_group1.getCompanyId(), filterString, LocaleUtil.getDefault(), 0,
+			2);
+
 		Assert.assertEquals(_user1, users.get(0));
 	}
 
@@ -733,14 +1115,49 @@ public class UserODataRetrieverTest {
 			ServiceContextTestUtil.getServiceContext());
 	}
 
+	private String _toISOFormat(Instant instant) {
+		ZonedDateTime zonedDateTime = instant.atZone(ZoneId.systemDefault());
+
+		LocalDate localDate = zonedDateTime.toLocalDate();
+
+		return localDate.format(DateTimeFormatter.ISO_DATE);
+	}
+
+	private void _updateUserBirthday(User user, Date birthDate)
+		throws PortalException {
+
+		Contact contact = user.getContact();
+
+		contact.setBirthday(birthDate);
+
+		_contactLocalService.updateContact(contact);
+
+		_userLocalService.updateUser(_user2);
+	}
+
+	@DeleteAfterTestRun
+	private final List<AssetTag> _assetTags = new ArrayList<>();
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
+
+	@Inject
+	private ContactLocalService _contactLocalService;
+
 	@DeleteAfterTestRun
 	private Group _group1;
 
 	@DeleteAfterTestRun
 	private Group _group2;
 
+	@Inject(filter = "model.class.name=com.liferay.portal.kernel.model.User")
+	private ODataRetriever<User> _oDataRetriever;
+
+	@Inject
+	private OrganizationLocalService _organizationLocalService;
+
 	@DeleteAfterTestRun
-	private List<Organization> _organizations;
+	private final List<Organization> _organizations = new ArrayList<>();
 
 	@DeleteAfterTestRun
 	private Role _role;
@@ -762,8 +1179,5 @@ public class UserODataRetrieverTest {
 
 	@Inject
 	private UserLocalService _userLocalService;
-
-	@Inject
-	private UserODataRetriever _userODataRetriever;
 
 }

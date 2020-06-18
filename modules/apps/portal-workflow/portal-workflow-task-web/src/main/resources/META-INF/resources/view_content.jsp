@@ -20,12 +20,18 @@
 String redirect = ParamUtil.getString(request, "redirect");
 
 AssetEntry assetEntry = workflowTaskDisplayContext.getAssetEntry();
-AssetRenderer assetRenderer = workflowTaskDisplayContext.getAssetRenderer();
+
+AssetRenderer assetRenderer = workflowTaskDisplayContext.getAssetRenderer(workflowTaskDisplayContext.getWorkflowTask());
+
 AssetRendererFactory assetRendererFactory = workflowTaskDisplayContext.getAssetRendererFactory();
 
 String languageId = LanguageUtil.getLanguageId(request);
 
 String[] availableLanguageIds = assetRenderer.getAvailableLanguageIds();
+
+if (ArrayUtil.isNotEmpty(availableLanguageIds) && !ArrayUtil.contains(availableLanguageIds, languageId)) {
+	languageId = assetRenderer.getDefaultLanguageId();
+}
 
 String title = assetRenderer.getTitle(workflowTaskDisplayContext.getTaskContentLocale());
 
@@ -37,32 +43,39 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle(title);
 %>
 
-<div class="card-horizontal main-content-card">
-	<div class="panel-body">
-		<c:if test="<%= assetEntry != null %>">
-			<div class="locale-actions">
-				<liferay-ui:language
-					formAction="<%= currentURL %>"
-					languageId="<%= languageId %>"
-					languageIds="<%= availableLanguageIds %>"
-				/>
+<div class="container-fluid-1280 main-content-body">
+	<clay:col
+		className="lfr-asset-column lfr-asset-column-details"
+		md="12"
+	>
+		<div class="card-horizontal main-content-card">
+			<div class="panel-body">
+				<c:if test="<%= assetEntry != null %>">
+					<div class="locale-actions">
+						<liferay-ui:language
+							formAction="<%= currentURL %>"
+							languageId="<%= languageId %>"
+							languageIds="<%= availableLanguageIds %>"
+						/>
+					</div>
+
+					<liferay-asset:asset-display
+						assetEntry="<%= assetEntry %>"
+						assetRenderer="<%= assetRenderer %>"
+						assetRendererFactory="<%= assetRendererFactory %>"
+					/>
+				</c:if>
+
+				<%
+				String viewInContextURL = assetRenderer.getURLViewInContext(liferayPortletRequest, liferayPortletResponse, null);
+				%>
+
+				<c:if test="<%= viewInContextURL != null %>">
+					<div class="asset-more">
+						<aui:a href="<%= viewInContextURL %>"><liferay-ui:message key="view-in-context" /> &raquo;</aui:a>
+					</div>
+				</c:if>
 			</div>
-
-			<liferay-asset:asset-display
-				assetEntry="<%= assetEntry %>"
-				assetRenderer="<%= assetRenderer %>"
-				assetRendererFactory="<%= assetRendererFactory %>"
-			/>
-		</c:if>
-
-		<%
-		String viewInContextURL = assetRenderer.getURLViewInContext(liferayPortletRequest, liferayPortletResponse, null);
-		%>
-
-		<c:if test="<%= viewInContextURL != null %>">
-			<div class="asset-more">
-				<aui:a href="<%= viewInContextURL %>"><liferay-ui:message key="view-in-context" /> &raquo;</aui:a>
-			</div>
-		</c:if>
-	</div>
+		</div>
+	</clay:col>
 </div>

@@ -17,8 +17,6 @@
 <%@ include file="/export/init.jsp" %>
 
 <%
-String redirect = ParamUtil.getString(request, "redirect");
-
 portletDisplay.setShowBackIcon(true);
 
 PortletURL exportProcessesURL = PortalUtil.getControlPanelPortletURL(request, ExportImportPortletKeys.EXPORT, PortletRequest.RENDER_PHASE);
@@ -58,7 +56,7 @@ if (liveGroup == null) {
 />
 
 <%
-ExportTemplatesToolbarDisplayContext exportTemplatesToolbarDisplayContext = new ExportTemplatesToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request, liveGroupId, company, portletURL);
+ExportTemplatesToolbarDisplayContext exportTemplatesToolbarDisplayContext = new ExportTemplatesToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, liveGroupId, company, portletURL);
 %>
 
 <clay:management-toolbar

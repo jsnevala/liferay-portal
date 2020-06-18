@@ -14,13 +14,9 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
-import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
-
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -30,66 +26,48 @@ public class UnusedVariableCheck extends BaseCheck {
 
 	@Override
 	public int[] getDefaultTokens() {
-		return new int[] {
-			TokenTypes.CLASS_DEF, TokenTypes.CTOR_DEF, TokenTypes.METHOD_DEF
-		};
+		return new int[] {TokenTypes.VARIABLE_DEF};
 	}
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		if ((detailAST.getType() == TokenTypes.CLASS_DEF) &&
-			(detailAST.getParent() != null)) {
+		DetailAST parentDetailAST = detailAST.getParent();
+
+		if (parentDetailAST.getType() == TokenTypes.OBJBLOCK) {
+			parentDetailAST = parentDetailAST.getParent();
+
+			if (parentDetailAST.getParent() != null) {
+				return;
+			}
+		}
+		else if (parentDetailAST.getType() != TokenTypes.SLIST) {
+			return;
+		}
+
+		DetailAST modifiersDetailAST = detailAST.findFirstToken(
+			TokenTypes.MODIFIERS);
+
+		if (modifiersDetailAST.branchContains(TokenTypes.ANNOTATION) ||
+			modifiersDetailAST.branchContains(TokenTypes.LITERAL_PROTECTED) ||
+			modifiersDetailAST.branchContains(TokenTypes.LITERAL_PUBLIC)) {
 
 			return;
 		}
 
-		List<DetailAST> variableDefASTList = DetailASTUtil.getAllChildTokens(
-			detailAST, true, TokenTypes.VARIABLE_DEF);
+		DetailAST nameDetailAST = detailAST.findFirstToken(TokenTypes.IDENT);
 
-		if (variableDefASTList.isEmpty()) {
+		String variableName = nameDetailAST.getText();
+
+		if (variableName.equals("serialVersionUID")) {
 			return;
 		}
 
-		List<String> tokenNames = _getTokenNames(detailAST);
+		List<DetailAST> variableCallerDetailASTList =
+			getVariableCallerDetailASTList(detailAST, variableName);
 
-		for (DetailAST variableDefAST : variableDefASTList) {
-			DetailAST modifiersAST = variableDefAST.findFirstToken(
-				TokenTypes.MODIFIERS);
-
-			if (detailAST.getType() == TokenTypes.CLASS_DEF) {
-				if (modifiersAST.branchContains(TokenTypes.ANNOTATION) ||
-					!modifiersAST.branchContains(TokenTypes.LITERAL_PRIVATE)) {
-
-					continue;
-				}
-			}
-			else if (modifiersAST.getChildCount() > 0) {
-				continue;
-			}
-
-			DetailAST nameAST = variableDefAST.findFirstToken(TokenTypes.IDENT);
-
-			String variableName = nameAST.getText();
-
-			if (!variableName.equals("serialVersionUID") &&
-				(Collections.frequency(tokenNames, variableName) == 1)) {
-
-				log(variableDefAST, _MSG_UNUSED_VARIABLE, variableName);
-			}
+		if (variableCallerDetailASTList.isEmpty()) {
+			log(detailAST, _MSG_UNUSED_VARIABLE, variableName);
 		}
-	}
-
-	private List<String> _getTokenNames(DetailAST detailAST) {
-		List<String> tokenNames = new ArrayList<>();
-
-		List<DetailAST> nameASTList = DetailASTUtil.getAllChildTokens(
-			detailAST, true, TokenTypes.IDENT);
-
-		for (DetailAST nameAST : nameASTList) {
-			tokenNames.add(nameAST.getText());
-		}
-
-		return tokenNames;
 	}
 
 	private static final String _MSG_UNUSED_VARIABLE = "variable.unused";

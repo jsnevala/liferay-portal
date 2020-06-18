@@ -18,7 +18,7 @@
 
 <c:if test="<%= Validator.isNotNull(backgroundTaskStatusMessage) %>">
 	<h6 class="<%= linkClass %>">
-		<a class="details-link" href="javascript:Liferay.fire('<portlet:namespace />viewBackgroundTaskDetails', {nodeId: 'backgroundTaskStatusMessage<%= backgroundTaskId %>', title: $('#<portlet:namespace />backgroundTaskName<%= backgroundTaskId %>').text()}); void(0);"><liferay-ui:message key="see-more-details" /></a>
+		<a class="details-link" href="javascript:Liferay.fire('<portlet:namespace />viewBackgroundTaskDetails', {nodeId: 'backgroundTaskStatusMessage<%= backgroundTaskId %>', title: document.getElementById('<portlet:namespace />backgroundTaskName<%= backgroundTaskId %>').textContent}); void(0);"><liferay-ui:message key="see-more-details" /></a>
 	</h6>
 
 	<div class="background-task-status-message hide" id="<portlet:namespace />backgroundTaskStatusMessage<%= backgroundTaskId %>">
@@ -69,20 +69,20 @@
 
 							<%
 							for (int i = 0; i < messageListItemsJSONArray.length(); i++) {
-								JSONObject messageListItemJSONArray = messageListItemsJSONArray.getJSONObject(i);
+								JSONObject messageListItemJSONObject = messageListItemsJSONArray.getJSONObject(i);
 
-								String info = messageListItemJSONArray.getString("info");
+								String info = messageListItemJSONObject.getString("info");
 							%>
 
 								<li>
-									<%= messageListItemJSONArray.getString("type") %>
+									<%= messageListItemJSONObject.getString("type") %>
 
-									<%= messageListItemJSONArray.getString("site") %>:
+									<%= messageListItemJSONObject.getString("site") %>:
 
-									<strong><%= HtmlUtil.escape(messageListItemJSONArray.getString("name")) %></strong>
+									<strong><%= HtmlUtil.escape(messageListItemJSONObject.getString("name")) %></strong>
 
 									<c:if test="<%= Validator.isNotNull(info) %>">
-										<span class="error-info">(<%= HtmlUtil.escape(messageListItemJSONArray.getString("info")) %>)</span>
+										<span class="error-info">(<%= HtmlUtil.escape(messageListItemJSONObject.getString("info")) %>)</span>
 									</c:if>
 								</li>
 
@@ -106,18 +106,18 @@
 
 							<%
 							for (int i = 0; i < warningMessagesJSONArray.length(); i++) {
-								JSONObject warningMessageJSONArray = warningMessagesJSONArray.getJSONObject(i);
+								JSONObject warningMessageJSONObject = warningMessagesJSONArray.getJSONObject(i);
 
-								String info = warningMessageJSONArray.getString("info");
+								String info = warningMessageJSONObject.getString("info");
 							%>
 
 								<li>
-									<%= warningMessageJSONArray.getString("type") %>:
+									<%= warningMessageJSONObject.getString("type") %>:
 
-									<strong><%= warningMessageJSONArray.getString("size") %></strong>
+									<strong><%= warningMessageJSONObject.getString("size") %></strong>
 
 									<c:if test="<%= Validator.isNotNull(info) %>">
-										<span class="error-info">(<%= HtmlUtil.escape(warningMessageJSONArray.getString("info")) %>)</span>
+										<span class="error-info">(<%= HtmlUtil.escape(warningMessageJSONObject.getString("info")) %>)</span>
 									</c:if>
 								</li>
 

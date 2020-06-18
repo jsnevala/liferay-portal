@@ -19,12 +19,11 @@
 <%
 boolean termsOfUseRequired = PrefsPropsUtil.getBoolean(company.getCompanyId(), PropsKeys.TERMS_OF_USE_REQUIRED, PropsValues.TERMS_OF_USE_REQUIRED);
 
-TermsOfUseContentProvider termsOfUseContentProvider = TermsOfUseContentProviderRegistryUtil.getTermsOfUseContentProvider();
+TermsOfUseContentProvider termsOfUseContentProvider = (TermsOfUseContentProvider)request.getAttribute(PortalSettingsWebKeys.TERMS_OF_USE_CONTENT_PROVIDER);
 %>
 
-<h3><liferay-ui:message key="terms-of-use" /></h3>
-
 <aui:fieldset>
+	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 	<aui:input label="require-terms-of-use" name='<%= "settings--" + PropsKeys.TERMS_OF_USE_REQUIRED + "--" %>' type="checkbox" value="<%= termsOfUseRequired %>" />
 
 	<c:if test="<%= termsOfUseContentProvider != null %>">

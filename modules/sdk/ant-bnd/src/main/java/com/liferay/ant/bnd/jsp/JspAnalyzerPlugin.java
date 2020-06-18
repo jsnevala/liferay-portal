@@ -26,10 +26,10 @@ import aQute.bnd.osgi.Instruction;
 import aQute.bnd.osgi.Instructions;
 import aQute.bnd.osgi.Jar;
 import aQute.bnd.osgi.Packages;
+import aQute.bnd.osgi.Processor;
 import aQute.bnd.osgi.Resource;
 import aQute.bnd.service.AnalyzerPlugin;
 
-import aQute.lib.env.Header;
 import aQute.lib.io.IO;
 import aQute.lib.strings.Strings;
 
@@ -245,7 +245,7 @@ public class JspAnalyzerPlugin implements AnalyzerPlugin {
 					}
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 	}
@@ -272,17 +272,10 @@ public class JspAnalyzerPlugin implements AnalyzerPlugin {
 
 		Clazz clazz = null;
 
-		try {
-			InputStream inputStream = resource.openInputStream();
-
+		try (InputStream inputStream = resource.openInputStream()) {
 			clazz = new Clazz(analyzer, fqnToPath, resource);
 
-			try {
-				clazz.parseClassFile();
-			}
-			finally {
-				inputStream.close();
-			}
+			clazz.parseClassFile();
 		}
 		catch (Throwable e) {
 			return;
@@ -329,8 +322,12 @@ public class JspAnalyzerPlugin implements AnalyzerPlugin {
 			// indicate that it already has access to the required classes
 
 			if (containsTLD(analyzer, analyzer.getJar(), "META-INF", uri) ||
+				containsTLD(
+					analyzer, analyzer.getJar(), "META-INF/resources", uri) ||
 				containsTLD(analyzer, analyzer.getJar(), "WEB-INF/tld", uri) ||
-				containsTLDInBundleClassPath(analyzer, "META-INF", uri)) {
+				containsTLDInBundleClassPath(analyzer, "META-INF", uri) ||
+				containsTLDInBundleClassPath(
+					analyzer, "META-INF/resources", uri)) {
 
 				continue;
 			}
@@ -350,7 +347,7 @@ public class JspAnalyzerPlugin implements AnalyzerPlugin {
 			Parameters parameters = OSGiHeader.parseHeader(value);
 
 			for (Map.Entry<String, Attrs> entry : parameters.entrySet()) {
-				String key = Header.removeDuplicateMarker(entry.getKey());
+				String key = Processor.removeDuplicateMarker(entry.getKey());
 
 				StringBuilder sb = new StringBuilder(key);
 
@@ -447,8 +444,7 @@ public class JspAnalyzerPlugin implements AnalyzerPlugin {
 					}
 				}
 			}
-			catch (Exception e) {
-				continue;
+			catch (Exception exception) {
 			}
 		}
 
@@ -512,9 +508,10 @@ public class JspAnalyzerPlugin implements AnalyzerPlugin {
 
 			return uriFinder.hasURI();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			analyzer.error(
-				"Unexpected exception in processing TLD " + path + ": " + e);
+				"Unexpected exception in processing TLD " + path + ": " +
+					exception);
 		}
 
 		return false;
@@ -535,8 +532,9 @@ public class JspAnalyzerPlugin implements AnalyzerPlugin {
 	private static final String _LOAD_EXTERNAL_DTD =
 		"http://apache.org/xml/features/nonvalidating/load-external-dtd";
 
-	private static final String[] _REQUIRED_PACKAGE_NAMES =
-		{"javax.servlet", "javax.servlet.http"};
+	private static final String[] _REQUIRED_PACKAGE_NAMES = {
+		"javax.servlet", "javax.servlet.http"
+	};
 
 	private static final Pattern _commentPattern = Pattern.compile(
 		"<%--[\\s\\S]*?--%>");

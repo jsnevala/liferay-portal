@@ -35,10 +35,11 @@ public class DefaultWikiPageInfoPanelDisplayContext
 	implements WikiPageInfoPanelDisplayContext {
 
 	public DefaultWikiPageInfoPanelDisplayContext(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
 		_wikiPageInfoPanelRequestHelper = new WikiPageInfoPanelRequestHelper(
-			request);
+			httpServletRequest);
 	}
 
 	@Override
@@ -110,15 +111,14 @@ public class DefaultWikiPageInfoPanelDisplayContext
 		if (pages.size() == 1) {
 			return true;
 		}
-		else {
-			WikiPage page = _wikiPageInfoPanelRequestHelper.getPage();
 
-			if (page != null) {
-				return true;
-			}
+		WikiPage page = _wikiPageInfoPanelRequestHelper.getPage();
 
-			return false;
+		if (page != null) {
+			return true;
 		}
+
+		return false;
 	}
 
 	protected List<WikiPage> getSelectedPages() {

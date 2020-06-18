@@ -14,8 +14,6 @@
 
 package com.liferay.asset.list.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.list.model.AssetListEntryAssetEntryRel;
 import com.liferay.asset.list.service.AssetListEntryAssetEntryRelLocalServiceUtil;
 
@@ -31,22 +29,25 @@ import com.liferay.asset.list.service.AssetListEntryAssetEntryRelLocalServiceUti
  * @see AssetListEntryAssetEntryRel
  * @generated
  */
-@ProviderType
 public abstract class AssetListEntryAssetEntryRelBaseImpl
 	extends AssetListEntryAssetEntryRelModelImpl
 	implements AssetListEntryAssetEntryRel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a asset list entry asset entry rel model instance should use the {@link AssetListEntryAssetEntryRel} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a asset list entry asset entry rel model instance should use the <code>AssetListEntryAssetEntryRel</code> interface instead.
 	 */
 	@Override
 	public void persist() {
 		if (this.isNew()) {
-			AssetListEntryAssetEntryRelLocalServiceUtil.addAssetListEntryAssetEntryRel(this);
+			AssetListEntryAssetEntryRelLocalServiceUtil.
+				addAssetListEntryAssetEntryRel(this);
 		}
 		else {
-			AssetListEntryAssetEntryRelLocalServiceUtil.updateAssetListEntryAssetEntryRel(this);
+			AssetListEntryAssetEntryRelLocalServiceUtil.
+				updateAssetListEntryAssetEntryRel(this);
 		}
 	}
+
 }

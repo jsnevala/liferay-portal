@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.AggregateClassLoader;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.template.freemarker.configuration.FreeMarkerEngineConfiguration;
@@ -108,12 +107,13 @@ public class LiferayTemplateClassResolver implements TemplateClassResolver {
 		if (allowed) {
 			try {
 				ClassLoader[] wwhitelistedClassLoaders =
-					_whitelistedClassLoaders.toArray(
-						new ClassLoader[_whitelistedClassLoaders.size()]);
+					_whitelistedClassLoaders.toArray(new ClassLoader[0]);
+
+				Thread currentThread = Thread.currentThread();
 
 				ClassLoader[] classLoaders = ArrayUtil.append(
 					wwhitelistedClassLoaders,
-					ClassLoaderUtil.getContextClassLoader());
+					currentThread.getContextClassLoader());
 
 				ClassLoader wwhitelistedAggregateClassLoader =
 					AggregateClassLoader.getAggregateClassLoader(classLoaders);
@@ -121,8 +121,8 @@ public class LiferayTemplateClassResolver implements TemplateClassResolver {
 				return Class.forName(
 					className, true, wwhitelistedAggregateClassLoader);
 			}
-			catch (Exception e) {
-				throw new TemplateException(e, environment);
+			catch (Exception exception) {
+				throw new TemplateException(exception, environment);
 			}
 		}
 

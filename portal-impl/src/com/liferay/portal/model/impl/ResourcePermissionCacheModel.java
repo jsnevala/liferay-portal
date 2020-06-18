@@ -14,14 +14,11 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ResourcePermission;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -32,12 +29,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing ResourcePermission in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see ResourcePermission
  * @generated
  */
-@ProviderType
-public class ResourcePermissionCacheModel implements CacheModel<ResourcePermission>,
-	Externalizable, MVCCModel {
+public class ResourcePermissionCacheModel
+	implements CacheModel<ResourcePermission>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -48,10 +44,13 @@ public class ResourcePermissionCacheModel implements CacheModel<ResourcePermissi
 			return false;
 		}
 
-		ResourcePermissionCacheModel resourcePermissionCacheModel = (ResourcePermissionCacheModel)obj;
+		ResourcePermissionCacheModel resourcePermissionCacheModel =
+			(ResourcePermissionCacheModel)obj;
 
-		if ((resourcePermissionId == resourcePermissionCacheModel.resourcePermissionId) &&
-				(mvccVersion == resourcePermissionCacheModel.mvccVersion)) {
+		if ((resourcePermissionId ==
+				resourcePermissionCacheModel.resourcePermissionId) &&
+			(mvccVersion == resourcePermissionCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -77,10 +76,12 @@ public class ResourcePermissionCacheModel implements CacheModel<ResourcePermissi
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(23);
+		StringBundler sb = new StringBundler(25);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", resourcePermissionId=");
 		sb.append(resourcePermissionId);
 		sb.append(", companyId=");
@@ -108,9 +109,11 @@ public class ResourcePermissionCacheModel implements CacheModel<ResourcePermissi
 
 	@Override
 	public ResourcePermission toEntityModel() {
-		ResourcePermissionImpl resourcePermissionImpl = new ResourcePermissionImpl();
+		ResourcePermissionImpl resourcePermissionImpl =
+			new ResourcePermissionImpl();
 
 		resourcePermissionImpl.setMvccVersion(mvccVersion);
+		resourcePermissionImpl.setCtCollectionId(ctCollectionId);
 		resourcePermissionImpl.setResourcePermissionId(resourcePermissionId);
 		resourcePermissionImpl.setCompanyId(companyId);
 
@@ -145,6 +148,8 @@ public class ResourcePermissionCacheModel implements CacheModel<ResourcePermissi
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
 
+		ctCollectionId = objectInput.readLong();
+
 		resourcePermissionId = objectInput.readLong();
 
 		companyId = objectInput.readLong();
@@ -165,9 +170,10 @@ public class ResourcePermissionCacheModel implements CacheModel<ResourcePermissi
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		objectOutput.writeLong(resourcePermissionId);
 
@@ -201,6 +207,7 @@ public class ResourcePermissionCacheModel implements CacheModel<ResourcePermissi
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public long resourcePermissionId;
 	public long companyId;
 	public String name;
@@ -211,4 +218,5 @@ public class ResourcePermissionCacheModel implements CacheModel<ResourcePermissi
 	public long ownerId;
 	public long actionIds;
 	public boolean viewActionId;
+
 }

@@ -17,7 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "vocabularies"), null);
+AssetVocabulariesManagementToolbarDisplayContext assetVocabulariesManagementToolbarDisplayContext = new AssetVocabulariesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetCategoriesDisplayContext);
 %>
 
 <clay:navigation-bar
@@ -26,19 +26,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "vocabul
 />
 
 <clay:management-toolbar
-	actionDropdownItems="<%= assetCategoriesDisplayContext.getVocabulariesActionItemsDropdownItems() %>"
-	clearResultsURL="<%= assetCategoriesDisplayContext.getVocabulariesClearResultsURL() %>"
-	componentId="assetVocabulariesManagementToolbar"
-	creationMenu="<%= assetCategoriesDisplayContext.isShowVocabulariesAddButton() ? assetCategoriesDisplayContext.getVocabulariesCreationMenu() : null %>"
-	disabled="<%= assetCategoriesDisplayContext.isDisabledVocabulariesManagementBar() %>"
-	filterDropdownItems="<%= assetCategoriesDisplayContext.getVocabulariesFilterItemsDropdownItems() %>"
-	itemsTotal="<%= assetCategoriesDisplayContext.getVocabulariesTotalItems() %>"
-	searchActionURL="<%= assetCategoriesDisplayContext.getVocabulariesSearchActionURL() %>"
-	searchContainerId="assetVocabularies"
-	searchFormName="searchFm"
-	sortingOrder="<%= assetCategoriesDisplayContext.getOrderByType() %>"
-	sortingURL="<%= assetCategoriesDisplayContext.getVocabulariesSortingURL() %>"
-	viewTypeItems="<%= assetCategoriesDisplayContext.getVocabulariesViewTypeItems() %>"
+	displayContext="<%= assetVocabulariesManagementToolbarDisplayContext %>"
 />
 
 <portlet:actionURL name="deleteVocabulary" var="deleteVocabularyURL">
@@ -46,12 +34,18 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "vocabul
 </portlet:actionURL>
 
 <aui:form action="<%= deleteVocabularyURL %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
-	<liferay-ui:breadcrumb
-		showCurrentGroup="<%= false %>"
-		showGuestGroup="<%= false %>"
-		showLayout="<%= false %>"
-		showParentGroups="<%= false %>"
+	<liferay-site-navigation:breadcrumb
+		breadcrumbEntries="<%= AssetCategoryUtil.getAssetVocabulariesBreadcrumbEntries(request) %>"
 	/>
+
+	<liferay-ui:error exception="<%= InvalidAssetCategoryException.class %>">
+
+		<%
+		InvalidAssetCategoryException iace = (InvalidAssetCategoryException)errorException;
+		%>
+
+		<liferay-ui:message arguments="<%= iace.getMessageArgument(locale) %>" key="<%= iace.getMessageKey() %>" />
+	</liferay-ui:error>
 
 	<liferay-ui:search-container
 		id="assetVocabularies"
@@ -62,6 +56,15 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "vocabul
 			keyProperty="vocabularyId"
 			modelVar="vocabulary"
 		>
+
+			<%
+			Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+				"actions", assetVocabulariesManagementToolbarDisplayContext.getAvailableActions(vocabulary)
+			).build();
+
+			row.setData(rowData);
+			%>
+
 			<portlet:renderURL var="rowURL">
 				<portlet:param name="mvcPath" value="/view_categories.jsp" />
 				<portlet:param name="vocabularyId" value="<%= String.valueOf(vocabulary.getVocabularyId()) %>" />
@@ -77,19 +80,18 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "vocabul
 					<liferay-ui:search-container-column-text
 						colspan="<%= 2 %>"
 					>
-						<h6 class="text-default">
+						<span class="text-default">
 							<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - vocabulary.getCreateDate().getTime(), true) %>" key="x-ago" translateArguments="<%= false %>" />
-						</h6>
+						</span>
 
-						<h5>
+						<h2 class="h5">
 							<aui:a href="<%= (rowURL != null) ? rowURL.toString() : null %>"><%= HtmlUtil.escape(vocabulary.getTitle(locale)) %></aui:a>
-						</h5>
+						</h2>
 
-						<h6 class="text-default">
+						<span class="text-default">
 							<%= HtmlUtil.escape(vocabulary.getDescription(locale)) %>
-						</h6>
-
-						<h6 class="text-default">
+						</span>
+						<span class="text-default">
 							<strong><liferay-ui:message key="number-of-categories" /></strong>:
 
 							<c:choose>
@@ -100,11 +102,10 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "vocabul
 									<%= vocabulary.getCategoriesCount() %>
 								</c:otherwise>
 							</c:choose>
-						</h6>
-
-						<h6 class="text-default">
+						</span>
+						<span class="text-default">
 							<strong><liferay-ui:message key="asset-type" /></strong>: <%= assetCategoriesDisplayContext.getAssetType(vocabulary) %>
-						</h6>
+						</span>
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-jsp
@@ -165,29 +166,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "vocabul
 	</liferay-ui:search-container>
 </aui:form>
 
-<aui:script>
-	var deleteSelectedVocabularies = function() {
-		if (confirm('<liferay-ui:message key="are-you-sure-you-want-to-delete-this" />')) {
-			submitForm(document.querySelector('#<portlet:namespace />fm'));
-		}
-	}
-
-	var ACTIONS = {
-		'deleteSelectedVocabularies': deleteSelectedVocabularies
-	};
-
-	Liferay.componentReady('assetVocabulariesManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				['actionItemClicked'],
-				function(event) {
-					var itemData = event.data.item.data;
-
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action]();
-					}
-				}
-			);
-		}
-	);
-</aui:script>
+<liferay-frontend:component
+	componentId="<%= assetVocabulariesManagementToolbarDisplayContext.getDefaultEventHandler() %>"
+	module="js/AssetVocabulariesManagementToolbarDefaultEventHandler.es"
+/>

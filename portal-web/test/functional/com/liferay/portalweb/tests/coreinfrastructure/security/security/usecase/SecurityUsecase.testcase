@@ -1,294 +1,332 @@
-<definition component-name="portal-security">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Security" />
+@component-name = "portal-security"
+definition {
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Security";
 
-		<execute macro="User#firstLoginPG" />
-	</set-up>
+	setUp {
+		TestCase.setUpPortalInstance();
 
-	<tear-down>
-		<var method="PropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+		User.firstLoginPG();
+	}
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="PortalSettings#tearDownAuthenticationCP" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-				<execute macro="Page#tearDownCP" />
-			</else>
-		</if>
-	</tear-down>
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			PortalSettings.tearDownAuthenticationCP();
 
-	<command name="EscapeUrlRedirectWithGroovyScript" priority="5">
-		<description message="This is a use case for LPS-69372." />
+			Page.tearDownCP();
+		}
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Configuration" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Server Administration" />
-		</execute>
+	@description = "This is a use case for LPS-107017."
+	@priority = "4"
+	test CreateUserViaJSONWSAPIUI {
+		var portalURL = PropsUtil.get("portal.url");
 
-		<execute macro="ServerAdministration#executeScript">
-			<var name="language" value="Groovy" />
-			<var name="script"><![CDATA[
+		Navigator.openSpecificURL(url = "${portalURL}/api/jsonws?contextName=&signature=/user/add-user-31-long-boolean-java.lang.String-java.lang.String-boolean-java.lang.String-java.lang.String-long-java.lang.String-java.util.Locale-java.lang.String-java.lang.String-java.lang.String-long-long-boolean-int-int-int-java.lang.String-%5BJ-%5BJ-%5BJ-%5BJ-java.util.List-java.util.List-java.util.List-java.util.List-java.util.List-boolean-com.liferay.portal.kernel.service.ServiceContext");
+
+		JSONUser.addUserByJSONWSUI(
+			userFirstName = "testfUI",
+			userLastName = "testlUI");
+
+		Pause(locator1 = "3000");
+
+		AssertHTMLSourceTextPresent(
+			locator1 = "JSONWS#SECURITY_RESULT",
+			value1 = "Welcome testfUI testlUI!");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		var key_userScreenName = "testui";
+
+		AssertTextEquals(
+			locator1 = "UsersAndOrganizations#USER_TABLE_NAME",
+			value1 = "testfUI testlUI");
+	}
+
+	@description = "This is a use case for LPS-83566."
+	@priority = "5"
+	test EscapeUrlRedirectWithGroovyScript {
+		property test.name.skip.portal.instance = "SecurityUsecase#EscapeUrlRedirectWithGroovyScript";
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Server Administration");
+
+		ServerAdministration.executeScript(
+			language = "Groovy",
+			script = '''
 import com.liferay.portal.kernel.util.PortalUtil;
 
 out.println(PortalUtil.escapeRedirect("/"));
-]]></var>
-		</execute>
-
-		<execute function="AssertTextEquals" locator1="ServerAdministrationScript#OUTPUT_FIELD" value1="/" />
-	</command>
-
-	<command name="NoGuestRoleFromWCDArticleHistoryURL" priority="5">
-		<property name="portal.acceptance" value="true" />
+''');
+
+		AssertTextEquals(
+			locator1 = "ServerAdministrationScript#OUTPUT_FIELD",
+			value1 = "/");
+	}
+
+	@description = "This is a use case for LPS-87768."
+	@priority = "5"
+	test NoPermissionFromUnauthorizedURLAsPowerUser {
+		property test.name.skip.portal.instance = "SecurityUsecase#NoPermissionFromUnauthorizedURLAsPowerUser";
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.addCP(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
 
-		<var method="PropsUtil#get('portal.url')" name="portalURL" />
-		<var name="url" value="${portalURL}/web/guest/home?&amp;p_p_id=com_liferay_journal_web_portlet_JournalPortlet&amp;p_p_lifecycle=0&amp;p_p_state=maximized&amp;p_p_mode=view&amp;_com_liferay_journal_web_portlet_JournalPortlet_struts_action=%2Fjournal%2Fview_article_history&amp;_com_liferay_journal_web_portlet_JournalPortlet_groupId=10180&amp;_com_liferay_journal_web_portlet_JournalPortlet_articleId=" />
-
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Build" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Pages" />
-		</execute>
-
-		<execute macro="SitePages#addPublicPage">
-			<var name="pageName" value="Web Content Display Page" />
-		</execute>
-
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="Web Content Display Page" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		<execute macro="Portlet#addPG">
-			<var name="portletName" value="Web Content Display" />
-		</execute>
+		User.assignRegularRoleCP(
+			roleTitle = "Power User",
+			userScreenName = "usersn");
 
-		<execute macro="WebContent#addPGViaWCD">
-			<var name="webContentContent" value="WC WebContent Content" />
-			<var name="webContentTitle" value="WC WebContent Title" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		<execute macro="WebContent#viewPGViaWCD">
-			<var name="webContentContent" value="WC WebContent Content" />
-		</execute>
+		User.editPasswordCP(
+			userEmailAddress = "userea@liferay.com",
+			userScreenName = "usersn");
 
-		<execute macro="WebContentNavigator#gotoEditPGViaWCD">
-			<var name="menuItem" value="Edit Web Content" />
-			<var name="webContentTitle" value="WC WebContent Title" />
-		</execute>
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
 
-		<var method="selenium#getText(WCEditWebContent#ARTICLE_ID)" name="articleID" />
+		UserBar.gotoDropdownItem(dropdownItem = "My Profile");
 
-		<execute macro="User#logoutPG" />
+		WaitForSPARefresh();
 
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="${url}${articleID}" />
-		</execute>
+		var authToken = Page.getAuthTokenFromHtmlSource();
+		var plid = Page.getPlidFromHtmlSource();
+		var portalURL = PropsUtil.get("portal.url");
 
-		<execute function="AssertTextEquals" locator1="Message#ERROR" value1="You do not have the roles required to access this portlet." />
-	</command>
+		Navigator.openSpecificURL(url = '''${portalURL}/c/portal/update_layout?cmd=add&p_p_col_id=column-1&p_p_col_pos=0&p_p_id=com_liferay_marketplace_store_web_portlet_MarketplacePurchasedPortlet&p_auth=${authToken}&p_l_id=${plid}''');
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Profile");
+
+		AssertElementNotPresent(
+			key_portletName = "Purchased",
+			locator1 = "Portlet#BODY");
+	}
+
+	@priority = "5"
+	test ValidateCannotOverwriteOSGiServiceIdentifier {
+		property portal.acceptance = "true";
+		var portalURL = PropsUtil.get("portal.url");
+		var url = "${portalURL}/c/portal/json_service?serviceClassName=com.liferay.portal.kernel.service.AccountServiceUtil&amp;serviceMethodName=getOSGiServiceIdentifier&amp;p_auth=";
+
+		Api.gotoPAuthURL(url = "${url}");
+
+		AssertElementPresent(locator1 = "JSONWS#SECURITY_EMPTY_PAGE");
+	}
+
+	@priority = "4"
+	test ValidateCannotStealAdminAccount {
+		property test.name.skip.portal.instance = "SecurityUsecase#ValidateCannotStealAdminAccount";
+		var pAuth = Api.getPAuth();
+		var portalURL = PropsUtil.get("portal.url");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.addCP(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.editPasswordCP(
+			userEmailAddress = "userea@liferay.com",
+			userScreenName = "usersn");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
 
-	<command name="NoPermissionFromUnauthorizedURLAsPowerUser" priority="5">
-		<description message="This is a use case for LPS-68070." />
+		Navigator.openSpecificURL(url = "${portalURL}/api/jsonws/group/get-group/group-id/20126?p_auth=${pAuth}");
 
-		<property name="test.name.skip.portal.instance" value="SecurityUsecase#NoPermissionFromUnauthorizedURLAsPowerUser" />
+		AssertTextEquals(
+			locator1 = "Home#ERROR_MESSAGE_ALERT_ERROR",
+			value1 = "Forbidden");
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
-
-		<execute macro="User#addCP">
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+	@priority = "5"
+	test ValidateForwardURLPG {
+		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,${ip.address}";
+		property portal.acceptance = "true";
+		var portalURL = PropsUtil.get("portal.url");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
+		Navigator.openSpecificURL(url = "${portalURL}/html/common/forward_jsp.jsp?FORWARD_URL=http://www.msn.com");
 
-		<execute macro="User#assignRegularRoleCP">
-			<var name="roleTitle" value="Power User" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		Pause(locator1 = "3000");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
+		AssertElementPresent(
+			key_pageName = "Home",
+			locator1 = "Home#PAGE");
 
-		<execute macro="User#editPasswordCP">
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		AssertTextEquals(
+			locator1 = "HelloWorld#PORTLET_TITLE",
+			value1 = "Hello World");
 
-		<execute macro="User#logoutAndLoginPG">
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			panel = "Site Administration",
+			portlet = "Pages");
 
-		<execute macro="UserBar#gotoProfile" />
+		SitePages.addPublicPage(pageName = "Test");
 
-		<execute macro="Page#getGroupIdFromHtmlSource">
-			<return name="groupId" />
-		</execute>
+		Navigator.openSpecificURL(url = '''${portalURL}/html/common/forward_jsp.jsp?FORWARD_URL=${portalURL}/web/guest/test''');
 
-		<var method="PropsUtil#get('portal.url')" name="portalURL" />
+		AssertElementPresent(
+			key_pageName = "Test",
+			locator1 = "Home#PAGE");
+	}
 
-		<execute macro="Api#gotoPAuthURL">
-			<var name="url" value="${portalURL}/api/jsonws/layout/update-layout/group-id/${groupId}/private-layout/false/layout-id/1/type-settings/layout-template-id%3D2_columns_ii%0Acolumn-1%3Dcom_liferay_marketplace_app_manager_web_portlet_MarketplaceAppManagerPortlet?p_auth=" />
-		</execute>
+	@description = "This is a use case for LPS-57776."
+	@priority = "5"
+	test ValidateNoLARRemoteCodeExecution {
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			panel = "Site Administration",
+			portlet = "Blogs");
 
-		<execute macro="UserBar#gotoProfile" />
+		LAR.importPortlet(
+			failureExpected = "true",
+			larFileName = "blogs-remote-code-execution.lar",
+			portletName = "Blogs",
+			uploadFrom = "dependencies");
 
-		<execute function="AssertElementNotPresent" locator1="ListGroupItem#ITEM_NAME">
-			<var name="key_itemName" value="Liferay Marketplace" />
-		</execute>
+		AssertConsoleTextPresent(value1 = "com.thoughtworks.xstream.security.ForbiddenClassException");
 
-		<execute function="AssertTextEquals" locator1="Portlet#BODY" value1="Portlet is temporarily unavailable.">
-			<var name="key_portletName" value="App Manager" />
-		</execute>
+		AssertConsoleTextNotPresent(value1 = "Remote_Code_Execution_vulnerability_is_present");
+	}
 
-		<execute function="AssertConsoleTextPresent" value1="must be the company administrator to perform the action" />
-	</command>
+	@description = "This is a use case for LPS-85112."
+	@priority = "5"
+	test ValidateViewPermissionCanNotUpdateOtherUsersPassword {
+		property test.name.skip.portal.instance = "SecurityUsecase#ValidateViewPermissionCanNotUpdateOtherUsersPassword";
 
-	<command name="ValidateBeanIdentifierUserPermissions" priority="5">
-		<property name="portal.acceptance" value="true" />
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-		<var method="PropsUtil#get('portal.url')" name="portalURL" />
-		<var name="url" value="${portalURL}/c/portal/json_service?serviceClassName=com.liferay.portal.service.AccountServiceUtil&amp;serviceMethodName=getBeanIdentifier&amp;p_auth=" />
+		Role.definePermissionCmdCP(
+			permissionDefinitionKeys = "CONTROL_PANEL_USERS_USERS_AND_ORGANIZATIONS_RESOURCE_PERMISSIONS_USER_VIEW_CHECKBOX",
+			permissionDefinitionValue = "View",
+			roleTitle = "User");
 
-		<execute macro="Api#gotoPAuthURL" />
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		<execute function="Pause" locator1="1000" />
-		<execute function="AssertElementNotPresent" locator1="JSONWS#SECURITY_TEST_PAGE_POPULATED" />
-	</command>
+		User.addCP(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
 
-	<command name="ValidateCannotStealAdminAccount" priority="4">
-		<property name="test.name.skip.portal.instance" value="SecurityUsecase#ValidateCannotStealAdminAccount" />
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		<var method="PropsUtil#get('portal.url')" name="portalURL" />
+		User.editPasswordCP(
+			userEmailAddress = "userea@liferay.com",
+			userScreenName = "usersn");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
+		User.logoutPG();
 
-		<execute macro="User#addCP">
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userFirstName" value="userfn" />
-			<var name="userLastName" value="userln" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Users and Organizations" />
-		</execute>
+		UserBar.openUserOrganizations();
 
-		<execute macro="User#editPasswordCP">
-			<var name="userEmailAddress" value="userea@liferay.com" />
-			<var name="userScreenName" value="usersn" />
-		</execute>
+		Alert.viewInfoMessageSpecific(infoMessage = "You do not belong to an organization and are not allowed to view other organizations.");
+	}
 
-		<execute macro="User#logoutAndLoginPG">
-			<var name="userLoginEmailAddress" value="userea@liferay.com" />
-			<var name="userLoginFullName" value="userfn userln" />
-		</execute>
+	@description = "This is a use case for LPS-73595."
+	@priority = "5"
+	test ViewJSLoaderModulesURLNoWiki {
+		var portalURL = PropsUtil.get("portal.url");
 
-		<execute macro="Api#gotoPAuthURL">
-			<var name="url" value="${portalURL}/api/jsonws/user/update-status/user-id/20250/status/6?p_auth=" />
-		</execute>
+		Navigator.openSpecificURL(url = "${portalURL}/o/js_loader_modules");
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="JSONWS#SECURITY_TEST_PAGE_BODY" value1="must have DELETE permission for com.liferay.portal.kernel.model.User" />
+		AssertConsoleTextPresent(value1 = "com.liferay.wiki.engine.html");
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="JSONWS#SECURITY_TEST_PAGE_BODY" value1="com.liferay.portal.kernel.security.auth.PrincipalException$MustHavePermission" />
-	</command>
+		AssertConsoleTextPresent(value1 = "com.liferay.wiki.engine.text");
 
-	<command name="ValidateForwardURLPG" priority="5">
-		<property name="custom.properties" value="virtual.hosts.valid.hosts=localhost,127.0.0.1,${ip.address}" />
-		<property name="portal.acceptance" value="true" />
+		AssertTextNotPresent(value1 = "com.liferay.wiki.engine.html");
 
-		<var method="PropsUtil#get('portal.url')" name="portalURL" />
+		AssertTextNotPresent(value1 = "com.liferay.wiki.engine.text");
+	}
 
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="${portalURL}/html/common/forward_jsp.jsp?FORWARD_URL=http://www.msn.com" />
-		</execute>
+	@description = "This is a use case for LPS-55622."
+	@priority = "5"
+	test ViewNoInvokedPortletViaURL {
+		property portal.acceptance = "true";
 
-		<execute function="Pause" locator1="3000" />
+		JSONLayout.addPublicLayout(
+			friendlyURL = "/test-widget-page",
+			groupName = "Guest",
+			layoutName = "Test Widget Page");
 
-		<execute function="AssertElementPresent" locator1="Home#PAGE">
-			<var name="key_pageName" value="Welcome" />
-		</execute>
+		SitePages.configurePage(
+			columnName = "1 Column",
+			pageName = "Test Widget Page",
+			privacy = "Public Pages",
+			sitePageType = "Widget Page");
 
-		<execute function="AssertTextEquals#assertTextCaseInsensitive" locator1="HelloWorld#PORTLET_TITLE" value1="Hello World" />
-		<execute function="AssertElementPresent" locator1="HelloWorld#PORTLET_CONTENT" />
+		Navigator.gotoPage(pageName = "Test Widget Page");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Build" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Pages" />
-		</execute>
+		Portlet.addPG(portletName = "Hello World");
 
-		<execute macro="SitePages#addPublicPage">
-			<var name="pageName" value="Test" />
-		</execute>
+		var portalURL = PropsUtil.get("portal.url");
 
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url"><![CDATA[${portalURL}/html/common/forward_jsp.jsp?FORWARD_URL=${portalURL}/web/guest/test]]></var>
-		</execute>
+		Navigator.openSpecificURL(url = "${portalURL}/web/guest/test-widget-page/?p_p_id=asdf&amp;p_p_lifecycle=0&amp;p_p_state=maximized&amp;_asdf_mvcPath=/html/portlet/portal_settings/edit_company.jsp");
 
-		<execute function="AssertElementPresent" locator1="Home#PAGE">
-			<var name="key_pageName" value="Test" />
-		</execute>
-	</command>
+		AssertTextEquals(
+			locator1 = "Message#INFO_MAIN_CONTENT",
+			value1 = "This portlet could not be found. Please redeploy it or remove it from the page.");
 
-	<command name="ViewJSLoaderModulesURLNoWiki" priority="5">
-		<description message="This is a use case for LPS-73595." />
+		JSONLayout.deletePublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Widget Page");
+	}
 
-		<var method="PropsUtil#get('portal.url')" name="portalURL" />
-
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="${portalURL}/o/js_loader_modules" />
-		</execute>
-
-		<execute function="AssertConsoleTextPresent" value1="com.liferay.wiki.engine.html" />
-		<execute function="AssertConsoleTextPresent" value1="com.liferay.wiki.engine.text" />
-
-		<execute function="AssertTextNotPresent" value1="com.liferay.wiki.engine.html" />
-		<execute function="AssertTextNotPresent" value1="com.liferay.wiki.engine.text" />
-	</command>
-
-	<command ignore="true" name="ViewNoInvokedPortletViaURL" priority="5">
-		<description message="This is a use case for LPS-55622." />
-
-		<var method="PropsUtil#get('portal.url')" name="portalURL" />
-
-		<var name="undeployedPortletURL">
-			<![CDATA[
-				${portalURL}/?p_p_id=asdf&p_p_lifecycle=0&p_p_state=maximized&_asdf_mvcPath=/html/portlet/portal_settings/edit_company.jsp
-			]]>
-		</var>
-
-		<execute macro="Navigator#openSpecificURL">
-			<var name="url" value="${undeployedPortletURL}" />
-		</execute>
-
-		<execute function="AssertTextEquals" locator1="Message#INFO" value1="This portlet has been undeployed. Please redeploy it or remove it from the page." />
-	</command>
-</definition>
+}

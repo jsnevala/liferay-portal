@@ -14,8 +14,8 @@
 
 package com.liferay.talend.wizard;
 
-import com.liferay.talend.connection.LiferayConnectionProperties;
-import com.liferay.talend.connection.LiferaySiteSelectorProperties;
+import com.liferay.talend.properties.connection.LiferayConnectionProperties;
+import com.liferay.talend.ui.UIKeys;
 
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.wizard.ComponentWizard;
@@ -24,39 +24,28 @@ import org.talend.daikon.properties.presentation.Form;
 
 /**
  * @author Zoltán Takács
+ * @author Igor Beslic
  */
 public class LiferayConnectionWizard extends ComponentWizard {
 
 	public LiferayConnectionWizard(
 		ComponentWizardDefinition componentWizardDefinition,
-		String repositoryLocation) {
+		ComponentProperties componentProperties, String repositoryLocation) {
 
 		super(componentWizardDefinition, repositoryLocation);
 
-		connection = new LiferayConnectionProperties("connection");
+		addForm(componentProperties.getForm(UIKeys.FORM_WIZARD));
 
-		connection.init();
+		schemaList = new LiferaySchemaListProperties("schemaList");
 
-		addForm(connection.getForm(LiferayConnectionProperties.FORM_WIZARD));
+		schemaList.setConnection(
+			(LiferayConnectionProperties)componentProperties);
 
-		siteSelector = new LiferaySiteSelectorProperties("siteSelector");
+		schemaList.setRepositoryLocation(getRepositoryLocation());
 
-		siteSelector.setConnection(connection);
-		siteSelector.setRepositoryLocation(getRepositoryLocation());
+		schemaList.init();
 
-		siteSelector.init();
-
-		addForm(siteSelector.getForm(Form.MAIN));
-	}
-
-	public void setupProperties(
-		LiferayConnectionProperties liferayConnectionProperties) {
-
-		this.connection.setupProperties();
-
-		this.connection.copyValuesFrom(liferayConnectionProperties);
-
-		this.siteSelector.setConnection(liferayConnectionProperties);
+		addForm(schemaList.getForm(Form.MAIN));
 	}
 
 	public boolean supportsProperties(ComponentProperties componentProperties) {
@@ -67,7 +56,6 @@ public class LiferayConnectionWizard extends ComponentWizard {
 		return false;
 	}
 
-	public LiferayConnectionProperties connection;
-	public LiferaySiteSelectorProperties siteSelector;
+	public LiferaySchemaListProperties schemaList;
 
 }

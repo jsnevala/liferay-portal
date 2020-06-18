@@ -37,8 +37,10 @@ if (organization != null) {
 
 <aui:model-context bean="<%= organization %>" model="<%= Organization.class %>" />
 
-<div class="row">
-	<aui:fieldset cssClass="col-md-7">
+<clay:row>
+	<clay:col
+		md="7"
+	>
 		<liferay-ui:error exception="<%= DuplicateOrganizationException.class %>" message="the-organization-name-is-already-taken" />
 
 		<liferay-ui:error exception="<%= OrganizationNameException.class %>">
@@ -91,9 +93,11 @@ if (organization != null) {
 
 			<aui:select label="region" name="regionId" />
 		</div>
-	</aui:fieldset>
+	</clay:col>
 
-	<aui:fieldset cssClass="col-md-5">
+	<clay:col
+		md="5"
+	>
 		<div align="middle">
 			<c:if test="<%= organization != null %>">
 
@@ -115,51 +119,63 @@ if (organization != null) {
 				/>
 			</c:if>
 		</div>
-	</aui:fieldset>
-</div>
+	</clay:col>
+</clay:row>
 
-<aui:script use="liferay-address,liferay-dynamic-select">
-	new Liferay.DynamicSelect(
-		[
-			{
-				select: '<portlet:namespace />countryId',
-				selectData: Liferay.Address.getCountries,
-				selectDesc: 'nameCurrentValue',
-				selectId: 'countryId',
-				selectSort: '<%= true %>',
-				selectVal: '<%= countryId %>'
-			},
-			{
-				select: '<portlet:namespace />regionId',
-				selectData: Liferay.Address.getRegions,
-				selectDesc: 'name',
-				selectDisableOnEmpty: true,
-				selectId: 'regionId',
-				selectVal: '<%= regionId %>'
-			}
-		]
-	);
+<aui:script use="liferay-dynamic-select">
+	new Liferay.DynamicSelect([
+		{
+			select: '<portlet:namespace />countryId',
+			selectData: Liferay.Address.getCountries,
+			selectDesc: 'nameCurrentValue',
+			selectId: 'countryId',
+			selectSort: '<%= true %>',
+			selectVal: '<%= countryId %>',
+		},
+		{
+			select: '<portlet:namespace />regionId',
+			selectData: Liferay.Address.getRegions,
+			selectDesc: 'name',
+			selectDisableOnEmpty: true,
+			selectId: 'regionId',
+			selectVal: '<%= regionId %>',
+		},
+	]);
 </aui:script>
 
 <c:if test="<%= organization == null %>">
 	<aui:script sandbox="<%= true %>">
-		$('#<portlet:namespace />type').on(
-			'change',
-			function(event) {
+		var typeSelect = document.getElementById('<portlet:namespace />type');
 
-				<%
-				for (String curType : organizationsTypes) {
-				%>
+		if (typeSelect) {
+			typeSelect.addEventListener('change', function (event) {
+				var countryDiv = document.getElementById(
+					'<portlet:namespace />countryDiv'
+				);
 
-					if ($(event.currentTarget).val() == '<%= curType %>') {
-						$('#<portlet:namespace />countryDiv').toggleClass('hide', !<%= OrganizationLocalServiceUtil.isCountryEnabled(curType) %>);
+				if (countryDiv) {
+
+					<%
+					for (String curType : organizationsTypes) {
+					%>
+
+						if (event.currentTarget.value === '<%= curType %>') {
+							if (
+								!<%= OrganizationLocalServiceUtil.isCountryEnabled(curType) %>
+							) {
+								countryDiv.classList.add('hide');
+							}
+							else {
+								countryDiv.classList.remove('hide');
+							}
+						}
+
+					<%
 					}
+					%>
 
-				<%
 				}
-				%>
-
-			}
-		);
+			});
+		}
 	</aui:script>
 </c:if>

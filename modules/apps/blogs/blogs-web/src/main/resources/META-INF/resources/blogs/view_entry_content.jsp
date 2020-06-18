@@ -20,10 +20,12 @@
 SearchContainer searchContainer = (SearchContainer)request.getAttribute("view_entry_content.jsp-searchContainer");
 
 BlogsEntry entry = (BlogsEntry)request.getAttribute("view_entry_content.jsp-entry");
+
+BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortletInstanceConfigurationUtil.getBlogsPortletInstanceConfiguration(themeDisplay);
 %>
 
 <c:choose>
-	<c:when test="<%= BlogsEntryPermission.contains(permissionChecker, entry, ActionKeys.VIEW) && (entry.isVisible() || (entry.getUserId() == user.getUserId()) || BlogsEntryPermission.contains(permissionChecker, entry, ActionKeys.UPDATE)) %>">
+	<c:when test="<%= entry.isVisible() || (entry.getUserId() == user.getUserId()) || BlogsEntryPermission.contains(permissionChecker, entry, ActionKeys.UPDATE) %>">
 		<portlet:renderURL var="viewEntryURL">
 			<portlet:param name="mvcRenderCommandName" value="/blogs/view_entry" />
 			<portlet:param name="redirect" value="<%= currentURL %>" />
@@ -75,7 +77,6 @@ BlogsEntry entry = (BlogsEntry)request.getAttribute("view_entry_content.jsp-entr
 					%>
 
 					<liferay-ui:user-portrait
-						cssClass="user-icon-lg"
 						user="<%= entryUser %>"
 					/>
 				</div>
@@ -84,7 +85,7 @@ BlogsEntry entry = (BlogsEntry)request.getAttribute("view_entry_content.jsp-entr
 					<div class="autofit-row">
 						<div class="autofit-col autofit-col-expand">
 							<div class="text-truncate-inline">
-								<a class="text-truncate username" href="<%= entryUserURL %>"><%= entry.getUserName() %></a>
+								<a class="text-truncate username" href="<%= entryUserURL %>"><%= HtmlUtil.escape(entry.getUserName()) %></a>
 							</div>
 
 							<div class="text-secondary">
@@ -97,7 +98,7 @@ BlogsEntry entry = (BlogsEntry)request.getAttribute("view_entry_content.jsp-entr
 								<c:if test="<%= blogsPortletInstanceConfiguration.enableViewCount() %>">
 
 									<%
-									AssetEntry assetEntry = _getAssetEntry(request, entry);
+									AssetEntry assetEntry = BlogsEntryAssetEntryUtil.getAssetEntry(request, entry);
 									%>
 
 									- <liferay-ui:message arguments="<%= assetEntry.getViewCount() %>" key='<%= (assetEntry.getViewCount() == 1) ? "x-view" : "x-views" %>' />
@@ -116,7 +117,7 @@ BlogsEntry entry = (BlogsEntry)request.getAttribute("view_entry_content.jsp-entr
 
 				<c:if test="<%= Validator.isNotNull(coverImageURL) %>">
 					<a href="<%= viewEntryURL.toString() %>">
-						<div class="aspect-ratio aspect-ratio-8-to-3 aspect-ratio-bg-cover cover-image" style="background-image: url(<%= coverImageURL %>)"></div>
+						<div class="aspect-ratio aspect-ratio-8-to-3 aspect-ratio-bg-cover cover-image" style="background-image: url(<%= coverImageURL %>);"></div>
 					</a>
 				</c:if>
 
@@ -132,7 +133,7 @@ BlogsEntry entry = (BlogsEntry)request.getAttribute("view_entry_content.jsp-entr
 						%>
 
 						<p>
-							<%= StringUtil.shorten(HtmlUtil.stripHtml(summary), pageAbstractLength) %>
+							<%= StringUtil.shorten(HtmlUtil.stripHtml(summary), PropsValues.BLOGS_PAGE_ABSTRACT_LENGTH) %>
 						</p>
 					</c:when>
 					<c:when test="<%= blogsPortletInstanceConfiguration.displayStyle().equals(BlogsUtil.DISPLAY_STYLE_FULL_CONTENT) %>">
@@ -165,7 +166,7 @@ BlogsEntry entry = (BlogsEntry)request.getAttribute("view_entry_content.jsp-entr
 					<div class="entry-links">
 
 						<%
-						AssetEntry assetEntry = _getAssetEntry(request, entry);
+						AssetEntry assetEntry = BlogsEntryAssetEntryUtil.getAssetEntry(request, entry);
 						%>
 
 						<liferay-asset:asset-links
@@ -201,17 +202,3 @@ BlogsEntry entry = (BlogsEntry)request.getAttribute("view_entry_content.jsp-entr
 
 	</c:otherwise>
 </c:choose>
-
-<%!
-private AssetEntry _getAssetEntry(HttpServletRequest request, BlogsEntry entry) throws PortalException, SystemException {
-	AssetEntry assetEntry = (AssetEntry)request.getAttribute("view_entry_content.jsp-assetEntry");
-
-	if (assetEntry == null) {
-		assetEntry = AssetEntryLocalServiceUtil.getEntry(BlogsEntry.class.getName(), entry.getEntryId());
-
-		request.setAttribute("view_entry_content.jsp-assetEntry", assetEntry);
-	}
-
-	return assetEntry;
-}
-%>

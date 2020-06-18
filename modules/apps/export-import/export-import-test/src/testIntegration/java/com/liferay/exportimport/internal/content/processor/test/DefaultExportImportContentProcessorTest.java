@@ -35,6 +35,8 @@ import com.liferay.exportimport.test.util.TestReaderWriter;
 import com.liferay.exportimport.test.util.TestUserIdStrategy;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.layout.test.util.LayoutFriendlyURLRandomizerBumper;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -73,11 +75,9 @@ import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
-import com.liferay.portal.test.randomizerbumpers.FriendlyURLRandomizerBumper;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PortalImpl;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.portal.util.test.LayoutTestUtil;
 import com.liferay.registry.Filter;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
@@ -107,7 +107,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -147,6 +146,7 @@ public class DefaultExportImportContentProcessorTest {
 		_nondefaultLocale = getNondefaultLocale();
 
 		_externalGroup = GroupTestUtil.addGroup();
+
 		_liveGroup = GroupTestUtil.addGroup();
 
 		GroupTestUtil.enableLocalStaging(_liveGroup);
@@ -191,6 +191,7 @@ public class DefaultExportImportContentProcessorTest {
 		_portletDataContextExport.setExportDataRootElement(rootElement);
 
 		_stagingPrivateLayout = addMultiLocaleLayout(_stagingGroup, true);
+
 		_stagingPublicLayout = addMultiLocaleLayout(_stagingGroup, false);
 
 		_portletDataContextExport.setPlid(_stagingPublicLayout.getPlid());
@@ -525,6 +526,21 @@ public class DefaultExportImportContentProcessorTest {
 	}
 
 	@Test
+	public void testExportLinksToURLsWithStopCharacters() throws Exception {
+		String path = RandomTestUtil.randomString();
+
+		String content = getContent("url_links.txt");
+
+		content = content.replaceAll("PATH", path);
+
+		content = _exportImportContentProcessor.replaceExportContentReferences(
+			_portletDataContextExport, _referrerStagedModel, content, true,
+			true);
+
+		_assertContainsPathWithStopCharacters(content, path);
+	}
+
+	@Test
 	public void testExportLinksToUserLayouts() throws Exception {
 		User user = TestPropsValues.getUser();
 
@@ -630,9 +646,10 @@ public class DefaultExportImportContentProcessorTest {
 			_portletDataContextImport, _referrerStagedModel, content);
 
 		Assert.assertTrue(
-			"The imported content should contain the friendly URL of the " +
-				"external group (\"" + _externalGroup.getFriendlyURL() +
-					"\"), but it does not:\n" + content,
+			StringBundler.concat(
+				"The imported content should contain the friendly URL of the ",
+				"external group (\"", _externalGroup.getFriendlyURL(),
+				"\"), but it does not:\n", content),
 			content.contains(_externalGroup.getFriendlyURL()));
 
 		Assert.assertFalse(
@@ -728,7 +745,39 @@ public class DefaultExportImportContentProcessorTest {
 		Assert.assertEquals(expectedContent, importedContent);
 	}
 
-	@Ignore
+	@Test
+	public void testImportLinksToLayoutsInLayoutSetPrototype()
+		throws Exception {
+
+		LayoutTestUtil.addLayout(_liveGroup, true);
+
+		exportImportLayouts(true);
+
+		Layout importedPrivateLayout =
+			LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
+				_stagingPrivateLayout.getUuid(), _liveGroup.getGroupId(), true);
+
+		Map<Long, Layout> layouts =
+			(Map<Long, Layout>)_portletDataContextImport.getNewPrimaryKeysMap(
+				Layout.class + ".layout");
+
+		layouts.put(3L, importedPrivateLayout);
+
+		String contentInFile = getContent(
+			"layout_links_in_layoutset_prototype.txt");
+
+		String content = replaceLinksToLayoutsParametersInLayoutSetPrototype(
+			contentInFile);
+
+		String importedContent =
+			_exportImportContentProcessor.replaceImportContentReferences(
+				_portletDataContextImport, _referrerStagedModel, content);
+
+		Assert.assertTrue(
+			"Template ID should have been replaced in the imported content",
+			!importedContent.contains("template"));
+	}
+
 	@Test
 	public void testInvalidLayoutReferencesCauseNoSuchLayoutException()
 		throws Exception {
@@ -763,10 +812,17 @@ public class DefaultExportImportContentProcessorTest {
 				_exportImportContentProcessor.validateContentReferences(
 					_stagingGroup.getGroupId(), layoutReference);
 			}
-			catch (ExportImportContentValidationException eicve) {
-				Throwable cause = eicve.getCause();
+			catch (ExportImportContentValidationException
+						exportImportContentValidationException) {
 
-				if (cause instanceof NoSuchLayoutException) {
+				Throwable cause =
+					exportImportContentValidationException.getCause();
+
+				if ((cause instanceof NoSuchLayoutException) ||
+					(exportImportContentValidationException.getType() ==
+						ExportImportContentValidationException.
+							LAYOUT_GROUP_NOT_FOUND)) {
+
 					noSuchLayoutExceptionThrown = true;
 				}
 			}
@@ -787,7 +843,7 @@ public class DefaultExportImportContentProcessorTest {
 
 		for (Locale locale : new Locale[] {_defaultLocale, _nondefaultLocale}) {
 			String name = RandomTestUtil.randomString(
-				FriendlyURLRandomizerBumper.INSTANCE,
+				LayoutFriendlyURLRandomizerBumper.INSTANCE,
 				NumericStringRandomizerBumper.INSTANCE,
 				UniqueStringRandomizerBumper.INSTANCE);
 
@@ -910,7 +966,7 @@ public class DefaultExportImportContentProcessorTest {
 			return content;
 		}
 
-		List<String> urls = ListUtil.toList(StringUtil.splitLines(content));
+		List<String> urls = ListUtil.fromArray(StringUtil.splitLines(content));
 
 		List<String> outURLs = new ArrayList<>();
 
@@ -1017,10 +1073,29 @@ public class DefaultExportImportContentProcessorTest {
 			});
 	}
 
+	protected String replaceLinksToLayoutsParametersInLayoutSetPrototype(
+		String content) {
+
+		String portalURL = TestPropsValues.PORTAL_URL;
+
+		String portalURLPlaceholderToReplace = "[$PORTAL_URL$]";
+
+		String templateIdPlaceholderToReplace = "[$ID$]";
+
+		return StringUtil.replace(
+			content,
+			new String[] {
+				portalURLPlaceholderToReplace, templateIdPlaceholderToReplace
+			},
+			new String[] {
+				portalURL, String.valueOf(_stagingGroup.getGroupId())
+			});
+	}
+
 	protected String replaceMultiLocaleLayoutFriendlyURLs(String content) {
 		return duplicateLinesWithParamNames(
 			content, _MULTI_LOCALE_LAYOUT_VARIABLES,
-			_NON_DEFAULT_MULTI_LOCALE_LAYOUT_VARIABLES);
+			_NONDEFAULT_MULTI_LOCALE_LAYOUT_VARIABLES);
 	}
 
 	protected String replaceParameters(String content, FileEntry fileEntry) {
@@ -1091,16 +1166,16 @@ public class DefaultExportImportContentProcessorTest {
 	}
 
 	protected String replaceTimestampParameters(String content) {
-		List<String> urls = ListUtil.toList(StringUtil.splitLines(content));
+		List<String> urls = ListUtil.fromArray(StringUtil.splitLines(content));
 
 		String timestampParameter = "t=123456789";
 
 		String parameters1 = timestampParameter + "&width=100&height=100";
 		String parameters2 = "width=100&" + timestampParameter + "&height=100";
 		String parameters3 = "width=100&height=100&" + timestampParameter;
-		String parameters4 =
-			timestampParameter + "?" + timestampParameter +
-				"&width=100&height=100";
+		String parameters4 = StringBundler.concat(
+			timestampParameter, "?", timestampParameter,
+			"&width=100&height=100");
 
 		List<String> outURLs = new ArrayList<>();
 
@@ -1158,6 +1233,24 @@ public class DefaultExportImportContentProcessorTest {
 			entriesStream.anyMatch(pattern.asPredicate()));
 	}
 
+	private void _assertContainsPathWithStopCharacters(
+		String content, String path) {
+
+		for (char stopChar : _LAYOUT_REFERENCE_STOP_CHARS) {
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(path);
+			sb.append(StringPool.SLASH);
+			sb.append(stopChar);
+			sb.append(StringPool.SLASH);
+
+			Assert.assertTrue(
+				String.format(
+					"%s does not contain the path %s", content, sb.toString()),
+				content.contains(sb.toString()));
+		}
+	}
+
 	private void _assertContainsReference(
 		List<String> entries, String className, long classPK) {
 
@@ -1183,19 +1276,27 @@ public class DefaultExportImportContentProcessorTest {
 		"[$PUBLIC_LAYOUT_FRIENDLY_URL$]"
 	};
 
+	private static final char[] _LAYOUT_REFERENCE_STOP_CHARS = {
+		CharPool.APOSTROPHE, CharPool.CLOSE_BRACKET, CharPool.CLOSE_CURLY_BRACE,
+		CharPool.CLOSE_PARENTHESIS, CharPool.GREATER_THAN, CharPool.LESS_THAN,
+		CharPool.PIPE, CharPool.POUND, CharPool.QUESTION, CharPool.QUOTE,
+		CharPool.SPACE
+	};
+
 	private static final String[] _MULTI_LOCALE_LAYOUT_VARIABLES = {
 		"[$LIVE_PUBLIC_LAYOUT_FRIENDLY_URL$]",
 		"[$PRIVATE_LAYOUT_FRIENDLY_URL$]", "[$PUBLIC_LAYOUT_FRIENDLY_URL$]"
 	};
 
-	private static final String[] _NON_DEFAULT_MULTI_LOCALE_LAYOUT_VARIABLES = {
+	private static final String[] _NONDEFAULT_MULTI_LOCALE_LAYOUT_VARIABLES = {
 		"[$NON_DEFAULT_LIVE_PUBLIC_LAYOUT_FRIENDLY_URL$]",
 		"[$NON_DEFAULT_PRIVATE_LAYOUT_FRIENDLY_URL$]",
 		"[$NON_DEFAULT_PUBLIC_LAYOUT_FRIENDLY_URL$]"
 	};
 
-	private static final Locale[] _locales =
-		{LocaleUtil.US, LocaleUtil.GERMANY, LocaleUtil.SPAIN};
+	private static final Locale[] _locales = {
+		LocaleUtil.US, LocaleUtil.GERMANY, LocaleUtil.SPAIN
+	};
 	private static String _oldLayoutFriendlyURLPrivateUserServletMapping;
 	private static final Pattern _pattern = Pattern.compile("href=|\\{|\\[");
 	private static ServiceTracker

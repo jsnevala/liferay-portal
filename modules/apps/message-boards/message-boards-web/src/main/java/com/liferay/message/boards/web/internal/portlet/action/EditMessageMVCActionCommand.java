@@ -45,7 +45,7 @@ import com.liferay.message.boards.web.internal.upload.format.MBMessageFormatUplo
 import com.liferay.message.boards.web.internal.util.MBAttachmentFileEntryReference;
 import com.liferay.message.boards.web.internal.util.MBAttachmentFileEntryUtil;
 import com.liferay.portal.kernel.captcha.CaptchaConfigurationException;
-import com.liferay.portal.kernel.captcha.CaptchaTextException;
+import com.liferay.portal.kernel.captcha.CaptchaException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -54,6 +54,7 @@ import com.liferay.portal.kernel.portlet.LiferayActionResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
@@ -81,6 +82,7 @@ import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.upload.UniqueFileNameProvider;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -209,38 +211,39 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 		catch (NoSuchMessageException | PrincipalException |
-			   RequiredMessageException e) {
+			   RequiredMessageException exception) {
 
-			SessionErrors.add(actionRequest, e.getClass());
+			SessionErrors.add(actionRequest, exception.getClass());
 
 			actionResponse.setRenderParameter(
 				"mvcPath", "/message_boards/error.jsp");
 		}
-		catch (AntivirusScannerException | CaptchaConfigurationException |
-			   CaptchaTextException | DuplicateFileEntryException |
-			   FileExtensionException | FileNameException | FileSizeException |
+		catch (AntivirusScannerException | CaptchaException |
+			   DuplicateFileEntryException | FileExtensionException |
+			   FileNameException | FileSizeException |
 			   LiferayFileItemException | LockedThreadException |
 			   MessageBodyException | MessageSubjectException |
-			   SanitizerException | UploadRequestSizeException e) {
+			   SanitizerException | UploadRequestSizeException exception) {
 
-			if (e instanceof AntivirusScannerException) {
-				SessionErrors.add(actionRequest, e.getClass(), e);
+			if (exception instanceof AntivirusScannerException) {
+				SessionErrors.add(
+					actionRequest, exception.getClass(), exception);
 			}
 			else {
-				SessionErrors.add(actionRequest, e.getClass());
+				SessionErrors.add(actionRequest, exception.getClass());
 			}
 		}
-		catch (AssetCategoryException | AssetTagException e) {
-			SessionErrors.add(actionRequest, e.getClass(), e);
+		catch (AssetCategoryException | AssetTagException exception) {
+			SessionErrors.add(actionRequest, exception.getClass(), exception);
 		}
-		catch (Exception e) {
-			Throwable cause = e.getCause();
+		catch (Exception exception) {
+			Throwable cause = exception.getCause();
 
 			if (cause instanceof SanitizerException) {
 				SessionErrors.add(actionRequest, SanitizerException.class);
 			}
 			else {
-				throw e;
+				throw exception;
 			}
 		}
 		catch (Throwable t) {
@@ -260,8 +263,8 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 			return _configurationProvider.getSystemConfiguration(
 				CaptchaConfiguration.class);
 		}
-		catch (Exception e) {
-			throw new CaptchaConfigurationException(e);
+		catch (Exception exception) {
+			throw new CaptchaConfigurationException(exception);
 		}
 	}
 
@@ -270,9 +273,7 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		MBMessage message) {
 
 		if (message == null) {
-			String redirect = ParamUtil.getString(actionRequest, "redirect");
-
-			return redirect;
+			return ParamUtil.getString(actionRequest, "redirect");
 		}
 
 		int workflowAction = ParamUtil.getInteger(
@@ -281,9 +282,6 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		if (workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT) {
 			return getSaveAndContinueRedirect(
 				actionRequest, actionResponse, message);
-		}
-		else if (message == null) {
-			return ParamUtil.getString(actionRequest, "redirect");
 		}
 
 		LiferayActionResponse liferayActionResponse =
@@ -378,8 +376,6 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 			WebKeys.THEME_DISPLAY);
 
 		long messageId = ParamUtil.getLong(actionRequest, "messageId");
-
-		long groupId = themeDisplay.getScopeGroupId();
 		long categoryId = ParamUtil.getLong(actionRequest, "mbCategoryId");
 		long threadId = ParamUtil.getLong(actionRequest, "threadId");
 		long parentMessageId = ParamUtil.getLong(
@@ -388,7 +384,7 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		String body = ParamUtil.getString(actionRequest, "body");
 
 		MBGroupServiceSettings mbGroupServiceSettings =
-			MBGroupServiceSettings.getInstance(groupId);
+			MBGroupServiceSettings.getInstance(themeDisplay.getSiteGroupId());
 
 		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
 			new ArrayList<>(5);
@@ -441,8 +437,8 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 					// Post new thread
 
 					message = _mbMessageService.addMessage(
-						groupId, categoryId, subject, body,
-						mbGroupServiceSettings.getMessageFormat(),
+						themeDisplay.getScopeGroupId(), categoryId, subject,
+						body, mbGroupServiceSettings.getMessageFormat(),
 						inputStreamOVPs, anonymous, priority, allowPingbacks,
 						serviceContext);
 
@@ -466,13 +462,19 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 					_formatHandlerProvider.provide(message.getFormat());
 
 				if (formatHandler != null) {
-					body = _addBodyAttachmentTempFiles(
-						themeDisplay, message.getBody(), message,
-						formatHandler);
+					List<FileEntry> tempMBAttachmentFileEntries =
+						MBAttachmentFileEntryUtil.
+							getTempMBAttachmentFileEntries(message.getBody());
 
-					message.setBody(body);
+					if (!tempMBAttachmentFileEntries.isEmpty()) {
+						body = _addBodyAttachmentTempFiles(
+							tempMBAttachmentFileEntries, themeDisplay,
+							message.getBody(), message, formatHandler);
 
-					_mbMessageLocalService.updateMBMessage(message);
+						message.setBody(body);
+
+						_mbMessageLocalService.updateMBMessage(message);
+					}
 				}
 			}
 			else {
@@ -482,8 +484,15 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 					_formatHandlerProvider.provide(message.getFormat());
 
 				if (formatHandler != null) {
-					body = _addBodyAttachmentTempFiles(
-						themeDisplay, body, message, formatHandler);
+					List<FileEntry> tempMBAttachmentFileEntries =
+						MBAttachmentFileEntryUtil.
+							getTempMBAttachmentFileEntries(body);
+
+					if (!tempMBAttachmentFileEntries.isEmpty()) {
+						body = _addBodyAttachmentTempFiles(
+							tempMBAttachmentFileEntries, themeDisplay, body,
+							message, formatHandler);
+					}
 				}
 
 				// Update message
@@ -524,9 +533,9 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 
 				try (InputStream inputStream = inputStreamOVP.getValue()) {
 				}
-				catch (IOException ioe) {
+				catch (IOException ioException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(ioe, ioe);
+						_log.warn(ioException, ioException);
 					}
 				}
 			}
@@ -534,33 +543,44 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 	}
 
 	private String _addBodyAttachmentTempFiles(
+			List<FileEntry> tempMBAttachmentFileEntries,
 			ThemeDisplay themeDisplay, String body, MBMessage message,
 			MBMessageFormatUploadHandler formatHandler)
 		throws PortalException {
 
-		List<FileEntry> tempMBAttachmentFileEntries =
-			MBAttachmentFileEntryUtil.getTempMBAttachmentFileEntries(body);
+		Folder folder = message.addAttachmentsFolder();
 
-		if (!tempMBAttachmentFileEntries.isEmpty()) {
-			Folder folder = message.addAttachmentsFolder();
+		List<MBAttachmentFileEntryReference> mbAttachmentFileEntryReferences =
+			MBAttachmentFileEntryUtil.addMBAttachmentFileEntries(
+				message.getGroupId(), themeDisplay.getUserId(),
+				message.getMessageId(), folder.getFolderId(),
+				tempMBAttachmentFileEntries,
+				fileName -> _uniqueFileNameProvider.provide(
+					fileName,
+					curFileName -> _hasFileEntry(
+						message.getGroupId(), folder.getFolderId(),
+						curFileName)));
 
-			List<MBAttachmentFileEntryReference>
-				mbAttachmentFileEntryReferences =
-					MBAttachmentFileEntryUtil.addMBAttachmentFileEntries(
-						message.getGroupId(), themeDisplay.getUserId(),
-						message.getMessageId(), folder.getFolderId(),
-						tempMBAttachmentFileEntries);
-
-			body = formatHandler.replaceImageReferences(
-				body, mbAttachmentFileEntryReferences);
-
-			for (FileEntry tempMBAttachment : tempMBAttachmentFileEntries) {
-				PortletFileRepositoryUtil.deletePortletFileEntry(
-					tempMBAttachment.getFileEntryId());
-			}
+		for (FileEntry tempMBAttachment : tempMBAttachmentFileEntries) {
+			PortletFileRepositoryUtil.deletePortletFileEntry(
+				tempMBAttachment.getFileEntryId());
 		}
 
-		return body;
+		return formatHandler.replaceImageReferences(
+			body, mbAttachmentFileEntryReferences);
+	}
+
+	private boolean _hasFileEntry(
+		long groupId, long folderId, String fileName) {
+
+		FileEntry fileEntry = _portletFileRepository.fetchPortletFileEntry(
+			groupId, folderId, fileName);
+
+		if (fileEntry == null) {
+			return false;
+		}
+
+		return true;
 	}
 
 	private List<FileEntry> _populateInputStreamOVPs(
@@ -574,7 +594,8 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		String[] selectedFileNames = ParamUtil.getParameterValues(
 			actionRequest, "selectedFileName");
 
-		List<FileEntry> tempFileEntries = new ArrayList<>();
+		List<FileEntry> tempFileEntries = new ArrayList<>(
+			selectedFileNames.length);
 
 		for (String selectedFileName : selectedFileNames) {
 			FileEntry tempFileEntry = TempFileEntryUtil.getTempFileEntry(
@@ -642,5 +663,11 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PortletFileRepository _portletFileRepository;
+
+	@Reference
+	private UniqueFileNameProvider _uniqueFileNameProvider;
 
 }

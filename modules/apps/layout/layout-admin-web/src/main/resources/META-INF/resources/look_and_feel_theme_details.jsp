@@ -50,14 +50,24 @@ PluginPackage selPluginPackage = selTheme.getPluginPackage();
 <aui:input name="regularThemeId" type="hidden" value="<%= selTheme.getThemeId() %>" />
 <aui:input name="regularColorSchemeId" type="hidden" value="<%= selColorScheme.getColorSchemeId() %>" />
 
-<aui:row>
-	<aui:col span="<%= 2 %>">
-		<img alt="<%= HtmlUtil.escapeAttribute(selTheme.getName()) %>" class="img-thumbnail theme-screenshot" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(selTheme.getImagesPath()) %>/thumbnail.png" title="<%= HtmlUtil.escapeAttribute(selTheme.getName()) %>" />
-	</aui:col>
+<clay:row>
+	<clay:col
+		size="6"
+		sm="4"
+	>
+		<div class="card image-card img-thumbnail">
+			<div class="aspect-ratio aspect-ratio-16-to-9">
+				<img alt="<%= HtmlUtil.escapeAttribute(selTheme.getName()) %>" class="aspect-ratio-item-flush aspect-ratio-item-top-center img-thumbnail theme-screenshot" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(selTheme.getImagesPath()) %>/thumbnail.png" title="<%= HtmlUtil.escapeAttribute(selTheme.getName()) %>" />
+			</div>
+		</div>
+	</clay:col>
 
-	<aui:col span="<%= 10 %>">
+	<clay:col
+		size="6"
+		sm="8"
+	>
 		<c:if test="<%= Validator.isNotNull(selTheme.getName()) %>">
-			<h4><liferay-ui:message key="name" /></h4>
+			<h2 class="h4"><liferay-ui:message key="name" /></h2>
 
 			<p class="text-default">
 				<%= HtmlUtil.escape(selTheme.getName()) %>
@@ -65,14 +75,14 @@ PluginPackage selPluginPackage = selTheme.getPluginPackage();
 		</c:if>
 
 		<c:if test="<%= (selPluginPackage != null) && Validator.isNotNull(selPluginPackage.getAuthor()) %>">
-			<h4><liferay-ui:message key="author" /></h4>
+			<h2 class="h4"><liferay-ui:message key="author" /></h2>
 
 			<p class="text-default">
 				<aui:a href="<%= HtmlUtil.escapeHREF(selPluginPackage.getPageURL()) %>" target="_blank"><%= HtmlUtil.escape(selPluginPackage.getAuthor()) %></aui:a>
 			</p>
 		</c:if>
-	</aui:col>
-</aui:row>
+	</clay:col>
+</clay:row>
 
 <c:if test="<%= (selPluginPackage != null) && Validator.isNotNull(selPluginPackage.getShortDescription()) %>">
 	<h4><liferay-ui:message key="description" /></h4>
@@ -87,26 +97,42 @@ List<ColorScheme> colorSchemes = selTheme.getColorSchemes();
 %>
 
 <c:if test="<%= !colorSchemes.isEmpty() %>">
-	<h4><liferay-ui:message key="color-schemes" /></h4>
+	<h2 class="h4"><liferay-ui:message key="color-schemes" /></h2>
 
 	<div class="clearfix" id="<portlet:namespace />colorSchemesContainer">
+		<clay:row>
 
-		<%
-		String selColorSchemeId = selColorScheme.getColorSchemeId();
+			<%
+			String selColorSchemeId = selColorScheme.getColorSchemeId();
 
-		for (ColorScheme curColorScheme : colorSchemes) {
-		%>
+			for (ColorScheme curColorScheme : colorSchemes) {
+			%>
 
-			<div class="color-scheme-selector img-thumbnail <%= selColorSchemeId.equals(curColorScheme.getColorSchemeId()) ? "selected" : StringPool.BLANK %>" data-color-scheme-id="<%= curColorScheme.getColorSchemeId() %>">
-				<div class="aspect-ratio aspect-ratio-4-to-3 aspect-ratio-middle">
-					<img alt="" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(curColorScheme.getColorSchemeThumbnailPath()) %>/thumbnail.png" title="<%= HtmlUtil.escapeAttribute(curColorScheme.getName()) %>" />
-				</div>
-			</div>
+				<clay:col
+					md="3"
+					size="6"
+					sm="4"
+				>
+					<div class="card card-interactive card-interactive-secondary card-type-asset color-scheme-selector image-card img-thumbnail <%= selColorSchemeId.equals(curColorScheme.getColorSchemeId()) ? "selected" : StringPool.BLANK %>" data-color-scheme-id="<%= curColorScheme.getColorSchemeId() %>" tabindex="0">
+						<div class="aspect-ratio aspect-ratio-16-to-9">
+							<img alt="" class="aspect-ratio-item-flush aspect-ratio-item-top-center" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(curColorScheme.getColorSchemeThumbnailPath()) %>/thumbnail.png" />
+						</div>
 
-		<%
-		}
-		%>
+						<div class="card-body p-2">
+							<div class="card-row">
+								<div class="card-title text-truncate">
+									<%= HtmlUtil.escapeAttribute(curColorScheme.getName()) %>
+								</div>
+							</div>
+						</div>
+					</div>
+				</clay:col>
 
+			<%
+			}
+			%>
+
+		</clay:row>
 	</div>
 </c:if>
 
@@ -115,7 +141,7 @@ Map<String, ThemeSetting> configurableSettings = selTheme.getConfigurableSetting
 %>
 
 <c:if test="<%= !configurableSettings.isEmpty() %>">
-	<h4><liferay-ui:message key="settings" /></h4>
+	<h2 class="h4"><liferay-ui:message key="settings" /></h2>
 
 	<%
 	ServletContext servletContext = ServletContextPool.get(selTheme.getServletContextName());
@@ -176,7 +202,7 @@ Map<String, ThemeSetting> configurableSettings = selTheme.getConfigurableSetting
 
 		<c:if test="<%= Validator.isNotNull(themeSetting.getScript()) %>">
 			<aui:script position="inline">
-				<%= StringUtil.replace(themeSetting.getScript(), "[@NAMESPACE@]", liferayPortletResponse.getNamespace()) %>
+				<%= StringUtil.replace(themeSetting.getScript(), "[@NAMESPACE@]", liferayPortletResponse.getNamespace()) %>;
 			</aui:script>
 		</c:if>
 
@@ -187,19 +213,29 @@ Map<String, ThemeSetting> configurableSettings = selTheme.getConfigurableSetting
 </c:if>
 
 <c:if test="<%= !colorSchemes.isEmpty() %>">
-	<aui:script use="aui-base">
-		var colorSchemesContainer = A.one('#<portlet:namespace />colorSchemesContainer');
+	<aui:script use="aui-base,aui-event-key">
+		var colorSchemesContainer = A.one(
+			'#<portlet:namespace />colorSchemesContainer'
+		);
 
 		colorSchemesContainer.delegate(
-			'click',
-			function(event) {
-				var currentTarget = event.currentTarget;
+			['click', 'keydown'],
+			function (event) {
+				if (!event.keyCode || event.keyCode === 13 || event.keyCode === 32) {
+					event.preventDefault();
 
-				colorSchemesContainer.all('.color-scheme-selector').removeClass('selected');
+					var currentTarget = event.currentTarget;
 
-				currentTarget.addClass('selected');
+					colorSchemesContainer
+						.all('.color-scheme-selector')
+						.removeClass('selected');
 
-				A.one('#<portlet:namespace />regularColorSchemeId').val(currentTarget.attr('data-color-scheme-id'));
+					currentTarget.addClass('selected');
+
+					A.one('#<portlet:namespace />regularColorSchemeId').val(
+						currentTarget.attr('data-color-scheme-id')
+					);
+				}
 			},
 			'.color-scheme-selector'
 		);

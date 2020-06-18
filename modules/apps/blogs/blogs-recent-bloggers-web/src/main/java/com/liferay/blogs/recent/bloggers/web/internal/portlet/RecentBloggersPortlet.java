@@ -43,18 +43,15 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.name=" + RecentBloggersPortletKeys.RECENT_BLOGGERS,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=guest,power-user,user"
 	},
 	service = Portlet.class
 )
 public class RecentBloggersPortlet extends MVCPortlet {
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.blogs.recent.bloggers.web)(release.schema.version=1.0.0))",
-		unbind = "-"
+		target = "(&(release.bundle.symbolic.name=com.liferay.blogs.recent.bloggers.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
 	)
-	protected void setRelease(Release release) {
-	}
+	private Release _release;
 
 }

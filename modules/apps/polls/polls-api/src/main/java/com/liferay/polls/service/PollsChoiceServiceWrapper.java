@@ -14,8 +14,6 @@
 
 package com.liferay.polls.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,18 +23,18 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see PollsChoiceService
  * @generated
  */
-@ProviderType
-public class PollsChoiceServiceWrapper implements PollsChoiceService,
-	ServiceWrapper<PollsChoiceService> {
+public class PollsChoiceServiceWrapper
+	implements PollsChoiceService, ServiceWrapper<PollsChoiceService> {
+
 	public PollsChoiceServiceWrapper(PollsChoiceService pollsChoiceService) {
 		_pollsChoiceService = pollsChoiceService;
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
 	public String getOSGiServiceIdentifier() {
 		return _pollsChoiceService.getOSGiServiceIdentifier();
@@ -53,4 +51,5 @@ public class PollsChoiceServiceWrapper implements PollsChoiceService,
 	}
 
 	private PollsChoiceService _pollsChoiceService;
+
 }

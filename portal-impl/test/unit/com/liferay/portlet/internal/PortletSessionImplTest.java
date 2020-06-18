@@ -15,6 +15,7 @@
 package com.liferay.portlet.internal;
 
 import com.liferay.petra.lang.ClassLoaderPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
@@ -28,9 +29,9 @@ import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.rule.NewEnv;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.test.rule.AdviseWith;
 import com.liferay.portal.test.rule.AspectJNewEnvTestRule;
+import com.liferay.portal.util.PropsUtil;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -41,7 +42,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -88,11 +88,9 @@ public class PortletSessionImplTest {
 				"$LazySerializableObjectWrapper");
 	}
 
-	@AdviseWith(adviceClasses = PropsUtilAdvice.class)
 	@Test
 	public void testConstructor() {
-		PropsUtilAdvice.setProps(
-			PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
+		PropsUtil.set(PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
 
 		PortletSessionImpl portletSessionImpl = _getPortletSessionImpl();
 
@@ -110,11 +108,9 @@ public class PortletSessionImplTest {
 		Assert.assertEquals(sb.toString(), portletSessionImpl.scopePrefix);
 	}
 
-	@AdviseWith(adviceClasses = PropsUtilAdvice.class)
 	@Test
 	public void testDirectDelegateMethods() {
-		PropsUtilAdvice.setProps(
-			PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
+		PropsUtil.set(PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
 
 		PortletSessionImpl portletSessionImpl = _getPortletSessionImpl();
 
@@ -154,11 +150,9 @@ public class PortletSessionImplTest {
 		Assert.assertSame(session, portletSessionImpl.session);
 	}
 
-	@AdviseWith(adviceClasses = PropsUtilAdvice.class)
 	@Test
 	public void testGetAttribute() {
-		PropsUtilAdvice.setProps(
-			PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
+		PropsUtil.set(PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
 
 		PortletSessionImpl portletSessionImpl = _getPortletSessionImpl();
 
@@ -167,7 +161,7 @@ public class PortletSessionImplTest {
 
 			Assert.fail();
 		}
-		catch (IllegalArgumentException iae) {
+		catch (IllegalArgumentException illegalArgumentException) {
 		}
 
 		try {
@@ -177,7 +171,7 @@ public class PortletSessionImplTest {
 
 			Assert.fail();
 		}
-		catch (IllegalArgumentException iae) {
+		catch (IllegalArgumentException illegalArgumentException) {
 		}
 
 		Assert.assertSame(_value1, portletSessionImpl.getAttribute(_KEY_1));
@@ -208,11 +202,9 @@ public class PortletSessionImplTest {
 				_KEY_6, PortletSession.APPLICATION_SCOPE));
 	}
 
-	@AdviseWith(adviceClasses = PropsUtilAdvice.class)
 	@Test
 	public void testGetAttributeMap() {
-		PropsUtilAdvice.setProps(
-			PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
+		PropsUtil.set(PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
 
 		PortletSessionImpl portletSessionImpl = _getPortletSessionImpl();
 
@@ -242,11 +234,9 @@ public class PortletSessionImplTest {
 		Assert.assertSame(_value5, attributeMap.get(_KEY_5));
 	}
 
-	@AdviseWith(adviceClasses = PropsUtilAdvice.class)
 	@Test
 	public void testGetAttributeNames() {
-		PropsUtilAdvice.setProps(
-			PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
+		PropsUtil.set(PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
 
 		PortletSessionImpl portletSessionImpl = _getPortletSessionImpl();
 
@@ -288,7 +278,7 @@ public class PortletSessionImplTest {
 
 			Assert.fail();
 		}
-		catch (IllegalStateException ise) {
+		catch (IllegalStateException illegalStateException) {
 		}
 
 		try {
@@ -298,7 +288,7 @@ public class PortletSessionImplTest {
 
 			Assert.fail();
 		}
-		catch (IllegalStateException ise) {
+		catch (IllegalStateException illegalStateException) {
 		}
 
 		Assert.assertTrue(portletSessionImpl.isInvalidated());
@@ -352,7 +342,8 @@ public class PortletSessionImplTest {
 
 		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
 
-		ClassNotFoundException cnfe = new ClassNotFoundException();
+		ClassNotFoundException classNotFoundException =
+			new ClassNotFoundException();
 
 		currentThread.setContextClassLoader(
 			new ClassLoader() {
@@ -362,7 +353,7 @@ public class PortletSessionImplTest {
 					throws ClassNotFoundException {
 
 					if (name.equals(TestSerializable.class.getName())) {
-						throw cnfe;
+						throw classNotFoundException;
 					}
 
 					return super.loadClass(name);
@@ -387,18 +378,16 @@ public class PortletSessionImplTest {
 
 			Assert.assertEquals(
 				"Unable to deserialize object", logRecord.getMessage());
-			Assert.assertSame(cnfe, logRecord.getThrown());
+			Assert.assertSame(classNotFoundException, logRecord.getThrown());
 		}
 		finally {
 			currentThread.setContextClassLoader(contextClassLoader);
 		}
 	}
 
-	@AdviseWith(adviceClasses = PropsUtilAdvice.class)
 	@Test
 	public void testRemoveAttribute() {
-		PropsUtilAdvice.setProps(
-			PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
+		PropsUtil.set(PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
 
 		PortletSessionImpl portletSessionImpl = _getPortletSessionImpl();
 
@@ -409,7 +398,7 @@ public class PortletSessionImplTest {
 
 			Assert.fail();
 		}
-		catch (IllegalArgumentException iae) {
+		catch (IllegalArgumentException illegalArgumentException) {
 		}
 
 		portletSessionImpl.removeAttribute(_KEY_1);
@@ -442,14 +431,10 @@ public class PortletSessionImplTest {
 		Assert.assertFalse(enumeration.hasMoreElements());
 	}
 
-	@AdviseWith(
-		adviceClasses =
-			{PropsUtilAdvice.class, PortalClassLoaderUtilAdvice.class}
-	)
+	@AdviseWith(adviceClasses = PortalClassLoaderUtilAdvice.class)
 	@Test
 	public void testSerializableHttpSessionWrapper() {
-		PropsUtilAdvice.setProps(
-			PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "true");
+		PropsUtil.set(PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "true");
 
 		// Constructor
 
@@ -481,16 +466,29 @@ public class PortletSessionImplTest {
 
 		Assert.assertSame(httpSessionWrapper, portletSessionImpl.session);
 
-		// Set/get attribute when value class is not loaded by PortalClassLoader
+		// Set/get attribute when value class is loaded by the bootstrap class
+		// loader
 
 		String key = "key";
 		String value = "value";
 
-		PortalClassLoaderUtilAdvice.setPortalClassLoader(false);
-
 		portletSessionImpl.setAttribute(key, value);
 
 		Assert.assertSame(value, portletSessionImpl.getAttribute(key));
+		Assert.assertSame(
+			value, _mockHttpSession.getAttribute(scopePrefix.concat(key)));
+
+		// Set/get attribute when value class is not loaded by the portal class
+		// loader
+
+		TestSerializable testSerializable = new TestSerializable("name");
+
+		PortalClassLoaderUtilAdvice.setPortalClassLoader(false);
+
+		portletSessionImpl.setAttribute(key, testSerializable);
+
+		Assert.assertSame(
+			testSerializable, portletSessionImpl.getAttribute(key));
 		Assert.assertTrue(
 			_lazySerializableObjectWrapperClass.isInstance(
 				_mockHttpSession.getAttribute(scopePrefix.concat(key))));
@@ -511,18 +509,18 @@ public class PortletSessionImplTest {
 
 		PortalClassLoaderUtilAdvice.setPortalClassLoader(true);
 
-		portletSessionImpl.setAttribute(key, value);
+		portletSessionImpl.setAttribute(key, testSerializable);
 
-		Assert.assertSame(value, portletSessionImpl.getAttribute(key));
 		Assert.assertSame(
-			value, _mockHttpSession.getAttribute(scopePrefix.concat(key)));
+			testSerializable, portletSessionImpl.getAttribute(key));
+		Assert.assertSame(
+			testSerializable,
+			_mockHttpSession.getAttribute(scopePrefix.concat(key)));
 	}
 
-	@AdviseWith(adviceClasses = PropsUtilAdvice.class)
 	@Test
 	public void testSetAttribute() {
-		PropsUtilAdvice.setProps(
-			PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
+		PropsUtil.set(PropsKeys.PORTLET_SESSION_REPLICATE_ENABLED, "false");
 
 		PortletSessionImpl portletSessionImpl = _getPortletSessionImpl();
 
@@ -533,7 +531,7 @@ public class PortletSessionImplTest {
 
 			Assert.fail();
 		}
-		catch (IllegalArgumentException iae) {
+		catch (IllegalArgumentException illegalArgumentException) {
 		}
 
 		String key7 = "key7";
@@ -570,25 +568,6 @@ public class PortletSessionImplTest {
 		}
 
 		private static boolean _portalClassLoader;
-
-	}
-
-	@Aspect
-	public static class PropsUtilAdvice {
-
-		public static void setProps(String name, String value) {
-			_props.put(name, value);
-		}
-
-		@Around(
-			"execution(public static String com.liferay.portal.util." +
-				"PropsUtil.get(String)) && args(key)"
-		)
-		public Object get(String key) {
-			return _props.get(key);
-		}
-
-		private static final Map<String, String> _props = new HashMap<>();
 
 	}
 

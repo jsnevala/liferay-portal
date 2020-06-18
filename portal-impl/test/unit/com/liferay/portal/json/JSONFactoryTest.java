@@ -15,6 +15,7 @@
 package com.liferay.portal.json;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.jabsorb.serializer.LiferayJSONDeserializationWhitelist;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -22,7 +23,7 @@ import com.liferay.portal.kernel.json.JSONSerializer;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.CaptureHandler;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.HashMap;
@@ -81,9 +82,9 @@ public class JSONFactoryTest {
 
 	@Test
 	public void testDeserializeLongArrayToIntegerArray() {
-		Map<String, long[]> map = new HashMap<>();
-
-		map.put("key", new long[] {1L, 2L, 3L, 4L, 5L});
+		Map<String, long[]> map = HashMapBuilder.<String, long[]>put(
+			"key", new long[] {1L, 2L, 3L, 4L, 5L}
+		).build();
 
 		String json = JSONFactoryUtil.serialize(map);
 
@@ -209,12 +210,15 @@ public class JSONFactoryTest {
 			"{\"\u0063lass\":\"java.lang.Thread\"}");
 
 		Assert.assertEquals(HashMap.class, object.getClass());
-		Assert.assertTrue(((Map<?, ?>)object).containsKey("class"));
+
+		Map<?, ?> map = (Map<?, ?>)object;
+
+		Assert.assertTrue(map.containsKey("class"));
 
 		JSONFactoryUtil.looseDeserialize(
 			"{\"class\":\"" + JSONFactoryUtil.class.getName() + "\"}");
 
-		Map<?, ?> map = (Map<?, ?>)JSONFactoryUtil.looseDeserialize(
+		map = (Map<?, ?>)JSONFactoryUtil.looseDeserialize(
 			"{\"class\":\"" + JSONFactoryUtil.class.getName() +
 				"\",\"foo\": \"boo\"}");
 
@@ -382,8 +386,9 @@ public class JSONFactoryTest {
 
 	private static final int _INTEGER_VALUE = 5;
 
-	private static final long[] _LONG_ARRAY =
-		{10000000000000L, 20000000000000L, 30000000000000L};
+	private static final long[] _LONG_ARRAY = {
+		10000000000000L, 20000000000000L, 30000000000000L
+	};
 
 	private static final String _LONG_ARRAY_STRING =
 		"[10000000000000,20000000000000,30000000000000]";

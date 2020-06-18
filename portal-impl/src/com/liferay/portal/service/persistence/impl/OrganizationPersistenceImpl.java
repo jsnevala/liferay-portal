@@ -14,11 +14,10 @@
 
 package com.liferay.portal.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
+import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -31,14 +30,15 @@ import com.liferay.portal.kernel.exception.NoSuchOrganizationException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.model.OrganizationTable;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.service.persistence.CompanyProvider;
-import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
 import com.liferay.portal.kernel.service.persistence.GroupPersistence;
 import com.liferay.portal.kernel.service.persistence.OrganizationPersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelperUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapper;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapperFactory;
@@ -55,11 +55,12 @@ import com.liferay.portal.model.impl.OrganizationModelImpl;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -76,51 +77,32 @@ import java.util.Set;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see OrganizationPersistence
- * @see com.liferay.portal.kernel.service.persistence.OrganizationUtil
  * @generated
  */
-@ProviderType
-public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organization>
+public class OrganizationPersistenceImpl
+	extends BasePersistenceImpl<Organization>
 	implements OrganizationPersistence {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link OrganizationUtil} to access the organization persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
+	 * Never modify or reference this class directly. Always use <code>OrganizationUtil</code> to access the organization persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static final String FINDER_CLASS_NAME_ENTITY = OrganizationImpl.class.getName();
-	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List1";
-	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List2";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_ALL = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_COUNT_ALL = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
-			new String[] {
-				String.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
-			new String[] { String.class.getName() },
-			OrganizationModelImpl.UUID_COLUMN_BITMASK |
-			OrganizationModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_UUID = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] { String.class.getName() });
+	public static final String FINDER_CLASS_NAME_ENTITY =
+		OrganizationImpl.class.getName();
+
+	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List1";
+
+	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List2";
+
+	private FinderPath _finderPathWithPaginationFindAll;
+	private FinderPath _finderPathWithoutPaginationFindAll;
+	private FinderPath _finderPathCountAll;
+	private FinderPath _finderPathWithPaginationFindByUuid;
+	private FinderPath _finderPathWithoutPaginationFindByUuid;
+	private FinderPath _finderPathCountByUuid;
 
 	/**
 	 * Returns all the organizations where uuid = &#63;.
@@ -137,7 +119,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns a range of all the organizations where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -154,7 +136,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -164,8 +146,10 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByUuid(String uuid, int start, int end,
+	public List<Organization> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<Organization> orderByComparator) {
+
 		return findByUuid(uuid, start, end, orderByComparator, true);
 	}
 
@@ -173,44 +157,52 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
 	 * @param start the lower bound of the range of organizations
 	 * @param end the upper bound of the range of organizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByUuid(String uuid, int start, int end,
+	public List<Organization> findByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<Organization> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+		boolean useFinderCache) {
+
+		uuid = Objects.toString(uuid, "");
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID;
-			finderArgs = new Object[] { uuid };
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByUuid;
+				finderArgs = new Object[] {uuid};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID;
-			finderArgs = new Object[] { uuid, start, end, orderByComparator };
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByUuid;
+			finderArgs = new Object[] {uuid, start, end, orderByComparator};
 		}
 
 		List<Organization> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Organization>)FinderCacheUtil.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache && productionMode) {
+			list = (List<Organization>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Organization organization : list) {
-					if (!Objects.equals(uuid, organization.getUuid())) {
+					if (!uuid.equals(organization.getUuid())) {
 						list = null;
 
 						break;
@@ -220,77 +212,67 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_UUID_1);
-			}
-			else if (uuid.equals("")) {
-				query.append(_FINDER_COLUMN_UUID_UUID_3);
+			if (uuid.isEmpty()) {
+				sb.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_UUID_2);
 			}
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				if (!pagination) {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<Organization>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -309,25 +291,26 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByUuid_First(String uuid,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByUuid_First(
+			String uuid, OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		Organization organization = fetchByUuid_First(uuid, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -338,8 +321,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the first matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByUuid_First(String uuid,
-		OrderByComparator<Organization> orderByComparator) {
+	public Organization fetchByUuid_First(
+		String uuid, OrderByComparator<Organization> orderByComparator) {
+
 		List<Organization> list = findByUuid(uuid, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -358,25 +342,26 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByUuid_Last(String uuid,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByUuid_Last(
+			String uuid, OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		Organization organization = fetchByUuid_Last(uuid, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -387,16 +372,17 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the last matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByUuid_Last(String uuid,
-		OrderByComparator<Organization> orderByComparator) {
+	public Organization fetchByUuid_Last(
+		String uuid, OrderByComparator<Organization> orderByComparator) {
+
 		int count = countByUuid(uuid);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Organization> list = findByUuid(uuid, count - 1, count,
-				orderByComparator);
+		List<Organization> list = findByUuid(
+			uuid, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -415,9 +401,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
 	 */
 	@Override
-	public Organization[] findByUuid_PrevAndNext(long organizationId,
-		String uuid, OrderByComparator<Organization> orderByComparator)
+	public Organization[] findByUuid_PrevAndNext(
+			long organizationId, String uuid,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
+		uuid = Objects.toString(uuid, "");
+
 		Organization organization = findByPrimaryKey(organizationId);
 
 		Session session = null;
@@ -427,135 +417,134 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = getByUuid_PrevAndNext(session, organization, uuid,
-					orderByComparator, true);
+			array[0] = getByUuid_PrevAndNext(
+				session, organization, uuid, orderByComparator, true);
 
 			array[1] = organization;
 
-			array[2] = getByUuid_PrevAndNext(session, organization, uuid,
-					orderByComparator, false);
+			array[2] = getByUuid_PrevAndNext(
+				session, organization, uuid, orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization getByUuid_PrevAndNext(Session session,
-		Organization organization, String uuid,
+	protected Organization getByUuid_PrevAndNext(
+		Session session, Organization organization, String uuid,
 		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+		sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_UUID_1);
-		}
-		else if (uuid.equals("")) {
-			query.append(_FINDER_COLUMN_UUID_UUID_3);
+		if (uuid.isEmpty()) {
+			sb.append(_FINDER_COLUMN_UUID_UUID_3);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_UUID_2);
+			sb.append(_FINDER_COLUMN_UUID_UUID_2);
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -573,14 +562,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public List<Organization> filterFindByUuid(String uuid) {
-		return filterFindByUuid(uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+		return filterFindByUuid(
+			uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations that the user has permission to view where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -589,7 +579,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByUuid(String uuid, int start, int end) {
+	public List<Organization> filterFindByUuid(
+		String uuid, int start, int end) {
+
 		return filterFindByUuid(uuid, start, end, null);
 	}
 
@@ -597,7 +589,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations that the user has permissions to view where uuid = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -607,95 +599,100 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByUuid(String uuid, int start, int end,
+	public List<Organization> filterFindByUuid(
+		String uuid, int start, int end,
 		OrderByComparator<Organization> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled()) {
 			return findByUuid(uuid, start, end, orderByComparator);
 		}
 
-		StringBundler query = null;
+		uuid = Objects.toString(uuid, "");
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(3 +
-					(orderByComparator.getOrderByFields().length * 2));
+			sb = new StringBundler(
+				3 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_UUID_1_SQL);
-		}
-		else if (uuid.equals("")) {
-			query.append(_FINDER_COLUMN_UUID_UUID_3_SQL);
+		if (uuid.isEmpty()) {
+			sb.append(_FINDER_COLUMN_UUID_UUID_3_SQL);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_UUID_2_SQL);
+			sb.append(_FINDER_COLUMN_UUID_UUID_2_SQL);
 		}
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
 			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
 			}
 			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
-				q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 			}
 			else {
-				q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 			}
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (bindUuid) {
-				qPos.add(uuid);
+				queryPos.add(uuid);
 			}
 
-			return (List<Organization>)QueryUtil.list(q, getDialect(), start,
-				end);
+			return (List<Organization>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -712,13 +709,17 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
 	 */
 	@Override
-	public Organization[] filterFindByUuid_PrevAndNext(long organizationId,
-		String uuid, OrderByComparator<Organization> orderByComparator)
+	public Organization[] filterFindByUuid_PrevAndNext(
+			long organizationId, String uuid,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		if (!InlineSQLHelperUtil.isEnabled()) {
-			return findByUuid_PrevAndNext(organizationId, uuid,
-				orderByComparator);
+			return findByUuid_PrevAndNext(
+				organizationId, uuid, orderByComparator);
 		}
+
+		uuid = Objects.toString(uuid, "");
 
 		Organization organization = findByPrimaryKey(organizationId);
 
@@ -729,170 +730,177 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = filterGetByUuid_PrevAndNext(session, organization, uuid,
-					orderByComparator, true);
+			array[0] = filterGetByUuid_PrevAndNext(
+				session, organization, uuid, orderByComparator, true);
 
 			array[1] = organization;
 
-			array[2] = filterGetByUuid_PrevAndNext(session, organization, uuid,
-					orderByComparator, false);
+			array[2] = filterGetByUuid_PrevAndNext(
+				session, organization, uuid, orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization filterGetByUuid_PrevAndNext(Session session,
-		Organization organization, String uuid,
+	protected Organization filterGetByUuid_PrevAndNext(
+		Session session, Organization organization, String uuid,
 		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_UUID_1_SQL);
-		}
-		else if (uuid.equals("")) {
-			query.append(_FINDER_COLUMN_UUID_UUID_3_SQL);
+		if (uuid.isEmpty()) {
+			sb.append(_FINDER_COLUMN_UUID_UUID_3_SQL);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_UUID_2_SQL);
+			sb.append(_FINDER_COLUMN_UUID_UUID_2_SQL);
 		}
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
 				}
-
-				query.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
 				}
-
-				query.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSynchronizedSQLQuery(sql);
+		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		sqlQuery.setFirstResult(0);
+		sqlQuery.setMaxResults(2);
 
 		if (getDB().isSupportsInlineDistinct()) {
-			q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 		}
 		else {
-			q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 		}
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = sqlQuery.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -909,8 +917,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public void removeByUuid(String uuid) {
-		for (Organization organization : findByUuid(uuid, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null)) {
+		for (Organization organization :
+				findByUuid(uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(organization);
 		}
 	}
@@ -923,55 +932,68 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public int countByUuid(String uuid) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_UUID;
+		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] { uuid };
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByUuid;
+
+			finderArgs = new Object[] {uuid};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_ORGANIZATION_WHERE);
+			sb.append(_SQL_COUNT_ORGANIZATION_WHERE);
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_UUID_1);
-			}
-			else if (uuid.equals("")) {
-				query.append(_FINDER_COLUMN_UUID_UUID_3);
+			if (uuid.isEmpty()) {
+				sb.append(_FINDER_COLUMN_UUID_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_UUID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -993,83 +1015,70 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			return countByUuid(uuid);
 		}
 
-		StringBundler query = new StringBundler(2);
+		uuid = Objects.toString(uuid, "");
 
-		query.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
+		StringBundler sb = new StringBundler(2);
+
+		sb.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_UUID_1_SQL);
-		}
-		else if (uuid.equals("")) {
-			query.append(_FINDER_COLUMN_UUID_UUID_3_SQL);
+		if (uuid.isEmpty()) {
+			sb.append(_FINDER_COLUMN_UUID_UUID_3_SQL);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_UUID_2_SQL);
+			sb.append(_FINDER_COLUMN_UUID_UUID_2_SQL);
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
+			sqlQuery.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (bindUuid) {
-				qPos.add(uuid);
+				queryPos.add(uuid);
 			}
 
-			Long count = (Long)q.uniqueResult();
+			Long count = (Long)sqlQuery.uniqueResult();
 
 			return count.intValue();
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	private static final String _FINDER_COLUMN_UUID_UUID_1 = "organization.uuid IS NULL";
-	private static final String _FINDER_COLUMN_UUID_UUID_2 = "organization.uuid = ?";
-	private static final String _FINDER_COLUMN_UUID_UUID_3 = "(organization.uuid IS NULL OR organization.uuid = '')";
-	private static final String _FINDER_COLUMN_UUID_UUID_1_SQL = "organization.uuid_ IS NULL";
-	private static final String _FINDER_COLUMN_UUID_UUID_2_SQL = "organization.uuid_ = ?";
-	private static final String _FINDER_COLUMN_UUID_UUID_3_SQL = "(organization.uuid_ IS NULL OR organization.uuid_ = '')";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID_C = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
-			new String[] {
-				String.class.getName(), Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C =
-		new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
-			new String[] { String.class.getName(), Long.class.getName() },
-			OrganizationModelImpl.UUID_COLUMN_BITMASK |
-			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
-			OrganizationModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_UUID_C = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] { String.class.getName(), Long.class.getName() });
+	private static final String _FINDER_COLUMN_UUID_UUID_2 =
+		"organization.uuid = ?";
+
+	private static final String _FINDER_COLUMN_UUID_UUID_3 =
+		"(organization.uuid IS NULL OR organization.uuid = '')";
+
+	private static final String _FINDER_COLUMN_UUID_UUID_2_SQL =
+		"organization.uuid_ = ?";
+
+	private static final String _FINDER_COLUMN_UUID_UUID_3_SQL =
+		"(organization.uuid_ IS NULL OR organization.uuid_ = '')";
+
+	private FinderPath _finderPathWithPaginationFindByUuid_C;
+	private FinderPath _finderPathWithoutPaginationFindByUuid_C;
+	private FinderPath _finderPathCountByUuid_C;
 
 	/**
 	 * Returns all the organizations where uuid = &#63; and companyId = &#63;.
@@ -1080,15 +1089,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public List<Organization> findByUuid_C(String uuid, long companyId) {
-		return findByUuid_C(uuid, companyId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return findByUuid_C(
+			uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1098,8 +1107,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByUuid_C(String uuid, long companyId,
-		int start, int end) {
+	public List<Organization> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
 		return findByUuid_C(uuid, companyId, start, end, null);
 	}
 
@@ -1107,7 +1117,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1118,16 +1128,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByUuid_C(String uuid, long companyId,
-		int start, int end, OrderByComparator<Organization> orderByComparator) {
-		return findByUuid_C(uuid, companyId, start, end, orderByComparator, true);
+	public List<Organization> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
+		return findByUuid_C(
+			uuid, companyId, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the organizations where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1135,42 +1148,49 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param start the lower bound of the range of organizations
 	 * @param end the upper bound of the range of organizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByUuid_C(String uuid, long companyId,
-		int start, int end, OrderByComparator<Organization> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<Organization> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<Organization> orderByComparator,
+		boolean useFinderCache) {
+
+		uuid = Objects.toString(uuid, "");
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C;
-			finderArgs = new Object[] { uuid, companyId };
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByUuid_C;
+				finderArgs = new Object[] {uuid, companyId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID_C;
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByUuid_C;
 			finderArgs = new Object[] {
-					uuid, companyId,
-					
-					start, end, orderByComparator
-				};
+				uuid, companyId, start, end, orderByComparator
+			};
 		}
 
 		List<Organization> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Organization>)FinderCacheUtil.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache && productionMode) {
+			list = (List<Organization>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Organization organization : list) {
-					if (!Objects.equals(uuid, organization.getUuid()) ||
-							(companyId != organization.getCompanyId())) {
+					if (!uuid.equals(organization.getUuid()) ||
+						(companyId != organization.getCompanyId())) {
+
 						list = null;
 
 						break;
@@ -1180,81 +1200,71 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(4 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-			}
-			else if (uuid.equals("")) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+			if (uuid.isEmpty()) {
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				if (!pagination) {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<Organization>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1274,29 +1284,31 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByUuid_C_First(String uuid, long companyId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByUuid_C_First(
+			String uuid, long companyId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByUuid_C_First(uuid, companyId,
-				orderByComparator);
+
+		Organization organization = fetchByUuid_C_First(
+			uuid, companyId, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -1308,10 +1320,12 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the first matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByUuid_C_First(String uuid, long companyId,
+	public Organization fetchByUuid_C_First(
+		String uuid, long companyId,
 		OrderByComparator<Organization> orderByComparator) {
-		List<Organization> list = findByUuid_C(uuid, companyId, 0, 1,
-				orderByComparator);
+
+		List<Organization> list = findByUuid_C(
+			uuid, companyId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1330,29 +1344,31 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByUuid_C_Last(String uuid, long companyId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByUuid_C_Last(
+			String uuid, long companyId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByUuid_C_Last(uuid, companyId,
-				orderByComparator);
+
+		Organization organization = fetchByUuid_C_Last(
+			uuid, companyId, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("uuid=");
-		msg.append(uuid);
+		sb.append("uuid=");
+		sb.append(uuid);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -1364,16 +1380,18 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the last matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByUuid_C_Last(String uuid, long companyId,
+	public Organization fetchByUuid_C_Last(
+		String uuid, long companyId,
 		OrderByComparator<Organization> orderByComparator) {
+
 		int count = countByUuid_C(uuid, companyId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Organization> list = findByUuid_C(uuid, companyId, count - 1,
-				count, orderByComparator);
+		List<Organization> list = findByUuid_C(
+			uuid, companyId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1393,10 +1411,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
 	 */
 	@Override
-	public Organization[] findByUuid_C_PrevAndNext(long organizationId,
-		String uuid, long companyId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization[] findByUuid_C_PrevAndNext(
+			long organizationId, String uuid, long companyId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
+		uuid = Objects.toString(uuid, "");
+
 		Organization organization = findByPrimaryKey(organizationId);
 
 		Session session = null;
@@ -1406,139 +1427,140 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = getByUuid_C_PrevAndNext(session, organization, uuid,
-					companyId, orderByComparator, true);
+			array[0] = getByUuid_C_PrevAndNext(
+				session, organization, uuid, companyId, orderByComparator,
+				true);
 
 			array[1] = organization;
 
-			array[2] = getByUuid_C_PrevAndNext(session, organization, uuid,
-					companyId, orderByComparator, false);
+			array[2] = getByUuid_C_PrevAndNext(
+				session, organization, uuid, companyId, orderByComparator,
+				false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization getByUuid_C_PrevAndNext(Session session,
-		Organization organization, String uuid, long companyId,
+	protected Organization getByUuid_C_PrevAndNext(
+		Session session, Organization organization, String uuid, long companyId,
 		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+		sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-		}
-		else if (uuid.equals("")) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+		if (uuid.isEmpty()) {
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 		}
 
-		query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1557,15 +1579,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public List<Organization> filterFindByUuid_C(String uuid, long companyId) {
-		return filterFindByUuid_C(uuid, companyId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return filterFindByUuid_C(
+			uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations that the user has permission to view where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1575,8 +1597,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByUuid_C(String uuid, long companyId,
-		int start, int end) {
+	public List<Organization> filterFindByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
 		return filterFindByUuid_C(uuid, companyId, start, end, null);
 	}
 
@@ -1584,7 +1607,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations that the user has permissions to view where uuid = &#63; and companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param uuid the uuid
@@ -1595,99 +1618,104 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByUuid_C(String uuid, long companyId,
-		int start, int end, OrderByComparator<Organization> orderByComparator) {
+	public List<Organization> filterFindByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return findByUuid_C(uuid, companyId, start, end, orderByComparator);
 		}
 
-		StringBundler query = null;
+		uuid = Objects.toString(uuid, "");
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByFields().length * 2));
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_1_SQL);
-		}
-		else if (uuid.equals("")) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_3_SQL);
+		if (uuid.isEmpty()) {
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_3_SQL);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_C_UUID_2_SQL);
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_2_SQL);
 		}
 
-		query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
 			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
 			}
 			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
-				q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 			}
 			else {
-				q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 			}
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (bindUuid) {
-				qPos.add(uuid);
+				queryPos.add(uuid);
 			}
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			return (List<Organization>)QueryUtil.list(q, getDialect(), start,
-				end);
+			return (List<Organization>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1705,14 +1733,17 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
 	 */
 	@Override
-	public Organization[] filterFindByUuid_C_PrevAndNext(long organizationId,
-		String uuid, long companyId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization[] filterFindByUuid_C_PrevAndNext(
+			long organizationId, String uuid, long companyId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByUuid_C_PrevAndNext(organizationId, uuid, companyId,
-				orderByComparator);
+			return findByUuid_C_PrevAndNext(
+				organizationId, uuid, companyId, orderByComparator);
 		}
+
+		uuid = Objects.toString(uuid, "");
 
 		Organization organization = findByPrimaryKey(organizationId);
 
@@ -1723,174 +1754,183 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = filterGetByUuid_C_PrevAndNext(session, organization,
-					uuid, companyId, orderByComparator, true);
+			array[0] = filterGetByUuid_C_PrevAndNext(
+				session, organization, uuid, companyId, orderByComparator,
+				true);
 
 			array[1] = organization;
 
-			array[2] = filterGetByUuid_C_PrevAndNext(session, organization,
-					uuid, companyId, orderByComparator, false);
+			array[2] = filterGetByUuid_C_PrevAndNext(
+				session, organization, uuid, companyId, orderByComparator,
+				false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization filterGetByUuid_C_PrevAndNext(Session session,
-		Organization organization, String uuid, long companyId,
+	protected Organization filterGetByUuid_C_PrevAndNext(
+		Session session, Organization organization, String uuid, long companyId,
 		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(6 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_1_SQL);
-		}
-		else if (uuid.equals("")) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_3_SQL);
+		if (uuid.isEmpty()) {
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_3_SQL);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_C_UUID_2_SQL);
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_2_SQL);
 		}
 
-		query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
 				}
-
-				query.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
 				}
-
-				query.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSynchronizedSQLQuery(sql);
+		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		sqlQuery.setFirstResult(0);
+		sqlQuery.setMaxResults(2);
 
 		if (getDB().isSupportsInlineDistinct()) {
-			q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 		}
 		else {
-			q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 		}
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 		if (bindUuid) {
-			qPos.add(uuid);
+			queryPos.add(uuid);
 		}
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = sqlQuery.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1908,8 +1948,11 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public void removeByUuid_C(String uuid, long companyId) {
-		for (Organization organization : findByUuid_C(uuid, companyId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (Organization organization :
+				findByUuid_C(
+					uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
 			remove(organization);
 		}
 	}
@@ -1923,59 +1966,72 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public int countByUuid_C(String uuid, long companyId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_UUID_C;
+		uuid = Objects.toString(uuid, "");
 
-		Object[] finderArgs = new Object[] { uuid, companyId };
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByUuid_C;
+
+			finderArgs = new Object[] {uuid, companyId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_ORGANIZATION_WHERE);
+			sb.append(_SQL_COUNT_ORGANIZATION_WHERE);
 
 			boolean bindUuid = false;
 
-			if (uuid == null) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_1);
-			}
-			else if (uuid.equals("")) {
-				query.append(_FINDER_COLUMN_UUID_C_UUID_3);
+			if (uuid.isEmpty()) {
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
 			}
 			else {
 				bindUuid = true;
 
-				query.append(_FINDER_COLUMN_UUID_C_UUID_2);
+				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 			}
 
-			query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindUuid) {
-					qPos.add(uuid);
+					queryPos.add(uuid);
 				}
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1998,88 +2054,77 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			return countByUuid_C(uuid, companyId);
 		}
 
-		StringBundler query = new StringBundler(3);
+		uuid = Objects.toString(uuid, "");
 
-		query.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
+		StringBundler sb = new StringBundler(3);
+
+		sb.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
 
 		boolean bindUuid = false;
 
-		if (uuid == null) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_1_SQL);
-		}
-		else if (uuid.equals("")) {
-			query.append(_FINDER_COLUMN_UUID_C_UUID_3_SQL);
+		if (uuid.isEmpty()) {
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_3_SQL);
 		}
 		else {
 			bindUuid = true;
 
-			query.append(_FINDER_COLUMN_UUID_C_UUID_2_SQL);
+			sb.append(_FINDER_COLUMN_UUID_C_UUID_2_SQL);
 		}
 
-		query.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
+			sqlQuery.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (bindUuid) {
-				qPos.add(uuid);
+				queryPos.add(uuid);
 			}
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			Long count = (Long)q.uniqueResult();
+			Long count = (Long)sqlQuery.uniqueResult();
 
 			return count.intValue();
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	private static final String _FINDER_COLUMN_UUID_C_UUID_1 = "organization.uuid IS NULL AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_2 = "organization.uuid = ? AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_3 = "(organization.uuid IS NULL OR organization.uuid = '') AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_1_SQL = "organization.uuid_ IS NULL AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_2_SQL = "organization.uuid_ = ? AND ";
-	private static final String _FINDER_COLUMN_UUID_C_UUID_3_SQL = "(organization.uuid_ IS NULL OR organization.uuid_ = '') AND ";
-	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 = "organization.companyId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_COMPANYID =
-		new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID =
-		new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
-			new String[] { Long.class.getName() },
-			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
-			OrganizationModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_COMPANYID = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] { Long.class.getName() });
+	private static final String _FINDER_COLUMN_UUID_C_UUID_2 =
+		"organization.uuid = ? AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_UUID_3 =
+		"(organization.uuid IS NULL OR organization.uuid = '') AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_UUID_2_SQL =
+		"organization.uuid_ = ? AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_UUID_3_SQL =
+		"(organization.uuid_ IS NULL OR organization.uuid_ = '') AND ";
+
+	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 =
+		"organization.companyId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByCompanyId;
+	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
+	private FinderPath _finderPathCountByCompanyId;
 
 	/**
 	 * Returns all the organizations where companyId = &#63;.
@@ -2089,15 +2134,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public List<Organization> findByCompanyId(long companyId) {
-		return findByCompanyId(companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			null);
+		return findByCompanyId(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -2106,7 +2151,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByCompanyId(long companyId, int start, int end) {
+	public List<Organization> findByCompanyId(
+		long companyId, int start, int end) {
+
 		return findByCompanyId(companyId, start, end, null);
 	}
 
@@ -2114,7 +2161,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -2124,8 +2171,10 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByCompanyId(long companyId, int start,
-		int end, OrderByComparator<Organization> orderByComparator) {
+	public List<Organization> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
 		return findByCompanyId(companyId, start, end, orderByComparator, true);
 	}
 
@@ -2133,44 +2182,52 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
 	 * @param start the lower bound of the range of organizations
 	 * @param end the upper bound of the range of organizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByCompanyId(long companyId, int start,
-		int end, OrderByComparator<Organization> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<Organization> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<Organization> orderByComparator,
+		boolean useFinderCache) {
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID;
-			finderArgs = new Object[] { companyId };
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByCompanyId;
+				finderArgs = new Object[] {companyId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_COMPANYID;
-			finderArgs = new Object[] { companyId, start, end, orderByComparator };
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByCompanyId;
+			finderArgs = new Object[] {
+				companyId, start, end, orderByComparator
+			};
 		}
 
 		List<Organization> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Organization>)FinderCacheUtil.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache && productionMode) {
+			list = (List<Organization>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Organization organization : list) {
-					if ((companyId != organization.getCompanyId())) {
+					if (companyId != organization.getCompanyId()) {
 						list = null;
 
 						break;
@@ -2180,63 +2237,56 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				if (!pagination) {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<Organization>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2255,26 +2305,27 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByCompanyId_First(long companyId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByCompanyId_First(
+			long companyId, OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByCompanyId_First(companyId,
-				orderByComparator);
+
+		Organization organization = fetchByCompanyId_First(
+			companyId, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -2285,10 +2336,11 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the first matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByCompanyId_First(long companyId,
-		OrderByComparator<Organization> orderByComparator) {
-		List<Organization> list = findByCompanyId(companyId, 0, 1,
-				orderByComparator);
+	public Organization fetchByCompanyId_First(
+		long companyId, OrderByComparator<Organization> orderByComparator) {
+
+		List<Organization> list = findByCompanyId(
+			companyId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -2306,26 +2358,27 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByCompanyId_Last(long companyId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByCompanyId_Last(
+			long companyId, OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByCompanyId_Last(companyId,
-				orderByComparator);
+
+		Organization organization = fetchByCompanyId_Last(
+			companyId, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -2336,16 +2389,17 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the last matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByCompanyId_Last(long companyId,
-		OrderByComparator<Organization> orderByComparator) {
+	public Organization fetchByCompanyId_Last(
+		long companyId, OrderByComparator<Organization> orderByComparator) {
+
 		int count = countByCompanyId(companyId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Organization> list = findByCompanyId(companyId, count - 1, count,
-				orderByComparator);
+		List<Organization> list = findByCompanyId(
+			companyId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -2364,9 +2418,11 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
 	 */
 	@Override
-	public Organization[] findByCompanyId_PrevAndNext(long organizationId,
-		long companyId, OrderByComparator<Organization> orderByComparator)
+	public Organization[] findByCompanyId_PrevAndNext(
+			long organizationId, long companyId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		Organization organization = findByPrimaryKey(organizationId);
 
 		Session session = null;
@@ -2376,121 +2432,123 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = getByCompanyId_PrevAndNext(session, organization,
-					companyId, orderByComparator, true);
+			array[0] = getByCompanyId_PrevAndNext(
+				session, organization, companyId, orderByComparator, true);
 
 			array[1] = organization;
 
-			array[2] = getByCompanyId_PrevAndNext(session, organization,
-					companyId, orderByComparator, false);
+			array[2] = getByCompanyId_PrevAndNext(
+				session, organization, companyId, orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization getByCompanyId_PrevAndNext(Session session,
-		Organization organization, long companyId,
+	protected Organization getByCompanyId_PrevAndNext(
+		Session session, Organization organization, long companyId,
 		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+		sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-		query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -2508,15 +2566,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public List<Organization> filterFindByCompanyId(long companyId) {
-		return filterFindByCompanyId(companyId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return filterFindByCompanyId(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations that the user has permission to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -2525,8 +2583,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByCompanyId(long companyId, int start,
-		int end) {
+	public List<Organization> filterFindByCompanyId(
+		long companyId, int start, int end) {
+
 		return filterFindByCompanyId(companyId, start, end, null);
 	}
 
@@ -2534,7 +2593,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations that the user has permissions to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -2544,81 +2603,87 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByCompanyId(long companyId, int start,
-		int end, OrderByComparator<Organization> orderByComparator) {
+	public List<Organization> filterFindByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return findByCompanyId(companyId, start, end, orderByComparator);
 		}
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(3 +
-					(orderByComparator.getOrderByFields().length * 2));
+			sb = new StringBundler(
+				3 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
 			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
 			}
 			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
-				q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 			}
 			else {
-				q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 			}
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			return (List<Organization>)QueryUtil.list(q, getDialect(), start,
-				end);
+			return (List<Organization>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2636,12 +2701,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public Organization[] filterFindByCompanyId_PrevAndNext(
-		long organizationId, long companyId,
-		OrderByComparator<Organization> orderByComparator)
+			long organizationId, long companyId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByCompanyId_PrevAndNext(organizationId, companyId,
-				orderByComparator);
+			return findByCompanyId_PrevAndNext(
+				organizationId, companyId, orderByComparator);
 		}
 
 		Organization organization = findByPrimaryKey(organizationId);
@@ -2653,156 +2719,166 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = filterGetByCompanyId_PrevAndNext(session, organization,
-					companyId, orderByComparator, true);
+			array[0] = filterGetByCompanyId_PrevAndNext(
+				session, organization, companyId, orderByComparator, true);
 
 			array[1] = organization;
 
-			array[2] = filterGetByCompanyId_PrevAndNext(session, organization,
-					companyId, orderByComparator, false);
+			array[2] = filterGetByCompanyId_PrevAndNext(
+				session, organization, companyId, orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization filterGetByCompanyId_PrevAndNext(Session session,
-		Organization organization, long companyId,
+	protected Organization filterGetByCompanyId_PrevAndNext(
+		Session session, Organization organization, long companyId,
 		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
 				}
-
-				query.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
 				}
-
-				query.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSynchronizedSQLQuery(sql);
+		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		sqlQuery.setFirstResult(0);
+		sqlQuery.setMaxResults(2);
 
 		if (getDB().isSupportsInlineDistinct()) {
-			q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 		}
 		else {
-			q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 		}
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = sqlQuery.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -2819,8 +2895,10 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public void removeByCompanyId(long companyId) {
-		for (Organization organization : findByCompanyId(companyId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (Organization organization :
+				findByCompanyId(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(organization);
 		}
 	}
@@ -2833,41 +2911,55 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public int countByCompanyId(long companyId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_COMPANYID;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
 
-		Object[] finderArgs = new Object[] { companyId };
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByCompanyId;
+
+			finderArgs = new Object[] {companyId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_ORGANIZATION_WHERE);
+			sb.append(_SQL_COUNT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2889,64 +2981,48 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			return countByCompanyId(companyId);
 		}
 
-		StringBundler query = new StringBundler(2);
+		StringBundler sb = new StringBundler(2);
 
-		query.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
+		sb.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
 
-		query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
+			sqlQuery.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			Long count = (Long)q.uniqueResult();
+			Long count = (Long)sqlQuery.uniqueResult();
 
 			return count.intValue();
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 = "organization.companyId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_LOCATIONS =
-		new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByLocations",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LOCATIONS =
-		new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByLocations",
-			new String[] { Long.class.getName() },
-			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
-			OrganizationModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_LOCATIONS = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByLocations",
-			new String[] { Long.class.getName() });
+	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 =
+		"organization.companyId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByLocations;
+	private FinderPath _finderPathWithoutPaginationFindByLocations;
+	private FinderPath _finderPathCountByLocations;
 
 	/**
 	 * Returns all the organizations where companyId = &#63;.
@@ -2956,15 +3032,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public List<Organization> findByLocations(long companyId) {
-		return findByLocations(companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			null);
+		return findByLocations(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -2973,7 +3049,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByLocations(long companyId, int start, int end) {
+	public List<Organization> findByLocations(
+		long companyId, int start, int end) {
+
 		return findByLocations(companyId, start, end, null);
 	}
 
@@ -2981,7 +3059,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -2991,8 +3069,10 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByLocations(long companyId, int start,
-		int end, OrderByComparator<Organization> orderByComparator) {
+	public List<Organization> findByLocations(
+		long companyId, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
 		return findByLocations(companyId, start, end, orderByComparator, true);
 	}
 
@@ -3000,44 +3080,52 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
 	 * @param start the lower bound of the range of organizations
 	 * @param end the upper bound of the range of organizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByLocations(long companyId, int start,
-		int end, OrderByComparator<Organization> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<Organization> findByLocations(
+		long companyId, int start, int end,
+		OrderByComparator<Organization> orderByComparator,
+		boolean useFinderCache) {
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LOCATIONS;
-			finderArgs = new Object[] { companyId };
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByLocations;
+				finderArgs = new Object[] {companyId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_LOCATIONS;
-			finderArgs = new Object[] { companyId, start, end, orderByComparator };
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByLocations;
+			finderArgs = new Object[] {
+				companyId, start, end, orderByComparator
+			};
 		}
 
 		List<Organization> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Organization>)FinderCacheUtil.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache && productionMode) {
+			list = (List<Organization>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Organization organization : list) {
-					if ((companyId != organization.getCompanyId())) {
+					if (companyId != organization.getCompanyId()) {
 						list = null;
 
 						break;
@@ -3047,63 +3135,56 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				if (!pagination) {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<Organization>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3122,26 +3203,27 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByLocations_First(long companyId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByLocations_First(
+			long companyId, OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByLocations_First(companyId,
-				orderByComparator);
+
+		Organization organization = fetchByLocations_First(
+			companyId, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -3152,10 +3234,11 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the first matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByLocations_First(long companyId,
-		OrderByComparator<Organization> orderByComparator) {
-		List<Organization> list = findByLocations(companyId, 0, 1,
-				orderByComparator);
+	public Organization fetchByLocations_First(
+		long companyId, OrderByComparator<Organization> orderByComparator) {
+
+		List<Organization> list = findByLocations(
+			companyId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -3173,26 +3256,27 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByLocations_Last(long companyId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByLocations_Last(
+			long companyId, OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByLocations_Last(companyId,
-				orderByComparator);
+
+		Organization organization = fetchByLocations_Last(
+			companyId, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -3203,16 +3287,17 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the last matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByLocations_Last(long companyId,
-		OrderByComparator<Organization> orderByComparator) {
+	public Organization fetchByLocations_Last(
+		long companyId, OrderByComparator<Organization> orderByComparator) {
+
 		int count = countByLocations(companyId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Organization> list = findByLocations(companyId, count - 1, count,
-				orderByComparator);
+		List<Organization> list = findByLocations(
+			companyId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -3231,9 +3316,11 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
 	 */
 	@Override
-	public Organization[] findByLocations_PrevAndNext(long organizationId,
-		long companyId, OrderByComparator<Organization> orderByComparator)
+	public Organization[] findByLocations_PrevAndNext(
+			long organizationId, long companyId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		Organization organization = findByPrimaryKey(organizationId);
 
 		Session session = null;
@@ -3243,121 +3330,123 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = getByLocations_PrevAndNext(session, organization,
-					companyId, orderByComparator, true);
+			array[0] = getByLocations_PrevAndNext(
+				session, organization, companyId, orderByComparator, true);
 
 			array[1] = organization;
 
-			array[2] = getByLocations_PrevAndNext(session, organization,
-					companyId, orderByComparator, false);
+			array[2] = getByLocations_PrevAndNext(
+				session, organization, companyId, orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization getByLocations_PrevAndNext(Session session,
-		Organization organization, long companyId,
+	protected Organization getByLocations_PrevAndNext(
+		Session session, Organization organization, long companyId,
 		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+		sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-		query.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -3375,15 +3464,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public List<Organization> filterFindByLocations(long companyId) {
-		return filterFindByLocations(companyId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return filterFindByLocations(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations that the user has permission to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -3392,8 +3481,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByLocations(long companyId, int start,
-		int end) {
+	public List<Organization> filterFindByLocations(
+		long companyId, int start, int end) {
+
 		return filterFindByLocations(companyId, start, end, null);
 	}
 
@@ -3401,7 +3491,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations that the user has permissions to view where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -3411,81 +3501,87 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByLocations(long companyId, int start,
-		int end, OrderByComparator<Organization> orderByComparator) {
+	public List<Organization> filterFindByLocations(
+		long companyId, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return findByLocations(companyId, start, end, orderByComparator);
 		}
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(3 +
-					(orderByComparator.getOrderByFields().length * 2));
+			sb = new StringBundler(
+				3 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		query.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
 			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
 			}
 			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
-				q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 			}
 			else {
-				q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 			}
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			return (List<Organization>)QueryUtil.list(q, getDialect(), start,
-				end);
+			return (List<Organization>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -3503,12 +3599,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public Organization[] filterFindByLocations_PrevAndNext(
-		long organizationId, long companyId,
-		OrderByComparator<Organization> orderByComparator)
+			long organizationId, long companyId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByLocations_PrevAndNext(organizationId, companyId,
-				orderByComparator);
+			return findByLocations_PrevAndNext(
+				organizationId, companyId, orderByComparator);
 		}
 
 		Organization organization = findByPrimaryKey(organizationId);
@@ -3520,156 +3617,166 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = filterGetByLocations_PrevAndNext(session, organization,
-					companyId, orderByComparator, true);
+			array[0] = filterGetByLocations_PrevAndNext(
+				session, organization, companyId, orderByComparator, true);
 
 			array[1] = organization;
 
-			array[2] = filterGetByLocations_PrevAndNext(session, organization,
-					companyId, orderByComparator, false);
+			array[2] = filterGetByLocations_PrevAndNext(
+				session, organization, companyId, orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization filterGetByLocations_PrevAndNext(Session session,
-		Organization organization, long companyId,
+	protected Organization filterGetByLocations_PrevAndNext(
+		Session session, Organization organization, long companyId,
 		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		query.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
 				}
-
-				query.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
 				}
-
-				query.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSynchronizedSQLQuery(sql);
+		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		sqlQuery.setFirstResult(0);
+		sqlQuery.setMaxResults(2);
 
 		if (getDB().isSupportsInlineDistinct()) {
-			q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 		}
 		else {
-			q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 		}
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = sqlQuery.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -3686,8 +3793,10 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public void removeByLocations(long companyId) {
-		for (Organization organization : findByLocations(companyId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (Organization organization :
+				findByLocations(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(organization);
 		}
 	}
@@ -3700,41 +3809,55 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public int countByLocations(long companyId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_LOCATIONS;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
 
-		Object[] finderArgs = new Object[] { companyId };
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByLocations;
+
+			finderArgs = new Object[] {companyId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_ORGANIZATION_WHERE);
+			sb.append(_SQL_COUNT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3756,63 +3879,48 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			return countByLocations(companyId);
 		}
 
-		StringBundler query = new StringBundler(2);
+		StringBundler sb = new StringBundler(2);
 
-		query.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
+		sb.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
 
-		query.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_LOCATIONS_COMPANYID_2);
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
+			sqlQuery.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			Long count = (Long)q.uniqueResult();
+			Long count = (Long)sqlQuery.uniqueResult();
 
 			return count.intValue();
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	private static final String _FINDER_COLUMN_LOCATIONS_COMPANYID_2 = "organization.companyId = ? AND organization.parentOrganizationId != 0";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_C_P = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_P",
-			new String[] {
-				Long.class.getName(), Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_C_P = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_P",
-			new String[] { Long.class.getName(), Long.class.getName() },
-			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
-			OrganizationModelImpl.PARENTORGANIZATIONID_COLUMN_BITMASK |
-			OrganizationModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_C_P = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_P",
-			new String[] { Long.class.getName(), Long.class.getName() });
+	private static final String _FINDER_COLUMN_LOCATIONS_COMPANYID_2 =
+		"organization.companyId = ? AND organization.parentOrganizationId != 0";
+
+	private FinderPath _finderPathWithPaginationFindByC_P;
+	private FinderPath _finderPathWithoutPaginationFindByC_P;
+	private FinderPath _finderPathCountByC_P;
 
 	/**
 	 * Returns all the organizations where companyId = &#63; and parentOrganizationId = &#63;.
@@ -3822,9 +3930,11 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the matching organizations
 	 */
 	@Override
-	public List<Organization> findByC_P(long companyId,
-		long parentOrganizationId) {
-		return findByC_P(companyId, parentOrganizationId, QueryUtil.ALL_POS,
+	public List<Organization> findByC_P(
+		long companyId, long parentOrganizationId) {
+
+		return findByC_P(
+			companyId, parentOrganizationId, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 	}
 
@@ -3832,7 +3942,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns a range of all the organizations where companyId = &#63; and parentOrganizationId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -3842,8 +3952,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByC_P(long companyId,
-		long parentOrganizationId, int start, int end) {
+	public List<Organization> findByC_P(
+		long companyId, long parentOrganizationId, int start, int end) {
+
 		return findByC_P(companyId, parentOrganizationId, start, end, null);
 	}
 
@@ -3851,7 +3962,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations where companyId = &#63; and parentOrganizationId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -3862,18 +3973,20 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByC_P(long companyId,
-		long parentOrganizationId, int start, int end,
+	public List<Organization> findByC_P(
+		long companyId, long parentOrganizationId, int start, int end,
 		OrderByComparator<Organization> orderByComparator) {
-		return findByC_P(companyId, parentOrganizationId, start, end,
-			orderByComparator, true);
+
+		return findByC_P(
+			companyId, parentOrganizationId, start, end, orderByComparator,
+			true);
 	}
 
 	/**
 	 * Returns an ordered range of all the organizations where companyId = &#63; and parentOrganizationId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -3881,43 +3994,48 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param start the lower bound of the range of organizations
 	 * @param end the upper bound of the range of organizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByC_P(long companyId,
-		long parentOrganizationId, int start, int end,
+	public List<Organization> findByC_P(
+		long companyId, long parentOrganizationId, int start, int end,
 		OrderByComparator<Organization> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+		boolean useFinderCache) {
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_C_P;
-			finderArgs = new Object[] { companyId, parentOrganizationId };
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByC_P;
+				finderArgs = new Object[] {companyId, parentOrganizationId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_C_P;
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByC_P;
 			finderArgs = new Object[] {
-					companyId, parentOrganizationId,
-					
-					start, end, orderByComparator
-				};
+				companyId, parentOrganizationId, start, end, orderByComparator
+			};
 		}
 
 		List<Organization> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Organization>)FinderCacheUtil.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache && productionMode) {
+			list = (List<Organization>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Organization organization : list) {
 					if ((companyId != organization.getCompanyId()) ||
-							(parentOrganizationId != organization.getParentOrganizationId())) {
+						(parentOrganizationId !=
+							organization.getParentOrganizationId())) {
+
 						list = null;
 
 						break;
@@ -3927,67 +4045,60 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(4 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_C_P_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_P_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
+			sb.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(parentOrganizationId);
+				queryPos.add(parentOrganizationId);
 
-				if (!pagination) {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<Organization>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4007,30 +4118,31 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByC_P_First(long companyId,
-		long parentOrganizationId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByC_P_First(
+			long companyId, long parentOrganizationId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByC_P_First(companyId,
-				parentOrganizationId, orderByComparator);
+
+		Organization organization = fetchByC_P_First(
+			companyId, parentOrganizationId, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", parentOrganizationId=");
-		msg.append(parentOrganizationId);
+		sb.append(", parentOrganizationId=");
+		sb.append(parentOrganizationId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -4042,11 +4154,12 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the first matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByC_P_First(long companyId,
-		long parentOrganizationId,
+	public Organization fetchByC_P_First(
+		long companyId, long parentOrganizationId,
 		OrderByComparator<Organization> orderByComparator) {
-		List<Organization> list = findByC_P(companyId, parentOrganizationId, 0,
-				1, orderByComparator);
+
+		List<Organization> list = findByC_P(
+			companyId, parentOrganizationId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -4065,30 +4178,31 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByC_P_Last(long companyId,
-		long parentOrganizationId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByC_P_Last(
+			long companyId, long parentOrganizationId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByC_P_Last(companyId,
-				parentOrganizationId, orderByComparator);
+
+		Organization organization = fetchByC_P_Last(
+			companyId, parentOrganizationId, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", parentOrganizationId=");
-		msg.append(parentOrganizationId);
+		sb.append(", parentOrganizationId=");
+		sb.append(parentOrganizationId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -4100,17 +4214,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the last matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByC_P_Last(long companyId,
-		long parentOrganizationId,
+	public Organization fetchByC_P_Last(
+		long companyId, long parentOrganizationId,
 		OrderByComparator<Organization> orderByComparator) {
+
 		int count = countByC_P(companyId, parentOrganizationId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Organization> list = findByC_P(companyId, parentOrganizationId,
-				count - 1, count, orderByComparator);
+		List<Organization> list = findByC_P(
+			companyId, parentOrganizationId, count - 1, count,
+			orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -4130,10 +4246,11 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
 	 */
 	@Override
-	public Organization[] findByC_P_PrevAndNext(long organizationId,
-		long companyId, long parentOrganizationId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization[] findByC_P_PrevAndNext(
+			long organizationId, long companyId, long parentOrganizationId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		Organization organization = findByPrimaryKey(organizationId);
 
 		Session session = null;
@@ -4143,125 +4260,130 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = getByC_P_PrevAndNext(session, organization, companyId,
-					parentOrganizationId, orderByComparator, true);
+			array[0] = getByC_P_PrevAndNext(
+				session, organization, companyId, parentOrganizationId,
+				orderByComparator, true);
 
 			array[1] = organization;
 
-			array[2] = getByC_P_PrevAndNext(session, organization, companyId,
-					parentOrganizationId, orderByComparator, false);
+			array[2] = getByC_P_PrevAndNext(
+				session, organization, companyId, parentOrganizationId,
+				orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization getByC_P_PrevAndNext(Session session,
-		Organization organization, long companyId, long parentOrganizationId,
+	protected Organization getByC_P_PrevAndNext(
+		Session session, Organization organization, long companyId,
+		long parentOrganizationId,
 		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+		sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-		query.append(_FINDER_COLUMN_C_P_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_P_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
-		qPos.add(parentOrganizationId);
+		queryPos.add(parentOrganizationId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -4279,17 +4401,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByC_P(long companyId,
-		long parentOrganizationId) {
-		return filterFindByC_P(companyId, parentOrganizationId,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	public List<Organization> filterFindByC_P(
+		long companyId, long parentOrganizationId) {
+
+		return filterFindByC_P(
+			companyId, parentOrganizationId, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations that the user has permission to view where companyId = &#63; and parentOrganizationId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -4299,16 +4423,18 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByC_P(long companyId,
-		long parentOrganizationId, int start, int end) {
-		return filterFindByC_P(companyId, parentOrganizationId, start, end, null);
+	public List<Organization> filterFindByC_P(
+		long companyId, long parentOrganizationId, int start, int end) {
+
+		return filterFindByC_P(
+			companyId, parentOrganizationId, start, end, null);
 	}
 
 	/**
 	 * Returns an ordered range of all the organizations that the user has permissions to view where companyId = &#63; and parentOrganizationId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -4319,87 +4445,92 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByC_P(long companyId,
-		long parentOrganizationId, int start, int end,
+	public List<Organization> filterFindByC_P(
+		long companyId, long parentOrganizationId, int start, int end,
 		OrderByComparator<Organization> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByC_P(companyId, parentOrganizationId, start, end,
-				orderByComparator);
+			return findByC_P(
+				companyId, parentOrganizationId, start, end, orderByComparator);
 		}
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByFields().length * 2));
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		query.append(_FINDER_COLUMN_C_P_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_P_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
 			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
 			}
 			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
-				q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 			}
 			else {
-				q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 			}
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			qPos.add(parentOrganizationId);
+			queryPos.add(parentOrganizationId);
 
-			return (List<Organization>)QueryUtil.list(q, getDialect(), start,
-				end);
+			return (List<Organization>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -4417,13 +4548,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
 	 */
 	@Override
-	public Organization[] filterFindByC_P_PrevAndNext(long organizationId,
-		long companyId, long parentOrganizationId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization[] filterFindByC_P_PrevAndNext(
+			long organizationId, long companyId, long parentOrganizationId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByC_P_PrevAndNext(organizationId, companyId,
-				parentOrganizationId, orderByComparator);
+			return findByC_P_PrevAndNext(
+				organizationId, companyId, parentOrganizationId,
+				orderByComparator);
 		}
 
 		Organization organization = findByPrimaryKey(organizationId);
@@ -4435,160 +4568,173 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = filterGetByC_P_PrevAndNext(session, organization,
-					companyId, parentOrganizationId, orderByComparator, true);
+			array[0] = filterGetByC_P_PrevAndNext(
+				session, organization, companyId, parentOrganizationId,
+				orderByComparator, true);
 
 			array[1] = organization;
 
-			array[2] = filterGetByC_P_PrevAndNext(session, organization,
-					companyId, parentOrganizationId, orderByComparator, false);
+			array[2] = filterGetByC_P_PrevAndNext(
+				session, organization, companyId, parentOrganizationId,
+				orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization filterGetByC_P_PrevAndNext(Session session,
-		Organization organization, long companyId, long parentOrganizationId,
+	protected Organization filterGetByC_P_PrevAndNext(
+		Session session, Organization organization, long companyId,
+		long parentOrganizationId,
 		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(6 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		query.append(_FINDER_COLUMN_C_P_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_P_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
 				}
-
-				query.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
 				}
-
-				query.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSynchronizedSQLQuery(sql);
+		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		sqlQuery.setFirstResult(0);
+		sqlQuery.setMaxResults(2);
 
 		if (getDB().isSupportsInlineDistinct()) {
-			q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 		}
 		else {
-			q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 		}
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
-		qPos.add(parentOrganizationId);
+		queryPos.add(parentOrganizationId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = sqlQuery.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -4606,8 +4752,11 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public void removeByC_P(long companyId, long parentOrganizationId) {
-		for (Organization organization : findByC_P(companyId,
-				parentOrganizationId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (Organization organization :
+				findByC_P(
+					companyId, parentOrganizationId, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
 			remove(organization);
 		}
 	}
@@ -4621,45 +4770,59 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public int countByC_P(long companyId, long parentOrganizationId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_C_P;
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
 
-		Object[] finderArgs = new Object[] { companyId, parentOrganizationId };
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_P;
+
+			finderArgs = new Object[] {companyId, parentOrganizationId};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_ORGANIZATION_WHERE);
+			sb.append(_SQL_COUNT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_C_P_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_P_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
+			sb.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(parentOrganizationId);
+				queryPos.add(parentOrganizationId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4682,61 +4845,54 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			return countByC_P(companyId, parentOrganizationId);
 		}
 
-		StringBundler query = new StringBundler(3);
+		StringBundler sb = new StringBundler(3);
 
-		query.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
+		sb.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
 
-		query.append(_FINDER_COLUMN_C_P_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_P_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2);
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
+			sqlQuery.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			qPos.add(parentOrganizationId);
+			queryPos.add(parentOrganizationId);
 
-			Long count = (Long)q.uniqueResult();
+			Long count = (Long)sqlQuery.uniqueResult();
 
 			return count.intValue();
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	private static final String _FINDER_COLUMN_C_P_COMPANYID_2 = "organization.companyId = ? AND ";
-	private static final String _FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2 = "organization.parentOrganizationId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_C_T = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_T",
-			new String[] {
-				Long.class.getName(), String.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_COUNT_BY_C_T = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByC_T",
-			new String[] { Long.class.getName(), String.class.getName() });
+	private static final String _FINDER_COLUMN_C_P_COMPANYID_2 =
+		"organization.companyId = ? AND ";
+
+	private static final String _FINDER_COLUMN_C_P_PARENTORGANIZATIONID_2 =
+		"organization.parentOrganizationId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByC_T;
+	private FinderPath _finderPathWithPaginationCountByC_T;
 
 	/**
 	 * Returns all the organizations where companyId = &#63; and treePath LIKE &#63;.
@@ -4747,15 +4903,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public List<Organization> findByC_T(long companyId, String treePath) {
-		return findByC_T(companyId, treePath, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return findByC_T(
+			companyId, treePath, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations where companyId = &#63; and treePath LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -4765,8 +4921,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByC_T(long companyId, String treePath,
-		int start, int end) {
+	public List<Organization> findByC_T(
+		long companyId, String treePath, int start, int end) {
+
 		return findByC_T(companyId, treePath, start, end, null);
 	}
 
@@ -4774,7 +4931,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations where companyId = &#63; and treePath LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -4785,17 +4942,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByC_T(long companyId, String treePath,
-		int start, int end, OrderByComparator<Organization> orderByComparator) {
-		return findByC_T(companyId, treePath, start, end, orderByComparator,
-			true);
+	public List<Organization> findByC_T(
+		long companyId, String treePath, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
+		return findByC_T(
+			companyId, treePath, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the organizations where companyId = &#63; and treePath LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -4803,36 +4962,41 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param start the lower bound of the range of organizations
 	 * @param end the upper bound of the range of organizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByC_T(long companyId, String treePath,
-		int start, int end, OrderByComparator<Organization> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<Organization> findByC_T(
+		long companyId, String treePath, int start, int end,
+		OrderByComparator<Organization> orderByComparator,
+		boolean useFinderCache) {
+
+		treePath = Objects.toString(treePath, "");
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
-		finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_C_T;
+		finderPath = _finderPathWithPaginationFindByC_T;
 		finderArgs = new Object[] {
-				companyId, treePath,
-				
-				start, end, orderByComparator
-			};
+			companyId, treePath, start, end, orderByComparator
+		};
 
 		List<Organization> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Organization>)FinderCacheUtil.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache && productionMode) {
+			list = (List<Organization>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Organization organization : list) {
 					if ((companyId != organization.getCompanyId()) ||
-							!StringUtil.wildcardMatches(
-								organization.getTreePath(), treePath, '_', '%',
-								'\\', true)) {
+						!StringUtil.wildcardMatches(
+							organization.getTreePath(), treePath, '_', '%',
+							'\\', true)) {
+
 						list = null;
 
 						break;
@@ -4842,81 +5006,71 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(4 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_C_T_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_T_COMPANYID_2);
 
 			boolean bindTreePath = false;
 
-			if (treePath == null) {
-				query.append(_FINDER_COLUMN_C_T_TREEPATH_1);
-			}
-			else if (treePath.equals("")) {
-				query.append(_FINDER_COLUMN_C_T_TREEPATH_3);
+			if (treePath.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_T_TREEPATH_3);
 			}
 			else {
 				bindTreePath = true;
 
-				query.append(_FINDER_COLUMN_C_T_TREEPATH_2);
+				sb.append(_FINDER_COLUMN_C_T_TREEPATH_2);
 			}
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindTreePath) {
-					qPos.add(treePath);
+					queryPos.add(treePath);
 				}
 
-				if (!pagination) {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<Organization>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -4936,29 +5090,31 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByC_T_First(long companyId, String treePath,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByC_T_First(
+			long companyId, String treePath,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByC_T_First(companyId, treePath,
-				orderByComparator);
+
+		Organization organization = fetchByC_T_First(
+			companyId, treePath, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", treePath=");
-		msg.append(treePath);
+		sb.append(", treePathLIKE");
+		sb.append(treePath);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -4970,10 +5126,12 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the first matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByC_T_First(long companyId, String treePath,
+	public Organization fetchByC_T_First(
+		long companyId, String treePath,
 		OrderByComparator<Organization> orderByComparator) {
-		List<Organization> list = findByC_T(companyId, treePath, 0, 1,
-				orderByComparator);
+
+		List<Organization> list = findByC_T(
+			companyId, treePath, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -4992,29 +5150,31 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByC_T_Last(long companyId, String treePath,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByC_T_Last(
+			long companyId, String treePath,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByC_T_Last(companyId, treePath,
-				orderByComparator);
+
+		Organization organization = fetchByC_T_Last(
+			companyId, treePath, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", treePath=");
-		msg.append(treePath);
+		sb.append(", treePathLIKE");
+		sb.append(treePath);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -5026,16 +5186,18 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the last matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByC_T_Last(long companyId, String treePath,
+	public Organization fetchByC_T_Last(
+		long companyId, String treePath,
 		OrderByComparator<Organization> orderByComparator) {
+
 		int count = countByC_T(companyId, treePath);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Organization> list = findByC_T(companyId, treePath, count - 1,
-				count, orderByComparator);
+		List<Organization> list = findByC_T(
+			companyId, treePath, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -5055,10 +5217,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
 	 */
 	@Override
-	public Organization[] findByC_T_PrevAndNext(long organizationId,
-		long companyId, String treePath,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization[] findByC_T_PrevAndNext(
+			long organizationId, long companyId, String treePath,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
+		treePath = Objects.toString(treePath, "");
+
 		Organization organization = findByPrimaryKey(organizationId);
 
 		Session session = null;
@@ -5068,139 +5233,141 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = getByC_T_PrevAndNext(session, organization, companyId,
-					treePath, orderByComparator, true);
+			array[0] = getByC_T_PrevAndNext(
+				session, organization, companyId, treePath, orderByComparator,
+				true);
 
 			array[1] = organization;
 
-			array[2] = getByC_T_PrevAndNext(session, organization, companyId,
-					treePath, orderByComparator, false);
+			array[2] = getByC_T_PrevAndNext(
+				session, organization, companyId, treePath, orderByComparator,
+				false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization getByC_T_PrevAndNext(Session session,
-		Organization organization, long companyId, String treePath,
-		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+	protected Organization getByC_T_PrevAndNext(
+		Session session, Organization organization, long companyId,
+		String treePath, OrderByComparator<Organization> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+		sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-		query.append(_FINDER_COLUMN_C_T_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_T_COMPANYID_2);
 
 		boolean bindTreePath = false;
 
-		if (treePath == null) {
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_1);
-		}
-		else if (treePath.equals("")) {
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_3);
+		if (treePath.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_T_TREEPATH_3);
 		}
 		else {
 			bindTreePath = true;
 
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_2);
+			sb.append(_FINDER_COLUMN_C_T_TREEPATH_2);
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (bindTreePath) {
-			qPos.add(treePath);
+			queryPos.add(treePath);
 		}
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -5219,15 +5386,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public List<Organization> filterFindByC_T(long companyId, String treePath) {
-		return filterFindByC_T(companyId, treePath, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return filterFindByC_T(
+			companyId, treePath, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations that the user has permission to view where companyId = &#63; and treePath LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -5237,8 +5404,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByC_T(long companyId, String treePath,
-		int start, int end) {
+	public List<Organization> filterFindByC_T(
+		long companyId, String treePath, int start, int end) {
+
 		return filterFindByC_T(companyId, treePath, start, end, null);
 	}
 
@@ -5246,7 +5414,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations that the user has permissions to view where companyId = &#63; and treePath LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -5257,99 +5425,105 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByC_T(long companyId, String treePath,
-		int start, int end, OrderByComparator<Organization> orderByComparator) {
+	public List<Organization> filterFindByC_T(
+		long companyId, String treePath, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByC_T(companyId, treePath, start, end, orderByComparator);
+			return findByC_T(
+				companyId, treePath, start, end, orderByComparator);
 		}
 
-		StringBundler query = null;
+		treePath = Objects.toString(treePath, "");
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByFields().length * 2));
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		query.append(_FINDER_COLUMN_C_T_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_T_COMPANYID_2);
 
 		boolean bindTreePath = false;
 
-		if (treePath == null) {
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_1);
-		}
-		else if (treePath.equals("")) {
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_3);
+		if (treePath.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_T_TREEPATH_3);
 		}
 		else {
 			bindTreePath = true;
 
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_2);
+			sb.append(_FINDER_COLUMN_C_T_TREEPATH_2);
 		}
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
 			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
 			}
 			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
-				q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 			}
 			else {
-				q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 			}
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (bindTreePath) {
-				qPos.add(treePath);
+				queryPos.add(treePath);
 			}
 
-			return (List<Organization>)QueryUtil.list(q, getDialect(), start,
-				end);
+			return (List<Organization>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -5367,14 +5541,17 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
 	 */
 	@Override
-	public Organization[] filterFindByC_T_PrevAndNext(long organizationId,
-		long companyId, String treePath,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization[] filterFindByC_T_PrevAndNext(
+			long organizationId, long companyId, String treePath,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByC_T_PrevAndNext(organizationId, companyId, treePath,
-				orderByComparator);
+			return findByC_T_PrevAndNext(
+				organizationId, companyId, treePath, orderByComparator);
 		}
+
+		treePath = Objects.toString(treePath, "");
 
 		Organization organization = findByPrimaryKey(organizationId);
 
@@ -5385,174 +5562,184 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = filterGetByC_T_PrevAndNext(session, organization,
-					companyId, treePath, orderByComparator, true);
+			array[0] = filterGetByC_T_PrevAndNext(
+				session, organization, companyId, treePath, orderByComparator,
+				true);
 
 			array[1] = organization;
 
-			array[2] = filterGetByC_T_PrevAndNext(session, organization,
-					companyId, treePath, orderByComparator, false);
+			array[2] = filterGetByC_T_PrevAndNext(
+				session, organization, companyId, treePath, orderByComparator,
+				false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization filterGetByC_T_PrevAndNext(Session session,
-		Organization organization, long companyId, String treePath,
-		OrderByComparator<Organization> orderByComparator, boolean previous) {
-		StringBundler query = null;
+	protected Organization filterGetByC_T_PrevAndNext(
+		Session session, Organization organization, long companyId,
+		String treePath, OrderByComparator<Organization> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(6 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		query.append(_FINDER_COLUMN_C_T_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_T_COMPANYID_2);
 
 		boolean bindTreePath = false;
 
-		if (treePath == null) {
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_1);
-		}
-		else if (treePath.equals("")) {
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_3);
+		if (treePath.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_T_TREEPATH_3);
 		}
 		else {
 			bindTreePath = true;
 
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_2);
+			sb.append(_FINDER_COLUMN_C_T_TREEPATH_2);
 		}
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
 				}
-
-				query.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
 				}
-
-				query.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSynchronizedSQLQuery(sql);
+		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		sqlQuery.setFirstResult(0);
+		sqlQuery.setMaxResults(2);
 
 		if (getDB().isSupportsInlineDistinct()) {
-			q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 		}
 		else {
-			q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 		}
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (bindTreePath) {
-			qPos.add(treePath);
+			queryPos.add(treePath);
 		}
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = sqlQuery.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -5570,8 +5757,11 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public void removeByC_T(long companyId, String treePath) {
-		for (Organization organization : findByC_T(companyId, treePath,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (Organization organization :
+				findByC_T(
+					companyId, treePath, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
 			remove(organization);
 		}
 	}
@@ -5585,59 +5775,72 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public int countByC_T(long companyId, String treePath) {
-		FinderPath finderPath = FINDER_PATH_WITH_PAGINATION_COUNT_BY_C_T;
+		treePath = Objects.toString(treePath, "");
 
-		Object[] finderArgs = new Object[] { companyId, treePath };
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathWithPaginationCountByC_T;
+
+			finderArgs = new Object[] {companyId, treePath};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_ORGANIZATION_WHERE);
+			sb.append(_SQL_COUNT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_C_T_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_T_COMPANYID_2);
 
 			boolean bindTreePath = false;
 
-			if (treePath == null) {
-				query.append(_FINDER_COLUMN_C_T_TREEPATH_1);
-			}
-			else if (treePath.equals("")) {
-				query.append(_FINDER_COLUMN_C_T_TREEPATH_3);
+			if (treePath.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_T_TREEPATH_3);
 			}
 			else {
 				bindTreePath = true;
 
-				query.append(_FINDER_COLUMN_C_T_TREEPATH_2);
+				sb.append(_FINDER_COLUMN_C_T_TREEPATH_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindTreePath) {
-					qPos.add(treePath);
+					queryPos.add(treePath);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5660,77 +5863,73 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			return countByC_T(companyId, treePath);
 		}
 
-		StringBundler query = new StringBundler(3);
+		treePath = Objects.toString(treePath, "");
 
-		query.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
+		StringBundler sb = new StringBundler(3);
 
-		query.append(_FINDER_COLUMN_C_T_COMPANYID_2);
+		sb.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
+
+		sb.append(_FINDER_COLUMN_C_T_COMPANYID_2);
 
 		boolean bindTreePath = false;
 
-		if (treePath == null) {
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_1);
-		}
-		else if (treePath.equals("")) {
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_3);
+		if (treePath.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_T_TREEPATH_3);
 		}
 		else {
 			bindTreePath = true;
 
-			query.append(_FINDER_COLUMN_C_T_TREEPATH_2);
+			sb.append(_FINDER_COLUMN_C_T_TREEPATH_2);
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
+			sqlQuery.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (bindTreePath) {
-				qPos.add(treePath);
+				queryPos.add(treePath);
 			}
 
-			Long count = (Long)q.uniqueResult();
+			Long count = (Long)sqlQuery.uniqueResult();
 
 			return count.intValue();
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	private static final String _FINDER_COLUMN_C_T_COMPANYID_2 = "organization.companyId = ? AND ";
-	private static final String _FINDER_COLUMN_C_T_TREEPATH_1 = "organization.treePath IS NULL";
-	private static final String _FINDER_COLUMN_C_T_TREEPATH_2 = "organization.treePath LIKE ?";
-	private static final String _FINDER_COLUMN_C_T_TREEPATH_3 = "(organization.treePath IS NULL OR organization.treePath LIKE '')";
-	public static final FinderPath FINDER_PATH_FETCH_BY_C_N = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_ENTITY, "fetchByC_N",
-			new String[] { Long.class.getName(), String.class.getName() },
-			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
-			OrganizationModelImpl.NAME_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_C_N = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_N",
-			new String[] { Long.class.getName(), String.class.getName() });
+	private static final String _FINDER_COLUMN_C_T_COMPANYID_2 =
+		"organization.companyId = ? AND ";
+
+	private static final String _FINDER_COLUMN_C_T_TREEPATH_2 =
+		"organization.treePath LIKE ?";
+
+	private static final String _FINDER_COLUMN_C_T_TREEPATH_3 =
+		"(organization.treePath IS NULL OR organization.treePath LIKE '')";
+
+	private FinderPath _finderPathFetchByC_N;
+	private FinderPath _finderPathCountByC_N;
 
 	/**
-	 * Returns the organization where companyId = &#63; and name = &#63; or throws a {@link NoSuchOrganizationException} if it could not be found.
+	 * Returns the organization where companyId = &#63; and name = &#63; or throws a <code>NoSuchOrganizationException</code> if it could not be found.
 	 *
 	 * @param companyId the company ID
 	 * @param name the name
@@ -5740,26 +5939,27 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	@Override
 	public Organization findByC_N(long companyId, String name)
 		throws NoSuchOrganizationException {
+
 		Organization organization = fetchByC_N(companyId, name);
 
 		if (organization == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("companyId=");
-			msg.append(companyId);
+			sb.append("companyId=");
+			sb.append(companyId);
 
-			msg.append(", name=");
-			msg.append(name);
+			sb.append(", name=");
+			sb.append(name);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchOrganizationException(msg.toString());
+			throw new NoSuchOrganizationException(sb.toString());
 		}
 
 		return organization;
@@ -5782,73 +5982,83 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 *
 	 * @param companyId the company ID
 	 * @param name the name
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByC_N(long companyId, String name,
-		boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] { companyId, name };
+	public Organization fetchByC_N(
+		long companyId, String name, boolean useFinderCache) {
+
+		name = Objects.toString(name, "");
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {companyId, name};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
-			result = FinderCacheUtil.getResult(FINDER_PATH_FETCH_BY_C_N,
-					finderArgs, this);
+		if (useFinderCache && productionMode) {
+			result = FinderCacheUtil.getResult(
+				_finderPathFetchByC_N, finderArgs, this);
 		}
 
 		if (result instanceof Organization) {
 			Organization organization = (Organization)result;
 
 			if ((companyId != organization.getCompanyId()) ||
-					!Objects.equals(name, organization.getName())) {
+				!Objects.equals(name, organization.getName())) {
+
 				result = null;
 			}
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_C_N_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_N_COMPANYID_2);
 
 			boolean bindName = false;
 
-			if (name == null) {
-				query.append(_FINDER_COLUMN_C_N_NAME_1);
-			}
-			else if (name.equals("")) {
-				query.append(_FINDER_COLUMN_C_N_NAME_3);
+			if (name.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_N_NAME_3);
 			}
 			else {
 				bindName = true;
 
-				query.append(_FINDER_COLUMN_C_N_NAME_2);
+				sb.append(_FINDER_COLUMN_C_N_NAME_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindName) {
-					qPos.add(name);
+					queryPos.add(name);
 				}
 
-				List<Organization> list = q.list();
+				List<Organization> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_C_N,
-						finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_N, finderArgs, list);
+					}
 				}
 				else {
 					Organization organization = list.get(0);
@@ -5858,11 +6068,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 					cacheResult(organization);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_C_N,
-					finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(
+						_finderPathFetchByC_N, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5887,6 +6099,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	@Override
 	public Organization removeByC_N(long companyId, String name)
 		throws NoSuchOrganizationException {
+
 		Organization organization = findByC_N(companyId, name);
 
 		return remove(organization);
@@ -5901,59 +6114,72 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public int countByC_N(long companyId, String name) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_C_N;
+		name = Objects.toString(name, "");
 
-		Object[] finderArgs = new Object[] { companyId, name };
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_N;
+
+			finderArgs = new Object[] {companyId, name};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_ORGANIZATION_WHERE);
+			sb.append(_SQL_COUNT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_C_N_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_N_COMPANYID_2);
 
 			boolean bindName = false;
 
-			if (name == null) {
-				query.append(_FINDER_COLUMN_C_N_NAME_1);
-			}
-			else if (name.equals("")) {
-				query.append(_FINDER_COLUMN_C_N_NAME_3);
+			if (name.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_N_NAME_3);
 			}
 			else {
 				bindName = true;
 
-				query.append(_FINDER_COLUMN_C_N_NAME_2);
+				sb.append(_FINDER_COLUMN_C_N_NAME_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindName) {
-					qPos.add(name);
+					queryPos.add(name);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -5963,25 +6189,1049 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_C_N_COMPANYID_2 = "organization.companyId = ? AND ";
-	private static final String _FINDER_COLUMN_C_N_NAME_1 = "organization.name IS NULL";
-	private static final String _FINDER_COLUMN_C_N_NAME_2 = "organization.name = ?";
-	private static final String _FINDER_COLUMN_C_N_NAME_3 = "(organization.name IS NULL OR organization.name = '')";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_O_C_P = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByO_C_P",
-			new String[] {
-				Long.class.getName(), Long.class.getName(), Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_COUNT_BY_O_C_P = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByO_C_P",
-			new String[] {
-				Long.class.getName(), Long.class.getName(), Long.class.getName()
-			});
+	private static final String _FINDER_COLUMN_C_N_COMPANYID_2 =
+		"organization.companyId = ? AND ";
+
+	private static final String _FINDER_COLUMN_C_N_NAME_2 =
+		"organization.name = ?";
+
+	private static final String _FINDER_COLUMN_C_N_NAME_3 =
+		"(organization.name IS NULL OR organization.name = '')";
+
+	private FinderPath _finderPathWithPaginationFindByC_LikeN;
+	private FinderPath _finderPathWithPaginationCountByC_LikeN;
+
+	/**
+	 * Returns all the organizations where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @return the matching organizations
+	 */
+	@Override
+	public List<Organization> findByC_LikeN(long companyId, String name) {
+		return findByC_LikeN(
+			companyId, name, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the organizations where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param start the lower bound of the range of organizations
+	 * @param end the upper bound of the range of organizations (not inclusive)
+	 * @return the range of matching organizations
+	 */
+	@Override
+	public List<Organization> findByC_LikeN(
+		long companyId, String name, int start, int end) {
+
+		return findByC_LikeN(companyId, name, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the organizations where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param start the lower bound of the range of organizations
+	 * @param end the upper bound of the range of organizations (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching organizations
+	 */
+	@Override
+	public List<Organization> findByC_LikeN(
+		long companyId, String name, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
+		return findByC_LikeN(
+			companyId, name, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the organizations where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param start the lower bound of the range of organizations
+	 * @param end the upper bound of the range of organizations (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching organizations
+	 */
+	@Override
+	public List<Organization> findByC_LikeN(
+		long companyId, String name, int start, int end,
+		OrderByComparator<Organization> orderByComparator,
+		boolean useFinderCache) {
+
+		name = Objects.toString(name, "");
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		finderPath = _finderPathWithPaginationFindByC_LikeN;
+		finderArgs = new Object[] {
+			companyId, name, start, end, orderByComparator
+		};
+
+		List<Organization> list = null;
+
+		if (useFinderCache && productionMode) {
+			list = (List<Organization>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (Organization organization : list) {
+					if ((companyId != organization.getCompanyId()) ||
+						!StringUtil.wildcardMatches(
+							organization.getName(), name, '_', '%', '\\',
+							false)) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(4);
+			}
+
+			sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
+
+			sb.append(_FINDER_COLUMN_C_LIKEN_COMPANYID_2);
+
+			boolean bindName = false;
+
+			if (name.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_LIKEN_NAME_3);
+			}
+			else {
+				bindName = true;
+
+				sb.append(_FINDER_COLUMN_C_LIKEN_NAME_2);
+			}
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(companyId);
+
+				if (bindName) {
+					queryPos.add(StringUtil.toLowerCase(name));
+				}
+
+				list = (List<Organization>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
+
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first organization in the ordered set where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching organization
+	 * @throws NoSuchOrganizationException if a matching organization could not be found
+	 */
+	@Override
+	public Organization findByC_LikeN_First(
+			long companyId, String name,
+			OrderByComparator<Organization> orderByComparator)
+		throws NoSuchOrganizationException {
+
+		Organization organization = fetchByC_LikeN_First(
+			companyId, name, orderByComparator);
+
+		if (organization != null) {
+			return organization;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("companyId=");
+		sb.append(companyId);
+
+		sb.append(", nameLIKE");
+		sb.append(name);
+
+		sb.append("}");
+
+		throw new NoSuchOrganizationException(sb.toString());
+	}
+
+	/**
+	 * Returns the first organization in the ordered set where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching organization, or <code>null</code> if a matching organization could not be found
+	 */
+	@Override
+	public Organization fetchByC_LikeN_First(
+		long companyId, String name,
+		OrderByComparator<Organization> orderByComparator) {
+
+		List<Organization> list = findByC_LikeN(
+			companyId, name, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last organization in the ordered set where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching organization
+	 * @throws NoSuchOrganizationException if a matching organization could not be found
+	 */
+	@Override
+	public Organization findByC_LikeN_Last(
+			long companyId, String name,
+			OrderByComparator<Organization> orderByComparator)
+		throws NoSuchOrganizationException {
+
+		Organization organization = fetchByC_LikeN_Last(
+			companyId, name, orderByComparator);
+
+		if (organization != null) {
+			return organization;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("companyId=");
+		sb.append(companyId);
+
+		sb.append(", nameLIKE");
+		sb.append(name);
+
+		sb.append("}");
+
+		throw new NoSuchOrganizationException(sb.toString());
+	}
+
+	/**
+	 * Returns the last organization in the ordered set where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching organization, or <code>null</code> if a matching organization could not be found
+	 */
+	@Override
+	public Organization fetchByC_LikeN_Last(
+		long companyId, String name,
+		OrderByComparator<Organization> orderByComparator) {
+
+		int count = countByC_LikeN(companyId, name);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<Organization> list = findByC_LikeN(
+			companyId, name, count - 1, count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the organizations before and after the current organization in the ordered set where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * @param organizationId the primary key of the current organization
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next organization
+	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
+	 */
+	@Override
+	public Organization[] findByC_LikeN_PrevAndNext(
+			long organizationId, long companyId, String name,
+			OrderByComparator<Organization> orderByComparator)
+		throws NoSuchOrganizationException {
+
+		name = Objects.toString(name, "");
+
+		Organization organization = findByPrimaryKey(organizationId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			Organization[] array = new OrganizationImpl[3];
+
+			array[0] = getByC_LikeN_PrevAndNext(
+				session, organization, companyId, name, orderByComparator,
+				true);
+
+			array[1] = organization;
+
+			array[2] = getByC_LikeN_PrevAndNext(
+				session, organization, companyId, name, orderByComparator,
+				false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected Organization getByC_LikeN_PrevAndNext(
+		Session session, Organization organization, long companyId, String name,
+		OrderByComparator<Organization> orderByComparator, boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(4);
+		}
+
+		sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
+
+		sb.append(_FINDER_COLUMN_C_LIKEN_COMPANYID_2);
+
+		boolean bindName = false;
+
+		if (name.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_LIKEN_NAME_3);
+		}
+		else {
+			bindName = true;
+
+			sb.append(_FINDER_COLUMN_C_LIKEN_NAME_2);
+		}
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(companyId);
+
+		if (bindName) {
+			queryPos.add(StringUtil.toLowerCase(name));
+		}
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<Organization> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns all the organizations that the user has permission to view where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @return the matching organizations that the user has permission to view
+	 */
+	@Override
+	public List<Organization> filterFindByC_LikeN(long companyId, String name) {
+		return filterFindByC_LikeN(
+			companyId, name, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the organizations that the user has permission to view where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param start the lower bound of the range of organizations
+	 * @param end the upper bound of the range of organizations (not inclusive)
+	 * @return the range of matching organizations that the user has permission to view
+	 */
+	@Override
+	public List<Organization> filterFindByC_LikeN(
+		long companyId, String name, int start, int end) {
+
+		return filterFindByC_LikeN(companyId, name, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the organizations that the user has permissions to view where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param start the lower bound of the range of organizations
+	 * @param end the upper bound of the range of organizations (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching organizations that the user has permission to view
+	 */
+	@Override
+	public List<Organization> filterFindByC_LikeN(
+		long companyId, String name, int start, int end,
+		OrderByComparator<Organization> orderByComparator) {
+
+		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
+			return findByC_LikeN(
+				companyId, name, start, end, orderByComparator);
+		}
+
+		name = Objects.toString(name, "");
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByFields().length * 2));
+		}
+		else {
+			sb = new StringBundler(5);
+		}
+
+		if (getDB().isSupportsInlineDistinct()) {
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+		}
+		else {
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+		}
+
+		sb.append(_FINDER_COLUMN_C_LIKEN_COMPANYID_2);
+
+		boolean bindName = false;
+
+		if (name.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_LIKEN_NAME_3);
+		}
+		else {
+			bindName = true;
+
+			sb.append(_FINDER_COLUMN_C_LIKEN_NAME_2);
+		}
+
+		if (!getDB().isSupportsInlineDistinct()) {
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+		}
+
+		if (orderByComparator != null) {
+			if (getDB().isSupportsInlineDistinct()) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
+			}
+			else {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
+			}
+		}
+		else {
+			if (getDB().isSupportsInlineDistinct()) {
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			}
+			else {
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
+			}
+		}
+
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
+
+			if (getDB().isSupportsInlineDistinct()) {
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+			}
+			else {
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+			}
+
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
+
+			queryPos.add(companyId);
+
+			if (bindName) {
+				queryPos.add(StringUtil.toLowerCase(name));
+			}
+
+			return (List<Organization>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	/**
+	 * Returns the organizations before and after the current organization in the ordered set of organizations that the user has permission to view where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * @param organizationId the primary key of the current organization
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next organization
+	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
+	 */
+	@Override
+	public Organization[] filterFindByC_LikeN_PrevAndNext(
+			long organizationId, long companyId, String name,
+			OrderByComparator<Organization> orderByComparator)
+		throws NoSuchOrganizationException {
+
+		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
+			return findByC_LikeN_PrevAndNext(
+				organizationId, companyId, name, orderByComparator);
+		}
+
+		name = Objects.toString(name, "");
+
+		Organization organization = findByPrimaryKey(organizationId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			Organization[] array = new OrganizationImpl[3];
+
+			array[0] = filterGetByC_LikeN_PrevAndNext(
+				session, organization, companyId, name, orderByComparator,
+				true);
+
+			array[1] = organization;
+
+			array[2] = filterGetByC_LikeN_PrevAndNext(
+				session, organization, companyId, name, orderByComparator,
+				false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected Organization filterGetByC_LikeN_PrevAndNext(
+		Session session, Organization organization, long companyId, String name,
+		OrderByComparator<Organization> orderByComparator, boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(5);
+		}
+
+		if (getDB().isSupportsInlineDistinct()) {
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+		}
+		else {
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+		}
+
+		sb.append(_FINDER_COLUMN_C_LIKEN_COMPANYID_2);
+
+		boolean bindName = false;
+
+		if (name.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_LIKEN_NAME_3);
+		}
+		else {
+			bindName = true;
+
+			sb.append(_FINDER_COLUMN_C_LIKEN_NAME_2);
+		}
+
+		if (!getDB().isSupportsInlineDistinct()) {
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+		}
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				if (getDB().isSupportsInlineDistinct()) {
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
+				}
+				else {
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
+				}
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				if (getDB().isSupportsInlineDistinct()) {
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
+				}
+				else {
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
+				}
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			if (getDB().isSupportsInlineDistinct()) {
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			}
+			else {
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
+			}
+		}
+
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+
+		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
+
+		sqlQuery.setFirstResult(0);
+		sqlQuery.setMaxResults(2);
+
+		if (getDB().isSupportsInlineDistinct()) {
+			sqlQuery.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+		}
+		else {
+			sqlQuery.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+		}
+
+		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
+
+		queryPos.add(companyId);
+
+		if (bindName) {
+			queryPos.add(StringUtil.toLowerCase(name));
+		}
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<Organization> list = sqlQuery.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the organizations where companyId = &#63; and name LIKE &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 */
+	@Override
+	public void removeByC_LikeN(long companyId, String name) {
+		for (Organization organization :
+				findByC_LikeN(
+					companyId, name, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
+			remove(organization);
+		}
+	}
+
+	/**
+	 * Returns the number of organizations where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @return the number of matching organizations
+	 */
+	@Override
+	public int countByC_LikeN(long companyId, String name) {
+		name = Objects.toString(name, "");
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathWithPaginationCountByC_LikeN;
+
+			finderArgs = new Object[] {companyId, name};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(3);
+
+			sb.append(_SQL_COUNT_ORGANIZATION_WHERE);
+
+			sb.append(_FINDER_COLUMN_C_LIKEN_COMPANYID_2);
+
+			boolean bindName = false;
+
+			if (name.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_LIKEN_NAME_3);
+			}
+			else {
+				bindName = true;
+
+				sb.append(_FINDER_COLUMN_C_LIKEN_NAME_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(companyId);
+
+				if (bindName) {
+					queryPos.add(StringUtil.toLowerCase(name));
+				}
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
+
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	/**
+	 * Returns the number of organizations that the user has permission to view where companyId = &#63; and name LIKE &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param name the name
+	 * @return the number of matching organizations that the user has permission to view
+	 */
+	@Override
+	public int filterCountByC_LikeN(long companyId, String name) {
+		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
+			return countByC_LikeN(companyId, name);
+		}
+
+		name = Objects.toString(name, "");
+
+		StringBundler sb = new StringBundler(3);
+
+		sb.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
+
+		sb.append(_FINDER_COLUMN_C_LIKEN_COMPANYID_2);
+
+		boolean bindName = false;
+
+		if (name.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_LIKEN_NAME_3);
+		}
+		else {
+			bindName = true;
+
+			sb.append(_FINDER_COLUMN_C_LIKEN_NAME_2);
+		}
+
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
+
+			sqlQuery.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
+
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
+
+			queryPos.add(companyId);
+
+			if (bindName) {
+				queryPos.add(StringUtil.toLowerCase(name));
+			}
+
+			Long count = (Long)sqlQuery.uniqueResult();
+
+			return count.intValue();
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	private static final String _FINDER_COLUMN_C_LIKEN_COMPANYID_2 =
+		"organization.companyId = ? AND ";
+
+	private static final String _FINDER_COLUMN_C_LIKEN_NAME_2 =
+		"lower(organization.name) LIKE ?";
+
+	private static final String _FINDER_COLUMN_C_LIKEN_NAME_3 =
+		"(organization.name IS NULL OR organization.name LIKE '')";
+
+	private FinderPath _finderPathWithPaginationFindByO_C_P;
+	private FinderPath _finderPathWithPaginationCountByO_C_P;
 
 	/**
 	 * Returns all the organizations where organizationId &gt; &#63; and companyId = &#63; and parentOrganizationId = &#63;.
@@ -5992,17 +7242,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the matching organizations
 	 */
 	@Override
-	public List<Organization> findByO_C_P(long organizationId, long companyId,
-		long parentOrganizationId) {
-		return findByO_C_P(organizationId, companyId, parentOrganizationId,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	public List<Organization> findByO_C_P(
+		long organizationId, long companyId, long parentOrganizationId) {
+
+		return findByO_C_P(
+			organizationId, companyId, parentOrganizationId, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations where organizationId &gt; &#63; and companyId = &#63; and parentOrganizationId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param organizationId the organization ID
@@ -6013,17 +7265,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByO_C_P(long organizationId, long companyId,
-		long parentOrganizationId, int start, int end) {
-		return findByO_C_P(organizationId, companyId, parentOrganizationId,
-			start, end, null);
+	public List<Organization> findByO_C_P(
+		long organizationId, long companyId, long parentOrganizationId,
+		int start, int end) {
+
+		return findByO_C_P(
+			organizationId, companyId, parentOrganizationId, start, end, null);
 	}
 
 	/**
 	 * Returns an ordered range of all the organizations where organizationId &gt; &#63; and companyId = &#63; and parentOrganizationId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param organizationId the organization ID
@@ -6035,18 +7289,20 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByO_C_P(long organizationId, long companyId,
-		long parentOrganizationId, int start, int end,
-		OrderByComparator<Organization> orderByComparator) {
-		return findByO_C_P(organizationId, companyId, parentOrganizationId,
-			start, end, orderByComparator, true);
+	public List<Organization> findByO_C_P(
+		long organizationId, long companyId, long parentOrganizationId,
+		int start, int end, OrderByComparator<Organization> orderByComparator) {
+
+		return findByO_C_P(
+			organizationId, companyId, parentOrganizationId, start, end,
+			orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the organizations where organizationId &gt; &#63; and companyId = &#63; and parentOrganizationId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param organizationId the organization ID
@@ -6055,36 +7311,40 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param start the lower bound of the range of organizations
 	 * @param end the upper bound of the range of organizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByO_C_P(long organizationId, long companyId,
-		long parentOrganizationId, int start, int end,
-		OrderByComparator<Organization> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<Organization> findByO_C_P(
+		long organizationId, long companyId, long parentOrganizationId,
+		int start, int end, OrderByComparator<Organization> orderByComparator,
+		boolean useFinderCache) {
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
-		finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_O_C_P;
+		finderPath = _finderPathWithPaginationFindByO_C_P;
 		finderArgs = new Object[] {
-				organizationId, companyId, parentOrganizationId,
-				
-				start, end, orderByComparator
-			};
+			organizationId, companyId, parentOrganizationId, start, end,
+			orderByComparator
+		};
 
 		List<Organization> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Organization>)FinderCacheUtil.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache && productionMode) {
+			list = (List<Organization>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Organization organization : list) {
 					if ((organizationId >= organization.getOrganizationId()) ||
-							(companyId != organization.getCompanyId()) ||
-							(parentOrganizationId != organization.getParentOrganizationId())) {
+						(companyId != organization.getCompanyId()) ||
+						(parentOrganizationId !=
+							organization.getParentOrganizationId())) {
+
 						list = null;
 
 						break;
@@ -6094,71 +7354,64 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(5 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(5);
+				sb = new StringBundler(5);
 			}
 
-			query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_O_C_P_ORGANIZATIONID_2);
+			sb.append(_FINDER_COLUMN_O_C_P_ORGANIZATIONID_2);
 
-			query.append(_FINDER_COLUMN_O_C_P_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_O_C_P_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_O_C_P_PARENTORGANIZATIONID_2);
+			sb.append(_FINDER_COLUMN_O_C_P_PARENTORGANIZATIONID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(organizationId);
+				queryPos.add(organizationId);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(parentOrganizationId);
+				queryPos.add(parentOrganizationId);
 
-				if (!pagination) {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<Organization>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -6179,33 +7432,34 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByO_C_P_First(long organizationId, long companyId,
-		long parentOrganizationId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByO_C_P_First(
+			long organizationId, long companyId, long parentOrganizationId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByO_C_P_First(organizationId,
-				companyId, parentOrganizationId, orderByComparator);
+
+		Organization organization = fetchByO_C_P_First(
+			organizationId, companyId, parentOrganizationId, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("organizationId=");
-		msg.append(organizationId);
+		sb.append("organizationId>");
+		sb.append(organizationId);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append(", parentOrganizationId=");
-		msg.append(parentOrganizationId);
+		sb.append(", parentOrganizationId=");
+		sb.append(parentOrganizationId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -6218,11 +7472,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the first matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByO_C_P_First(long organizationId, long companyId,
-		long parentOrganizationId,
+	public Organization fetchByO_C_P_First(
+		long organizationId, long companyId, long parentOrganizationId,
 		OrderByComparator<Organization> orderByComparator) {
-		List<Organization> list = findByO_C_P(organizationId, companyId,
-				parentOrganizationId, 0, 1, orderByComparator);
+
+		List<Organization> list = findByO_C_P(
+			organizationId, companyId, parentOrganizationId, 0, 1,
+			orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -6242,33 +7498,34 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByO_C_P_Last(long organizationId, long companyId,
-		long parentOrganizationId,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByO_C_P_Last(
+			long organizationId, long companyId, long parentOrganizationId,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByO_C_P_Last(organizationId,
-				companyId, parentOrganizationId, orderByComparator);
+
+		Organization organization = fetchByO_C_P_Last(
+			organizationId, companyId, parentOrganizationId, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("organizationId=");
-		msg.append(organizationId);
+		sb.append("organizationId>");
+		sb.append(organizationId);
 
-		msg.append(", companyId=");
-		msg.append(companyId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 
-		msg.append(", parentOrganizationId=");
-		msg.append(parentOrganizationId);
+		sb.append(", parentOrganizationId=");
+		sb.append(parentOrganizationId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -6281,17 +7538,20 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the last matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByO_C_P_Last(long organizationId, long companyId,
-		long parentOrganizationId,
+	public Organization fetchByO_C_P_Last(
+		long organizationId, long companyId, long parentOrganizationId,
 		OrderByComparator<Organization> orderByComparator) {
-		int count = countByO_C_P(organizationId, companyId, parentOrganizationId);
+
+		int count = countByO_C_P(
+			organizationId, companyId, parentOrganizationId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Organization> list = findByO_C_P(organizationId, companyId,
-				parentOrganizationId, count - 1, count, orderByComparator);
+		List<Organization> list = findByO_C_P(
+			organizationId, companyId, parentOrganizationId, count - 1, count,
+			orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -6309,17 +7569,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByO_C_P(long organizationId,
-		long companyId, long parentOrganizationId) {
-		return filterFindByO_C_P(organizationId, companyId,
-			parentOrganizationId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	public List<Organization> filterFindByO_C_P(
+		long organizationId, long companyId, long parentOrganizationId) {
+
+		return filterFindByO_C_P(
+			organizationId, companyId, parentOrganizationId, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations that the user has permission to view where organizationId &gt; &#63; and companyId = &#63; and parentOrganizationId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param organizationId the organization ID
@@ -6330,17 +7592,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByO_C_P(long organizationId,
-		long companyId, long parentOrganizationId, int start, int end) {
-		return filterFindByO_C_P(organizationId, companyId,
-			parentOrganizationId, start, end, null);
+	public List<Organization> filterFindByO_C_P(
+		long organizationId, long companyId, long parentOrganizationId,
+		int start, int end) {
+
+		return filterFindByO_C_P(
+			organizationId, companyId, parentOrganizationId, start, end, null);
 	}
 
 	/**
 	 * Returns an ordered range of all the organizations that the user has permissions to view where organizationId &gt; &#63; and companyId = &#63; and parentOrganizationId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param organizationId the organization ID
@@ -6352,91 +7616,97 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByO_C_P(long organizationId,
-		long companyId, long parentOrganizationId, int start, int end,
-		OrderByComparator<Organization> orderByComparator) {
+	public List<Organization> filterFindByO_C_P(
+		long organizationId, long companyId, long parentOrganizationId,
+		int start, int end, OrderByComparator<Organization> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByO_C_P(organizationId, companyId, parentOrganizationId,
-				start, end, orderByComparator);
+			return findByO_C_P(
+				organizationId, companyId, parentOrganizationId, start, end,
+				orderByComparator);
 		}
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByFields().length * 2));
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
-			query = new StringBundler(6);
+			sb = new StringBundler(6);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		query.append(_FINDER_COLUMN_O_C_P_ORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_O_C_P_ORGANIZATIONID_2);
 
-		query.append(_FINDER_COLUMN_O_C_P_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_O_C_P_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_O_C_P_PARENTORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_O_C_P_PARENTORGANIZATIONID_2);
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
 			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
 			}
 			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
-				q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 			}
 			else {
-				q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 			}
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(organizationId);
+			queryPos.add(organizationId);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			qPos.add(parentOrganizationId);
+			queryPos.add(parentOrganizationId);
 
-			return (List<Organization>)QueryUtil.list(q, getDialect(), start,
-				end);
+			return (List<Organization>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -6451,10 +7721,14 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param parentOrganizationId the parent organization ID
 	 */
 	@Override
-	public void removeByO_C_P(long organizationId, long companyId,
-		long parentOrganizationId) {
-		for (Organization organization : findByO_C_P(organizationId, companyId,
-				parentOrganizationId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+	public void removeByO_C_P(
+		long organizationId, long companyId, long parentOrganizationId) {
+
+		for (Organization organization :
+				findByO_C_P(
+					organizationId, companyId, parentOrganizationId,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(organization);
 		}
 	}
@@ -6468,53 +7742,68 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the number of matching organizations
 	 */
 	@Override
-	public int countByO_C_P(long organizationId, long companyId,
-		long parentOrganizationId) {
-		FinderPath finderPath = FINDER_PATH_WITH_PAGINATION_COUNT_BY_O_C_P;
+	public int countByO_C_P(
+		long organizationId, long companyId, long parentOrganizationId) {
 
-		Object[] finderArgs = new Object[] {
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathWithPaginationCountByO_C_P;
+
+			finderArgs = new Object[] {
 				organizationId, companyId, parentOrganizationId
 			};
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_ORGANIZATION_WHERE);
+			sb.append(_SQL_COUNT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_O_C_P_ORGANIZATIONID_2);
+			sb.append(_FINDER_COLUMN_O_C_P_ORGANIZATIONID_2);
 
-			query.append(_FINDER_COLUMN_O_C_P_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_O_C_P_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_O_C_P_PARENTORGANIZATIONID_2);
+			sb.append(_FINDER_COLUMN_O_C_P_PARENTORGANIZATIONID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(organizationId);
+				queryPos.add(organizationId);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(parentOrganizationId);
+				queryPos.add(parentOrganizationId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -6533,78 +7822,69 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the number of matching organizations that the user has permission to view
 	 */
 	@Override
-	public int filterCountByO_C_P(long organizationId, long companyId,
-		long parentOrganizationId) {
+	public int filterCountByO_C_P(
+		long organizationId, long companyId, long parentOrganizationId) {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return countByO_C_P(organizationId, companyId, parentOrganizationId);
+			return countByO_C_P(
+				organizationId, companyId, parentOrganizationId);
 		}
 
-		StringBundler query = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		query.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
+		sb.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
 
-		query.append(_FINDER_COLUMN_O_C_P_ORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_O_C_P_ORGANIZATIONID_2);
 
-		query.append(_FINDER_COLUMN_O_C_P_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_O_C_P_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_O_C_P_PARENTORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_O_C_P_PARENTORGANIZATIONID_2);
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
+			sqlQuery.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(organizationId);
+			queryPos.add(organizationId);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			qPos.add(parentOrganizationId);
+			queryPos.add(parentOrganizationId);
 
-			Long count = (Long)q.uniqueResult();
+			Long count = (Long)sqlQuery.uniqueResult();
 
 			return count.intValue();
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	private static final String _FINDER_COLUMN_O_C_P_ORGANIZATIONID_2 = "organization.organizationId > ? AND ";
-	private static final String _FINDER_COLUMN_O_C_P_COMPANYID_2 = "organization.companyId = ? AND ";
-	private static final String _FINDER_COLUMN_O_C_P_PARENTORGANIZATIONID_2 = "organization.parentOrganizationId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_C_P_LIKEN =
-		new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_P_LikeN",
-			new String[] {
-				Long.class.getName(), Long.class.getName(),
-				String.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_COUNT_BY_C_P_LIKEN =
-		new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByC_P_LikeN",
-			new String[] {
-				Long.class.getName(), Long.class.getName(),
-				String.class.getName()
-			});
+	private static final String _FINDER_COLUMN_O_C_P_ORGANIZATIONID_2 =
+		"organization.organizationId > ? AND ";
+
+	private static final String _FINDER_COLUMN_O_C_P_COMPANYID_2 =
+		"organization.companyId = ? AND ";
+
+	private static final String _FINDER_COLUMN_O_C_P_PARENTORGANIZATIONID_2 =
+		"organization.parentOrganizationId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByC_P_LikeN;
+	private FinderPath _finderPathWithPaginationCountByC_P_LikeN;
 
 	/**
 	 * Returns all the organizations where companyId = &#63; and parentOrganizationId = &#63; and name LIKE &#63;.
@@ -6615,17 +7895,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the matching organizations
 	 */
 	@Override
-	public List<Organization> findByC_P_LikeN(long companyId,
-		long parentOrganizationId, String name) {
-		return findByC_P_LikeN(companyId, parentOrganizationId, name,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	public List<Organization> findByC_P_LikeN(
+		long companyId, long parentOrganizationId, String name) {
+
+		return findByC_P_LikeN(
+			companyId, parentOrganizationId, name, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations where companyId = &#63; and parentOrganizationId = &#63; and name LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -6636,17 +7918,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByC_P_LikeN(long companyId,
-		long parentOrganizationId, String name, int start, int end) {
-		return findByC_P_LikeN(companyId, parentOrganizationId, name, start,
-			end, null);
+	public List<Organization> findByC_P_LikeN(
+		long companyId, long parentOrganizationId, String name, int start,
+		int end) {
+
+		return findByC_P_LikeN(
+			companyId, parentOrganizationId, name, start, end, null);
 	}
 
 	/**
 	 * Returns an ordered range of all the organizations where companyId = &#63; and parentOrganizationId = &#63; and name LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -6658,18 +7942,20 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByC_P_LikeN(long companyId,
-		long parentOrganizationId, String name, int start, int end,
-		OrderByComparator<Organization> orderByComparator) {
-		return findByC_P_LikeN(companyId, parentOrganizationId, name, start,
-			end, orderByComparator, true);
+	public List<Organization> findByC_P_LikeN(
+		long companyId, long parentOrganizationId, String name, int start,
+		int end, OrderByComparator<Organization> orderByComparator) {
+
+		return findByC_P_LikeN(
+			companyId, parentOrganizationId, name, start, end,
+			orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the organizations where companyId = &#63; and parentOrganizationId = &#63; and name LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -6678,38 +7964,43 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param start the lower bound of the range of organizations
 	 * @param end the upper bound of the range of organizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching organizations
 	 */
 	@Override
-	public List<Organization> findByC_P_LikeN(long companyId,
-		long parentOrganizationId, String name, int start, int end,
-		OrderByComparator<Organization> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<Organization> findByC_P_LikeN(
+		long companyId, long parentOrganizationId, String name, int start,
+		int end, OrderByComparator<Organization> orderByComparator,
+		boolean useFinderCache) {
+
+		name = Objects.toString(name, "");
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
-		finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_C_P_LIKEN;
+		finderPath = _finderPathWithPaginationFindByC_P_LikeN;
 		finderArgs = new Object[] {
-				companyId, parentOrganizationId, name,
-				
-				start, end, orderByComparator
-			};
+			companyId, parentOrganizationId, name, start, end, orderByComparator
+		};
 
 		List<Organization> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Organization>)FinderCacheUtil.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache && productionMode) {
+			list = (List<Organization>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Organization organization : list) {
 					if ((companyId != organization.getCompanyId()) ||
-							(parentOrganizationId != organization.getParentOrganizationId()) ||
-							!StringUtil.wildcardMatches(
-								organization.getName(), name, '_', '%', '\\',
-								false)) {
+						(parentOrganizationId !=
+							organization.getParentOrganizationId()) ||
+						!StringUtil.wildcardMatches(
+							organization.getName(), name, '_', '%', '\\',
+							false)) {
+
 						list = null;
 
 						break;
@@ -6719,85 +8010,75 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(5 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(5);
+				sb = new StringBundler(5);
 			}
 
-			query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
 
 			boolean bindName = false;
 
-			if (name == null) {
-				query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_1);
-			}
-			else if (name.equals("")) {
-				query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
+			if (name.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
 			}
 			else {
 				bindName = true;
 
-				query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
+				sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
 			}
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(parentOrganizationId);
+				queryPos.add(parentOrganizationId);
 
 				if (bindName) {
-					qPos.add(StringUtil.toLowerCase(name));
+					queryPos.add(StringUtil.toLowerCase(name));
 				}
 
-				if (!pagination) {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<Organization>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -6818,33 +8099,34 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByC_P_LikeN_First(long companyId,
-		long parentOrganizationId, String name,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByC_P_LikeN_First(
+			long companyId, long parentOrganizationId, String name,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByC_P_LikeN_First(companyId,
-				parentOrganizationId, name, orderByComparator);
+
+		Organization organization = fetchByC_P_LikeN_First(
+			companyId, parentOrganizationId, name, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", parentOrganizationId=");
-		msg.append(parentOrganizationId);
+		sb.append(", parentOrganizationId=");
+		sb.append(parentOrganizationId);
 
-		msg.append(", name=");
-		msg.append(name);
+		sb.append(", nameLIKE");
+		sb.append(name);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -6857,11 +8139,12 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the first matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByC_P_LikeN_First(long companyId,
-		long parentOrganizationId, String name,
+	public Organization fetchByC_P_LikeN_First(
+		long companyId, long parentOrganizationId, String name,
 		OrderByComparator<Organization> orderByComparator) {
-		List<Organization> list = findByC_P_LikeN(companyId,
-				parentOrganizationId, name, 0, 1, orderByComparator);
+
+		List<Organization> list = findByC_P_LikeN(
+			companyId, parentOrganizationId, name, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -6881,33 +8164,34 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByC_P_LikeN_Last(long companyId,
-		long parentOrganizationId, String name,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization findByC_P_LikeN_Last(
+			long companyId, long parentOrganizationId, String name,
+			OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByC_P_LikeN_Last(companyId,
-				parentOrganizationId, name, orderByComparator);
+
+		Organization organization = fetchByC_P_LikeN_Last(
+			companyId, parentOrganizationId, name, orderByComparator);
 
 		if (organization != null) {
 			return organization;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", parentOrganizationId=");
-		msg.append(parentOrganizationId);
+		sb.append(", parentOrganizationId=");
+		sb.append(parentOrganizationId);
 
-		msg.append(", name=");
-		msg.append(name);
+		sb.append(", nameLIKE");
+		sb.append(name);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOrganizationException(msg.toString());
+		throw new NoSuchOrganizationException(sb.toString());
 	}
 
 	/**
@@ -6920,17 +8204,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the last matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByC_P_LikeN_Last(long companyId,
-		long parentOrganizationId, String name,
+	public Organization fetchByC_P_LikeN_Last(
+		long companyId, long parentOrganizationId, String name,
 		OrderByComparator<Organization> orderByComparator) {
+
 		int count = countByC_P_LikeN(companyId, parentOrganizationId, name);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Organization> list = findByC_P_LikeN(companyId,
-				parentOrganizationId, name, count - 1, count, orderByComparator);
+		List<Organization> list = findByC_P_LikeN(
+			companyId, parentOrganizationId, name, count - 1, count,
+			orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -6951,10 +8237,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a organization with the primary key could not be found
 	 */
 	@Override
-	public Organization[] findByC_P_LikeN_PrevAndNext(long organizationId,
-		long companyId, long parentOrganizationId, String name,
-		OrderByComparator<Organization> orderByComparator)
+	public Organization[] findByC_P_LikeN_PrevAndNext(
+			long organizationId, long companyId, long parentOrganizationId,
+			String name, OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
+		name = Objects.toString(name, "");
+
 		Organization organization = findByPrimaryKey(organizationId);
 
 		Session session = null;
@@ -6964,146 +8253,145 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = getByC_P_LikeN_PrevAndNext(session, organization,
-					companyId, parentOrganizationId, name, orderByComparator,
-					true);
+			array[0] = getByC_P_LikeN_PrevAndNext(
+				session, organization, companyId, parentOrganizationId, name,
+				orderByComparator, true);
 
 			array[1] = organization;
 
-			array[2] = getByC_P_LikeN_PrevAndNext(session, organization,
-					companyId, parentOrganizationId, name, orderByComparator,
-					false);
+			array[2] = getByC_P_LikeN_PrevAndNext(
+				session, organization, companyId, parentOrganizationId, name,
+				orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization getByC_P_LikeN_PrevAndNext(Session session,
-		Organization organization, long companyId, long parentOrganizationId,
-		String name, OrderByComparator<Organization> orderByComparator,
-		boolean previous) {
-		StringBundler query = null;
+	protected Organization getByC_P_LikeN_PrevAndNext(
+		Session session, Organization organization, long companyId,
+		long parentOrganizationId, String name,
+		OrderByComparator<Organization> orderByComparator, boolean previous) {
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(6 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
-		query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+		sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-		query.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
 
 		boolean bindName = false;
 
-		if (name == null) {
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_1);
-		}
-		else if (name.equals("")) {
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
+		if (name.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
 		}
 		else {
 			bindName = true;
 
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+			sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
-		qPos.add(parentOrganizationId);
+		queryPos.add(parentOrganizationId);
 
 		if (bindName) {
-			qPos.add(StringUtil.toLowerCase(name));
+			queryPos.add(StringUtil.toLowerCase(name));
 		}
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -7122,17 +8410,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByC_P_LikeN(long companyId,
-		long parentOrganizationId, String name) {
-		return filterFindByC_P_LikeN(companyId, parentOrganizationId, name,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	public List<Organization> filterFindByC_P_LikeN(
+		long companyId, long parentOrganizationId, String name) {
+
+		return filterFindByC_P_LikeN(
+			companyId, parentOrganizationId, name, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the organizations that the user has permission to view where companyId = &#63; and parentOrganizationId = &#63; and name LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -7143,17 +8433,19 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByC_P_LikeN(long companyId,
-		long parentOrganizationId, String name, int start, int end) {
-		return filterFindByC_P_LikeN(companyId, parentOrganizationId, name,
-			start, end, null);
+	public List<Organization> filterFindByC_P_LikeN(
+		long companyId, long parentOrganizationId, String name, int start,
+		int end) {
+
+		return filterFindByC_P_LikeN(
+			companyId, parentOrganizationId, name, start, end, null);
 	}
 
 	/**
 	 * Returns an ordered range of all the organizations that the user has permissions to view where companyId = &#63; and parentOrganizationId = &#63; and name LIKE &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -7165,105 +8457,110 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of matching organizations that the user has permission to view
 	 */
 	@Override
-	public List<Organization> filterFindByC_P_LikeN(long companyId,
-		long parentOrganizationId, String name, int start, int end,
-		OrderByComparator<Organization> orderByComparator) {
+	public List<Organization> filterFindByC_P_LikeN(
+		long companyId, long parentOrganizationId, String name, int start,
+		int end, OrderByComparator<Organization> orderByComparator) {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByC_P_LikeN(companyId, parentOrganizationId, name,
-				start, end, orderByComparator);
+			return findByC_P_LikeN(
+				companyId, parentOrganizationId, name, start, end,
+				orderByComparator);
 		}
 
-		StringBundler query = null;
+		name = Objects.toString(name, "");
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(5 +
-					(orderByComparator.getOrderByFields().length * 2));
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByFields().length * 2));
 		}
 		else {
-			query = new StringBundler(6);
+			sb = new StringBundler(6);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		query.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
 
 		boolean bindName = false;
 
-		if (name == null) {
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_1);
-		}
-		else if (name.equals("")) {
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
+		if (name.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
 		}
 		else {
 			bindName = true;
 
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
 		}
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
 			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
 			}
 			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator, true);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
-				q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 			}
 			else {
-				q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 			}
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			qPos.add(parentOrganizationId);
+			queryPos.add(parentOrganizationId);
 
 			if (bindName) {
-				qPos.add(StringUtil.toLowerCase(name));
+				queryPos.add(StringUtil.toLowerCase(name));
 			}
 
-			return (List<Organization>)QueryUtil.list(q, getDialect(), start,
-				end);
+			return (List<Organization>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -7283,13 +8580,17 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public Organization[] filterFindByC_P_LikeN_PrevAndNext(
-		long organizationId, long companyId, long parentOrganizationId,
-		String name, OrderByComparator<Organization> orderByComparator)
+			long organizationId, long companyId, long parentOrganizationId,
+			String name, OrderByComparator<Organization> orderByComparator)
 		throws NoSuchOrganizationException {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
-			return findByC_P_LikeN_PrevAndNext(organizationId, companyId,
-				parentOrganizationId, name, orderByComparator);
+			return findByC_P_LikeN_PrevAndNext(
+				organizationId, companyId, parentOrganizationId, name,
+				orderByComparator);
 		}
+
+		name = Objects.toString(name, "");
 
 		Organization organization = findByPrimaryKey(organizationId);
 
@@ -7300,181 +8601,188 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			Organization[] array = new OrganizationImpl[3];
 
-			array[0] = filterGetByC_P_LikeN_PrevAndNext(session, organization,
-					companyId, parentOrganizationId, name, orderByComparator,
-					true);
+			array[0] = filterGetByC_P_LikeN_PrevAndNext(
+				session, organization, companyId, parentOrganizationId, name,
+				orderByComparator, true);
 
 			array[1] = organization;
 
-			array[2] = filterGetByC_P_LikeN_PrevAndNext(session, organization,
-					companyId, parentOrganizationId, name, orderByComparator,
-					false);
+			array[2] = filterGetByC_P_LikeN_PrevAndNext(
+				session, organization, companyId, parentOrganizationId, name,
+				orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected Organization filterGetByC_P_LikeN_PrevAndNext(Session session,
-		Organization organization, long companyId, long parentOrganizationId,
-		String name, OrderByComparator<Organization> orderByComparator,
-		boolean previous) {
-		StringBundler query = null;
+	protected Organization filterGetByC_P_LikeN_PrevAndNext(
+		Session session, Organization organization, long companyId,
+		long parentOrganizationId, String name,
+		OrderByComparator<Organization> orderByComparator, boolean previous) {
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(7 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				7 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(6);
+			sb = new StringBundler(6);
 		}
 
 		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_FILTER_SQL_SELECT_ORGANIZATION_WHERE);
 		}
 		else {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		query.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
 
 		boolean bindName = false;
 
-		if (name == null) {
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_1);
-		}
-		else if (name.equals("")) {
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
+		if (name.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
 		}
 		else {
 			bindName = true;
 
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
 		}
 
 		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
+			sb.append(
+				_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2);
 		}
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
 				}
-
-				query.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
 				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
 				}
 				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
 				}
-
-				query.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				query.append(OrganizationModelImpl.ORDER_BY_JPQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 			else {
-				query.append(OrganizationModelImpl.ORDER_BY_SQL);
+				sb.append(OrganizationModelImpl.ORDER_BY_SQL);
 			}
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSynchronizedSQLQuery(sql);
+		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		sqlQuery.setFirstResult(0);
+		sqlQuery.setMaxResults(2);
 
 		if (getDB().isSupportsInlineDistinct()) {
-			q.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_ALIAS, OrganizationImpl.class);
 		}
 		else {
-			q.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
+			sqlQuery.addEntity(_FILTER_ENTITY_TABLE, OrganizationImpl.class);
 		}
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
-		qPos.add(parentOrganizationId);
+		queryPos.add(parentOrganizationId);
 
 		if (bindName) {
-			qPos.add(StringUtil.toLowerCase(name));
+			queryPos.add(StringUtil.toLowerCase(name));
 		}
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(organization);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(organization)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<Organization> list = q.list();
+		List<Organization> list = sqlQuery.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -7492,11 +8800,14 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param name the name
 	 */
 	@Override
-	public void removeByC_P_LikeN(long companyId, long parentOrganizationId,
-		String name) {
-		for (Organization organization : findByC_P_LikeN(companyId,
-				parentOrganizationId, name, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null)) {
+	public void removeByC_P_LikeN(
+		long companyId, long parentOrganizationId, String name) {
+
+		for (Organization organization :
+				findByC_P_LikeN(
+					companyId, parentOrganizationId, name, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
 			remove(organization);
 		}
 	}
@@ -7510,65 +8821,79 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the number of matching organizations
 	 */
 	@Override
-	public int countByC_P_LikeN(long companyId, long parentOrganizationId,
-		String name) {
-		FinderPath finderPath = FINDER_PATH_WITH_PAGINATION_COUNT_BY_C_P_LIKEN;
+	public int countByC_P_LikeN(
+		long companyId, long parentOrganizationId, String name) {
 
-		Object[] finderArgs = new Object[] { companyId, parentOrganizationId, name };
+		name = Objects.toString(name, "");
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathWithPaginationCountByC_P_LikeN;
+
+			finderArgs = new Object[] {companyId, parentOrganizationId, name};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_ORGANIZATION_WHERE);
+			sb.append(_SQL_COUNT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
 
 			boolean bindName = false;
 
-			if (name == null) {
-				query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_1);
-			}
-			else if (name.equals("")) {
-				query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
+			if (name.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
 			}
 			else {
 				bindName = true;
 
-				query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
+				sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(parentOrganizationId);
+				queryPos.add(parentOrganizationId);
 
 				if (bindName) {
-					qPos.add(StringUtil.toLowerCase(name));
+					queryPos.add(StringUtil.toLowerCase(name));
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -7587,88 +8912,88 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the number of matching organizations that the user has permission to view
 	 */
 	@Override
-	public int filterCountByC_P_LikeN(long companyId,
-		long parentOrganizationId, String name) {
+	public int filterCountByC_P_LikeN(
+		long companyId, long parentOrganizationId, String name) {
+
 		if (!InlineSQLHelperUtil.isEnabled(companyId, 0)) {
 			return countByC_P_LikeN(companyId, parentOrganizationId, name);
 		}
 
-		StringBundler query = new StringBundler(4);
+		name = Objects.toString(name, "");
 
-		query.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
+		StringBundler sb = new StringBundler(4);
 
-		query.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
+		sb.append(_FILTER_SQL_COUNT_ORGANIZATION_WHERE);
 
-		query.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
+		sb.append(_FINDER_COLUMN_C_P_LIKEN_COMPANYID_2);
+
+		sb.append(_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2);
 
 		boolean bindName = false;
 
-		if (name == null) {
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_1);
-		}
-		else if (name.equals("")) {
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
+		if (name.isEmpty()) {
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_3);
 		}
 		else {
 			bindName = true;
 
-			query.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
+			sb.append(_FINDER_COLUMN_C_P_LIKEN_NAME_2);
 		}
 
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Organization.class.getName(),
-				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), Organization.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
+			sqlQuery.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
-			qPos.add(parentOrganizationId);
+			queryPos.add(parentOrganizationId);
 
 			if (bindName) {
-				qPos.add(StringUtil.toLowerCase(name));
+				queryPos.add(StringUtil.toLowerCase(name));
 			}
 
-			Long count = (Long)q.uniqueResult();
+			Long count = (Long)sqlQuery.uniqueResult();
 
 			return count.intValue();
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	private static final String _FINDER_COLUMN_C_P_LIKEN_COMPANYID_2 = "organization.companyId = ? AND ";
-	private static final String _FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2 = "organization.parentOrganizationId = ? AND ";
-	private static final String _FINDER_COLUMN_C_P_LIKEN_NAME_1 = "organization.name IS NULL";
-	private static final String _FINDER_COLUMN_C_P_LIKEN_NAME_2 = "lower(organization.name) LIKE ?";
-	private static final String _FINDER_COLUMN_C_P_LIKEN_NAME_3 = "(organization.name IS NULL OR organization.name LIKE '')";
-	public static final FinderPath FINDER_PATH_FETCH_BY_C_ERC = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
-			FINDER_CLASS_NAME_ENTITY, "fetchByC_ERC",
-			new String[] { Long.class.getName(), String.class.getName() },
-			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
-			OrganizationModelImpl.EXTERNALREFERENCECODE_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_C_ERC = new FinderPath(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_ERC",
-			new String[] { Long.class.getName(), String.class.getName() });
+	private static final String _FINDER_COLUMN_C_P_LIKEN_COMPANYID_2 =
+		"organization.companyId = ? AND ";
+
+	private static final String
+		_FINDER_COLUMN_C_P_LIKEN_PARENTORGANIZATIONID_2 =
+			"organization.parentOrganizationId = ? AND ";
+
+	private static final String _FINDER_COLUMN_C_P_LIKEN_NAME_2 =
+		"lower(organization.name) LIKE ?";
+
+	private static final String _FINDER_COLUMN_C_P_LIKEN_NAME_3 =
+		"(organization.name IS NULL OR organization.name LIKE '')";
+
+	private FinderPath _finderPathFetchByC_ERC;
+	private FinderPath _finderPathCountByC_ERC;
 
 	/**
-	 * Returns the organization where companyId = &#63; and externalReferenceCode = &#63; or throws a {@link NoSuchOrganizationException} if it could not be found.
+	 * Returns the organization where companyId = &#63; and externalReferenceCode = &#63; or throws a <code>NoSuchOrganizationException</code> if it could not be found.
 	 *
 	 * @param companyId the company ID
 	 * @param externalReferenceCode the external reference code
@@ -7676,29 +9001,31 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @throws NoSuchOrganizationException if a matching organization could not be found
 	 */
 	@Override
-	public Organization findByC_ERC(long companyId, String externalReferenceCode)
+	public Organization findByC_ERC(
+			long companyId, String externalReferenceCode)
 		throws NoSuchOrganizationException {
-		Organization organization = fetchByC_ERC(companyId,
-				externalReferenceCode);
+
+		Organization organization = fetchByC_ERC(
+			companyId, externalReferenceCode);
 
 		if (organization == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("companyId=");
-			msg.append(companyId);
+			sb.append("companyId=");
+			sb.append(companyId);
 
-			msg.append(", externalReferenceCode=");
-			msg.append(externalReferenceCode);
+			sb.append(", externalReferenceCode=");
+			sb.append(externalReferenceCode);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchOrganizationException(msg.toString());
+			throw new NoSuchOrganizationException(sb.toString());
 		}
 
 		return organization;
@@ -7712,8 +9039,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByC_ERC(long companyId,
-		String externalReferenceCode) {
+	public Organization fetchByC_ERC(
+		long companyId, String externalReferenceCode) {
+
 		return fetchByC_ERC(companyId, externalReferenceCode, true);
 	}
 
@@ -7722,84 +9050,101 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 *
 	 * @param companyId the company ID
 	 * @param externalReferenceCode the external reference code
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Override
-	public Organization fetchByC_ERC(long companyId,
-		String externalReferenceCode, boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] { companyId, externalReferenceCode };
+	public Organization fetchByC_ERC(
+		long companyId, String externalReferenceCode, boolean useFinderCache) {
+
+		externalReferenceCode = Objects.toString(externalReferenceCode, "");
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {companyId, externalReferenceCode};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
-			result = FinderCacheUtil.getResult(FINDER_PATH_FETCH_BY_C_ERC,
-					finderArgs, this);
+		if (useFinderCache && productionMode) {
+			result = FinderCacheUtil.getResult(
+				_finderPathFetchByC_ERC, finderArgs, this);
 		}
 
 		if (result instanceof Organization) {
 			Organization organization = (Organization)result;
 
 			if ((companyId != organization.getCompanyId()) ||
-					!Objects.equals(externalReferenceCode,
-						organization.getExternalReferenceCode())) {
+				!Objects.equals(
+					externalReferenceCode,
+					organization.getExternalReferenceCode())) {
+
 				result = null;
 			}
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_ORGANIZATION_WHERE);
+			sb.append(_SQL_SELECT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_C_ERC_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_ERC_COMPANYID_2);
 
 			boolean bindExternalReferenceCode = false;
 
-			if (externalReferenceCode == null) {
-				query.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_1);
-			}
-			else if (externalReferenceCode.equals("")) {
-				query.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_3);
+			if (externalReferenceCode.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_3);
 			}
 			else {
 				bindExternalReferenceCode = true;
 
-				query.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_2);
+				sb.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindExternalReferenceCode) {
-					qPos.add(externalReferenceCode);
+					queryPos.add(externalReferenceCode);
 				}
 
-				List<Organization> list = q.list();
+				List<Organization> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_C_ERC,
-						finderArgs, list);
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_ERC, finderArgs, list);
+					}
 				}
 				else {
 					if (list.size() > 1) {
 						Collections.sort(list, Collections.reverseOrder());
 
 						if (_log.isWarnEnabled()) {
+							if (!productionMode || !useFinderCache) {
+								finderArgs = new Object[] {
+									companyId, externalReferenceCode
+								};
+							}
+
 							_log.warn(
 								"OrganizationPersistenceImpl.fetchByC_ERC(long, String, boolean) with parameters (" +
-								StringUtil.merge(finderArgs) +
-								") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
+									StringUtil.merge(finderArgs) +
+										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
 						}
 					}
 
@@ -7810,11 +9155,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 					cacheResult(organization);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_C_ERC,
-					finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(
+						_finderPathFetchByC_ERC, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -7837,9 +9184,12 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the organization that was removed
 	 */
 	@Override
-	public Organization removeByC_ERC(long companyId,
-		String externalReferenceCode) throws NoSuchOrganizationException {
-		Organization organization = findByC_ERC(companyId, externalReferenceCode);
+	public Organization removeByC_ERC(
+			long companyId, String externalReferenceCode)
+		throws NoSuchOrganizationException {
+
+		Organization organization = findByC_ERC(
+			companyId, externalReferenceCode);
 
 		return remove(organization);
 	}
@@ -7853,59 +9203,72 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public int countByC_ERC(long companyId, String externalReferenceCode) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_C_ERC;
+		externalReferenceCode = Objects.toString(externalReferenceCode, "");
 
-		Object[] finderArgs = new Object[] { companyId, externalReferenceCode };
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_ERC;
+
+			finderArgs = new Object[] {companyId, externalReferenceCode};
+
+			count = (Long)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
+		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_ORGANIZATION_WHERE);
+			sb.append(_SQL_COUNT_ORGANIZATION_WHERE);
 
-			query.append(_FINDER_COLUMN_C_ERC_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_ERC_COMPANYID_2);
 
 			boolean bindExternalReferenceCode = false;
 
-			if (externalReferenceCode == null) {
-				query.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_1);
-			}
-			else if (externalReferenceCode.equals("")) {
-				query.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_3);
+			if (externalReferenceCode.isEmpty()) {
+				sb.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_3);
 			}
 			else {
 				bindExternalReferenceCode = true;
 
-				query.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_2);
+				sb.append(_FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
 				if (bindExternalReferenceCode) {
-					qPos.add(externalReferenceCode);
+					queryPos.add(externalReferenceCode);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -7915,32 +9278,31 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_C_ERC_COMPANYID_2 = "organization.companyId = ? AND ";
-	private static final String _FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_1 = "organization.externalReferenceCode IS NULL";
-	private static final String _FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_2 = "organization.externalReferenceCode = ?";
-	private static final String _FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_3 = "(organization.externalReferenceCode IS NULL OR organization.externalReferenceCode = '')";
+	private static final String _FINDER_COLUMN_C_ERC_COMPANYID_2 =
+		"organization.companyId = ? AND ";
+
+	private static final String _FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_2 =
+		"organization.externalReferenceCode = ?";
+
+	private static final String _FINDER_COLUMN_C_ERC_EXTERNALREFERENCECODE_3 =
+		"(organization.externalReferenceCode IS NULL OR organization.externalReferenceCode = '')";
 
 	public OrganizationPersistenceImpl() {
+		Map<String, String> dbColumnNames = new HashMap<String, String>();
+
+		dbColumnNames.put("uuid", "uuid_");
+		dbColumnNames.put("type", "type_");
+		dbColumnNames.put("groups", "groups_");
+
+		setDBColumnNames(dbColumnNames);
+
 		setModelClass(Organization.class);
 
-		try {
-			Field field = BasePersistenceImpl.class.getDeclaredField(
-					"_dbColumnNames");
+		setModelImplClass(OrganizationImpl.class);
+		setModelPKClass(long.class);
+		setEntityCacheEnabled(OrganizationModelImpl.ENTITY_CACHE_ENABLED);
 
-			field.setAccessible(true);
-
-			Map<String, String> dbColumnNames = new HashMap<String, String>();
-
-			dbColumnNames.put("uuid", "uuid_");
-			dbColumnNames.put("type", "type_");
-
-			field.set(this, dbColumnNames);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-		}
+		setTable(OrganizationTable.INSTANCE);
 	}
 
 	/**
@@ -7950,18 +9312,28 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public void cacheResult(Organization organization) {
-		EntityCacheUtil.putResult(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationImpl.class, organization.getPrimaryKey(), organization);
+		if (organization.getCtCollectionId() != 0) {
+			organization.resetOriginalValues();
 
-		FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_C_N,
-			new Object[] { organization.getCompanyId(), organization.getName() },
+			return;
+		}
+
+		EntityCacheUtil.putResult(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED, OrganizationImpl.class,
+			organization.getPrimaryKey(), organization);
+
+		FinderCacheUtil.putResult(
+			_finderPathFetchByC_N,
+			new Object[] {organization.getCompanyId(), organization.getName()},
 			organization);
 
-		FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_C_ERC,
+		FinderCacheUtil.putResult(
+			_finderPathFetchByC_ERC,
 			new Object[] {
 				organization.getCompanyId(),
 				organization.getExternalReferenceCode()
-			}, organization);
+			},
+			organization);
 
 		organization.resetOriginalValues();
 	}
@@ -7974,9 +9346,17 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	@Override
 	public void cacheResult(List<Organization> organizations) {
 		for (Organization organization : organizations) {
+			if (organization.getCtCollectionId() != 0) {
+				organization.resetOriginalValues();
+
+				continue;
+			}
+
 			if (EntityCacheUtil.getResult(
-						OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-						OrganizationImpl.class, organization.getPrimaryKey()) == null) {
+					OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+					OrganizationImpl.class, organization.getPrimaryKey()) ==
+						null) {
+
 				cacheResult(organization);
 			}
 			else {
@@ -7989,7 +9369,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Clears the cache for all organizations.
 	 *
 	 * <p>
-	 * The {@link com.liferay.portal.kernel.dao.orm.EntityCache} and {@link com.liferay.portal.kernel.dao.orm.FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
@@ -8005,13 +9385,14 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Clears the cache for the organization.
 	 *
 	 * <p>
-	 * The {@link com.liferay.portal.kernel.dao.orm.EntityCache} and {@link com.liferay.portal.kernel.dao.orm.FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(Organization organization) {
-		EntityCacheUtil.removeResult(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationImpl.class, organization.getPrimaryKey());
+		EntityCacheUtil.removeResult(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED, OrganizationImpl.class,
+			organization.getPrimaryKey());
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
@@ -8025,78 +9406,96 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		for (Organization organization : organizations) {
-			EntityCacheUtil.removeResult(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			EntityCacheUtil.removeResult(
+				OrganizationModelImpl.ENTITY_CACHE_ENABLED,
 				OrganizationImpl.class, organization.getPrimaryKey());
 
 			clearUniqueFindersCache((OrganizationModelImpl)organization, true);
 		}
 	}
 
+	@Override
+	public void clearCache(Set<Serializable> primaryKeys) {
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		for (Serializable primaryKey : primaryKeys) {
+			EntityCacheUtil.removeResult(
+				OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+				OrganizationImpl.class, primaryKey);
+		}
+	}
+
 	protected void cacheUniqueFindersCache(
 		OrganizationModelImpl organizationModelImpl) {
-		Object[] args = new Object[] {
-				organizationModelImpl.getCompanyId(),
-				organizationModelImpl.getName()
-			};
 
-		FinderCacheUtil.putResult(FINDER_PATH_COUNT_BY_C_N, args,
-			Long.valueOf(1), false);
-		FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_C_N, args,
-			organizationModelImpl, false);
+		Object[] args = new Object[] {
+			organizationModelImpl.getCompanyId(),
+			organizationModelImpl.getName()
+		};
+
+		FinderCacheUtil.putResult(
+			_finderPathCountByC_N, args, Long.valueOf(1), false);
+		FinderCacheUtil.putResult(
+			_finderPathFetchByC_N, args, organizationModelImpl, false);
 
 		args = new Object[] {
-				organizationModelImpl.getCompanyId(),
-				organizationModelImpl.getExternalReferenceCode()
-			};
+			organizationModelImpl.getCompanyId(),
+			organizationModelImpl.getExternalReferenceCode()
+		};
 
-		FinderCacheUtil.putResult(FINDER_PATH_COUNT_BY_C_ERC, args,
-			Long.valueOf(1), false);
-		FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_C_ERC, args,
-			organizationModelImpl, false);
+		FinderCacheUtil.putResult(
+			_finderPathCountByC_ERC, args, Long.valueOf(1), false);
+		FinderCacheUtil.putResult(
+			_finderPathFetchByC_ERC, args, organizationModelImpl, false);
 	}
 
 	protected void clearUniqueFindersCache(
 		OrganizationModelImpl organizationModelImpl, boolean clearCurrent) {
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-					organizationModelImpl.getCompanyId(),
-					organizationModelImpl.getName()
-				};
-
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_C_N, args);
-			FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_C_N, args);
-		}
-
-		if ((organizationModelImpl.getColumnBitmask() &
-				FINDER_PATH_FETCH_BY_C_N.getColumnBitmask()) != 0) {
-			Object[] args = new Object[] {
-					organizationModelImpl.getOriginalCompanyId(),
-					organizationModelImpl.getOriginalName()
-				};
-
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_C_N, args);
-			FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_C_N, args);
-		}
 
 		if (clearCurrent) {
 			Object[] args = new Object[] {
-					organizationModelImpl.getCompanyId(),
-					organizationModelImpl.getExternalReferenceCode()
-				};
+				organizationModelImpl.getCompanyId(),
+				organizationModelImpl.getName()
+			};
 
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_C_ERC, args);
-			FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_C_ERC, args);
+			FinderCacheUtil.removeResult(_finderPathCountByC_N, args);
+			FinderCacheUtil.removeResult(_finderPathFetchByC_N, args);
 		}
 
 		if ((organizationModelImpl.getColumnBitmask() &
-				FINDER_PATH_FETCH_BY_C_ERC.getColumnBitmask()) != 0) {
-			Object[] args = new Object[] {
-					organizationModelImpl.getOriginalCompanyId(),
-					organizationModelImpl.getOriginalExternalReferenceCode()
-				};
+			 _finderPathFetchByC_N.getColumnBitmask()) != 0) {
 
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_C_ERC, args);
-			FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_C_ERC, args);
+			Object[] args = new Object[] {
+				organizationModelImpl.getOriginalCompanyId(),
+				organizationModelImpl.getOriginalName()
+			};
+
+			FinderCacheUtil.removeResult(_finderPathCountByC_N, args);
+			FinderCacheUtil.removeResult(_finderPathFetchByC_N, args);
+		}
+
+		if (clearCurrent) {
+			Object[] args = new Object[] {
+				organizationModelImpl.getCompanyId(),
+				organizationModelImpl.getExternalReferenceCode()
+			};
+
+			FinderCacheUtil.removeResult(_finderPathCountByC_ERC, args);
+			FinderCacheUtil.removeResult(_finderPathFetchByC_ERC, args);
+		}
+
+		if ((organizationModelImpl.getColumnBitmask() &
+			 _finderPathFetchByC_ERC.getColumnBitmask()) != 0) {
+
+			Object[] args = new Object[] {
+				organizationModelImpl.getOriginalCompanyId(),
+				organizationModelImpl.getOriginalExternalReferenceCode()
+			};
+
+			FinderCacheUtil.removeResult(_finderPathCountByC_ERC, args);
+			FinderCacheUtil.removeResult(_finderPathFetchByC_ERC, args);
 		}
 	}
 
@@ -8117,7 +9516,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 		organization.setUuid(uuid);
 
-		organization.setCompanyId(companyProvider.getCompanyId());
+		organization.setCompanyId(CompanyThreadLocal.getCompanyId());
 
 		return organization;
 	}
@@ -8132,6 +9531,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	@Override
 	public Organization remove(long organizationId)
 		throws NoSuchOrganizationException {
+
 		return remove((Serializable)organizationId);
 	}
 
@@ -8145,30 +9545,31 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	@Override
 	public Organization remove(Serializable primaryKey)
 		throws NoSuchOrganizationException {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			Organization organization = (Organization)session.get(OrganizationImpl.class,
-					primaryKey);
+			Organization organization = (Organization)session.get(
+				OrganizationImpl.class, primaryKey);
 
 			if (organization == null) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 				}
 
-				throw new NoSuchOrganizationException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-					primaryKey);
+				throw new NoSuchOrganizationException(
+					_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
 			return remove(organization);
 		}
-		catch (NoSuchOrganizationException nsee) {
-			throw nsee;
+		catch (NoSuchOrganizationException noSuchEntityException) {
+			throw noSuchEntityException;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -8177,9 +9578,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 	@Override
 	protected Organization removeImpl(Organization organization) {
-		organizationToGroupTableMapper.deleteLeftPrimaryKeyTableMappings(organization.getPrimaryKey());
+		organizationToGroupTableMapper.deleteLeftPrimaryKeyTableMappings(
+			organization.getPrimaryKey());
 
-		organizationToUserTableMapper.deleteLeftPrimaryKeyTableMappings(organization.getPrimaryKey());
+		organizationToUserTableMapper.deleteLeftPrimaryKeyTableMappings(
+			organization.getPrimaryKey());
+
+		if (!CTPersistenceHelperUtil.isRemove(organization)) {
+			return organization;
+		}
 
 		Session session = null;
 
@@ -8187,16 +9594,16 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			session = openSession();
 
 			if (!session.contains(organization)) {
-				organization = (Organization)session.get(OrganizationImpl.class,
-						organization.getPrimaryKeyObj());
+				organization = (Organization)session.get(
+					OrganizationImpl.class, organization.getPrimaryKeyObj());
 			}
 
 			if (organization != null) {
 				session.delete(organization);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -8217,19 +9624,21 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			InvocationHandler invocationHandler = null;
 
 			if (ProxyUtil.isProxyClass(organization.getClass())) {
-				invocationHandler = ProxyUtil.getInvocationHandler(organization);
+				invocationHandler = ProxyUtil.getInvocationHandler(
+					organization);
 
 				throw new IllegalArgumentException(
 					"Implement ModelWrapper in organization proxy " +
-					invocationHandler.getClass());
+						invocationHandler.getClass());
 			}
 
 			throw new IllegalArgumentException(
 				"Implement ModelWrapper in custom Organization implementation " +
-				organization.getClass());
+					organization.getClass());
 		}
 
-		OrganizationModelImpl organizationModelImpl = (OrganizationModelImpl)organization;
+		OrganizationModelImpl organizationModelImpl =
+			(OrganizationModelImpl)organization;
 
 		if (Validator.isNull(organization.getUuid())) {
 			String uuid = PortalUUIDUtil.generate();
@@ -8237,7 +9646,8 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			organization.setUuid(uuid);
 		}
 
-		ServiceContext serviceContext = ServiceContextThreadLocal.getServiceContext();
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
 
 		Date now = new Date();
 
@@ -8255,7 +9665,8 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 				organization.setModifiedDate(now);
 			}
 			else {
-				organization.setModifiedDate(serviceContext.getModifiedDate(now));
+				organization.setModifiedDate(
+					serviceContext.getModifiedDate(now));
 			}
 		}
 
@@ -8264,7 +9675,17 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		try {
 			session = openSession();
 
-			if (organization.isNew()) {
+			if (CTPersistenceHelperUtil.isInsert(organization)) {
+				if (!isNew) {
+					Organization oldOrganization = (Organization)session.get(
+						OrganizationImpl.class,
+						organization.getPrimaryKeyObj());
+
+					if (oldOrganization != null) {
+						session.evict(oldOrganization);
+					}
+				}
+
 				session.save(organization);
 
 				organization.setNew(false);
@@ -8273,164 +9694,175 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 				organization = (Organization)session.merge(organization);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 
+		if (organization.getCtCollectionId() != 0) {
+			organization.resetOriginalValues();
+
+			return organization;
+		}
+
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 
 		if (!OrganizationModelImpl.COLUMN_BITMASK_ENABLED) {
-			FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+			FinderCacheUtil.clearCache(
+				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 		}
-		else
-		 if (isNew) {
-			Object[] args = new Object[] { organizationModelImpl.getUuid() };
+		else if (isNew) {
+			Object[] args = new Object[] {organizationModelImpl.getUuid()};
 
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-			FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-				args);
+			FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindByUuid, args);
 
 			args = new Object[] {
+				organizationModelImpl.getUuid(),
+				organizationModelImpl.getCompanyId()
+			};
+
+			FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindByUuid_C, args);
+
+			args = new Object[] {organizationModelImpl.getCompanyId()};
+
+			FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindByCompanyId, args);
+
+			args = new Object[] {organizationModelImpl.getCompanyId()};
+
+			FinderCacheUtil.removeResult(_finderPathCountByLocations, args);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindByLocations, args);
+
+			args = new Object[] {
+				organizationModelImpl.getCompanyId(),
+				organizationModelImpl.getParentOrganizationId()
+			};
+
+			FinderCacheUtil.removeResult(_finderPathCountByC_P, args);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindByC_P, args);
+
+			FinderCacheUtil.removeResult(
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
+		}
+		else {
+			if ((organizationModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
+					 0) {
+
+				Object[] args = new Object[] {
+					organizationModelImpl.getOriginalUuid()
+				};
+
+				FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByUuid, args);
+
+				args = new Object[] {organizationModelImpl.getUuid()};
+
+				FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByUuid, args);
+			}
+
+			if ((organizationModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
+					 0) {
+
+				Object[] args = new Object[] {
+					organizationModelImpl.getOriginalUuid(),
+					organizationModelImpl.getOriginalCompanyId()
+				};
+
+				FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByUuid_C, args);
+
+				args = new Object[] {
 					organizationModelImpl.getUuid(),
 					organizationModelImpl.getCompanyId()
 				};
 
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-			FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-				args);
+				FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByUuid_C, args);
+			}
 
-			args = new Object[] { organizationModelImpl.getCompanyId() };
+			if ((organizationModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByCompanyId.
+					 getColumnBitmask()) != 0) {
 
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-			FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-				args);
+				Object[] args = new Object[] {
+					organizationModelImpl.getOriginalCompanyId()
+				};
 
-			args = new Object[] { organizationModelImpl.getCompanyId() };
+				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByCompanyId, args);
 
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_LOCATIONS, args);
-			FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LOCATIONS,
-				args);
+				args = new Object[] {organizationModelImpl.getCompanyId()};
 
-			args = new Object[] {
+				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByCompanyId, args);
+			}
+
+			if ((organizationModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByLocations.
+					 getColumnBitmask()) != 0) {
+
+				Object[] args = new Object[] {
+					organizationModelImpl.getOriginalCompanyId()
+				};
+
+				FinderCacheUtil.removeResult(_finderPathCountByLocations, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByLocations, args);
+
+				args = new Object[] {organizationModelImpl.getCompanyId()};
+
+				FinderCacheUtil.removeResult(_finderPathCountByLocations, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByLocations, args);
+			}
+
+			if ((organizationModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByC_P.getColumnBitmask()) !=
+					 0) {
+
+				Object[] args = new Object[] {
+					organizationModelImpl.getOriginalCompanyId(),
+					organizationModelImpl.getOriginalParentOrganizationId()
+				};
+
+				FinderCacheUtil.removeResult(_finderPathCountByC_P, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByC_P, args);
+
+				args = new Object[] {
 					organizationModelImpl.getCompanyId(),
 					organizationModelImpl.getParentOrganizationId()
 				};
 
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_C_P, args);
-			FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_C_P,
-				args);
-
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_ALL,
-				FINDER_ARGS_EMPTY);
-			FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL,
-				FINDER_ARGS_EMPTY);
-		}
-
-		else {
-			if ((organizationModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						organizationModelImpl.getOriginalUuid()
-					};
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-					args);
-
-				args = new Object[] { organizationModelImpl.getUuid() };
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
-					args);
-			}
-
-			if ((organizationModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						organizationModelImpl.getOriginalUuid(),
-						organizationModelImpl.getOriginalCompanyId()
-					};
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-					args);
-
-				args = new Object[] {
-						organizationModelImpl.getUuid(),
-						organizationModelImpl.getCompanyId()
-					};
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_UUID_C, args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID_C,
-					args);
-			}
-
-			if ((organizationModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						organizationModelImpl.getOriginalCompanyId()
-					};
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_COMPANYID,
-					args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-					args);
-
-				args = new Object[] { organizationModelImpl.getCompanyId() };
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_COMPANYID,
-					args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-					args);
-			}
-
-			if ((organizationModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LOCATIONS.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						organizationModelImpl.getOriginalCompanyId()
-					};
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_LOCATIONS,
-					args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LOCATIONS,
-					args);
-
-				args = new Object[] { organizationModelImpl.getCompanyId() };
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_LOCATIONS,
-					args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_LOCATIONS,
-					args);
-			}
-
-			if ((organizationModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_C_P.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						organizationModelImpl.getOriginalCompanyId(),
-						organizationModelImpl.getOriginalParentOrganizationId()
-					};
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_C_P, args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_C_P,
-					args);
-
-				args = new Object[] {
-						organizationModelImpl.getCompanyId(),
-						organizationModelImpl.getParentOrganizationId()
-					};
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_C_P, args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_C_P,
-					args);
+				FinderCacheUtil.removeResult(_finderPathCountByC_P, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByC_P, args);
 			}
 		}
 
-		EntityCacheUtil.putResult(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-			OrganizationImpl.class, organization.getPrimaryKey(), organization,
-			false);
+		EntityCacheUtil.putResult(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED, OrganizationImpl.class,
+			organization.getPrimaryKey(), organization, false);
 
 		clearUniqueFindersCache(organizationModelImpl, false);
 		cacheUniqueFindersCache(organizationModelImpl);
@@ -8441,7 +9873,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	}
 
 	/**
-	 * Returns the organization with the primary key or throws a {@link com.liferay.portal.kernel.exception.NoSuchModelException} if it could not be found.
+	 * Returns the organization with the primary key or throws a <code>com.liferay.portal.kernel.exception.NoSuchModelException</code> if it could not be found.
 	 *
 	 * @param primaryKey the primary key of the organization
 	 * @return the organization
@@ -8450,6 +9882,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	@Override
 	public Organization findByPrimaryKey(Serializable primaryKey)
 		throws NoSuchOrganizationException {
+
 		Organization organization = fetchByPrimaryKey(primaryKey);
 
 		if (organization == null) {
@@ -8457,15 +9890,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 				_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
-			throw new NoSuchOrganizationException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-				primaryKey);
+			throw new NoSuchOrganizationException(
+				_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 		}
 
 		return organization;
 	}
 
 	/**
-	 * Returns the organization with the primary key or throws a {@link NoSuchOrganizationException} if it could not be found.
+	 * Returns the organization with the primary key or throws a <code>NoSuchOrganizationException</code> if it could not be found.
 	 *
 	 * @param organizationId the primary key of the organization
 	 * @return the organization
@@ -8474,6 +9907,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	@Override
 	public Organization findByPrimaryKey(long organizationId)
 		throws NoSuchOrganizationException {
+
 		return findByPrimaryKey((Serializable)organizationId);
 	}
 
@@ -8485,41 +9919,29 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public Organization fetchByPrimaryKey(Serializable primaryKey) {
-		Serializable serializable = EntityCacheUtil.getResult(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-				OrganizationImpl.class, primaryKey);
-
-		if (serializable == nullModel) {
-			return null;
+		if (CTPersistenceHelperUtil.isProductionMode(Organization.class)) {
+			return super.fetchByPrimaryKey(primaryKey);
 		}
 
-		Organization organization = (Organization)serializable;
+		Organization organization = null;
 
-		if (organization == null) {
-			Session session = null;
+		Session session = null;
 
-			try {
-				session = openSession();
+		try {
+			session = openSession();
 
-				organization = (Organization)session.get(OrganizationImpl.class,
-						primaryKey);
+			organization = (Organization)session.get(
+				OrganizationImpl.class, primaryKey);
 
-				if (organization != null) {
-					cacheResult(organization);
-				}
-				else {
-					EntityCacheUtil.putResult(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-						OrganizationImpl.class, primaryKey, nullModel);
-				}
+			if (organization != null) {
+				cacheResult(organization);
 			}
-			catch (Exception e) {
-				EntityCacheUtil.removeResult(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-					OrganizationImpl.class, primaryKey);
-
-				throw processException(e);
-			}
-			finally {
-				closeSession(session);
-			}
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
 		}
 
 		return organization;
@@ -8539,11 +9961,17 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	@Override
 	public Map<Serializable, Organization> fetchByPrimaryKeys(
 		Set<Serializable> primaryKeys) {
+
+		if (CTPersistenceHelperUtil.isProductionMode(Organization.class)) {
+			return super.fetchByPrimaryKeys(primaryKeys);
+		}
+
 		if (primaryKeys.isEmpty()) {
 			return Collections.emptyMap();
 		}
 
-		Map<Serializable, Organization> map = new HashMap<Serializable, Organization>();
+		Map<Serializable, Organization> map =
+			new HashMap<Serializable, Organization>();
 
 		if (primaryKeys.size() == 1) {
 			Iterator<Serializable> iterator = primaryKeys.iterator();
@@ -8559,69 +9987,40 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			return map;
 		}
 
-		Set<Serializable> uncachedPrimaryKeys = null;
+		StringBundler sb = new StringBundler(primaryKeys.size() * 2 + 1);
+
+		sb.append(getSelectSQL());
+		sb.append(" WHERE ");
+		sb.append(getPKDBName());
+		sb.append(" IN (");
 
 		for (Serializable primaryKey : primaryKeys) {
-			Serializable serializable = EntityCacheUtil.getResult(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-					OrganizationImpl.class, primaryKey);
+			sb.append((long)primaryKey);
 
-			if (serializable != nullModel) {
-				if (serializable == null) {
-					if (uncachedPrimaryKeys == null) {
-						uncachedPrimaryKeys = new HashSet<Serializable>();
-					}
-
-					uncachedPrimaryKeys.add(primaryKey);
-				}
-				else {
-					map.put(primaryKey, (Organization)serializable);
-				}
-			}
+			sb.append(",");
 		}
 
-		if (uncachedPrimaryKeys == null) {
-			return map;
-		}
+		sb.setIndex(sb.index() - 1);
 
-		StringBundler query = new StringBundler((uncachedPrimaryKeys.size() * 2) +
-				1);
+		sb.append(")");
 
-		query.append(_SQL_SELECT_ORGANIZATION_WHERE_PKS_IN);
-
-		for (Serializable primaryKey : uncachedPrimaryKeys) {
-			query.append((long)primaryKey);
-
-			query.append(",");
-		}
-
-		query.setIndex(query.index() - 1);
-
-		query.append(")");
-
-		String sql = query.toString();
+		String sql = sb.toString();
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			Query q = session.createQuery(sql);
+			Query query = session.createQuery(sql);
 
-			for (Organization organization : (List<Organization>)q.list()) {
+			for (Organization organization : (List<Organization>)query.list()) {
 				map.put(organization.getPrimaryKeyObj(), organization);
 
 				cacheResult(organization);
-
-				uncachedPrimaryKeys.remove(organization.getPrimaryKeyObj());
-			}
-
-			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				EntityCacheUtil.putResult(OrganizationModelImpl.ENTITY_CACHE_ENABLED,
-					OrganizationImpl.class, primaryKey, nullModel);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -8644,7 +10043,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns a range of all the organizations.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of organizations
@@ -8660,7 +10059,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of organizations
@@ -8669,8 +10068,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of organizations
 	 */
 	@Override
-	public List<Organization> findAll(int start, int end,
-		OrderByComparator<Organization> orderByComparator) {
+	public List<Organization> findAll(
+		int start, int end, OrderByComparator<Organization> orderByComparator) {
+
 		return findAll(start, end, orderByComparator, true);
 	}
 
@@ -8678,62 +10078,65 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the organizations.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of organizations
 	 * @param end the upper bound of the range of organizations (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of organizations
 	 */
 	@Override
-	public List<Organization> findAll(int start, int end,
-		OrderByComparator<Organization> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<Organization> findAll(
+		int start, int end, OrderByComparator<Organization> orderByComparator,
+		boolean useFinderCache) {
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL;
-			finderArgs = FINDER_ARGS_EMPTY;
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_ALL;
-			finderArgs = new Object[] { start, end, orderByComparator };
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindAll;
+			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<Organization> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<Organization>)FinderCacheUtil.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache && productionMode) {
+			list = (List<Organization>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(2 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_ORGANIZATION);
+				sb.append(_SQL_SELECT_ORGANIZATION);
 
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_ORGANIZATION;
 
-				if (pagination) {
-					sql = sql.concat(OrganizationModelImpl.ORDER_BY_JPQL);
-				}
+				sql = sql.concat(OrganizationModelImpl.ORDER_BY_JPQL);
 			}
 
 			Session session = null;
@@ -8741,29 +10144,23 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				if (!pagination) {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<Organization>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<Organization>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -8791,8 +10188,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)FinderCacheUtil.getResult(FINDER_PATH_COUNT_ALL,
-				FINDER_ARGS_EMPTY, this);
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Organization.class);
+
+		Long count = null;
+
+		if (productionMode) {
+			count = (Long)FinderCacheUtil.getResult(
+				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+		}
 
 		if (count == null) {
 			Session session = null;
@@ -8800,18 +10204,22 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_ORGANIZATION);
+				Query query = session.createQuery(_SQL_COUNT_ORGANIZATION);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(FINDER_PATH_COUNT_ALL,
-					FINDER_ARGS_EMPTY, count);
+				if (productionMode) {
+					FinderCacheUtil.putResult(
+						_finderPathCountAll, FINDER_ARGS_EMPTY, count);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_ALL,
-					FINDER_ARGS_EMPTY);
+			catch (Exception exception) {
+				if (productionMode) {
+					FinderCacheUtil.removeResult(
+						_finderPathCountAll, FINDER_ARGS_EMPTY);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -8849,7 +10257,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns a range of all the groups associated with the organization.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the organization
@@ -8858,8 +10266,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of groups associated with the organization
 	 */
 	@Override
-	public List<com.liferay.portal.kernel.model.Group> getGroups(long pk,
-		int start, int end) {
+	public List<com.liferay.portal.kernel.model.Group> getGroups(
+		long pk, int start, int end) {
+
 		return getGroups(pk, start, end, null);
 	}
 
@@ -8867,7 +10276,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the groups associated with the organization.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the organization
@@ -8877,11 +10286,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of groups associated with the organization
 	 */
 	@Override
-	public List<com.liferay.portal.kernel.model.Group> getGroups(long pk,
-		int start, int end,
-		OrderByComparator<com.liferay.portal.kernel.model.Group> orderByComparator) {
-		return organizationToGroupTableMapper.getRightBaseModels(pk, start,
-			end, orderByComparator);
+	public List<com.liferay.portal.kernel.model.Group> getGroups(
+		long pk, int start, int end,
+		OrderByComparator<com.liferay.portal.kernel.model.Group>
+			orderByComparator) {
+
+		return organizationToGroupTableMapper.getRightBaseModels(
+			pk, start, end, orderByComparator);
 	}
 
 	/**
@@ -8936,12 +10347,12 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			organizationToGroupTableMapper.addTableMapping(companyProvider.getCompanyId(),
-				pk, groupPK);
+			organizationToGroupTableMapper.addTableMapping(
+				CompanyThreadLocal.getCompanyId(), pk, groupPK);
 		}
 		else {
-			organizationToGroupTableMapper.addTableMapping(organization.getCompanyId(),
-				pk, groupPK);
+			organizationToGroupTableMapper.addTableMapping(
+				organization.getCompanyId(), pk, groupPK);
 		}
 	}
 
@@ -8956,12 +10367,12 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			organizationToGroupTableMapper.addTableMapping(companyProvider.getCompanyId(),
-				pk, group.getPrimaryKey());
+			organizationToGroupTableMapper.addTableMapping(
+				CompanyThreadLocal.getCompanyId(), pk, group.getPrimaryKey());
 		}
 		else {
-			organizationToGroupTableMapper.addTableMapping(organization.getCompanyId(),
-				pk, group.getPrimaryKey());
+			organizationToGroupTableMapper.addTableMapping(
+				organization.getCompanyId(), pk, group.getPrimaryKey());
 		}
 	}
 
@@ -8978,13 +10389,14 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = organization.getCompanyId();
 		}
 
-		organizationToGroupTableMapper.addTableMappings(companyId, pk, groupPKs);
+		organizationToGroupTableMapper.addTableMappings(
+			companyId, pk, groupPKs);
 	}
 
 	/**
@@ -8994,10 +10406,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param groups the groups
 	 */
 	@Override
-	public void addGroups(long pk,
-		List<com.liferay.portal.kernel.model.Group> groups) {
-		addGroups(pk,
-			ListUtil.toLongArray(groups,
+	public void addGroups(
+		long pk, List<com.liferay.portal.kernel.model.Group> groups) {
+
+		addGroups(
+			pk,
+			ListUtil.toLongArray(
+				groups,
 				com.liferay.portal.kernel.model.Group.GROUP_ID_ACCESSOR));
 	}
 
@@ -9029,9 +10444,11 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param group the group
 	 */
 	@Override
-	public void removeGroup(long pk, com.liferay.portal.kernel.model.Group group) {
-		organizationToGroupTableMapper.deleteTableMapping(pk,
-			group.getPrimaryKey());
+	public void removeGroup(
+		long pk, com.liferay.portal.kernel.model.Group group) {
+
+		organizationToGroupTableMapper.deleteTableMapping(
+			pk, group.getPrimaryKey());
 	}
 
 	/**
@@ -9052,10 +10469,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param groups the groups
 	 */
 	@Override
-	public void removeGroups(long pk,
-		List<com.liferay.portal.kernel.model.Group> groups) {
-		removeGroups(pk,
-			ListUtil.toLongArray(groups,
+	public void removeGroups(
+		long pk, List<com.liferay.portal.kernel.model.Group> groups) {
+
+		removeGroups(
+			pk,
+			ListUtil.toLongArray(
+				groups,
 				com.liferay.portal.kernel.model.Group.GROUP_ID_ACCESSOR));
 	}
 
@@ -9068,15 +10488,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	@Override
 	public void setGroups(long pk, long[] groupPKs) {
 		Set<Long> newGroupPKsSet = SetUtil.fromArray(groupPKs);
-		Set<Long> oldGroupPKsSet = SetUtil.fromArray(organizationToGroupTableMapper.getRightPrimaryKeys(
-					pk));
+		Set<Long> oldGroupPKsSet = SetUtil.fromArray(
+			organizationToGroupTableMapper.getRightPrimaryKeys(pk));
 
 		Set<Long> removeGroupPKsSet = new HashSet<Long>(oldGroupPKsSet);
 
 		removeGroupPKsSet.removeAll(newGroupPKsSet);
 
-		organizationToGroupTableMapper.deleteTableMappings(pk,
-			ArrayUtil.toLongArray(removeGroupPKsSet));
+		organizationToGroupTableMapper.deleteTableMappings(
+			pk, ArrayUtil.toLongArray(removeGroupPKsSet));
 
 		newGroupPKsSet.removeAll(oldGroupPKsSet);
 
@@ -9085,14 +10505,14 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = organization.getCompanyId();
 		}
 
-		organizationToGroupTableMapper.addTableMappings(companyId, pk,
-			ArrayUtil.toLongArray(newGroupPKsSet));
+		organizationToGroupTableMapper.addTableMappings(
+			companyId, pk, ArrayUtil.toLongArray(newGroupPKsSet));
 	}
 
 	/**
@@ -9102,8 +10522,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param groups the groups to be associated with the organization
 	 */
 	@Override
-	public void setGroups(long pk,
-		List<com.liferay.portal.kernel.model.Group> groups) {
+	public void setGroups(
+		long pk, List<com.liferay.portal.kernel.model.Group> groups) {
+
 		try {
 			long[] groupPKs = new long[groups.size()];
 
@@ -9115,8 +10536,8 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			setGroups(pk, groupPKs);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 	}
 
@@ -9148,7 +10569,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns a range of all the users associated with the organization.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the organization
@@ -9157,8 +10578,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the range of users associated with the organization
 	 */
 	@Override
-	public List<com.liferay.portal.kernel.model.User> getUsers(long pk,
-		int start, int end) {
+	public List<com.liferay.portal.kernel.model.User> getUsers(
+		long pk, int start, int end) {
+
 		return getUsers(pk, start, end, null);
 	}
 
@@ -9166,7 +10588,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * Returns an ordered range of all the users associated with the organization.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link OrganizationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OrganizationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param pk the primary key of the organization
@@ -9176,11 +10598,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @return the ordered range of users associated with the organization
 	 */
 	@Override
-	public List<com.liferay.portal.kernel.model.User> getUsers(long pk,
-		int start, int end,
-		OrderByComparator<com.liferay.portal.kernel.model.User> orderByComparator) {
-		return organizationToUserTableMapper.getRightBaseModels(pk, start, end,
-			orderByComparator);
+	public List<com.liferay.portal.kernel.model.User> getUsers(
+		long pk, int start, int end,
+		OrderByComparator<com.liferay.portal.kernel.model.User>
+			orderByComparator) {
+
+		return organizationToUserTableMapper.getRightBaseModels(
+			pk, start, end, orderByComparator);
 	}
 
 	/**
@@ -9235,12 +10659,12 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			organizationToUserTableMapper.addTableMapping(companyProvider.getCompanyId(),
-				pk, userPK);
+			organizationToUserTableMapper.addTableMapping(
+				CompanyThreadLocal.getCompanyId(), pk, userPK);
 		}
 		else {
-			organizationToUserTableMapper.addTableMapping(organization.getCompanyId(),
-				pk, userPK);
+			organizationToUserTableMapper.addTableMapping(
+				organization.getCompanyId(), pk, userPK);
 		}
 	}
 
@@ -9255,12 +10679,12 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			organizationToUserTableMapper.addTableMapping(companyProvider.getCompanyId(),
-				pk, user.getPrimaryKey());
+			organizationToUserTableMapper.addTableMapping(
+				CompanyThreadLocal.getCompanyId(), pk, user.getPrimaryKey());
 		}
 		else {
-			organizationToUserTableMapper.addTableMapping(organization.getCompanyId(),
-				pk, user.getPrimaryKey());
+			organizationToUserTableMapper.addTableMapping(
+				organization.getCompanyId(), pk, user.getPrimaryKey());
 		}
 	}
 
@@ -9277,7 +10701,7 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = organization.getCompanyId();
@@ -9293,11 +10717,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param users the users
 	 */
 	@Override
-	public void addUsers(long pk,
-		List<com.liferay.portal.kernel.model.User> users) {
-		addUsers(pk,
-			ListUtil.toLongArray(users,
-				com.liferay.portal.kernel.model.User.USER_ID_ACCESSOR));
+	public void addUsers(
+		long pk, List<com.liferay.portal.kernel.model.User> users) {
+
+		addUsers(
+			pk,
+			ListUtil.toLongArray(
+				users, com.liferay.portal.kernel.model.User.USER_ID_ACCESSOR));
 	}
 
 	/**
@@ -9329,8 +10755,8 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 */
 	@Override
 	public void removeUser(long pk, com.liferay.portal.kernel.model.User user) {
-		organizationToUserTableMapper.deleteTableMapping(pk,
-			user.getPrimaryKey());
+		organizationToUserTableMapper.deleteTableMapping(
+			pk, user.getPrimaryKey());
 	}
 
 	/**
@@ -9351,11 +10777,13 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param users the users
 	 */
 	@Override
-	public void removeUsers(long pk,
-		List<com.liferay.portal.kernel.model.User> users) {
-		removeUsers(pk,
-			ListUtil.toLongArray(users,
-				com.liferay.portal.kernel.model.User.USER_ID_ACCESSOR));
+	public void removeUsers(
+		long pk, List<com.liferay.portal.kernel.model.User> users) {
+
+		removeUsers(
+			pk,
+			ListUtil.toLongArray(
+				users, com.liferay.portal.kernel.model.User.USER_ID_ACCESSOR));
 	}
 
 	/**
@@ -9367,15 +10795,15 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	@Override
 	public void setUsers(long pk, long[] userPKs) {
 		Set<Long> newUserPKsSet = SetUtil.fromArray(userPKs);
-		Set<Long> oldUserPKsSet = SetUtil.fromArray(organizationToUserTableMapper.getRightPrimaryKeys(
-					pk));
+		Set<Long> oldUserPKsSet = SetUtil.fromArray(
+			organizationToUserTableMapper.getRightPrimaryKeys(pk));
 
 		Set<Long> removeUserPKsSet = new HashSet<Long>(oldUserPKsSet);
 
 		removeUserPKsSet.removeAll(newUserPKsSet);
 
-		organizationToUserTableMapper.deleteTableMappings(pk,
-			ArrayUtil.toLongArray(removeUserPKsSet));
+		organizationToUserTableMapper.deleteTableMappings(
+			pk, ArrayUtil.toLongArray(removeUserPKsSet));
 
 		newUserPKsSet.removeAll(oldUserPKsSet);
 
@@ -9384,14 +10812,14 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		Organization organization = fetchByPrimaryKey(pk);
 
 		if (organization == null) {
-			companyId = companyProvider.getCompanyId();
+			companyId = CompanyThreadLocal.getCompanyId();
 		}
 		else {
 			companyId = organization.getCompanyId();
 		}
 
-		organizationToUserTableMapper.addTableMappings(companyId, pk,
-			ArrayUtil.toLongArray(newUserPKsSet));
+		organizationToUserTableMapper.addTableMappings(
+			companyId, pk, ArrayUtil.toLongArray(newUserPKsSet));
 	}
 
 	/**
@@ -9401,8 +10829,9 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	 * @param users the users to be associated with the organization
 	 */
 	@Override
-	public void setUsers(long pk,
-		List<com.liferay.portal.kernel.model.User> users) {
+	public void setUsers(
+		long pk, List<com.liferay.portal.kernel.model.User> users) {
+
 		try {
 			long[] userPKs = new long[users.size()];
 
@@ -9414,8 +10843,8 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 
 			setUsers(pk, userPKs);
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 	}
 
@@ -9425,19 +10854,343 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 	}
 
 	@Override
-	protected Map<String, Integer> getTableColumnsMap() {
+	protected EntityCache getEntityCache() {
+		return EntityCacheUtil.getEntityCache();
+	}
+
+	@Override
+	protected String getPKDBName() {
+		return "organizationId";
+	}
+
+	@Override
+	protected String getSelectSQL() {
+		return _SQL_SELECT_ORGANIZATION;
+	}
+
+	@Override
+	public Set<String> getCTColumnNames(
+		CTColumnResolutionType ctColumnResolutionType) {
+
+		return _ctColumnNamesMap.get(ctColumnResolutionType);
+	}
+
+	@Override
+	public List<String> getMappingTableNames() {
+		return _mappingTableNames;
+	}
+
+	@Override
+	public Map<String, Integer> getTableColumnsMap() {
 		return OrganizationModelImpl.TABLE_COLUMNS_MAP;
+	}
+
+	@Override
+	public String getTableName() {
+		return "Organization_";
+	}
+
+	@Override
+	public List<String[]> getUniqueIndexColumnNames() {
+		return _uniqueIndexColumnNames;
+	}
+
+	private static final Map<CTColumnResolutionType, Set<String>>
+		_ctColumnNamesMap = new EnumMap<CTColumnResolutionType, Set<String>>(
+			CTColumnResolutionType.class);
+	private static final List<String> _mappingTableNames =
+		new ArrayList<String>();
+	private static final List<String[]> _uniqueIndexColumnNames =
+		new ArrayList<String[]>();
+
+	static {
+		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
+		Set<String> ctStrictColumnNames = new HashSet<String>();
+
+		ctControlColumnNames.add("mvccVersion");
+		ctControlColumnNames.add("ctCollectionId");
+		ctStrictColumnNames.add("uuid_");
+		ctStrictColumnNames.add("externalReferenceCode");
+		ctStrictColumnNames.add("companyId");
+		ctStrictColumnNames.add("userId");
+		ctStrictColumnNames.add("userName");
+		ctStrictColumnNames.add("createDate");
+		ctIgnoreColumnNames.add("modifiedDate");
+		ctStrictColumnNames.add("parentOrganizationId");
+		ctStrictColumnNames.add("treePath");
+		ctStrictColumnNames.add("name");
+		ctStrictColumnNames.add("type_");
+		ctStrictColumnNames.add("recursable");
+		ctStrictColumnNames.add("regionId");
+		ctStrictColumnNames.add("countryId");
+		ctStrictColumnNames.add("statusId");
+		ctStrictColumnNames.add("comments");
+		ctStrictColumnNames.add("logoId");
+		ctStrictColumnNames.add("groups_");
+		ctStrictColumnNames.add("users");
+
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.PK, Collections.singleton("organizationId"));
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.STRICT, ctStrictColumnNames);
+
+		_mappingTableNames.add("Groups_Orgs");
+		_mappingTableNames.add("Users_Orgs");
+
+		_uniqueIndexColumnNames.add(new String[] {"companyId", "name"});
 	}
 
 	/**
 	 * Initializes the organization persistence.
 	 */
 	public void afterPropertiesSet() {
-		organizationToGroupTableMapper = TableMapperFactory.getTableMapper("Groups_Orgs",
-				"companyId", "organizationId", "groupId", this, groupPersistence);
+		organizationToGroupTableMapper = TableMapperFactory.getTableMapper(
+			"Groups_Orgs", "companyId", "organizationId", "groupId", this,
+			groupPersistence);
 
-		organizationToUserTableMapper = TableMapperFactory.getTableMapper("Users_Orgs",
-				"companyId", "organizationId", "userId", this, userPersistence);
+		organizationToUserTableMapper = TableMapperFactory.getTableMapper(
+			"Users_Orgs", "companyId", "organizationId", "userId", this,
+			userPersistence);
+
+		_finderPathWithPaginationFindAll = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+
+		_finderPathWithoutPaginationFindAll = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
+			new String[0]);
+
+		_finderPathCountAll = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
+			new String[0]);
+
+		_finderPathWithPaginationFindByUuid = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
+			new String[] {
+				String.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByUuid = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
+			new String[] {String.class.getName()},
+			OrganizationModelImpl.UUID_COLUMN_BITMASK |
+			OrganizationModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByUuid = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
+			new String[] {String.class.getName()});
+
+		_finderPathWithPaginationFindByUuid_C = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
+			new String[] {
+				String.class.getName(), Long.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
+			new String[] {String.class.getName(), Long.class.getName()},
+			OrganizationModelImpl.UUID_COLUMN_BITMASK |
+			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
+			OrganizationModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByUuid_C = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
+			new String[] {String.class.getName(), Long.class.getName()});
+
+		_finderPathWithPaginationFindByCompanyId = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
+			new String[] {Long.class.getName()},
+			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
+			OrganizationModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByCompanyId = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
+			new String[] {Long.class.getName()});
+
+		_finderPathWithPaginationFindByLocations = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByLocations",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByLocations = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByLocations",
+			new String[] {Long.class.getName()},
+			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
+			OrganizationModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByLocations = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByLocations",
+			new String[] {Long.class.getName()});
+
+		_finderPathWithPaginationFindByC_P = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_P",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByC_P = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_P",
+			new String[] {Long.class.getName(), Long.class.getName()},
+			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
+			OrganizationModelImpl.PARENTORGANIZATIONID_COLUMN_BITMASK |
+			OrganizationModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByC_P = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_P",
+			new String[] {Long.class.getName(), Long.class.getName()});
+
+		_finderPathWithPaginationFindByC_T = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_T",
+			new String[] {
+				Long.class.getName(), String.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			});
+
+		_finderPathWithPaginationCountByC_T = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByC_T",
+			new String[] {Long.class.getName(), String.class.getName()});
+
+		_finderPathFetchByC_N = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_ENTITY, "fetchByC_N",
+			new String[] {Long.class.getName(), String.class.getName()},
+			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
+			OrganizationModelImpl.NAME_COLUMN_BITMASK);
+
+		_finderPathCountByC_N = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_N",
+			new String[] {Long.class.getName(), String.class.getName()});
+
+		_finderPathWithPaginationFindByC_LikeN = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_LikeN",
+			new String[] {
+				Long.class.getName(), String.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			});
+
+		_finderPathWithPaginationCountByC_LikeN = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByC_LikeN",
+			new String[] {Long.class.getName(), String.class.getName()});
+
+		_finderPathWithPaginationFindByO_C_P = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByO_C_P",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithPaginationCountByO_C_P = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByO_C_P",
+			new String[] {
+				Long.class.getName(), Long.class.getName(), Long.class.getName()
+			});
+
+		_finderPathWithPaginationFindByC_P_LikeN = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_P_LikeN",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				String.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithPaginationCountByC_P_LikeN = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByC_P_LikeN",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				String.class.getName()
+			});
+
+		_finderPathFetchByC_ERC = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, OrganizationImpl.class,
+			FINDER_CLASS_NAME_ENTITY, "fetchByC_ERC",
+			new String[] {Long.class.getName(), String.class.getName()},
+			OrganizationModelImpl.COMPANYID_COLUMN_BITMASK |
+			OrganizationModelImpl.EXTERNALREFERENCECODE_COLUMN_BITMASK);
+
+		_finderPathCountByC_ERC = new FinderPath(
+			OrganizationModelImpl.ENTITY_CACHE_ENABLED,
+			OrganizationModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_ERC",
+			new String[] {Long.class.getName(), String.class.getName()});
 	}
 
 	public void destroy() {
@@ -9450,34 +11203,65 @@ public class OrganizationPersistenceImpl extends BasePersistenceImpl<Organizatio
 		TableMapperFactory.removeTableMapper("Users_Orgs");
 	}
 
-	@BeanReference(type = CompanyProviderWrapper.class)
-	protected CompanyProvider companyProvider;
 	@BeanReference(type = GroupPersistence.class)
 	protected GroupPersistence groupPersistence;
-	protected TableMapper<Organization, com.liferay.portal.kernel.model.Group> organizationToGroupTableMapper;
+
+	protected TableMapper<Organization, com.liferay.portal.kernel.model.Group>
+		organizationToGroupTableMapper;
+
 	@BeanReference(type = UserPersistence.class)
 	protected UserPersistence userPersistence;
-	protected TableMapper<Organization, com.liferay.portal.kernel.model.User> organizationToUserTableMapper;
-	private static final String _SQL_SELECT_ORGANIZATION = "SELECT organization FROM Organization organization";
-	private static final String _SQL_SELECT_ORGANIZATION_WHERE_PKS_IN = "SELECT organization FROM Organization organization WHERE organizationId IN (";
-	private static final String _SQL_SELECT_ORGANIZATION_WHERE = "SELECT organization FROM Organization organization WHERE ";
-	private static final String _SQL_COUNT_ORGANIZATION = "SELECT COUNT(organization) FROM Organization organization";
-	private static final String _SQL_COUNT_ORGANIZATION_WHERE = "SELECT COUNT(organization) FROM Organization organization WHERE ";
-	private static final String _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN = "organization.organizationId";
-	private static final String _FILTER_SQL_SELECT_ORGANIZATION_WHERE = "SELECT DISTINCT {organization.*} FROM Organization_ organization WHERE ";
-	private static final String _FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1 =
-		"SELECT {Organization_.*} FROM (SELECT DISTINCT organization.organizationId FROM Organization_ organization WHERE ";
-	private static final String _FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2 =
-		") TEMP_TABLE INNER JOIN Organization_ ON TEMP_TABLE.organizationId = Organization_.organizationId";
-	private static final String _FILTER_SQL_COUNT_ORGANIZATION_WHERE = "SELECT COUNT(DISTINCT organization.organizationId) AS COUNT_VALUE FROM Organization_ organization WHERE ";
+
+	protected TableMapper<Organization, com.liferay.portal.kernel.model.User>
+		organizationToUserTableMapper;
+
+	private static final String _SQL_SELECT_ORGANIZATION =
+		"SELECT organization FROM Organization organization";
+
+	private static final String _SQL_SELECT_ORGANIZATION_WHERE =
+		"SELECT organization FROM Organization organization WHERE ";
+
+	private static final String _SQL_COUNT_ORGANIZATION =
+		"SELECT COUNT(organization) FROM Organization organization";
+
+	private static final String _SQL_COUNT_ORGANIZATION_WHERE =
+		"SELECT COUNT(organization) FROM Organization organization WHERE ";
+
+	private static final String _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN =
+		"organization.organizationId";
+
+	private static final String _FILTER_SQL_SELECT_ORGANIZATION_WHERE =
+		"SELECT DISTINCT {organization.*} FROM Organization_ organization WHERE ";
+
+	private static final String
+		_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_1 =
+			"SELECT {Organization_.*} FROM (SELECT DISTINCT organization.organizationId FROM Organization_ organization WHERE ";
+
+	private static final String
+		_FILTER_SQL_SELECT_ORGANIZATION_NO_INLINE_DISTINCT_WHERE_2 =
+			") TEMP_TABLE INNER JOIN Organization_ ON TEMP_TABLE.organizationId = Organization_.organizationId";
+
+	private static final String _FILTER_SQL_COUNT_ORGANIZATION_WHERE =
+		"SELECT COUNT(DISTINCT organization.organizationId) AS COUNT_VALUE FROM Organization_ organization WHERE ";
+
 	private static final String _FILTER_ENTITY_ALIAS = "organization";
+
 	private static final String _FILTER_ENTITY_TABLE = "Organization_";
+
 	private static final String _ORDER_BY_ENTITY_ALIAS = "organization.";
+
 	private static final String _ORDER_BY_ENTITY_TABLE = "Organization_.";
-	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY = "No Organization exists with the primary key ";
-	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No Organization exists with the key {";
-	private static final Log _log = LogFactoryUtil.getLog(OrganizationPersistenceImpl.class);
-	private static final Set<String> _badColumnNames = SetUtil.fromArray(new String[] {
-				"uuid", "type"
-			});
+
+	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY =
+		"No Organization exists with the primary key ";
+
+	private static final String _NO_SUCH_ENTITY_WITH_KEY =
+		"No Organization exists with the key {";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		OrganizationPersistenceImpl.class);
+
+	private static final Set<String> _badColumnNames = SetUtil.fromArray(
+		new String[] {"uuid", "type", "groups"});
+
 }

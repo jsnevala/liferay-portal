@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.Deserializer;
 import com.liferay.portal.kernel.io.Serializer;
@@ -22,7 +23,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletSession;
 import com.liferay.portal.kernel.servlet.HttpSessionWrapper;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.PortletSessionAttributeMap;
 
@@ -257,8 +257,9 @@ public class PortletSessionImpl implements LiferayPortletSession {
 			try {
 				return deserializer.readObject();
 			}
-			catch (ClassNotFoundException cnfe) {
-				_log.error("Unable to deserialize object", cnfe);
+			catch (ClassNotFoundException classNotFoundException) {
+				_log.error(
+					"Unable to deserialize object", classNotFoundException);
 
 				return null;
 			}
@@ -374,8 +375,10 @@ public class PortletSessionImpl implements LiferayPortletSession {
 
 			Class<?> clazz = value.getClass();
 
-			if (!PortalClassLoaderUtil.isPortalClassLoader(
-					clazz.getClassLoader())) {
+			ClassLoader classLoader = clazz.getClassLoader();
+
+			if ((classLoader != null) &&
+				!PortalClassLoaderUtil.isPortalClassLoader(classLoader)) {
 
 				value = new LazySerializableObjectWrapper((Serializable)value);
 			}

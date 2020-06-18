@@ -36,7 +36,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PredicateFilter;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -106,18 +105,18 @@ public class SearchUtil {
 
 					resultRows.add(element);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					_log.error(
 						"Unable to retrieve individual search result for " +
 							className,
-						e);
+						exception);
 
 					totalRows--;
 				}
 			}
 		}
-		catch (Exception e) {
-			_log.error("Unable to display content for " + className, e);
+		catch (Exception exception) {
+			_log.error("Unable to display content for " + className, exception);
 		}
 
 		return new Tuple(resultRows, totalRows);
@@ -128,14 +127,7 @@ public class SearchUtil {
 
 		List<OpenSearch> openSearchInstances = ListUtil.filter(
 			OpenSearchRegistryUtil.getOpenSearchInstances(),
-			new PredicateFilter<OpenSearch>() {
-
-				@Override
-				public boolean filter(OpenSearch openSearch) {
-					return openSearch.isEnabled();
-				}
-
-			});
+			OpenSearch::isEnabled);
 
 		if (Validator.isNotNull(primarySearch)) {
 			for (int i = 0; i < openSearchInstances.size(); i++) {
@@ -201,7 +193,7 @@ public class SearchUtil {
 				viewContentURL.toString());
 
 			if (Validator.isNull(viewURL)) {
-				return viewURL;
+				return viewContentURL.toString();
 			}
 
 			ThemeDisplay themeDisplay =
@@ -223,12 +215,12 @@ public class SearchUtil {
 
 			return viewURL;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(
 				StringBundler.concat(
 					"Unable to get search result view URL for class ",
 					className, " with primary key ", classPK),
-				e);
+				exception);
 
 			return StringPool.BLANK;
 		}

@@ -23,27 +23,20 @@ import org.json.JSONObject;
  */
 public class JenkinsSlave {
 
-	public JenkinsSlave(JenkinsMaster jenkinsMaster, String slaveName) {
-		_jenkinsMaster = jenkinsMaster;
-		_slaveName = slaveName;
-
-		_localURL = JenkinsResultsParserUtil.combine(
-			"http://", _jenkinsMaster.getName(), "/computer/", _slaveName, "/");
-	}
-
 	public JenkinsMaster getJenkinsMaster() {
 		return _jenkinsMaster;
 	}
 
 	public String getName() {
-		return _slaveName;
+		return _name;
 	}
 
-	public boolean isOffline() throws IOException {
-		JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
-			_localURL + "api/json?tree=offline");
+	public boolean isIdle() {
+		return _idle;
+	}
 
-		return jsonObject.getBoolean("offline");
+	public boolean isOffline() {
+		return _offline;
 	}
 
 	public void takeSlavesOffline(String offlineReason) {
@@ -54,17 +47,33 @@ public class JenkinsSlave {
 		_setSlaveStatus(offlineReason, false);
 	}
 
+	public void update() {
+		_jenkinsMaster.update();
+	}
+
+	protected JenkinsSlave(
+		JenkinsMaster jenkinsMaster, JSONObject jenkinsSlaveJSONObject) {
+
+		_jenkinsMaster = jenkinsMaster;
+		_name = jenkinsSlaveJSONObject.getString("displayName");
+
+		update(jenkinsSlaveJSONObject);
+	}
+
+	protected void update(JSONObject jenkinsSlaveJSONObject) {
+		_idle = jenkinsSlaveJSONObject.getBoolean("idle");
+		_offline = jenkinsSlaveJSONObject.getBoolean("offline");
+	}
+
 	private void _setSlaveStatus(String offlineReason, boolean offlineStatus) {
 		try {
-			String script = "script=";
-
 			Class<?> clazz = JenkinsSlave.class;
 
-			script += JenkinsResultsParserUtil.readInputStream(
+			String script = JenkinsResultsParserUtil.readInputStream(
 				clazz.getResourceAsStream(
 					"dependencies/set-slave-status.groovy"));
 
-			script = script.replace("${slaves}", _slaveName);
+			script = script.replace("${slaves}", _name);
 			script = script.replace(
 				"${offline.reason}",
 				offlineReason.replaceAll("\n", "<br />\\\\n"));
@@ -74,16 +83,16 @@ public class JenkinsSlave {
 			JenkinsResultsParserUtil.executeJenkinsScript(
 				_jenkinsMaster.getName(), script);
 		}
-		catch (IOException ioe) {
-			System.out.println(
-				"Unable to set the status for slaves: " + _slaveName);
+		catch (IOException ioException) {
+			System.out.println("Unable to set the status for slaves: " + _name);
 
-			ioe.printStackTrace();
+			ioException.printStackTrace();
 		}
 	}
 
+	private boolean _idle;
 	private final JenkinsMaster _jenkinsMaster;
-	private final String _localURL;
-	private final String _slaveName;
+	private final String _name;
+	private boolean _offline;
 
 }

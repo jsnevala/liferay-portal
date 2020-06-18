@@ -25,13 +25,12 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.search.test.util.BaseSearchTestCase;
-import com.liferay.portal.service.test.ServiceTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,20 +49,16 @@ public class JournalFolderSearchTest extends BaseSearchTestCase {
 	@Before
 	@Override
 	public void setUp() throws Exception {
-		ServiceTestUtil.setUser(TestPropsValues.getUser());
+		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		super.setUp();
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testLocalizedSearch() throws Exception {
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testSearchAttachments() throws Exception {
 	}
 
@@ -85,57 +80,43 @@ public class JournalFolderSearchTest extends BaseSearchTestCase {
 		searchBaseModelWithTrash(1);
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testSearchByDDMStructureField() throws Exception {
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testSearchComments() throws Exception {
 	}
 
-	@Ignore
 	@Override
-	@Test
+	public void testSearchCommentsByKeywords() throws Exception {
+	}
+
+	@Override
 	public void testSearchExpireAllVersions() throws Exception {
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testSearchExpireLatestVersion() throws Exception {
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testSearchMyEntries() throws Exception {
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testSearchRecentEntries() throws Exception {
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testSearchStatus() throws Exception {
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testSearchVersions() throws Exception {
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testSearchWithinDDMStructure() throws Exception {
 	}
 

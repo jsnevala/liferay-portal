@@ -18,7 +18,7 @@ import com.liferay.bookmarks.constants.BookmarksPortletKeys;
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionHelper;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.Validator;
@@ -94,13 +94,14 @@ public class BookmarksFolderActivityInterpreter
 			String actionId, ServiceContext serviceContext)
 		throws Exception {
 
-		return ModelResourcePermissionHelper.contains(
+		return ModelResourcePermissionUtil.contains(
 			_bookmarksFolderModelResourcePermission, permissionChecker,
 			activity.getGroupId(), activity.getClassPK(), actionId);
 	}
 
-	private static final String[] _CLASS_NAMES =
-		{BookmarksFolder.class.getName()};
+	private static final String[] _CLASS_NAMES = {
+		BookmarksFolder.class.getName()
+	};
 
 	@Reference(
 		target = "(model.class.name=com.liferay.bookmarks.model.BookmarksFolder)"

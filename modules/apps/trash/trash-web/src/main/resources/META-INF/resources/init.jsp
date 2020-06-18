@@ -23,19 +23,16 @@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
+taglib uri="http://liferay.com/tld/site-navigation" prefix="liferay-site-navigation" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/trash" prefix="liferay-trash" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.petra.string.StringPool" %><%@
-page import="com.liferay.portal.kernel.dao.search.ResultRow" %><%@
 page import="com.liferay.portal.kernel.exception.TrashPermissionException" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
-page import="com.liferay.portal.kernel.language.UnicodeLanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.ClassedModel" %><%@
-page import="com.liferay.portal.kernel.model.TrashedModel" %><%@
-page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
 page import="com.liferay.portal.kernel.security.permission.ResourceActionsUtil" %><%@
 page import="com.liferay.portal.kernel.servlet.SessionMessages" %><%@
 page import="com.liferay.portal.kernel.trash.TrashHandler" %><%@
@@ -43,7 +40,7 @@ page import="com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil" %><%@
 page import="com.liferay.portal.kernel.trash.TrashRenderer" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.FastDateFormatFactoryUtil" %><%@
-page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
@@ -51,16 +48,20 @@ page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.Time" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
-page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.trash.exception.RestoreEntryException" %><%@
 page import="com.liferay.trash.exception.TrashEntryException" %><%@
 page import="com.liferay.trash.model.TrashEntry" %><%@
 page import="com.liferay.trash.service.TrashEntryLocalServiceUtil" %><%@
 page import="com.liferay.trash.web.internal.constants.TrashWebKeys" %><%@
 page import="com.liferay.trash.web.internal.dao.search.TrashResultRowSplitter" %><%@
+page import="com.liferay.trash.web.internal.display.context.TrashContainerManagementToolbarDisplayContext" %><%@
 page import="com.liferay.trash.web.internal.display.context.TrashContainerModelDisplayContext" %><%@
 page import="com.liferay.trash.web.internal.display.context.TrashDisplayContext" %><%@
-page import="com.liferay.trash.web.internal.util.TrashUtil" %>
+page import="com.liferay.trash.web.internal.display.context.TrashManagementToolbarDisplayContext" %><%@
+page import="com.liferay.trash.web.internal.servlet.taglib.clay.TrashContentHorizontalCard" %><%@
+page import="com.liferay.trash.web.internal.servlet.taglib.clay.TrashContentVerticalCard" %><%@
+page import="com.liferay.trash.web.internal.servlet.taglib.clay.TrashEntryVerticalCard" %><%@
+page import="com.liferay.trash.web.internal.servlet.taglib.util.TrashContainerActionDropdownItemsProvider" %>
 
 <%@ page import="java.text.Format" %>
 
@@ -80,8 +81,6 @@ page import="java.util.Map" %>
 
 <%
 TrashDisplayContext trashDisplayContext = new TrashDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
-
-TrashUtil trashUtil = (TrashUtil)request.getAttribute(TrashWebKeys.TRASH_UTIL);
 
 Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
 

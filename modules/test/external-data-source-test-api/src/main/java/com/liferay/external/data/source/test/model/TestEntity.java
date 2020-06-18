@@ -14,30 +14,33 @@
 
 package com.liferay.external.data.source.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the TestEntity service. Represents a row in the &quot;TestEntity&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see TestEntityModel
- * @see com.liferay.external.data.source.test.model.impl.TestEntityImpl
- * @see com.liferay.external.data.source.test.model.impl.TestEntityModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.external.data.source.test.model.impl.TestEntityImpl")
+@ImplementationClassName(
+	"com.liferay.external.data.source.test.model.impl.TestEntityImpl"
+)
 @ProviderType
-public interface TestEntity extends TestEntityModel, PersistedModel {
+public interface TestEntity extends PersistedModel, TestEntityModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.external.data.source.test.model.impl.TestEntityImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.external.data.source.test.model.impl.TestEntityImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<TestEntity, Long> ID_ACCESSOR = new Accessor<TestEntity, Long>() {
+	public static final Accessor<TestEntity, Long> ID_ACCESSOR =
+		new Accessor<TestEntity, Long>() {
+
 			@Override
 			public Long get(TestEntity testEntity) {
 				return testEntity.getId();
@@ -52,5 +55,7 @@ public interface TestEntity extends TestEntityModel, PersistedModel {
 			public Class<TestEntity> getTypeClass() {
 				return TestEntity.class;
 			}
+
 		};
+
 }

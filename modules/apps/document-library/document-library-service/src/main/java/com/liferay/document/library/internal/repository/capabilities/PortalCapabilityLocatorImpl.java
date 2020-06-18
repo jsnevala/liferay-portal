@@ -15,11 +15,18 @@
 package com.liferay.document.library.internal.repository.capabilities;
 
 import com.liferay.document.library.kernel.service.DLAppHelperLocalService;
+import com.liferay.document.library.kernel.service.DLFolderService;
+import com.liferay.document.library.security.io.InputStreamSanitizer;
+import com.liferay.document.library.service.DLFileVersionPreviewLocalService;
 import com.liferay.document.library.sync.service.DLSyncEventLocalService;
+import com.liferay.portal.kernel.cache.CacheRegistryItem;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.repository.DocumentRepository;
 import com.liferay.portal.kernel.repository.capabilities.BulkOperationCapability;
 import com.liferay.portal.kernel.repository.capabilities.CommentCapability;
 import com.liferay.portal.kernel.repository.capabilities.ConfigurationCapability;
+import com.liferay.portal.kernel.repository.capabilities.DynamicCapability;
+import com.liferay.portal.kernel.repository.capabilities.FileEntryTypeCapability;
 import com.liferay.portal.kernel.repository.capabilities.PortalCapabilityLocator;
 import com.liferay.portal.kernel.repository.capabilities.ProcessorCapability;
 import com.liferay.portal.kernel.repository.capabilities.RelatedModelCapability;
@@ -41,14 +48,21 @@ import com.liferay.portal.repository.capabilities.util.RepositoryServiceAdapter;
 import com.liferay.trash.service.TrashEntryLocalService;
 import com.liferay.trash.service.TrashVersionLocalService;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Adolfo Pérez
  */
-@Component(service = PortalCapabilityLocator.class)
-public class PortalCapabilityLocatorImpl implements PortalCapabilityLocator {
+@Component(service = {CacheRegistryItem.class, PortalCapabilityLocator.class})
+public class PortalCapabilityLocatorImpl
+	implements CacheRegistryItem, PortalCapabilityLocator {
 
 	@Override
 	public BulkOperationCapability getBulkOperationCapability(
@@ -77,19 +91,41 @@ public class PortalCapabilityLocatorImpl implements PortalCapabilityLocator {
 	}
 
 	@Override
+	public DynamicCapability getDynamicCapability(
+		DocumentRepository documentRepository, String repositoryClassName) {
+
+		return _liferayDynamicCapabilities.computeIfAbsent(
+			documentRepository,
+			key -> new LiferayDynamicCapability(
+				_bundleContext, repositoryClassName));
+	}
+
+	@Override
+	public FileEntryTypeCapability getFileEntryTypeCapability() {
+		return new LiferayFileEntryTypeCapability(_dlFolderService);
+	}
+
+	@Override
 	public ProcessorCapability getProcessorCapability(
 		DocumentRepository documentRepository,
 		ProcessorCapability.ResourceGenerationStrategy
 			resourceGenerationStrategy) {
 
 		if (resourceGenerationStrategy ==
-				ProcessorCapability.
-					ResourceGenerationStrategy.ALWAYS_GENERATE) {
+				ProcessorCapability.ResourceGenerationStrategy.
+					ALWAYS_GENERATE) {
 
 			return _alwaysGeneratingProcessorCapability;
 		}
 
 		return _reusingProcessorCapability;
+	}
+
+	@Override
+	public String getRegistryName() {
+		Class<?> clazz = getClass();
+
+		return clazz.getName();
 	}
 
 	@Override
@@ -118,7 +154,7 @@ public class PortalCapabilityLocatorImpl implements PortalCapabilityLocator {
 
 		return new LiferaySyncCapability(
 			GroupServiceAdapter.create(documentRepository),
-			_dlSyncEventLocalService);
+			_dlSyncEventLocalService, _messageBus);
 	}
 
 	@Override
@@ -167,9 +203,40 @@ public class PortalCapabilityLocatorImpl implements PortalCapabilityLocator {
 			DLFileVersionServiceAdapter.create(documentRepository));
 	}
 
-	private final ProcessorCapability _alwaysGeneratingProcessorCapability =
-		new LiferayProcessorCapability(
-			ProcessorCapability.ResourceGenerationStrategy.ALWAYS_GENERATE);
+	@Override
+	public void invalidate() {
+		_clearLiferayDynamicCapabilities();
+	}
+
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_bundleContext = bundleContext;
+
+		_alwaysGeneratingProcessorCapability = new LiferayProcessorCapability(
+			ProcessorCapability.ResourceGenerationStrategy.ALWAYS_GENERATE,
+			_dlFileVersionPreviewLocalService, _inputStreamSanitizer);
+		_reusingProcessorCapability = new LiferayProcessorCapability(
+			ProcessorCapability.ResourceGenerationStrategy.REUSE,
+			_dlFileVersionPreviewLocalService, _inputStreamSanitizer);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_clearLiferayDynamicCapabilities();
+	}
+
+	private void _clearLiferayDynamicCapabilities() {
+		for (LiferayDynamicCapability liferayDynamicCapability :
+				_liferayDynamicCapabilities.values()) {
+
+			liferayDynamicCapability.clear();
+		}
+
+		_liferayDynamicCapabilities.clear();
+	}
+
+	private ProcessorCapability _alwaysGeneratingProcessorCapability;
+	private BundleContext _bundleContext;
 	private final CommentCapability _commentCapability =
 		new LiferayCommentCapability();
 
@@ -177,12 +244,26 @@ public class PortalCapabilityLocatorImpl implements PortalCapabilityLocator {
 	private DLAppHelperLocalService _dlAppHelperLocalService;
 
 	@Reference
+	private DLFileVersionPreviewLocalService _dlFileVersionPreviewLocalService;
+
+	@Reference
+	private DLFolderService _dlFolderService;
+
+	@Reference
 	private DLSyncEventLocalService _dlSyncEventLocalService;
+
+	@Reference
+	private InputStreamSanitizer _inputStreamSanitizer;
+
+	private final Map<DocumentRepository, LiferayDynamicCapability>
+		_liferayDynamicCapabilities = new ConcurrentHashMap<>();
+
+	@Reference
+	private MessageBus _messageBus;
 
 	private final RepositoryEntryConverter _repositoryEntryConverter =
 		new RepositoryEntryConverter();
-	private final ProcessorCapability _reusingProcessorCapability =
-		new LiferayProcessorCapability();
+	private ProcessorCapability _reusingProcessorCapability;
 
 	@Reference
 	private TrashEntryLocalService _trashEntryLocalService;

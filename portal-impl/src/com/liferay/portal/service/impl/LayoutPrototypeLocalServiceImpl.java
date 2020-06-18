@@ -14,6 +14,7 @@
 
 package com.liferay.portal.service.impl;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutPrototypeException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -30,12 +31,12 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.service.base.LayoutPrototypeLocalServiceBaseImpl;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -75,7 +76,7 @@ public class LayoutPrototypeLocalServiceImpl
 		layoutPrototype.setDescriptionMap(descriptionMap);
 		layoutPrototype.setActive(active);
 
-		layoutPrototypePersistence.update(layoutPrototype);
+		layoutPrototype = layoutPrototypePersistence.update(layoutPrototype);
 
 		// Resources
 
@@ -99,9 +100,9 @@ public class LayoutPrototypeLocalServiceImpl
 		if (GetterUtil.getBoolean(
 				serviceContext.getAttribute("addDefaultLayout"), true)) {
 
-			Map<Locale, String> friendlyURLMap = new HashMap<>();
-
-			friendlyURLMap.put(LocaleUtil.getSiteDefault(), "/layout");
+			Map<Locale, String> friendlyURLMap = HashMapBuilder.put(
+				LocaleUtil.getSiteDefault(), "/layout"
+			).build();
 
 			layoutLocalService.addLayout(
 				userId, group.getGroupId(), true,
@@ -112,26 +113,6 @@ public class LayoutPrototypeLocalServiceImpl
 		}
 
 		return layoutPrototype;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #addLayoutPrototype(long, long, Map, Map, boolean,
-	 *             ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public LayoutPrototype addLayoutPrototype(
-			long userId, long companyId, Map<Locale, String> nameMap,
-			String description, boolean active, ServiceContext serviceContext)
-		throws PortalException {
-
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.getDefault(), description);
-
-		return addLayoutPrototype(
-			userId, companyId, nameMap, descriptionMap, active, serviceContext);
 	}
 
 	@Override
@@ -145,17 +126,24 @@ public class LayoutPrototypeLocalServiceImpl
 
 		// Group
 
-		if (!CompanyThreadLocal.isDeleteInProcess() &&
-			(layoutPersistence.countByC_L(
-				layoutPrototype.getCompanyId(),
-				layoutPrototype.getUuid()) > 0)) {
+		if (!CompanyThreadLocal.isDeleteInProcess()) {
+			int count = layoutPersistence.countByC_L(
+				layoutPrototype.getCompanyId(), layoutPrototype.getUuid());
 
-			throw new RequiredLayoutPrototypeException();
+			if (count > 0) {
+				StringBundler sb = new StringBundler(5);
+
+				sb.append("Layout prototype cannot be deleted because it is ");
+				sb.append("used by layout with company ID ");
+				sb.append(layoutPrototype.getCompanyId());
+				sb.append(" and layout prototype UUID ");
+				sb.append(layoutPrototype.getUuid());
+
+				throw new RequiredLayoutPrototypeException(sb.toString());
+			}
 		}
 
-		Group group = layoutPrototype.getGroup();
-
-		groupLocalService.deleteGroup(group);
+		groupLocalService.deleteGroup(layoutPrototype.getGroup());
 
 		// Resources
 
@@ -297,7 +285,7 @@ public class LayoutPrototypeLocalServiceImpl
 		layoutPrototype.setDescriptionMap(descriptionMap);
 		layoutPrototype.setActive(active);
 
-		layoutPrototypePersistence.update(layoutPrototype);
+		layoutPrototype = layoutPrototypePersistence.update(layoutPrototype);
 
 		// Layout
 
@@ -310,26 +298,6 @@ public class LayoutPrototypeLocalServiceImpl
 		layoutPersistence.update(layout);
 
 		return layoutPrototype;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #updateLayoutPrototype(long, Map, Map, boolean,
-	 *             ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public LayoutPrototype updateLayoutPrototype(
-			long layoutPrototypeId, Map<Locale, String> nameMap,
-			String description, boolean active, ServiceContext serviceContext)
-		throws PortalException {
-
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.getDefault(), description);
-
-		return updateLayoutPrototype(
-			layoutPrototypeId, nameMap, descriptionMap, active, null);
 	}
 
 }

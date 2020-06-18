@@ -42,12 +42,12 @@ else {
 	<c:if test="<%= !workflowInstance.isComplete() %>">
 		<portlet:renderURL var="redirectURL">
 			<portlet:param name="mvcPath" value="/view.jsp" />
-			<portlet:param name="tab" value="monitoring" />
+			<portlet:param name="tab" value="<%= WorkflowWebKeys.WORKFLOW_TAB_INSTANCE %>" />
 		</portlet:renderURL>
 
 		<portlet:actionURL name="deleteWorkflowInstance" var="deleteURL">
 			<portlet:param name="redirect" value="<%= redirectURL %>" />
-			<portlet:param name="workflowInstanceId" value="<%= StringUtil.valueOf(workflowInstance.getWorkflowInstanceId()) %>" />
+			<portlet:param name="workflowInstanceId" value="<%= String.valueOf(workflowInstance.getWorkflowInstanceId()) %>" />
 		</portlet:actionURL>
 
 		<liferay-ui:icon

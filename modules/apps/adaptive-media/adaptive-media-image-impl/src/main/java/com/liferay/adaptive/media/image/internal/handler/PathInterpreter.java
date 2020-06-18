@@ -39,8 +39,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = PathInterpreter.class)
 public class PathInterpreter {
 
-	public Optional<Tuple<FileVersion, Map<String, String>>>
-		interpretPath(String pathInfo) {
+	public Optional<Tuple<FileVersion, Map<String, String>>> interpretPath(
+		String pathInfo) {
 
 		try {
 			if (pathInfo == null) {
@@ -89,21 +89,9 @@ public class PathInterpreter {
 
 			return Optional.of(Tuple.of(fileVersion, properties));
 		}
-		catch (PortalException pe) {
-			throw new AMRuntimeException(pe);
+		catch (PortalException portalException) {
+			throw new AMRuntimeException(portalException);
 		}
-	}
-
-	@Reference(unbind = "-")
-	public void setAMImageConfigurationHelper(
-		AMImageConfigurationHelper amImageConfigurationHelper) {
-
-		_amImageConfigurationHelper = amImageConfigurationHelper;
-	}
-
-	@Reference(unbind = "-")
-	public void setDLAppService(DLAppService dlAppService) {
-		_dlAppService = dlAppService;
 	}
 
 	private String _getConfigurationEntryUUID(Matcher matcher) {
@@ -131,7 +119,10 @@ public class PathInterpreter {
 	private static final Pattern _pattern = Pattern.compile(
 		"/image/(\\d+)(?:/(\\d+))?/([^/]+)/(?:[^/]+)");
 
+	@Reference
 	private AMImageConfigurationHelper _amImageConfigurationHelper;
+
+	@Reference
 	private DLAppService _dlAppService;
 
 }

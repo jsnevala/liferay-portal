@@ -71,34 +71,33 @@
 				<liferay-util:dynamic-include key="com.liferay.login.web#/login.jsp#alertPre" />
 
 				<c:choose>
-					<c:when test='<%= SessionMessages.contains(request, "passwordSent") %>'>
+					<c:when test='<%= SessionMessages.contains(request, "forgotPasswordSent") %>'>
 						<div class="alert alert-success">
-							<liferay-ui:message key="An-email-has-been-sent-to-the-provided-email-address" />
+							<liferay-ui:message key="your-request-completed-successfully" />
 						</div>
 					</c:when>
 					<c:when test='<%= SessionMessages.contains(request, "userAdded") %>'>
 
 						<%
 						String userEmailAddress = (String)SessionMessages.get(request, "userAdded");
-						String userPassword = (String)SessionMessages.get(request, "userAddedPassword");
 						%>
 
 						<div class="alert alert-success">
-							<c:choose>
-								<c:when test="<%= company.isStrangersVerify() || Validator.isNull(userPassword) %>">
-									<liferay-ui:message key="thank-you-for-creating-an-account" />
+							<liferay-ui:message key="thank-you-for-creating-an-account" />
 
-									<c:if test="<%= company.isStrangersVerify() %>">
-										<liferay-ui:message arguments="<%= HtmlUtil.escape(userEmailAddress) %>" key="your-email-verification-code-was-sent-to-x" translateArguments="<%= false %>" />
-									</c:if>
-								</c:when>
-								<c:otherwise>
-									<liferay-ui:message arguments="<%= HtmlUtil.escape(userPassword) %>" key="thank-you-for-creating-an-account.-your-password-is-x" translateArguments="<%= false %>" />
-								</c:otherwise>
-							</c:choose>
+							<c:if test="<%= company.isStrangersVerify() %>">
+								<liferay-ui:message arguments="<%= HtmlUtil.escape(userEmailAddress) %>" key="your-email-verification-code-was-sent-to-x" translateArguments="<%= false %>" />
+							</c:if>
 
 							<c:if test="<%= PrefsPropsUtil.getBoolean(company.getCompanyId(), PropsKeys.ADMIN_EMAIL_USER_ADDED_ENABLED) %>">
-								<liferay-ui:message arguments="<%= HtmlUtil.escape(userEmailAddress) %>" key="your-password-was-sent-to-x" translateArguments="<%= false %>" />
+								<c:choose>
+									<c:when test="<%= PropsValues.LOGIN_CREATE_ACCOUNT_ALLOW_CUSTOM_PASSWORD %>">
+										<liferay-ui:message key="use-your-password-to-login" />
+									</c:when>
+									<c:otherwise>
+										<liferay-ui:message arguments="<%= HtmlUtil.escape(userEmailAddress) %>" key="you-can-set-your-password-following-instructions-sent-to-x" translateArguments="<%= false %>" />
+									</c:otherwise>
+								</c:choose>
 							</c:if>
 						</div>
 					</c:when>
@@ -133,7 +132,12 @@
 							<liferay-ui:message key="this-account-is-locked" />
 						</c:when>
 						<c:otherwise>
-							<liferay-ui:message arguments="<%= ule.user.getUnlockDate() %>" key="this-account-is-locked-until-x" translateArguments="<%= false %>" />
+
+							<%
+							Format dateFormat = FastDateFormatFactoryUtil.getDateTime(FastDateFormatConstants.SHORT, FastDateFormatConstants.LONG, locale, TimeZone.getTimeZone(ule.user.getTimeZoneId()));
+							%>
+
+							<liferay-ui:message arguments="<%= dateFormat.format(ule.user.getUnlockDate()) %>" key="this-account-is-locked-until-x" translateArguments="<%= false %>" />
 						</c:otherwise>
 					</c:choose>
 				</liferay-ui:error>
@@ -161,6 +165,10 @@
 
 					<aui:input autoFocus="<%= windowState.equals(LiferayWindowState.EXCLUSIVE) || windowState.equals(WindowState.MAXIMIZED) %>" cssClass="clearable" label="<%= loginLabel %>" name="login" showRequiredLabel="<%= false %>" type="text" value="<%= login %>">
 						<aui:validator name="required" />
+
+						<c:if test="<%= authType.equals(CompanyConstants.AUTH_TYPE_EA) %>">
+							<aui:validator name="email" />
+						</c:if>
 					</aui:input>
 
 					<aui:input name="password" showRequiredLabel="<%= false %>" type="password" value="<%= password %>">
@@ -186,32 +194,29 @@
 			var form = document.getElementById('<portlet:namespace /><%= formName %>');
 
 			if (form) {
-				form.addEventListener(
-					'submit',
-					function(event) {
-						<c:if test="<%= Validator.isNotNull(redirect) %>">
-							var redirect = form.querySelector('#<portlet:namespace />redirect');
+				form.addEventListener('submit', function (event) {
+					<c:if test="<%= Validator.isNotNull(redirect) %>">
+						var redirect = form.querySelector('#<portlet:namespace />redirect');
 
-							if (redirect) {
-								var redirectVal = redirect.getAttribute('value');
+						if (redirect) {
+							var redirectVal = redirect.getAttribute('value');
 
-								redirect.setAttribute('value', redirectVal + window.location.hash);
-							}
-						</c:if>
+							redirect.setAttribute('value', redirectVal + window.location.hash);
+						}
+					</c:if>
 
-						submitForm(form);
-					}
-				);
+					submitForm(form);
+				});
 
 				var password = form.querySelector('#<portlet:namespace />password');
 
 				if (password) {
-					password.addEventListener(
-						'keypress',
-						function(event) {
-							Liferay.Util.showCapsLock(event, '<portlet:namespace />passwordCapsLockSpan');
-						}
-					);
+					password.addEventListener('keypress', function (event) {
+						Liferay.Util.showCapsLock(
+							event,
+							'<portlet:namespace />passwordCapsLockSpan'
+						);
+					});
 				}
 			}
 		</aui:script>

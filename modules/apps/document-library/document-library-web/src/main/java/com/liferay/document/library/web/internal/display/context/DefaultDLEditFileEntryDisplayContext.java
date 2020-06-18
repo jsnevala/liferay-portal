@@ -17,6 +17,7 @@ package com.liferay.document.library.web.internal.display.context;
 import com.liferay.document.library.display.context.DLEditFileEntryDisplayContext;
 import com.liferay.document.library.display.context.DLFilePicker;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
+import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.kernel.util.DLValidator;
 import com.liferay.document.library.web.internal.display.context.logic.FileEntryDisplayContextHelper;
@@ -50,20 +51,23 @@ public class DefaultDLEditFileEntryDisplayContext
 	implements DLEditFileEntryDisplayContext {
 
 	public DefaultDLEditFileEntryDisplayContext(
-		HttpServletRequest request, HttpServletResponse response,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse,
 		DLFileEntryType dlFileEntryType, DLValidator dlValidator,
 		StorageEngine storageEngine) {
 
-		this(request, dlFileEntryType, dlValidator, null, storageEngine);
+		this(
+			httpServletRequest, dlFileEntryType, dlValidator, null,
+			storageEngine);
 	}
 
 	public DefaultDLEditFileEntryDisplayContext(
-		HttpServletRequest request, HttpServletResponse response,
-		DLValidator dlValidator, FileEntry fileEntry,
-		StorageEngine storageEngine) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, DLValidator dlValidator,
+		FileEntry fileEntry, StorageEngine storageEngine) {
 
 		this(
-			request, (DLFileEntryType)null, dlValidator, fileEntry,
+			httpServletRequest, (DLFileEntryType)null, dlValidator, fileEntry,
 			storageEngine);
 	}
 
@@ -156,8 +160,8 @@ public class DefaultDLEditFileEntryDisplayContext
 
 	@Override
 	public boolean isCheckoutDocumentButtonVisible() throws PortalException {
-		return
-			_fileEntryDisplayContextHelper.isCheckoutDocumentActionAvailable();
+		return _fileEntryDisplayContextHelper.
+			isCheckoutDocumentActionAvailable();
 	}
 
 	@Override
@@ -227,18 +231,19 @@ public class DefaultDLEditFileEntryDisplayContext
 	}
 
 	private DefaultDLEditFileEntryDisplayContext(
-		HttpServletRequest request, DLFileEntryType dlFileEntryType,
+		HttpServletRequest httpServletRequest, DLFileEntryType dlFileEntryType,
 		DLValidator dlValidator, FileEntry fileEntry,
 		StorageEngine storageEngine) {
 
 		try {
-			_dlRequestHelper = new DLRequestHelper(request);
+			_dlRequestHelper = new DLRequestHelper(httpServletRequest);
 			_dlValidator = dlValidator;
 			_fileEntry = fileEntry;
 			_storageEngine = storageEngine;
 
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
 			_fileEntryDisplayContextHelper = new FileEntryDisplayContextHelper(
 				themeDisplay.getPermissionChecker(), _fileEntry);
@@ -262,33 +267,36 @@ public class DefaultDLEditFileEntryDisplayContext
 				new FileVersionDisplayContextHelper(_fileVersion);
 
 			_showSelectFolder = ParamUtil.getBoolean(
-				request, "showSelectFolder");
+				httpServletRequest, "showSelectFolder");
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new SystemException(
 				"Unable to build DefaultDLEditFileEntryDisplayContext for " +
 					fileEntry,
-				pe);
+				portalException);
 		}
 	}
 
 	private boolean _hasFolderWorkflowDefinitionLink() {
 		try {
-			if (_dlFileEntryType == null) {
-				return false;
-			}
-
 			long folderId = BeanParamUtil.getLong(
 				_fileEntry, _dlRequestHelper.getRequest(), "folderId");
 
+			long fileEntryTypeId =
+				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT;
+
+			if (_dlFileEntryType != null) {
+				fileEntryTypeId = _dlFileEntryType.getFileEntryTypeId();
+			}
+
 			return DLUtil.hasWorkflowDefinitionLink(
 				_dlRequestHelper.getCompanyId(),
-				_dlRequestHelper.getScopeGroupId(), folderId,
-				_dlFileEntryType.getFileEntryTypeId());
+				_dlRequestHelper.getScopeGroupId(), folderId, fileEntryTypeId);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new SystemException(
-				"Unable to check if folder has workflow definition link", e);
+				"Unable to check if folder has workflow definition link",
+				exception);
 		}
 	}
 

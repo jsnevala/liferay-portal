@@ -15,6 +15,7 @@
 package com.liferay.layout.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -24,14 +25,13 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.model.impl.LayoutTypeControllerImpl;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.test.LayoutTestUtil;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
 import com.liferay.registry.ServiceRegistration;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -130,9 +130,9 @@ public class LayoutImplTest {
 
 			_layout.setType(type);
 
-			Map<String, Object> properties = new HashMap<>();
-
-			properties.put("layout.type", type);
+			Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+				"layout.type", type
+			).build();
 
 			ServiceRegistration<LayoutTypeController> serviceRegistration =
 				registry.registerService(
@@ -182,9 +182,9 @@ public class LayoutImplTest {
 
 			_layout.setType(layoutTypeValue);
 
-			Map<String, Object> properties = new HashMap<>();
-
-			properties.put("layout.type", layoutTypeValue);
+			Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+				"layout.type", layoutTypeValue
+			).build();
 
 			ServiceRegistration<LayoutTypeController> serviceRegistration =
 				registry.registerService(
@@ -212,9 +212,9 @@ public class LayoutImplTest {
 			LayoutTypeController layoutTypeController =
 				new LayoutTypeControllerImpl(type);
 
-			Map<String, Object> properties = new HashMap<>();
-
-			properties.put("layout.type", type);
+			Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+				"layout.type", type
+			).build();
 
 			ServiceRegistration<LayoutTypeController> serviceRegistration =
 				registry.registerService(
@@ -253,9 +253,9 @@ public class LayoutImplTest {
 
 			_layout.setType(type);
 
-			Map<String, Object> properties = new HashMap<>();
-
-			properties.put("layout.type", type);
+			Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+				"layout.type", type
+			).build();
 
 			ServiceRegistration<LayoutTypeController> serviceRegistration =
 				registry.registerService(
@@ -273,10 +273,9 @@ public class LayoutImplTest {
 
 	@SuppressWarnings("deprecation")
 	private static final String[] _TYPES = {
-		LayoutConstants.TYPE_ARTICLE, LayoutConstants.TYPE_CONTROL_PANEL,
-		LayoutConstants.TYPE_EMBEDDED, LayoutConstants.TYPE_LINK_TO_LAYOUT,
-		LayoutConstants.TYPE_PANEL, LayoutConstants.TYPE_PORTLET,
-		LayoutConstants.TYPE_URL
+		LayoutConstants.TYPE_CONTROL_PANEL, LayoutConstants.TYPE_EMBEDDED,
+		LayoutConstants.TYPE_LINK_TO_LAYOUT, LayoutConstants.TYPE_PANEL,
+		LayoutConstants.TYPE_PORTLET, LayoutConstants.TYPE_URL
 	};
 
 	@DeleteAfterTestRun

@@ -18,84 +18,46 @@
 
 <%
 List<String> previewFileURLs = (List<String>)request.getAttribute(DLPreviewAudioWebKeys.PREVIEW_FILE_URLS);
-
-String randomNamespace = PortalUtil.generateRandomKey(request, "portlet_document_library_view_file_entry_preview") + StringPool.UNDERLINE;
 %>
 
-<div class="lfr-preview-audio" id="<portlet:namespace /><%= randomNamespace %>previewFile">
-	<div class="lfr-preview-audio-content" id="<portlet:namespace /><%= randomNamespace %>previewFileContent"></div>
+<liferay-util:html-top
+	outputKey="document_library_preview_audio_css"
+>
+	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/preview/css/main.css") %>" rel="stylesheet" type="text/css" />
+</liferay-util:html-top>
+
+<div class="preview-file">
+	<div class="preview-file-container">
+		<audio
+			class="preview-file-audio"
+			controls
+			controlsList="nodownload"
+			style="max-width: <%= PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_WIDTH %>px;"
+		>
+
+			<%
+			for (String previewFileURL : previewFileURLs) {
+				String type = null;
+
+				if (Validator.isNotNull(previewFileURL)) {
+					if (previewFileURL.endsWith("mp3")) {
+						type = "audio/mp3";
+					}
+					else if (previewFileURL.endsWith("ogg")) {
+						type = "audio/ogg";
+					}
+				}
+
+				if (type != null) {
+			%>
+
+					<source src="<%= previewFileURL %>" type="<%= type %>" />
+
+			<%
+				}
+			}
+			%>
+
+		</audio>
+	</div>
 </div>
-
-<%
-String mp3PreviewFileURL = null;
-String oggPreviewFileURL = null;
-
-for (String previewFileURL : previewFileURLs) {
-	if (Validator.isNotNull(previewFileURL)) {
-		if (previewFileURL.endsWith("mp3")) {
-			mp3PreviewFileURL = previewFileURL;
-		}
-		else if (previewFileURL.endsWith("ogg")) {
-			oggPreviewFileURL = previewFileURL;
-		}
-	}
-}
-%>
-
-<aui:script use="aui-audio">
-	var playing = false;
-
-	var audio = new A.Audio(
-		{
-			contentBox: '#<portlet:namespace /><%= randomNamespace %>previewFileContent',
-			fixedAttributes: {
-				allowfullscreen: 'true',
-				wmode: 'opaque'
-			}
-
-			<c:if test="<%= Validator.isNotNull(oggPreviewFileURL) %>">
-				, oggUrl: '<%= HtmlUtil.escapeJS(oggPreviewFileURL) %>'
-			</c:if>
-
-			<c:if test="<%= Validator.isNotNull(mp3PreviewFileURL) %>">
-				, url: '<%= HtmlUtil.escapeJS(mp3PreviewFileURL) %>'
-			</c:if>
-		}
-	).render();
-
-	if (audio._audio) {
-		var audioNode = audio._audio.getDOMNode();
-
-		audioNode.addEventListener(
-			'pause',
-			function() {
-				playing = false;
-			}
-		);
-
-		audioNode.addEventListener(
-			'play',
-			function() {
-				window.parent.Liferay.fire('<portlet:namespace /><%= randomNamespace %>Audio:play');
-
-				playing = true;
-			}
-		);
-	}
-
-	window.parent.Liferay.on(
-		'<portlet:namespace /><%= randomNamespace %>ImageViewer:currentIndexChange',
-		function() {
-			if (playing) {
-				audio.pause();
-			}
-		}
-	);
-
-	window.parent.Liferay.on(
-		'<portlet:namespace /><%= randomNamespace %>ImageViewer:close',
-		function() {
-			audio.load();
-		}
-	);
-</aui:script>

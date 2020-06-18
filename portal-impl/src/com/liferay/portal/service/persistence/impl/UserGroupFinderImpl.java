@@ -14,21 +14,19 @@
 
 package com.liferay.portal.service.persistence.impl;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.Type;
-import com.liferay.portal.kernel.exception.NoSuchUserGroupException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.persistence.UserGroupFinder;
-import com.liferay.portal.kernel.service.persistence.UserGroupUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.UserGroupImpl;
@@ -166,17 +164,6 @@ public class UserGroupFinderImpl
 			companyId, keywords, params, start, end, obc, false);
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public UserGroup findByC_N(long companyId, String name)
-		throws NoSuchUserGroupException {
-
-		return UserGroupUtil.findByC_N(companyId, name);
-	}
-
 	@Override
 	public List<UserGroup> findByC_N_D(
 		long companyId, String name, String description,
@@ -255,19 +242,19 @@ public class UserGroupFinderImpl
 					null, null, new long[] {0}, null);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			setJoin(qPos, params);
+			setJoin(queryPos, params);
 
-			qPos.add(companyId);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(companyId);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -279,8 +266,8 @@ public class UserGroupFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -343,22 +330,23 @@ public class UserGroupFinderImpl
 					null, null, new long[] {0}, null);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("UserGroup", UserGroupImpl.class);
+			sqlQuery.addEntity("UserGroup", UserGroupImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			setJoin(qPos, params);
+			setJoin(queryPos, params);
 
-			qPos.add(companyId);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(companyId);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
-			return (List<UserGroup>)QueryUtil.list(q, getDialect(), start, end);
+			return (List<UserGroup>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -379,9 +367,7 @@ public class UserGroupFinderImpl
 				continue;
 			}
 
-			Object value = entry.getValue();
-
-			if (Validator.isNotNull(value)) {
+			if (Validator.isNotNull(entry.getValue())) {
 				sb.append(getJoin(key));
 			}
 		}
@@ -513,7 +499,9 @@ public class UserGroupFinderImpl
 			int pos = join.indexOf("WHERE");
 
 			if (pos != -1) {
-				join = join.substring(pos + 5).concat(" AND ");
+				join = join.substring(pos + 5);
+
+				join = join.concat(" AND ");
 			}
 			else {
 				join = StringPool.BLANK;
@@ -524,16 +512,14 @@ public class UserGroupFinderImpl
 	}
 
 	protected void setJoin(
-		QueryPos qPos, LinkedHashMap<String, Object> params) {
+		QueryPos queryPos, LinkedHashMap<String, Object> params) {
 
 		if (params == null) {
 			return;
 		}
 
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
-			String key = entry.getKey();
-
-			if (!_isFinderParam(key)) {
+			if (!_isFinderParam(entry.getKey())) {
 				continue;
 			}
 
@@ -543,7 +529,7 @@ public class UserGroupFinderImpl
 				Long valueLong = (Long)value;
 
 				if (Validator.isNotNull(valueLong)) {
-					qPos.add(valueLong);
+					queryPos.add(valueLong);
 				}
 			}
 			else if (value instanceof Long[]) {
@@ -551,7 +537,7 @@ public class UserGroupFinderImpl
 
 				for (Long curValue : valueArray) {
 					if (Validator.isNotNull(curValue)) {
-						qPos.add(curValue);
+						queryPos.add(curValue);
 					}
 				}
 			}
@@ -559,7 +545,7 @@ public class UserGroupFinderImpl
 				String valueString = (String)value;
 
 				if (Validator.isNotNull(valueString)) {
-					qPos.add(valueString);
+					queryPos.add(valueString);
 				}
 			}
 		}

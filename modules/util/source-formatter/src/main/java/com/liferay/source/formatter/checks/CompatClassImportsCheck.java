@@ -15,7 +15,6 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.util.FileUtil;
@@ -85,8 +84,9 @@ public class CompatClassImportsCheck extends BaseFileCheck {
 
 		_compatClassNamesMap = new HashMap<>();
 
-		String[] includes =
-			{"**/portal-compat-shared/src/com/liferay/compat/**/*.java"};
+		String[] includes = {
+			"**/portal-compat-shared/src/com/liferay/compat/**/*.java"
+		};
 
 		String baseDirName = getBaseDirName();
 
@@ -122,8 +122,8 @@ public class CompatClassImportsCheck extends BaseFileCheck {
 			compatClassName = compatClassName.substring(
 				0, compatClassName.length() - 5);
 
-			String extendedClassName = StringUtil.replace(
-				compatClassName, "compat.", StringPool.BLANK);
+			String extendedClassName = StringUtil.removeSubstring(
+				compatClassName, "compat.");
 
 			if (content.contains("extends " + extendedClassName)) {
 				_compatClassNamesMap.put(compatClassName, extendedClassName);

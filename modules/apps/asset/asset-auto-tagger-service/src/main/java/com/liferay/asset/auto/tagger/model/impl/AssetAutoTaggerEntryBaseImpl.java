@@ -14,8 +14,6 @@
 
 package com.liferay.asset.auto.tagger.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.auto.tagger.model.AssetAutoTaggerEntry;
 import com.liferay.asset.auto.tagger.service.AssetAutoTaggerEntryLocalServiceUtil;
 
@@ -31,13 +29,13 @@ import com.liferay.asset.auto.tagger.service.AssetAutoTaggerEntryLocalServiceUti
  * @see AssetAutoTaggerEntry
  * @generated
  */
-@ProviderType
 public abstract class AssetAutoTaggerEntryBaseImpl
 	extends AssetAutoTaggerEntryModelImpl implements AssetAutoTaggerEntry {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a asset auto tagger entry model instance should use the {@link AssetAutoTaggerEntry} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a asset auto tagger entry model instance should use the <code>AssetAutoTaggerEntry</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -45,7 +43,9 @@ public abstract class AssetAutoTaggerEntryBaseImpl
 			AssetAutoTaggerEntryLocalServiceUtil.addAssetAutoTaggerEntry(this);
 		}
 		else {
-			AssetAutoTaggerEntryLocalServiceUtil.updateAssetAutoTaggerEntry(this);
+			AssetAutoTaggerEntryLocalServiceUtil.updateAssetAutoTaggerEntry(
+				this);
 		}
 	}
+
 }

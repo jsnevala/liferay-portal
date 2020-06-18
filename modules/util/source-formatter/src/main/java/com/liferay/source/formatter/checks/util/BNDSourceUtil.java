@@ -18,10 +18,13 @@ import aQute.bnd.osgi.Constants;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,27 +54,60 @@ public class BNDSourceUtil {
 		return null;
 	}
 
+	public static List<String> getDefinitionValues(String content, String key) {
+		List<String> definitionValues = new ArrayList<>();
+
+		if (!content.contains(key + ":")) {
+			return definitionValues;
+		}
+
+		String definitionValue = getDefinitionValue(content, key);
+
+		if (definitionValue != null) {
+			definitionValues.add(definitionValue);
+
+			return definitionValues;
+		}
+
+		int x = content.indexOf(key + ":\\\n");
+
+		if (x == -1) {
+			return definitionValues;
+		}
+
+		int lineNumber = SourceUtil.getLineNumber(content, x);
+
+		for (int i = lineNumber + 1;; i++) {
+			String line = StringUtil.trim(SourceUtil.getLine(content, i));
+
+			if (line.endsWith(",\\")) {
+				definitionValues.add(
+					StringUtil.replaceLast(line, ",\\", StringPool.BLANK));
+			}
+			else if (!line.endsWith(StringPool.BACK_SLASH)) {
+				definitionValues.add(line);
+
+				return definitionValues;
+			}
+		}
+	}
+
 	public static Map<String, Map<String, String>>
 		getFileSpecificDefinitionKeysMap() {
 
-		Map<String, Map<String, String>> fileSpecificDefinitionKeysMap =
-			new HashMap<>();
-
-		fileSpecificDefinitionKeysMap.put(
-			"app.bnd", _populateDefinitionKeysMap(_APP_BND_DEFINITION_KEYS));
-		fileSpecificDefinitionKeysMap.put(
-			"bnd.bnd", _populateDefinitionKeysMap(_BND_BND_DEFINITION_KEYS));
-		fileSpecificDefinitionKeysMap.put(
+		return HashMapBuilder.<String, Map<String, String>>put(
+			"app.bnd", _populateDefinitionKeysMap(_APP_BND_DEFINITION_KEYS)
+		).put(
+			"bnd.bnd", _populateDefinitionKeysMap(_BND_BND_DEFINITION_KEYS)
+		).put(
 			"common.bnd",
-			_populateDefinitionKeysMap(_COMMON_BND_DEFINITION_KEYS));
-		fileSpecificDefinitionKeysMap.put(
+			_populateDefinitionKeysMap(_COMMON_BND_DEFINITION_KEYS)
+		).put(
 			"subsystem.bnd",
-			_populateDefinitionKeysMap(_SUBSYSTEM_BND_DEFINITION_KEYS));
-		fileSpecificDefinitionKeysMap.put(
-			"suite.bnd",
-			_populateDefinitionKeysMap(_SUITE_BND_DEFINITION_KEYS));
-
-		return fileSpecificDefinitionKeysMap;
+			_populateDefinitionKeysMap(_SUBSYSTEM_BND_DEFINITION_KEYS)
+		).put(
+			"suite.bnd", _populateDefinitionKeysMap(_SUITE_BND_DEFINITION_KEYS)
+		).build();
 	}
 
 	public static String getModuleName(String absolutePath) {
@@ -130,7 +166,8 @@ public class BNDSourceUtil {
 	};
 
 	private static final String[] _BND_BND_DEFINITION_KEYS = {
-		"-jsp", "-metatype-inherit", "-sass", "Bundle-ActivationPolicy",
+		"-jsp", "-liferay-aggregate-resource-bundles", "-metatype",
+		"-metatype-inherit", "-sass", "Bundle-ActivationPolicy",
 		"Can-Redefine-Classes", "Can-Retransform-Classes",
 		"Eclipse-PlatformFilter", "Implementation-Version", "JPM-Command",
 		"Liferay-Configuration-Path", "Liferay-JS-Config",
@@ -154,10 +191,12 @@ public class BNDSourceUtil {
 		"Liferay-Portal-Version"
 	};
 
-	private static final String[] _SUBSYSTEM_BND_DEFINITION_KEYS =
-		{"Liferay-Releng-Marketplace", "Liferay-Releng-Subsystem-Title"};
+	private static final String[] _SUBSYSTEM_BND_DEFINITION_KEYS = {
+		"Liferay-Releng-Marketplace", "Liferay-Releng-Subsystem-Title"
+	};
 
-	private static final String[] _SUITE_BND_DEFINITION_KEYS =
-		{"Liferay-Releng-Suite-Description", "Liferay-Releng-Suite-Title"};
+	private static final String[] _SUITE_BND_DEFINITION_KEYS = {
+		"Liferay-Releng-Suite-Description", "Liferay-Releng-Suite-Title"
+	};
 
 }

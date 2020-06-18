@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	immediate = true,
@@ -66,19 +66,15 @@ public class AnalyticsClientDemoPortlet extends MVCPortlet {
 			_analyticsClient.sendAnalytics(
 				analyticsEventsMessageBuilder.build());
 		}
-		catch (Exception e) {
-			_log.error("Unable to send analytics", e);
+		catch (Exception exception) {
+			_log.error("Unable to send analytics", exception);
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setAnalyticsClient(AnalyticsClient analyticsClient) {
-		_analyticsClient = analyticsClient;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AnalyticsClientDemoPortlet.class);
 
+	@Reference
 	private AnalyticsClient _analyticsClient;
 
 }

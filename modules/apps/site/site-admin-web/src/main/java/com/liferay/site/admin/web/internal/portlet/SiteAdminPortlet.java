@@ -18,14 +18,17 @@ import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.exportimport.kernel.exception.RemoteExportException;
 import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.layout.seo.service.LayoutSEOSiteLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.AvailableLocaleException;
 import com.liferay.portal.kernel.exception.DuplicateGroupException;
 import com.liferay.portal.kernel.exception.GroupFriendlyURLException;
 import com.liferay.portal.kernel.exception.GroupInheritContentException;
 import com.liferay.portal.kernel.exception.GroupKeyException;
+import com.liferay.portal.kernel.exception.GroupNameException;
 import com.liferay.portal.kernel.exception.GroupParentException;
 import com.liferay.portal.kernel.exception.LayoutSetVirtualHostException;
 import com.liferay.portal.kernel.exception.LocaleException;
@@ -40,6 +43,7 @@ import com.liferay.portal.kernel.exception.RequiredGroupException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -49,11 +53,8 @@ import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.model.MembershipRequest;
 import com.liferay.portal.kernel.model.MembershipRequestConstants;
-import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.Team;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.AuthException;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -103,7 +104,6 @@ import com.liferay.site.constants.SiteWebKeys;
 import com.liferay.site.initializer.SiteInitializer;
 import com.liferay.site.initializer.SiteInitializerRegistry;
 import com.liferay.site.util.GroupSearchProvider;
-import com.liferay.site.util.GroupURLProvider;
 import com.liferay.sites.kernel.util.Sites;
 import com.liferay.sites.kernel.util.SitesUtil;
 
@@ -115,6 +115,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
 import javax.portlet.ActionRequest;
@@ -125,6 +126,8 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
+import javax.portlet.ResourceRequest;
+import javax.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -151,8 +154,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + SiteAdminPortletKeys.SITE_ADMIN,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=administrator"
 	},
 	service = Portlet.class
 )
@@ -200,31 +202,16 @@ public class SiteAdminPortlet extends MVCPortlet {
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			hideDefaultSuccessMessage(actionRequest);
 
 			groupExceptionRequestHandler.handlePortalException(
-				actionRequest, actionResponse, pe);
+				actionRequest, actionResponse, portalException);
 		}
-	}
-
-	public void changeDisplayStyle(
-		ActionRequest actionRequest, ActionResponse actionResponse) {
-
-		hideDefaultSuccessMessage(actionRequest);
-
-		String displayStyle = ParamUtil.getString(
-			actionRequest, "displayStyle");
-
-		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(actionRequest);
-
-		portalPreferences.setValue(
-			SiteAdminPortletKeys.SITE_ADMIN, "display-style", displayStyle);
 	}
 
 	public void deactivate(
@@ -361,9 +348,8 @@ public class SiteAdminPortlet extends MVCPortlet {
 
 		SitesUtil.resetPrototype(layoutSet);
 
-		Group group = groupLocalService.getGroup(groupId);
-
-		SitesUtil.mergeLayoutSetPrototypeLayouts(group, layoutSet);
+		SitesUtil.mergeLayoutSetPrototypeLayouts(
+			groupLocalService.getGroup(groupId), layoutSet);
 
 		layoutSetPrototype = layoutSetPrototypeService.getLayoutSetPrototype(
 			layoutSetPrototypeId);
@@ -374,15 +360,23 @@ public class SiteAdminPortlet extends MVCPortlet {
 	}
 
 	@Override
+	public void serveResource(
+			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
+		throws IOException, PortletException {
+
+		resourceRequest.setAttribute(
+			SiteWebKeys.GROUP_SEARCH_PROVIDER, groupSearchProvider);
+
+		super.serveResource(resourceRequest, resourceResponse);
+	}
+
+	@Override
 	protected void doDispatch(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
 
 		renderRequest.setAttribute(
 			SiteWebKeys.GROUP_SEARCH_PROVIDER, groupSearchProvider);
-
-		renderRequest.setAttribute(
-			SiteWebKeys.GROUP_URL_PROVIDER, groupURLProvider);
 
 		renderRequest.setAttribute(
 			SiteWebKeys.SITE_INITIALIZER_REGISTRY, siteInitializerRegistry);
@@ -409,7 +403,7 @@ public class SiteAdminPortlet extends MVCPortlet {
 	protected long[] filterRemoveUserIds(long groupId, long[] userIds)
 		throws Exception {
 
-		Set<Long> filteredUserIds = new HashSet<>(userIds.length);
+		Set<Long> filteredUserIds = new HashSet<>();
 
 		for (long userId : userIds) {
 			if (userLocalService.hasGroupUser(groupId, userId)) {
@@ -417,8 +411,7 @@ public class SiteAdminPortlet extends MVCPortlet {
 			}
 		}
 
-		return ArrayUtil.toArray(
-			filteredUserIds.toArray(new Long[filteredUserIds.size()]));
+		return ArrayUtil.toArray(filteredUserIds.toArray(new Long[0]));
 	}
 
 	protected String getHistoryKey(
@@ -453,22 +446,22 @@ public class SiteAdminPortlet extends MVCPortlet {
 
 			refererGroupId = refererLayout.getGroupId();
 		}
-		catch (NoSuchLayoutException nsle) {
+		catch (NoSuchLayoutException noSuchLayoutException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(nsle, nsle);
+				_log.debug(noSuchLayoutException, noSuchLayoutException);
 			}
 		}
 
 		return refererGroupId;
 	}
 
-	protected List<Role> getRoles(PortletRequest portletRequest)
+	protected List<Long> getRoleIds(PortletRequest portletRequest)
 		throws Exception {
 
-		List<Role> roles = new ArrayList<>();
+		List<Long> roleIds = new ArrayList<>();
 
 		long[] siteRolesRoleIds = ArrayUtil.unique(
 			ParamUtil.getLongValues(
@@ -479,12 +472,10 @@ public class SiteAdminPortlet extends MVCPortlet {
 				continue;
 			}
 
-			Role role = roleLocalService.getRole(siteRolesRoleId);
-
-			roles.add(role);
+			roleIds.add(siteRolesRoleId);
 		}
 
-		return roles;
+		return roleIds;
 	}
 
 	protected PortletURL getSiteAdministrationURL(
@@ -502,10 +493,10 @@ public class SiteAdminPortlet extends MVCPortlet {
 			actionRequest, group, portletId, 0, 0, PortletRequest.RENDER_PHASE);
 	}
 
-	protected List<Team> getTeams(PortletRequest portletRequest)
+	protected List<Long> getTeamIds(PortletRequest portletRequest)
 		throws Exception {
 
-		List<Team> teams = new ArrayList<>();
+		List<Long> teamIds = new ArrayList<>();
 
 		long[] teamsTeamIds = ArrayUtil.unique(
 			ParamUtil.getLongValues(
@@ -516,12 +507,10 @@ public class SiteAdminPortlet extends MVCPortlet {
 				continue;
 			}
 
-			Team team = teamLocalService.getTeam(teamsTeamId);
-
-			teams.add(team);
+			teamIds.add(teamsTeamId);
 		}
 
-		return teams;
+		return teamIds;
 	}
 
 	@Override
@@ -533,6 +522,7 @@ public class SiteAdminPortlet extends MVCPortlet {
 			cause instanceof GroupFriendlyURLException ||
 			cause instanceof GroupInheritContentException ||
 			cause instanceof GroupKeyException ||
+			cause instanceof GroupNameException ||
 			cause instanceof GroupParentException ||
 			cause instanceof LayoutSetVirtualHostException ||
 			cause instanceof LocaleException ||
@@ -567,11 +557,6 @@ public class SiteAdminPortlet extends MVCPortlet {
 	@Reference(unbind = "-")
 	protected void setGroupService(GroupService groupService) {
 		this.groupService = groupService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupURLProvider(GroupURLProvider groupURLProvider) {
-		this.groupURLProvider = groupURLProvider;
 	}
 
 	@Reference(unbind = "-")
@@ -634,6 +619,39 @@ public class SiteAdminPortlet extends MVCPortlet {
 		this.userService = userService;
 	}
 
+	protected TreeMap<String, String> toTreeMap(
+			ActionRequest actionRequest, String parameterPrefix,
+			Set<Locale> availableLocales)
+		throws AvailableLocaleException {
+
+		TreeMap<String, String> treeMap = new TreeMap<>();
+
+		String[] virtualHostnames = ParamUtil.getStringValues(
+			actionRequest, parameterPrefix + "name[]");
+		String[] virtualHostLanguageIds = ParamUtil.getStringValues(
+			actionRequest, parameterPrefix + "LanguageId[]");
+
+		for (int i = 0; i < virtualHostnames.length; i++) {
+			String virtualHostname = virtualHostnames[i];
+
+			String virtualHostLanguageId = (String)ArrayUtil.getValue(
+				virtualHostLanguageIds, i);
+
+			if (Validator.isNotNull(virtualHostLanguageId)) {
+				Locale locale = LocaleUtil.fromLanguageId(
+					virtualHostLanguageId);
+
+				if (!availableLocales.contains(locale)) {
+					throw new AvailableLocaleException(virtualHostLanguageId);
+				}
+			}
+
+			treeMap.put(virtualHostname, virtualHostLanguageId);
+		}
+
+		return treeMap;
+	}
+
 	protected void updateActive(ActionRequest actionRequest, boolean active)
 		throws Exception {
 
@@ -670,9 +688,14 @@ public class SiteAdminPortlet extends MVCPortlet {
 
 		long liveGroupId = ParamUtil.getLong(actionRequest, "liveGroupId");
 
+		long defaultParentGroupId = ParamUtil.getLong(
+			actionRequest, "parentGroupId",
+			GroupConstants.DEFAULT_PARENT_GROUP_ID);
+
 		long parentGroupId = ParamUtil.getLong(
 			actionRequest, "parentGroupSearchContainerPrimaryKeys",
-			GroupConstants.DEFAULT_PARENT_GROUP_ID);
+			defaultParentGroupId);
+
 		Map<Locale, String> nameMap = null;
 		Map<Locale, String> descriptionMap = null;
 		int type = 0;
@@ -712,7 +735,8 @@ public class SiteAdminPortlet extends MVCPortlet {
 				actionRequest, "description");
 			type = ParamUtil.getInteger(
 				actionRequest, "type", GroupConstants.TYPE_SITE_OPEN);
-			friendlyURL = ParamUtil.getString(actionRequest, "friendlyURL");
+			friendlyURL = ParamUtil.getString(
+				actionRequest, "groupFriendlyURL");
 			manualMembership = ParamUtil.getBoolean(
 				actionRequest, "manualMembership", true);
 			inheritContent = ParamUtil.getBoolean(
@@ -748,11 +772,22 @@ public class SiteAdminPortlet extends MVCPortlet {
 				actionRequest, "manualMembership",
 				liveGroup.isManualMembership());
 			friendlyURL = ParamUtil.getString(
-				actionRequest, "friendlyURL", liveGroup.getFriendlyURL());
+				actionRequest, "groupFriendlyURL", liveGroup.getFriendlyURL());
 			inheritContent = ParamUtil.getBoolean(
 				actionRequest, "inheritContent", liveGroup.isInheritContent());
 			active = ParamUtil.getBoolean(
 				actionRequest, "active", liveGroup.isActive());
+
+			UnicodeProperties unicodeProperties =
+				PropertiesParamUtil.getProperties(
+					actionRequest, "TypeSettingsProperties--");
+
+			Locale defaultLocale = LocaleUtil.fromLanguageId(
+				unicodeProperties.getProperty("languageId"));
+
+			if (!liveGroup.isGuest()) {
+				validateDefaultLocaleGroupName(nameMap, defaultLocale);
+			}
 
 			liveGroup = groupService.updateGroup(
 				liveGroupId, parentGroupId, nameMap, descriptionMap, type,
@@ -781,28 +816,38 @@ public class SiteAdminPortlet extends MVCPortlet {
 			}
 		}
 
+		boolean openGraphEnabled = ParamUtil.getBoolean(
+			actionRequest, "openGraphEnabled", true);
+		Map<Locale, String> openGraphImageAltMap =
+			LocalizationUtil.getLocalizationMap(
+				actionRequest, "openGraphImageAlt");
+		long openGraphImageFileEntryId = ParamUtil.getLong(
+			actionRequest, "openGraphImageFileEntryId");
+
+		layoutSEOSiteLocalService.updateLayoutSEOSite(
+			portal.getUserId(actionRequest), liveGroup.getGroupId(),
+			openGraphEnabled, openGraphImageAltMap, openGraphImageFileEntryId,
+			serviceContext);
+
 		// Settings
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			liveGroup.getTypeSettingsProperties();
 
 		String customJspServletContextName = ParamUtil.getString(
 			actionRequest, "customJspServletContextName",
-			typeSettingsProperties.getProperty("customJspServletContextName"));
+			typeSettingsUnicodeProperties.getProperty(
+				"customJspServletContextName"));
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			"customJspServletContextName", customJspServletContextName);
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			"defaultSiteRoleIds",
-			ListUtil.toString(
-				getRoles(actionRequest), Role.ROLE_ID_ACCESSOR,
-				StringPool.COMMA));
-		typeSettingsProperties.setProperty(
+			ListUtil.toString(getRoleIds(actionRequest), StringPool.BLANK));
+		typeSettingsUnicodeProperties.setProperty(
 			"defaultTeamIds",
-			ListUtil.toString(
-				getTeams(actionRequest), Team.TEAM_ID_ACCESSOR,
-				StringPool.COMMA));
+			ListUtil.toString(getTeamIds(actionRequest), StringPool.BLANK));
 
 		String[] analyticsTypes = PrefsPropsUtil.getStringArray(
 			themeDisplay.getCompanyId(), PropsKeys.ADMIN_ANALYTICS_TYPES,
@@ -810,19 +855,40 @@ public class SiteAdminPortlet extends MVCPortlet {
 
 		for (String analyticsType : analyticsTypes) {
 			if (StringUtil.equalsIgnoreCase(analyticsType, "google")) {
+				String googleAnalyticsCreateCustomConfiguration =
+					ParamUtil.getString(
+						actionRequest,
+						"googleAnalyticsCreateCustomConfiguration",
+						typeSettingsUnicodeProperties.getProperty(
+							"googleAnalyticsCreateCustomConfiguration"));
+
+				typeSettingsUnicodeProperties.setProperty(
+					"googleAnalyticsCreateCustomConfiguration",
+					googleAnalyticsCreateCustomConfiguration);
+
+				String googleAnalyticsCustomConfiguration = ParamUtil.getString(
+					actionRequest, "googleAnalyticsCustomConfiguration",
+					typeSettingsUnicodeProperties.getProperty(
+						"googleAnalyticsCustomConfiguration"));
+
+				typeSettingsUnicodeProperties.setProperty(
+					"googleAnalyticsCustomConfiguration",
+					googleAnalyticsCustomConfiguration);
+
 				String googleAnalyticsId = ParamUtil.getString(
 					actionRequest, "googleAnalyticsId",
-					typeSettingsProperties.getProperty("googleAnalyticsId"));
+					typeSettingsUnicodeProperties.getProperty(
+						"googleAnalyticsId"));
 
-				typeSettingsProperties.setProperty(
+				typeSettingsUnicodeProperties.setProperty(
 					"googleAnalyticsId", googleAnalyticsId);
 			}
 			else {
 				String analyticsScript = ParamUtil.getString(
 					actionRequest, Sites.ANALYTICS_PREFIX + analyticsType,
-					typeSettingsProperties.getProperty(analyticsType));
+					typeSettingsUnicodeProperties.getProperty(analyticsType));
 
-				typeSettingsProperties.setProperty(
+				typeSettingsUnicodeProperties.setProperty(
 					Sites.ANALYTICS_PREFIX + analyticsType, analyticsScript);
 			}
 		}
@@ -830,9 +896,10 @@ public class SiteAdminPortlet extends MVCPortlet {
 		boolean trashEnabled = ParamUtil.getBoolean(
 			actionRequest, "trashEnabled",
 			GetterUtil.getBoolean(
-				typeSettingsProperties.getProperty("trashEnabled"), true));
+				typeSettingsUnicodeProperties.getProperty("trashEnabled"),
+				true));
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			"trashEnabled", String.valueOf(trashEnabled));
 
 		int trashEntriesMaxAgeCompany = PrefsPropsUtil.getInteger(
@@ -843,44 +910,76 @@ public class SiteAdminPortlet extends MVCPortlet {
 
 		if (trashEntriesMaxAgeGroup <= 0) {
 			trashEntriesMaxAgeGroup = GetterUtil.getInteger(
-				typeSettingsProperties.getProperty("trashEntriesMaxAge"),
+				typeSettingsUnicodeProperties.getProperty("trashEntriesMaxAge"),
 				trashEntriesMaxAgeCompany);
 		}
 
 		if (trashEntriesMaxAgeGroup != trashEntriesMaxAgeCompany) {
-			typeSettingsProperties.setProperty(
+			typeSettingsUnicodeProperties.setProperty(
 				"trashEntriesMaxAge",
 				String.valueOf(GetterUtil.getInteger(trashEntriesMaxAgeGroup)));
 		}
 		else {
-			typeSettingsProperties.remove("trashEntriesMaxAge");
+			typeSettingsUnicodeProperties.remove("trashEntriesMaxAge");
 		}
 
 		int contentSharingWithChildrenEnabled = ParamUtil.getInteger(
 			actionRequest, "contentSharingWithChildrenEnabled",
 			GetterUtil.getInteger(
-				typeSettingsProperties.getProperty(
+				typeSettingsUnicodeProperties.getProperty(
 					"contentSharingWithChildrenEnabled"),
 				Sites.CONTENT_SHARING_WITH_CHILDREN_DEFAULT_VALUE));
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			"contentSharingWithChildrenEnabled",
 			String.valueOf(contentSharingWithChildrenEnabled));
 
-		UnicodeProperties formTypeSettingsProperties =
+		UnicodeProperties formTypeSettingsUnicodeProperties =
 			PropertiesParamUtil.getProperties(
 				actionRequest, "TypeSettingsProperties--");
 
-		typeSettingsProperties.putAll(formTypeSettingsProperties);
+		boolean inheritLocales = GetterUtil.getBoolean(
+			typeSettingsUnicodeProperties.getProperty("inheritLocales"));
 
-		UnicodeProperties ratingsTypeProperties =
+		if (formTypeSettingsUnicodeProperties.containsKey("inheritLocales")) {
+			inheritLocales = GetterUtil.getBoolean(
+				formTypeSettingsUnicodeProperties.getProperty(
+					"inheritLocales"));
+		}
+
+		if (inheritLocales) {
+			formTypeSettingsUnicodeProperties.setProperty(
+				PropsKeys.LOCALES,
+				StringUtil.merge(
+					LocaleUtil.toLanguageIds(
+						LanguageUtil.getAvailableLocales())));
+
+			User user = themeDisplay.getDefaultUser();
+
+			formTypeSettingsUnicodeProperties.setProperty(
+				"languageId", user.getLanguageId());
+		}
+
+		if (formTypeSettingsUnicodeProperties.containsKey(PropsKeys.LOCALES) &&
+			Validator.isNull(
+				formTypeSettingsUnicodeProperties.getProperty(
+					PropsKeys.LOCALES))) {
+
+			throw new LocaleException(
+				LocaleException.TYPE_DEFAULT,
+				"Must have at least one valid locale for site " + liveGroupId);
+		}
+
+		typeSettingsUnicodeProperties.putAll(formTypeSettingsUnicodeProperties);
+
+		UnicodeProperties ratingsTypeUnicodeProperties =
 			PropertiesParamUtil.getProperties(actionRequest, "RatingsType--");
 
-		for (String propertyKey : ratingsTypeProperties.keySet()) {
-			String newRatingsType = ratingsTypeProperties.getProperty(
+		for (String propertyKey : ratingsTypeUnicodeProperties.keySet()) {
+			String newRatingsType = ratingsTypeUnicodeProperties.getProperty(
 				propertyKey);
 
-			String oldRatingsType = typeSettingsProperties.getProperty(
+			String oldRatingsType = typeSettingsUnicodeProperties.getProperty(
 				propertyKey);
 
 			if (newRatingsType.equals(oldRatingsType)) {
@@ -888,10 +987,10 @@ public class SiteAdminPortlet extends MVCPortlet {
 			}
 
 			if (RatingsType.isValid(newRatingsType)) {
-				typeSettingsProperties.put(propertyKey, newRatingsType);
+				typeSettingsUnicodeProperties.put(propertyKey, newRatingsType);
 			}
 			else {
-				typeSettingsProperties.remove(propertyKey);
+				typeSettingsUnicodeProperties.remove(propertyKey);
 			}
 		}
 
@@ -899,21 +998,18 @@ public class SiteAdminPortlet extends MVCPortlet {
 
 		LayoutSet publicLayoutSet = liveGroup.getPublicLayoutSet();
 
-		String publicVirtualHost = ParamUtil.getString(
-			actionRequest, "publicVirtualHost",
-			publicLayoutSet.getVirtualHostname());
+		Set<Locale> availableLocales = LanguageUtil.getAvailableLocales(
+			liveGroup.getGroupId());
 
-		layoutSetService.updateVirtualHost(
-			liveGroup.getGroupId(), false, publicVirtualHost);
+		layoutSetService.updateVirtualHosts(
+			liveGroup.getGroupId(), false,
+			toTreeMap(actionRequest, "publicVirtualHost", availableLocales));
 
 		LayoutSet privateLayoutSet = liveGroup.getPrivateLayoutSet();
 
-		String privateVirtualHost = ParamUtil.getString(
-			actionRequest, "privateVirtualHost",
-			privateLayoutSet.getVirtualHostname());
-
-		layoutSetService.updateVirtualHost(
-			liveGroup.getGroupId(), true, privateVirtualHost);
+		layoutSetService.updateVirtualHosts(
+			liveGroup.getGroupId(), true,
+			toTreeMap(actionRequest, "privateVirtualHost", availableLocales));
 
 		// Staging
 
@@ -927,39 +1023,31 @@ public class SiteAdminPortlet extends MVCPortlet {
 			groupService.updateFriendlyURL(
 				stagingGroup.getGroupId(), friendlyURL);
 
-			LayoutSet stagingPublicLayoutSet =
-				stagingGroup.getPublicLayoutSet();
+			layoutSetService.updateVirtualHosts(
+				stagingGroup.getGroupId(), false,
+				toTreeMap(
+					actionRequest, "stagingPublicVirtualHost",
+					availableLocales));
 
-			publicVirtualHost = ParamUtil.getString(
-				actionRequest, "stagingPublicVirtualHost",
-				stagingPublicLayoutSet.getVirtualHostname());
+			layoutSetService.updateVirtualHosts(
+				stagingGroup.getGroupId(), true,
+				toTreeMap(
+					actionRequest, "stagingPrivateVirtualHost",
+					availableLocales));
 
-			layoutSetService.updateVirtualHost(
-				stagingGroup.getGroupId(), false, publicVirtualHost);
-
-			LayoutSet stagingPrivateLayoutSet =
-				stagingGroup.getPrivateLayoutSet();
-
-			privateVirtualHost = ParamUtil.getString(
-				actionRequest, "stagingPrivateVirtualHost",
-				stagingPrivateLayoutSet.getVirtualHostname());
-
-			layoutSetService.updateVirtualHost(
-				stagingGroup.getGroupId(), true, privateVirtualHost);
-
-			UnicodeProperties stagedGroupTypeSettingsProperties =
+			UnicodeProperties stagedGroupTypeSettingsUnicodeProperties =
 				stagingGroup.getTypeSettingsProperties();
 
-			stagedGroupTypeSettingsProperties.putAll(
-				formTypeSettingsProperties);
+			stagedGroupTypeSettingsUnicodeProperties.putAll(
+				formTypeSettingsUnicodeProperties);
 
 			groupService.updateGroup(
 				stagingGroup.getGroupId(),
-				stagedGroupTypeSettingsProperties.toString());
+				stagedGroupTypeSettingsUnicodeProperties.toString());
 		}
 
 		liveGroup = groupService.updateGroup(
-			liveGroup.getGroupId(), typeSettingsProperties.toString());
+			liveGroup.getGroupId(), typeSettingsUnicodeProperties.toString());
 
 		String creationType = ParamUtil.getString(
 			actionRequest, "creationType");
@@ -1050,6 +1138,15 @@ public class SiteAdminPortlet extends MVCPortlet {
 		return liveGroup;
 	}
 
+	protected void validateDefaultLocaleGroupName(
+			Map<Locale, String> nameMap, Locale defaultLocale)
+		throws PortalException {
+
+		if ((nameMap == null) || Validator.isNull(nameMap.get(defaultLocale))) {
+			throw new GroupNameException();
+		}
+	}
+
 	@Reference
 	protected BackgroundTaskManager backgroundTaskManager;
 
@@ -1059,12 +1156,15 @@ public class SiteAdminPortlet extends MVCPortlet {
 	protected GroupLocalService groupLocalService;
 	protected GroupSearchProvider groupSearchProvider;
 	protected GroupService groupService;
-	protected GroupURLProvider groupURLProvider;
 
 	@Reference
 	protected Http http;
 
 	protected LayoutLocalService layoutLocalService;
+
+	@Reference
+	protected LayoutSEOSiteLocalService layoutSEOSiteLocalService;
+
 	protected LayoutSetLocalService layoutSetLocalService;
 	protected LayoutSetPrototypeService layoutSetPrototypeService;
 	protected LayoutSetService layoutSetService;

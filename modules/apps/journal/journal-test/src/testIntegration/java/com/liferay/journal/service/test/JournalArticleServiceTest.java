@@ -26,7 +26,6 @@ import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRespons
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.service.DDMStructureServiceUtil;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
@@ -39,15 +38,13 @@ import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
-import com.liferay.portal.kernel.service.ClassNameServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortalPreferencesLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.aop.AdvisedSupport;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -55,21 +52,24 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.service.test.ServiceTestUtil;
-import com.liferay.portal.spring.aop.ServiceBeanAopProxy;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.io.InputStream;
 
+import java.lang.reflect.InvocationHandler;
+
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -95,11 +95,12 @@ public class JournalArticleServiceTest {
 		new LiferayIntegrationTestRule();
 
 	@BeforeClass
-	public static void setUpClass() throws Exception {
-		AdvisedSupport advisedSupport = ServiceBeanAopProxy.getAdvisedSupport(
+	public static void setUpClass() {
+		InvocationHandler invocationHandler = ProxyUtil.getInvocationHandler(
 			_journalArticleLocalService);
 
-		_journalArticleLocalServiceImplInstance = advisedSupport.getTarget();
+		_journalArticleLocalServiceImplInstance = ReflectionTestUtil.invoke(
+			invocationHandler, "getTarget", new Class<?>[0]);
 	}
 
 	@Before
@@ -118,7 +119,7 @@ public class JournalArticleServiceTest {
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Version 1",
 			"This is a test article.");
 
-		ServiceTestUtil.setUser(TestPropsValues.getUser());
+		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		PortalPreferences portalPreferenceces =
 			PortletPreferencesFactoryUtil.getPortalPreferences(
@@ -160,9 +161,9 @@ public class JournalArticleServiceTest {
 
 	@Test(expected = StorageFieldRequiredException.class)
 	public void testAddArticleWithEmptyRequiredHTMLField() throws Exception {
-		Map<String, String> requiredFields = new HashMap<>();
-
-		requiredFields.put("HTML2030", "");
+		Map<String, String> requiredFields = HashMapBuilder.put(
+			"HTML2030", ""
+		).build();
 
 		testAddArticleRequiredFields(
 			"test-ddm-structure-html-required-field.xml",
@@ -172,9 +173,9 @@ public class JournalArticleServiceTest {
 
 	@Test
 	public void testAddArticleWithNotEmptyRequiredHTMLField() throws Exception {
-		Map<String, String> requiredFields = new HashMap<>();
-
-		requiredFields.put("HTML2030", "<p>Hello.</p>");
+		Map<String, String> requiredFields = HashMapBuilder.put(
+			"HTML2030", "<p>Hello.</p>"
+		).build();
 
 		testAddArticleRequiredFields(
 			"test-ddm-structure-html-required-field.xml",
@@ -198,31 +199,31 @@ public class JournalArticleServiceTest {
 
 		ReflectionTestUtil.invoke(
 			_journalArticleLocalServiceImplInstance, "checkStructure",
-			new Class<?>[] {JournalArticle.class, DDMStructure.class}, article,
-			ddmStructure);
+			new Class<?>[] {Long.TYPE, String.class, Double.TYPE},
+			article.getGroupId(), article.getArticleId(), article.getVersion());
 	}
 
 	@Test
 	public void testCheckArticleWithValidStructure() throws Exception {
 		Group group = GroupTestUtil.addGroup();
 
-		JournalFolder parentFolder = JournalTestUtil.addFolder(
-			group.getGroupId(), RandomTestUtil.randomString());
+		try {
+			JournalFolder parentFolder = JournalTestUtil.addFolder(
+				group.getGroupId(), RandomTestUtil.randomString());
 
-		JournalArticle article = JournalTestUtil.addArticle(
-			group.getGroupId(), parentFolder.getFolderId(), "title", "content");
+			JournalArticle article = JournalTestUtil.addArticle(
+				group.getGroupId(), parentFolder.getFolderId(), "title",
+				"content");
 
-		ClassName className = ClassNameServiceUtil.fetchClassName(
-			JournalArticle.class.getName());
-
-		DDMStructure ddmStructure = DDMStructureServiceUtil.getStructure(
-			group.getGroupId(), className.getClassNameId(),
-			article.getDDMStructureKey());
-
-		ReflectionTestUtil.invoke(
-			_journalArticleLocalServiceImplInstance, "checkStructure",
-			new Class<?>[] {JournalArticle.class, DDMStructure.class}, article,
-			ddmStructure);
+			ReflectionTestUtil.invoke(
+				_journalArticleLocalServiceImplInstance, "checkStructure",
+				new Class<?>[] {Long.TYPE, String.class, Double.TYPE},
+				article.getGroupId(), article.getArticleId(),
+				article.getVersion());
+		}
+		finally {
+			GroupLocalServiceUtil.deleteGroup(group);
+		}
 	}
 
 	@Test
@@ -246,7 +247,7 @@ public class JournalArticleServiceTest {
 
 			Assert.fail();
 		}
-		catch (RequiredTemplateException rte) {
+		catch (RequiredTemplateException requiredTemplateException) {
 		}
 	}
 
@@ -639,12 +640,9 @@ public class JournalArticleServiceTest {
 	protected int countArticlesByKeyword(String keyword, int status)
 		throws Exception {
 
-		List<Long> folderIds = new ArrayList<>(1);
-
-		folderIds.add(JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
-
 		return JournalArticleLocalServiceUtil.searchCount(
-			TestPropsValues.getCompanyId(), _group.getGroupId(), folderIds,
+			TestPropsValues.getCompanyId(), _group.getGroupId(),
+			ListUtil.fromArray(JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID),
 			JournalArticleConstants.CLASSNAME_ID_DEFAULT, null, null, null,
 			null, keyword, "", "", null, null, status, null, true);
 	}
@@ -660,9 +658,8 @@ public class JournalArticleServiceTest {
 		if (articles.isEmpty()) {
 			return addArticles(count, _keyword);
 		}
-		else {
-			createArticlesWithKeyword(count);
-		}
+
+		createArticlesWithKeyword(count);
 
 		return null;
 	}
@@ -695,12 +692,9 @@ public class JournalArticleServiceTest {
 			String keyword, int status)
 		throws Exception {
 
-		List<Long> folderIds = new ArrayList<>(1);
-
-		folderIds.add(JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
-
 		return JournalArticleLocalServiceUtil.search(
-			TestPropsValues.getCompanyId(), _group.getGroupId(), folderIds,
+			TestPropsValues.getCompanyId(), _group.getGroupId(),
+			ListUtil.fromArray(JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID),
 			JournalArticleConstants.CLASSNAME_ID_DEFAULT, null, null, null,
 			null, keyword, "", "", null, null, status, null, false,
 			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);

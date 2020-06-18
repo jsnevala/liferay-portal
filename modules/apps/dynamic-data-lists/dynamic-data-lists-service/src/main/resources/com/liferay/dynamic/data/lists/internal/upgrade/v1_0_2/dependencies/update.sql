@@ -1,12 +1,13 @@
 alter table DDLRecord add recordSetVersion VARCHAR(75) null;
 
-alter table DDLRecordSet add versionUserId VARCHAR(75) null;
+alter table DDLRecordSet add versionUserId LONG null;
 alter table DDLRecordSet add versionUserName VARCHAR(75) null;
 alter table DDLRecordSet add version VARCHAR(75) null;
 
 alter table DDLRecordVersion add recordSetVersion VARCHAR(75) null;
 
 create table DDLRecordSetVersion (
+	mvccVersion LONG default 0 not null,
 	recordSetVersionId LONG not null primary key,
 	groupId LONG,
 	companyId LONG,

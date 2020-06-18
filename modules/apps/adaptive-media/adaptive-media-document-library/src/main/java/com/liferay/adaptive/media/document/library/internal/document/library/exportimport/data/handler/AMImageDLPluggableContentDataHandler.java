@@ -116,12 +116,10 @@ public class AMImageDLPluggableContentDataHandler
 					fileVersion
 				).done());
 
-		List<AdaptiveMedia<AMImageProcessor>> adaptiveMediaList =
+		List<AdaptiveMedia<AMImageProcessor>> adaptiveMedias =
 			adaptiveMediaStream.collect(Collectors.toList());
 
-		for (AdaptiveMedia<AMImageProcessor> adaptiveMedia :
-				adaptiveMediaList) {
-
+		for (AdaptiveMedia<AMImageProcessor> adaptiveMedia : adaptiveMedias) {
 			_exportMedia(portletDataContext, fileEntry, adaptiveMedia);
 		}
 	}
@@ -146,6 +144,18 @@ public class AMImageDLPluggableContentDataHandler
 			try (InputStream inputStream = adaptiveMedia.getInputStream()) {
 				portletDataContext.addZipEntry(basePath + ".bin", inputStream);
 			}
+			catch (Exception exception) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						StringBundler.concat(
+							"Unable to find adaptive media for file entry ",
+							fileEntry.getFileEntryId(), " and configuration ",
+							configurationUuidOptional.get()),
+						exception);
+				}
+
+				return;
+			}
 		}
 
 		portletDataContext.addZipEntry(
@@ -166,7 +176,7 @@ public class AMImageDLPluggableContentDataHandler
 					amImageConfigurationEntry.getUUID()
 				).done());
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			StringBundler sb = new StringBundler(4);
 
 			sb.append("Unable to find adaptive media for file entry ");
@@ -174,7 +184,7 @@ public class AMImageDLPluggableContentDataHandler
 			sb.append(" and configuration ");
 			sb.append(amImageConfigurationEntry.getUUID());
 
-			_log.error(sb.toString(), pe);
+			_log.error(sb.toString(), portalException);
 		}
 
 		return Stream.empty();
@@ -222,7 +232,7 @@ public class AMImageDLPluggableContentDataHandler
 
 		return firstAdaptiveMediaOptional.map(
 			adaptiveMedia -> _amImageSerializer.deserialize(
-				serializedAdaptiveMedia, () -> adaptiveMedia.getInputStream())
+				serializedAdaptiveMedia, adaptiveMedia::getInputStream)
 		).orElse(
 			null
 		);

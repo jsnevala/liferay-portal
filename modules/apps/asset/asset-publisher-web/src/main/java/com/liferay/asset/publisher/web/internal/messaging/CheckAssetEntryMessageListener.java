@@ -14,7 +14,7 @@
 
 package com.liferay.asset.publisher.web.internal.messaging;
 
-import com.liferay.asset.publisher.web.configuration.AssetPublisherWebConfiguration;
+import com.liferay.asset.publisher.web.internal.configuration.AssetPublisherWebConfiguration;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.DestinationNames;
@@ -40,11 +40,11 @@ import org.osgi.service.component.annotations.Reference;
  * subscribers. The scheduled task uses the <code>check.interval</code> property
  * to define the execution interval (in hours).
  *
- * @author Roberto Diaz
+ * @author Roberto Díaz
  * @author Sergio González
  */
 @Component(
-	configurationPid = "com.liferay.asset.publisher.web.configuration.AssetPublisherWebConfiguration",
+	configurationPid = "com.liferay.asset.publisher.web.internal.configuration.AssetPublisherWebConfiguration",
 	immediate = true, service = {}
 )
 public class CheckAssetEntryMessageListener extends BaseMessageListener {
@@ -80,26 +80,13 @@ public class CheckAssetEntryMessageListener extends BaseMessageListener {
 		_assetEntriesCheckerUtil.checkAssetEntries();
 	}
 
-	@Reference(unbind = "-")
-	protected void setAssetEntriesCheckerUtil(
-		AssetEntriesCheckerUtil assetEntriesCheckerUtil) {
+	@Reference
+	private AssetEntriesCheckerHelper _assetEntriesCheckerUtil;
 
-		_assetEntriesCheckerUtil = assetEntriesCheckerUtil;
-	}
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
-	}
-
-	@Reference(unbind = "-")
-	protected void setSchedulerEngineHelper(
-		SchedulerEngineHelper schedulerEngineHelper) {
-
-		_schedulerEngineHelper = schedulerEngineHelper;
-	}
-
-	private AssetEntriesCheckerUtil _assetEntriesCheckerUtil;
+	@Reference
 	private SchedulerEngineHelper _schedulerEngineHelper;
 
 	@Reference

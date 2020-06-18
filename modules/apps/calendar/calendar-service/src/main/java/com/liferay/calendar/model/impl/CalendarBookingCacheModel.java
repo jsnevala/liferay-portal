@@ -14,14 +14,11 @@
 
 package com.liferay.calendar.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.calendar.model.CalendarBooking;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing CalendarBooking in entity cache.
  *
  * @author Eduardo Lundgren
- * @see CalendarBooking
  * @generated
  */
-@ProviderType
-public class CalendarBookingCacheModel implements CacheModel<CalendarBooking>,
-	Externalizable {
+public class CalendarBookingCacheModel
+	implements CacheModel<CalendarBooking>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,13 @@ public class CalendarBookingCacheModel implements CacheModel<CalendarBooking>,
 			return false;
 		}
 
-		CalendarBookingCacheModel calendarBookingCacheModel = (CalendarBookingCacheModel)obj;
+		CalendarBookingCacheModel calendarBookingCacheModel =
+			(CalendarBookingCacheModel)obj;
 
-		if (calendarBookingId == calendarBookingCacheModel.calendarBookingId) {
+		if ((calendarBookingId ==
+				calendarBookingCacheModel.calendarBookingId) &&
+			(mvccVersion == calendarBookingCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +61,28 @@ public class CalendarBookingCacheModel implements CacheModel<CalendarBooking>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, calendarBookingId);
+		int hashCode = HashUtil.hash(0, calendarBookingId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(59);
+		StringBundler sb = new StringBundler(61);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", calendarBookingId=");
 		sb.append(calendarBookingId);
@@ -135,6 +149,8 @@ public class CalendarBookingCacheModel implements CacheModel<CalendarBooking>,
 	public CalendarBooking toEntityModel() {
 		CalendarBookingImpl calendarBookingImpl = new CalendarBookingImpl();
 
+		calendarBookingImpl.setMvccVersion(mvccVersion);
+
 		if (uuid == null) {
 			calendarBookingImpl.setUuid("");
 		}
@@ -171,7 +187,8 @@ public class CalendarBookingCacheModel implements CacheModel<CalendarBooking>,
 		calendarBookingImpl.setCalendarId(calendarId);
 		calendarBookingImpl.setCalendarResourceId(calendarResourceId);
 		calendarBookingImpl.setParentCalendarBookingId(parentCalendarBookingId);
-		calendarBookingImpl.setRecurringCalendarBookingId(recurringCalendarBookingId);
+		calendarBookingImpl.setRecurringCalendarBookingId(
+			recurringCalendarBookingId);
 
 		if (vEventUid == null) {
 			calendarBookingImpl.setVEventUid("");
@@ -260,7 +277,10 @@ public class CalendarBookingCacheModel implements CacheModel<CalendarBooking>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		calendarBookingId = objectInput.readLong();
@@ -283,7 +303,7 @@ public class CalendarBookingCacheModel implements CacheModel<CalendarBooking>,
 		recurringCalendarBookingId = objectInput.readLong();
 		vEventUid = objectInput.readUTF();
 		title = objectInput.readUTF();
-		description = objectInput.readUTF();
+		description = (String)objectInput.readObject();
 		location = objectInput.readUTF();
 
 		startTime = objectInput.readLong();
@@ -308,8 +328,9 @@ public class CalendarBookingCacheModel implements CacheModel<CalendarBooking>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -358,10 +379,10 @@ public class CalendarBookingCacheModel implements CacheModel<CalendarBooking>,
 		}
 
 		if (description == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(description);
+			objectOutput.writeObject(description);
 		}
 
 		if (location == null) {
@@ -418,6 +439,7 @@ public class CalendarBookingCacheModel implements CacheModel<CalendarBooking>,
 		objectOutput.writeLong(statusDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long calendarBookingId;
 	public long groupId;
@@ -447,4 +469,5 @@ public class CalendarBookingCacheModel implements CacheModel<CalendarBooking>,
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

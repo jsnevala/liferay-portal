@@ -68,22 +68,24 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
- * @author Michael Young
- * @author Brian Wing Shun Chan
- * @author Jerry Niu
- * @author Scott Lee
- * @author Hervé Ménage
- * @author Samuel Kong
- * @author Ryan Park
- * @author Wesley Gong
- * @author Marcellus Tavares
- * @author Hugo Huijser
- * @author Edward Han
+ * @author     Michael Young
+ * @author     Brian Wing Shun Chan
+ * @author     Jerry Niu
+ * @author     Scott Lee
+ * @author     Hervé Ménage
+ * @author     Samuel Kong
+ * @author     Ryan Park
+ * @author     Wesley Gong
+ * @author     Marcellus Tavares
+ * @author     Hugo Huijser
+ * @author     Edward Han
+ * @deprecated As of Mueller (7.2.x), replaced by {@link SafePortalLDAPImpl}
  */
 @Component(
 	configurationPid = "com.liferay.portal.security.ldap.configuration.LDAPConfiguration",
 	immediate = true, service = PortalLDAP.class
 )
+@Deprecated
 public class DefaultPortalLDAP implements PortalLDAP {
 
 	@Override
@@ -179,9 +181,9 @@ public class DefaultPortalLDAP implements PortalLDAP {
 		try {
 			ldapContext = new InitialLdapContext(environmentProperties, null);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to bind to the LDAP server", e);
+				_log.warn("Unable to bind to the LDAP server", exception);
 			}
 		}
 
@@ -288,8 +290,7 @@ public class DefaultPortalLDAP implements PortalLDAP {
 
 		Attributes attributes = _getAttributes(
 			ldapContext, fullDistinguishedName,
-			mappedGroupAttributeIds.toArray(
-				new String[mappedGroupAttributeIds.size()]));
+			mappedGroupAttributeIds.toArray(new String[0]));
 
 		if (_log.isDebugEnabled()) {
 			if ((attributes == null) || (attributes.size() == 0)) {
@@ -437,8 +438,9 @@ public class DefaultPortalLDAP implements PortalLDAP {
 		SystemLDAPConfiguration systemLDAPConfiguration =
 			_systemLDAPConfigurationProvider.getConfiguration(companyId);
 
-		String[] attributeIds =
-			{_getNextRange(systemLDAPConfiguration, attribute.getID())};
+		String[] attributeIds = {
+			_getNextRange(systemLDAPConfiguration, attribute.getID())
+		};
 
 		while (true) {
 			List<SearchResult> searchResults = new ArrayList<>();
@@ -493,36 +495,6 @@ public class DefaultPortalLDAP implements PortalLDAP {
 		}
 
 		return attribute;
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public String getNameInNamespace(
-			long ldapServerId, long companyId, Binding binding)
-		throws Exception {
-
-		LDAPServerConfiguration ldapServerConfiguration =
-			_ldapServerConfigurationProvider.getConfiguration(
-				companyId, ldapServerId);
-
-		String baseDN = ldapServerConfiguration.baseDN();
-
-		String name = binding.getName();
-
-		if (name.startsWith(StringPool.QUOTE) &&
-			name.endsWith(StringPool.QUOTE)) {
-
-			name = name.substring(1, name.length() - 1);
-		}
-
-		if (Validator.isNull(baseDN)) {
-			return name;
-		}
-
-		return name.concat(StringPool.COMMA).concat(baseDN);
 	}
 
 	@Override
@@ -681,6 +653,8 @@ public class DefaultPortalLDAP implements PortalLDAP {
 		PropertiesUtil.merge(userMappings, contactMappings);
 
 		Collection<Object> values = userMappings.values();
+
+		values.removeIf(object -> Validator.isNull(object));
 
 		String[] mappedUserAttributeIds = ArrayUtil.toStringArray(
 			values.toArray(new Object[userMappings.size()]));
@@ -855,13 +829,13 @@ public class DefaultPortalLDAP implements PortalLDAP {
 				return true;
 			}
 		}
-		catch (NameNotFoundException nnfe) {
+		catch (NameNotFoundException nameNotFoundException) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					StringBundler.concat(
 						"Unable to determine if user DN ", userDN,
 						" is a member of group DN ", groupDN),
-					nnfe);
+					nameNotFoundException);
 			}
 		}
 		finally {
@@ -913,13 +887,13 @@ public class DefaultPortalLDAP implements PortalLDAP {
 				return true;
 			}
 		}
-		catch (NameNotFoundException nnfe) {
+		catch (NameNotFoundException nameNotFoundException) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					StringBundler.concat(
 						"Unable to determine if group DN ", groupDN,
 						" is a member of user DN ", userDN),
-					nnfe);
+					nameNotFoundException);
 			}
 		}
 		finally {
@@ -982,7 +956,7 @@ public class DefaultPortalLDAP implements PortalLDAP {
 				return _getCookie(ldapContext.getResponseControls());
 			}
 		}
-		catch (OperationNotSupportedException onse) {
+		catch (OperationNotSupportedException operationNotSupportedException) {
 			if (enu != null) {
 				enu.close();
 			}
@@ -1133,10 +1107,13 @@ public class DefaultPortalLDAP implements PortalLDAP {
 			int z = attributeId.indexOf(CharPool.DASH, y);
 
 			originalAttributeId = attributeId.substring(0, x);
+
 			start = GetterUtil.getInteger(attributeId.substring(y + 1, z));
-			end = GetterUtil.getInteger(attributeId.substring(z + 1));
 
 			start += systemLDAPConfiguration.rangeSize();
+
+			end = GetterUtil.getInteger(attributeId.substring(z + 1));
+
 			end += systemLDAPConfiguration.rangeSize();
 		}
 

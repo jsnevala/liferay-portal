@@ -42,23 +42,26 @@ GroupDisplayContextHelper groupDisplayContextHelper = new GroupDisplayContextHel
 Map<String, Serializable> settingsMap = exportImportConfiguration.getSettingsMap();
 
 Map<String, String[]> parameterMap = (Map<String, String[]>)settingsMap.get("parameterMap");
+
+PortletURL advancedPublishURL = renderResponse.createRenderURL();
+
+advancedPublishURL.setParameter("mvcRenderCommandName", "publishLayouts");
+advancedPublishURL.setParameter(Constants.CMD, cmd);
+advancedPublishURL.setParameter("tabs1", privateLayout ? "private-pages" : "public-pages");
+advancedPublishURL.setParameter("groupId", String.valueOf(groupDisplayContextHelper.getGroupId()));
+advancedPublishURL.setParameter("layoutSetBranchId", MapUtil.getString(parameterMap, "layoutSetBranchId"));
+advancedPublishURL.setParameter("selPlid", String.valueOf(selPlid));
+advancedPublishURL.setParameter("privateLayout", String.valueOf(privateLayout));
 %>
 
-<aui:nav-bar cssClass="navbar-collapse-absolute">
-	<aui:nav cssClass="navbar-nav" id="publishConfigurationButtons">
-		<portlet:renderURL var="advancedPublishURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-			<portlet:param name="mvcRenderCommandName" value="publishLayouts" />
-			<portlet:param name="<%= Constants.CMD %>" value="<%= cmd %>" />
-			<portlet:param name="tabs1" value='<%= privateLayout ? "private-pages" : "public-pages" %>' />
-			<portlet:param name="groupId" value="<%= String.valueOf(groupDisplayContextHelper.getGroupId()) %>" />
-			<portlet:param name="layoutSetBranchId" value='<%= MapUtil.getString(parameterMap, "layoutSetBranchId") %>' />
-			<portlet:param name="selPlid" value="<%= String.valueOf(selPlid) %>" />
-			<portlet:param name="privateLayout" value="<%= String.valueOf(privateLayout) %>" />
-		</portlet:renderURL>
-
-		<aui:nav-item href="<%= advancedPublishURL %>" iconCssClass="icon-cog" label="switch-to-advanced-publication" selected="<%= false %>" />
-	</aui:nav>
-</aui:nav-bar>
+<div class="container-fluid-1280 mt-2 publish-navbar text-right">
+	<clay:link
+		buttonStyle="link"
+		elementClasses="btn-sm"
+		href="<%= advancedPublishURL.toString() %>"
+		label='<%= LanguageUtil.get(request, "switch-to-advanced-publication") %>'
+	/>
+</div>
 
 <portlet:actionURL name="editPublishConfiguration" var="confirmedActionURL">
 	<portlet:param name="mvcRenderCommandName" value="editPublishConfigurationSimple" />
@@ -84,7 +87,9 @@ Map<String, String[]> parameterMap = (Map<String, String[]>)settingsMap.get("par
 
 		int incompleteBackgroundTaskCount = BackgroundTaskManagerUtil.getBackgroundTasksCount(groupDisplayContextHelper.getStagingGroupId(), taskExecutorClassName, false);
 
-		incompleteBackgroundTaskCount += BackgroundTaskManagerUtil.getBackgroundTasksCount(groupDisplayContextHelper.getLiveGroupId(), taskExecutorClassName, false);
+		if (localPublishing) {
+			incompleteBackgroundTaskCount += BackgroundTaskManagerUtil.getBackgroundTasksCount(groupDisplayContextHelper.getLiveGroupId(), taskExecutorClassName, false);
+		}
 		%>
 
 		<div class="container-fluid-1280">
@@ -194,6 +199,12 @@ Map<String, String[]> parameterMap = (Map<String, String[]>)settingsMap.get("par
 
 									layoutsCount = selLayoutSet.getPageCount();
 								}
+
+								DateRange dateRange = ExportImportDateUtil.getDateRange(exportImportConfiguration);
+
+								PortletDataContext portletDataContext = PortletDataContextFactoryUtil.createPreparePortletDataContext(company.getCompanyId(), groupDisplayContextHelper.getStagingGroupId(), ExportImportDateUtil.RANGE_FROM_LAST_PUBLISH_DATE, dateRange.getStartDate(), dateRange.getEndDate());
+
+								long layoutModelDeletionCount = ExportImportHelperUtil.getLayoutModelDeletionCount(portletDataContext, privateLayout);
 								%>
 
 								<liferay-util:buffer
@@ -209,6 +220,7 @@ Map<String, String[]> parameterMap = (Map<String, String[]>)settingsMap.get("par
 											</c:otherwise>
 										</c:choose>
 									</span>
+									<span class="badge badge-warning deletions"><%= (layoutModelDeletionCount > 0) ? (layoutModelDeletionCount + StringPool.SPACE + LanguageUtil.get(request, "deletions")) : StringPool.BLANK %></span>
 								</liferay-util:buffer>
 
 								<li class="tree-item">

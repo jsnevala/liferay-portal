@@ -14,14 +14,15 @@
 
 package com.liferay.portal.search.elasticsearch6.internal.search.engine.adapter.cluster;
 
-import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.engine.adapter.cluster.HealthClusterRequest;
 import com.liferay.portal.search.engine.adapter.cluster.HealthClusterResponse;
 
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthAction;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequestBuilder;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.client.ClusterAdminClient;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.common.unit.TimeValue;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -47,24 +48,53 @@ public class HealthClusterRequestExecutorImpl
 			clusterHealthResponse.getStatus();
 
 		return new HealthClusterResponse(
-			clusterHealthStatusTranslator.translate(clusterHealthStatus),
+			_clusterHealthStatusTranslator.translate(clusterHealthStatus),
 			clusterHealthResponse.toString());
 	}
 
 	protected ClusterHealthRequestBuilder createClusterHealthRequestBuilder(
 		HealthClusterRequest healthClusterRequest) {
 
-		ClusterAdminClient clusterAdminClient =
-			elasticsearchConnectionManager.getClusterAdminClient();
+		ClusterHealthRequestBuilder clusterHealthRequestBuilder =
+			ClusterHealthAction.INSTANCE.newRequestBuilder(
+				_elasticsearchClientResolver.getClient());
 
-		return clusterAdminClient.prepareHealth(
+		clusterHealthRequestBuilder.setIndices(
 			healthClusterRequest.getIndexNames());
+
+		long timeout = healthClusterRequest.getTimeout();
+
+		if (timeout > 0) {
+			clusterHealthRequestBuilder.setMasterNodeTimeout(
+				TimeValue.timeValueMillis(timeout));
+			clusterHealthRequestBuilder.setTimeout(
+				TimeValue.timeValueMillis(timeout));
+		}
+
+		if (healthClusterRequest.getWaitForClusterHealthStatus() != null) {
+			clusterHealthRequestBuilder.setWaitForStatus(
+				_clusterHealthStatusTranslator.translate(
+					healthClusterRequest.getWaitForClusterHealthStatus()));
+		}
+
+		return clusterHealthRequestBuilder;
 	}
 
-	@Reference
-	protected ClusterHealthStatusTranslator clusterHealthStatusTranslator;
+	@Reference(unbind = "-")
+	protected void setClusterHealthStatusTranslator(
+		ClusterHealthStatusTranslator clusterHealthStatusTranslator) {
 
-	@Reference
-	protected ElasticsearchConnectionManager elasticsearchConnectionManager;
+		_clusterHealthStatusTranslator = clusterHealthStatusTranslator;
+	}
+
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private ClusterHealthStatusTranslator _clusterHealthStatusTranslator;
+	private ElasticsearchClientResolver _elasticsearchClientResolver;
 
 }

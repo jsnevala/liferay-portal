@@ -33,7 +33,6 @@ import org.junit.Test;
 
 /**
  * @author Wesley Gong
- * @see    ServiceBeanMethodInvocationFactoryImplTest
  */
 public class OrderByComparatorFactoryUtilTest {
 
@@ -250,7 +249,7 @@ public class OrderByComparatorFactoryUtilTest {
 
 			Assert.fail();
 		}
-		catch (IllegalArgumentException iae) {
+		catch (IllegalArgumentException illegalArgumentException) {
 		}
 
 		try {
@@ -259,7 +258,7 @@ public class OrderByComparatorFactoryUtilTest {
 
 			Assert.fail();
 		}
-		catch (IllegalArgumentException iae) {
+		catch (IllegalArgumentException illegalArgumentException) {
 		}
 
 		try {
@@ -269,7 +268,7 @@ public class OrderByComparatorFactoryUtilTest {
 
 			Assert.fail();
 		}
-		catch (IllegalArgumentException iae) {
+		catch (IllegalArgumentException illegalArgumentException) {
 		}
 	}
 

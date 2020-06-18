@@ -17,6 +17,8 @@ package com.liferay.configuration.admin.web.internal.portlet.action;
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.configuration.admin.web.internal.constants.ConfigurationAdminWebKeys;
 import com.liferay.configuration.admin.web.internal.display.ConfigurationCategorySectionDisplay;
+import com.liferay.configuration.admin.web.internal.display.context.ConfigurationScopeDisplayContext;
+import com.liferay.configuration.admin.web.internal.display.context.ConfigurationScopeDisplayContextFactory;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationEntryRetriever;
 import com.liferay.configuration.admin.web.internal.util.ResourceBundleLoaderProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
@@ -35,6 +37,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
+		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
+		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SITE_SETTINGS,
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SYSTEM_SETTINGS,
 		"mvc.command.name=/"
 	},
@@ -46,10 +50,15 @@ public class ViewMVCRenderCommand implements MVCRenderCommand {
 	public String render(
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
+		ConfigurationScopeDisplayContext configurationScopeDisplayContext =
+			ConfigurationScopeDisplayContextFactory.create(renderRequest);
+
 		List<ConfigurationCategorySectionDisplay>
 			configurationCategorySectionDisplays =
 				_configurationEntryRetriever.
-					getConfigurationCategorySectionDisplays();
+					getConfigurationCategorySectionDisplays(
+						configurationScopeDisplayContext.getScope(),
+						configurationScopeDisplayContext.getScopePK());
 
 		renderRequest.setAttribute(
 			ConfigurationAdminWebKeys.CONFIGURATION_CATEGORY_SECTION_DISPLAYS,

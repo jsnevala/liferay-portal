@@ -71,7 +71,7 @@ public class OrganizationUserChecker extends EmptyOnClickRowChecker {
 				return true;
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return super.isDisabled(obj);
@@ -79,8 +79,8 @@ public class OrganizationUserChecker extends EmptyOnClickRowChecker {
 
 	@Override
 	protected String getRowCheckBox(
-		HttpServletRequest request, boolean checked, boolean disabled,
-		String name, String value, String checkBoxRowIds,
+		HttpServletRequest httpServletRequest, boolean checked,
+		boolean disabled, String name, String value, String checkBoxRowIds,
 		String checkBoxAllRowIds, String checkBoxPostOnClick) {
 
 		try {
@@ -90,8 +90,8 @@ public class OrganizationUserChecker extends EmptyOnClickRowChecker {
 
 			name += Organization.class.getSimpleName();
 		}
-		catch (Exception e1) {
-			if (e1 instanceof NoSuchOrganizationException) {
+		catch (Exception exception1) {
+			if (exception1 instanceof NoSuchOrganizationException) {
 				try {
 					long userId = GetterUtil.getLong(value);
 
@@ -99,14 +99,14 @@ public class OrganizationUserChecker extends EmptyOnClickRowChecker {
 
 					name += User.class.getSimpleName();
 				}
-				catch (Exception e2) {
+				catch (Exception exception2) {
 					return StringPool.BLANK;
 				}
 			}
 		}
 
 		return super.getRowCheckBox(
-			request, checked, disabled, name, value, checkBoxRowIds,
+			httpServletRequest, checked, disabled, name, value, checkBoxRowIds,
 			checkBoxAllRowIds, checkBoxPostOnClick);
 	}
 

@@ -14,8 +14,6 @@
 
 package com.liferay.friendly.url.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,14 +25,18 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class FriendlyURLEntryMappingSoap implements Serializable {
+
 	public static FriendlyURLEntryMappingSoap toSoapModel(
 		FriendlyURLEntryMapping model) {
-		FriendlyURLEntryMappingSoap soapModel = new FriendlyURLEntryMappingSoap();
+
+		FriendlyURLEntryMappingSoap soapModel =
+			new FriendlyURLEntryMappingSoap();
 
 		soapModel.setMvccVersion(model.getMvccVersion());
-		soapModel.setFriendlyURLEntryMappingId(model.getFriendlyURLEntryMappingId());
+		soapModel.setFriendlyURLEntryMappingId(
+			model.getFriendlyURLEntryMappingId());
+		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setClassNameId(model.getClassNameId());
 		soapModel.setClassPK(model.getClassPK());
 		soapModel.setFriendlyURLEntryId(model.getFriendlyURLEntryId());
@@ -44,7 +46,9 @@ public class FriendlyURLEntryMappingSoap implements Serializable {
 
 	public static FriendlyURLEntryMappingSoap[] toSoapModels(
 		FriendlyURLEntryMapping[] models) {
-		FriendlyURLEntryMappingSoap[] soapModels = new FriendlyURLEntryMappingSoap[models.length];
+
+		FriendlyURLEntryMappingSoap[] soapModels =
+			new FriendlyURLEntryMappingSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -55,10 +59,13 @@ public class FriendlyURLEntryMappingSoap implements Serializable {
 
 	public static FriendlyURLEntryMappingSoap[][] toSoapModels(
 		FriendlyURLEntryMapping[][] models) {
+
 		FriendlyURLEntryMappingSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new FriendlyURLEntryMappingSoap[models.length][models[0].length];
+			soapModels =
+				new FriendlyURLEntryMappingSoap
+					[models.length][models[0].length];
 		}
 		else {
 			soapModels = new FriendlyURLEntryMappingSoap[0][0];
@@ -73,13 +80,16 @@ public class FriendlyURLEntryMappingSoap implements Serializable {
 
 	public static FriendlyURLEntryMappingSoap[] toSoapModels(
 		List<FriendlyURLEntryMapping> models) {
-		List<FriendlyURLEntryMappingSoap> soapModels = new ArrayList<FriendlyURLEntryMappingSoap>(models.size());
+
+		List<FriendlyURLEntryMappingSoap> soapModels =
+			new ArrayList<FriendlyURLEntryMappingSoap>(models.size());
 
 		for (FriendlyURLEntryMapping model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new FriendlyURLEntryMappingSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new FriendlyURLEntryMappingSoap[soapModels.size()]);
 	}
 
 	public FriendlyURLEntryMappingSoap() {
@@ -109,6 +119,14 @@ public class FriendlyURLEntryMappingSoap implements Serializable {
 		_friendlyURLEntryMappingId = friendlyURLEntryMappingId;
 	}
 
+	public long getCompanyId() {
+		return _companyId;
+	}
+
+	public void setCompanyId(long companyId) {
+		_companyId = companyId;
+	}
+
 	public long getClassNameId() {
 		return _classNameId;
 	}
@@ -135,7 +153,9 @@ public class FriendlyURLEntryMappingSoap implements Serializable {
 
 	private long _mvccVersion;
 	private long _friendlyURLEntryMappingId;
+	private long _companyId;
 	private long _classNameId;
 	private long _classPK;
 	private long _friendlyURLEntryId;
+
 }

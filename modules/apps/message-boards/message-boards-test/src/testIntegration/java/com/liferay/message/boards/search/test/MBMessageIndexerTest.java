@@ -30,16 +30,19 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.Sync;
+import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.log.CaptureAppender;
 import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.InputStream;
 
@@ -60,6 +63,7 @@ import org.junit.runner.RunWith;
  * @author Sergio González
  */
 @RunWith(Arquillian.class)
+@Sync
 public class MBMessageIndexerTest {
 
 	@ClassRule
@@ -67,7 +71,8 @@ public class MBMessageIndexerTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE,
+			SynchronousDestinationTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -82,9 +87,7 @@ public class MBMessageIndexerTest {
 	public void testNotReindexGroupNotContainingMBMessages() throws Exception {
 		try (CaptureAppender captureAppender =
 				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.message.boards.internal.search." +
-						"MBMessageIndexer",
-					Level.DEBUG)) {
+					_LOG_NAME, Level.DEBUG)) {
 
 			GroupTestUtil.addGroup(
 				_company1.getCompanyId(), _user1.getUserId(),
@@ -105,9 +108,7 @@ public class MBMessageIndexerTest {
 	public void testReindexGroupContainingMBDiscussion() throws Exception {
 		try (CaptureAppender captureAppender =
 				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.message.boards.internal.search." +
-						"MBMessageIndexer",
-					Level.DEBUG)) {
+					_LOG_NAME, Level.DEBUG)) {
 
 			Group group = GroupTestUtil.addGroup(
 				_company1.getCompanyId(), _user1.getUserId(),
@@ -129,7 +130,7 @@ public class MBMessageIndexerTest {
 				captureAppender.getLoggingEvents();
 
 			Assert.assertEquals(
-				loggingEvents.toString(), 1, loggingEvents.size());
+				loggingEvents.toString(), 2, loggingEvents.size());
 
 			LoggingEvent loggingEvent = loggingEvents.get(0);
 
@@ -146,9 +147,7 @@ public class MBMessageIndexerTest {
 	public void testReindexGroupContainingMBMessage() throws Exception {
 		try (CaptureAppender captureAppender =
 				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.message.boards.internal.search." +
-						"MBMessageIndexer",
-					Level.DEBUG)) {
+					_LOG_NAME, Level.DEBUG)) {
 
 			Group group = GroupTestUtil.addGroup(
 				_company1.getCompanyId(), _user1.getUserId(),
@@ -190,6 +189,13 @@ public class MBMessageIndexerTest {
 				loggingEvent.getMessage());
 		}
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	private static final String _LOG_NAME =
+		"com.liferay.message.boards.internal.search.spi.model.index." +
+			"contributor.MBMessageModelIndexerWriterContributor";
 
 	@DeleteAfterTestRun
 	private Company _company1;

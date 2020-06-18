@@ -30,41 +30,45 @@
 	<aui:input name="redirect" type="hidden" value="<%= configurationRenderURL %>" />
 
 	<liferay-frontend:edit-form-body>
-		<aui:row>
-			<aui:col width="<%= 50 %>">
+		<clay:row>
+			<clay:col
+				md="6"
+			>
 				<liferay-frontend:fieldset-group>
 					<liferay-frontend:fieldset
 						cssClass="ml-3"
 					>
-						<aui:row>
+						<clay:row>
 							<aui:select name="preferences--sites--" value="<%= sitesDirectoryDisplayContext.getSites() %>">
 								<aui:option label="<%= SitesDirectoryTag.SITES_TOP_LEVEL %>" />
 								<aui:option label="<%= SitesDirectoryTag.SITES_PARENT_LEVEL %>" />
 								<aui:option label="<%= SitesDirectoryTag.SITES_SIBLINGS %>" />
 								<aui:option label="<%= SitesDirectoryTag.SITES_CHILDREN %>" />
 							</aui:select>
-						</aui:row>
+						</clay:row>
 
-						<aui:row>
+						<clay:row>
 							<aui:select name="preferences--displayStyle--" value="<%= sitesDirectoryDisplayContext.getDisplayStyle() %>">
 								<aui:option label="icon" />
 								<aui:option label="descriptive" />
 								<aui:option label="list" />
 								<aui:option label="list-hierarchy" />
 							</aui:select>
-						</aui:row>
+						</clay:row>
 					</liferay-frontend:fieldset>
 				</liferay-frontend:fieldset-group>
-			</aui:col>
+			</clay:col>
 
-			<aui:col width="<%= 50 %>">
+			<clay:col
+				md="6"
+			>
 				<liferay-portlet:preview
 					portletName="<%= portletResource %>"
 					queryString="struts_action=/sites_directory/view"
 					showBorders="<%= true %>"
 				/>
-			</aui:col>
-		</aui:row>
+			</clay:col>
+		</clay:row>
 	</liferay-frontend:edit-form-body>
 
 	<liferay-frontend:edit-form-footer>
@@ -75,26 +79,30 @@
 </liferay-frontend:edit-form>
 
 <aui:script sandbox="<%= true %>">
-	var form = $('#<portlet:namespace />fm');
+	function refreshPreview(displayStyle, sites) {
+		var data = Liferay.Util.ns('_<%= HtmlUtil.escapeJS(portletResource) %>_', {
+			displayStyle: displayStyle,
+			sites: sites,
+		});
 
-	var selectDisplayStyle = form.fm('displayStyle');
-	var selectSites = form.fm('sites');
+		Liferay.Portlet.refresh(
+			'#p_p_id_<%= HtmlUtil.escapeJS(portletResource) %>_',
+			data
+		);
+	}
 
-	var curPortletBoundaryId = '#p_p_id_<%= HtmlUtil.escapeJS(portletResource) %>_';
+	var form = document.<portlet:namespace />fm;
 
-	form.on(
-		'change',
-		'select',
-		function() {
-			var data = Liferay.Util.ns(
-				'_<%= HtmlUtil.escapeJS(portletResource) %>_',
-				{
-					displayStyle: selectDisplayStyle.val(),
-					sites: selectSites.val()
-				}
-			);
+	var displayStyleSelect = Liferay.Util.getFormElement(form, 'displayStyle');
+	var sitesSelect = Liferay.Util.getFormElement(form, 'sites');
 
-			Liferay.Portlet.refresh(curPortletBoundaryId, data);
-		}
-	);
+	if (displayStyleSelect && sitesSelect) {
+		form.addEventListener('change', function () {
+			refreshPreview(displayStyleSelect.value, sitesSelect.value);
+		});
+
+		form.addEventListener('select', function () {
+			refreshPreview(displayStyleSelect.value, sitesSelect.value);
+		});
+	}
 </aui:script>

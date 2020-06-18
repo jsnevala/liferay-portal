@@ -67,17 +67,19 @@ public class EmailNotificationSender implements NotificationSender {
 				notificationRecipient.getName());
 
 			String subject = NotificationTemplateRenderer.render(
-				notificationTemplateContext, NotificationField.SUBJECT);
+				notificationTemplateContext, NotificationField.SUBJECT,
+				NotificationTemplateRenderer.MODE_PLAIN);
 			String body = NotificationTemplateRenderer.render(
-				notificationTemplateContext, NotificationField.BODY);
+				notificationTemplateContext, NotificationField.BODY,
+				NotificationTemplateRenderer.MODE_HTML);
 
 			sendNotification(
 				notificationTemplateContext.getFromAddress(),
 				notificationTemplateContext.getFromName(),
 				notificationRecipient, subject, body);
 		}
-		catch (Exception e) {
-			throw new NotificationSenderException(e);
+		catch (Exception exception) {
+			throw new NotificationSenderException(exception);
 		}
 	}
 
@@ -104,9 +106,9 @@ public class EmailNotificationSender implements NotificationSender {
 
 			_mailService.sendEmail(mailMessage);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new NotificationSenderException(
-				"Unable to send mail message", e);
+				"Unable to send mail message", exception);
 		}
 	}
 

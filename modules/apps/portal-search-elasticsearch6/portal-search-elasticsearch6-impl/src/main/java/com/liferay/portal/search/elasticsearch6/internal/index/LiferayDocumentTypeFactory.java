@@ -26,16 +26,14 @@ import com.liferay.portal.search.elasticsearch6.internal.util.LogUtil;
 import com.liferay.portal.search.elasticsearch6.internal.util.ResourceUtil;
 import com.liferay.portal.search.elasticsearch6.settings.TypeMappingsHelper;
 
-import java.io.IOException;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
@@ -68,14 +66,9 @@ public class LiferayDocumentTypeFactory implements TypeMappingsHelper {
 		putMappingRequestBuilder.setType(
 			LiferayTypeMappingsConstants.LIFERAY_DOCUMENT_TYPE);
 
-		PutMappingResponse putMappingResponse = putMappingRequestBuilder.get();
+		ActionResponse actionResponse = putMappingRequestBuilder.get();
 
-		try {
-			LogUtil.logActionResponse(_log, putMappingResponse);
-		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
-		}
+		LogUtil.logActionResponse(_log, actionResponse);
 	}
 
 	public void createLiferayDocumentTypeMappings(
@@ -115,16 +108,40 @@ public class LiferayDocumentTypeFactory implements TypeMappingsHelper {
 			LiferayTypeMappingsConstants.
 				LIFERAY_DOCUMENT_TYPE_MAPPING_FILE_NAME);
 
+		JSONObject defaultJSONObject = createJSONObject(
+			requiredDefaultMappings);
+
+		String name = StringUtil.replace(
+			LiferayTypeMappingsConstants.
+				LIFERAY_DOCUMENT_TYPE_MAPPING_FILE_NAME,
+			".json", "-optional-defaults.json");
+
+		String optionalDefaultTypeMappings = ResourceUtil.getResourceAsString(
+			getClass(), name);
+
+		JSONObject optionalJSONObject = createJSONObject(
+			optionalDefaultTypeMappings);
+
+		JSONObject liferayDocumentTypeJSONObject =
+			defaultJSONObject.getJSONObject(
+				LiferayTypeMappingsConstants.LIFERAY_DOCUMENT_TYPE);
+
+		liferayDocumentTypeJSONObject.put(
+			"dynamic_templates",
+			merge(
+				liferayDocumentTypeJSONObject.getJSONArray("dynamic_templates"),
+				optionalJSONObject.getJSONArray("dynamic_templates")));
+
 		createLiferayDocumentTypeMappings(
-			createIndexRequestBuilder, requiredDefaultMappings);
+			createIndexRequestBuilder, defaultJSONObject.toString());
 	}
 
 	protected JSONObject createJSONObject(String mappings) {
 		try {
 			return _jsonFactory.createJSONObject(mappings);
 		}
-		catch (JSONException jsone) {
-			throw new RuntimeException(jsone);
+		catch (JSONException jsonException) {
+			throw new RuntimeException(jsonException);
 		}
 	}
 

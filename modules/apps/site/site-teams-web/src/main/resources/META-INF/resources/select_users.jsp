@@ -17,22 +17,11 @@
 <%@ include file="/init.jsp" %>
 
 <%
-SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayContext(renderRequest, renderResponse, request);
+SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayContext(request, renderRequest, renderResponse);
 %>
 
 <clay:management-toolbar
-	clearResultsURL="<%= selectUsersDisplayContext.getClearResultsURL() %>"
-	componentId="selectUsersWebManagementToolbar"
-	disabled="<%= selectUsersDisplayContext.isDisabledManagementBar() %>"
-	filterDropdownItems="<%= selectUsersDisplayContext.getFilterDropdownItems() %>"
-	itemsTotal="<%= selectUsersDisplayContext.getTotalItems() %>"
-	searchActionURL="<%= selectUsersDisplayContext.getSearchActionURL() %>"
-	searchContainerId="users"
-	searchFormName="searchFm"
-	showSearch="<%= selectUsersDisplayContext.isShowSearch() %>"
-	sortingOrder="<%= selectUsersDisplayContext.getOrderByType() %>"
-	sortingURL="<%= selectUsersDisplayContext.getSortingURL() %>"
-	viewTypeItems="<%= selectUsersDisplayContext.getViewTypeItems() %>"
+	displayContext="<%= new SelectUsersManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectUsersDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid-1280 portlet-site-teams-select-users" name="selectUserFm">
@@ -56,13 +45,9 @@ SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayCont
 					%>
 
 					<liferay-ui:search-container-column-text>
-						<liferay-frontend:user-vertical-card
-							cssClass="entry-display-style"
-							resultRow="<%= row %>"
-							rowChecker="<%= searchContainer.getRowChecker() %>"
-							subtitle="<%= user2.getScreenName() %>"
-							title="<%= user2.getFullName() %>"
-							userId="<%= user2.getUserId() %>"
+						<clay:user-card
+							userCard="<%= new SelectUserUserCard(user2, renderRequest, searchContainer.getRowChecker()) %>"
+							userColorClass='<%= "user-icon " + LexiconUtil.getUserColorCssClass(user2) %>'
 						/>
 					</liferay-ui:search-container-column-text>
 				</c:when>
@@ -109,15 +94,12 @@ SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayCont
 <aui:script use="liferay-search-container">
 	var searchContainer = Liferay.SearchContainer.get('<portlet:namespace />users');
 
-	searchContainer.on(
-		'rowToggled',
-		function(event) {
-			Liferay.Util.getOpener().Liferay.fire(
-				'<%= HtmlUtil.escapeJS(selectUsersDisplayContext.getEventName()) %>',
-				{
-					data: event.elements.allSelectedElements.getDOMNodes()
-				}
-			);
-		}
-	);
+	searchContainer.on('rowToggled', function (event) {
+		Liferay.Util.getOpener().Liferay.fire(
+			'<%= HtmlUtil.escapeJS(selectUsersDisplayContext.getEventName()) %>',
+			{
+				data: event.elements.allSelectedElements.getDOMNodes(),
+			}
+		);
+	});
 </aui:script>

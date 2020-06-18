@@ -31,10 +31,12 @@ page import="com.liferay.asset.kernel.exception.DuplicateTagException" %><%@
 page import="com.liferay.asset.kernel.exception.NoSuchTagException" %><%@
 page import="com.liferay.asset.kernel.model.AssetTag" %><%@
 page import="com.liferay.asset.tags.admin.web.internal.display.context.AssetTagsDisplayContext" %><%@
+page import="com.liferay.asset.tags.admin.web.internal.display.context.AssetTagsManagementToolbarDisplayContext" %><%@
 page import="com.liferay.asset.util.AssetHelper" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.dao.search.ResultRow" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
+page import="com.liferay.portal.kernel.model.ModelHintsUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
@@ -51,7 +53,7 @@ page import="com.liferay.portal.kernel.util.WebKeys" %>
 <portlet:defineObjects />
 
 <%
-AssetTagsDisplayContext assetTagsDisplayContext = new AssetTagsDisplayContext(renderRequest, renderResponse, request);
+AssetTagsDisplayContext assetTagsDisplayContext = new AssetTagsDisplayContext(request, renderRequest, renderResponse);
 %>
 
 <%@ include file="/init-ext.jsp" %>

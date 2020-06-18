@@ -47,7 +47,7 @@
 		</ul>
 	</c:if>
 
-	<c:if test="<%= searchDisplayContext.isQuerySuggestionsEnabled() && ArrayUtil.isNotEmpty(hits.getQuerySuggestions()) %>">
+	<c:if test="<%= searchDisplayContext.isQuerySuggestionEnabled() && ArrayUtil.isNotEmpty(hits.getQuerySuggestions()) %>">
 		<ul class="list-inline related-queries">
 			<li class="label label-default">
 				<liferay-ui:message key="related-queries" />:
@@ -92,12 +92,12 @@
 	</c:if>
 </div>
 
-<aui:script>
+<script>
 	function <portlet:namespace />searchKeywords(newKeywords) {
-		var form = AUI.$(document.<portlet:namespace />fm);
-
-		form.fm('keywords').val(newKeywords);
-
-		submitForm(form);
+		Liferay.Util.postForm(document.<portlet:namespace />fm, {
+			data: {
+				keywords: newKeywords,
+			},
+		});
 	}
-</aui:script>
+</script>

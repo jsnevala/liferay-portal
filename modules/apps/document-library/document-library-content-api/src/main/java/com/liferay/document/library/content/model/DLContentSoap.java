@@ -14,8 +14,6 @@
 
 package com.liferay.document.library.content.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.sql.Blob;
@@ -29,11 +27,13 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class DLContentSoap implements Serializable {
+
 	public static DLContentSoap toSoapModel(DLContent model) {
 		DLContentSoap soapModel = new DLContentSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setContentId(model.getContentId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -74,7 +74,8 @@ public class DLContentSoap implements Serializable {
 	}
 
 	public static DLContentSoap[] toSoapModels(List<DLContent> models) {
-		List<DLContentSoap> soapModels = new ArrayList<DLContentSoap>(models.size());
+		List<DLContentSoap> soapModels = new ArrayList<DLContentSoap>(
+			models.size());
 
 		for (DLContent model : models) {
 			soapModels.add(toSoapModel(model));
@@ -92,6 +93,22 @@ public class DLContentSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setContentId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public long getContentId() {
@@ -158,6 +175,8 @@ public class DLContentSoap implements Serializable {
 		_size = size;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _contentId;
 	private long _groupId;
 	private long _companyId;
@@ -166,4 +185,5 @@ public class DLContentSoap implements Serializable {
 	private String _version;
 	private Blob _data;
 	private long _size;
+
 }

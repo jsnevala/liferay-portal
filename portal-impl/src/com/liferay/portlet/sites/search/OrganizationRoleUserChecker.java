@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.membershippolicy.OrganizationMembershipPolicyUtil;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalServiceUtil;
 
@@ -50,8 +49,8 @@ public class OrganizationRoleUserChecker extends RowChecker {
 				user.getUserId(), _organization.getGroupId(),
 				_role.getRoleId());
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
 			return false;
 		}
@@ -63,12 +62,10 @@ public class OrganizationRoleUserChecker extends RowChecker {
 
 		try {
 			if (isChecked(user)) {
-				PermissionChecker permissionChecker =
-					PermissionThreadLocal.getPermissionChecker();
-
 				if (OrganizationMembershipPolicyUtil.isRoleProtected(
-						permissionChecker, user.getUserId(),
-						_organization.getOrganizationId(), _role.getRoleId()) ||
+						PermissionThreadLocal.getPermissionChecker(),
+						user.getUserId(), _organization.getOrganizationId(),
+						_role.getRoleId()) ||
 					OrganizationMembershipPolicyUtil.isRoleRequired(
 						user.getUserId(), _organization.getOrganizationId(),
 						_role.getRoleId())) {
@@ -85,8 +82,8 @@ public class OrganizationRoleUserChecker extends RowChecker {
 				}
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return super.isDisabled(obj);

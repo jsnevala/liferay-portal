@@ -24,7 +24,7 @@
 	</c:when>
 	<c:otherwise>
 		<div class="iframe-container">
-			<iframe alt="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.alt()) %>" border="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.border()) %>" bordercolor="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.bordercolor()) %>" frameborder="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.frameborder()) %>" height="<%= iFramePortletInstanceConfiguration.resizeAutomatically() ? StringPool.BLANK : HtmlUtil.escapeAttribute(iFrameDisplayContext.getHeight()) %>" hspace="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.hspace()) %>" id="<portlet:namespace />iframe" longdesc="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.longdesc()) %>" name="<portlet:namespace />iframe" onload="<%= iFramePortletInstanceConfiguration.dynamicUrlEnabled() ? renderResponse.getNamespace() + "monitorIframe();" : StringPool.BLANK %>" scrolling="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.scrolling()) %>" src="<%= HtmlUtil.escapeHREF(iFrameDisplayContext.getIframeSrc()) %>" title="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.title()) %>" vspace="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.vspace()) %>" width="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.width()) %>">
+			<iframe alt="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.alt()) %>" border="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.border()) %>" bordercolor="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.bordercolor()) %>" frameborder="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.frameborder()) %>" height="<%= iFramePortletInstanceConfiguration.resizeAutomatically() ? StringPool.BLANK : HtmlUtil.escapeAttribute(iFrameDisplayContext.getHeight()) %>" hspace="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.hspace()) %>" id="<portlet:namespace />iframe" longdesc="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.longdesc()) %>" name="<portlet:namespace />iframe" scrolling="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.scrolling()) %>" title="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.title()) %>" vspace="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.vspace()) %>" width="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.width()) %>">
 				<liferay-ui:message arguments="<%= HtmlUtil.escape(iFrameDisplayContext.getIframeSrc()) %>" key="your-browser-does-not-support-inline-frames-or-is-currently-configured-not-to-display-inline-frames.-content-can-be-viewed-at-actual-source-page-x" translateArguments="<%= false %>" />
 			</iframe>
 		</div>
@@ -36,35 +36,35 @@
 		Liferay.provide(
 			window,
 			'<portlet:namespace />init',
-			function() {
+			function () {
 				var A = AUI();
 
 				var hash = document.location.hash.replace('#', '');
 
-				// LPS-33951
-
-				if (!A.UA.gecko) {
-					hash = A.QueryString.unescape(hash);
-				}
-
 				var hashObj = A.QueryString.parse(hash);
 
-				hash = hashObj['<portlet:namespace />'];
+				hash = String(hashObj['<portlet:namespace />']);
 
-				if (hash) {
-					var src = '';
+				var iframe = A.one('#<portlet:namespace />iframe');
 
-					var baseSrc = '<%= HtmlUtil.escapeJS(iFrameDisplayContext.getIframeBaseSrc()) %>';
+				if (iframe) {
+					if (hash) {
+						var src = '';
 
-					if (!(/^https?\:\/\//.test(hash)) || !A.Lang.String.startsWith(hash, baseSrc)) {
-						src = A.QueryString.unescape(hash);
+						var baseSrc =
+							'<%= HtmlUtil.escapeJS(iFrameDisplayContext.getIframeBaseSrc()) %>';
+
+						if (
+							!/^https?\:\/\//.test(hash) ||
+							!A.Lang.String.startsWith(hash, baseSrc)
+						) {
+							src = A.QueryString.unescape(hash);
+						}
+
+						iframe.attr('src', baseSrc + src);
 					}
 
-					var iframe = A.one('#<portlet:namespace />iframe');
-
-					if (iframe) {
-						iframe.attr('src', src);
-					}
+					iframe.on('load', <portlet:namespace />monitorIframe);
 				}
 			},
 			['aui-base', 'querystring']
@@ -73,7 +73,7 @@
 		Liferay.provide(
 			window,
 			'<portlet:namespace />monitorIframe',
-			function() {
+			function () {
 				var A = AUI();
 
 				var url = null;
@@ -83,15 +83,19 @@
 
 					url = iframe.contentWindow.document.location.href;
 
-					iframe.contentWindow.Liferay.on('endNavigate', <portlet:namespace />monitorIframe);
+					iframe.contentWindow.Liferay.on(
+						'endNavigate',
+						<portlet:namespace />monitorIframe
+					);
 				}
 				catch (e) {
 					return true;
 				}
 
-				var baseSrc = '<%= HtmlUtil.escapeJS(iFrameDisplayContext.getIframeBaseSrc()) %>';
-				var iframeSrc = '<%= HtmlUtil.escapeJS(iFrameDisplayContext.getIframeSrc()) %>';
-
+				var baseSrc =
+					'<%= HtmlUtil.escapeJS(iFrameDisplayContext.getIframeBaseSrc()) %>';
+				var iframeSrc =
+					'<%= HtmlUtil.escapeJS(iFrameDisplayContext.getIframeSrc()) %>';
 				var hasBaseSrc = A.Lang.String.startsWith(url, baseSrc);
 
 				if (hasBaseSrc) {
@@ -99,7 +103,10 @@
 
 					<portlet:namespace />updateHash(url);
 				}
-				else if (!(url == iframeSrc || url == (iframeSrc + '/')) && !hasBaseSrc) {
+				else if (
+					!(url == iframeSrc || url == iframeSrc + '/') &&
+					!hasBaseSrc
+				) {
 					<portlet:namespace />updateHash(url);
 				}
 			},
@@ -109,7 +116,7 @@
 		Liferay.provide(
 			window,
 			'<portlet:namespace />updateHash',
-			function(url) {
+			function (url) {
 				var A = AUI();
 
 				var hash = document.location.hash.replace('#', '');
@@ -120,7 +127,9 @@
 
 				hash = A.QueryString.stringify(hashObj);
 
-				var maximize = A.one('#p_p_id<portlet:namespace /> .portlet-maximize-icon a');
+				var maximize = A.one(
+					'#p_p_id<portlet:namespace /> .portlet-maximize-icon a'
+				);
 
 				if (maximize) {
 					var maximizeUrl = maximize.attr('href');
@@ -140,9 +149,7 @@
 					restore.attr('href', restoreHREF + '#' + hash);
 				}
 
-				// LPS-33951
-
-				location.hash = A.QueryString.escape(hash);
+				location.hash = hash;
 			},
 			['aui-base', 'querystring']
 		);
@@ -155,30 +162,53 @@
 	var iframe = A.one('#<portlet:namespace />iframe');
 
 	if (iframe) {
-		iframe.plug(
-			A.Plugin.AutosizeIframe,
-			{
-				monitorHeight: <%= iFramePortletInstanceConfiguration.resizeAutomatically() %>
-			}
+		iframe.set(
+			'src',
+			'<%= HtmlUtil.escapeJS(iFrameDisplayContext.getIframeSrc()) %>'
 		);
 
-		iframe.on(
-			'load',
-			function() {
-				var height = A.Plugin.AutosizeIframe.getContentHeight(iframe);
+		iframe.plug(A.Plugin.AutosizeIframe, {
+			monitorHeight: <%= iFramePortletInstanceConfiguration.resizeAutomatically() %>,
+		});
 
-				if (height == null) {
-					height = '<%= HtmlUtil.escapeJS(iFramePortletInstanceConfiguration.heightNormal()) %>';
+		iframe.on('load', function () {
+			var height = A.Plugin.AutosizeIframe.getContentHeight(iframe);
 
-					if (themeDisplay.isStateMaximized()) {
-						height = '<%= HtmlUtil.escapeJS(iFramePortletInstanceConfiguration.heightMaximized()) %>';
-					}
+			if (height == null) {
+				height =
+					'<%= HtmlUtil.escapeJS(iFramePortletInstanceConfiguration.heightNormal()) %>';
 
-					iframe.setStyle('height', height);
-
-					iframe.autosizeiframe.set('monitorHeight', false);
+				if (themeDisplay.isStateMaximized()) {
+					height =
+						'<%= HtmlUtil.escapeJS(iFramePortletInstanceConfiguration.heightMaximized()) %>';
 				}
+
+				iframe.setStyle('height', height);
+
+				iframe.autosizeiframe.set('monitorHeight', false);
 			}
-		);
+		});
 	}
 </aui:script>
+
+<c:if test='<%= iFramePortletInstanceConfiguration.auth() && StringUtil.equals(iFramePortletInstanceConfiguration.authType(), "basic") %>'>
+	<aui:script>
+		var headers = new Headers();
+
+		headers.append(
+			'Authorization',
+			'Basic ' +
+				btoa(
+					'<%= iFramePortletInstanceConfiguration.basicUserName() %>:<%= iFramePortletInstanceConfiguration.basicPassword() %>'
+				)
+		);
+
+		Liferay.Util.fetch(
+			'<%= HtmlUtil.escapeJS(iFrameDisplayContext.getIframeSrc()) %>',
+			{
+				headers: headers,
+				mode: 'no-cors',
+			}
+		);
+	</aui:script>
+</c:if>

@@ -38,6 +38,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
@@ -46,6 +47,7 @@ import org.gradle.util.GUtil;
 /**
  * @author Andrea Di Giorgi
  */
+@CacheableTask
 public class ReplaceRegexTask extends DefaultTask {
 
 	@Input
@@ -58,7 +60,6 @@ public class ReplaceRegexTask extends DefaultTask {
 		return _preClosures;
 	}
 
-	@Input
 	public Object getReplacement() {
 		return _replacement;
 	}
@@ -90,10 +91,13 @@ public class ReplaceRegexTask extends DefaultTask {
 		return match(regex, Arrays.asList(files));
 	}
 
-	public ReplaceRegexTask pre(Closure<String>... preClosures) {
+	public ReplaceRegexTask pre(
+		@SuppressWarnings("unchecked") Closure<String>... preClosures) {
+
 		return pre(Arrays.asList(preClosures));
 	}
 
+	@SuppressWarnings("unchecked")
 	public ReplaceRegexTask pre(Iterable<Closure<String>> preClosures) {
 		GUtil.addToCollection(_preClosures, preClosures);
 
@@ -101,11 +105,13 @@ public class ReplaceRegexTask extends DefaultTask {
 	}
 
 	public ReplaceRegexTask replaceOnlyIf(
-		Closure<Boolean>... replaceOnlyIfClosures) {
+		@SuppressWarnings("unchecked")
+			Closure<Boolean>... replaceOnlyIfClosures) {
 
 		return replaceOnlyIf(Arrays.asList(replaceOnlyIfClosures));
 	}
 
+	@SuppressWarnings("unchecked")
 	public ReplaceRegexTask replaceOnlyIf(
 		Iterable<Closure<Boolean>> replaceOnlyIfClosures) {
 
@@ -136,7 +142,9 @@ public class ReplaceRegexTask extends DefaultTask {
 		_matches.putAll(matches);
 	}
 
-	public void setPre(Closure<String>... preClosures) {
+	public void setPre(
+		@SuppressWarnings("unchecked") Closure<String>... preClosures) {
+
 		setPre(Arrays.asList(preClosures));
 	}
 
@@ -150,7 +158,10 @@ public class ReplaceRegexTask extends DefaultTask {
 		_replacement = replacement;
 	}
 
-	public void setReplaceOnlyIf(Closure<Boolean>... replaceOnlyIfClosures) {
+	public void setReplaceOnlyIf(
+		@SuppressWarnings("unchecked")
+			Closure<Boolean>... replaceOnlyIfClosures) {
+
 		setReplaceOnlyIf(Arrays.asList(replaceOnlyIfClosures));
 	}
 
@@ -174,6 +185,7 @@ public class ReplaceRegexTask extends DefaultTask {
 		return replacementObj;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void _replaceRegex(
 			File file, Pattern pattern, Object replacementObj)
 		throws IOException {

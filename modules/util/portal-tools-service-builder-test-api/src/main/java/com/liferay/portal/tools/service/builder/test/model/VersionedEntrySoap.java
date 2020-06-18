@@ -14,8 +14,6 @@
 
 package com.liferay.portal.tools.service.builder.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,8 +25,8 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class VersionedEntrySoap implements Serializable {
+
 	public static VersionedEntrySoap toSoapModel(VersionedEntry model) {
 		VersionedEntrySoap soapModel = new VersionedEntrySoap();
 
@@ -50,11 +48,14 @@ public class VersionedEntrySoap implements Serializable {
 		return soapModels;
 	}
 
-	public static VersionedEntrySoap[][] toSoapModels(VersionedEntry[][] models) {
+	public static VersionedEntrySoap[][] toSoapModels(
+		VersionedEntry[][] models) {
+
 		VersionedEntrySoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new VersionedEntrySoap[models.length][models[0].length];
+			soapModels =
+				new VersionedEntrySoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new VersionedEntrySoap[0][0];
@@ -67,8 +68,11 @@ public class VersionedEntrySoap implements Serializable {
 		return soapModels;
 	}
 
-	public static VersionedEntrySoap[] toSoapModels(List<VersionedEntry> models) {
-		List<VersionedEntrySoap> soapModels = new ArrayList<VersionedEntrySoap>(models.size());
+	public static VersionedEntrySoap[] toSoapModels(
+		List<VersionedEntry> models) {
+
+		List<VersionedEntrySoap> soapModels = new ArrayList<VersionedEntrySoap>(
+			models.size());
 
 		for (VersionedEntry model : models) {
 			soapModels.add(toSoapModel(model));
@@ -124,4 +128,5 @@ public class VersionedEntrySoap implements Serializable {
 	private long _headId;
 	private long _versionedEntryId;
 	private long _groupId;
+
 }

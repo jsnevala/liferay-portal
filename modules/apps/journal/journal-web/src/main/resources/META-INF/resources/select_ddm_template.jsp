@@ -21,15 +21,7 @@ JournalSelectDDMTemplateDisplayContext journalSelectDDMTemplateDisplayContext = 
 %>
 
 <clay:management-toolbar
-	clearResultsURL="<%= journalSelectDDMTemplateDisplayContext.getClearResultsURL() %>"
-	disabled="<%= journalSelectDDMTemplateDisplayContext.isDisabledManagementBar() %>"
-	filterDropdownItems="<%= journalSelectDDMTemplateDisplayContext.getFilterItemsDropdownItems() %>"
-	itemsTotal="<%= journalSelectDDMTemplateDisplayContext.getTotalItems() %>"
-	searchActionURL="<%= journalSelectDDMTemplateDisplayContext.getSearchActionURL() %>"
-	searchFormName="searchForm"
-	selectable="<%= false %>"
-	sortingOrder="<%= journalSelectDDMTemplateDisplayContext.getOrderByType() %>"
-	sortingURL="<%= journalSelectDDMTemplateDisplayContext.getSortingURL() %>"
+	displayContext="<%= new JournalSelectDDMTemplateManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalSelectDDMTemplateDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid-1280" method="post" name="selectDDMTemplateFm">
@@ -41,57 +33,77 @@ JournalSelectDDMTemplateDisplayContext journalSelectDDMTemplateDisplayContext = 
 			keyProperty="templateId"
 			modelVar="ddmTemplate"
 		>
-			<liferay-ui:search-container-column-text
-				name="id"
-				value="<%= String.valueOf(ddmTemplate.getTemplateId()) %>"
-			/>
+			<c:choose>
+				<c:when test='<%= Objects.equals(journalSelectDDMTemplateDisplayContext.getDisplayStyle(), "icon") %>'>
 
-			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
-				name="name"
-			>
-				<c:choose>
-					<c:when test="<%= ddmTemplate.getTemplateId() != journalSelectDDMTemplateDisplayContext.getDDMTemplateId() %>">
+					<%
+					row.setCssClass("entry-card lfr-asset-item " + row.getCssClass());
+					%>
 
-						<%
-						Map<String, Object> data = new HashMap<>();
+					<liferay-ui:search-container-column-text>
+						<clay:vertical-card
+							verticalCard="<%= new JournalSelectDDMTemplateVerticalCard(ddmTemplate, renderRequest, journalSelectDDMTemplateDisplayContext) %>"
+						/>
+					</liferay-ui:search-container-column-text>
+				</c:when>
+				<c:otherwise>
+					<liferay-ui:search-container-column-text
+						cssClass="table-cell-content"
+						name="name"
+					>
+						<c:choose>
+							<c:when test="<%= ddmTemplate.getTemplateId() != journalSelectDDMTemplateDisplayContext.getDDMTemplateId() %>">
 
-						data.put("ddmtemplateid", ddmTemplate.getTemplateId());
-						data.put("ddmtemplatekey", ddmTemplate.getTemplateKey());
-						data.put("description", ddmTemplate.getDescription(locale));
-						data.put("imageurl", ddmTemplate.getTemplateImageURL(themeDisplay));
-						data.put("name", ddmTemplate.getName(locale));
-						%>
+								<%
+								Map<String, Object> data = HashMapBuilder.<String, Object>put(
+									"ddmtemplateid", ddmTemplate.getTemplateId()
+								).put(
+									"ddmtemplatekey", ddmTemplate.getTemplateKey()
+								).put(
+									"description", ddmTemplate.getDescription(locale)
+								).put(
+									"imageurl", ddmTemplate.getTemplateImageURL(themeDisplay)
+								).put(
+									"name", ddmTemplate.getName(locale)
+								).build();
+								%>
 
-						<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
-							<%= HtmlUtil.escape(ddmTemplate.getName(locale)) %>
-						</aui:a>
-					</c:when>
-					<c:otherwise>
-						<%= HtmlUtil.escape(ddmTemplate.getName(locale)) %>
-					</c:otherwise>
-				</c:choose>
-			</liferay-ui:search-container-column-text>
+								<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+									<%= HtmlUtil.escape(ddmTemplate.getName(locale)) %>
+								</aui:a>
+							</c:when>
+							<c:otherwise>
+								<%= HtmlUtil.escape(ddmTemplate.getName(locale)) %>
+							</c:otherwise>
+						</c:choose>
+					</liferay-ui:search-container-column-text>
 
-			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
-				name="description"
-				value="<%= HtmlUtil.escape(ddmTemplate.getDescription(locale)) %>"
-			/>
+					<liferay-ui:search-container-column-text
+						cssClass="table-cell-content"
+						name="description"
+						value="<%= HtmlUtil.escape(ddmTemplate.getDescription(locale)) %>"
+					/>
 
-			<liferay-ui:search-container-column-date
-				name="modified-date"
-				value="<%= ddmTemplate.getModifiedDate() %>"
-			/>
+					<liferay-ui:search-container-column-date
+						name="modified-date"
+						value="<%= ddmTemplate.getModifiedDate() %>"
+					/>
+				</c:otherwise>
+			</c:choose>
 		</liferay-ui:search-container-row>
 
 		<liferay-ui:search-iterator
-			displayStyle="list"
+			displayStyle="<%= journalSelectDDMTemplateDisplayContext.getDisplayStyle() %>"
 			markupView="lexicon"
 		/>
 	</liferay-ui:search-container>
 </aui:form>
 
 <aui:script>
-	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectDDMTemplateFm', '<%= HtmlUtil.escapeJS(journalSelectDDMTemplateDisplayContext.getEventName()) %>');
+	document.addEventListener('DOMContentLoaded', function () {
+		Liferay.Util.selectEntityHandler(
+			'#<portlet:namespace />selectDDMTemplateFm',
+			'<%= HtmlUtil.escapeJS(journalSelectDDMTemplateDisplayContext.getEventName()) %>'
+		);
+	});
 </aui:script>

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,13 +26,16 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class KaleoDefinitionVersionSoap implements Serializable {
+
 	public static KaleoDefinitionVersionSoap toSoapModel(
 		KaleoDefinitionVersion model) {
+
 		KaleoDefinitionVersionSoap soapModel = new KaleoDefinitionVersionSoap();
 
-		soapModel.setKaleoDefinitionVersionId(model.getKaleoDefinitionVersionId());
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setKaleoDefinitionVersionId(
+			model.getKaleoDefinitionVersionId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setUserId(model.getUserId());
@@ -44,6 +45,7 @@ public class KaleoDefinitionVersionSoap implements Serializable {
 		soapModel.setStatusDate(model.getStatusDate());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
+		soapModel.setKaleoDefinitionId(model.getKaleoDefinitionId());
 		soapModel.setName(model.getName());
 		soapModel.setTitle(model.getTitle());
 		soapModel.setDescription(model.getDescription());
@@ -57,7 +59,9 @@ public class KaleoDefinitionVersionSoap implements Serializable {
 
 	public static KaleoDefinitionVersionSoap[] toSoapModels(
 		KaleoDefinitionVersion[] models) {
-		KaleoDefinitionVersionSoap[] soapModels = new KaleoDefinitionVersionSoap[models.length];
+
+		KaleoDefinitionVersionSoap[] soapModels =
+			new KaleoDefinitionVersionSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -68,10 +72,12 @@ public class KaleoDefinitionVersionSoap implements Serializable {
 
 	public static KaleoDefinitionVersionSoap[][] toSoapModels(
 		KaleoDefinitionVersion[][] models) {
+
 		KaleoDefinitionVersionSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new KaleoDefinitionVersionSoap[models.length][models[0].length];
+			soapModels =
+				new KaleoDefinitionVersionSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new KaleoDefinitionVersionSoap[0][0];
@@ -86,13 +92,16 @@ public class KaleoDefinitionVersionSoap implements Serializable {
 
 	public static KaleoDefinitionVersionSoap[] toSoapModels(
 		List<KaleoDefinitionVersion> models) {
-		List<KaleoDefinitionVersionSoap> soapModels = new ArrayList<KaleoDefinitionVersionSoap>(models.size());
+
+		List<KaleoDefinitionVersionSoap> soapModels =
+			new ArrayList<KaleoDefinitionVersionSoap>(models.size());
 
 		for (KaleoDefinitionVersion model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new KaleoDefinitionVersionSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new KaleoDefinitionVersionSoap[soapModels.size()]);
 	}
 
 	public KaleoDefinitionVersionSoap() {
@@ -104,6 +113,14 @@ public class KaleoDefinitionVersionSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setKaleoDefinitionVersionId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getKaleoDefinitionVersionId() {
@@ -186,6 +203,14 @@ public class KaleoDefinitionVersionSoap implements Serializable {
 		_modifiedDate = modifiedDate;
 	}
 
+	public long getKaleoDefinitionId() {
+		return _kaleoDefinitionId;
+	}
+
+	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		_kaleoDefinitionId = kaleoDefinitionId;
+	}
+
 	public String getName() {
 		return _name;
 	}
@@ -242,6 +267,7 @@ public class KaleoDefinitionVersionSoap implements Serializable {
 		_status = status;
 	}
 
+	private long _mvccVersion;
 	private long _kaleoDefinitionVersionId;
 	private long _groupId;
 	private long _companyId;
@@ -252,6 +278,7 @@ public class KaleoDefinitionVersionSoap implements Serializable {
 	private Date _statusDate;
 	private Date _createDate;
 	private Date _modifiedDate;
+	private long _kaleoDefinitionId;
 	private String _name;
 	private String _title;
 	private String _description;
@@ -259,4 +286,5 @@ public class KaleoDefinitionVersionSoap implements Serializable {
 	private String _version;
 	private long _startKaleoNodeId;
 	private int _status;
+
 }

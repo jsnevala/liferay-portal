@@ -14,8 +14,6 @@
 
 package com.liferay.asset.list.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.list.model.AssetListEntryUsage;
 import com.liferay.asset.list.service.AssetListEntryUsageLocalServiceUtil;
 
@@ -31,13 +29,13 @@ import com.liferay.asset.list.service.AssetListEntryUsageLocalServiceUtil;
  * @see AssetListEntryUsage
  * @generated
  */
-@ProviderType
 public abstract class AssetListEntryUsageBaseImpl
 	extends AssetListEntryUsageModelImpl implements AssetListEntryUsage {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a asset list entry usage model instance should use the {@link AssetListEntryUsage} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a asset list entry usage model instance should use the <code>AssetListEntryUsage</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +46,5 @@ public abstract class AssetListEntryUsageBaseImpl
 			AssetListEntryUsageLocalServiceUtil.updateAssetListEntryUsage(this);
 		}
 	}
+
 }

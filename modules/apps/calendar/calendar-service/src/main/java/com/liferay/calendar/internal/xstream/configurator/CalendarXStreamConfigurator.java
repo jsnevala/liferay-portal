@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = XStreamConfigurator.class)
 public class CalendarXStreamConfigurator implements XStreamConfigurator {
@@ -42,7 +42,7 @@ public class CalendarXStreamConfigurator implements XStreamConfigurator {
 
 	@Override
 	public List<XStreamAlias> getXStreamAliases() {
-		return ListUtil.toList(_xStreamAliases);
+		return ListUtil.fromArray(_xStreamAliases);
 	}
 
 	@Override

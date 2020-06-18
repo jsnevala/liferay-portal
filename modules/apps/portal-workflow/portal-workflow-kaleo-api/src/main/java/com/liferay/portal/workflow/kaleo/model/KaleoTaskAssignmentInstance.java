@@ -14,46 +14,53 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the KaleoTaskAssignmentInstance service. Represents a row in the &quot;KaleoTaskAssignmentInstance&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see KaleoTaskAssignmentInstanceModel
- * @see com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceImpl
- * @see com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceImpl")
+@ImplementationClassName(
+	"com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceImpl"
+)
 @ProviderType
 public interface KaleoTaskAssignmentInstance
 	extends KaleoTaskAssignmentInstanceModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskAssignmentInstanceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<KaleoTaskAssignmentInstance, Long> KALEO_TASK_ASSIGNMENT_INSTANCE_ID_ACCESSOR =
-		new Accessor<KaleoTaskAssignmentInstance, Long>() {
-			@Override
-			public Long get(
-				KaleoTaskAssignmentInstance kaleoTaskAssignmentInstance) {
-				return kaleoTaskAssignmentInstance.getKaleoTaskAssignmentInstanceId();
-			}
+	public static final Accessor<KaleoTaskAssignmentInstance, Long>
+		KALEO_TASK_ASSIGNMENT_INSTANCE_ID_ACCESSOR =
+			new Accessor<KaleoTaskAssignmentInstance, Long>() {
 
-			@Override
-			public Class<Long> getAttributeClass() {
-				return Long.class;
-			}
+				@Override
+				public Long get(
+					KaleoTaskAssignmentInstance kaleoTaskAssignmentInstance) {
 
-			@Override
-			public Class<KaleoTaskAssignmentInstance> getTypeClass() {
-				return KaleoTaskAssignmentInstance.class;
-			}
-		};
+					return kaleoTaskAssignmentInstance.
+						getKaleoTaskAssignmentInstanceId();
+				}
+
+				@Override
+				public Class<Long> getAttributeClass() {
+					return Long.class;
+				}
+
+				@Override
+				public Class<KaleoTaskAssignmentInstance> getTypeClass() {
+					return KaleoTaskAssignmentInstance.class;
+				}
+
+			};
+
 }

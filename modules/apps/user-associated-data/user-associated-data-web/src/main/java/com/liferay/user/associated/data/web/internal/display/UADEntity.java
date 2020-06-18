@@ -26,10 +26,17 @@ import java.util.List;
  */
 public class UADEntity<T> {
 
-	public UADEntity(T entity, Serializable primaryKey, String editURL) {
+	public UADEntity(
+		T entity, Serializable primaryKey, String editURL, boolean inTrash,
+		Class<?> typeClass, boolean userOwned, String viewURL) {
+
 		_entity = entity;
 		_primaryKey = primaryKey;
 		_editURL = editURL;
+		_inTrash = inTrash;
+		_typeClass = typeClass;
+		_userOwned = userOwned;
+		_viewURL = viewURL;
 	}
 
 	public void addColumnEntry(String key, Object value) {
@@ -46,6 +53,16 @@ public class UADEntity<T> {
 		return _columnEntries;
 	}
 
+	public Object getColumnEntry(String key) {
+		for (KeyValuePair columnEntry : _columnEntries) {
+			if (key.equals(columnEntry.getKey())) {
+				return columnEntry.getValue();
+			}
+		}
+
+		return null;
+	}
+
 	public String getEditURL() {
 		return _editURL;
 	}
@@ -58,9 +75,29 @@ public class UADEntity<T> {
 		return _primaryKey;
 	}
 
+	public Class<?> getTypeClass() {
+		return _typeClass;
+	}
+
+	public String getViewURL() {
+		return _viewURL;
+	}
+
+	public boolean isInTrash() {
+		return _inTrash;
+	}
+
+	public boolean isUserOwned() {
+		return _userOwned;
+	}
+
 	private final List<KeyValuePair> _columnEntries = new ArrayList<>();
 	private final String _editURL;
 	private final T _entity;
+	private final boolean _inTrash;
 	private final Serializable _primaryKey;
+	private final Class<?> _typeClass;
+	private final boolean _userOwned;
+	private final String _viewURL;
 
 }

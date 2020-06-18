@@ -41,9 +41,10 @@ portletURL.setParameter("folderId", String.valueOf(folderId));
 EntriesChecker entriesChecker = new EntriesChecker(liferayPortletRequest, liferayPortletResponse);
 
 entriesChecker.setCssClass("entry-selector");
-entriesChecker.setRememberCheckBoxStateURLRegex("^(?!.*" + liferayPortletResponse.getNamespace() + "redirect).*(folderId=" + String.valueOf(folderId) + ")");
 
-EntriesMover entriesMover = new EntriesMover(dlTrashUtil.isTrashEnabled(scopeGroupId, repositoryId));
+entriesChecker.setRememberCheckBoxStateURLRegex(dlAdminDisplayContext.getRememberCheckBoxStateURLRegex());
+
+EntriesMover entriesMover = new EntriesMover(dlTrashHelper.isTrashEnabled(scopeGroupId, repositoryId));
 
 String[] entryColumns = dlPortletInstanceSettingsHelper.getEntryColumns();
 
@@ -86,7 +87,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 					<%
 					boolean draggable = false;
 
-					if (DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.UPDATE)) {
+					if (!BrowserSnifferUtil.isMobile(request) && (DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.UPDATE))) {
 						draggable = true;
 
 						if (dlSearchContainer.getRowMover() == null) {
@@ -98,11 +99,13 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 						dlSearchContainer.setRowChecker(entriesChecker);
 					}
 
-					Map<String, Object> rowData = new HashMap<String, Object>();
-
-					rowData.put("actions", String.join(StringPool.COMMA, dlAdminManagementToolbarDisplayContext.getAvailableActionDropdownItems(fileEntry)));
-					rowData.put("draggable", draggable);
-					rowData.put("title", fileEntry.getTitle());
+					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(dlAdminManagementToolbarDisplayContext.getAvailableActions(fileEntry))
+					).put(
+						"draggable", draggable
+					).put(
+						"title", fileEntry.getTitle()
+					).build();
 
 					row.setData(rowData);
 
@@ -125,36 +128,27 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 						latestFileVersion = fileEntry.getLatestFileVersion();
 					}
 
-					String thumbnailSrc = DLUtil.getThumbnailSrc(fileEntry, latestFileVersion, themeDisplay);
+					latestFileVersion = latestFileVersion.toEscapedModel();
+
+					String thumbnailSrc = DLURLHelperUtil.getThumbnailSrc(fileEntry, latestFileVersion, themeDisplay);
 					%>
 
 					<c:choose>
 						<c:when test='<%= displayStyle.equals("descriptive") %>'>
 							<c:choose>
-								<c:when test="<%= fileShortcut != null %>">
-									<liferay-ui:search-container-column-icon
-										icon="shortcut"
-										toggleRowChecker="<%= true %>"
-									/>
-								</c:when>
 								<c:when test="<%= Validator.isNotNull(thumbnailSrc) %>">
 									<liferay-ui:search-container-column-image
 										src="<%= thumbnailSrc %>"
 										toggleRowChecker="<%= true %>"
 									/>
 								</c:when>
-								<c:when test="<%= Validator.isNotNull(latestFileVersion.getExtension()) %>">
-									<liferay-ui:search-container-column-text>
-										<div class="sticker sticker-secondary <%= dlViewFileVersionDisplayContext.getCssClassFileMimeType() %>">
-											<%= StringUtil.shorten(StringUtil.upperCase(latestFileVersion.getExtension()), 3, StringPool.BLANK) %>
-										</div>
-									</liferay-ui:search-container-column-text>
-								</c:when>
 								<c:otherwise>
-									<liferay-ui:search-container-column-icon
-										icon="documents-and-media"
-										toggleRowChecker="<%= true %>"
-									/>
+									<liferay-ui:search-container-column-text>
+										<liferay-document-library:mime-type-sticker
+											cssClass="sticker-secondary"
+											fileVersion="<%= latestFileVersion %>"
+										/>
+									</liferay-ui:search-container-column-text>
 								</c:otherwise>
 							</c:choose>
 
@@ -198,7 +192,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 										<liferay-frontend:html-vertical-card
 											actionJsp="/document_library/file_entry_action.jsp"
 											actionJspServletContext="<%= application %>"
-											cssClass="entry-display-style"
+											cssClass="entry-display-style file-card"
 											html="<%= customThumbnailHtml %>"
 											resultRow="<%= row %>"
 											rowChecker="<%= entriesChecker %>"
@@ -212,7 +206,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 										<liferay-frontend:icon-vertical-card
 											actionJsp="/document_library/file_entry_action.jsp"
 											actionJspServletContext="<%= application %>"
-											cssClass="entry-display-style"
+											cssClass="entry-display-style file-card"
 											icon="documents-and-media"
 											resultRow="<%= row %>"
 											rowChecker="<%= entriesChecker %>"
@@ -226,7 +220,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 										<liferay-frontend:vertical-card
 											actionJsp="/document_library/file_entry_action.jsp"
 											actionJspServletContext="<%= application %>"
-											cssClass="entry-display-style"
+											cssClass="entry-display-style file-card"
 											imageUrl="<%= thumbnailSrc %>"
 											resultRow="<%= row %>"
 											rowChecker="<%= entriesChecker %>"
@@ -252,16 +246,31 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 
 								<liferay-ui:search-container-column-text
 									cssClass="table-cell-expand table-cell-minw-200 table-title"
-									name="title"
+									name="name"
 								>
+									<liferay-document-library:mime-type-sticker
+										cssClass="sticker-secondary"
+										fileVersion="<%= latestFileVersion %>"
+									/>
+
 									<aui:a href="<%= rowURL.toString() %>"><%= latestFileVersion.getTitle() %></aui:a>
 
 									<c:if test="<%= fileEntry.hasLock() || fileEntry.isCheckedOut() %>">
-										<aui:icon cssClass="inline-item inline-item-after" image="lock" markupView="lexicon" message="locked" />
+										<span class="inline-item inline-item-after state-icon">
+											<aui:icon image="lock" markupView="lexicon" message="locked" />
+										</span>
+									</c:if>
+
+									<c:if test="<%= dlViewFileVersionDisplayContext.isShared() %>">
+										<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title="<%= LanguageUtil.get(request, "shared") %>">
+											<aui:icon image="users" markupView="lexicon" message="shared" />
+										</span>
 									</c:if>
 
 									<c:if test="<%= fileShortcut != null %>">
-										<aui:icon cssClass="inline-item inline-item-after" image="shortcut" markupView="lexicon" message="shortcut" />
+										<span class="inline-item inline-item-after state-icon">
+											<aui:icon image="shortcut" markupView="lexicon" message="shortcut" />
+										</span>
 									</c:if>
 								</liferay-ui:search-container-column-text>
 							</c:if>
@@ -304,7 +313,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 								<liferay-ui:search-container-column-text
 									cssClass="table-cell-expand-smallest"
 									name="size"
-									value="<%= TextFormatter.formatStorageSize(latestFileVersion.getSize(), locale) %>"
+									value="<%= LanguageUtil.formatStorageSize(latestFileVersion.getSize(), locale) %>"
 								/>
 							</c:if>
 
@@ -357,7 +366,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 
 					boolean draggable = false;
 
-					if (DLFolderPermission.contains(permissionChecker, curFolder, ActionKeys.DELETE) || DLFolderPermission.contains(permissionChecker, curFolder, ActionKeys.UPDATE)) {
+					if (!BrowserSnifferUtil.isMobile(request) && (DLFolderPermission.contains(permissionChecker, curFolder, ActionKeys.DELETE) || DLFolderPermission.contains(permissionChecker, curFolder, ActionKeys.UPDATE))) {
 						draggable = true;
 
 						if (dlSearchContainer.getRowMover() == null) {
@@ -365,13 +374,17 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 						}
 					}
 
-					Map<String, Object> rowData = new HashMap<String, Object>();
-
-					rowData.put("actions", String.join(StringPool.COMMA, dlAdminManagementToolbarDisplayContext.getAvailableActionDropdownItems(curFolder)));
-					rowData.put("draggable", draggable);
-					rowData.put("folder", true);
-					rowData.put("folder-id", curFolder.getFolderId());
-					rowData.put("title", curFolder.getName());
+					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(dlAdminManagementToolbarDisplayContext.getAvailableActions(curFolder))
+					).put(
+						"draggable", draggable
+					).put(
+						"folder", true
+					).put(
+						"folder-id", curFolder.getFolderId()
+					).put(
+						"title", curFolder.getName()
+					).build();
 
 					row.setData(rowData);
 
@@ -438,10 +451,16 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 
 								<liferay-ui:search-container-column-text
 									cssClass="table-cell-expand table-cell-minw-200 table-title"
-									href="<%= rowURL %>"
-									name="title"
-									value="<%= curFolder.getName() %>"
-								/>
+									name="name"
+								>
+									<div class="sticker sticker-document sticker-secondary">
+										<clay:icon
+											symbol='<%= curFolder.isMountPoint() ? "repository" : "folder" %>'
+										/>
+									</div>
+
+									<aui:a href="<%= rowURL.toString() %>"><%= HtmlUtil.escape(curFolder.getName()) %></aui:a>
+								</liferay-ui:search-container-column-text>
 							</c:if>
 
 							<c:if test='<%= ArrayUtil.contains(entryColumns, "description") %>'>
@@ -524,7 +543,6 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 request.setAttribute("edit_file_entry.jsp-checkedOut", true);
 %>
 
-<liferay-util:include page="/document_library/version_details.jsp" servletContext="<%= application %>" />
-
-<%!
-%>
+<c:if test="<%= dlAdminDisplayContext.isVersioningStrategyOverridable() %>">
+	<liferay-util:include page="/document_library/version_details.jsp" servletContext="<%= application %>" />
+</c:if>

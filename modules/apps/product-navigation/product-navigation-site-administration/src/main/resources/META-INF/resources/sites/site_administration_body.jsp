@@ -23,17 +23,19 @@ SiteAdministrationPanelCategoryDisplayContext siteAdministrationPanelCategoryDis
 %>
 
 <c:if test="<%= siteAdministrationPanelCategoryDisplayContext.getGroup() != null %>">
-	<div class="row">
-		<div class="col-md-12">
+	<clay:row>
+		<clay:col
+			md="12"
+		>
 			<c:if test="<%= siteAdministrationPanelCategoryDisplayContext.isShowStagingInfo() %>">
 
 				<%
-				Map<String, Object> data = new HashMap<String, Object>();
-
-				data.put("qa-id", "staging");
+				Map<String, Object> data = HashMapBuilder.<String, Object>put(
+					"qa-id", "staging"
+				).build();
 				%>
 
-				<div class="pull-right staging-links">
+				<div class="float-right staging-links">
 					<span class="<%= Validator.isNull(siteAdministrationPanelCategoryDisplayContext.getStagingGroupURL()) ? "active" : StringPool.BLANK %>">
 						<aui:a data="<%= data %>" href="<%= siteAdministrationPanelCategoryDisplayContext.getStagingGroupURL() %>" label="staging" />
 					</span>
@@ -61,15 +63,15 @@ SiteAdministrationPanelCategoryDisplayContext siteAdministrationPanelCategoryDis
 						<aui:a data="<%= data %>" href="" id="remoteLiveLink" label="<%= siteAdministrationPanelCategoryDisplayContext.getLiveGroupLabel() %>" />
 
 						<aui:script use="aui-tooltip">
-							new A.Tooltip(
-								{
-									bodyContent: Liferay.Language.get('the-connection-to-the-remote-live-site-cannot-be-established-due-to-a-network-problem'),
-									position: 'right',
-									trigger: A.one('#<portlet:namespace />remoteLiveLink'),
-									visible: false,
-									zIndex: Liferay.zIndex.TOOLTIP
-								}
-							).render();
+							new A.Tooltip({
+								bodyContent: Liferay.Language.get(
+									'the-connection-to-the-remote-live-site-cannot-be-established-due-to-a-network-problem'
+								),
+								position: 'right',
+								trigger: A.one('#<portlet:namespace />remoteLiveLink'),
+								visible: false,
+								zIndex: Liferay.zIndex.TOOLTIP,
+							}).render();
 						</aui:script>
 
 					<%
@@ -82,8 +84,8 @@ SiteAdministrationPanelCategoryDisplayContext siteAdministrationPanelCategoryDis
 			<c:if test="<%= siteAdministrationPanelCategoryDisplayContext.isDisplaySiteLink() %>">
 				<aui:a cssClass="goto-link list-group-heading panel-header-link" href="<%= siteAdministrationPanelCategoryDisplayContext.getGroupURL() %>" label="go-to-site" />
 			</c:if>
-		</div>
-	</div>
+		</clay:col>
+	</clay:row>
 
 	<c:if test="<%= siteAdministrationPanelCategoryDisplayContext.isShowSiteAdministration() %>">
 		<liferay-application-list:panel-category-body

@@ -15,6 +15,8 @@
 package com.liferay.product.navigation.control.menu.web.internal;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.product.navigation.control.menu.BaseJSPProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
@@ -52,12 +54,24 @@ public class AddContentProductNavigationControlMenuEntry
 	}
 
 	@Override
-	public boolean isShow(HttpServletRequest request) throws PortalException {
-		if (!ProductNavigationControlMenuUtil.isEditEnabled(request)) {
+	public boolean isShow(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		if (!ProductNavigationControlMenuUtil.isEditEnabled(
+				httpServletRequest)) {
+
 			return false;
 		}
 
-		return super.isShow(request);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (isEmbeddedPersonalApplicationLayout(themeDisplay.getLayout())) {
+			return false;
+		}
+
+		return super.isShow(httpServletRequest);
 	}
 
 	@Override

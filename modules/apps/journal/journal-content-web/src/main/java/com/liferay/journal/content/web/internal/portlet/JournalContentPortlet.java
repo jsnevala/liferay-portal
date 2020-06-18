@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.PortletRequestModel;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -42,7 +43,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.trash.kernel.service.TrashEntryService;
+import com.liferay.trash.service.TrashEntryService;
 
 import java.io.IOException;
 
@@ -85,10 +86,9 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT,
+		"javax.portlet.portlet-mode=application/vnd.wap.xhtml+xml;view",
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.supports.mime-type=application/vnd.wap.xhtml+xml",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=guest,power-user,user"
 	},
 	service = Portlet.class
 )
@@ -119,8 +119,14 @@ public class JournalContentPortlet extends MVCPortlet {
 				JournalContentWebKeys.JOURNAL_CONTENT_DISPLAY_CONTEXT);
 
 		if (journalContentDisplayContext != null) {
-			article = journalContentDisplayContext.getArticle();
-			articleDisplay = journalContentDisplayContext.getArticleDisplay();
+			try {
+				article = journalContentDisplayContext.getArticle();
+				articleDisplay =
+					journalContentDisplayContext.getArticleDisplay();
+			}
+			catch (PortalException portalException) {
+				_log.error("Unable to get journal article", portalException);
+			}
 		}
 		else if ((articleGroupId > 0) && Validator.isNotNull(articleId)) {
 			String viewMode = ParamUtil.getString(renderRequest, "viewMode");
@@ -149,7 +155,7 @@ public class JournalContentPortlet extends MVCPortlet {
 					new PortletRequestModel(renderRequest, renderResponse),
 					themeDisplay);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				renderRequest.removeAttribute(WebKeys.JOURNAL_ARTICLE);
 			}
 		}
@@ -174,26 +180,17 @@ public class JournalContentPortlet extends MVCPortlet {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		renderRequest.setAttribute(
 			JournalWebKeys.JOURNAL_CONTENT, _journalContent);
 
 		try {
-			JournalContentDisplayContext journalContentDisplayContext =
-				JournalContentDisplayContext.create(
-					renderRequest, renderResponse,
-					themeDisplay.getPortletDisplay(), _CLASS_NAME_ID,
-					_ddmTemplateModelResourcePermission);
-
-			renderRequest.setAttribute(
-				JournalContentWebKeys.JOURNAL_CONTENT_DISPLAY_CONTEXT,
-				journalContentDisplayContext);
+			JournalContentDisplayContext.create(
+				renderRequest, renderResponse, _CLASS_NAME_ID,
+				_ddmTemplateModelResourcePermission);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 
@@ -240,32 +237,29 @@ public class JournalContentPortlet extends MVCPortlet {
 			}
 		}
 		else {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)resourceRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
-
 			resourceRequest.setAttribute(
 				JournalWebKeys.JOURNAL_CONTENT, _journalContent);
 
 			try {
-				JournalContentDisplayContext journalContentDisplayContext =
-					JournalContentDisplayContext.create(
-						resourceRequest, resourceResponse,
-						themeDisplay.getPortletDisplay(), _CLASS_NAME_ID,
-						_ddmTemplateModelResourcePermission);
-
-				resourceRequest.setAttribute(
-					JournalContentWebKeys.JOURNAL_CONTENT_DISPLAY_CONTEXT,
-					journalContentDisplayContext);
+				JournalContentDisplayContext.create(
+					resourceRequest, resourceResponse, _CLASS_NAME_ID,
+					_ddmTemplateModelResourcePermission);
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(pe, pe);
+					_log.debug(portalException, portalException);
 				}
 			}
 
 			super.serveResource(resourceRequest, resourceResponse);
 		}
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.journal.content.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
 	}
 
 	private static final long _CLASS_NAME_ID = PortalUtil.getClassNameId(

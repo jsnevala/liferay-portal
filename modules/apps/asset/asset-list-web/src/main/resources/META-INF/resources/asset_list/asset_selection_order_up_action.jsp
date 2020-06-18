@@ -25,13 +25,14 @@ AssetListEntryAssetEntryRel assetListEntryAssetEntryRel = (AssetListEntryAssetEn
 
 int position = assetListEntryAssetEntryRel.getPosition();
 
-boolean last = (position == (searchContainer.getTotal() - 1));
+boolean last = position == (searchContainer.getTotal() - 1);
 %>
 
 <c:if test="<%= (position > 0) && !last %>">
 	<portlet:actionURL name="/asset_list/move_asset_entry_selection" var="moveAssetEntrySelectionUpURL">
 		<portlet:param name="redirect" value="<%= currentURL %>" />
 		<portlet:param name="assetListEntryId" value="<%= String.valueOf(assetListEntryAssetEntryRel.getAssetListEntryId()) %>" />
+		<portlet:param name="segmentsEntryId" value="<%= String.valueOf(assetListEntryAssetEntryRel.getSegmentsEntryId()) %>" />
 		<portlet:param name="position" value="<%= String.valueOf(position) %>" />
 		<portlet:param name="newPosition" value="<%= String.valueOf(position - 1) %>" />
 	</portlet:actionURL>

@@ -15,9 +15,9 @@
 package com.liferay.source.formatter;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.source.formatter.util.FileUtil;
@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import org.junit.AfterClass;
@@ -105,18 +104,26 @@ public abstract class BaseSourceProcessorTestCase {
 			String fileName, String[] expectedMessages, Integer[] lineNumbers)
 		throws Exception {
 
-		String originalExtension = FilenameUtils.getExtension(fileName);
+		int pos = fileName.lastIndexOf(CharPool.PERIOD);
+
+		if (pos == -1) {
+			throw new IllegalArgumentException(
+				"The file name " + fileName +
+					" does not end with a valid extension");
+		}
+
+		String originalExtension = fileName.substring(pos + 1);
 
 		String extension = originalExtension;
 
-		fileName = FilenameUtils.getBaseName(fileName);
+		fileName = fileName.substring(0, pos);
 
 		if (originalExtension.startsWith("test")) {
 			extension = extension.substring(4);
 		}
 
-		String fullFileName =
-			_DIR_NAME + StringPool.SLASH + fileName + "." + originalExtension;
+		String fullFileName = StringBundler.concat(
+			_DIR_NAME, StringPool.SLASH, fileName, ".", originalExtension);
 
 		URL url = classLoader.getResource(fullFileName);
 
@@ -186,8 +193,8 @@ public abstract class BaseSourceProcessorTestCase {
 			String actualFormattedContent = FileUtil.read(
 				new File(modifiedFileNames.get(0)));
 
-			String expectedFileName =
-				_DIR_NAME + "/expected/" + fileName + "." + originalExtension;
+			String expectedFileName = StringBundler.concat(
+				_DIR_NAME, "/expected/", fileName, ".", originalExtension);
 
 			URL expectedURL = classLoader.getResource(expectedFileName);
 

@@ -14,10 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.asset.kernel.service.persistence.AssetEntryPersistence;
-
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceFinder;
@@ -25,14 +21,13 @@ import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstancePersi
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceRecordFinder;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceRecordPersistence;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceRecordVersionPersistence;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -51,19 +46,19 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
-import com.liferay.portal.kernel.service.persistence.WorkflowInstanceLinkPersistence;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
 import java.util.List;
 
 import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the base implementation for the ddm form instance record local service.
@@ -74,17 +69,17 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.dynamic.data.mapping.service.impl.DDMFormInstanceRecordLocalServiceImpl
- * @see com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalServiceUtil
  * @generated
  */
-@ProviderType
 public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements DDMFormInstanceRecordLocalService,
-		IdentifiableOSGiService {
+	extends BaseLocalServiceImpl
+	implements AopService, DDMFormInstanceRecordLocalService,
+			   IdentifiableOSGiService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalServiceUtil} to access the ddm form instance record local service.
+	 * Never modify or reference this class directly. Use <code>DDMFormInstanceRecordLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -97,6 +92,7 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	@Override
 	public DDMFormInstanceRecord addDDMFormInstanceRecord(
 		DDMFormInstanceRecord ddmFormInstanceRecord) {
+
 		ddmFormInstanceRecord.setNew(true);
 
 		return ddmFormInstanceRecordPersistence.update(ddmFormInstanceRecord);
@@ -112,6 +108,7 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	@Transactional(enabled = false)
 	public DDMFormInstanceRecord createDDMFormInstanceRecord(
 		long formInstanceRecordId) {
+
 		return ddmFormInstanceRecordPersistence.create(formInstanceRecordId);
 	}
 
@@ -125,7 +122,9 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public DDMFormInstanceRecord deleteDDMFormInstanceRecord(
-		long formInstanceRecordId) throws PortalException {
+			long formInstanceRecordId)
+		throws PortalException {
+
 		return ddmFormInstanceRecordPersistence.remove(formInstanceRecordId);
 	}
 
@@ -139,15 +138,21 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	@Override
 	public DDMFormInstanceRecord deleteDDMFormInstanceRecord(
 		DDMFormInstanceRecord ddmFormInstanceRecord) {
+
 		return ddmFormInstanceRecordPersistence.remove(ddmFormInstanceRecord);
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return ddmFormInstanceRecordPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(DDMFormInstanceRecord.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			DDMFormInstanceRecord.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -158,14 +163,15 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 */
 	@Override
 	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery) {
-		return ddmFormInstanceRecordPersistence.findWithDynamicQuery(dynamicQuery);
+		return ddmFormInstanceRecordPersistence.findWithDynamicQuery(
+			dynamicQuery);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceRecordModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceRecordModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -174,17 +180,18 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return ddmFormInstanceRecordPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return ddmFormInstanceRecordPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceRecordModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceRecordModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -194,10 +201,12 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return ddmFormInstanceRecordPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return ddmFormInstanceRecordPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -208,7 +217,8 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 */
 	@Override
 	public long dynamicQueryCount(DynamicQuery dynamicQuery) {
-		return ddmFormInstanceRecordPersistence.countWithDynamicQuery(dynamicQuery);
+		return ddmFormInstanceRecordPersistence.countWithDynamicQuery(
+			dynamicQuery);
 	}
 
 	/**
@@ -219,16 +229,19 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return ddmFormInstanceRecordPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return ddmFormInstanceRecordPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
 	public DDMFormInstanceRecord fetchDDMFormInstanceRecord(
 		long formInstanceRecordId) {
-		return ddmFormInstanceRecordPersistence.fetchByPrimaryKey(formInstanceRecordId);
+
+		return ddmFormInstanceRecordPersistence.fetchByPrimaryKey(
+			formInstanceRecordId);
 	}
 
 	/**
@@ -241,6 +254,7 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	@Override
 	public DDMFormInstanceRecord fetchDDMFormInstanceRecordByUuidAndGroupId(
 		String uuid, long groupId) {
+
 		return ddmFormInstanceRecordPersistence.fetchByUUID_G(uuid, groupId);
 	}
 
@@ -253,30 +267,41 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 */
 	@Override
 	public DDMFormInstanceRecord getDDMFormInstanceRecord(
-		long formInstanceRecordId) throws PortalException {
-		return ddmFormInstanceRecordPersistence.findByPrimaryKey(formInstanceRecordId);
+			long formInstanceRecordId)
+		throws PortalException {
+
+		return ddmFormInstanceRecordPersistence.findByPrimaryKey(
+			formInstanceRecordId);
 	}
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
-		actionableDynamicQuery.setBaseLocalService(ddmFormInstanceRecordLocalService);
+		actionableDynamicQuery.setBaseLocalService(
+			ddmFormInstanceRecordLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(DDMFormInstanceRecord.class);
 
-		actionableDynamicQuery.setPrimaryKeyPropertyName("formInstanceRecordId");
+		actionableDynamicQuery.setPrimaryKeyPropertyName(
+			"formInstanceRecordId");
 
 		return actionableDynamicQuery;
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(ddmFormInstanceRecordLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			ddmFormInstanceRecordLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
-		indexableActionableDynamicQuery.setModelClass(DDMFormInstanceRecord.class);
+		indexableActionableDynamicQuery.setModelClass(
+			DDMFormInstanceRecord.class);
 
 		indexableActionableDynamicQuery.setPrimaryKeyPropertyName(
 			"formInstanceRecordId");
@@ -286,65 +311,96 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
-		actionableDynamicQuery.setBaseLocalService(ddmFormInstanceRecordLocalService);
+
+		actionableDynamicQuery.setBaseLocalService(
+			ddmFormInstanceRecordLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(DDMFormInstanceRecord.class);
 
-		actionableDynamicQuery.setPrimaryKeyPropertyName("formInstanceRecordId");
+		actionableDynamicQuery.setPrimaryKeyPropertyName(
+			"formInstanceRecordId");
 	}
 
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
-		final ExportActionableDynamicQuery exportActionableDynamicQuery = new ExportActionableDynamicQuery() {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
 				@Override
 				public long performCount() throws PortalException {
-					ManifestSummary manifestSummary = portletDataContext.getManifestSummary();
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
 
 					StagedModelType stagedModelType = getStagedModelType();
 
 					long modelAdditionCount = super.performCount();
 
-					manifestSummary.addModelAdditionCount(stagedModelType,
-						modelAdditionCount);
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
 
-					long modelDeletionCount = ExportImportHelperUtil.getModelDeletionCount(portletDataContext,
-							stagedModelType);
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
 
-					manifestSummary.addModelDeletionCount(stagedModelType,
-						modelDeletionCount);
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
 
 					return modelAdditionCount;
 				}
+
 			};
 
 		initActionableDynamicQuery(exportActionableDynamicQuery);
 
-		exportActionableDynamicQuery.setAddCriteriaMethod(new ActionableDynamicQuery.AddCriteriaMethod() {
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
 				@Override
 				public void addCriteria(DynamicQuery dynamicQuery) {
-					portletDataContext.addDateRangeCriteria(dynamicQuery,
-						"modifiedDate");
+					portletDataContext.addDateRangeCriteria(
+						dynamicQuery, "modifiedDate");
 				}
+
 			});
 
-		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setGroupId(portletDataContext.getScopeGroupId());
+		exportActionableDynamicQuery.setGroupId(
+			portletDataContext.getScopeGroupId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<DDMFormInstanceRecord>() {
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod
+				<DDMFormInstanceRecord>() {
+
 				@Override
 				public void performAction(
-					DDMFormInstanceRecord ddmFormInstanceRecord)
+						DDMFormInstanceRecord ddmFormInstanceRecord)
 					throws PortalException {
-					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
-						ddmFormInstanceRecord);
+
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, ddmFormInstanceRecord);
 				}
+
 			});
-		exportActionableDynamicQuery.setStagedModelType(new StagedModelType(
-				PortalUtil.getClassNameId(DDMFormInstanceRecord.class.getName())));
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
+				PortalUtil.getClassNameId(
+					DDMFormInstanceRecord.class.getName())));
 
 		return exportActionableDynamicQuery;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return ddmFormInstanceRecordPersistence.create(
+			((Long)primaryKeyObj).longValue());
 	}
 
 	/**
@@ -353,12 +409,22 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
-		return ddmFormInstanceRecordLocalService.deleteDDMFormInstanceRecord((DDMFormInstanceRecord)persistedModel);
+
+		return ddmFormInstanceRecordLocalService.deleteDDMFormInstanceRecord(
+			(DDMFormInstanceRecord)persistedModel);
 	}
 
+	public BasePersistence<DDMFormInstanceRecord> getBasePersistence() {
+		return ddmFormInstanceRecordPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return ddmFormInstanceRecordPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -370,8 +436,10 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 * @return the matching ddm form instance records, or an empty list if no matches were found
 	 */
 	@Override
-	public List<DDMFormInstanceRecord> getDDMFormInstanceRecordsByUuidAndCompanyId(
-		String uuid, long companyId) {
+	public List<DDMFormInstanceRecord>
+		getDDMFormInstanceRecordsByUuidAndCompanyId(
+			String uuid, long companyId) {
+
 		return ddmFormInstanceRecordPersistence.findByUuid_C(uuid, companyId);
 	}
 
@@ -386,11 +454,13 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 * @return the range of matching ddm form instance records, or an empty list if no matches were found
 	 */
 	@Override
-	public List<DDMFormInstanceRecord> getDDMFormInstanceRecordsByUuidAndCompanyId(
-		String uuid, long companyId, int start, int end,
-		OrderByComparator<DDMFormInstanceRecord> orderByComparator) {
-		return ddmFormInstanceRecordPersistence.findByUuid_C(uuid, companyId,
-			start, end, orderByComparator);
+	public List<DDMFormInstanceRecord>
+		getDDMFormInstanceRecordsByUuidAndCompanyId(
+			String uuid, long companyId, int start, int end,
+			OrderByComparator<DDMFormInstanceRecord> orderByComparator) {
+
+		return ddmFormInstanceRecordPersistence.findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -403,7 +473,9 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 */
 	@Override
 	public DDMFormInstanceRecord getDDMFormInstanceRecordByUuidAndGroupId(
-		String uuid, long groupId) throws PortalException {
+			String uuid, long groupId)
+		throws PortalException {
+
 		return ddmFormInstanceRecordPersistence.findByUUID_G(uuid, groupId);
 	}
 
@@ -411,7 +483,7 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 * Returns a range of all the ddm form instance records.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceRecordModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceRecordModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of ddm form instance records
@@ -419,8 +491,9 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 * @return the range of ddm form instance records
 	 */
 	@Override
-	public List<DDMFormInstanceRecord> getDDMFormInstanceRecords(int start,
-		int end) {
+	public List<DDMFormInstanceRecord> getDDMFormInstanceRecords(
+		int start, int end) {
+
 		return ddmFormInstanceRecordPersistence.findAll(start, end);
 	}
 
@@ -444,301 +517,22 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	@Override
 	public DDMFormInstanceRecord updateDDMFormInstanceRecord(
 		DDMFormInstanceRecord ddmFormInstanceRecord) {
+
 		return ddmFormInstanceRecordPersistence.update(ddmFormInstanceRecord);
 	}
 
-	/**
-	 * Returns the ddm form instance record local service.
-	 *
-	 * @return the ddm form instance record local service
-	 */
-	public DDMFormInstanceRecordLocalService getDDMFormInstanceRecordLocalService() {
-		return ddmFormInstanceRecordLocalService;
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			DDMFormInstanceRecordLocalService.class,
+			IdentifiableOSGiService.class, PersistedModelLocalService.class
+		};
 	}
 
-	/**
-	 * Sets the ddm form instance record local service.
-	 *
-	 * @param ddmFormInstanceRecordLocalService the ddm form instance record local service
-	 */
-	public void setDDMFormInstanceRecordLocalService(
-		DDMFormInstanceRecordLocalService ddmFormInstanceRecordLocalService) {
-		this.ddmFormInstanceRecordLocalService = ddmFormInstanceRecordLocalService;
-	}
-
-	/**
-	 * Returns the ddm form instance record persistence.
-	 *
-	 * @return the ddm form instance record persistence
-	 */
-	public DDMFormInstanceRecordPersistence getDDMFormInstanceRecordPersistence() {
-		return ddmFormInstanceRecordPersistence;
-	}
-
-	/**
-	 * Sets the ddm form instance record persistence.
-	 *
-	 * @param ddmFormInstanceRecordPersistence the ddm form instance record persistence
-	 */
-	public void setDDMFormInstanceRecordPersistence(
-		DDMFormInstanceRecordPersistence ddmFormInstanceRecordPersistence) {
-		this.ddmFormInstanceRecordPersistence = ddmFormInstanceRecordPersistence;
-	}
-
-	/**
-	 * Returns the ddm form instance record finder.
-	 *
-	 * @return the ddm form instance record finder
-	 */
-	public DDMFormInstanceRecordFinder getDDMFormInstanceRecordFinder() {
-		return ddmFormInstanceRecordFinder;
-	}
-
-	/**
-	 * Sets the ddm form instance record finder.
-	 *
-	 * @param ddmFormInstanceRecordFinder the ddm form instance record finder
-	 */
-	public void setDDMFormInstanceRecordFinder(
-		DDMFormInstanceRecordFinder ddmFormInstanceRecordFinder) {
-		this.ddmFormInstanceRecordFinder = ddmFormInstanceRecordFinder;
-	}
-
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
-		return counterLocalService;
-	}
-
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
-		this.counterLocalService = counterLocalService;
-	}
-
-	/**
-	 * Returns the ddm form instance local service.
-	 *
-	 * @return the ddm form instance local service
-	 */
-	public com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService getDDMFormInstanceLocalService() {
-		return ddmFormInstanceLocalService;
-	}
-
-	/**
-	 * Sets the ddm form instance local service.
-	 *
-	 * @param ddmFormInstanceLocalService the ddm form instance local service
-	 */
-	public void setDDMFormInstanceLocalService(
-		com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService ddmFormInstanceLocalService) {
-		this.ddmFormInstanceLocalService = ddmFormInstanceLocalService;
-	}
-
-	/**
-	 * Returns the ddm form instance persistence.
-	 *
-	 * @return the ddm form instance persistence
-	 */
-	public DDMFormInstancePersistence getDDMFormInstancePersistence() {
-		return ddmFormInstancePersistence;
-	}
-
-	/**
-	 * Sets the ddm form instance persistence.
-	 *
-	 * @param ddmFormInstancePersistence the ddm form instance persistence
-	 */
-	public void setDDMFormInstancePersistence(
-		DDMFormInstancePersistence ddmFormInstancePersistence) {
-		this.ddmFormInstancePersistence = ddmFormInstancePersistence;
-	}
-
-	/**
-	 * Returns the ddm form instance finder.
-	 *
-	 * @return the ddm form instance finder
-	 */
-	public DDMFormInstanceFinder getDDMFormInstanceFinder() {
-		return ddmFormInstanceFinder;
-	}
-
-	/**
-	 * Sets the ddm form instance finder.
-	 *
-	 * @param ddmFormInstanceFinder the ddm form instance finder
-	 */
-	public void setDDMFormInstanceFinder(
-		DDMFormInstanceFinder ddmFormInstanceFinder) {
-		this.ddmFormInstanceFinder = ddmFormInstanceFinder;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService getUserLocalService() {
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	/**
-	 * Returns the workflow instance link local service.
-	 *
-	 * @return the workflow instance link local service
-	 */
-	public com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService getWorkflowInstanceLinkLocalService() {
-		return workflowInstanceLinkLocalService;
-	}
-
-	/**
-	 * Sets the workflow instance link local service.
-	 *
-	 * @param workflowInstanceLinkLocalService the workflow instance link local service
-	 */
-	public void setWorkflowInstanceLinkLocalService(
-		com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService workflowInstanceLinkLocalService) {
-		this.workflowInstanceLinkLocalService = workflowInstanceLinkLocalService;
-	}
-
-	/**
-	 * Returns the workflow instance link persistence.
-	 *
-	 * @return the workflow instance link persistence
-	 */
-	public WorkflowInstanceLinkPersistence getWorkflowInstanceLinkPersistence() {
-		return workflowInstanceLinkPersistence;
-	}
-
-	/**
-	 * Sets the workflow instance link persistence.
-	 *
-	 * @param workflowInstanceLinkPersistence the workflow instance link persistence
-	 */
-	public void setWorkflowInstanceLinkPersistence(
-		WorkflowInstanceLinkPersistence workflowInstanceLinkPersistence) {
-		this.workflowInstanceLinkPersistence = workflowInstanceLinkPersistence;
-	}
-
-	/**
-	 * Returns the asset entry local service.
-	 *
-	 * @return the asset entry local service
-	 */
-	public com.liferay.asset.kernel.service.AssetEntryLocalService getAssetEntryLocalService() {
-		return assetEntryLocalService;
-	}
-
-	/**
-	 * Sets the asset entry local service.
-	 *
-	 * @param assetEntryLocalService the asset entry local service
-	 */
-	public void setAssetEntryLocalService(
-		com.liferay.asset.kernel.service.AssetEntryLocalService assetEntryLocalService) {
-		this.assetEntryLocalService = assetEntryLocalService;
-	}
-
-	/**
-	 * Returns the asset entry persistence.
-	 *
-	 * @return the asset entry persistence
-	 */
-	public AssetEntryPersistence getAssetEntryPersistence() {
-		return assetEntryPersistence;
-	}
-
-	/**
-	 * Sets the asset entry persistence.
-	 *
-	 * @param assetEntryPersistence the asset entry persistence
-	 */
-	public void setAssetEntryPersistence(
-		AssetEntryPersistence assetEntryPersistence) {
-		this.assetEntryPersistence = assetEntryPersistence;
-	}
-
-	/**
-	 * Returns the ddm form instance record version local service.
-	 *
-	 * @return the ddm form instance record version local service
-	 */
-	public com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService getDDMFormInstanceRecordVersionLocalService() {
-		return ddmFormInstanceRecordVersionLocalService;
-	}
-
-	/**
-	 * Sets the ddm form instance record version local service.
-	 *
-	 * @param ddmFormInstanceRecordVersionLocalService the ddm form instance record version local service
-	 */
-	public void setDDMFormInstanceRecordVersionLocalService(
-		com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService ddmFormInstanceRecordVersionLocalService) {
-		this.ddmFormInstanceRecordVersionLocalService = ddmFormInstanceRecordVersionLocalService;
-	}
-
-	/**
-	 * Returns the ddm form instance record version persistence.
-	 *
-	 * @return the ddm form instance record version persistence
-	 */
-	public DDMFormInstanceRecordVersionPersistence getDDMFormInstanceRecordVersionPersistence() {
-		return ddmFormInstanceRecordVersionPersistence;
-	}
-
-	/**
-	 * Sets the ddm form instance record version persistence.
-	 *
-	 * @param ddmFormInstanceRecordVersionPersistence the ddm form instance record version persistence
-	 */
-	public void setDDMFormInstanceRecordVersionPersistence(
-		DDMFormInstanceRecordVersionPersistence ddmFormInstanceRecordVersionPersistence) {
-		this.ddmFormInstanceRecordVersionPersistence = ddmFormInstanceRecordVersionPersistence;
-	}
-
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord",
-			ddmFormInstanceRecordLocalService);
-	}
-
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord");
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		ddmFormInstanceRecordLocalService =
+			(DDMFormInstanceRecordLocalService)aopProxy;
 	}
 
 	/**
@@ -766,53 +560,57 @@ public abstract class DDMFormInstanceRecordLocalServiceBaseImpl
 	 */
 	protected void runSQL(String sql) {
 		try {
-			DataSource dataSource = ddmFormInstanceRecordPersistence.getDataSource();
+			DataSource dataSource =
+				ddmFormInstanceRecordPersistence.getDataSource();
 
 			DB db = DBManagerUtil.getDB();
 
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = DDMFormInstanceRecordLocalService.class)
-	protected DDMFormInstanceRecordLocalService ddmFormInstanceRecordLocalService;
-	@BeanReference(type = DDMFormInstanceRecordPersistence.class)
+	protected DDMFormInstanceRecordLocalService
+		ddmFormInstanceRecordLocalService;
+
+	@Reference
 	protected DDMFormInstanceRecordPersistence ddmFormInstanceRecordPersistence;
-	@BeanReference(type = DDMFormInstanceRecordFinder.class)
+
+	@Reference
 	protected DDMFormInstanceRecordFinder ddmFormInstanceRecordFinder;
-	@ServiceReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@BeanReference(type = com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService.class)
-	protected com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService ddmFormInstanceLocalService;
-	@BeanReference(type = DDMFormInstancePersistence.class)
+
+	@Reference
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@Reference
 	protected DDMFormInstancePersistence ddmFormInstancePersistence;
-	@BeanReference(type = DDMFormInstanceFinder.class)
+
+	@Reference
 	protected DDMFormInstanceFinder ddmFormInstanceFinder;
-	@ServiceReference(type = com.liferay.portal.kernel.service.UserLocalService.class)
-	protected com.liferay.portal.kernel.service.UserLocalService userLocalService;
-	@ServiceReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService.class)
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService workflowInstanceLinkLocalService;
-	@ServiceReference(type = WorkflowInstanceLinkPersistence.class)
-	protected WorkflowInstanceLinkPersistence workflowInstanceLinkPersistence;
-	@ServiceReference(type = com.liferay.asset.kernel.service.AssetEntryLocalService.class)
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService assetEntryLocalService;
-	@ServiceReference(type = AssetEntryPersistence.class)
-	protected AssetEntryPersistence assetEntryPersistence;
-	@BeanReference(type = com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService.class)
-	protected com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService ddmFormInstanceRecordVersionLocalService;
-	@BeanReference(type = DDMFormInstanceRecordVersionPersistence.class)
-	protected DDMFormInstanceRecordVersionPersistence ddmFormInstanceRecordVersionPersistence;
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.UserLocalService
+		userLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
+		workflowInstanceLinkLocalService;
+
+	@Reference
+	protected com.liferay.asset.kernel.service.AssetEntryLocalService
+		assetEntryLocalService;
+
+	@Reference
+	protected DDMFormInstanceRecordVersionPersistence
+		ddmFormInstanceRecordVersionPersistence;
+
 }

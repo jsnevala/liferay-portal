@@ -14,7 +14,6 @@
 
 package com.liferay.document.library.internal.verify;
 
-import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileVersion;
@@ -25,29 +24,23 @@ import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalServi
 import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
 import com.liferay.document.library.kernel.util.DLUtil;
-import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Criterion;
-import com.liferay.portal.kernel.dao.orm.Property;
-import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileVersion;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFolder;
@@ -61,18 +54,17 @@ import java.util.Objects;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
-import org.springframework.context.ApplicationContext;
-
 /**
- * @author Raymond Augé
- * @author Douglas Wong
- * @author Alexander Chow
+ * @author     Raymond Augé
+ * @author     Douglas Wong
+ * @author     Alexander Chow
+ * @deprecated As of Mueller (7.2.x), with no direct replacement
  */
 @Component(
-	immediate = true,
 	property = "verify.process.name=com.liferay.document.library.service",
 	service = VerifyProcess.class
 )
+@Deprecated
 public class DLServiceVerifyProcess extends VerifyProcess {
 
 	protected void checkDLFileEntryMetadata() throws Exception {
@@ -169,16 +161,16 @@ public class DLServiceVerifyProcess extends VerifyProcess {
 								dlFileEntry);
 						}
 					}
-					catch (PortalException pe) {
+					catch (PortalException portalException) {
 						if (_log.isWarnEnabled()) {
 							_log.warn(
 								"Unable to get file entry " +
 									dlFileVersion.getFileEntryId(),
-								pe);
+								portalException);
 						}
 					}
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
 						DLFileEntry dlFileEntry =
 							_dlFileEntryLocalService.fetchDLFileEntry(
@@ -189,7 +181,7 @@ public class DLServiceVerifyProcess extends VerifyProcess {
 								"Unable to find file entry associated with " +
 									"file version " +
 										dlFileVersion.getFileVersionId(),
-								e);
+								exception);
 						}
 						else {
 							StringBundler sb = new StringBundler(4);
@@ -199,7 +191,7 @@ public class DLServiceVerifyProcess extends VerifyProcess {
 							sb.append(" for file entry ");
 							sb.append(dlFileEntry.getName());
 
-							_log.warn(sb.toString(), e);
+							_log.warn(sb.toString(), exception);
 						}
 					}
 				}
@@ -247,15 +239,6 @@ public class DLServiceVerifyProcess extends VerifyProcess {
 		updateClassNameId();
 		updateFileEntryAssets();
 		updateFolderAssets();
-		updateStagedPortletNames();
-	}
-
-	@Reference(
-		target = "(org.springframework.context.service.name=com.liferay.dynamic.data.mapping.service)",
-		unbind = "-"
-	)
-	protected void setApplicationContext(
-		ApplicationContext applicationContext) {
 	}
 
 	@Reference(unbind = "-")
@@ -293,13 +276,8 @@ public class DLServiceVerifyProcess extends VerifyProcess {
 		_dlFolderLocalService = dlFolderLocalService;
 	}
 
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.document.library.service)(release.schema.version=1.0.2))",
+		target = "(&(release.bundle.symbolic.name=com.liferay.document.library.service)(&(release.schema.version>=3.0.0)(!(release.schema.version>=4.0.0))))",
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {
@@ -311,11 +289,11 @@ public class DLServiceVerifyProcess extends VerifyProcess {
 				"update DLFileEntry set classNameId = 0 where classNameId is " +
 					"null");
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Unable to fix file entries where class name ID is null",
-					e);
+					exception);
 			}
 		}
 	}
@@ -341,13 +319,13 @@ public class DLServiceVerifyProcess extends VerifyProcess {
 						dlFileEntry.getUserId(), fileEntry, fileVersion, null,
 						null, null);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							StringBundler.concat(
 								"Unable to update asset for file entry ",
 								dlFileEntry.getFileEntryId(), ": ",
-								e.getMessage()));
+								exception.getMessage()));
 					}
 				}
 			}
@@ -376,12 +354,13 @@ public class DLServiceVerifyProcess extends VerifyProcess {
 					_dlAppHelperLocalService.updateAsset(
 						dlFolder.getUserId(), folder, null, null, null);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							StringBundler.concat(
 								"Unable to update asset for folder ",
-								dlFolder.getFolderId(), ": ", e.getMessage()));
+								dlFolder.getFolderId(), ": ",
+								exception.getMessage()));
 					}
 				}
 			}
@@ -392,64 +371,19 @@ public class DLServiceVerifyProcess extends VerifyProcess {
 		}
 	}
 
-	protected void updateStagedPortletNames() throws PortalException {
-		ActionableDynamicQuery groupActionableDynamicQuery =
-			_groupLocalService.getActionableDynamicQuery();
-
-		groupActionableDynamicQuery.setAddCriteriaMethod(
-			dynamicQuery -> {
-				Property siteProperty = PropertyFactoryUtil.forName("site");
-
-				dynamicQuery.add(siteProperty.eq(Boolean.TRUE));
-			});
-		groupActionableDynamicQuery.setPerformActionMethod(
-			(ActionableDynamicQuery.PerformActionMethod<Group>)group -> {
-				UnicodeProperties typeSettingsProperties =
-					group.getTypeSettingsProperties();
-
-				if (typeSettingsProperties == null) {
-					return;
-				}
-
-				String propertyKey = _staging.getStagedPortletId(
-					DLPortletKeys.DOCUMENT_LIBRARY);
-
-				String propertyValue = typeSettingsProperties.getProperty(
-					propertyKey);
-
-				if (Validator.isNull(propertyValue)) {
-					return;
-				}
-
-				typeSettingsProperties.remove(propertyKey);
-
-				propertyKey = _staging.getStagedPortletId(
-					DLPortletKeys.DOCUMENT_LIBRARY_ADMIN);
-
-				typeSettingsProperties.put(propertyKey, propertyValue);
-
-				group.setTypeSettingsProperties(typeSettingsProperties);
-
-				_groupLocalService.updateGroup(group);
-			});
-
-		groupActionableDynamicQuery.performActions();
-	}
-
 	private static final String _MS_OFFICE_2010_TEXT_XML_UTF8 =
 		"text/xml; charset=\"utf-8\"";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DLServiceVerifyProcess.class);
 
+	@Reference
+	private DDMStructureLocalService _ddmStructureLocalService;
+
 	private DLAppHelperLocalService _dlAppHelperLocalService;
 	private DLFileEntryLocalService _dlFileEntryLocalService;
 	private DLFileEntryMetadataLocalService _dlFileEntryMetadataLocalService;
 	private DLFileVersionLocalService _dlFileVersionLocalService;
 	private DLFolderLocalService _dlFolderLocalService;
-	private GroupLocalService _groupLocalService;
-
-	@Reference
-	private Staging _staging;
 
 }

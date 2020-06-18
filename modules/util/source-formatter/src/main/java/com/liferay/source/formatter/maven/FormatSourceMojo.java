@@ -18,7 +18,6 @@ import com.liferay.source.formatter.SourceFormatter;
 import com.liferay.source.formatter.SourceFormatterArgs;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -43,15 +42,12 @@ public class FormatSourceMojo extends AbstractMojo {
 
 			sourceFormatter.format();
 
-			List<String> modifiedFileNames =
-				sourceFormatter.getModifiedFileNames();
-
 			pluginContext.put(
 				SourceFormatterArgs.OUTPUT_KEY_MODIFIED_FILES,
-				modifiedFileNames);
+				sourceFormatter.getModifiedFileNames());
 		}
-		catch (Exception e) {
-			throw new MojoExecutionException(e.getMessage(), e);
+		catch (Exception exception) {
+			throw new MojoExecutionException(exception.getMessage(), exception);
 		}
 	}
 

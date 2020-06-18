@@ -16,26 +16,35 @@ package com.liferay.portal.upgrade.internal.executor;
 
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.dao.db.DBContext;
 import com.liferay.portal.kernel.dao.db.DBProcessContext;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.model.ReleaseConstants;
 import com.liferay.portal.kernel.service.ReleaseLocalService;
+import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.output.stream.container.OutputStreamContainer;
-import com.liferay.portal.output.stream.container.OutputStreamContainerFactory;
-import com.liferay.portal.output.stream.container.OutputStreamContainerFactoryTracker;
+import com.liferay.portal.kernel.version.Version;
 import com.liferay.portal.upgrade.internal.graph.ReleaseGraphManager;
+import com.liferay.portal.upgrade.internal.index.updater.IndexUpdaterUtil;
 import com.liferay.portal.upgrade.internal.registry.UpgradeInfo;
 import com.liferay.portal.upgrade.internal.release.ReleasePublisher;
 
-import java.io.IOException;
 import java.io.OutputStream;
 
+import java.util.Dictionary;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Supplier;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -46,7 +55,39 @@ import org.osgi.service.component.annotations.Reference;
 public class UpgradeExecutor {
 
 	public void execute(
-		String bundleSymbolicName, List<UpgradeInfo> upgradeInfos) {
+		String bundleSymbolicName, List<UpgradeInfo> upgradeInfos,
+		String outputStreamContainerFactoryName) {
+
+		Bundle bundle = null;
+
+		for (UpgradeInfo upgradeInfo : upgradeInfos) {
+			UpgradeStep upgradeStep = upgradeInfo.getUpgradeStep();
+
+			Bundle currentBundle = FrameworkUtil.getBundle(
+				upgradeStep.getClass());
+
+			if (currentBundle == null) {
+				continue;
+			}
+
+			if (Objects.equals(
+					currentBundle.getSymbolicName(), bundleSymbolicName)) {
+
+				bundle = currentBundle;
+
+				break;
+			}
+		}
+
+		Version requiredVersion = null;
+
+		if (bundle != null) {
+			Dictionary<String, String> headers = bundle.getHeaders(
+				StringPool.BLANK);
+
+			requiredVersion = Version.parseVersion(
+				headers.get("Liferay-Require-SchemaVersion"));
+		}
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			upgradeInfos);
@@ -73,23 +114,33 @@ public class UpgradeExecutor {
 					schemaVersionString));
 		}
 
-		if (size == 0) {
-			return;
+		if (size != 0) {
+			release = executeUpgradeInfos(
+				bundleSymbolicName, upgradeInfosList.get(0),
+				outputStreamContainerFactoryName);
 		}
 
-		executeUpgradeInfos(bundleSymbolicName, upgradeInfosList.get(0));
+		if (release != null) {
+			String schemaVersion = release.getSchemaVersion();
+
+			if (Validator.isNull(schemaVersion) || (requiredVersion == null)) {
+				return;
+			}
+
+			if (requiredVersion.compareTo(Version.parseVersion(schemaVersion)) >
+					0) {
+
+				throw new IllegalStateException(
+					StringBundler.concat(
+						"Unable to upgrade ", bundleSymbolicName, " to ",
+						requiredVersion, " from ", schemaVersion));
+			}
+		}
 	}
 
-	public void executeUpgradeInfos(
-		String bundleSymbolicName, List<UpgradeInfo> upgradeInfos) {
-
-		OutputStreamContainerFactory outputStreamContainerFactory =
-			_outputStreamContainerFactoryTracker.
-				getOutputStreamContainerFactory();
-
-		OutputStreamContainer outputStreamContainer =
-			outputStreamContainerFactory.create(
-				"upgrade-" + bundleSymbolicName);
+	public Release executeUpgradeInfos(
+		String bundleSymbolicName, List<UpgradeInfo> upgradeInfos,
+		String outputStreamContainerFactoryName) {
 
 		Release release = _releaseLocalService.fetchRelease(bundleSymbolicName);
 
@@ -97,34 +148,41 @@ public class UpgradeExecutor {
 			_releasePublisher.publishInProgress(release);
 		}
 
-		try (OutputStream outputStream =
-				outputStreamContainer.getOutputStream()) {
+		UpgradeInfosRunnable upgradeInfosRunnable = new UpgradeInfosRunnable(
+			bundleSymbolicName, upgradeInfos,
+			_swappedLogExecutor::getOutputStream);
 
-			_outputStreamContainerFactoryTracker.runWithSwappedLog(
-				new UpgradeInfosRunnable(
-					bundleSymbolicName, upgradeInfos, outputStream),
-				outputStreamContainer.getDescription(), outputStream);
-		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
-		}
+		_swappedLogExecutor.execute(
+			bundleSymbolicName, upgradeInfosRunnable,
+			outputStreamContainerFactoryName);
 
 		release = _releaseLocalService.fetchRelease(bundleSymbolicName);
 
 		if (release != null) {
 			_releasePublisher.publish(release);
 		}
+
+		return release;
 	}
 
-	@Reference
-	private OutputStreamContainerFactoryTracker
-		_outputStreamContainerFactoryTracker;
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_bundleContext = bundleContext;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		UpgradeExecutor.class);
+
+	private BundleContext _bundleContext;
 
 	@Reference
 	private ReleaseLocalService _releaseLocalService;
 
 	@Reference
 	private ReleasePublisher _releasePublisher;
+
+	@Reference
+	private SwappedLogExecutor _swappedLogExecutor;
 
 	private class UpgradeInfosRunnable implements Runnable {
 
@@ -149,7 +207,7 @@ public class UpgradeExecutor {
 
 							@Override
 							public OutputStream getOutputStream() {
-								return _outputStream;
+								return _outputStreamSupplier.get();
 							}
 
 						});
@@ -162,10 +220,10 @@ public class UpgradeExecutor {
 					buildNumber = upgradeInfo.getBuildNumber();
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				state = ReleaseConstants.STATE_UPGRADE_FAILURE;
 
-				ReflectionUtil.throwException(e);
+				ReflectionUtil.throwException(exception);
 			}
 			finally {
 				Release release = _releaseLocalService.fetchRelease(
@@ -182,16 +240,58 @@ public class UpgradeExecutor {
 				}
 			}
 
+			Bundle bundle = IndexUpdaterUtil.getBundle(
+				_bundleContext, _bundleSymbolicName);
+
+			if (_requiresUpdateIndexes(bundle)) {
+				try {
+					IndexUpdaterUtil.updateIndexes(bundle);
+				}
+				catch (Exception exception) {
+					_log.error(exception, exception);
+				}
+			}
+
 			CacheRegistryUtil.clear();
 		}
 
 		private UpgradeInfosRunnable(
 			String bundleSymbolicName, List<UpgradeInfo> upgradeInfos,
-			OutputStream outputStream) {
+			Supplier<OutputStream> outputStreamSupplier) {
 
 			_bundleSymbolicName = bundleSymbolicName;
 			_upgradeInfos = upgradeInfos;
-			_outputStream = outputStream;
+			_outputStreamSupplier = outputStreamSupplier;
+		}
+
+		private boolean _requiresUpdateIndexes(Bundle bundle) {
+			if (!IndexUpdaterUtil.isLiferayServiceBundle(bundle)) {
+				return false;
+			}
+
+			if (_upgradeInfos.size() != 1) {
+				return true;
+			}
+
+			UpgradeInfo upgradeInfo = _upgradeInfos.get(0);
+
+			UpgradeStep upgradeStep = upgradeInfo.getUpgradeStep();
+
+			if (upgradeStep instanceof DummyUpgradeStep) {
+				return false;
+			}
+
+			String fromSchemaVersion = upgradeInfo.getFromSchemaVersionString();
+
+			String upgradeStepName = upgradeStep.toString();
+
+			if (fromSchemaVersion.equals("0.0.0") &&
+				upgradeStepName.equals("Initial Database Creation")) {
+
+				return false;
+			}
+
+			return true;
 		}
 
 		private void _updateReleaseState(int state) {
@@ -208,7 +308,7 @@ public class UpgradeExecutor {
 		private static final int _STATE_IN_PROGRESS = -1;
 
 		private final String _bundleSymbolicName;
-		private final OutputStream _outputStream;
+		private final Supplier<OutputStream> _outputStreamSupplier;
 		private final List<UpgradeInfo> _upgradeInfos;
 
 	}

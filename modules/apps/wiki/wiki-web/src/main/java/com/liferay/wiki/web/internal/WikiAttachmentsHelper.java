@@ -61,6 +61,7 @@ public class WikiAttachmentsHelper {
 
 		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
 			new ArrayList<>();
+		List<FileEntry> tempFileEntries = new ArrayList<>();
 
 		try {
 			if (numOfFiles == 0) {
@@ -104,6 +105,8 @@ public class WikiAttachmentsHelper {
 							uniqueFileName, tempFileEntry.getContentStream());
 
 					inputStreamOVPs.add(inputStreamOVP);
+
+					tempFileEntries.add(tempFileEntry);
 				}
 			}
 
@@ -118,11 +121,16 @@ public class WikiAttachmentsHelper {
 
 				try (InputStream inputStream = inputStreamOVP.getValue()) {
 				}
-				catch (IOException ioe) {
+				catch (IOException ioException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(ioe, ioe);
+						_log.warn(ioException, ioException);
 					}
 				}
+			}
+
+			for (FileEntry tempFileEntry : tempFileEntries) {
+				TempFileEntryUtil.deleteTempFileEntry(
+					tempFileEntry.getFileEntryId());
 			}
 		}
 	}
@@ -170,23 +178,16 @@ public class WikiAttachmentsHelper {
 			nodeId, title, fileName);
 	}
 
-	@Reference(unbind = "-")
-	protected void setTrashEntryService(TrashEntryService trashEntryService) {
-		_trashEntryService = trashEntryService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiPageService(WikiPageService wikiPageService) {
-		_wikiPageService = wikiPageService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		WikiAttachmentsHelper.class);
 
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private TrashEntryService _trashEntryService;
+
+	@Reference
 	private WikiPageService _wikiPageService;
 
 }

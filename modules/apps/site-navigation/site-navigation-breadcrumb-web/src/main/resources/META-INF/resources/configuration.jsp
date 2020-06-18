@@ -29,8 +29,10 @@
 	<aui:input name="redirect" type="hidden" value="<%= configurationRenderURL %>" />
 
 	<liferay-frontend:edit-form-body>
-		<aui:row>
-			<aui:col width="<%= 50 %>">
+		<clay:row>
+			<clay:col
+				md="6"
+			>
 				<liferay-frontend:fieldset-group>
 					<liferay-frontend:fieldset>
 						<div class="display-template">
@@ -46,27 +48,33 @@
 					<liferay-frontend:fieldset
 						id='<%= renderResponse.getNamespace() + "checkBoxes" %>'
 					>
-						<aui:col width="<%= 50 %>">
+						<clay:col
+							md="6"
+						>
 							<aui:input data-key='<%= "_" + HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) + "_showCurrentGroup" %>' label="show-current-site" name="preferences--showCurrentGroup--" type="toggle-switch" value="<%= siteNavigationBreadcrumbDisplayContext.isShowCurrentGroup() %>" />
 							<aui:input data-key='<%= "_" + HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) + "_showGuestGroup" %>' label="show-guest-site" name="preferences--showGuestGroup--" type="toggle-switch" value="<%= siteNavigationBreadcrumbDisplayContext.isShowGuestGroup() %>" />
-						</aui:col>
+						</clay:col>
 
-						<aui:col width="<%= 50 %>">
+						<clay:col
+							md="6"
+						>
 							<aui:input data-key='<%= "_" + HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) + "_showLayout" %>' label="show-page" name="preferences--showLayout--" type="toggle-switch" value="<%= siteNavigationBreadcrumbDisplayContext.isShowLayout() %>" />
 							<aui:input data-key='<%= "_" + HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) + "_showParentGroups" %>' label="show-parent-sites" name="preferences--showParentGroups--" type="toggle-switch" value="<%= siteNavigationBreadcrumbDisplayContext.isShowParentGroups() %>" />
 							<aui:input data-key='<%= "_" + HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) + "_showPortletBreadcrumb" %>' label="show-application-breadcrumb" name="preferences--showPortletBreadcrumb--" type="toggle-switch" value="<%= siteNavigationBreadcrumbDisplayContext.isShowPortletBreadcrumb() %>" />
-						</aui:col>
+						</clay:col>
 					</liferay-frontend:fieldset>
 				</liferay-frontend:fieldset-group>
-			</aui:col>
+			</clay:col>
 
-			<aui:col width="<%= 50 %>">
+			<clay:col
+				md="6"
+			>
 				<liferay-portlet:preview
 					portletName="<%= siteNavigationBreadcrumbDisplayContext.getPortletResource() %>"
 					showBorders="<%= true %>"
 				/>
-			</aui:col>
-		</aui:row>
+			</clay:col>
+		</clay:row>
 	</liferay-frontend:edit-form-body>
 
 	<liferay-frontend:edit-form-footer>
@@ -77,48 +85,79 @@
 </liferay-frontend:edit-form>
 
 <aui:script sandbox="<%= true %>">
-	var data = {
-		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_displayStyle': '<%= siteNavigationBreadcrumbDisplayContext.getDisplayStyle() %>',
-		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_showCurrentGroup': <%= siteNavigationBreadcrumbDisplayContext.isShowCurrentGroup() %>,
-		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_showGuestGroup': <%= siteNavigationBreadcrumbDisplayContext.isShowGuestGroup() %>,
-		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_showLayout': <%= siteNavigationBreadcrumbDisplayContext.isShowLayout() %>,
-		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_showParentGroups': <%= siteNavigationBreadcrumbDisplayContext.isShowParentGroups() %>,
-		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_showPortletBreadcrumb': <%= siteNavigationBreadcrumbDisplayContext.isShowPortletBreadcrumb() %>
-	};
+	var data = {};
 
-	var selectDisplayStyle = $('#<portlet:namespace />displayStyle');
+	data[
+		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_displayStyle'
+	] = '<%= siteNavigationBreadcrumbDisplayContext.getDisplayStyle() %>';
+	data[
+		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_showCurrentGroup'
+	] = <%= siteNavigationBreadcrumbDisplayContext.isShowCurrentGroup() %>;
+	data[
+		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_showGuestGroup'
+	] = <%= siteNavigationBreadcrumbDisplayContext.isShowGuestGroup() %>;
+	data[
+		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_showLayout'
+	] = <%= siteNavigationBreadcrumbDisplayContext.isShowLayout() %>;
+	data[
+		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_showParentGroups'
+	] = <%= siteNavigationBreadcrumbDisplayContext.isShowParentGroups() %>;
+	data[
+		'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_showPortletBreadcrumb'
+	] = <%= siteNavigationBreadcrumbDisplayContext.isShowPortletBreadcrumb() %>;
 
-	selectDisplayStyle.on(
-		'change',
-		function(event) {
-			if (selectDisplayStyle.prop('selectedIndex') > -1) {
-				data['_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_displayStyle'] = selectDisplayStyle.val();
+	var selectDisplayStyle = document.getElementById(
+		'<portlet:namespace />displayStyle'
+	);
 
-				Liferay.Portlet.refresh('#p_p_id_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_', data);
+	if (selectDisplayStyle) {
+		selectDisplayStyle.addEventListener('change', function (event) {
+			if (selectDisplayStyle.selectedIndex > -1) {
+				data[
+					'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_displayStyle'
+				] = selectDisplayStyle.value;
+
+				Liferay.Portlet.refresh(
+					'#p_p_id_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_',
+					data
+				);
 			}
-		}
-	);
+		});
+	}
 
-	$('#<portlet:namespace />checkBoxes').on(
-		'change',
-		'input[type="checkbox"]',
-		function(event) {
-			var currentTarget = $(event.currentTarget);
+	var checkBoxes = document.getElementById('<portlet:namespace />checkBoxes');
 
-			data[currentTarget.data('key')] = currentTarget.prop('checked');
+	if (checkBoxes) {
+		checkBoxes.addEventListener('change', function (event) {
+			if (event.target.classList.contains('toggle-switch')) {
+				var target = event.target;
 
-			Liferay.Portlet.refresh('#p_p_id_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_', data);
-		}
-	);
+				data[target.dataset.key] = target.checked;
 
-	var handler = Liferay.on(
-		'portletReady',
-		function(event) {
-			if (event.portletId === '<%= siteNavigationBreadcrumbDisplayContext.getPortletResource() %>') {
-				Liferay.Portlet.refresh('#p_p_id_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_', data);
-
-				handler.detach();
+				Liferay.Portlet.refresh(
+					'#p_p_id_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_',
+					data
+				);
 			}
+		});
+	}
+
+	var handler = Liferay.on('portletReady', function (event) {
+		Liferay.Portlet.refresh(
+			'#p_p_id_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_',
+			data
+		);
+
+		handler.detach();
+
+		handler = null;
+	});
+
+	var destroyHandler = Liferay.on('destroyHandler', function (event) {
+		if (handler) {
+			handler.detach();
+
+			handler = null;
 		}
-	);
+	});
 </aui:script>

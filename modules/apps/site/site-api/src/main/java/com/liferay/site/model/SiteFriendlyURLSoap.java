@@ -14,8 +14,6 @@
 
 package com.liferay.site.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,11 +26,12 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class SiteFriendlyURLSoap implements Serializable {
+
 	public static SiteFriendlyURLSoap toSoapModel(SiteFriendlyURL model) {
 		SiteFriendlyURLSoap soapModel = new SiteFriendlyURLSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setSiteFriendlyURLId(model.getSiteFriendlyURLId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -49,7 +48,8 @@ public class SiteFriendlyURLSoap implements Serializable {
 	}
 
 	public static SiteFriendlyURLSoap[] toSoapModels(SiteFriendlyURL[] models) {
-		SiteFriendlyURLSoap[] soapModels = new SiteFriendlyURLSoap[models.length];
+		SiteFriendlyURLSoap[] soapModels =
+			new SiteFriendlyURLSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -60,10 +60,12 @@ public class SiteFriendlyURLSoap implements Serializable {
 
 	public static SiteFriendlyURLSoap[][] toSoapModels(
 		SiteFriendlyURL[][] models) {
+
 		SiteFriendlyURLSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new SiteFriendlyURLSoap[models.length][models[0].length];
+			soapModels =
+				new SiteFriendlyURLSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new SiteFriendlyURLSoap[0][0];
@@ -78,7 +80,9 @@ public class SiteFriendlyURLSoap implements Serializable {
 
 	public static SiteFriendlyURLSoap[] toSoapModels(
 		List<SiteFriendlyURL> models) {
-		List<SiteFriendlyURLSoap> soapModels = new ArrayList<SiteFriendlyURLSoap>(models.size());
+
+		List<SiteFriendlyURLSoap> soapModels =
+			new ArrayList<SiteFriendlyURLSoap>(models.size());
 
 		for (SiteFriendlyURL model : models) {
 			soapModels.add(toSoapModel(model));
@@ -96,6 +100,14 @@ public class SiteFriendlyURLSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setSiteFriendlyURLId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -186,6 +198,7 @@ public class SiteFriendlyURLSoap implements Serializable {
 		_lastPublishDate = lastPublishDate;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _siteFriendlyURLId;
 	private long _companyId;
@@ -197,4 +210,5 @@ public class SiteFriendlyURLSoap implements Serializable {
 	private String _friendlyURL;
 	private String _languageId;
 	private Date _lastPublishDate;
+
 }

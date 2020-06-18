@@ -46,7 +46,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 			<div class="autofit-padded-no-gutters-x autofit-row widget-metadata">
 				<div class="autofit-col">
 					<liferay-ui:user-portrait
-						cssClass="user-icon-lg"
+						cssClass="sticker-lg"
 						userId="<%= discussionComment.getUserId() %>"
 						userName="<%= discussionComment.getUserName() %>"
 					/>
@@ -96,7 +96,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 										<div class="autofit-padded-no-gutters-x autofit-row">
 											<div class="autofit-col">
 												<liferay-ui:user-portrait
-													cssClass="user-icon-lg"
+													cssClass="sticker-lg"
 													user="<%= parentMessageUser %>"
 												/>
 											</div>
@@ -118,16 +118,18 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 									</liferay-util:buffer>
 
 									<%
-									Map<String, String> dataInReply = new HashMap<>();
-									dataInReply.put("inreply-content", parentDiscussionComment.getBody());
-									dataInReply.put("inreply-title", parentCommentUserBuffer);
+									Map<String, String> dataInReply = HashMapBuilder.put(
+										"inreply-content", parentDiscussionComment.getBody()
+									).put(
+										"inreply-title", parentCommentUserBuffer
+									).build();
 									%>
 
 									<clay:link
 										ariaLabel='<%= LanguageUtil.format(request, "in-reply-to-x", HtmlUtil.escape(parentDiscussionComment.getUserName()), false) %>'
 										data="<%= dataInReply %>"
 										elementClasses="lfr-discussion-parent-link"
-										href="javascript:void(0);"
+										href='<%= "#" + randomNamespace + "message_" + parentDiscussionComment.getCommentId() %>'
 										icon="redo"
 										label="<%= HtmlUtil.escape(parentDiscussionComment.getUserName()) %>"
 									/>
@@ -166,10 +168,11 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 				<c:if test="<%= commentTreeDisplayContext.isActionControlsVisible() && (index > 0) %>">
 					<div class="autofit-col">
 						<liferay-ui:icon-menu
+							cssClass="actions-menu"
 							direction="left-side"
 							icon="<%= StringPool.BLANK %>"
 							markupView="lexicon"
-							message="<%= StringPool.BLANK %>"
+							message="actions"
 							showWhenSingleIcon="<%= true %>"
 						>
 							<c:if test="<%= commentTreeDisplayContext.isEditActionControlVisible() %>">
@@ -199,29 +202,30 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 				</div>
 
 				<div class="lfr-discussion-message">
-					<div class="lfr-discussion-message-body" id="<%= namespace + randomNamespace + "discussionMessage" + index %>">
+					<div class="lfr-discussion-message-body" id="<%= namespace + "discussionMessage" + index %>">
 						<%= discussionComment.getTranslatedBody(themeDisplay.getPathThemeImages()) %>
 					</div>
 
 					<c:if test="<%= commentTreeDisplayContext.isEditControlsVisible() %>">
-						<div class="lfr-discussion-form lfr-discussion-form-edit" id="<%= namespace + randomNamespace %>editForm<%= index %>" style="display: none;">
+						<div class="lfr-discussion-form lfr-discussion-form-edit" id="<%= namespace %>editForm<%= index %>" style="display: none;">
 							<div class="editor-wrapper"></div>
 
-							<aui:input name='<%= "editReplyBody" + index %>' type="hidden" value="<%= discussionComment.getBody() %>" />
-
 							<aui:button-row>
-								<aui:button cssClass="btn-comment btn-primary btn-sm" name='<%= randomNamespace + "editReplyButton" + index %>' onClick='<%= randomNamespace + "updateMessage(" + index + ");" %>' value="<%= commentTreeDisplayContext.getPublishButtonLabel(locale) %>" />
+								<aui:button cssClass="btn-comment btn-primary btn-sm" name='<%= "editReplyButton" + index %>' onClick='<%= randomNamespace + "updateMessage(" + index + ");" %>' value="<%= commentTreeDisplayContext.getPublishButtonLabel(locale) %>" />
 
 								<%
-								String taglibCancel = randomNamespace + "showEl('" + namespace + randomNamespace + "discussionMessage" + index + "');" + randomNamespace + "hideEditor('" + randomNamespace + "editReplyBody" + index + "', '" + namespace + randomNamespace + "editForm" + index + "');";
+								String taglibCancel = randomNamespace + "showEl('" + namespace + "discussionMessage" + index + "');" + randomNamespace + "hideEditor('" + randomNamespace + "editReplyBody" + index + "', '" + namespace + "editForm" + index + "');";
 								%>
 
 								<aui:button cssClass="btn-comment btn-primary btn-sm" onClick="<%= taglibCancel %>" type="cancel" />
 							</aui:button-row>
 
 							<aui:script>
-								window['<%= namespace + randomNamespace + index %>EditOnChange'] = function(html) {
-									Liferay.Util.toggleDisabled('#<%= namespace + randomNamespace %>editReplyButton<%= index %>', html.trim() === '');
+								window['<%= namespace + index %>EditOnChange'] = function (html) {
+									Liferay.Util.toggleDisabled(
+										'#<%= namespace %>editReplyButton<%= index %>',
+										html.trim() === ''
+									);
 								};
 							</aui:script>
 						</div>
@@ -250,7 +254,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 
 					<c:if test="<%= commentTreeDisplayContext.isRatingsVisible() %>">
 						<div class="autofit-col">
-							<liferay-ui:ratings
+							<liferay-ratings:ratings
 								className="<%= CommentConstants.getDiscussionClassName() %>"
 								classPK="<%= discussionComment.getCommentId() %>"
 								inTrash="<%= false %>"
@@ -263,12 +267,12 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 			</div>
 		</div>
 
-		<div class="lfr-discussion lfr-discussion-form-reply" id="<%= namespace + randomNamespace + "postReplyForm" + index %>" style="display: none;">
+		<div class="lfr-discussion lfr-discussion-form-reply" id="<%= namespace + "postReplyForm" + index %>" style="display: none;">
 			<div class="lfr-discussion-reply-container">
 				<div class="autofit-padded-no-gutters autofit-row">
 					<div class="autofit-col lfr-discussion-details">
 						<liferay-ui:user-portrait
-							cssClass="user-icon-lg"
+							cssClass="sticker-lg"
 							user="<%= user %>"
 						/>
 					</div>
@@ -276,21 +280,22 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 					<div class="autofit-col autofit-col-expand">
 						<div class="editor-wrapper"></div>
 
-						<aui:input name='<%= "postReplyBody" + index %>' type="hidden" />
-
 						<aui:button-row>
-							<aui:button cssClass="btn-comment btn-primary btn-sm" disabled="<%= true %>" id='<%= randomNamespace + "postReplyButton" + index %>' onClick='<%= randomNamespace + "postReply(" + index + ");" %>' value='<%= themeDisplay.isSignedIn() ? "reply" : "reply-as" %>' />
+							<aui:button cssClass="btn-comment btn-primary btn-sm" disabled="<%= true %>" id='<%= "postReplyButton" + index %>' onClick='<%= randomNamespace + "postReply(" + index + ");" %>' value='<%= themeDisplay.isSignedIn() ? "reply" : "reply-as" %>' />
 
 							<%
-							String taglibCancel = randomNamespace + "hideEditor('" + randomNamespace + "postReplyBody" + index + "', '" + namespace + randomNamespace + "postReplyForm" + index + "')";
+							String taglibCancel = randomNamespace + "hideEditor('" + randomNamespace + "postReplyBody" + index + "', '" + namespace + "postReplyForm" + index + "')";
 							%>
 
 							<aui:button cssClass="btn-comment btn-sm" onClick="<%= taglibCancel %>" type="cancel" />
 						</aui:button-row>
 
 						<aui:script>
-							window['<%= namespace + randomNamespace + index %>ReplyOnChange'] = function(html) {
-								Liferay.Util.toggleDisabled('#<%= namespace + randomNamespace %>postReplyButton<%= index %>', html.trim() === '');
+							window['<%= namespace + index %>ReplyOnChange'] = function (html) {
+								Liferay.Util.toggleDisabled(
+									'#<%= namespace %>postReplyButton<%= index %>',
+									html.trim() === ''
+								);
 							};
 						</aui:script>
 					</div>

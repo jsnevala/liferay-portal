@@ -16,7 +16,6 @@ package com.liferay.source.formatter.checkstyle.checks;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
@@ -27,7 +26,7 @@ import java.util.List;
 /**
  * @author Hugo Huijser
  */
-public class PlusStatementCheck extends StringConcatenationCheck {
+public class PlusStatementCheck extends BaseStringConcatenationCheck {
 
 	@Override
 	public int[] getDefaultTokens() {
@@ -44,26 +43,26 @@ public class PlusStatementCheck extends StringConcatenationCheck {
 			return;
 		}
 
-		DetailAST firstChildAST = detailAST.getFirstChild();
+		DetailAST firstChildDetailAST = detailAST.getFirstChild();
 
-		String literalString1 = _getLiteralString(firstChildAST);
+		String literalString1 = _getLiteralString(firstChildDetailAST);
 
 		if (literalString1 == null) {
 			return;
 		}
 
-		DetailAST lastChildAST = detailAST.getLastChild();
+		DetailAST lastChildDetailAST = detailAST.getLastChild();
 
-		String literalString2 = _getLiteralString(lastChildAST);
+		String literalString2 = _getLiteralString(lastChildDetailAST);
 
 		if (literalString2 == null) {
 			return;
 		}
 
-		if (firstChildAST.getLineNo() == lastChildAST.getLineNo()) {
+		if (firstChildDetailAST.getLineNo() == lastChildDetailAST.getLineNo()) {
 			log(
-				firstChildAST, MSG_COMBINE_LITERAL_STRINGS, literalString1,
-				literalString2);
+				firstChildDetailAST, MSG_COMBINE_LITERAL_STRINGS,
+				literalString1, literalString2);
 
 			return;
 		}
@@ -75,8 +74,8 @@ public class PlusStatementCheck extends StringConcatenationCheck {
 		checkLiteralStringStartAndEndCharacter(
 			literalString1, literalString2, detailAST.getLineNo());
 
-		String line1 = getLine(lastChildAST.getLineNo() - 2);
-		String line2 = getLine(lastChildAST.getLineNo() - 1);
+		String line1 = getLine(lastChildDetailAST.getLineNo() - 2);
+		String line2 = getLine(lastChildDetailAST.getLineNo() - 1);
 
 		if (_getLeadingTabCount(line1) == _getLeadingTabCount(line2)) {
 			return;
@@ -87,18 +86,18 @@ public class PlusStatementCheck extends StringConcatenationCheck {
 
 		String trimmedLine2 = StringUtil.trim(line2);
 
-		if ((lineLength1 + trimmedLine2.length() - 4) <= maxLineLength) {
+		if ((lineLength1 + trimmedLine2.length() - 4) <= getMaxLineLength()) {
 			log(
-				lastChildAST, MSG_COMBINE_LITERAL_STRINGS, literalString1,
+				lastChildDetailAST, MSG_COMBINE_LITERAL_STRINGS, literalString1,
 				literalString2);
 
 			return;
 		}
 
-		DetailAST parentAST = detailAST.getParent();
+		DetailAST parentDetailAST = detailAST.getParent();
 
-		if ((parentAST.getType() == TokenTypes.PLUS) &&
-			((lineLength1 + literalString2.length()) <= maxLineLength)) {
+		if ((parentDetailAST.getType() == TokenTypes.PLUS) &&
+			((lineLength1 + literalString2.length()) <= getMaxLineLength())) {
 
 			log(
 				detailAST, MSG_COMBINE_LITERAL_STRINGS, literalString1,
@@ -108,11 +107,11 @@ public class PlusStatementCheck extends StringConcatenationCheck {
 		}
 
 		int pos = getStringBreakPos(
-			literalString1, literalString2, maxLineLength - lineLength1);
+			literalString1, literalString2, getMaxLineLength() - lineLength1);
 
 		if (pos != -1) {
 			log(
-				lastChildAST, MSG_MOVE_LITERAL_STRING,
+				lastChildDetailAST, MSG_MOVE_LITERAL_STRING,
 				literalString2.substring(0, pos + 1));
 		}
 	}
@@ -138,10 +137,10 @@ public class PlusStatementCheck extends StringConcatenationCheck {
 		else if ((detailAST.getType() == TokenTypes.PLUS) &&
 				 (detailAST.getChildCount() == 2)) {
 
-			DetailAST lastChild = detailAST.getLastChild();
+			DetailAST lastChildDetailAST = detailAST.getLastChild();
 
-			if (lastChild.getType() == TokenTypes.STRING_LITERAL) {
-				literalString = lastChild.getText();
+			if (lastChildDetailAST.getType() == TokenTypes.STRING_LITERAL) {
+				literalString = lastChildDetailAST.getText();
 			}
 		}
 
@@ -153,33 +152,33 @@ public class PlusStatementCheck extends StringConcatenationCheck {
 	}
 
 	private boolean _isRegexPattern(DetailAST detailAST) {
-		DetailAST parentAST = detailAST.getParent();
+		DetailAST parentDetailAST = detailAST.getParent();
 
-		while (parentAST != null) {
-			if (parentAST.getType() != TokenTypes.METHOD_CALL) {
-				parentAST = parentAST.getParent();
+		while (parentDetailAST != null) {
+			if (parentDetailAST.getType() != TokenTypes.METHOD_CALL) {
+				parentDetailAST = parentDetailAST.getParent();
 
 				continue;
 			}
 
-			DetailAST firstChild = parentAST.getFirstChild();
+			DetailAST firstChildDetailAST = parentDetailAST.getFirstChild();
 
-			if (firstChild.getType() != TokenTypes.DOT) {
+			if (firstChildDetailAST.getType() != TokenTypes.DOT) {
 				return false;
 			}
 
-			List<DetailAST> nameASTList = DetailASTUtil.getAllChildTokens(
-				firstChild, false, TokenTypes.IDENT);
+			List<DetailAST> nameDetailASTList = getAllChildTokens(
+				firstChildDetailAST, false, TokenTypes.IDENT);
 
-			if (nameASTList.size() != 2) {
+			if (nameDetailASTList.size() != 2) {
 				return false;
 			}
 
-			DetailAST classNameAST = nameASTList.get(0);
-			DetailAST methodNameAST = nameASTList.get(1);
+			DetailAST classNameDetailAST = nameDetailASTList.get(0);
+			DetailAST methodNameDetailAST = nameDetailASTList.get(1);
 
-			String methodCallClassName = classNameAST.getText();
-			String methodCallMethodName = methodNameAST.getText();
+			String methodCallClassName = classNameDetailAST.getText();
+			String methodCallMethodName = methodNameDetailAST.getText();
 
 			if (methodCallMethodName.equals("matches") ||
 				(methodCallClassName.equals("Pattern") &&

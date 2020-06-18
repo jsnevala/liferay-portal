@@ -16,6 +16,7 @@ package com.liferay.portal.bundle.blacklist.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.osgi.util.service.OSGiServiceUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.bundle.blacklist.BundleBlacklistManager;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -40,7 +41,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,7 +59,6 @@ import org.osgi.util.tracker.BundleTracker;
 /**
  * @author Matthew Tambara
  */
-@Ignore
 @RunWith(Arquillian.class)
 public class BundleBlacklistTest {
 
@@ -215,8 +214,9 @@ public class BundleBlacklistTest {
 				warBundle = bundle;
 			}
 			else if (symbolicName.equals(
-						_LPKG_NAME + StringPool.DASH + _SYMBOLIC_NAME +
-							"-war-wrapper")) {
+						StringBundler.concat(
+							_LPKG_NAME, StringPool.DASH, _SYMBOLIC_NAME,
+							"-war-wrapper"))) {
 
 				warWrapperBundle = bundle;
 			}

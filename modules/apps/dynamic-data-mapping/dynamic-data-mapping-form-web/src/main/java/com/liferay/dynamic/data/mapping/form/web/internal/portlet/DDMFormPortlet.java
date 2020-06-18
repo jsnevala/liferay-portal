@@ -15,12 +15,14 @@
 package com.liferay.dynamic.data.mapping.form.web.internal.portlet;
 
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
+import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderer;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
+import com.liferay.dynamic.data.mapping.form.web.internal.configuration.activator.DDMFormWebConfigurationActivator;
+import com.liferay.dynamic.data.mapping.form.web.internal.constants.DDMFormWebKeys;
 import com.liferay.dynamic.data.mapping.form.web.internal.display.context.DDMFormDisplayContext;
 import com.liferay.dynamic.data.mapping.form.web.internal.instance.lifecycle.AddDefaultSharedFormLayoutPortalInstanceLifecycleListener;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
-import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
@@ -28,11 +30,11 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalServi
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesMerger;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -53,6 +55,9 @@ import javax.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Marcellus Tavares
@@ -81,8 +86,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/display/view.jsp",
 		"javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=guest,power-user,user"
 	},
 	service = Portlet.class
 )
@@ -96,15 +100,17 @@ public class DDMFormPortlet extends MVCPortlet {
 		try {
 			super.processAction(actionRequest, actionResponse);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_portal.copyRequestParameters(actionRequest, actionResponse);
 
-			Throwable cause = getRootCause(e);
+			Throwable cause = getRootCause(exception);
 
 			hideDefaultErrorMessage(actionRequest);
 
 			if (cause instanceof DDMFormValuesValidationException) {
 				if (cause instanceof
+						DDMFormValuesValidationException.MustSetValidValue ||
+					cause instanceof
 						DDMFormValuesValidationException.RequiredValue) {
 
 					SessionErrors.add(actionRequest, cause.getClass(), cause);
@@ -141,52 +147,27 @@ public class DDMFormPortlet extends MVCPortlet {
 				(DDMFormDisplayContext)renderRequest.getAttribute(
 					WebKeys.PORTLET_DISPLAY_CONTEXT);
 
-			checkFormIsNotRestricted(
-				renderRequest, renderResponse, ddmFormPortletDisplayContext);
+			if (ddmFormPortletDisplayContext.isFormShared()) {
+				saveRefererGroupIdInRequest(
+					renderRequest, ddmFormPortletDisplayContext);
+			}
 		}
-		catch (Exception e) {
-			if (isSessionErrorException(e)) {
+		catch (Exception exception) {
+			if (isSessionErrorException(exception)) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(e, e);
+					_log.warn(exception, exception);
 				}
 
 				hideDefaultErrorMessage(renderRequest);
 
-				SessionErrors.add(renderRequest, e.getClass());
+				SessionErrors.add(renderRequest, exception.getClass());
 			}
 			else {
-				throw new PortletException(e);
+				throw new PortletException(exception);
 			}
 		}
 
 		super.render(renderRequest, renderResponse);
-	}
-
-	protected void checkFormIsNotRestricted(
-			RenderRequest renderRequest, RenderResponse renderResponse,
-			DDMFormDisplayContext ddmFormDisplayContext)
-		throws PortalException {
-
-		DDMFormInstance formInstance = ddmFormDisplayContext.getFormInstance();
-
-		if (formInstance == null) {
-			return;
-		}
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		DDMFormInstanceSettings formInstanceSettings =
-			formInstance.getSettingsModel();
-
-		Layout layout = themeDisplay.getLayout();
-
-		if (formInstanceSettings.requireAuthentication() &&
-			!layout.isPrivateLayout()) {
-
-			throw new PrincipalException.MustBeAuthenticated(
-				themeDisplay.getUserId());
-		}
 	}
 
 	protected Throwable getRootCause(Throwable throwable) {
@@ -214,16 +195,39 @@ public class DDMFormPortlet extends MVCPortlet {
 		}
 	}
 
+	protected void saveRefererGroupIdInRequest(
+		RenderRequest renderRequest,
+		DDMFormDisplayContext ddmFormPortletDisplayContext) {
+
+		DDMFormInstance ddmFormInstance =
+			ddmFormPortletDisplayContext.getFormInstance();
+
+		if (ddmFormInstance != null) {
+			renderRequest.setAttribute(
+				DDMFormWebKeys.REFERER_GROUP_ID, ddmFormInstance.getGroupId());
+		}
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.dynamic.data.mapping.form.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
+	}
+
 	protected void setRenderRequestAttributes(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortalException {
 
 		DDMFormDisplayContext ddmFormDisplayContext = new DDMFormDisplayContext(
-			renderRequest, renderResponse, _ddmFormInstanceLocalService,
+			renderRequest, renderResponse, _ddmFormFieldTypeServicesTracker,
+			_ddmFormInstanceLocalService,
 			_ddmFormInstanceRecordVersionLocalService, _ddmFormInstanceService,
 			_ddmFormInstanceVersionLocalService, _ddmFormRenderer,
-			_ddmFormValuesFactory, _ddmFormValuesMerger, _groupLocalService,
-			_workflowDefinitionLinkLocalService);
+			_ddmFormValuesFactory, _ddmFormValuesMerger,
+			_ddmFormWebConfigurationActivator.getDDMFormWebConfiguration(),
+			_groupLocalService, _jsonFactory,
+			_workflowDefinitionLinkLocalService, _portal);
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, ddmFormDisplayContext);
@@ -234,6 +238,9 @@ public class DDMFormPortlet extends MVCPortlet {
 	@Reference
 	private AddDefaultSharedFormLayoutPortalInstanceLifecycleListener
 		_addDefaultSharedFormLayoutPortalInstanceLifecycleListener;
+
+	@Reference
+	private DDMFormFieldTypeServicesTracker _ddmFormFieldTypeServicesTracker;
 
 	@Reference
 	private DDMFormInstanceLocalService _ddmFormInstanceLocalService;
@@ -258,8 +265,20 @@ public class DDMFormPortlet extends MVCPortlet {
 	@Reference
 	private DDMFormValuesMerger _ddmFormValuesMerger;
 
+	@Reference(
+		cardinality = ReferenceCardinality.OPTIONAL,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY,
+		unbind = "unsetDDMFormWebConfigurationActivator"
+	)
+	private volatile DDMFormWebConfigurationActivator
+		_ddmFormWebConfigurationActivator;
+
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Portal _portal;

@@ -46,7 +46,22 @@
 		color: $nav-pills-link-active-color;
 	}
 
-	.nav-tabs, .nav-underline {
+	.nav-tabs,
+	.nav-underline {
 		flex-direction: row;
+	}
+
+	.nav-underline {
+		.tab {
+			@extend .nav-item;
+
+			a {
+				@extend .nav-link;
+			}
+
+			&.active a {
+				@extend .active;
+			}
+		}
 	}
 }

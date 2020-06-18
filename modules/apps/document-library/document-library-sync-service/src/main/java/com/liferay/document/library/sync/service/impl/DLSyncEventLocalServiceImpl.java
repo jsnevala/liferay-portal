@@ -16,6 +16,7 @@ package com.liferay.document.library.sync.service.impl;
 
 import com.liferay.document.library.sync.model.DLSyncEvent;
 import com.liferay.document.library.sync.service.base.DLSyncEventLocalServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Projection;
@@ -25,9 +26,15 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+
 /**
  * @author Dennis Ju
  */
+@Component(
+	property = "model.class.name=com.liferay.document.library.sync.model.DLSyncEvent",
+	service = AopService.class
+)
 public class DLSyncEventLocalServiceImpl
 	extends DLSyncEventLocalServiceBaseImpl {
 
@@ -63,12 +70,13 @@ public class DLSyncEventLocalServiceImpl
 	@Override
 	public List<DLSyncEvent> getLatestDLSyncEvents() {
 		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
-			DLSyncEvent.class);
+			DLSyncEvent.class, getClassLoader());
 
 		Property property = PropertyFactoryUtil.forName("modifiedTime");
 
 		DynamicQuery modifiedTimeDynamicQuery =
-			DynamicQueryFactoryUtil.forClass(DLSyncEvent.class);
+			DynamicQueryFactoryUtil.forClass(
+				DLSyncEvent.class, getClassLoader());
 
 		Projection projection = ProjectionFactoryUtil.max("modifiedTime");
 

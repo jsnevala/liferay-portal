@@ -33,9 +33,9 @@ public class PostgreSQLTransformerLogic extends BaseSQLTransformerLogic {
 		Function[] functions = {
 			getBitwiseCheckFunction(), getBooleanFunction(),
 			getCastClobTextFunction(), getCastLongFunction(),
-			getCastTextFunction(), getInstrFunction(),
-			getIntegerDivisionFunction(), _getNegativeComparisonFunction(),
-			_getNullDateFunction()
+			getCastTextFunction(), getDropTableIfExistsTextFunction(),
+			getInstrFunction(), getIntegerDivisionFunction(),
+			_getNegativeComparisonFunction(), _getNullDateFunction()
 		};
 
 		if (!db.isSupportsStringCaseSensitiveQuery()) {
@@ -47,7 +47,7 @@ public class PostgreSQLTransformerLogic extends BaseSQLTransformerLogic {
 
 	@Override
 	protected String replaceCastLong(Matcher matcher) {
-		return matcher.replaceAll("CAST($1 AS INTEGER)");
+		return matcher.replaceAll("CAST($1 AS BIGINT)");
 	}
 
 	@Override

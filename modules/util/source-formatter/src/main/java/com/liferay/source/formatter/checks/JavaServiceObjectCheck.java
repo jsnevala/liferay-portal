@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.checks.util.SourceUtil;
-import com.liferay.source.formatter.parser.JavaClass;
 import com.liferay.source.formatter.parser.JavaTerm;
 import com.liferay.source.formatter.util.FileUtil;
 
@@ -53,7 +52,7 @@ import org.dom4j.Element;
 public class JavaServiceObjectCheck extends BaseJavaTermCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
 	}
 
@@ -62,7 +61,7 @@ public class JavaServiceObjectCheck extends BaseJavaTermCheck {
 		String fileName, String absolutePath, JavaTerm javaTerm,
 		String fileContent) {
 
-		List<String> importNames = _getImportNames(javaTerm);
+		List<String> importNames = getImportNames(javaTerm);
 
 		if (importNames.isEmpty()) {
 			return javaTerm.getContent();
@@ -202,20 +201,6 @@ public class JavaServiceObjectCheck extends BaseJavaTermCheck {
 		return -1;
 	}
 
-	private List<String> _getImportNames(JavaTerm javaTerm) {
-		JavaClass javaClass = javaTerm.getParentJavaClass();
-
-		while (true) {
-			JavaClass parentJavaClass = javaClass.getParentJavaClass();
-
-			if (parentJavaClass == null) {
-				return javaClass.getImports();
-			}
-
-			javaClass = parentJavaClass;
-		}
-	}
-
 	private String _getPackageName(
 		String variableTypeName, List<String> importNames) {
 
@@ -242,7 +227,7 @@ public class JavaServiceObjectCheck extends BaseJavaTermCheck {
 			_populateServiceXMLElements("modules/apps", 6);
 			_populateServiceXMLElements("portal-impl/src/com/liferay", 4);
 		}
-		catch (DocumentException | IOException e) {
+		catch (DocumentException | IOException exception) {
 			return null;
 		}
 
@@ -346,8 +331,8 @@ public class JavaServiceObjectCheck extends BaseJavaTermCheck {
 
 	private static final String[] _SKIP_DIR_NAMES = {
 		".git", ".gradle", ".idea", ".m2", ".settings", "bin", "build",
-		"classes", "dependencies", "node_modules", "sql", "src", "test",
-		"test-classes", "test-coverage", "test-results", "tmp"
+		"classes", "dependencies", "node_modules", "node_modules_cache", "sql",
+		"src", "test", "test-classes", "test-coverage", "test-results", "tmp"
 	};
 
 	private static final Pattern _getterCallPattern = Pattern.compile(

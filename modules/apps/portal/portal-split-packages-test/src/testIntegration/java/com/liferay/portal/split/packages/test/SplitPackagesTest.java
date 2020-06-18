@@ -18,9 +18,9 @@ import aQute.bnd.header.OSGiHeader;
 import aQute.bnd.header.Parameters;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.module.framework.ModuleFrameworkUtilAdapter;
@@ -156,8 +156,9 @@ public class SplitPackagesTest {
 			}
 
 			Assert.assertFalse(
-				"Detected split packages " + duplicateExportPackage + " in " +
-					previousBundle + " and " + currentBundle,
+				StringBundler.concat(
+					"Detected split packages ", duplicateExportPackage, " in ",
+					previousBundle, " and ", currentBundle),
 				hasSplitPackages);
 		}
 	}

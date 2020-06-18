@@ -28,7 +28,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	immediate = true, property = "key=" + PropsKeys.LOGIN_EVENTS_POST,
@@ -58,8 +58,8 @@ public class LoginPostAction implements LifecycleAction {
 			_memberRequestLocalService.updateMemberRequest(
 				memberRequestKey, user.getUserId());
 		}
-		catch (Exception e) {
-			throw new ActionException(e);
+		catch (Exception exception) {
+			throw new ActionException(exception);
 		}
 	}
 

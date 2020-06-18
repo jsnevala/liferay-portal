@@ -15,6 +15,7 @@
 package com.liferay.layout.type.controller.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -33,7 +34,6 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.test.LayoutTestUtil;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -65,12 +65,12 @@ public class LayoutTypeURLTest {
 
 		_publicLayout = LayoutTestUtil.addLayout(_group);
 
-		setUpVirtualHostName();
+		setUpVirtualHostname();
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		_company.setVirtualHostname(_originalVirtualHostName);
+		_company.setVirtualHostname(_originalVirtualHostname);
 	}
 
 	@Test
@@ -91,18 +91,18 @@ public class LayoutTypeURLTest {
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);
 
-		UnicodeProperties properties =
+		UnicodeProperties unicodeProperties =
 			layoutURLType.getTypeSettingsProperties();
 
-		properties.setProperty("url", "javascript:alert(1)");
+		unicodeProperties.setProperty("url", "javascript:alert(1)");
 
 		Assert.assertTrue(
 			Validator.isUrl(
 				layoutURLType.getRegularURL(mockHttpServletRequest), true));
 	}
 
-	protected void setUpVirtualHostName() {
-		_originalVirtualHostName = _company.getVirtualHostname();
+	protected void setUpVirtualHostname() {
+		_originalVirtualHostname = _company.getVirtualHostname();
 
 		_company.setVirtualHostname(_VIRTUAL_HOSTNAME);
 	}
@@ -133,7 +133,7 @@ public class LayoutTypeURLTest {
 	@DeleteAfterTestRun
 	private Group _group;
 
-	private String _originalVirtualHostName;
+	private String _originalVirtualHostname;
 	private Layout _publicLayout;
 
 }

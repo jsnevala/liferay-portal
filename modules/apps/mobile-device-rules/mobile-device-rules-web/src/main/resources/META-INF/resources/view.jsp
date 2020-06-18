@@ -30,9 +30,9 @@ RuleGroupSearch ruleGroupSearch = new RuleGroupSearch(liferayPortletRequest, Por
 
 RuleGroupSearchTerms searchTerms = (RuleGroupSearchTerms)ruleGroupSearch.getSearchTerms();
 
-LinkedHashMap<String, Object> params = new LinkedHashMap<String, Object>();
-
-params.put("includeGlobalScope", Boolean.TRUE);
+LinkedHashMap<String, Object> params = LinkedHashMapBuilder.<String, Object>put(
+	"includeGlobalScope", Boolean.TRUE
+).build();
 
 int mdrRuleGroupsCount = MDRRuleGroupLocalServiceUtil.searchByKeywordsCount(groupId, searchTerms.getKeywords(), params, searchTerms.isAndOperator());
 
@@ -42,22 +42,6 @@ List<MDRRuleGroup> mdrRuleGroups = MDRRuleGroupLocalServiceUtil.searchByKeywords
 
 ruleGroupSearch.setResults(mdrRuleGroups);
 %>
-
-<clay:navigation-bar
-	inverted="<%= true %>"
-	navigationItems="<%=
-		new JSPNavigationItemList(pageContext) {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(true);
-						navigationItem.setHref(renderResponse.createRenderURL());
-						navigationItem.setLabel(LanguageUtil.get(request, "device-families"));
-					});
-			}
-		}
-	%>"
-/>
 
 <liferay-frontend:management-bar
 	disabled="<%= mdrRuleGroupsCount <= 0 %>"
@@ -192,21 +176,20 @@ ruleGroupSearch.setResults(mdrRuleGroups);
 					<liferay-ui:search-container-column-text
 						colspan="<%= 2 %>"
 					>
-						<h6 class="text-default">
+						<span class="text-default">
 							<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - ruleGroup.getModifiedDate().getTime(), true) %>" key="x-ago" translateArguments="<%= false %>" />
-						</h6>
+						</span>
 
-						<h5>
+						<h2 class="h5">
 							<aui:a href="<%= rowHREF %>"><%= ruleGroup.getName(locale) %></aui:a>
-						</h5>
+						</h2>
 
-						<h6 class="text-default">
+						<span class="text-default">
 							<%= HtmlUtil.escape(ruleGroup.getDescription(locale)) %>
-						</h6>
-
-						<h6 class="text-default">
+						</span>
+						<span class="text-default">
 							<strong><liferay-ui:message key="scope" /></strong>: <%= LanguageUtil.get(resourceBundle, group.getScopeLabel(themeDisplay)) %>
-						</h6>
+						</span>
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-jsp
@@ -250,13 +233,25 @@ ruleGroupSearch.setResults(mdrRuleGroups);
 	</liferay-ui:search-container>
 </aui:form>
 
-<aui:script>
-	$('#<portlet:namespace />deleteSelectedDeviceFamilies').on(
-		'click',
-		function() {
-			if (confirm('<%= UnicodeLanguageUtil.get(resourceBundle, "are-you-sure-you-want-to-delete-this") %>')) {
-				submitForm($(document.<portlet:namespace />fm));
-			}
+<script>
+	(function () {
+		var deleteSelectedDeviceFamiliesButton = document.getElementById(
+			'<portlet:namespace />deleteSelectedDeviceFamilies'
+		);
+
+		if (deleteSelectedDeviceFamiliesButton) {
+			deleteSelectedDeviceFamiliesButton.addEventListener(
+				'click',
+				function () {
+					if (
+						confirm(
+							'<%= UnicodeLanguageUtil.get(resourceBundle, "are-you-sure-you-want-to-delete-this") %>'
+						)
+					) {
+						submitForm(document.<portlet:namespace />fm);
+					}
+				}
+			);
 		}
-	);
-</aui:script>
+	})();
+</script>

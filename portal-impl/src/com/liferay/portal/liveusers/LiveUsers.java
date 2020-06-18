@@ -15,6 +15,7 @@
 package com.liferay.portal.liveusers;
 
 import com.liferay.portal.kernel.cluster.ClusterExecutorUtil;
+import com.liferay.portal.kernel.cluster.ClusterMasterExecutorUtil;
 import com.liferay.portal.kernel.cluster.ClusterNode;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -25,6 +26,7 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserTrackerLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.UserTrackerUtil;
 import com.liferay.portal.kernel.servlet.PortalSessionContext;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PropsValues;
 
@@ -84,7 +86,9 @@ public class LiveUsers {
 	}
 
 	public static int getGroupUsersCount(long companyId, long groupId) {
-		return getGroupUsers(companyId, groupId).size();
+		Set<Long> groupUsers = getGroupUsers(companyId, groupId);
+
+		return groupUsers.size();
 	}
 
 	public static Map<Long, Map<Long, Set<String>>> getLocalClusterUsers() {
@@ -110,7 +114,9 @@ public class LiveUsers {
 	}
 
 	public static int getSessionUsersCount(long companyId) {
-		return getSessionUsers(companyId).size();
+		Map<String, UserTracker> sessionUsers = getSessionUsers(companyId);
+
+		return sessionUsers.size();
 	}
 
 	public static UserTracker getUserTracker(long companyId, String sessionId) {
@@ -242,15 +248,17 @@ public class LiveUsers {
 		}
 
 		try {
-			UserTrackerLocalServiceUtil.addUserTracker(
-				userTracker.getCompanyId(), userTracker.getUserId(),
-				userTracker.getModifiedDate(), sessionId,
-				userTracker.getRemoteAddr(), userTracker.getRemoteHost(),
-				userTracker.getUserAgent(), userTracker.getPaths());
+			if (ClusterMasterExecutorUtil.isMaster()) {
+				UserTrackerLocalServiceUtil.addUserTracker(
+					userTracker.getCompanyId(), userTracker.getUserId(),
+					userTracker.getModifiedDate(), sessionId,
+					userTracker.getRemoteAddr(), userTracker.getRemoteHost(),
+					userTracker.getUserAgent(), userTracker.getPaths());
+			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e.getMessage());
+				_log.warn(exception.getMessage());
 			}
 		}
 
@@ -261,7 +269,7 @@ public class LiveUsers {
 				session.invalidate();
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		_removeUserTracker(companyId, userId, userTracker);
@@ -435,9 +443,10 @@ public class LiveUsers {
 
 		Map<Long, Set<Long>> liveUsers = _getLiveUsers(companyId);
 
-		LinkedHashMap<String, Object> groupParams = new LinkedHashMap<>();
-
-		groupParams.put("usersGroups", userId);
+		LinkedHashMap<String, Object> groupParams =
+			LinkedHashMapBuilder.<String, Object>put(
+				"usersGroups", userId
+			).build();
 
 		List<Group> groups = GroupLocalServiceUtil.search(
 			companyId, null, null, groupParams, QueryUtil.ALL_POS,

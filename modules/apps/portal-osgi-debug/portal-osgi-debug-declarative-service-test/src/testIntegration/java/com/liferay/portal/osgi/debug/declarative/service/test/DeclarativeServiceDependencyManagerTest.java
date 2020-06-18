@@ -86,7 +86,7 @@ public class DeclarativeServiceDependencyManagerTest {
 			_configurationAdmin.getConfiguration(
 				"com.liferay.portal.osgi.debug.declarative.service.internal." +
 					"configuration.UnsatisfiedComponentScannerConfiguration",
-				null);
+				"?");
 
 		_properties = _unsatisfiedComponentScannerConfiguration.getProperties();
 
@@ -215,8 +215,8 @@ public class DeclarativeServiceDependencyManagerTest {
 						_unsatisfiedComponentScannerConfiguration.update(
 							new HashMapDictionary<String, Object>());
 					}
-					catch (IOException ioe) {
-						ReflectionUtil.throwException(ioe);
+					catch (IOException ioException) {
+						ReflectionUtil.throwException(ioException);
 					}
 
 					Thread thread = Thread.currentThread();
@@ -235,7 +235,7 @@ public class DeclarativeServiceDependencyManagerTest {
 
 		Dictionary<String, Object> properties = new HashMapDictionary<>();
 
-		properties.put("unsatisfiedComponentScanningInterval", "1");
+		properties.put("unsatisfiedComponentScanningInterval", 1);
 
 		_unsatisfiedComponentScannerConfiguration.update(properties);
 
@@ -343,8 +343,11 @@ public class DeclarativeServiceDependencyManagerTest {
 
 		StreamUtil.transfer(
 			classLoader.getResourceAsStream(
-				packagePath.concat("/dependencies/").concat(
-					_TEST_COMPONENT_FILE_NAME)),
+				packagePath.concat(
+					"/dependencies/"
+				).concat(
+					_TEST_COMPONENT_FILE_NAME
+				)),
 			jarOutputStream, false);
 	}
 

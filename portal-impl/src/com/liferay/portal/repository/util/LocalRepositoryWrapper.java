@@ -84,22 +84,6 @@ public class LocalRepositoryWrapper implements LocalRepository {
 			userId, parentFolderId, name, description, serviceContext);
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #checkInFileEntry(long, long, DLVersionNumberIncrease, String, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public void checkInFileEntry(
-			long userId, long fileEntryId, boolean majorVersion,
-			String changeLog, ServiceContext serviceContext)
-		throws PortalException {
-
-		checkInFileEntry(
-			userId, fileEntryId,
-			DLVersionNumberIncrease.fromMajorVersion(majorVersion), changeLog,
-			serviceContext);
-	}
-
 	@Override
 	public void checkInFileEntry(
 			long userId, long fileEntryId,
@@ -150,6 +134,11 @@ public class LocalRepositoryWrapper implements LocalRepository {
 	@Override
 	public void deleteFileShortcuts(long toFileEntryId) throws PortalException {
 		_localRepository.deleteFileShortcuts(toFileEntryId);
+	}
+
+	@Override
+	public void deleteFileVersion(long fileVersionId) throws PortalException {
+		_localRepository.deleteFileVersion(fileVersionId);
 	}
 
 	@Override
@@ -379,55 +368,8 @@ public class LocalRepositoryWrapper implements LocalRepository {
 			userId, fileEntryId, version, serviceContext);
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void updateAsset(
-			long userId, FileEntry fileEntry, FileVersion fileVersion,
-			long[] assetCategoryIds, String[] assetTagNames,
-			long[] assetLinkEntryIds)
-		throws PortalException {
-
-		_localRepository.updateAsset(
-			userId, fileEntry, fileVersion, assetCategoryIds, assetTagNames,
-			assetLinkEntryIds);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #updateFileEntry(long, long, String, String, String, String, String, DLVersionNumberIncrease, File, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public FileEntry updateFileEntry(
-			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			boolean majorVersion, File file, ServiceContext serviceContext)
-		throws PortalException {
-
-		return updateFileEntry(
-			userId, fileEntryId, sourceFileName, mimeType, title, description,
-			changeLog, DLVersionNumberIncrease.fromMajorVersion(majorVersion),
-			file, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #updateFileEntry(long, long, String, String, String, String, String, DLVersionNumberIncrease, InputStream, long, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public FileEntry updateFileEntry(
-			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			boolean majorVersion, InputStream is, long size,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		return updateFileEntry(
-			userId, fileEntryId, sourceFileName, mimeType, title, description,
-			changeLog, DLVersionNumberIncrease.fromMajorVersion(majorVersion),
-			is, size, serviceContext);
+	public void setLocalRepository(LocalRepository localRepository) {
+		_localRepository = localRepository;
 	}
 
 	@Override
@@ -485,6 +427,6 @@ public class LocalRepositoryWrapper implements LocalRepository {
 			folderId, parentFolderId, name, description, serviceContext);
 	}
 
-	private final LocalRepository _localRepository;
+	private volatile LocalRepository _localRepository;
 
 }

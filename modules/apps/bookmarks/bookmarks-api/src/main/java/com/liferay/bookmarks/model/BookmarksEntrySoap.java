@@ -14,8 +14,6 @@
 
 package com.liferay.bookmarks.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,14 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.bookmarks.service.http.BookmarksEntryServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.bookmarks.service.http.BookmarksEntryServiceSoap
  * @generated
  */
-@ProviderType
 public class BookmarksEntrySoap implements Serializable {
+
 	public static BookmarksEntrySoap toSoapModel(BookmarksEntry model) {
 		BookmarksEntrySoap soapModel = new BookmarksEntrySoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setEntryId(model.getEntryId());
 		soapModel.setGroupId(model.getGroupId());
@@ -47,7 +45,6 @@ public class BookmarksEntrySoap implements Serializable {
 		soapModel.setName(model.getName());
 		soapModel.setUrl(model.getUrl());
 		soapModel.setDescription(model.getDescription());
-		soapModel.setVisits(model.getVisits());
 		soapModel.setPriority(model.getPriority());
 		soapModel.setLastPublishDate(model.getLastPublishDate());
 		soapModel.setStatus(model.getStatus());
@@ -68,11 +65,14 @@ public class BookmarksEntrySoap implements Serializable {
 		return soapModels;
 	}
 
-	public static BookmarksEntrySoap[][] toSoapModels(BookmarksEntry[][] models) {
+	public static BookmarksEntrySoap[][] toSoapModels(
+		BookmarksEntry[][] models) {
+
 		BookmarksEntrySoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new BookmarksEntrySoap[models.length][models[0].length];
+			soapModels =
+				new BookmarksEntrySoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new BookmarksEntrySoap[0][0];
@@ -85,8 +85,11 @@ public class BookmarksEntrySoap implements Serializable {
 		return soapModels;
 	}
 
-	public static BookmarksEntrySoap[] toSoapModels(List<BookmarksEntry> models) {
-		List<BookmarksEntrySoap> soapModels = new ArrayList<BookmarksEntrySoap>(models.size());
+	public static BookmarksEntrySoap[] toSoapModels(
+		List<BookmarksEntry> models) {
+
+		List<BookmarksEntrySoap> soapModels = new ArrayList<BookmarksEntrySoap>(
+			models.size());
 
 		for (BookmarksEntry model : models) {
 			soapModels.add(toSoapModel(model));
@@ -104,6 +107,14 @@ public class BookmarksEntrySoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setEntryId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -210,14 +221,6 @@ public class BookmarksEntrySoap implements Serializable {
 		_description = description;
 	}
 
-	public int getVisits() {
-		return _visits;
-	}
-
-	public void setVisits(int visits) {
-		_visits = visits;
-	}
-
 	public int getPriority() {
 		return _priority;
 	}
@@ -266,6 +269,7 @@ public class BookmarksEntrySoap implements Serializable {
 		_statusDate = statusDate;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _entryId;
 	private long _groupId;
@@ -279,11 +283,11 @@ public class BookmarksEntrySoap implements Serializable {
 	private String _name;
 	private String _url;
 	private String _description;
-	private int _visits;
 	private int _priority;
 	private Date _lastPublishDate;
 	private int _status;
 	private long _statusByUserId;
 	private String _statusByUserName;
 	private Date _statusDate;
+
 }

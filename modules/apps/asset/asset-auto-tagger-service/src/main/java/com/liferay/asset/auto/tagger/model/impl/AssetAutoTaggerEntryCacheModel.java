@@ -14,14 +14,11 @@
 
 package com.liferay.asset.auto.tagger.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.auto.tagger.model.AssetAutoTaggerEntry;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing AssetAutoTaggerEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see AssetAutoTaggerEntry
  * @generated
  */
-@ProviderType
-public class AssetAutoTaggerEntryCacheModel implements CacheModel<AssetAutoTaggerEntry>,
-	Externalizable {
+public class AssetAutoTaggerEntryCacheModel
+	implements CacheModel<AssetAutoTaggerEntry>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,13 @@ public class AssetAutoTaggerEntryCacheModel implements CacheModel<AssetAutoTagge
 			return false;
 		}
 
-		AssetAutoTaggerEntryCacheModel assetAutoTaggerEntryCacheModel = (AssetAutoTaggerEntryCacheModel)obj;
+		AssetAutoTaggerEntryCacheModel assetAutoTaggerEntryCacheModel =
+			(AssetAutoTaggerEntryCacheModel)obj;
 
-		if (assetAutoTaggerEntryId == assetAutoTaggerEntryCacheModel.assetAutoTaggerEntryId) {
+		if ((assetAutoTaggerEntryId ==
+				assetAutoTaggerEntryCacheModel.assetAutoTaggerEntryId) &&
+			(mvccVersion == assetAutoTaggerEntryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +61,30 @@ public class AssetAutoTaggerEntryCacheModel implements CacheModel<AssetAutoTagge
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, assetAutoTaggerEntryId);
+		int hashCode = HashUtil.hash(0, assetAutoTaggerEntryId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(15);
+		StringBundler sb = new StringBundler(19);
 
-		sb.append("{assetAutoTaggerEntryId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
+		sb.append(", assetAutoTaggerEntryId=");
 		sb.append(assetAutoTaggerEntryId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -89,9 +105,13 @@ public class AssetAutoTaggerEntryCacheModel implements CacheModel<AssetAutoTagge
 
 	@Override
 	public AssetAutoTaggerEntry toEntityModel() {
-		AssetAutoTaggerEntryImpl assetAutoTaggerEntryImpl = new AssetAutoTaggerEntryImpl();
+		AssetAutoTaggerEntryImpl assetAutoTaggerEntryImpl =
+			new AssetAutoTaggerEntryImpl();
 
-		assetAutoTaggerEntryImpl.setAssetAutoTaggerEntryId(assetAutoTaggerEntryId);
+		assetAutoTaggerEntryImpl.setMvccVersion(mvccVersion);
+		assetAutoTaggerEntryImpl.setCtCollectionId(ctCollectionId);
+		assetAutoTaggerEntryImpl.setAssetAutoTaggerEntryId(
+			assetAutoTaggerEntryId);
 		assetAutoTaggerEntryImpl.setGroupId(groupId);
 		assetAutoTaggerEntryImpl.setCompanyId(companyId);
 
@@ -119,6 +139,10 @@ public class AssetAutoTaggerEntryCacheModel implements CacheModel<AssetAutoTagge
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
+
 		assetAutoTaggerEntryId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -133,8 +157,11 @@ public class AssetAutoTaggerEntryCacheModel implements CacheModel<AssetAutoTagge
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
+
 		objectOutput.writeLong(assetAutoTaggerEntryId);
 
 		objectOutput.writeLong(groupId);
@@ -148,6 +175,8 @@ public class AssetAutoTaggerEntryCacheModel implements CacheModel<AssetAutoTagge
 		objectOutput.writeLong(assetTagId);
 	}
 
+	public long mvccVersion;
+	public long ctCollectionId;
 	public long assetAutoTaggerEntryId;
 	public long groupId;
 	public long companyId;
@@ -155,4 +184,5 @@ public class AssetAutoTaggerEntryCacheModel implements CacheModel<AssetAutoTagge
 	public long modifiedDate;
 	public long assetEntryId;
 	public long assetTagId;
+
 }

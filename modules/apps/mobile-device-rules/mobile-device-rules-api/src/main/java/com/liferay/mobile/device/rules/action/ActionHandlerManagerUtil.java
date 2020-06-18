@@ -30,16 +30,17 @@ import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * @author Edward Han
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class ActionHandlerManagerUtil {
 
 	public static void applyActions(
-			List<MDRAction> mdrActions, HttpServletRequest request,
-			HttpServletResponse response)
+			List<MDRAction> mdrActions, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws PortalException {
 
-		getActionHandlerManager().applyActions(mdrActions, request, response);
+		getActionHandlerManager().applyActions(
+			mdrActions, httpServletRequest, httpServletResponse);
 	}
 
 	public static ActionHandler getActionHandler(String actionType) {
@@ -47,7 +48,7 @@ public class ActionHandlerManagerUtil {
 	}
 
 	public static ActionHandlerManager getActionHandlerManager() {
-		return _instance._getActionHandlerManager();
+		return _actionHandlerManagerUtil._getActionHandlerManager();
 	}
 
 	public static Collection<ActionHandler> getActionHandlers() {
@@ -77,7 +78,7 @@ public class ActionHandlerManagerUtil {
 		return _serviceTracker.getService();
 	}
 
-	private static final ActionHandlerManagerUtil _instance =
+	private static final ActionHandlerManagerUtil _actionHandlerManagerUtil =
 		new ActionHandlerManagerUtil();
 
 	private final ServiceTracker<ActionHandlerManager, ActionHandlerManager>

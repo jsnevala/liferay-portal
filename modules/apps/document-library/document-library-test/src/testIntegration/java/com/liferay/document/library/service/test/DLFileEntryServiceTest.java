@@ -37,7 +37,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
@@ -62,7 +62,7 @@ public class DLFileEntryServiceTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -249,7 +249,7 @@ public class DLFileEntryServiceTest {
 	}
 
 	@Test
-	public void testUpdateFileName()throws Exception {
+	public void testUpdateFileName() throws Exception {
 		DLFileEntry dlFileEntry = addDLFileEntry(
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, false);
 

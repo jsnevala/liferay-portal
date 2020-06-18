@@ -17,6 +17,8 @@
 <%@ include file="/preview/init.jsp" %>
 
 <%
+String randomNamespace = PortalUtil.generateRandomKey(request, "portlet_document_library_view_file_entry_preview") + StringPool.UNDERLINE;
+
 FileVersion fileVersion = (FileVersion)request.getAttribute(WebKeys.DOCUMENT_LIBRARY_FILE_VERSION);
 
 String previewQueryString = "&imagePreview=1";
@@ -27,25 +29,36 @@ if (status != WorkflowConstants.STATUS_ANY) {
 	previewQueryString += "&status=" + status;
 }
 
-String previewFileURL = DLUtil.getPreviewURL(fileVersion.getFileEntry(), fileVersion, themeDisplay, previewQueryString);
-
-String randomNamespace = PortalUtil.generateRandomKey(request, "portlet_document_library_view_file_entry_preview") + StringPool.UNDERLINE;
+String previewURL = DLURLHelperUtil.getPreviewURL(fileVersion.getFileEntry(), fileVersion, themeDisplay, previewQueryString);
 %>
 
-<div class="lfr-preview-file lfr-preview-image" id="<portlet:namespace /><%= randomNamespace %>previewFile">
-	<div class="lfr-preview-file-content lfr-preview-image-content" id="<portlet:namespace /><%= randomNamespace %>previewFileContent">
-		<div class="lfr-preview-file-image-current-column">
-			<div class="lfr-preview-file-image-container">
-				<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="preview" />" class="lfr-preview-file-image-current" src="<%= previewFileURL %>" />
+<liferay-util:html-top
+	outputKey="document_library_preview_image_css"
+>
+	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/preview/css/main.css") %>" rel="stylesheet" type="text/css" />
+</liferay-util:html-top>
+
+<c:choose>
+	<c:when test="<%= Objects.equals(fileVersion.getMimeType(), ContentTypes.IMAGE_SVG_XML) %>">
+		<div class="preview-file">
+			<div class="preview-file-container preview-file-max-height">
+				<img class="preview-file-image-vectorial" src="<%= previewURL %>" />
 			</div>
 		</div>
-	</div>
-</div>
+	</c:when>
+	<c:otherwise>
 
-<aui:script use="aui-base">
-	var currentImage = A.one('.lfr-preview-file-image-current');
+		<%
+		Map<String, Object> data = HashMapBuilder.<String, Object>put(
+			"imageURL", previewURL
+		).build();
+		%>
 
-	if (currentImage && (currentImage.get('complete') || currentImage.get('naturalWidth'))) {
-		currentImage.setStyle('background-image', 'none');
-	}
-</aui:script>
+		<div id="<%= renderResponse.getNamespace() + randomNamespace + "previewImage" %>">
+			<react:component
+				data="<%= data %>"
+				module="preview/js/ImagePreviewer.es"
+			/>
+		</div>
+	</c:otherwise>
+</c:choose>

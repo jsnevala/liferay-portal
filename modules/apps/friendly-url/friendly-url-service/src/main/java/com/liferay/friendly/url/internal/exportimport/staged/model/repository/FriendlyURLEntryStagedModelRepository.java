@@ -17,15 +17,20 @@ package com.liferay.friendly.url.internal.exportimport.staged.model.repository;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepositoryHelper;
+import com.liferay.friendly.url.internal.exportimport.lar.FriendlyURLExportImportPathUtil;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -51,12 +56,15 @@ public class FriendlyURLEntryStagedModelRepository
 		ServiceContext serviceContext = portletDataContext.createServiceContext(
 			friendlyURLEntry);
 
-		serviceContext.setUuid(friendlyURLEntry.getUuid());
+		if (portletDataContext.isDataStrategyMirror()) {
+			serviceContext.setUuid(friendlyURLEntry.getUuid());
+		}
 
 		return _friendlyURLEntryLocalService.addFriendlyURLEntry(
 			friendlyURLEntry.getGroupId(), friendlyURLEntry.getClassNameId(),
 			friendlyURLEntry.getClassPK(),
-			friendlyURLEntry.getLanguageIdToUrlTitleMap(), serviceContext);
+			_getLocalizationMap(portletDataContext, friendlyURLEntry),
+			serviceContext);
 	}
 
 	@Override
@@ -66,8 +74,7 @@ public class FriendlyURLEntryStagedModelRepository
 
 	@Override
 	public void deleteStagedModel(
-			String uuid, long groupId, String className, String extraData)
-		throws PortalException {
+		String uuid, long groupId, String className, String extraData) {
 
 		FriendlyURLEntry friendlyURLEntry = fetchStagedModelByUuidAndGroupId(
 			uuid, groupId);
@@ -79,11 +86,9 @@ public class FriendlyURLEntryStagedModelRepository
 
 	@Override
 	public void deleteStagedModels(PortletDataContext portletDataContext) {
-		Map<String, String[]> parameterMap =
-			portletDataContext.getParameterMap();
-
 		long classNameId = MapUtil.getLong(
-			parameterMap, "parentStagedModelClassNameId");
+			portletDataContext.getParameterMap(),
+			"parentStagedModelClassNameId");
 
 		_friendlyURLEntryLocalService.deleteGroupFriendlyURLEntries(
 			portletDataContext.getGroupId(), classNameId);
@@ -99,9 +104,8 @@ public class FriendlyURLEntryStagedModelRepository
 	public FriendlyURLEntry fetchStagedModelByUuidAndGroupId(
 		String uuid, long groupId) {
 
-		return
-			_friendlyURLEntryLocalService.fetchFriendlyURLEntryByUuidAndGroupId(
-				uuid, groupId);
+		return _friendlyURLEntryLocalService.
+			fetchFriendlyURLEntryByUuidAndGroupId(uuid, groupId);
 	}
 
 	@Override
@@ -159,14 +163,59 @@ public class FriendlyURLEntryStagedModelRepository
 
 	@Override
 	public FriendlyURLEntry updateStagedModel(
+			PortletDataContext portletDataContext,
+			FriendlyURLEntry friendlyURLEntry)
+		throws PortalException {
+
+		return _friendlyURLEntryLocalService.updateFriendlyURLEntry(
+			friendlyURLEntry.getFriendlyURLEntryId(),
+			friendlyURLEntry.getClassNameId(), friendlyURLEntry.getClassPK(),
+			friendlyURLEntry.getDefaultLanguageId(),
+			_getLocalizationMap(portletDataContext, friendlyURLEntry));
+	}
+
+	private Map<String, String> _getLocalizationMap(
 		PortletDataContext portletDataContext,
 		FriendlyURLEntry friendlyURLEntry) {
 
-		return saveStagedModel(friendlyURLEntry);
+		String modelPath = FriendlyURLExportImportPathUtil.getModelPath(
+			portletDataContext, friendlyURLEntry);
+
+		Map<Locale, String> localeLocalizationMap =
+			LocalizationUtil.getLocalizationMap(
+				portletDataContext.getZipEntryAsString(modelPath));
+
+		Map<String, String> languageIdLocalizationMap = new HashMap<>();
+
+		for (Map.Entry<Locale, String> entry :
+				localeLocalizationMap.entrySet()) {
+
+			String urlTitle = entry.getValue();
+
+			FriendlyURLEntry existingFriendlyURLEntry =
+				_friendlyURLEntryLocalService.fetchFriendlyURLEntry(
+					friendlyURLEntry.getGroupId(),
+					friendlyURLEntry.getClassNameId(), urlTitle);
+
+			if (existingFriendlyURLEntry != null) {
+				urlTitle = _friendlyURLEntryLocalService.getUniqueUrlTitle(
+					friendlyURLEntry.getGroupId(),
+					friendlyURLEntry.getClassNameId(),
+					friendlyURLEntry.getClassPK(), urlTitle);
+			}
+
+			languageIdLocalizationMap.put(
+				_language.getLanguageId(entry.getKey()), urlTitle);
+		}
+
+		return languageIdLocalizationMap;
 	}
 
 	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private StagedModelRepositoryHelper _stagedModelRepositoryHelper;

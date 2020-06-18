@@ -37,12 +37,10 @@ if (recordSet != null) {
 String ddmStructureName = StringPool.BLANK;
 
 if (ddmStructureId > 0) {
-	try {
-		DDMStructure ddmStructure = DDMStructureLocalServiceUtil.getStructure(ddmStructureId);
+	DDMStructure ddmStructure = DDMStructureLocalServiceUtil.fetchDDMStructure(ddmStructureId);
 
+	if (ddmStructure != null) {
 		ddmStructureName = HtmlUtil.escape(ddmStructure.getName(locale));
-	}
-	catch (NoSuchStructureException nsse) {
 	}
 }
 
@@ -99,7 +97,7 @@ if (ddlDisplayContext.isAdminPortlet()) {
 
 				<liferay-ui:icon
 					label="<%= true %>"
-					linkCssClass="btn btn-default"
+					linkCssClass="btn btn-secondary"
 					message="select"
 					url='<%= "javascript:" + renderResponse.getNamespace() + "openDDMStructureSelector();" %>'
 				/>
@@ -162,13 +160,16 @@ if (ddlDisplayContext.isAdminPortlet()) {
 </aui:form>
 
 <aui:script>
+	var form = document.<portlet:namespace />fm;
+
 	function <portlet:namespace />openDDMStructureSelector() {
 		Liferay.Util.openDDMPortlet(
 			{
-				basePortletURL: '<%= PortletURLFactoryUtil.create(request, PortletProviderUtil.getPortletId(DDMStructure.class.getName(), PortletProvider.Action.VIEW), PortletRequest.RENDER_PHASE) %>',
+				basePortletURL:
+					'<%= PortletURLFactoryUtil.create(request, PortletProviderUtil.getPortletId(DDMStructure.class.getName(), PortletProvider.Action.VIEW), PortletRequest.RENDER_PHASE) %>',
 				classPK: <%= ddmStructureId %>,
 				dialog: {
-					destroyOnHide: true
+					destroyOnHide: true,
 				},
 				eventName: '<portlet:namespace />selectDDMStructure',
 				groupId: <%= groupId %>,
@@ -182,18 +183,20 @@ if (ddlDisplayContext.isAdminPortlet()) {
 				refererPortletName: '<%= portlet.getPortletName() %>',
 				refererWebDAVToken: '<%= WebDAVUtil.getStorageToken(portlet) %>',
 				showAncestorScopes: true,
-				title: '<%= UnicodeLanguageUtil.get(request, "data-definitions") %>'
+				title:
+					'<%= UnicodeLanguageUtil.get(request, "data-definitions") %>',
 			},
-			function(event) {
-				AUI.$('#<portlet:namespace />ddmStructureId').val(event.ddmstructureid);
-
-				AUI.$('#<portlet:namespace />ddmStructureNameDisplay').val(Liferay.Util.unescape(event.name));
+			function (event) {
+				Liferay.Util.setFormValues(form, {
+					ddmStructureId: event.ddmstructureid,
+					ddmStructureNameDisplay: Liferay.Util.unescape(event.name),
+				});
 			}
 		);
 	}
 
 	function <portlet:namespace />saveRecordSet() {
-		submitForm(document.<portlet:namespace />fm);
+		submitForm(form);
 	}
 </aui:script>
 

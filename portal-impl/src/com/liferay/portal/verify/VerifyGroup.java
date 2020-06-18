@@ -14,7 +14,6 @@
 
 package com.liferay.portal.verify;
 
-import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -36,97 +35,22 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.portal.service.impl.GroupLocalServiceImpl;
-import com.liferay.portal.util.PortalInstances;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 /**
- * @author Brian Wing Shun Chan
+ * @author     Brian Wing Shun Chan
+ * @deprecated As of Mueller (7.2.x), with no direct replacement
  */
+@Deprecated
 public class VerifyGroup extends VerifyProcess {
 
 	@Override
 	protected void doVerify() throws Exception {
-		verifyOrganizationNames();
-		verifySites();
 		verifyStagedGroups();
-		verifyTree();
-	}
-
-	protected void verifyOrganizationNames() throws Exception {
-		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append("select groupId, name from Group_ where name like '%");
-			sb.append(GroupLocalServiceImpl.ORGANIZATION_NAME_SUFFIX);
-			sb.append("%' and name not like '%");
-			sb.append(GroupLocalServiceImpl.ORGANIZATION_NAME_SUFFIX);
-			sb.append("'");
-
-			try (PreparedStatement ps1 = connection.prepareStatement(
-					sb.toString());
-				PreparedStatement ps2 =
-					AutoBatchPreparedStatementUtil.concurrentAutoBatch(
-						connection,
-						"update Group_ set name = ? where groupId = ?");
-				ResultSet rs = ps1.executeQuery()) {
-
-				while (rs.next()) {
-					String name = rs.getString("name");
-
-					if (name.endsWith(
-							GroupLocalServiceImpl.ORGANIZATION_NAME_SUFFIX) ||
-						name.endsWith(
-							GroupLocalServiceImpl.
-								ORGANIZATION_STAGING_SUFFIX)) {
-
-						continue;
-					}
-
-					int pos = name.indexOf(
-						GroupLocalServiceImpl.ORGANIZATION_NAME_SUFFIX);
-
-					pos = name.indexOf(" ", pos + 1);
-
-					String newName =
-						name.substring(pos + 1) +
-							GroupLocalServiceImpl.ORGANIZATION_NAME_SUFFIX;
-
-					ps2.setString(1, newName);
-
-					long groupId = rs.getLong("groupId");
-
-					ps2.setLong(2, groupId);
-
-					ps2.addBatch();
-				}
-
-				ps2.executeBatch();
-			}
-		}
-	}
-
-	protected void verifySites() throws Exception {
-		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			long organizationClassNameId = PortalUtil.getClassNameId(
-				Organization.class);
-
-			runSQL(
-				StringBundler.concat(
-					"update Group_ set site = [$TRUE$] where classNameId = ",
-					String.valueOf(organizationClassNameId),
-					" and site = [$FALSE$] and exists (select 1 from Layout ",
-					"where Layout.groupId = Group_.groupId)"));
-		}
 	}
 
 	protected void verifyStagedGroups() throws Exception {
@@ -138,26 +62,17 @@ public class VerifyGroup extends VerifyProcess {
 					continue;
 				}
 
-				UnicodeProperties typeSettingsProperties =
+				UnicodeProperties typeSettingsUnicodeProperties =
 					group.getTypeSettingsProperties();
 
-				typeSettingsProperties.setProperty(
-					"staged", Boolean.TRUE.toString());
-				typeSettingsProperties.setProperty(
-					"stagedRemotely", Boolean.FALSE.toString());
-
-				verifyStagingTypeSettingsProperties(typeSettingsProperties);
+				verifyStagingTypeSettingsProperties(
+					typeSettingsUnicodeProperties);
 
 				GroupLocalServiceUtil.updateGroup(
-					group.getGroupId(), typeSettingsProperties.toString());
+					group.getGroupId(),
+					typeSettingsUnicodeProperties.toString());
 
 				Group stagingGroup = group.getStagingGroup();
-
-				if (group.getClassNameId() != stagingGroup.getClassNameId()) {
-					stagingGroup.setClassNameId(group.getClassNameId());
-
-					GroupLocalServiceUtil.updateGroup(stagingGroup);
-				}
 
 				if (!stagingGroup.isStagedRemotely()) {
 					verifyStagingGroupOrganizationMembership(stagingGroup);
@@ -264,9 +179,9 @@ public class VerifyGroup extends VerifyProcess {
 	}
 
 	protected void verifyStagingTypeSettingsProperties(
-		UnicodeProperties typeSettingsProperties) {
+		UnicodeProperties typeSettingsUnicodeProperties) {
 
-		Set<String> keys = typeSettingsProperties.keySet();
+		Set<String> keys = typeSettingsUnicodeProperties.keySet();
 
 		Iterator<String> iterator = keys.iterator();
 
@@ -292,8 +207,7 @@ public class VerifyGroup extends VerifyProcess {
 			UserGroupGroupRoleLocalServiceUtil.dynamicQuery();
 
 		dynamicQuery.add(
-			RestrictionsFactoryUtil.eq(
-				"id.groupId", stagingGroup.getGroupId()));
+			RestrictionsFactoryUtil.eq("groupId", stagingGroup.getGroupId()));
 
 		List<UserGroupGroupRole> stagingUserGroupGroupRoles =
 			UserGroupGroupRoleLocalServiceUtil.dynamicQuery(dynamicQuery);
@@ -306,7 +220,7 @@ public class VerifyGroup extends VerifyProcess {
 
 		dynamicQuery.add(
 			RestrictionsFactoryUtil.eq(
-				"id.groupId", stagingGroup.getLiveGroupId()));
+				"groupId", stagingGroup.getLiveGroupId()));
 
 		List<UserGroupGroupRole> liveUserGroupGroupRoles =
 			UserGroupGroupRoleLocalServiceUtil.dynamicQuery(dynamicQuery);
@@ -350,16 +264,6 @@ public class VerifyGroup extends VerifyProcess {
 
 		UserGroupRoleLocalServiceUtil.deleteUserGroupRolesByGroupId(
 			stagingGroup.getGroupId());
-	}
-
-	protected void verifyTree() throws Exception {
-		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			long[] companyIds = PortalInstances.getCompanyIdsBySQL();
-
-			for (long companyId : companyIds) {
-				GroupLocalServiceUtil.rebuildTree(companyId);
-			}
-		}
 	}
 
 	private static final String[] _LEGACY_STAGED_PORTLET_TYPE_SETTINGS_KEYS = {

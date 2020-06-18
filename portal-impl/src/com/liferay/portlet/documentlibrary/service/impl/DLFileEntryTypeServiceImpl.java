@@ -23,13 +23,13 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
 import com.liferay.portlet.documentlibrary.service.base.DLFileEntryTypeServiceBaseImpl;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -64,13 +64,13 @@ public class DLFileEntryTypeServiceImpl extends DLFileEntryTypeServiceBaseImpl {
 			long[] ddmStructureIds, ServiceContext serviceContext)
 		throws PortalException {
 
-		Map<Locale, String> nameMap = new HashMap<>();
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), name
+		).build();
 
-		nameMap.put(LocaleUtil.getSiteDefault(), name);
-
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.getSiteDefault(), description);
+		Map<Locale, String> descriptionMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), description
+		).build();
 
 		return addFileEntryType(
 			groupId, null, nameMap, descriptionMap, ddmStructureIds,
@@ -127,6 +127,18 @@ public class DLFileEntryTypeServiceImpl extends DLFileEntryTypeServiceBaseImpl {
 
 	@Override
 	public List<DLFileEntryType> search(
+			long companyId, long folderId, long[] groupIds, String keywords,
+			boolean includeBasicFileEntryType, boolean inherited, int start,
+			int end)
+		throws PortalException {
+
+		return dlFileEntryTypeFinder.filterFindByKeywords(
+			companyId, folderId, groupIds, keywords, includeBasicFileEntryType,
+			inherited, start, end);
+	}
+
+	@Override
+	public List<DLFileEntryType> search(
 		long companyId, long[] groupIds, String keywords,
 		boolean includeBasicFileEntryType, int start, int end,
 		OrderByComparator<DLFileEntryType> orderByComparator) {
@@ -134,6 +146,16 @@ public class DLFileEntryTypeServiceImpl extends DLFileEntryTypeServiceBaseImpl {
 		return dlFileEntryTypeFinder.filterFindByKeywords(
 			companyId, groupIds, keywords, includeBasicFileEntryType, start,
 			end, orderByComparator);
+	}
+
+	@Override
+	public int searchCount(
+		long companyId, long folderId, long[] groupIds, String keywords,
+		boolean includeBasicFileEntryType, boolean inherited) {
+
+		return dlFileEntryTypeFinder.filterCountByKeywords(
+			companyId, folderId, groupIds, keywords, includeBasicFileEntryType,
+			inherited);
 	}
 
 	@Override
@@ -166,13 +188,13 @@ public class DLFileEntryTypeServiceImpl extends DLFileEntryTypeServiceBaseImpl {
 			long[] ddmStructureIds, ServiceContext serviceContext)
 		throws PortalException {
 
-		Map<Locale, String> nameMap = new HashMap<>();
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), name
+		).build();
 
-		nameMap.put(LocaleUtil.getSiteDefault(), name);
-
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.getSiteDefault(), description);
+		Map<Locale, String> descriptionMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), description
+		).build();
 
 		updateFileEntryType(
 			fileEntryTypeId, nameMap, descriptionMap, ddmStructureIds,

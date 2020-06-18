@@ -14,8 +14,6 @@
 
 package com.liferay.segments.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,14 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.segments.service.http.SegmentsEntryRelServiceSoap}.
  *
  * @author Eduardo Garcia
- * @see com.liferay.segments.service.http.SegmentsEntryRelServiceSoap
  * @generated
  */
-@ProviderType
 public class SegmentsEntryRelSoap implements Serializable {
+
 	public static SegmentsEntryRelSoap toSoapModel(SegmentsEntryRel model) {
 		SegmentsEntryRelSoap soapModel = new SegmentsEntryRelSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setSegmentsEntryRelId(model.getSegmentsEntryRelId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -48,8 +46,11 @@ public class SegmentsEntryRelSoap implements Serializable {
 		return soapModel;
 	}
 
-	public static SegmentsEntryRelSoap[] toSoapModels(SegmentsEntryRel[] models) {
-		SegmentsEntryRelSoap[] soapModels = new SegmentsEntryRelSoap[models.length];
+	public static SegmentsEntryRelSoap[] toSoapModels(
+		SegmentsEntryRel[] models) {
+
+		SegmentsEntryRelSoap[] soapModels =
+			new SegmentsEntryRelSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -60,10 +61,12 @@ public class SegmentsEntryRelSoap implements Serializable {
 
 	public static SegmentsEntryRelSoap[][] toSoapModels(
 		SegmentsEntryRel[][] models) {
+
 		SegmentsEntryRelSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new SegmentsEntryRelSoap[models.length][models[0].length];
+			soapModels =
+				new SegmentsEntryRelSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new SegmentsEntryRelSoap[0][0];
@@ -78,7 +81,9 @@ public class SegmentsEntryRelSoap implements Serializable {
 
 	public static SegmentsEntryRelSoap[] toSoapModels(
 		List<SegmentsEntryRel> models) {
-		List<SegmentsEntryRelSoap> soapModels = new ArrayList<SegmentsEntryRelSoap>(models.size());
+
+		List<SegmentsEntryRelSoap> soapModels =
+			new ArrayList<SegmentsEntryRelSoap>(models.size());
 
 		for (SegmentsEntryRel model : models) {
 			soapModels.add(toSoapModel(model));
@@ -96,6 +101,14 @@ public class SegmentsEntryRelSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setSegmentsEntryRelId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getSegmentsEntryRelId() {
@@ -178,6 +191,7 @@ public class SegmentsEntryRelSoap implements Serializable {
 		_classPK = classPK;
 	}
 
+	private long _mvccVersion;
 	private long _segmentsEntryRelId;
 	private long _groupId;
 	private long _companyId;
@@ -188,4 +202,5 @@ public class SegmentsEntryRelSoap implements Serializable {
 	private long _segmentsEntryId;
 	private long _classNameId;
 	private long _classPK;
+
 }

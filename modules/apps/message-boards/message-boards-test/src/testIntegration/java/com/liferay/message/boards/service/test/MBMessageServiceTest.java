@@ -27,7 +27,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
-import com.liferay.portal.kernel.messaging.SynchronousDestination;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -44,16 +43,15 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceTestConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.security.permission.DoAsUserThread;
-import com.liferay.portal.service.test.ServiceTestUtil;
-import com.liferay.portal.spring.transaction.DefaultTransactionExecutor;
 import com.liferay.portal.test.log.CaptureAppender;
 import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.InputStream;
 
@@ -83,7 +81,7 @@ public class MBMessageServiceTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -110,9 +108,9 @@ public class MBMessageServiceTest {
 
 		_group = GroupTestUtil.addGroup();
 
-		_users = new User[ServiceTestUtil.THREAD_COUNT];
+		_users = new User[ServiceTestConstants.THREAD_COUNT];
 
-		for (int i = 0; i < ServiceTestUtil.THREAD_COUNT; i++) {
+		for (int i = 0; i < ServiceTestConstants.THREAD_COUNT; i++) {
 			User user = UserTestUtil.addUser(_group.getGroupId());
 
 			_users[i] = user;
@@ -151,7 +149,9 @@ public class MBMessageServiceTest {
 					BasePersistenceImpl.class.getName(), Level.ERROR);
 			CaptureAppender captureAppender2 =
 				Log4JLoggerTestUtil.configureLog4JLogger(
-					DefaultTransactionExecutor.class.getName(), Level.ERROR);
+					"com.liferay.portal.spring.transaction." +
+						"DefaultTransactionExecutor",
+					Level.ERROR);
 			CaptureAppender captureAppender3 =
 				Log4JLoggerTestUtil.configureLog4JLogger(
 					DoAsUserThread.class.getName(), Level.ERROR);
@@ -160,7 +160,9 @@ public class MBMessageServiceTest {
 					JDBCExceptionReporter.class.getName(), Level.ERROR);
 			CaptureAppender captureAppender5 =
 				Log4JLoggerTestUtil.configureLog4JLogger(
-					SynchronousDestination.class.getName(), Level.ERROR);) {
+					"com.liferay.portal.messaging.internal." +
+						"SynchronousDestination",
+					Level.ERROR)) {
 
 			for (DoAsUserThread doAsUserThread : doAsUserThreads) {
 				doAsUserThread.start();
@@ -241,8 +243,9 @@ public class MBMessageServiceTest {
 		}
 
 		Assert.assertTrue(
-			"Only " + successCount + " out of " + _users.length +
-				" threads added messages successfully",
+			StringBundler.concat(
+				"Only ", successCount, " out of ", _users.length,
+				" threads added messages successfully"),
 			successCount == _users.length);
 	}
 
@@ -260,8 +263,8 @@ public class MBMessageServiceTest {
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(user);
 
-		try (ContextUserReplace contextUserReplace =
-				new ContextUserReplace(user, permissionChecker)) {
+		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+				user, permissionChecker)) {
 
 			MBMessageServiceUtil.addMessage(
 				_group.getGroupId(), _category.getCategoryId(),
@@ -285,8 +288,8 @@ public class MBMessageServiceTest {
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(user);
 
-		try (ContextUserReplace contextUserReplace =
-				new ContextUserReplace(user, permissionChecker)) {
+		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+				user, permissionChecker)) {
 
 			MBMessageServiceUtil.addMessage(
 				_group.getGroupId(),
@@ -308,7 +311,7 @@ public class MBMessageServiceTest {
 	private class AddMessageThread extends DoAsUserThread {
 
 		public AddMessageThread(long userId, String subject) {
-			super(userId, ServiceTestUtil.RETRY_COUNT);
+			super(userId, ServiceTestConstants.RETRY_COUNT);
 
 			_subject = subject;
 		}

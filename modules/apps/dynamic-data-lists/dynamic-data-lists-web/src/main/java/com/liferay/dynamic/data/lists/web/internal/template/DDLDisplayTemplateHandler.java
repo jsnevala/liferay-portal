@@ -14,6 +14,7 @@
 
 package com.liferay.dynamic.data.lists.web.internal.template;
 
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.dynamic.data.lists.constants.DDLConstants;
 import com.liferay.dynamic.data.lists.constants.DDLPortletKeys;
 import com.liferay.dynamic.data.lists.model.DDLRecord;
@@ -37,10 +38,11 @@ import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateVariableCodeHandler;
 import com.liferay.portal.kernel.template.TemplateVariableGroup;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -67,18 +69,18 @@ public class DDLDisplayTemplateHandler extends BaseDDMTemplateHandler {
 
 	@Override
 	public Map<String, Object> getCustomContextObjects() {
-		Map<String, Object> contextObjects = new HashMap<>(1);
-
-		contextObjects.put(
-			"ddlDisplayTemplateHelper", new DDLDisplayTemplateHelper());
-
-		return contextObjects;
+		return HashMapBuilder.<String, Object>put(
+			"ddlDisplayTemplateHelper",
+			new DDLDisplayTemplateHelper(_dlURLHelper)
+		).build();
 	}
 
 	@Override
 	public String getName(Locale locale) {
 		String portletTitle = _portal.getPortletTitle(
-			DDLPortletKeys.DYNAMIC_DATA_LISTS, locale);
+			DDLPortletKeys.DYNAMIC_DATA_LISTS,
+			ResourceBundleUtil.getBundle(
+				"content.Language", locale, getClass()));
 
 		return LanguageUtil.format(locale, "x-template", portletTitle, false);
 	}
@@ -127,11 +129,9 @@ public class DDLDisplayTemplateHandler extends BaseDDMTemplateHandler {
 		addTemplateVariableGroup(
 			templateVariableGroups, getUtilTemplateVariableGroup());
 
-		String[] restrictedVariables = getRestrictedVariables(language);
-
 		TemplateVariableGroup ddlServicesTemplateVariableGroup =
 			new TemplateVariableGroup(
-				"data-list-services", restrictedVariables);
+				"data-list-services", getRestrictedVariables(language));
 
 		ddlServicesTemplateVariableGroup.setAutocompleteEnabled(false);
 
@@ -193,6 +193,9 @@ public class DDLDisplayTemplateHandler extends BaseDDMTemplateHandler {
 	protected TemplateVariableCodeHandler getTemplateVariableCodeHandler() {
 		return _templateVariableCodeHandler;
 	}
+
+	@Reference
+	private DLURLHelper _dlURLHelper;
 
 	@Reference
 	private Portal _portal;

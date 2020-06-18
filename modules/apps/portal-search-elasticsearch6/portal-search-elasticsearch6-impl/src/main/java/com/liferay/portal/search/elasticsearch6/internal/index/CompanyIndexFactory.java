@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.elasticsearch6.internal.index;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
@@ -21,20 +22,25 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch6.configuration.ElasticsearchConfiguration;
+import com.liferay.portal.search.elasticsearch6.internal.index.contributor.IndexContributorReceiver;
 import com.liferay.portal.search.elasticsearch6.internal.settings.SettingsBuilder;
 import com.liferay.portal.search.elasticsearch6.internal.util.LogUtil;
 import com.liferay.portal.search.elasticsearch6.internal.util.ResourceUtil;
 import com.liferay.portal.search.elasticsearch6.settings.IndexSettingsContributor;
 import com.liferay.portal.search.elasticsearch6.settings.IndexSettingsHelper;
+import com.liferay.portal.search.index.IndexNameBuilder;
+import com.liferay.portal.search.spi.model.index.contributor.IndexContributor;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.client.AdminClient;
@@ -55,14 +61,19 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  */
 @Component(
 	configurationPid = "com.liferay.portal.search.elasticsearch6.configuration.ElasticsearchConfiguration",
-	immediate = true, service = IndexFactory.class
+	immediate = true,
+	service = {IndexContributorReceiver.class, IndexFactory.class}
 )
-public class CompanyIndexFactory implements IndexFactory {
+public class CompanyIndexFactory
+	implements IndexContributorReceiver, IndexFactory {
 
 	@Override
-	public void createIndices(AdminClient adminClient, long companyId)
-		throws Exception {
+	public void addIndexContributor(IndexContributor indexContributor) {
+		_indexContributors.add(indexContributor);
+	}
 
+	@Override
+	public void createIndices(AdminClient adminClient, long companyId) {
 		IndicesAdminClient indicesAdminClient = adminClient.indices();
 
 		String indexName = getIndexName(companyId);
@@ -75,9 +86,7 @@ public class CompanyIndexFactory implements IndexFactory {
 	}
 
 	@Override
-	public void deleteIndices(AdminClient adminClient, long companyId)
-		throws Exception {
-
+	public void deleteIndices(AdminClient adminClient, long companyId) {
 		IndicesAdminClient indicesAdminClient = adminClient.indices();
 
 		String indexName = getIndexName(companyId);
@@ -86,13 +95,19 @@ public class CompanyIndexFactory implements IndexFactory {
 			return;
 		}
 
+		executeIndexContributorsBeforeRemove(indexName);
+
 		DeleteIndexRequestBuilder deleteIndexRequestBuilder =
 			indicesAdminClient.prepareDelete(indexName);
 
-		DeleteIndexResponse deleteIndexResponse =
-			deleteIndexRequestBuilder.get();
+		ActionResponse actionResponse = deleteIndexRequestBuilder.get();
 
-		LogUtil.logActionResponse(_log, deleteIndexResponse);
+		LogUtil.logActionResponse(_log, actionResponse);
+	}
+
+	@Override
+	public void removeIndexContributor(IndexContributor indexContributor) {
+		_indexContributors.remove(indexContributor);
 	}
 
 	@Activate
@@ -140,8 +155,7 @@ public class CompanyIndexFactory implements IndexFactory {
 	}
 
 	protected void createIndex(
-			String indexName, IndicesAdminClient indicesAdminClient)
-		throws Exception {
+		String indexName, IndicesAdminClient indicesAdminClient) {
 
 		CreateIndexRequestBuilder createIndexRequestBuilder =
 			indicesAdminClient.prepareCreate(indexName);
@@ -160,6 +174,50 @@ public class CompanyIndexFactory implements IndexFactory {
 		LogUtil.logActionResponse(_log, createIndexResponse);
 
 		updateLiferayDocumentType(indexName, liferayDocumentTypeFactory);
+
+		executeIndexContributorsAfterCreate(indexName);
+	}
+
+	protected void executeIndexContributorAfterCreate(
+		IndexContributor indexContributor, String indexName) {
+
+		try {
+			indexContributor.onAfterCreate(indexName);
+		}
+		catch (Throwable t) {
+			_log.error(
+				StringBundler.concat(
+					"Unable to apply contributor ", indexContributor,
+					" when creating index ", indexName),
+				t);
+		}
+	}
+
+	protected void executeIndexContributorBeforeRemove(
+		IndexContributor indexContributor, String indexName) {
+
+		try {
+			indexContributor.onBeforeRemove(indexName);
+		}
+		catch (Throwable t) {
+			_log.error(
+				StringBundler.concat(
+					"Unable to apply contributor ", indexContributor,
+					" when removing index ", indexName),
+				t);
+		}
+	}
+
+	protected void executeIndexContributorsAfterCreate(String indexName) {
+		for (IndexContributor indexContributor : _indexContributors) {
+			executeIndexContributorAfterCreate(indexContributor, indexName);
+		}
+	}
+
+	protected void executeIndexContributorsBeforeRemove(String indexName) {
+		for (IndexContributor indexContributor : _indexContributors) {
+			executeIndexContributorBeforeRemove(indexContributor, indexName);
+		}
 	}
 
 	protected String getIndexName(long companyId) {
@@ -167,8 +225,7 @@ public class CompanyIndexFactory implements IndexFactory {
 	}
 
 	protected boolean hasIndex(
-			IndicesAdminClient indicesAdminClient, String indexName)
-		throws Exception {
+		IndicesAdminClient indicesAdminClient, String indexName) {
 
 		IndicesExistsRequestBuilder indicesExistsRequestBuilder =
 			indicesAdminClient.prepareExists(indexName);
@@ -315,8 +372,6 @@ public class CompanyIndexFactory implements IndexFactory {
 		loadAdditionalTypeMappings(indexName, liferayDocumentTypeFactory);
 
 		loadTypeMappingsContributors(indexName, liferayDocumentTypeFactory);
-
-		liferayDocumentTypeFactory.createOptionalDefaultTypeMappings(indexName);
 	}
 
 	@Reference
@@ -330,6 +385,8 @@ public class CompanyIndexFactory implements IndexFactory {
 
 	private volatile String _additionalIndexConfigurations;
 	private String _additionalTypeMappings;
+	private final List<IndexContributor> _indexContributors =
+		new CopyOnWriteArrayList<>();
 	private String _indexNumberOfReplicas;
 	private String _indexNumberOfShards;
 	private final Set<IndexSettingsContributor> _indexSettingsContributors =

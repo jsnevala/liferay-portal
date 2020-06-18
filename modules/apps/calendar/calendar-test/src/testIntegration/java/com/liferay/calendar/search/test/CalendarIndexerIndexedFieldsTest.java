@@ -28,13 +28,15 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.text.DateFormat;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Before;
@@ -57,7 +59,7 @@ public class CalendarIndexerIndexedFieldsTest
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE,
+			PermissionCheckerMethodTestRule.INSTANCE,
 			SynchronousDestinationTestRule.INSTANCE);
 
 	@Before
@@ -144,6 +146,9 @@ public class CalendarIndexerIndexedFieldsTest
 		FieldValuesAssert.assertFieldValues(map, document, keywords);
 	}
 
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
 	protected Calendar addCalendar(
 			LocalizedValuesMap nameMap, LocalizedValuesMap descriptionMap)
 		throws PortalException {
@@ -168,10 +173,14 @@ public class CalendarIndexerIndexedFieldsTest
 			"resourceName",
 			StringUtil.toLowerCase(
 				calendarResource.getName(LocaleUtil.US, true)));
-		map.put(
-			"resourceName_en_US",
-			StringUtil.toLowerCase(
-				calendarResource.getName(calendar.getDefaultLanguageId())));
+
+		Map<Locale, String> nameMap = calendarResource.getNameMap();
+
+		for (Map.Entry<Locale, String> entry : nameMap.entrySet()) {
+			map.put(
+				"resourceName_" + entry.getKey(),
+				StringUtil.toLowerCase(entry.getValue()));
+		}
 	}
 
 	protected void populateExpectedFieldValues(

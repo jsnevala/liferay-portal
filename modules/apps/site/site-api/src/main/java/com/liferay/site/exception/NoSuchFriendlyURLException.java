@@ -14,14 +14,11 @@
 
 package com.liferay.site.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchFriendlyURLException extends NoSuchModelException {
 
 	public NoSuchFriendlyURLException() {

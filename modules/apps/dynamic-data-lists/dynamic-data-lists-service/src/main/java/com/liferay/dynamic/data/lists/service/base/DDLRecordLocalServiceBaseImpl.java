@@ -14,10 +14,6 @@
 
 package com.liferay.dynamic.data.lists.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.asset.kernel.service.persistence.AssetEntryPersistence;
-
 import com.liferay.dynamic.data.lists.model.DDLRecord;
 import com.liferay.dynamic.data.lists.service.DDLRecordLocalService;
 import com.liferay.dynamic.data.lists.service.persistence.DDLRecordFinder;
@@ -25,14 +21,13 @@ import com.liferay.dynamic.data.lists.service.persistence.DDLRecordPersistence;
 import com.liferay.dynamic.data.lists.service.persistence.DDLRecordSetFinder;
 import com.liferay.dynamic.data.lists.service.persistence.DDLRecordSetPersistence;
 import com.liferay.dynamic.data.lists.service.persistence.DDLRecordVersionPersistence;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -51,21 +46,19 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
-import com.liferay.portal.kernel.service.persistence.WorkflowInstanceLinkPersistence;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
-
-import com.liferay.ratings.kernel.service.persistence.RatingsStatsPersistence;
 
 import java.io.Serializable;
 
 import java.util.List;
 
 import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Provides the base implementation for the ddl record local service.
@@ -76,16 +69,16 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.dynamic.data.lists.service.impl.DDLRecordLocalServiceImpl
- * @see com.liferay.dynamic.data.lists.service.DDLRecordLocalServiceUtil
  * @generated
  */
-@ProviderType
-public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
-	implements DDLRecordLocalService, IdentifiableOSGiService {
+public abstract class DDLRecordLocalServiceBaseImpl
+	extends BaseLocalServiceImpl
+	implements AopService, DDLRecordLocalService, IdentifiableOSGiService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.dynamic.data.lists.service.DDLRecordLocalServiceUtil} to access the ddl record local service.
+	 * Never modify or reference this class directly. Use <code>DDLRecordLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.lists.service.DDLRecordLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -140,11 +133,16 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	}
 
 	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return ddlRecordPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(DDLRecord.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			DDLRecord.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -162,7 +160,7 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.dynamic.data.lists.model.impl.DDLRecordModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.lists.model.impl.DDLRecordModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -171,17 +169,18 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return ddlRecordPersistence.findWithDynamicQuery(dynamicQuery, start,
-			end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return ddlRecordPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.dynamic.data.lists.model.impl.DDLRecordModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.lists.model.impl.DDLRecordModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -191,10 +190,12 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return ddlRecordPersistence.findWithDynamicQuery(dynamicQuery, start,
-			end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return ddlRecordPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -216,10 +217,11 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return ddlRecordPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return ddlRecordPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
@@ -253,7 +255,8 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
 		actionableDynamicQuery.setBaseLocalService(ddlRecordLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
@@ -265,10 +268,14 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(ddlRecordLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			ddlRecordLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(DDLRecord.class);
 
@@ -279,6 +286,7 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
+
 		actionableDynamicQuery.setBaseLocalService(ddlRecordLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(DDLRecord.class);
@@ -289,51 +297,67 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
-		final ExportActionableDynamicQuery exportActionableDynamicQuery = new ExportActionableDynamicQuery() {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
 				@Override
 				public long performCount() throws PortalException {
-					ManifestSummary manifestSummary = portletDataContext.getManifestSummary();
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
 
 					StagedModelType stagedModelType = getStagedModelType();
 
 					long modelAdditionCount = super.performCount();
 
-					manifestSummary.addModelAdditionCount(stagedModelType,
-						modelAdditionCount);
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
 
-					long modelDeletionCount = ExportImportHelperUtil.getModelDeletionCount(portletDataContext,
-							stagedModelType);
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
 
-					manifestSummary.addModelDeletionCount(stagedModelType,
-						modelDeletionCount);
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
 
 					return modelAdditionCount;
 				}
+
 			};
 
 		initActionableDynamicQuery(exportActionableDynamicQuery);
 
-		exportActionableDynamicQuery.setAddCriteriaMethod(new ActionableDynamicQuery.AddCriteriaMethod() {
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
 				@Override
 				public void addCriteria(DynamicQuery dynamicQuery) {
-					portletDataContext.addDateRangeCriteria(dynamicQuery,
-						"modifiedDate");
+					portletDataContext.addDateRangeCriteria(
+						dynamicQuery, "modifiedDate");
 				}
+
 			});
 
-		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setGroupId(portletDataContext.getScopeGroupId());
+		exportActionableDynamicQuery.setGroupId(
+			portletDataContext.getScopeGroupId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<DDLRecord>() {
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<DDLRecord>() {
+
 				@Override
 				public void performAction(DDLRecord ddlRecord)
 					throws PortalException {
-					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
-						ddlRecord);
+
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, ddlRecord);
 				}
+
 			});
-		exportActionableDynamicQuery.setStagedModelType(new StagedModelType(
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
 				PortalUtil.getClassNameId(DDLRecord.class.getName())));
 
 		return exportActionableDynamicQuery;
@@ -342,15 +366,33 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return ddlRecordPersistence.create(((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
+
 		return ddlRecordLocalService.deleteDDLRecord((DDLRecord)persistedModel);
 	}
 
+	public BasePersistence<DDLRecord> getBasePersistence() {
+		return ddlRecordPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return ddlRecordPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -362,8 +404,9 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the matching ddl records, or an empty list if no matches were found
 	 */
 	@Override
-	public List<DDLRecord> getDDLRecordsByUuidAndCompanyId(String uuid,
-		long companyId) {
+	public List<DDLRecord> getDDLRecordsByUuidAndCompanyId(
+		String uuid, long companyId) {
+
 		return ddlRecordPersistence.findByUuid_C(uuid, companyId);
 	}
 
@@ -378,11 +421,12 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * @return the range of matching ddl records, or an empty list if no matches were found
 	 */
 	@Override
-	public List<DDLRecord> getDDLRecordsByUuidAndCompanyId(String uuid,
-		long companyId, int start, int end,
+	public List<DDLRecord> getDDLRecordsByUuidAndCompanyId(
+		String uuid, long companyId, int start, int end,
 		OrderByComparator<DDLRecord> orderByComparator) {
-		return ddlRecordPersistence.findByUuid_C(uuid, companyId, start, end,
-			orderByComparator);
+
+		return ddlRecordPersistence.findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -396,6 +440,7 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	@Override
 	public DDLRecord getDDLRecordByUuidAndGroupId(String uuid, long groupId)
 		throws PortalException {
+
 		return ddlRecordPersistence.findByUUID_G(uuid, groupId);
 	}
 
@@ -403,7 +448,7 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 	 * Returns a range of all the ddl records.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.dynamic.data.lists.model.impl.DDLRecordModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.dynamic.data.lists.model.impl.DDLRecordModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of ddl records
@@ -437,334 +482,17 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 		return ddlRecordPersistence.update(ddlRecord);
 	}
 
-	/**
-	 * Returns the ddl record local service.
-	 *
-	 * @return the ddl record local service
-	 */
-	public DDLRecordLocalService getDDLRecordLocalService() {
-		return ddlRecordLocalService;
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			DDLRecordLocalService.class, IdentifiableOSGiService.class,
+			PersistedModelLocalService.class
+		};
 	}
 
-	/**
-	 * Sets the ddl record local service.
-	 *
-	 * @param ddlRecordLocalService the ddl record local service
-	 */
-	public void setDDLRecordLocalService(
-		DDLRecordLocalService ddlRecordLocalService) {
-		this.ddlRecordLocalService = ddlRecordLocalService;
-	}
-
-	/**
-	 * Returns the ddl record persistence.
-	 *
-	 * @return the ddl record persistence
-	 */
-	public DDLRecordPersistence getDDLRecordPersistence() {
-		return ddlRecordPersistence;
-	}
-
-	/**
-	 * Sets the ddl record persistence.
-	 *
-	 * @param ddlRecordPersistence the ddl record persistence
-	 */
-	public void setDDLRecordPersistence(
-		DDLRecordPersistence ddlRecordPersistence) {
-		this.ddlRecordPersistence = ddlRecordPersistence;
-	}
-
-	/**
-	 * Returns the ddl record finder.
-	 *
-	 * @return the ddl record finder
-	 */
-	public DDLRecordFinder getDDLRecordFinder() {
-		return ddlRecordFinder;
-	}
-
-	/**
-	 * Sets the ddl record finder.
-	 *
-	 * @param ddlRecordFinder the ddl record finder
-	 */
-	public void setDDLRecordFinder(DDLRecordFinder ddlRecordFinder) {
-		this.ddlRecordFinder = ddlRecordFinder;
-	}
-
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
-		return counterLocalService;
-	}
-
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
-		this.counterLocalService = counterLocalService;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService getUserLocalService() {
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	/**
-	 * Returns the workflow instance link local service.
-	 *
-	 * @return the workflow instance link local service
-	 */
-	public com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService getWorkflowInstanceLinkLocalService() {
-		return workflowInstanceLinkLocalService;
-	}
-
-	/**
-	 * Sets the workflow instance link local service.
-	 *
-	 * @param workflowInstanceLinkLocalService the workflow instance link local service
-	 */
-	public void setWorkflowInstanceLinkLocalService(
-		com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService workflowInstanceLinkLocalService) {
-		this.workflowInstanceLinkLocalService = workflowInstanceLinkLocalService;
-	}
-
-	/**
-	 * Returns the workflow instance link persistence.
-	 *
-	 * @return the workflow instance link persistence
-	 */
-	public WorkflowInstanceLinkPersistence getWorkflowInstanceLinkPersistence() {
-		return workflowInstanceLinkPersistence;
-	}
-
-	/**
-	 * Sets the workflow instance link persistence.
-	 *
-	 * @param workflowInstanceLinkPersistence the workflow instance link persistence
-	 */
-	public void setWorkflowInstanceLinkPersistence(
-		WorkflowInstanceLinkPersistence workflowInstanceLinkPersistence) {
-		this.workflowInstanceLinkPersistence = workflowInstanceLinkPersistence;
-	}
-
-	/**
-	 * Returns the asset entry local service.
-	 *
-	 * @return the asset entry local service
-	 */
-	public com.liferay.asset.kernel.service.AssetEntryLocalService getAssetEntryLocalService() {
-		return assetEntryLocalService;
-	}
-
-	/**
-	 * Sets the asset entry local service.
-	 *
-	 * @param assetEntryLocalService the asset entry local service
-	 */
-	public void setAssetEntryLocalService(
-		com.liferay.asset.kernel.service.AssetEntryLocalService assetEntryLocalService) {
-		this.assetEntryLocalService = assetEntryLocalService;
-	}
-
-	/**
-	 * Returns the asset entry persistence.
-	 *
-	 * @return the asset entry persistence
-	 */
-	public AssetEntryPersistence getAssetEntryPersistence() {
-		return assetEntryPersistence;
-	}
-
-	/**
-	 * Sets the asset entry persistence.
-	 *
-	 * @param assetEntryPersistence the asset entry persistence
-	 */
-	public void setAssetEntryPersistence(
-		AssetEntryPersistence assetEntryPersistence) {
-		this.assetEntryPersistence = assetEntryPersistence;
-	}
-
-	/**
-	 * Returns the ratings stats local service.
-	 *
-	 * @return the ratings stats local service
-	 */
-	public com.liferay.ratings.kernel.service.RatingsStatsLocalService getRatingsStatsLocalService() {
-		return ratingsStatsLocalService;
-	}
-
-	/**
-	 * Sets the ratings stats local service.
-	 *
-	 * @param ratingsStatsLocalService the ratings stats local service
-	 */
-	public void setRatingsStatsLocalService(
-		com.liferay.ratings.kernel.service.RatingsStatsLocalService ratingsStatsLocalService) {
-		this.ratingsStatsLocalService = ratingsStatsLocalService;
-	}
-
-	/**
-	 * Returns the ratings stats persistence.
-	 *
-	 * @return the ratings stats persistence
-	 */
-	public RatingsStatsPersistence getRatingsStatsPersistence() {
-		return ratingsStatsPersistence;
-	}
-
-	/**
-	 * Sets the ratings stats persistence.
-	 *
-	 * @param ratingsStatsPersistence the ratings stats persistence
-	 */
-	public void setRatingsStatsPersistence(
-		RatingsStatsPersistence ratingsStatsPersistence) {
-		this.ratingsStatsPersistence = ratingsStatsPersistence;
-	}
-
-	/**
-	 * Returns the ddl record set local service.
-	 *
-	 * @return the ddl record set local service
-	 */
-	public com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService getDDLRecordSetLocalService() {
-		return ddlRecordSetLocalService;
-	}
-
-	/**
-	 * Sets the ddl record set local service.
-	 *
-	 * @param ddlRecordSetLocalService the ddl record set local service
-	 */
-	public void setDDLRecordSetLocalService(
-		com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService ddlRecordSetLocalService) {
-		this.ddlRecordSetLocalService = ddlRecordSetLocalService;
-	}
-
-	/**
-	 * Returns the ddl record set persistence.
-	 *
-	 * @return the ddl record set persistence
-	 */
-	public DDLRecordSetPersistence getDDLRecordSetPersistence() {
-		return ddlRecordSetPersistence;
-	}
-
-	/**
-	 * Sets the ddl record set persistence.
-	 *
-	 * @param ddlRecordSetPersistence the ddl record set persistence
-	 */
-	public void setDDLRecordSetPersistence(
-		DDLRecordSetPersistence ddlRecordSetPersistence) {
-		this.ddlRecordSetPersistence = ddlRecordSetPersistence;
-	}
-
-	/**
-	 * Returns the ddl record set finder.
-	 *
-	 * @return the ddl record set finder
-	 */
-	public DDLRecordSetFinder getDDLRecordSetFinder() {
-		return ddlRecordSetFinder;
-	}
-
-	/**
-	 * Sets the ddl record set finder.
-	 *
-	 * @param ddlRecordSetFinder the ddl record set finder
-	 */
-	public void setDDLRecordSetFinder(DDLRecordSetFinder ddlRecordSetFinder) {
-		this.ddlRecordSetFinder = ddlRecordSetFinder;
-	}
-
-	/**
-	 * Returns the ddl record version local service.
-	 *
-	 * @return the ddl record version local service
-	 */
-	public com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService getDDLRecordVersionLocalService() {
-		return ddlRecordVersionLocalService;
-	}
-
-	/**
-	 * Sets the ddl record version local service.
-	 *
-	 * @param ddlRecordVersionLocalService the ddl record version local service
-	 */
-	public void setDDLRecordVersionLocalService(
-		com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService ddlRecordVersionLocalService) {
-		this.ddlRecordVersionLocalService = ddlRecordVersionLocalService;
-	}
-
-	/**
-	 * Returns the ddl record version persistence.
-	 *
-	 * @return the ddl record version persistence
-	 */
-	public DDLRecordVersionPersistence getDDLRecordVersionPersistence() {
-		return ddlRecordVersionPersistence;
-	}
-
-	/**
-	 * Sets the ddl record version persistence.
-	 *
-	 * @param ddlRecordVersionPersistence the ddl record version persistence
-	 */
-	public void setDDLRecordVersionPersistence(
-		DDLRecordVersionPersistence ddlRecordVersionPersistence) {
-		this.ddlRecordVersionPersistence = ddlRecordVersionPersistence;
-	}
-
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.dynamic.data.lists.model.DDLRecord",
-			ddlRecordLocalService);
-	}
-
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.dynamic.data.lists.model.DDLRecord");
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		ddlRecordLocalService = (DDLRecordLocalService)aopProxy;
 	}
 
 	/**
@@ -799,50 +527,51 @@ public abstract class DDLRecordLocalServiceBaseImpl extends BaseLocalServiceImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = DDLRecordLocalService.class)
 	protected DDLRecordLocalService ddlRecordLocalService;
-	@BeanReference(type = DDLRecordPersistence.class)
+
+	@Reference
 	protected DDLRecordPersistence ddlRecordPersistence;
-	@BeanReference(type = DDLRecordFinder.class)
+
+	@Reference
 	protected DDLRecordFinder ddlRecordFinder;
-	@ServiceReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.UserLocalService.class)
-	protected com.liferay.portal.kernel.service.UserLocalService userLocalService;
-	@ServiceReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService.class)
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService workflowInstanceLinkLocalService;
-	@ServiceReference(type = WorkflowInstanceLinkPersistence.class)
-	protected WorkflowInstanceLinkPersistence workflowInstanceLinkPersistence;
-	@ServiceReference(type = com.liferay.asset.kernel.service.AssetEntryLocalService.class)
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService assetEntryLocalService;
-	@ServiceReference(type = AssetEntryPersistence.class)
-	protected AssetEntryPersistence assetEntryPersistence;
-	@ServiceReference(type = com.liferay.ratings.kernel.service.RatingsStatsLocalService.class)
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService ratingsStatsLocalService;
-	@ServiceReference(type = RatingsStatsPersistence.class)
-	protected RatingsStatsPersistence ratingsStatsPersistence;
-	@BeanReference(type = com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService.class)
-	protected com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService ddlRecordSetLocalService;
-	@BeanReference(type = DDLRecordSetPersistence.class)
+
+	@Reference
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.UserLocalService
+		userLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
+		workflowInstanceLinkLocalService;
+
+	@Reference
+	protected com.liferay.asset.kernel.service.AssetEntryLocalService
+		assetEntryLocalService;
+
+	@Reference
+	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
+		ratingsStatsLocalService;
+
+	@Reference
 	protected DDLRecordSetPersistence ddlRecordSetPersistence;
-	@BeanReference(type = DDLRecordSetFinder.class)
+
+	@Reference
 	protected DDLRecordSetFinder ddlRecordSetFinder;
-	@BeanReference(type = com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService.class)
-	protected com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService ddlRecordVersionLocalService;
-	@BeanReference(type = DDLRecordVersionPersistence.class)
+
+	@Reference
 	protected DDLRecordVersionPersistence ddlRecordVersionPersistence;
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+
 }

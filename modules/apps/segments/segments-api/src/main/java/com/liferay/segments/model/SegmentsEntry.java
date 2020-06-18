@@ -14,31 +14,31 @@
 
 package com.liferay.segments.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the SegmentsEntry service. Represents a row in the &quot;SegmentsEntry&quot; database table, with each column mapped to a property of this class.
  *
  * @author Eduardo Garcia
  * @see SegmentsEntryModel
- * @see com.liferay.segments.model.impl.SegmentsEntryImpl
- * @see com.liferay.segments.model.impl.SegmentsEntryModelImpl
  * @generated
  */
 @ImplementationClassName("com.liferay.segments.model.impl.SegmentsEntryImpl")
 @ProviderType
-public interface SegmentsEntry extends SegmentsEntryModel, PersistedModel {
+public interface SegmentsEntry extends PersistedModel, SegmentsEntryModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.segments.model.impl.SegmentsEntryImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.segments.model.impl.SegmentsEntryImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<SegmentsEntry, Long> SEGMENTS_ENTRY_ID_ACCESSOR =
-		new Accessor<SegmentsEntry, Long>() {
+	public static final Accessor<SegmentsEntry, Long>
+		SEGMENTS_ENTRY_ID_ACCESSOR = new Accessor<SegmentsEntry, Long>() {
+
 			@Override
 			public Long get(SegmentsEntry segmentsEntry) {
 				return segmentsEntry.getSegmentsEntryId();
@@ -53,5 +53,11 @@ public interface SegmentsEntry extends SegmentsEntryModel, PersistedModel {
 			public Class<SegmentsEntry> getTypeClass() {
 				return SegmentsEntry.class;
 			}
+
 		};
+
+	public com.liferay.segments.criteria.Criteria getCriteriaObj();
+
+	public long[] getRoleIds();
+
 }

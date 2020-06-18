@@ -65,10 +65,11 @@ portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
 								curSourceVersion = tempVersion;
 							}
 
-							Map<String, Object> data = new HashMap<String, Object>();
-
-							data.put("sourceversion", curSourceVersion);
-							data.put("targetversion", curTargetVersion);
+							Map<String, Object> data = HashMapBuilder.<String, Object>put(
+								"sourceversion", curSourceVersion
+							).put(
+								"targetversion", curTargetVersion
+							).build();
 							%>
 
 							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
@@ -95,5 +96,8 @@ portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
 </div>
 
 <aui:script>
-	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectVersionFm', '<%= HtmlUtil.escapeJS(eventName) %>');
+	Liferay.Util.selectEntityHandler(
+		'#<portlet:namespace />selectVersionFm',
+		'<%= HtmlUtil.escapeJS(eventName) %>'
+	);
 </aui:script>

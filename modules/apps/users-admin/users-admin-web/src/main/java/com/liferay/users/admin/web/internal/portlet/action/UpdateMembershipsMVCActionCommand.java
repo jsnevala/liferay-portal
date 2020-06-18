@@ -73,6 +73,9 @@ public class UpdateMembershipsMVCActionCommand extends BaseMVCActionCommand {
 			ServiceContext serviceContext = ServiceContextFactory.getInstance(
 				User.class.getName(), actionRequest);
 
+			serviceContext.setAssetCategoryIds(null);
+			serviceContext.setAssetTagNames(null);
+
 			_userService.updateUser(
 				user.getUserId(), user.getPassword(), null, null,
 				user.isPasswordReset(), null, null, user.getScreenName(),
@@ -88,21 +91,22 @@ public class UpdateMembershipsMVCActionCommand extends BaseMVCActionCommand {
 				user.getJobTitle(), groupIds, user.getOrganizationIds(), null,
 				null, userGroupIds, serviceContext);
 		}
-		catch (Exception e) {
-			if (e instanceof NoSuchUserException ||
-				e instanceof PrincipalException) {
+		catch (Exception exception) {
+			if (exception instanceof NoSuchUserException ||
+				exception instanceof PrincipalException) {
 
-				SessionErrors.add(actionRequest, e.getClass());
+				SessionErrors.add(actionRequest, exception.getClass());
 
 				actionResponse.setRenderParameter("mvcPath", "/error.jsp");
 			}
-			else if (e instanceof MembershipPolicyException) {
-				SessionErrors.add(actionRequest, e.getClass(), e);
+			else if (exception instanceof MembershipPolicyException) {
+				SessionErrors.add(
+					actionRequest, exception.getClass(), exception);
 
 				actionResponse.setRenderParameter("mvcPath", "/edit_user.jsp");
 			}
 			else {
-				throw e;
+				throw exception;
 			}
 		}
 	}

@@ -14,14 +14,12 @@
 
 package com.liferay.portal.kernel.json;
 
-import aQute.bnd.annotation.ProviderType;
-
+import java.util.Collection;
 import java.util.List;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class JSONFactoryUtil {
 
 	public static String convertJSONMLArrayToXML(String jsonml) {
@@ -51,8 +49,16 @@ public class JSONFactoryUtil {
 		return getJSONFactory().createJSONArray();
 	}
 
+	public static JSONArray createJSONArray(Collection<?> collection) {
+		return getJSONFactory().createJSONArray(collection);
+	}
+
 	public static JSONArray createJSONArray(String json) throws JSONException {
 		return getJSONFactory().createJSONArray(json);
+	}
+
+	public static <T> JSONArray createJSONArray(T[] array) {
+		return getJSONFactory().createJSONArray(array);
 	}
 
 	public static <T> JSONDeserializer<T> createJSONDeserializer() {
@@ -71,12 +77,6 @@ public class JSONFactoryUtil {
 
 	public static JSONSerializer createJSONSerializer() {
 		return getJSONFactory().createJSONSerializer();
-	}
-
-	public static JSONValidator createJSONValidator(String jsonSchema)
-		throws JSONException {
-
-		return getJSONFactory().createJSONValidator(jsonSchema);
 	}
 
 	public static Object deserialize(JSONObject jsonObj) {

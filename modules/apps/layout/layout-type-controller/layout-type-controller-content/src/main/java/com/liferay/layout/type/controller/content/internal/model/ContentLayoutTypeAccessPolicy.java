@@ -14,9 +14,9 @@
 
 package com.liferay.layout.type.controller.content.internal.model;
 
-import com.liferay.layout.type.controller.content.internal.constants.ContentLayoutTypeControllerConstants;
+import com.liferay.layout.type.controller.model.BaseLayoutTypeAccessPolicy;
+import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypeAccessPolicy;
-import com.liferay.portal.kernel.model.impl.DefaultLayoutTypeAccessPolicyImpl;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -24,10 +24,8 @@ import org.osgi.service.component.annotations.Component;
  * @author Jürgen Kappler
  */
 @Component(
-	immediate = true,
-	property = "layout.type=" + ContentLayoutTypeControllerConstants.LAYOUT_TYPE_CONTENT,
+	immediate = true, property = "layout.type=" + LayoutConstants.TYPE_CONTENT,
 	service = LayoutTypeAccessPolicy.class
 )
-public class ContentLayoutTypeAccessPolicy
-	extends DefaultLayoutTypeAccessPolicyImpl {
+public class ContentLayoutTypeAccessPolicy extends BaseLayoutTypeAccessPolicy {
 }

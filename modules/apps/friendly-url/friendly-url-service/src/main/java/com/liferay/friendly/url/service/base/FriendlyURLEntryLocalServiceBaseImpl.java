@@ -14,22 +14,19 @@
 
 package com.liferay.friendly.url.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryLocalizationPersistence;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryMappingPersistence;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryPersistence;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -50,13 +47,11 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
-import com.liferay.portal.kernel.service.persistence.ClassNamePersistence;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
@@ -67,6 +62,8 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * Provides the base implementation for the friendly url entry local service.
  *
@@ -76,17 +73,17 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.friendly.url.service.impl.FriendlyURLEntryLocalServiceImpl
- * @see com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil
  * @generated
  */
-@ProviderType
 public abstract class FriendlyURLEntryLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements FriendlyURLEntryLocalService,
-		IdentifiableOSGiService {
+	extends BaseLocalServiceImpl
+	implements AopService, FriendlyURLEntryLocalService,
+			   IdentifiableOSGiService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil} to access the friendly url entry local service.
+	 * Never modify or reference this class directly. Use <code>FriendlyURLEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -99,6 +96,7 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public FriendlyURLEntry addFriendlyURLEntry(
 		FriendlyURLEntry friendlyURLEntry) {
+
 		friendlyURLEntry.setNew(true);
 
 		return friendlyURLEntryPersistence.update(friendlyURLEntry);
@@ -127,6 +125,7 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public FriendlyURLEntry deleteFriendlyURLEntry(long friendlyURLEntryId)
 		throws PortalException {
+
 		return friendlyURLEntryPersistence.remove(friendlyURLEntryId);
 	}
 
@@ -140,15 +139,21 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public FriendlyURLEntry deleteFriendlyURLEntry(
 		FriendlyURLEntry friendlyURLEntry) {
+
 		return friendlyURLEntryPersistence.remove(friendlyURLEntry);
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return friendlyURLEntryPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(FriendlyURLEntry.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			FriendlyURLEntry.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -166,7 +171,7 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.friendly.url.model.impl.FriendlyURLEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.friendly.url.model.impl.FriendlyURLEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -175,17 +180,18 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return friendlyURLEntryPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return friendlyURLEntryPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.friendly.url.model.impl.FriendlyURLEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.friendly.url.model.impl.FriendlyURLEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -195,10 +201,12 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return friendlyURLEntryPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return friendlyURLEntryPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -220,15 +228,17 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return friendlyURLEntryPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return friendlyURLEntryPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
 	public FriendlyURLEntry fetchFriendlyURLEntry(long friendlyURLEntryId) {
-		return friendlyURLEntryPersistence.fetchByPrimaryKey(friendlyURLEntryId);
+		return friendlyURLEntryPersistence.fetchByPrimaryKey(
+			friendlyURLEntryId);
 	}
 
 	/**
@@ -239,8 +249,9 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	 * @return the matching friendly url entry, or <code>null</code> if a matching friendly url entry could not be found
 	 */
 	@Override
-	public FriendlyURLEntry fetchFriendlyURLEntryByUuidAndGroupId(String uuid,
-		long groupId) {
+	public FriendlyURLEntry fetchFriendlyURLEntryByUuidAndGroupId(
+		String uuid, long groupId) {
+
 		return friendlyURLEntryPersistence.fetchByUUID_G(uuid, groupId);
 	}
 
@@ -254,14 +265,17 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public FriendlyURLEntry getFriendlyURLEntry(long friendlyURLEntryId)
 		throws PortalException {
+
 		return friendlyURLEntryPersistence.findByPrimaryKey(friendlyURLEntryId);
 	}
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
-		actionableDynamicQuery.setBaseLocalService(friendlyURLEntryLocalService);
+		actionableDynamicQuery.setBaseLocalService(
+			friendlyURLEntryLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(FriendlyURLEntry.class);
 
@@ -271,10 +285,14 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(friendlyURLEntryLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			friendlyURLEntryLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(FriendlyURLEntry.class);
 
@@ -286,7 +304,9 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
-		actionableDynamicQuery.setBaseLocalService(friendlyURLEntryLocalService);
+
+		actionableDynamicQuery.setBaseLocalService(
+			friendlyURLEntryLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(FriendlyURLEntry.class);
 
@@ -296,65 +316,88 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
-		final ExportActionableDynamicQuery exportActionableDynamicQuery = new ExportActionableDynamicQuery() {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
 				@Override
 				public long performCount() throws PortalException {
-					ManifestSummary manifestSummary = portletDataContext.getManifestSummary();
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
 
 					StagedModelType stagedModelType = getStagedModelType();
 
 					long modelAdditionCount = super.performCount();
 
-					manifestSummary.addModelAdditionCount(stagedModelType,
-						modelAdditionCount);
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
 
-					long modelDeletionCount = ExportImportHelperUtil.getModelDeletionCount(portletDataContext,
-							stagedModelType);
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
 
-					manifestSummary.addModelDeletionCount(stagedModelType,
-						modelDeletionCount);
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
 
 					return modelAdditionCount;
 				}
+
 			};
 
 		initActionableDynamicQuery(exportActionableDynamicQuery);
 
-		exportActionableDynamicQuery.setAddCriteriaMethod(new ActionableDynamicQuery.AddCriteriaMethod() {
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
 				@Override
 				public void addCriteria(DynamicQuery dynamicQuery) {
-					portletDataContext.addDateRangeCriteria(dynamicQuery,
-						"modifiedDate");
+					portletDataContext.addDateRangeCriteria(
+						dynamicQuery, "modifiedDate");
 
-					StagedModelType stagedModelType = exportActionableDynamicQuery.getStagedModelType();
+					StagedModelType stagedModelType =
+						exportActionableDynamicQuery.getStagedModelType();
 
-					long referrerClassNameId = stagedModelType.getReferrerClassNameId();
+					long referrerClassNameId =
+						stagedModelType.getReferrerClassNameId();
 
 					Property classNameIdProperty = PropertyFactoryUtil.forName(
-							"classNameId");
+						"classNameId");
 
-					if ((referrerClassNameId != StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
-							(referrerClassNameId != StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
-						dynamicQuery.add(classNameIdProperty.eq(
+					if ((referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ALL) &&
+						(referrerClassNameId !=
+							StagedModelType.REFERRER_CLASS_NAME_ID_ANY)) {
+
+						dynamicQuery.add(
+							classNameIdProperty.eq(
 								stagedModelType.getReferrerClassNameId()));
 					}
-					else if (referrerClassNameId == StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
+					else if (referrerClassNameId ==
+								StagedModelType.REFERRER_CLASS_NAME_ID_ANY) {
+
 						dynamicQuery.add(classNameIdProperty.isNotNull());
 					}
 				}
+
 			});
 
-		exportActionableDynamicQuery.setCompanyId(portletDataContext.getCompanyId());
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
 
-		exportActionableDynamicQuery.setPerformActionMethod(new ActionableDynamicQuery.PerformActionMethod<FriendlyURLEntry>() {
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<FriendlyURLEntry>() {
+
 				@Override
 				public void performAction(FriendlyURLEntry friendlyURLEntry)
 					throws PortalException {
-					StagedModelDataHandlerUtil.exportStagedModel(portletDataContext,
-						friendlyURLEntry);
+
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, friendlyURLEntry);
 				}
+
 			});
-		exportActionableDynamicQuery.setStagedModelType(new StagedModelType(
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
 				PortalUtil.getClassNameId(FriendlyURLEntry.class.getName()),
 				StagedModelType.REFERRER_CLASS_NAME_ID_ALL));
 
@@ -364,15 +407,35 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return friendlyURLEntryPersistence.create(
+			((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
-		return friendlyURLEntryLocalService.deleteFriendlyURLEntry((FriendlyURLEntry)persistedModel);
+
+		return friendlyURLEntryLocalService.deleteFriendlyURLEntry(
+			(FriendlyURLEntry)persistedModel);
 	}
 
+	public BasePersistence<FriendlyURLEntry> getBasePersistence() {
+		return friendlyURLEntryPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return friendlyURLEntryPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -386,6 +449,7 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public List<FriendlyURLEntry> getFriendlyURLEntriesByUuidAndCompanyId(
 		String uuid, long companyId) {
+
 		return friendlyURLEntryPersistence.findByUuid_C(uuid, companyId);
 	}
 
@@ -403,8 +467,9 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	public List<FriendlyURLEntry> getFriendlyURLEntriesByUuidAndCompanyId(
 		String uuid, long companyId, int start, int end,
 		OrderByComparator<FriendlyURLEntry> orderByComparator) {
-		return friendlyURLEntryPersistence.findByUuid_C(uuid, companyId, start,
-			end, orderByComparator);
+
+		return friendlyURLEntryPersistence.findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -416,8 +481,10 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	 * @throws PortalException if a matching friendly url entry could not be found
 	 */
 	@Override
-	public FriendlyURLEntry getFriendlyURLEntryByUuidAndGroupId(String uuid,
-		long groupId) throws PortalException {
+	public FriendlyURLEntry getFriendlyURLEntryByUuidAndGroupId(
+			String uuid, long groupId)
+		throws PortalException {
+
 		return friendlyURLEntryPersistence.findByUUID_G(uuid, groupId);
 	}
 
@@ -425,7 +492,7 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	 * Returns a range of all the friendly url entries.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.friendly.url.model.impl.FriendlyURLEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.friendly.url.model.impl.FriendlyURLEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of friendly url entries
@@ -457,49 +524,67 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public FriendlyURLEntry updateFriendlyURLEntry(
 		FriendlyURLEntry friendlyURLEntry) {
+
 		return friendlyURLEntryPersistence.update(friendlyURLEntry);
 	}
 
 	@Override
 	public FriendlyURLEntryLocalization fetchFriendlyURLEntryLocalization(
 		long friendlyURLEntryId, String languageId) {
-		return friendlyURLEntryLocalizationPersistence.fetchByFriendlyURLEntryId_LanguageId(friendlyURLEntryId,
-			languageId);
+
+		return friendlyURLEntryLocalizationPersistence.
+			fetchByFriendlyURLEntryId_LanguageId(
+				friendlyURLEntryId, languageId);
 	}
 
 	@Override
 	public FriendlyURLEntryLocalization getFriendlyURLEntryLocalization(
-		long friendlyURLEntryId, String languageId) throws PortalException {
-		return friendlyURLEntryLocalizationPersistence.findByFriendlyURLEntryId_LanguageId(friendlyURLEntryId,
-			languageId);
+			long friendlyURLEntryId, String languageId)
+		throws PortalException {
+
+		return friendlyURLEntryLocalizationPersistence.
+			findByFriendlyURLEntryId_LanguageId(friendlyURLEntryId, languageId);
 	}
 
 	@Override
 	public List<FriendlyURLEntryLocalization> getFriendlyURLEntryLocalizations(
 		long friendlyURLEntryId) {
-		return friendlyURLEntryLocalizationPersistence.findByFriendlyURLEntryId(friendlyURLEntryId);
+
+		return friendlyURLEntryLocalizationPersistence.findByFriendlyURLEntryId(
+			friendlyURLEntryId);
 	}
 
 	@Override
 	public FriendlyURLEntryLocalization updateFriendlyURLEntryLocalization(
-		FriendlyURLEntry friendlyURLEntry, String languageId, String urlTitle)
+			FriendlyURLEntry friendlyURLEntry, String languageId,
+			String urlTitle)
 		throws PortalException {
-		friendlyURLEntry = friendlyURLEntryPersistence.findByPrimaryKey(friendlyURLEntry.getPrimaryKey());
 
-		FriendlyURLEntryLocalization friendlyURLEntryLocalization = friendlyURLEntryLocalizationPersistence.fetchByFriendlyURLEntryId_LanguageId(friendlyURLEntry.getFriendlyURLEntryId(),
-				languageId);
+		friendlyURLEntry = friendlyURLEntryPersistence.findByPrimaryKey(
+			friendlyURLEntry.getPrimaryKey());
 
-		return _updateFriendlyURLEntryLocalization(friendlyURLEntry,
-			friendlyURLEntryLocalization, languageId, urlTitle);
+		FriendlyURLEntryLocalization friendlyURLEntryLocalization =
+			friendlyURLEntryLocalizationPersistence.
+				fetchByFriendlyURLEntryId_LanguageId(
+					friendlyURLEntry.getFriendlyURLEntryId(), languageId);
+
+		return _updateFriendlyURLEntryLocalization(
+			friendlyURLEntry, friendlyURLEntryLocalization, languageId,
+			urlTitle);
 	}
 
 	@Override
-	public List<FriendlyURLEntryLocalization> updateFriendlyURLEntryLocalizations(
-		FriendlyURLEntry friendlyURLEntry, Map<String, String> urlTitleMap)
+	public List<FriendlyURLEntryLocalization>
+			updateFriendlyURLEntryLocalizations(
+				FriendlyURLEntry friendlyURLEntry,
+				Map<String, String> urlTitleMap)
 		throws PortalException {
-		friendlyURLEntry = friendlyURLEntryPersistence.findByPrimaryKey(friendlyURLEntry.getPrimaryKey());
 
-		Map<String, String[]> localizedValuesMap = new HashMap<String, String[]>();
+		friendlyURLEntry = friendlyURLEntryPersistence.findByPrimaryKey(
+			friendlyURLEntry.getPrimaryKey());
+
+		Map<String, String[]> localizedValuesMap =
+			new HashMap<String, String[]>();
 
 		for (Map.Entry<String, String> entry : urlTitleMap.entrySet()) {
 			String languageId = entry.getKey();
@@ -515,48 +600,71 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 			localizedValues[0] = entry.getValue();
 		}
 
-		List<FriendlyURLEntryLocalization> friendlyURLEntryLocalizations = new ArrayList<FriendlyURLEntryLocalization>(localizedValuesMap.size());
+		List<FriendlyURLEntryLocalization> friendlyURLEntryLocalizations =
+			new ArrayList<FriendlyURLEntryLocalization>(
+				localizedValuesMap.size());
 
-		for (FriendlyURLEntryLocalization friendlyURLEntryLocalization : friendlyURLEntryLocalizationPersistence.findByFriendlyURLEntryId(
-				friendlyURLEntry.getFriendlyURLEntryId())) {
-			String[] localizedValues = localizedValuesMap.remove(friendlyURLEntryLocalization.getLanguageId());
+		for (FriendlyURLEntryLocalization friendlyURLEntryLocalization :
+				friendlyURLEntryLocalizationPersistence.
+					findByFriendlyURLEntryId(
+						friendlyURLEntry.getFriendlyURLEntryId())) {
+
+			String[] localizedValues = localizedValuesMap.remove(
+				friendlyURLEntryLocalization.getLanguageId());
 
 			if (localizedValues == null) {
-				friendlyURLEntryLocalizationPersistence.remove(friendlyURLEntryLocalization);
+				friendlyURLEntryLocalizationPersistence.remove(
+					friendlyURLEntryLocalization);
 			}
 			else {
-				friendlyURLEntryLocalization.setGroupId(friendlyURLEntry.getGroupId());
-				friendlyURLEntryLocalization.setCompanyId(friendlyURLEntry.getCompanyId());
-				friendlyURLEntryLocalization.setClassNameId(friendlyURLEntry.getClassNameId());
-				friendlyURLEntryLocalization.setClassPK(friendlyURLEntry.getClassPK());
+				friendlyURLEntryLocalization.setGroupId(
+					friendlyURLEntry.getGroupId());
+				friendlyURLEntryLocalization.setCompanyId(
+					friendlyURLEntry.getCompanyId());
+				friendlyURLEntryLocalization.setClassNameId(
+					friendlyURLEntry.getClassNameId());
+				friendlyURLEntryLocalization.setClassPK(
+					friendlyURLEntry.getClassPK());
 
 				friendlyURLEntryLocalization.setUrlTitle(localizedValues[0]);
 
-				friendlyURLEntryLocalizations.add(friendlyURLEntryLocalizationPersistence.update(
+				friendlyURLEntryLocalizations.add(
+					friendlyURLEntryLocalizationPersistence.update(
 						friendlyURLEntryLocalization));
 			}
 		}
 
-		long batchCounter = counterLocalService.increment(FriendlyURLEntryLocalization.class.getName(),
+		long batchCounter =
+			counterLocalService.increment(
+				FriendlyURLEntryLocalization.class.getName(),
 				localizedValuesMap.size()) - localizedValuesMap.size();
 
-		for (Map.Entry<String, String[]> entry : localizedValuesMap.entrySet()) {
+		for (Map.Entry<String, String[]> entry :
+				localizedValuesMap.entrySet()) {
+
 			String languageId = entry.getKey();
 			String[] localizedValues = entry.getValue();
 
-			FriendlyURLEntryLocalization friendlyURLEntryLocalization = friendlyURLEntryLocalizationPersistence.create(++batchCounter);
+			FriendlyURLEntryLocalization friendlyURLEntryLocalization =
+				friendlyURLEntryLocalizationPersistence.create(++batchCounter);
 
-			friendlyURLEntryLocalization.setFriendlyURLEntryId(friendlyURLEntry.getFriendlyURLEntryId());
-			friendlyURLEntryLocalization.setGroupId(friendlyURLEntry.getGroupId());
-			friendlyURLEntryLocalization.setCompanyId(friendlyURLEntry.getCompanyId());
-			friendlyURLEntryLocalization.setClassNameId(friendlyURLEntry.getClassNameId());
-			friendlyURLEntryLocalization.setClassPK(friendlyURLEntry.getClassPK());
+			friendlyURLEntryLocalization.setFriendlyURLEntryId(
+				friendlyURLEntry.getFriendlyURLEntryId());
+			friendlyURLEntryLocalization.setGroupId(
+				friendlyURLEntry.getGroupId());
+			friendlyURLEntryLocalization.setCompanyId(
+				friendlyURLEntry.getCompanyId());
+			friendlyURLEntryLocalization.setClassNameId(
+				friendlyURLEntry.getClassNameId());
+			friendlyURLEntryLocalization.setClassPK(
+				friendlyURLEntry.getClassPK());
 
 			friendlyURLEntryLocalization.setLanguageId(languageId);
 
 			friendlyURLEntryLocalization.setUrlTitle(localizedValues[0]);
 
-			friendlyURLEntryLocalizations.add(friendlyURLEntryLocalizationPersistence.update(
+			friendlyURLEntryLocalizations.add(
+				friendlyURLEntryLocalizationPersistence.update(
 					friendlyURLEntryLocalization));
 		}
 
@@ -564,225 +672,48 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	}
 
 	private FriendlyURLEntryLocalization _updateFriendlyURLEntryLocalization(
-		FriendlyURLEntry friendlyURLEntry,
-		FriendlyURLEntryLocalization friendlyURLEntryLocalization,
-		String languageId, String urlTitle) throws PortalException {
+			FriendlyURLEntry friendlyURLEntry,
+			FriendlyURLEntryLocalization friendlyURLEntryLocalization,
+			String languageId, String urlTitle)
+		throws PortalException {
+
 		if (friendlyURLEntryLocalization == null) {
-			long friendlyURLEntryLocalizationId = counterLocalService.increment(FriendlyURLEntryLocalization.class.getName());
+			long friendlyURLEntryLocalizationId = counterLocalService.increment(
+				FriendlyURLEntryLocalization.class.getName());
 
-			friendlyURLEntryLocalization = friendlyURLEntryLocalizationPersistence.create(friendlyURLEntryLocalizationId);
+			friendlyURLEntryLocalization =
+				friendlyURLEntryLocalizationPersistence.create(
+					friendlyURLEntryLocalizationId);
 
-			friendlyURLEntryLocalization.setFriendlyURLEntryId(friendlyURLEntry.getFriendlyURLEntryId());
+			friendlyURLEntryLocalization.setFriendlyURLEntryId(
+				friendlyURLEntry.getFriendlyURLEntryId());
 			friendlyURLEntryLocalization.setLanguageId(languageId);
 		}
 
 		friendlyURLEntryLocalization.setGroupId(friendlyURLEntry.getGroupId());
-		friendlyURLEntryLocalization.setCompanyId(friendlyURLEntry.getCompanyId());
-		friendlyURLEntryLocalization.setClassNameId(friendlyURLEntry.getClassNameId());
+		friendlyURLEntryLocalization.setCompanyId(
+			friendlyURLEntry.getCompanyId());
+		friendlyURLEntryLocalization.setClassNameId(
+			friendlyURLEntry.getClassNameId());
 		friendlyURLEntryLocalization.setClassPK(friendlyURLEntry.getClassPK());
 
 		friendlyURLEntryLocalization.setUrlTitle(urlTitle);
 
-		return friendlyURLEntryLocalizationPersistence.update(friendlyURLEntryLocalization);
+		return friendlyURLEntryLocalizationPersistence.update(
+			friendlyURLEntryLocalization);
 	}
 
-	/**
-	 * Returns the friendly url entry local service.
-	 *
-	 * @return the friendly url entry local service
-	 */
-	public FriendlyURLEntryLocalService getFriendlyURLEntryLocalService() {
-		return friendlyURLEntryLocalService;
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			FriendlyURLEntryLocalService.class, IdentifiableOSGiService.class,
+			PersistedModelLocalService.class
+		};
 	}
 
-	/**
-	 * Sets the friendly url entry local service.
-	 *
-	 * @param friendlyURLEntryLocalService the friendly url entry local service
-	 */
-	public void setFriendlyURLEntryLocalService(
-		FriendlyURLEntryLocalService friendlyURLEntryLocalService) {
-		this.friendlyURLEntryLocalService = friendlyURLEntryLocalService;
-	}
-
-	/**
-	 * Returns the friendly url entry persistence.
-	 *
-	 * @return the friendly url entry persistence
-	 */
-	public FriendlyURLEntryPersistence getFriendlyURLEntryPersistence() {
-		return friendlyURLEntryPersistence;
-	}
-
-	/**
-	 * Sets the friendly url entry persistence.
-	 *
-	 * @param friendlyURLEntryPersistence the friendly url entry persistence
-	 */
-	public void setFriendlyURLEntryPersistence(
-		FriendlyURLEntryPersistence friendlyURLEntryPersistence) {
-		this.friendlyURLEntryPersistence = friendlyURLEntryPersistence;
-	}
-
-	/**
-	 * Returns the friendly url entry localization persistence.
-	 *
-	 * @return the friendly url entry localization persistence
-	 */
-	public FriendlyURLEntryLocalizationPersistence getFriendlyURLEntryLocalizationPersistence() {
-		return friendlyURLEntryLocalizationPersistence;
-	}
-
-	/**
-	 * Sets the friendly url entry localization persistence.
-	 *
-	 * @param friendlyURLEntryLocalizationPersistence the friendly url entry localization persistence
-	 */
-	public void setFriendlyURLEntryLocalizationPersistence(
-		FriendlyURLEntryLocalizationPersistence friendlyURLEntryLocalizationPersistence) {
-		this.friendlyURLEntryLocalizationPersistence = friendlyURLEntryLocalizationPersistence;
-	}
-
-	/**
-	 * Returns the friendly url entry mapping persistence.
-	 *
-	 * @return the friendly url entry mapping persistence
-	 */
-	public FriendlyURLEntryMappingPersistence getFriendlyURLEntryMappingPersistence() {
-		return friendlyURLEntryMappingPersistence;
-	}
-
-	/**
-	 * Sets the friendly url entry mapping persistence.
-	 *
-	 * @param friendlyURLEntryMappingPersistence the friendly url entry mapping persistence
-	 */
-	public void setFriendlyURLEntryMappingPersistence(
-		FriendlyURLEntryMappingPersistence friendlyURLEntryMappingPersistence) {
-		this.friendlyURLEntryMappingPersistence = friendlyURLEntryMappingPersistence;
-	}
-
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
-		return counterLocalService;
-	}
-
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
-		this.counterLocalService = counterLocalService;
-	}
-
-	/**
-	 * Returns the class name local service.
-	 *
-	 * @return the class name local service
-	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService getClassNameLocalService() {
-		return classNameLocalService;
-	}
-
-	/**
-	 * Sets the class name local service.
-	 *
-	 * @param classNameLocalService the class name local service
-	 */
-	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService) {
-		this.classNameLocalService = classNameLocalService;
-	}
-
-	/**
-	 * Returns the class name persistence.
-	 *
-	 * @return the class name persistence
-	 */
-	public ClassNamePersistence getClassNamePersistence() {
-		return classNamePersistence;
-	}
-
-	/**
-	 * Sets the class name persistence.
-	 *
-	 * @param classNamePersistence the class name persistence
-	 */
-	public void setClassNamePersistence(
-		ClassNamePersistence classNamePersistence) {
-		this.classNamePersistence = classNamePersistence;
-	}
-
-	/**
-	 * Returns the resource local service.
-	 *
-	 * @return the resource local service
-	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService getResourceLocalService() {
-		return resourceLocalService;
-	}
-
-	/**
-	 * Sets the resource local service.
-	 *
-	 * @param resourceLocalService the resource local service
-	 */
-	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService) {
-		this.resourceLocalService = resourceLocalService;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService getUserLocalService() {
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.friendly.url.model.FriendlyURLEntry",
-			friendlyURLEntryLocalService);
-	}
-
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.friendly.url.model.FriendlyURLEntry");
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		friendlyURLEntryLocalService = (FriendlyURLEntryLocalService)aopProxy;
 	}
 
 	/**
@@ -817,36 +748,43 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = FriendlyURLEntryLocalService.class)
 	protected FriendlyURLEntryLocalService friendlyURLEntryLocalService;
-	@BeanReference(type = FriendlyURLEntryPersistence.class)
+
+	@Reference
 	protected FriendlyURLEntryPersistence friendlyURLEntryPersistence;
-	@BeanReference(type = FriendlyURLEntryLocalizationPersistence.class)
-	protected FriendlyURLEntryLocalizationPersistence friendlyURLEntryLocalizationPersistence;
-	@BeanReference(type = FriendlyURLEntryMappingPersistence.class)
-	protected FriendlyURLEntryMappingPersistence friendlyURLEntryMappingPersistence;
-	@ServiceReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ClassNameLocalService.class)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService;
-	@ServiceReference(type = ClassNamePersistence.class)
-	protected ClassNamePersistence classNamePersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ResourceLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.UserLocalService.class)
-	protected com.liferay.portal.kernel.service.UserLocalService userLocalService;
-	@ServiceReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+
+	@Reference
+	protected FriendlyURLEntryLocalizationPersistence
+		friendlyURLEntryLocalizationPersistence;
+
+	@Reference
+	protected FriendlyURLEntryMappingPersistence
+		friendlyURLEntryMappingPersistence;
+
+	@Reference
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.ClassNameLocalService
+		classNameLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.ResourceLocalService
+		resourceLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.UserLocalService
+		userLocalService;
+
 }

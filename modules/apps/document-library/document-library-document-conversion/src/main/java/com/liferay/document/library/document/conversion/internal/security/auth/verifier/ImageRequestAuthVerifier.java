@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Daniel Sanz
- * @author Istvan Andras Dezsi
+ * @author István András Dézsi
  * @author Tomas Polesovsky
  */
 public class ImageRequestAuthVerifier implements AuthVerifier {
@@ -47,10 +47,12 @@ public class ImageRequestAuthVerifier implements AuthVerifier {
 
 		AuthVerifierResult authVerifierResult = new AuthVerifierResult();
 
-		HttpServletRequest request = accessControlContext.getRequest();
+		HttpServletRequest httpServletRequest =
+			accessControlContext.getRequest();
 
 		try {
-			String token = ParamUtil.getString(request, "auth_token");
+			String token = ParamUtil.getString(
+				httpServletRequest, "auth_token");
 
 			if (Validator.isBlank(token)) {
 				return authVerifierResult;
@@ -69,8 +71,8 @@ public class ImageRequestAuthVerifier implements AuthVerifier {
 
 			return authVerifierResult;
 		}
-		catch (Exception e) {
-			throw new AuthException(e);
+		catch (Exception exception) {
+			throw new AuthException(exception);
 		}
 	}
 

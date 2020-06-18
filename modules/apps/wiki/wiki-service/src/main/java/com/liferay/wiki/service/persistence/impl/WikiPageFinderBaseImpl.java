@@ -14,71 +14,85 @@
 
 package com.liferay.wiki.service.persistence.impl;
 
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.configuration.Configuration;
+import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.persistence.WikiPagePersistence;
-
-import java.lang.reflect.Field;
+import com.liferay.wiki.service.persistence.impl.constants.WikiPersistenceConstants;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Brian Wing Shun Chan
  * @generated
  */
-public class WikiPageFinderBaseImpl extends BasePersistenceImpl<WikiPage> {
+public abstract class WikiPageFinderBaseImpl
+	extends BasePersistenceImpl<WikiPage> {
+
 	public WikiPageFinderBaseImpl() {
 		setModelClass(WikiPage.class);
 
-		try {
-			Field field = BasePersistenceImpl.class.getDeclaredField(
-					"_dbColumnNames");
+		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
-			field.setAccessible(true);
+		dbColumnNames.put("uuid", "uuid_");
 
-			Map<String, String> dbColumnNames = new HashMap<String, String>();
-
-			dbColumnNames.put("uuid", "uuid_");
-
-			field.set(this, dbColumnNames);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-		}
+		setDBColumnNames(dbColumnNames);
 	}
 
 	@Override
 	public Set<String> getBadColumnNames() {
-		return getWikiPagePersistence().getBadColumnNames();
+		return wikiPagePersistence.getBadColumnNames();
 	}
 
-	/**
-	 * Returns the wiki page persistence.
-	 *
-	 * @return the wiki page persistence
-	 */
-	public WikiPagePersistence getWikiPagePersistence() {
-		return wikiPagePersistence;
+	@Override
+	@Reference(
+		target = WikiPersistenceConstants.SERVICE_CONFIGURATION_FILTER,
+		unbind = "-"
+	)
+	public void setConfiguration(Configuration configuration) {
+		super.setConfiguration(configuration);
 	}
 
-	/**
-	 * Sets the wiki page persistence.
-	 *
-	 * @param wikiPagePersistence the wiki page persistence
-	 */
-	public void setWikiPagePersistence(WikiPagePersistence wikiPagePersistence) {
-		this.wikiPagePersistence = wikiPagePersistence;
+	@Override
+	@Reference(
+		target = WikiPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
 	}
 
-	@BeanReference(type = WikiPagePersistence.class)
+	@Override
+	@Reference(
+		target = WikiPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		super.setSessionFactory(sessionFactory);
+	}
+
+	@Reference
 	protected WikiPagePersistence wikiPagePersistence;
-	private static final Log _log = LogFactoryUtil.getLog(WikiPageFinderBaseImpl.class);
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		WikiPageFinderBaseImpl.class);
+
+	static {
+		try {
+			Class.forName(WikiPersistenceConstants.class.getName());
+		}
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new ExceptionInInitializerError(classNotFoundException);
+		}
+	}
+
 }

@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,11 +25,13 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class DDMTemplateLinkSoap implements Serializable {
+
 	public static DDMTemplateLinkSoap toSoapModel(DDMTemplateLink model) {
 		DDMTemplateLinkSoap soapModel = new DDMTemplateLinkSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setTemplateLinkId(model.getTemplateLinkId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setClassNameId(model.getClassNameId());
@@ -42,7 +42,8 @@ public class DDMTemplateLinkSoap implements Serializable {
 	}
 
 	public static DDMTemplateLinkSoap[] toSoapModels(DDMTemplateLink[] models) {
-		DDMTemplateLinkSoap[] soapModels = new DDMTemplateLinkSoap[models.length];
+		DDMTemplateLinkSoap[] soapModels =
+			new DDMTemplateLinkSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -53,10 +54,12 @@ public class DDMTemplateLinkSoap implements Serializable {
 
 	public static DDMTemplateLinkSoap[][] toSoapModels(
 		DDMTemplateLink[][] models) {
+
 		DDMTemplateLinkSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new DDMTemplateLinkSoap[models.length][models[0].length];
+			soapModels =
+				new DDMTemplateLinkSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new DDMTemplateLinkSoap[0][0];
@@ -71,7 +74,9 @@ public class DDMTemplateLinkSoap implements Serializable {
 
 	public static DDMTemplateLinkSoap[] toSoapModels(
 		List<DDMTemplateLink> models) {
-		List<DDMTemplateLinkSoap> soapModels = new ArrayList<DDMTemplateLinkSoap>(models.size());
+
+		List<DDMTemplateLinkSoap> soapModels =
+			new ArrayList<DDMTemplateLinkSoap>(models.size());
 
 		for (DDMTemplateLink model : models) {
 			soapModels.add(toSoapModel(model));
@@ -89,6 +94,22 @@ public class DDMTemplateLinkSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setTemplateLinkId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public long getTemplateLinkId() {
@@ -131,9 +152,12 @@ public class DDMTemplateLinkSoap implements Serializable {
 		_templateId = templateId;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _templateLinkId;
 	private long _companyId;
 	private long _classNameId;
 	private long _classPK;
 	private long _templateId;
+
 }

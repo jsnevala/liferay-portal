@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN" "http://jakarta.apache.org/struts/dtds/struts-config_1_2.dtd">
 
 <struts-config>
 
@@ -70,8 +69,6 @@
 		<action path="/portal/render_portlet" type="com.liferay.portal.action.RenderPortletAction">
 			<forward name="/portal/render_portlet" path="/portal/render_portlet.jsp" />
 		</action>
-
-		<action path="/portal/resiliency" type="com.liferay.portal.resiliency.spi.action.PortalResiliencyAction" />
 
 		<action path="/portal/rest_proxy" type="com.liferay.portal.action.RESTProxyAction" />
 

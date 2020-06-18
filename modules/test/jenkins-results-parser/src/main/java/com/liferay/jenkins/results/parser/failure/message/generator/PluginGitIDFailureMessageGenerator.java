@@ -39,7 +39,7 @@ public class PluginGitIDFailureMessageGenerator
 		int end = consoleText.indexOf("merge-test-results:");
 		TopLevelBuild topLevelBuild = build.getTopLevelBuild();
 
-		Element messageElement = Dom4JUtil.getNewElement(
+		return Dom4JUtil.getNewElement(
 			"p", null, "Please update ",
 			Dom4JUtil.getNewElement(
 				"strong", null,
@@ -47,9 +47,7 @@ public class PluginGitIDFailureMessageGenerator
 			" to an existing Git ID from ",
 			Dom4JUtil.getNewElement(
 				"strong", null, getPluginsBranchAnchorElement(topLevelBuild)),
-			".", getConsoleTextSnippetElement(consoleText, true, end));
-
-		return messageElement;
+			".", getConsoleTextSnippetElementByEnd(consoleText, true, end));
 	}
 
 	protected Element getPluginsBranchAnchorElement(

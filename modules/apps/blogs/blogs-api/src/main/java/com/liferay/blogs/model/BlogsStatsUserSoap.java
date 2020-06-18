@@ -14,8 +14,6 @@
 
 package com.liferay.blogs.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,11 +26,12 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class BlogsStatsUserSoap implements Serializable {
+
 	public static BlogsStatsUserSoap toSoapModel(BlogsStatsUser model) {
 		BlogsStatsUserSoap soapModel = new BlogsStatsUserSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setStatsUserId(model.getStatsUserId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -56,11 +55,14 @@ public class BlogsStatsUserSoap implements Serializable {
 		return soapModels;
 	}
 
-	public static BlogsStatsUserSoap[][] toSoapModels(BlogsStatsUser[][] models) {
+	public static BlogsStatsUserSoap[][] toSoapModels(
+		BlogsStatsUser[][] models) {
+
 		BlogsStatsUserSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new BlogsStatsUserSoap[models.length][models[0].length];
+			soapModels =
+				new BlogsStatsUserSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new BlogsStatsUserSoap[0][0];
@@ -73,8 +75,11 @@ public class BlogsStatsUserSoap implements Serializable {
 		return soapModels;
 	}
 
-	public static BlogsStatsUserSoap[] toSoapModels(List<BlogsStatsUser> models) {
-		List<BlogsStatsUserSoap> soapModels = new ArrayList<BlogsStatsUserSoap>(models.size());
+	public static BlogsStatsUserSoap[] toSoapModels(
+		List<BlogsStatsUser> models) {
+
+		List<BlogsStatsUserSoap> soapModels = new ArrayList<BlogsStatsUserSoap>(
+			models.size());
 
 		for (BlogsStatsUser model : models) {
 			soapModels.add(toSoapModel(model));
@@ -92,6 +97,14 @@ public class BlogsStatsUserSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setStatsUserId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getStatsUserId() {
@@ -166,6 +179,7 @@ public class BlogsStatsUserSoap implements Serializable {
 		_ratingsAverageScore = ratingsAverageScore;
 	}
 
+	private long _mvccVersion;
 	private long _statsUserId;
 	private long _groupId;
 	private long _companyId;
@@ -175,4 +189,5 @@ public class BlogsStatsUserSoap implements Serializable {
 	private int _ratingsTotalEntries;
 	private double _ratingsTotalScore;
 	private double _ratingsAverageScore;
+
 }

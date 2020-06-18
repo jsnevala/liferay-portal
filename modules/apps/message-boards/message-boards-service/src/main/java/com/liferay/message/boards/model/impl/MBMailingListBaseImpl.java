@@ -14,8 +14,6 @@
 
 package com.liferay.message.boards.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.message.boards.model.MBMailingList;
 import com.liferay.message.boards.service.MBMailingListLocalServiceUtil;
 
@@ -31,13 +29,13 @@ import com.liferay.message.boards.service.MBMailingListLocalServiceUtil;
  * @see MBMailingList
  * @generated
  */
-@ProviderType
-public abstract class MBMailingListBaseImpl extends MBMailingListModelImpl
-	implements MBMailingList {
+public abstract class MBMailingListBaseImpl
+	extends MBMailingListModelImpl implements MBMailingList {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a message boards mailing list model instance should use the {@link MBMailingList} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a message boards mailing list model instance should use the <code>MBMailingList</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +46,5 @@ public abstract class MBMailingListBaseImpl extends MBMailingListModelImpl
 			MBMailingListLocalServiceUtil.updateMBMailingList(this);
 		}
 	}
+
 }

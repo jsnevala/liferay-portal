@@ -57,7 +57,7 @@ public class UnsyncBufferedOutputStreamTest extends BaseOutputStreamTestCase {
 
 		unsyncBufferedOutputStream.write(_BUFFER);
 
-		for (int i = _SIZE; i < _SIZE * 2; i++) {
+		for (int i = _SIZE; i < (_SIZE * 2); i++) {
 			Assert.assertEquals(i - _SIZE, buffer[i]);
 		}
 
@@ -126,15 +126,17 @@ public class UnsyncBufferedOutputStreamTest extends BaseOutputStreamTestCase {
 		try {
 			new UnsyncBufferedOutputStream(byteArrayOutputStream, 0);
 		}
-		catch (IllegalArgumentException iae) {
-			Assert.assertEquals("Size is less than 1", iae.getMessage());
+		catch (IllegalArgumentException illegalArgumentException) {
+			Assert.assertEquals(
+				"Size is less than 1", illegalArgumentException.getMessage());
 		}
 
 		try {
 			new UnsyncBufferedOutputStream(byteArrayOutputStream, -1);
 		}
-		catch (IllegalArgumentException iae) {
-			Assert.assertEquals("Size is less than 1", iae.getMessage());
+		catch (IllegalArgumentException illegalArgumentException) {
+			Assert.assertEquals(
+				"Size is less than 1", illegalArgumentException.getMessage());
 		}
 	}
 

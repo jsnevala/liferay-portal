@@ -17,6 +17,8 @@ package com.liferay.portal.service.impl;
 import com.liferay.admin.kernel.util.PortalMyAccountApplicationType;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.thread.local.Lifecycle;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCache;
@@ -35,14 +37,16 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.search.Indexer;
@@ -52,12 +56,12 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.aop.Skip;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -65,6 +69,7 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.permission.PermissionCacheUtil;
 import com.liferay.portal.service.base.RoleLocalServiceBaseImpl;
@@ -154,7 +159,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		role.setSubtype(subtype);
 		role.setExpandoBridgeAttributes(serviceContext);
 
-		rolePersistence.update(role);
+		role = rolePersistence.update(role);
 
 		// Resources
 
@@ -276,7 +281,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		try {
 			roles = roleFinder.findBySystem(companyId);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 
 			// LPS-34324
 
@@ -299,14 +304,15 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		String[] systemRoles = PortalUtil.getSystemRoles();
 
 		for (String name : systemRoles) {
-			String key =
-				"system.role." +
-					StringUtil.replace(name, CharPool.SPACE, CharPool.PERIOD) +
-						".description";
-
-			Map<Locale, String> descriptionMap = new HashMap<>();
-
-			descriptionMap.put(LocaleUtil.getDefault(), PropsUtil.get(key));
+			Map<Locale, String> descriptionMap = HashMapBuilder.put(
+				LocaleUtil.getDefault(),
+				PropsUtil.get(
+					StringBundler.concat(
+						"system.role.",
+						StringUtil.replace(
+							name, CharPool.SPACE, CharPool.PERIOD),
+						".description"))
+			).build();
 
 			int type = RoleConstants.TYPE_REGULAR;
 
@@ -319,14 +325,15 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 			PortalUtil.getSystemOrganizationRoles();
 
 		for (String name : systemOrganizationRoles) {
-			String key =
-				"system.organization.role." +
-					StringUtil.replace(name, CharPool.SPACE, CharPool.PERIOD) +
-						".description";
-
-			Map<Locale, String> descriptionMap = new HashMap<>();
-
-			descriptionMap.put(LocaleUtil.getDefault(), PropsUtil.get(key));
+			Map<Locale, String> descriptionMap = HashMapBuilder.put(
+				LocaleUtil.getDefault(),
+				PropsUtil.get(
+					StringBundler.concat(
+						"system.organization.role.",
+						StringUtil.replace(
+							name, CharPool.SPACE, CharPool.PERIOD),
+						".description"))
+			).build();
 
 			int type = RoleConstants.TYPE_ORGANIZATION;
 
@@ -338,14 +345,15 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		String[] systemSiteRoles = PortalUtil.getSystemSiteRoles();
 
 		for (String name : systemSiteRoles) {
-			String key =
-				"system.site.role." +
-					StringUtil.replace(name, CharPool.SPACE, CharPool.PERIOD) +
-						".description";
-
-			Map<Locale, String> descriptionMap = new HashMap<>();
-
-			descriptionMap.put(LocaleUtil.getDefault(), PropsUtil.get(key));
+			Map<Locale, String> descriptionMap = HashMapBuilder.put(
+				LocaleUtil.getDefault(),
+				PropsUtil.get(
+					StringBundler.concat(
+						"system.site.role.",
+						StringUtil.replace(
+							name, CharPool.SPACE, CharPool.PERIOD),
+						".description"))
+			).build();
 
 			int type = RoleConstants.TYPE_SITE;
 
@@ -441,8 +449,36 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 				ResourceConstants.SCOPE_INDIVIDUAL, role.getRoleId());
 		}
 
-		if ((role.getType() == RoleConstants.TYPE_ORGANIZATION) ||
+		if ((role.getType() == RoleConstants.TYPE_DEPOT) ||
+			(role.getType() == RoleConstants.TYPE_ORGANIZATION) ||
 			(role.getType() == RoleConstants.TYPE_SITE)) {
+
+			List<Group> groups = groupPersistence.findByC_S(
+				role.getCompanyId(), true);
+
+			for (Group group : groups) {
+				UnicodeProperties typeSettingsUnicodeProperties =
+					group.getTypeSettingsProperties();
+
+				List<Long> defaultSiteRoleIds = ListUtil.fromArray(
+					StringUtil.split(
+						typeSettingsUnicodeProperties.getProperty(
+							"defaultSiteRoleIds"),
+						0L));
+
+				if (defaultSiteRoleIds.contains(role.getRoleId())) {
+					defaultSiteRoleIds.remove(role.getRoleId());
+
+					typeSettingsUnicodeProperties.setProperty(
+						"defaultSiteRoleIds",
+						ListUtil.toString(
+							defaultSiteRoleIds, StringPool.BLANK));
+
+					groupLocalService.updateGroup(
+						group.getGroupId(),
+						typeSettingsUnicodeProperties.toString());
+				}
+			}
 
 			userGroupRoleLocalService.deleteUserGroupRolesByRoleId(
 				role.getRoleId());
@@ -546,7 +582,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 	 *         with the name could not be found in the company
 	 */
 	@Override
-	@Skip
+	@Transactional(enabled = false)
 	public Role fetchRole(long companyId, String name) {
 		String companyIdHexString = StringUtil.toHexString(companyId);
 
@@ -572,17 +608,18 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 			assigneesTotal += userLocalService.getRoleUsersCount(roleId);
 		}
 
-		if (type == RoleConstants.TYPE_SITE) {
+		if ((type == RoleConstants.TYPE_DEPOT) ||
+			(type == RoleConstants.TYPE_SITE)) {
+
 			DynamicQuery userGroupGroupRoleDynamicQuery =
 				userGroupGroupRoleLocalService.dynamicQuery();
 
-			Property property = PropertyFactoryUtil.forName(
-				"primaryKey.roleId");
+			Property property = PropertyFactoryUtil.forName("roleId");
 
 			userGroupGroupRoleDynamicQuery.add(property.eq(roleId));
 
 			userGroupGroupRoleDynamicQuery.setProjection(
-				ProjectionFactoryUtil.countDistinct("primaryKey.userGroupId"));
+				ProjectionFactoryUtil.countDistinct("userGroupId"));
 
 			List<?> list = userGroupRoleLocalService.dynamicQuery(
 				userGroupGroupRoleDynamicQuery);
@@ -592,19 +629,19 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 			assigneesTotal += count.intValue();
 		}
 
-		if ((type == RoleConstants.TYPE_SITE) ||
-			(type == RoleConstants.TYPE_ORGANIZATION)) {
+		if ((type == RoleConstants.TYPE_DEPOT) ||
+			(type == RoleConstants.TYPE_ORGANIZATION) ||
+			(type == RoleConstants.TYPE_SITE)) {
 
 			DynamicQuery userGroupRoleDynamicQuery =
 				userGroupRoleLocalService.dynamicQuery();
 
-			Property property = PropertyFactoryUtil.forName(
-				"primaryKey.roleId");
+			Property property = PropertyFactoryUtil.forName("roleId");
 
 			userGroupRoleDynamicQuery.add(property.eq(roleId));
 
 			userGroupRoleDynamicQuery.setProjection(
-				ProjectionFactoryUtil.countDistinct("primaryKey.userId"));
+				ProjectionFactoryUtil.countDistinct("userId"));
 
 			List<?> list = userGroupRoleLocalService.dynamicQuery(
 				userGroupRoleDynamicQuery);
@@ -724,17 +761,6 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 	}
 
 	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public List<Role> getResourceBlockRoles(
-		long resourceBlockId, String className, String actionId) {
-
-		return roleFinder.findByR_N_A(resourceBlockId, className, actionId);
-	}
-
-	/**
 	 * Returns a map of role names to associated action IDs for the named
 	 * resource in the company within the permission scope.
 	 *
@@ -788,7 +814,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 	 * @return the role with the name
 	 */
 	@Override
-	@Skip
+	@Transactional(enabled = false)
 	public Role getRole(long companyId, String name) throws PortalException {
 		String companyIdHexString = StringUtil.toHexString(companyId);
 
@@ -836,6 +862,14 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		return rolePersistence.findByC_T(companyId, types);
 	}
 
+	@Override
+	public List<Role> getRoles(
+		long companyId, long classNameId, long[] classPKs, int type) {
+
+		return rolePersistence.findByC_C_C_T(
+			companyId, classNameId, classPKs, type);
+	}
+
 	/**
 	 * Returns all the roles with the primary keys.
 	 *
@@ -847,9 +881,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		List<Role> roles = new ArrayList<>(roleIds.length);
 
 		for (long roleId : roleIds) {
-			Role role = getRole(roleId);
-
-			roles.add(role);
+			roles.add(getRole(roleId));
 		}
 
 		return roles;
@@ -1098,6 +1130,13 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		Role role = rolePersistence.fetchByC_N(companyId, name);
 
 		if (role == null) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					StringBundler.concat(
+						"Role ", name, " with company ID ", companyId,
+						" does not exist"));
+			}
+
 			return false;
 		}
 
@@ -1124,8 +1163,9 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 				ThreadLocalCacheManager.getThreadLocalCache(
 					Lifecycle.REQUEST, RoleLocalServiceImpl.class.getName());
 
-			String key = String.valueOf(role.getRoleId()).concat(
-				String.valueOf(userId));
+			String roleId = String.valueOf(role.getRoleId());
+
+			String key = roleId.concat(String.valueOf(userId));
 
 			Boolean value = threadLocalCache.get(key);
 
@@ -1510,9 +1550,23 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		role.setSubtype(subtype);
 		role.setExpandoBridgeAttributes(serviceContext);
 
-		rolePersistence.update(role);
+		return rolePersistence.update(role);
+	}
 
-		return role;
+	@Override
+	public void validateName(String name) throws PortalException {
+		String[] invalidCharacters = StringUtil.split(
+			RoleConstants.NAME_INVALID_CHARACTERS, StringPool.SPACE);
+
+		if (Validator.isNull(name) ||
+			(StringUtil.indexOfAny(name, invalidCharacters) > -1)) {
+
+			throw new RoleNameException();
+		}
+
+		if (!PropsValues.ROLES_NAME_ALLOW_NUMERIC && Validator.isNumber(name)) {
+			throw new RoleNameException();
+		}
 	}
 
 	protected void checkSystemRole(
@@ -1537,12 +1591,12 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 				roleLocalService.updateRole(role);
 			}
 		}
-		catch (NoSuchRoleException nsre) {
+		catch (NoSuchRoleException noSuchRoleException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(nsre, nsre);
+				_log.debug(noSuchRoleException, noSuchRoleException);
 			}
 
 			User user = userLocalService.getDefaultUser(companyId);
@@ -1558,7 +1612,10 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 				PermissionThreadLocal.setAddResource(true);
 			}
 
-			if (name.equals(RoleConstants.USER)) {
+			if (name.equals(RoleConstants.ANALYTICS_ADMINISTRATOR)) {
+				initAnalyticsAdministratorViewPermissions(role);
+			}
+			else if (name.equals(RoleConstants.USER)) {
 				initPersonalControlPanelPortletsPermissions(role);
 			}
 		}
@@ -1610,6 +1667,34 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		return teamRoleMap;
 	}
 
+	protected void initAnalyticsAdministratorViewPermissions(Role role)
+		throws PortalException {
+
+		resourcePermissionLocalService.addResourcePermission(
+			role.getCompanyId(), Group.class.getName(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(role.getCompanyId()), role.getRoleId(),
+			ActionKeys.VIEW);
+
+		resourcePermissionLocalService.addResourcePermission(
+			role.getCompanyId(), User.class.getName(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(role.getCompanyId()), role.getRoleId(),
+			ActionKeys.VIEW);
+
+		resourcePermissionLocalService.addResourcePermission(
+			role.getCompanyId(), Organization.class.getName(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(role.getCompanyId()), role.getRoleId(),
+			ActionKeys.VIEW_MEMBERS);
+
+		resourcePermissionLocalService.addResourcePermission(
+			role.getCompanyId(), UserGroup.class.getName(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(role.getCompanyId()), role.getRoleId(),
+			ActionKeys.VIEW_MEMBERS);
+	}
+
 	protected void initPersonalControlPanelPortletsPermissions(Role role)
 		throws PortalException {
 
@@ -1659,18 +1744,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		throws PortalException {
 
 		if (classNameId == classNameLocalService.getClassNameId(Role.class)) {
-			if (Validator.isNull(name) ||
-				(name.indexOf(CharPool.COMMA) != -1) ||
-				(name.indexOf(CharPool.STAR) != -1)) {
-
-				throw new RoleNameException();
-			}
-
-			if (Validator.isNumber(name) &&
-				!PropsValues.ROLES_NAME_ALLOW_NUMERIC) {
-
-				throw new RoleNameException();
-			}
+			validateName(name);
 		}
 
 		try {
@@ -1680,12 +1754,12 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 				throw new DuplicateRoleException("{roleId=" + roleId + "}");
 			}
 		}
-		catch (NoSuchRoleException nsre) {
+		catch (NoSuchRoleException noSuchRoleException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(nsre, nsre);
+				_log.debug(noSuchRoleException, noSuchRoleException);
 			}
 		}
 

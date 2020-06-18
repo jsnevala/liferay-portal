@@ -16,6 +16,7 @@ package com.liferay.jenkins.results.parser.test.clazz.group;
 
 import com.google.common.collect.Lists;
 
+import com.liferay.jenkins.results.parser.JenkinsMaster;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
@@ -73,6 +74,17 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return batchName;
 	}
 
+	public Integer getMinimumSlaveRAM() {
+		String minimumSlaveRAM = getFirstPropertyValue(
+			"test.batch.minimum.slave.ram");
+
+		if (minimumSlaveRAM == null) {
+			return JenkinsMaster.SLAVE_RAM_DEFAULT;
+		}
+
+		return Integer.valueOf(minimumSlaveRAM);
+	}
+
 	public PortalGitWorkingDirectory getPortalGitWorkingDirectory() {
 		return portalGitWorkingDirectory;
 	}
@@ -83,28 +95,64 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			String batchName,
 			PortalGitWorkingDirectory portalGitWorkingDirectory) {
 
-			File file = new File(
+			TestClassFile testClassFile = new TestClassFile(
 				portalGitWorkingDirectory.getWorkingDirectory(),
 				"build-test-batch.xml");
 
-			return new BatchTestClass(batchName, file);
+			return new BatchTestClass(batchName, testClassFile);
 		}
 
-		protected BatchTestClass(String batchName, File file) {
-			super(file);
+		protected BatchTestClass(
+			String batchName, TestClassFile testClassFile) {
 
-			addTestMethod(batchName);
+			super(testClassFile);
+
+			addTestClassMethod(batchName);
+		}
+
+	}
+
+	public static enum BuildProfile {
+
+		DXP {
+
+			private static final String _TEXT = "dxp";
+
+			@Override
+			public String toString() {
+				return _TEXT;
+			}
+
+		},
+		PORTAL {
+
+			private static final String _TEXT = "portal";
+
+			@Override
+			public String toString() {
+				return _TEXT;
+			}
+
 		}
 
 	}
 
 	protected BatchTestClassGroup(
-		String batchName, PortalTestClassJob portalTestClassJob) {
+		String batchName, BuildProfile buildProfile,
+		PortalTestClassJob portalTestClassJob) {
 
 		this.batchName = batchName;
+		this.buildProfile = buildProfile;
 
 		portalGitWorkingDirectory =
 			portalTestClassJob.getPortalGitWorkingDirectory();
+
+		String portalBranchName =
+			portalGitWorkingDirectory.getUpstreamBranchName();
+
+		if (portalBranchName.endsWith("-private")) {
+			testPrivatePortalBranch = true;
+		}
 
 		if (portalTestClassJob instanceof TestSuiteJob) {
 			TestSuiteJob testSuiteJob = (TestSuiteJob)portalTestClassJob;
@@ -117,8 +165,21 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 		jobProperties = portalTestClassJob.getJobProperties();
 
+		String stableTestSuiteBatchNamesFirstPropertyValue =
+			getFirstPropertyValue(
+				"test.batch.names", batchName, NAME_STABLE_TEST_SUITE);
+
+		if (stableTestSuiteBatchNamesFirstPropertyValue != null) {
+			Collections.addAll(
+				stableTestSuiteBatchNames,
+				stableTestSuiteBatchNamesFirstPropertyValue.split("\\s*,\\s*"));
+		}
+
 		_setTestReleaseBundle();
 		_setTestRelevantChanges();
+		_setTestRelevantIntegrationUnitOnly();
+
+		_setIncludeStableTestSuite();
 	}
 
 	protected int getAxisMaxSize() {
@@ -128,17 +189,23 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			return Integer.parseInt(axisMaxSize);
 		}
 
-		return _DEFAULT_AXIS_MAX_SIZE;
-	}
-
-	protected String getFirstMatchingPropertyName(
-		String basePropertyName, Properties properties) {
-
-		return getFirstMatchingPropertyName(basePropertyName, properties, null);
+		return _AXES_SIZE_MAX_DEFAULT;
 	}
 
 	protected String getFirstMatchingPropertyName(
 		String basePropertyName, Properties properties, String testSuiteName) {
+
+		return getFirstMatchingPropertyName(
+			basePropertyName, null, properties, testSuiteName);
+	}
+
+	protected String getFirstMatchingPropertyName(
+		String basePropertyName, String batchName, Properties properties,
+		String testSuiteName) {
+
+		if (batchName == null) {
+			batchName = this.batchName;
+		}
 
 		if (basePropertyName.contains("[") || basePropertyName.contains("]")) {
 			throw new RuntimeException(
@@ -171,8 +238,6 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 				if (Objects.equals(testSuiteName, targetTestSuiteName)) {
 					return propertyName;
 				}
-
-				continue;
 			}
 		}
 
@@ -180,6 +245,20 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	}
 
 	protected String getFirstPropertyValue(String basePropertyName) {
+		return getFirstPropertyValue(
+			basePropertyName, batchName, testSuiteName);
+	}
+
+	protected String getFirstPropertyValue(
+		String basePropertyName, String batchName) {
+
+		return getFirstPropertyValue(
+			basePropertyName, batchName, testSuiteName);
+	}
+
+	protected String getFirstPropertyValue(
+		String basePropertyName, String batchName, String testSuiteName) {
+
 		if (basePropertyName.contains("[") || basePropertyName.contains("]")) {
 			throw new RuntimeException(
 				"Invalid base property name " + basePropertyName);
@@ -195,7 +274,7 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 			propertyNames.add(
 				getFirstMatchingPropertyName(
-					basePropertyName, jobProperties, testSuiteName));
+					basePropertyName, batchName, jobProperties, testSuiteName));
 
 			propertyNames.add(
 				JenkinsResultsParserUtil.combine(
@@ -207,7 +286,8 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 				basePropertyName, "[", batchName, "]"));
 
 		propertyNames.add(
-			getFirstMatchingPropertyName(basePropertyName, jobProperties));
+			getFirstMatchingPropertyName(
+				basePropertyName, batchName, jobProperties, null));
 
 		propertyNames.add(basePropertyName);
 
@@ -237,8 +317,99 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		}
 
 		return JenkinsResultsParserUtil.toPathMatchers(
-			workingDirectory.getAbsolutePath() + File.separator,
-			relativeGlobs.split(","));
+			JenkinsResultsParserUtil.getCanonicalPath(workingDirectory) +
+				File.separator,
+			JenkinsResultsParserUtil.getGlobsFromProperty(relativeGlobs));
+	}
+
+	protected List<String> getRelevantIntegrationUnitBatchList() {
+		List<String> relevantIntegrationUnitBatchList = new ArrayList<>();
+
+		if (testSuiteName.equals("relevant")) {
+			String relevantTestBatchNames = getFirstPropertyValue(
+				"test.batch.names");
+
+			if (relevantTestBatchNames != null) {
+				for (String relevantTestBatchName :
+						relevantTestBatchNames.split(",")) {
+
+					if (relevantTestBatchName.startsWith("integration-") ||
+						relevantTestBatchName.startsWith(
+							"modules-integration") ||
+						relevantTestBatchName.startsWith("modules-unit") ||
+						relevantTestBatchName.startsWith("unit-")) {
+
+						relevantIntegrationUnitBatchList.add(
+							relevantTestBatchName);
+					}
+				}
+			}
+		}
+
+		return relevantIntegrationUnitBatchList;
+	}
+
+	protected List<PathMatcher>
+		getRelevantIntegrationUnitIncludePathMatchers() {
+
+		List<PathMatcher> relevantIntegrationUnitIncludePathMatchers =
+			new ArrayList<>();
+
+		List<String> relevantIntegrationUnitBatchList =
+			getRelevantIntegrationUnitBatchList();
+
+		if (!relevantIntegrationUnitBatchList.isEmpty()) {
+			for (String relevantIntegrationUnitBatch :
+					relevantIntegrationUnitBatchList) {
+
+				String integrationUnitIncludesPropertyValue =
+					getFirstPropertyValue(
+						"test.batch.class.names.includes",
+						relevantIntegrationUnitBatch);
+
+				if (integrationUnitIncludesPropertyValue != null) {
+					relevantIntegrationUnitIncludePathMatchers.addAll(
+						getPathMatchers(
+							integrationUnitIncludesPropertyValue,
+							portalGitWorkingDirectory.getWorkingDirectory()));
+				}
+			}
+		}
+
+		return relevantIntegrationUnitIncludePathMatchers;
+	}
+
+	protected List<File> getRequiredModuleDirs(List<File> moduleDirs) {
+		return _getRequiredModuleDirs(moduleDirs, new ArrayList<>(moduleDirs));
+	}
+
+	protected boolean isIntegrationUnitTestFileModifiedOnly() {
+		List<PathMatcher> relevantIntegrationUnitIncludePathMatchers =
+			getRelevantIntegrationUnitIncludePathMatchers();
+
+		List<File> modifiedFilesList =
+			portalGitWorkingDirectory.getModifiedFilesList();
+
+		if (relevantIntegrationUnitIncludePathMatchers.isEmpty() ||
+			modifiedFilesList.isEmpty()) {
+
+			return false;
+		}
+
+		for (File modifiedFile : modifiedFilesList) {
+			if (!JenkinsResultsParserUtil.isFileIncluded(
+					null, relevantIntegrationUnitIncludePathMatchers,
+					modifiedFile)) {
+
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	protected boolean isStableTestSuiteBatch() {
+		return stableTestSuiteBatchNames.contains(batchName);
 	}
 
 	protected void setAxisTestClassGroups() {
@@ -254,13 +425,13 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 		int id = 0;
 
-		for (List<BaseTestClass> axisTestClasses :
+		for (List<TestClass> axisTestClasses :
 				Lists.partition(testClasses, axisSize)) {
 
 			AxisTestClassGroup axisTestClassGroup = new AxisTestClassGroup(
 				this, id);
 
-			for (BaseTestClass axisTestClass : axisTestClasses) {
+			for (TestClass axisTestClass : axisTestClasses) {
 				axisTestClassGroup.addTestClass(axisTestClass);
 			}
 
@@ -270,15 +441,22 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		}
 	}
 
+	protected static final String NAME_STABLE_TEST_SUITE = "stable";
+
 	protected final Map<Integer, AxisTestClassGroup> axisTestClassGroups =
 		new HashMap<>();
 	protected final String batchName;
+	protected final BuildProfile buildProfile;
 	protected final List<PathMatcher> excludesPathMatchers = new ArrayList<>();
 	protected final List<PathMatcher> includesPathMatchers = new ArrayList<>();
+	protected boolean includeStableTestSuite;
 	protected final Properties jobProperties;
 	protected final PortalGitWorkingDirectory portalGitWorkingDirectory;
+	protected List<String> stableTestSuiteBatchNames = new ArrayList<>();
+	protected boolean testPrivatePortalBranch;
 	protected boolean testReleaseBundle;
 	protected boolean testRelevantChanges;
+	protected boolean testRelevantIntegrationUnitOnly;
 	protected final String testSuiteName;
 
 	protected static final class CSVReport {
@@ -342,6 +520,49 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 	}
 
+	private List<File> _getRequiredModuleDirs(
+		List<File> moduleDirs, List<File> requiredModuleDirs) {
+
+		File modulesBaseDir = new File(
+			portalGitWorkingDirectory.getWorkingDirectory(), "modules");
+
+		for (File moduleDir : moduleDirs) {
+			Properties moduleDirTestProperties =
+				JenkinsResultsParserUtil.getProperties(
+					new File(moduleDir, "test.properties"));
+
+			String requiredModuleDirPaths = moduleDirTestProperties.getProperty(
+				"modules.includes.required[" + testSuiteName + "]");
+
+			if (requiredModuleDirPaths == null) {
+				continue;
+			}
+
+			for (String requiredModuleDirPath :
+					requiredModuleDirPaths.split(",")) {
+
+				File requiredModuleDir = new File(
+					modulesBaseDir, requiredModuleDirPath);
+
+				if (!requiredModuleDir.exists()) {
+					continue;
+				}
+
+				if (requiredModuleDirs.contains(requiredModuleDir)) {
+					continue;
+				}
+
+				requiredModuleDirs.add(requiredModuleDir);
+			}
+		}
+
+		return Lists.newArrayList(requiredModuleDirs);
+	}
+
+	private void _setIncludeStableTestSuite() {
+		includeStableTestSuite = testRelevantChanges;
+	}
+
 	private void _setTestReleaseBundle() {
 		String propertyValue = getFirstPropertyValue("test.release.bundle");
 
@@ -351,7 +572,7 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			return;
 		}
 
-		testReleaseBundle = _DEFAULT_TEST_RELEASE_BUNDLE;
+		testReleaseBundle = _ENABLE_TEST_RELEASE_BUNDLE_DEFAULT;
 	}
 
 	private void _setTestRelevantChanges() {
@@ -363,13 +584,23 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			return;
 		}
 
-		testRelevantChanges = _DEFAULT_TEST_RELEVANT_CHANGES;
+		testRelevantChanges = _ENABLE_TEST_RELEVANT_CHANGES_DEFAULT;
 	}
 
-	private static final int _DEFAULT_AXIS_MAX_SIZE = 5000;
+	private void _setTestRelevantIntegrationUnitOnly() {
+		if (testRelevantChanges && isIntegrationUnitTestFileModifiedOnly()) {
+			testRelevantIntegrationUnitOnly = true;
 
-	private static final boolean _DEFAULT_TEST_RELEASE_BUNDLE = false;
+			return;
+		}
 
-	private static final boolean _DEFAULT_TEST_RELEVANT_CHANGES = false;
+		testRelevantIntegrationUnitOnly = false;
+	}
+
+	private static final int _AXES_SIZE_MAX_DEFAULT = 5000;
+
+	private static final boolean _ENABLE_TEST_RELEASE_BUNDLE_DEFAULT = false;
+
+	private static final boolean _ENABLE_TEST_RELEVANT_CHANGES_DEFAULT = false;
 
 }

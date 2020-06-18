@@ -1,39 +1,47 @@
-<definition default="assertConfirmation" summary="Assert that the text within the confirmation window equals the value '${value1}' and execute the confirmation">
-	<command name="assertConfirmation">
-		<execute selenium="assertConfirmation" />
+@default = "assertConfirmation"
+@summary = "Assert that the text within the confirmation window equals the value '${value1}' and execute the confirmation"
+definition {
 
-		<execute selenium="assertJavaScriptErrors" />
+	function assertConfirmation {
+		selenium.assertConfirmation();
 
-		<execute selenium="assertLiferayErrors" />
+		selenium.assertJavaScriptErrors();
 
-		<execute function="WaitForSPARefresh" />
-	</command>
+		selenium.assertLiferayErrors();
 
-	<command name="assertConfirmationNoWait">
-		<execute selenium="assertConfirmation" />
+		WaitForSPARefresh();
+	}
 
-		<execute selenium="assertJavaScriptErrors" />
+	function assertConfirmationNoError {
+		selenium.assertConfirmation();
+	}
 
-		<execute selenium="assertLiferayErrors" />
-	</command>
+	function assertConfirmationNoWait {
+		selenium.assertConfirmation();
 
-	<command name="assertPartialConfirmation">
-		<execute selenium="assertPartialConfirmation" />
+		selenium.assertJavaScriptErrors();
 
-		<execute selenium="assertJavaScriptErrors" />
+		selenium.assertLiferayErrors();
+	}
 
-		<execute selenium="assertLiferayErrors" />
+	function assertPartialConfirmation {
+		selenium.assertPartialConfirmation();
 
-		<execute function="WaitForSPARefresh" />
-	</command>
+		selenium.assertJavaScriptErrors();
 
-	<command name="waitForConfirmation">
-		<execute selenium="waitForConfirmation" />
+		selenium.assertLiferayErrors();
 
-		<execute selenium="assertJavaScriptErrors" />
+		WaitForSPARefresh();
+	}
 
-		<execute selenium="assertLiferayErrors" />
+	function waitForConfirmation {
+		selenium.waitForConfirmation();
 
-		<execute function="WaitForSPARefresh" />
-	</command>
-</definition>
+		selenium.assertJavaScriptErrors();
+
+		selenium.assertLiferayErrors();
+
+		WaitForSPARefresh();
+	}
+
+}

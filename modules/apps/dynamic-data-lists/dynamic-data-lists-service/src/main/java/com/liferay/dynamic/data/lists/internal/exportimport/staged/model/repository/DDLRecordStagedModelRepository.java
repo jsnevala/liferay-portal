@@ -50,8 +50,9 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = "model.class.name=com.liferay.dynamic.data.lists.model.DDLRecord",
-	service =
-		{DDLRecordStagedModelRepository.class, StagedModelRepository.class}
+	service = {
+		DDLRecordStagedModelRepository.class, StagedModelRepository.class
+	}
 )
 public class DDLRecordStagedModelRepository
 	implements StagedModelRepository<DDLRecord> {
@@ -151,19 +152,14 @@ public class DDLRecordStagedModelRepository
 				Property recordIdProperty = PropertyFactoryUtil.forName(
 					"recordId");
 
-				DynamicQuery recordVersionDynamicQuery =
-					getRecordVersionDynamicQuery();
-
 				dynamicQuery.add(
-					recordIdProperty.in(recordVersionDynamicQuery));
+					recordIdProperty.in(getRecordVersionDynamicQuery()));
 
 				Property recordSetIdProperty = PropertyFactoryUtil.forName(
 					"recordSetId");
 
-				DynamicQuery recordSetDynamicQuery = getRecordSetDynamicQuery(
-					scope);
-
-				dynamicQuery.add(recordSetIdProperty.in(recordSetDynamicQuery));
+				dynamicQuery.add(
+					recordSetIdProperty.in(getRecordSetDynamicQuery(scope)));
 			});
 
 		return exportActionableDynamicQuery;

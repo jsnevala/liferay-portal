@@ -15,17 +15,21 @@
 package com.liferay.asset.list.web.internal.display.context;
 
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.asset.list.asset.entry.provider.AssetListAssetEntryProvider;
 import com.liferay.asset.list.constants.AssetListActionKeys;
 import com.liferay.asset.list.constants.AssetListEntryTypeConstants;
 import com.liferay.asset.list.constants.AssetListPortletKeys;
+import com.liferay.asset.list.constants.AssetListWebKeys;
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.service.AssetListEntryLocalServiceUtil;
 import com.liferay.asset.list.service.AssetListEntryServiceUtil;
 import com.liferay.asset.list.util.AssetListPortletUtil;
 import com.liferay.asset.list.web.internal.security.permission.resource.AssetListPermission;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -33,16 +37,14 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.segments.constants.SegmentsEntryConstants;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
@@ -57,34 +59,34 @@ import javax.servlet.http.HttpServletRequest;
 public class AssetListDisplayContext {
 
 	public AssetListDisplayContext(
+		AssetRendererFactoryClassProvider assetRendererFactoryClassProvider,
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
+		_assetRendererFactoryClassProvider = assetRendererFactoryClassProvider;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 
+		_assetListAssetEntryProvider =
+			(AssetListAssetEntryProvider)_httpServletRequest.getAttribute(
+				AssetListWebKeys.ASSET_LIST_ASSET_ENTRY_PROVIDER);
 		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
-			_request);
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+			_httpServletRequest);
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
 	public List<DropdownItem> getAddAssetListEntryDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					_getAddAssetListEntryDropdownItem(
-						AssetListEntryTypeConstants.TYPE_MANUAL_LABEL,
-						"manual-selection",
-						AssetListEntryTypeConstants.TYPE_MANUAL));
-				add(
-					_getAddAssetListEntryDropdownItem(
-						AssetListEntryTypeConstants.TYPE_DYNAMIC_LABEL,
-						"dynamic-selection",
-						AssetListEntryTypeConstants.TYPE_DYNAMIC));
-			}
-		};
+		return DropdownItemListBuilder.add(
+			_getAddAssetListEntryDropdownItemUnsafeConsumer(
+				AssetListEntryTypeConstants.TYPE_MANUAL_LABEL,
+				"manual-selection", AssetListEntryTypeConstants.TYPE_MANUAL)
+		).add(
+			_getAddAssetListEntryDropdownItemUnsafeConsumer(
+				AssetListEntryTypeConstants.TYPE_DYNAMIC_LABEL,
+				"dynamic-selection", AssetListEntryTypeConstants.TYPE_DYNAMIC)
+		).build();
 	}
 
 	public SearchContainer<AssetEntry> getAssetListContentSearchContainer() {
@@ -93,16 +95,18 @@ public class AssetListDisplayContext {
 		}
 
 		SearchContainer searchContainer = new SearchContainer(
-			_renderRequest, _renderResponse.createRenderURL(), null,
+			_renderRequest, _getAssetListContentURL(), null,
 			"there-are-no-asset-entries");
 
-		AssetListEntry assetListEntry = getAssetListEntry();
-
-		List<AssetEntry> assetEntries = assetListEntry.getAssetEntries();
+		List<AssetEntry> assetEntries =
+			_assetListAssetEntryProvider.getAssetEntries(
+				getAssetListEntry(), getSegmentsEntryId(),
+				searchContainer.getStart(), searchContainer.getEnd());
 
 		searchContainer.setResults(assetEntries);
 
-		int totalCount = assetListEntry.getAssetEntriesCount();
+		int totalCount = _assetListAssetEntryProvider.getAssetEntriesCount(
+			getAssetListEntry(), getSegmentsEntryId());
 
 		searchContainer.setTotal(totalCount);
 
@@ -130,7 +134,7 @@ public class AssetListDisplayContext {
 
 		SearchContainer assetListEntriesSearchContainer = new SearchContainer(
 			_renderRequest, _renderResponse.createRenderURL(), null,
-			"there-are-no-asset-lists");
+			"there-are-no-collections");
 
 		assetListEntriesSearchContainer.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
@@ -186,68 +190,22 @@ public class AssetListDisplayContext {
 		return _assetListEntry;
 	}
 
-	public List<DropdownItem> getAssetListEntryActionItemsDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData(
-							"action", "deleteSelectedAssetListEntries");
-						dropdownItem.setIcon("times-circle");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
-			}
-		};
-	}
-
-	public String getAssetListEntryClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
-	}
-
-	public List<DropdownItem> getAssetListEntryFilterItemsDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getAssetListEntryOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
-			}
-		};
-	}
-
 	public long getAssetListEntryId() {
 		if (_assetListEntryId != null) {
 			return _assetListEntryId;
 		}
 
-		_assetListEntryId = ParamUtil.getLong(_request, "assetListEntryId");
+		_assetListEntryId = ParamUtil.getLong(
+			_httpServletRequest, "assetListEntryId");
 
 		return _assetListEntryId;
-	}
-
-	public String getAssetListEntrySearchActionURL() {
-		PortletURL searchActionURL = _renderResponse.createRenderURL();
-
-		searchActionURL.setParameter("mvcPath", "/view.jsp");
-		searchActionURL.setParameter("redirect", _themeDisplay.getURLCurrent());
-
-		return searchActionURL.toString();
 	}
 
 	public String getAssetListEntryTitle() {
 		AssetListEntry assetListEntry = getAssetListEntry();
 
 		if (assetListEntry != null) {
-			return HtmlUtil.escape(assetListEntry.getTitle());
+			return assetListEntry.getTitle();
 		}
 
 		String title = StringPool.BLANK;
@@ -255,22 +213,15 @@ public class AssetListDisplayContext {
 		if (getAssetListEntryType() ==
 				AssetListEntryTypeConstants.TYPE_DYNAMIC) {
 
-			title = "new-dynamic-asset-list";
+			title = "new-dynamic-collection";
 		}
 		else if (getAssetListEntryType() ==
 					AssetListEntryTypeConstants.TYPE_MANUAL) {
 
-			title = "new-manual-asset-list";
+			title = "new-manual-collection";
 		}
 
-		return LanguageUtil.get(_request, title);
-	}
-
-	public int getAssetListEntryTotalItems() {
-		SearchContainer assetListEntriesSearchContainer =
-			getAssetListEntriesSearchContainer();
-
-		return assetListEntriesSearchContainer.getTotal();
+		return LanguageUtil.get(_httpServletRequest, title);
 	}
 
 	public int getAssetListEntryType() {
@@ -281,7 +232,7 @@ public class AssetListDisplayContext {
 		AssetListEntry assetListEntry = getAssetListEntry();
 
 		int assetListEntryType = ParamUtil.getInteger(
-			_request, "assetListEntryType");
+			_httpServletRequest, "assetListEntryType");
 
 		if (assetListEntry != null) {
 			assetListEntryType = assetListEntry.getType();
@@ -292,28 +243,22 @@ public class AssetListDisplayContext {
 		return _assetListEntryType;
 	}
 
-	public CreationMenu getCreationMenu() {
-		return new CreationMenu() {
-			{
-				addPrimaryDropdownItem(
-					_getAddAssetListEntryDropdownItem(
-						AssetListEntryTypeConstants.TYPE_MANUAL_LABEL,
-						"manual-selection",
-						AssetListEntryTypeConstants.TYPE_MANUAL));
+	public String getClassName(AssetRendererFactory<?> assetRendererFactory) {
+		Class<? extends AssetRendererFactory> clazz =
+			_assetRendererFactoryClassProvider.getClass(assetRendererFactory);
 
-				addPrimaryDropdownItem(
-					_getAddAssetListEntryDropdownItem(
-						AssetListEntryTypeConstants.TYPE_DYNAMIC_LABEL,
-						"dynamic-selection",
-						AssetListEntryTypeConstants.TYPE_DYNAMIC));
-			}
-		};
+		String className = clazz.getName();
+
+		int pos = className.lastIndexOf(StringPool.PERIOD);
+
+		return className.substring(pos + 1);
 	}
 
 	public String getEmptyResultMessageDescription() {
 		if (isShowAddAssetListEntryAction()) {
 			return LanguageUtil.get(
-				_request, "fortunately-it-is-very-easy-to-add-new-ones");
+				_httpServletRequest,
+				"fortunately-it-is-very-easy-to-add-new-ones");
 		}
 
 		return StringPool.BLANK;
@@ -324,14 +269,15 @@ public class AssetListDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(_request, "orderByCol");
+		_orderByCol = ParamUtil.getString(_httpServletRequest, "orderByCol");
 
 		if (Validator.isNull(_orderByCol)) {
 			_orderByCol = _portalPreferences.getValue(
 				AssetListPortletKeys.ASSET_LIST, "order-by-col", "create-date");
 		}
 		else {
-			boolean saveOrderBy = ParamUtil.getBoolean(_request, "saveOrderBy");
+			boolean saveOrderBy = ParamUtil.getBoolean(
+				_httpServletRequest, "saveOrderBy");
 
 			if (saveOrderBy) {
 				_portalPreferences.setValue(
@@ -348,14 +294,15 @@ public class AssetListDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType");
+		_orderByType = ParamUtil.getString(_httpServletRequest, "orderByType");
 
 		if (Validator.isNull(_orderByType)) {
 			_orderByType = _portalPreferences.getValue(
 				AssetListPortletKeys.ASSET_LIST, "order-by-type", "asc");
 		}
 		else {
-			boolean saveOrderBy = ParamUtil.getBoolean(_request, "saveOrderBy");
+			boolean saveOrderBy = ParamUtil.getBoolean(
+				_httpServletRequest, "saveOrderBy");
 
 			if (saveOrderBy) {
 				_portalPreferences.setValue(
@@ -391,14 +338,16 @@ public class AssetListDisplayContext {
 		return portletURL;
 	}
 
-	public String getSortingURL() {
-		PortletURL sortingURL = getPortletURL();
+	public long getSegmentsEntryId() {
+		if (_segmentsEntryId != null) {
+			return _segmentsEntryId;
+		}
 
-		sortingURL.setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
+		_segmentsEntryId = ParamUtil.getLong(
+			_httpServletRequest, "segmentsEntryId",
+			SegmentsEntryConstants.ID_DEFAULT);
 
-		return sortingURL.toString();
+		return _segmentsEntryId;
 	}
 
 	public boolean isShowAddAssetListEntryAction() {
@@ -408,8 +357,9 @@ public class AssetListDisplayContext {
 			AssetListActionKeys.ADD_ASSET_LIST_ENTRY);
 	}
 
-	private Consumer<DropdownItem> _getAddAssetListEntryDropdownItem(
-		String title, String label, int type) {
+	private UnsafeConsumer<DropdownItem, Exception>
+		_getAddAssetListEntryDropdownItemUnsafeConsumer(
+			String title, String label, int type) {
 
 		return dropdownItem -> {
 			dropdownItem.putData("action", "addAssetListEntry");
@@ -417,7 +367,7 @@ public class AssetListDisplayContext {
 				"addAssetListEntryURL", _getAddAssetListEntryURL(type));
 			dropdownItem.putData("title", _getAddAssetListTitle(title));
 			dropdownItem.setHref("#");
-			dropdownItem.setLabel(LanguageUtil.get(_request, label));
+			dropdownItem.setLabel(LanguageUtil.get(_httpServletRequest, label));
 		};
 	}
 
@@ -432,33 +382,20 @@ public class AssetListDisplayContext {
 	}
 
 	private String _getAddAssetListTitle(String title) {
-		return LanguageUtil.format(_request, "add-x-asset-list", title, true);
+		return LanguageUtil.format(
+			_httpServletRequest, "add-x-collection", title, true);
 	}
 
-	private List<DropdownItem> _getAssetListEntryOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(_getOrderByCol(), "title"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "title");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "title"));
-					});
+	private PortletURL _getAssetListContentURL() {
+		PortletURL portletURL = _renderResponse.createRenderURL();
 
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(_getOrderByCol(), "create-date"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "create-date");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "create-date"));
-					});
-			}
-		};
+		portletURL.setParameter("mvcPath", "/view_content.jsp");
+		portletURL.setParameter(
+			"assetListEntryId", String.valueOf(getAssetListEntryId()));
+		portletURL.setParameter(
+			"segmentsEntryId", String.valueOf(getSegmentsEntryId()));
+
+		return portletURL;
 	}
 
 	private String _getKeywords() {
@@ -466,7 +403,7 @@ public class AssetListDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords");
+		_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		return _keywords;
 	}
@@ -477,7 +414,7 @@ public class AssetListDisplayContext {
 		}
 
 		_orderByCol = ParamUtil.getString(
-			_request, "orderByCol", "create-date");
+			_httpServletRequest, "orderByCol", "create-date");
 
 		return _orderByCol;
 	}
@@ -490,19 +427,23 @@ public class AssetListDisplayContext {
 		return false;
 	}
 
+	private final AssetListAssetEntryProvider _assetListAssetEntryProvider;
 	private SearchContainer _assetListContentSearchContainer;
 	private Integer _assetListEntriesCount;
 	private SearchContainer _assetListEntriesSearchContainer;
 	private AssetListEntry _assetListEntry;
 	private Long _assetListEntryId;
 	private Integer _assetListEntryType;
+	private final AssetRendererFactoryClassProvider
+		_assetRendererFactoryClassProvider;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private final PortalPreferences _portalPreferences;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
+	private Long _segmentsEntryId;
 	private final ThemeDisplay _themeDisplay;
 
 }

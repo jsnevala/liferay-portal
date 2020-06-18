@@ -16,7 +16,8 @@ package com.liferay.staging.processes.web.internal.portlet.action;
 
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationFactory;
-import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationHelper;
+import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationUtil;
+import com.liferay.exportimport.kernel.exception.RemoteExportException;
 import com.liferay.exportimport.kernel.lar.ExportImportHelper;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
@@ -36,6 +37,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -45,10 +47,9 @@ import com.liferay.staging.constants.StagingProcessesPortletKeys;
 import com.liferay.taglib.ui.util.SessionTreeJSClicks;
 import com.liferay.trash.service.TrashEntryService;
 
-import java.io.Serializable;
+import java.net.ConnectException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -84,8 +85,9 @@ public class EditPublishConfigurationMVCActionCommand
 			actionRequest, "exportImportConfigurationId");
 
 		if (exportImportConfigurationId > 0) {
-			deleteExportImportConfigurationIds =
-				new long[] {exportImportConfigurationId};
+			deleteExportImportConfigurationIds = new long[] {
+				exportImportConfigurationId
+			};
 		}
 		else {
 			deleteExportImportConfigurationIds = StringUtil.split(
@@ -115,9 +117,9 @@ public class EditPublishConfigurationMVCActionCommand
 		}
 
 		if (moveToTrash && !trashedModels.isEmpty()) {
-			Map<String, Object> data = new HashMap<>();
-
-			data.put("trashedModels", trashedModels);
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"trashedModels", trashedModels
+			).build();
 
 			addDeleteSuccessData(actionRequest, data);
 		}
@@ -159,10 +161,23 @@ public class EditPublishConfigurationMVCActionCommand
 
 			sendRedirect(actionRequest, actionResponse, redirect);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			if (exception instanceof ConnectException ||
+				exception instanceof RemoteExportException) {
 
-			SessionErrors.add(actionRequest, e.getClass(), e);
+				_log.error(
+					"Unable to connect to remote live: " +
+						exception.getMessage());
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
+			}
+			else {
+				_log.error(exception, exception);
+			}
+
+			SessionErrors.add(actionRequest, exception.getClass(), exception);
 		}
 	}
 
@@ -176,12 +191,11 @@ public class EditPublishConfigurationMVCActionCommand
 		BackgroundTask backgroundTask =
 			_backgroundTaskManager.getBackgroundTask(backgroundTaskId);
 
-		Map<String, Serializable> taskContextMap =
-			backgroundTask.getTaskContextMap();
-
 		ExportImportConfiguration exportImportConfiguration =
 			_exportImportConfigurationLocalService.getExportImportConfiguration(
-				MapUtil.getLong(taskContextMap, "exportImportConfigurationId"));
+				MapUtil.getLong(
+					backgroundTask.getTaskContextMap(),
+					"exportImportConfigurationId"));
 
 		exportImportConfiguration =
 			ExportImportConfigurationFactory.cloneExportImportConfiguration(
@@ -233,7 +247,7 @@ public class EditPublishConfigurationMVCActionCommand
 	}
 
 	protected void setLayoutIdMap(ActionRequest actionRequest) {
-		HttpServletRequest portletRequest = _portal.getHttpServletRequest(
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			actionRequest);
 
 		long groupId = ParamUtil.getLong(actionRequest, "groupId");
@@ -243,7 +257,7 @@ public class EditPublishConfigurationMVCActionCommand
 		String treeId = ParamUtil.getString(actionRequest, "treeId");
 
 		String openNodes = SessionTreeJSClicks.getOpenNodes(
-			portletRequest, treeId + "SelectedNode");
+			httpServletRequest, treeId + "SelectedNode");
 
 		String selectedLayoutsJSON = _exportImportHelper.getSelectedLayoutsJSON(
 			groupId, privateLayout, openNodes);
@@ -276,24 +290,23 @@ public class EditPublishConfigurationMVCActionCommand
 
 		if (group.isStagedRemotely()) {
 			if (exportImportConfigurationId > 0) {
-				return ExportImportConfigurationHelper.
+				return ExportImportConfigurationUtil.
 					updatePublishLayoutRemoteExportImportConfiguration(
 						actionRequest);
 			}
 
-			return ExportImportConfigurationHelper.
+			return ExportImportConfigurationUtil.
 				addPublishLayoutRemoteExportImportConfiguration(actionRequest);
 		}
-		else {
-			if (exportImportConfigurationId > 0) {
-				return ExportImportConfigurationHelper.
-					updatePublishLayoutLocalExportImportConfiguration(
-						actionRequest);
-			}
 
-			return ExportImportConfigurationHelper.
-				addPublishLayoutLocalExportImportConfiguration(actionRequest);
+		if (exportImportConfigurationId > 0) {
+			return ExportImportConfigurationUtil.
+				updatePublishLayoutLocalExportImportConfiguration(
+					actionRequest);
 		}
+
+		return ExportImportConfigurationUtil.
+			addPublishLayoutLocalExportImportConfiguration(actionRequest);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

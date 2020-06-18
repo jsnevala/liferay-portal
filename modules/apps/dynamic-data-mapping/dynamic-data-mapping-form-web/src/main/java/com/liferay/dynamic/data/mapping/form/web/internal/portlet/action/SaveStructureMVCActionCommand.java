@@ -85,8 +85,9 @@ public class SaveStructureMVCActionCommand extends BaseMVCActionCommand {
 		String description = ParamUtil.getString(actionRequest, "description");
 		DDMForm ddmForm = getDDMForm(actionRequest);
 		DDMFormLayout ddmFormLayout = getDDMFormLayout(actionRequest);
-		Map<Locale, String> nameMap = getLocalizedMap(
-			name, ddmForm.getAvailableLocales(), ddmForm.getDefaultLocale());
+		Map<Locale, String> nameMap =
+			saveFormInstanceMVCCommandHelper.getNameMap(
+				ddmForm, name, "untitled-element-set");
 		Map<Locale, String> descriptionMap = getLocalizedMap(
 			description, ddmForm.getAvailableLocales(),
 			ddmForm.getDefaultLocale());
@@ -112,9 +113,10 @@ public class SaveStructureMVCActionCommand extends BaseMVCActionCommand {
 		LiferayPortletURL portletURL = PortletURLFactoryUtil.create(
 			actionRequest, themeDisplay.getPpid(), PortletRequest.RENDER_PHASE);
 
-		String mvcPath = ParamUtil.getString(actionRequest, "mvcPath");
+		String mvcRenderCommandName = ParamUtil.getString(
+			actionRequest, "mvcRenderCommandName");
 
-		portletURL.setParameter("mvcPath", mvcPath);
+		portletURL.setParameter("mvcRenderCommandName", mvcRenderCommandName);
 
 		String redirect = ParamUtil.getString(actionRequest, "redirect");
 
@@ -136,8 +138,8 @@ public class SaveStructureMVCActionCommand extends BaseMVCActionCommand {
 			return ddlFormBuilderContextToDDMForm.deserialize(
 				DDMFormContextDeserializerRequest.with(serializedFormContext));
 		}
-		catch (PortalException pe) {
-			throw new StructureDefinitionException(pe);
+		catch (PortalException portalException) {
+			throw new StructureDefinitionException(portalException);
 		}
 	}
 
@@ -151,8 +153,8 @@ public class SaveStructureMVCActionCommand extends BaseMVCActionCommand {
 			return ddlFormBuilderContextToDDMFormLayout.deserialize(
 				DDMFormContextDeserializerRequest.with(serializedFormContext));
 		}
-		catch (PortalException pe) {
-			throw new StructureLayoutException(pe);
+		catch (PortalException portalException) {
+			throw new StructureLayoutException(portalException);
 		}
 	}
 
@@ -191,6 +193,9 @@ public class SaveStructureMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	protected JSONFactory jsonFactory;
+
+	@Reference
+	protected SaveFormInstanceMVCCommandHelper saveFormInstanceMVCCommandHelper;
 
 	@Reference
 	private DDMStructureService _ddmStructureService;

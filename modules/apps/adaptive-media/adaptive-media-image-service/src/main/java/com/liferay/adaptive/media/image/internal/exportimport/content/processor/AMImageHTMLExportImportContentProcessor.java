@@ -25,6 +25,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.util.GetterUtil;
+
+import java.util.Objects;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -87,32 +90,13 @@ public class AMImageHTMLExportImportContentProcessor
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setAMEmbeddedReferenceSetFactory(
-		AMEmbeddedReferenceSetFactory amEmbeddedReferenceSetFactory) {
-
-		_amEmbeddedReferenceSetFactory = amEmbeddedReferenceSetFactory;
-	}
-
-	@Reference(unbind = "-")
-	protected void setAMImageHTMLTagFactory(
-		AMImageHTMLTagFactory amImageHTMLTagFactory) {
-
-		_amImageHTMLTagFactory = amImageHTMLTagFactory;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDLAppLocalService(DLAppLocalService dlAppLocalService) {
-		_dlAppLocalService = dlAppLocalService;
-	}
-
 	private FileEntry _getFileEntry(long fileEntryId) {
 		try {
 			return _dlAppLocalService.getFileEntry(fileEntryId);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(pe, pe);
+				_log.warn(portalException, portalException);
 			}
 
 			return null;
@@ -169,7 +153,7 @@ public class AMImageHTMLExportImportContentProcessor
 				String.valueOf(fileEntryId));
 			element.removeAttr(_ATTRIBUTE_NAME_EXPORT_IMPORT_PATH);
 
-			if ("picture".equals(element.tagName())) {
+			if (Objects.equals(element.tagName(), "picture")) {
 				Elements imgElements = element.getElementsByTag("img");
 
 				Element imgElement = imgElements.first();
@@ -200,11 +184,15 @@ public class AMImageHTMLExportImportContentProcessor
 			"[" + AMImageHTMLConstants.ATTRIBUTE_NAME_FILE_ENTRY_ID + "]";
 
 		for (Element element : document.select(elementSelector)) {
-			long fileEntryId = Long.valueOf(
-				element.attr(
-					AMImageHTMLConstants.ATTRIBUTE_NAME_FILE_ENTRY_ID));
-
 			try {
+				long fileEntryId = GetterUtil.getLong(
+					element.attr(
+						AMImageHTMLConstants.ATTRIBUTE_NAME_FILE_ENTRY_ID));
+
+				if (fileEntryId == 0) {
+					continue;
+				}
+
 				FileEntry fileEntry = _dlAppLocalService.getFileEntry(
 					fileEntryId);
 
@@ -216,12 +204,12 @@ public class AMImageHTMLExportImportContentProcessor
 					_ATTRIBUTE_NAME_EXPORT_IMPORT_PATH,
 					ExportImportPathUtil.getModelPath(fileEntry));
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(pe, pe);
+					_log.debug(portalException, portalException);
 				}
 				else if (_log.isWarnEnabled()) {
-					_log.warn(pe.getMessage());
+					_log.warn(portalException.getMessage());
 				}
 			}
 		}
@@ -237,8 +225,13 @@ public class AMImageHTMLExportImportContentProcessor
 	private static final Log _log = LogFactoryUtil.getLog(
 		AMImageHTMLExportImportContentProcessor.class);
 
+	@Reference
 	private AMEmbeddedReferenceSetFactory _amEmbeddedReferenceSetFactory;
+
+	@Reference
 	private AMImageHTMLTagFactory _amImageHTMLTagFactory;
+
+	@Reference
 	private DLAppLocalService _dlAppLocalService;
 
 }

@@ -23,6 +23,7 @@ import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.DynamicInheritancePermissionLogic;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
@@ -46,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 public class JournalFolderModelResourcePermissionRegistrar {
 
 	@Activate
-	public void activate(BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 		properties.put("model.class.name", JournalFolder.class.getName());
@@ -59,9 +60,26 @@ public class JournalFolderModelResourcePermissionRegistrar {
 				_portletResourcePermission,
 				(modelResourcePermission, consumer) -> {
 					consumer.accept(
-						new StagedModelPermissionLogic<>(
+						new StagedModelPermissionLogic<JournalFolder>(
 							_stagingPermission, JournalPortletKeys.JOURNAL,
-							JournalFolder::getFolderId));
+							JournalFolder::getFolderId) {
+
+							@Override
+							public Boolean contains(
+								PermissionChecker permissionChecker,
+								String name, JournalFolder journalFolder,
+								String actionId) {
+
+								if (actionId.equals(ActionKeys.SUBSCRIBE)) {
+									return null;
+								}
+
+								return super.contains(
+									permissionChecker, name, journalFolder,
+									actionId);
+							}
+
+						});
 					consumer.accept(
 						new DynamicInheritancePermissionLogic<>(
 							modelResourcePermission, _getFetchParentFunction(),
@@ -78,7 +96,7 @@ public class JournalFolderModelResourcePermissionRegistrar {
 	}
 
 	@Deactivate
-	public void deactivate() {
+	protected void deactivate() {
 		_serviceRegistration.unregister();
 	}
 

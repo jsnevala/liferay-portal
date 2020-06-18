@@ -98,7 +98,8 @@ public class WorkflowTaskPermissionChecker {
 		List<Group> groups = new ArrayList<>();
 
 		Organization organization =
-			OrganizationLocalServiceUtil.getOrganization(group.getClassPK());
+			OrganizationLocalServiceUtil.getOrganization(
+				group.getOrganizationId());
 
 		for (Organization ancestorOrganization : organization.getAncestors()) {
 			groups.add(ancestorOrganization.getGroup());
@@ -135,8 +136,8 @@ public class WorkflowTaskPermissionChecker {
 				roleIds = ArrayUtil.append(roleIds, roleIdArray);
 			}
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 		}
 
 		return roleIds;
@@ -167,8 +168,8 @@ public class WorkflowTaskPermissionChecker {
 
 			return assetRenderer.hasViewPermission(permissionChecker);
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 		}
 
 		return false;

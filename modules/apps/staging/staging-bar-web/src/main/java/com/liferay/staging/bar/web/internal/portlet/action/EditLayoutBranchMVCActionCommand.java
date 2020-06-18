@@ -32,7 +32,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -77,10 +77,10 @@ public class EditLayoutBranchMVCActionCommand extends BaseMVCActionCommand {
 			ActionUtil.addLayoutBranchSessionMessages(
 				actionRequest, actionResponse);
 		}
-		catch (Exception e) {
-			SessionErrors.add(actionRequest, e.getClass(), e);
+		catch (Exception exception) {
+			SessionErrors.add(actionRequest, exception.getClass(), exception);
 
-			if (e instanceof LayoutBranchNameException) {
+			if (exception instanceof LayoutBranchNameException) {
 				actionResponse.setRenderParameter(
 					"mvcPath", "/edit_layout_branch.jsp");
 			}

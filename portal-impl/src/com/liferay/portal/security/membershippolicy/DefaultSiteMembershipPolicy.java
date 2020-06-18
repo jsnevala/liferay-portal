@@ -29,12 +29,12 @@ import com.liferay.portal.kernel.security.membershippolicy.BaseSiteMembershipPol
 import com.liferay.portal.kernel.security.membershippolicy.MembershipPolicyException;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,16 +59,15 @@ public class DefaultSiteMembershipPolicy extends BaseSiteMembershipPolicy {
 		try {
 			Group group = GroupLocalServiceUtil.getGroup(groupId);
 
-			if (group.isLimitedToParentSiteMembers()) {
-				if (!GroupLocalServiceUtil.hasUserGroup(
-						userId, group.getParentGroupId(), false)) {
+			if (group.isLimitedToParentSiteMembers() &&
+				!GroupLocalServiceUtil.hasUserGroup(
+					userId, group.getParentGroupId(), false)) {
 
-					return false;
-				}
+				return false;
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return true;
@@ -98,7 +97,7 @@ public class DefaultSiteMembershipPolicy extends BaseSiteMembershipPolicy {
 			Group group, Group oldGroup, List<AssetCategory> oldAssetCategories,
 			List<AssetTag> oldAssetTags,
 			Map<String, Serializable> oldExpandoAttributes,
-			UnicodeProperties oldTypeSettingsProperties)
+			UnicodeProperties oldTypeSettingsUnicodeProperties)
 		throws PortalException {
 
 		if (group.isLimitedToParentSiteMembers()) {
@@ -140,9 +139,8 @@ public class DefaultSiteMembershipPolicy extends BaseSiteMembershipPolicy {
 									SITE_MEMBERSHIP_NOT_ALLOWED);
 					}
 
-					User user = UserLocalServiceUtil.getUser(userId);
-
-					membershipPolicyException.addUser(user);
+					membershipPolicyException.addUser(
+						UserLocalServiceUtil.getUser(userId));
 				}
 			}
 
@@ -159,17 +157,15 @@ public class DefaultSiteMembershipPolicy extends BaseSiteMembershipPolicy {
 	protected List<Group> getLimitedChildrenGroups(Group group)
 		throws PortalException {
 
-		List<Group> parentGroups = new ArrayList<>();
-
-		parentGroups.add(group);
-
-		LinkedHashMap<String, Object> groupParams = new LinkedHashMap<>();
-
-		groupParams.put("groupsTree", parentGroups);
-		groupParams.put(
-			"membershipRestriction",
-			GroupConstants.MEMBERSHIP_RESTRICTION_TO_PARENT_SITE_MEMBERS);
-		groupParams.put("site", Boolean.TRUE);
+		LinkedHashMap<String, Object> groupParams =
+			LinkedHashMapBuilder.<String, Object>put(
+				"groupsTree", ListUtil.fromArray(group)
+			).put(
+				"membershipRestriction",
+				GroupConstants.MEMBERSHIP_RESTRICTION_TO_PARENT_SITE_MEMBERS
+			).put(
+				"site", Boolean.TRUE
+			).build();
 
 		List<Group> childrenGroups = GroupLocalServiceUtil.search(
 			group.getCompanyId(), null, StringPool.BLANK, groupParams,
@@ -196,9 +192,8 @@ public class DefaultSiteMembershipPolicy extends BaseSiteMembershipPolicy {
 			long[] userIds, long groupId)
 		throws PortalException {
 
-		Group group = GroupLocalServiceUtil.getGroup(groupId);
-
-		List<Group> childrenGroups = getLimitedChildrenGroups(group);
+		List<Group> childrenGroups = getLimitedChildrenGroups(
+			GroupLocalServiceUtil.getGroup(groupId));
 
 		for (Group childrenGroup : childrenGroups) {
 			if (!childrenGroup.isLimitedToParentSiteMembers()) {

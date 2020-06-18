@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.form.renderer;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Marcellus Tavares
  */
-@ProviderType
 public class DDMFormRenderingException extends PortalException {
 
 	public DDMFormRenderingException() {

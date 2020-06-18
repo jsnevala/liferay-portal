@@ -37,8 +37,13 @@ import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.util.HtmlImpl;
 
 import java.io.Serializable;
 
@@ -49,6 +54,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ResourceBundle;
 
 import jodd.http.HttpException;
 import jodd.http.HttpRequest;
@@ -76,8 +82,10 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 
 	@Before
 	public void setUp() throws Exception {
+		_setUpHtmlUtil();
 		_setUpJSONFactoryUtil();
 		_setUpLanguageUtil();
+		_setUpPortalUtil();
 		_setUpResourceBundleUtil();
 
 		_ddmRESTDataProvider = new DDMRESTDataProvider();
@@ -320,6 +328,105 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 	}
 
 	@Test
+	public void testDoGetDataWithBOM() throws Exception {
+		DDMDataProviderInstanceService ddmDataProviderInstanceService = mock(
+			DDMDataProviderInstanceService.class);
+
+		DDMDataProviderInstance ddmDataProviderInstance = mock(
+			DDMDataProviderInstance.class);
+
+		when(
+			ddmDataProviderInstanceService.fetchDataProviderInstance(1L)
+		).thenReturn(
+			ddmDataProviderInstance
+		);
+
+		DDMDataProviderInstanceSettings ddmDataProviderInstanceSettings = mock(
+			DDMDataProviderInstanceSettings.class);
+
+		String outputParameterId = StringUtil.randomString();
+
+		DDMRESTDataProviderSettings ddmRESTDataProviderSettings =
+			_createSettingsWithOutputParameter(
+				outputParameterId, "output", false, ".output", "list");
+
+		when(
+			ddmDataProviderInstanceSettings.getSettings(
+				Matchers.any(DDMDataProviderInstance.class), Matchers.any())
+		).thenReturn(
+			ddmRESTDataProviderSettings
+		);
+
+		mockStatic(HttpRequest.class);
+
+		HttpRequest httpRequest = mock(HttpRequest.class);
+
+		HttpRequest spyHttpRequest = spy(httpRequest);
+
+		when(
+			HttpRequest.get(Matchers.anyString())
+		).thenReturn(
+			spyHttpRequest
+		);
+
+		HttpResponse httpResponse = mock(HttpResponse.class);
+
+		HttpResponse spyHttpResponse = spy(httpResponse);
+
+		when(
+			spyHttpRequest.send()
+		).thenReturn(
+			spyHttpResponse
+		);
+
+		when(
+			spyHttpResponse.bodyText()
+		).thenReturn(
+			"ï»¿[{output : \"value\"}]"
+		);
+
+		DDMDataProviderRequest.Builder builder =
+			DDMDataProviderRequest.Builder.newBuilder();
+
+		DDMDataProviderRequest ddmDataProviderRequest =
+			builder.withDDMDataProviderId(
+				"1"
+			).build();
+
+		_ddmRESTDataProvider.ddmDataProviderInstanceService =
+			ddmDataProviderInstanceService;
+		_ddmRESTDataProvider.ddmDataProviderInstanceSettings =
+			ddmDataProviderInstanceSettings;
+
+		MultiVMPool multiVMPool = mock(MultiVMPool.class);
+
+		PortalCache portalCache = mock(PortalCache.class);
+
+		PortalCache spyPortalCache = spy(portalCache);
+
+		when(
+			multiVMPool.getPortalCache(DDMRESTDataProvider.class.getName())
+		).thenReturn(
+			spyPortalCache
+		);
+
+		_ddmRESTDataProvider.setMultiVMPool(multiVMPool);
+
+		DDMDataProviderResponse ddmDataProviderResponse =
+			_ddmRESTDataProvider.doGetData(ddmDataProviderRequest);
+
+		Optional<List> outputOptional =
+			ddmDataProviderResponse.getOutputOptional(
+				outputParameterId, List.class);
+
+		Assert.assertTrue(outputOptional.isPresent());
+
+		List<String> output = outputOptional.get();
+
+		Assert.assertFalse(output.isEmpty());
+	}
+
+	@Test
 	public void testFetchDDMDataProviderInstanceNotFound1() throws Exception {
 		DDMDataProviderInstanceService ddmDataProviderInstanceService = mock(
 			DDMDataProviderInstanceService.class);
@@ -533,15 +640,6 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 	}
 
 	@Test
-	public void testGetSettings() {
-		Class<?> settings = _ddmRESTDataProvider.getSettings();
-
-		Assert.assertEquals(
-			DDMRESTDataProviderSettings.class.getCanonicalName(),
-			settings.getCanonicalName());
-	}
-
-	@Test
 	public void testListOutputWithoutPagination() {
 		DocumentContext documentContext = mock(DocumentContext.class);
 
@@ -550,9 +648,11 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 
 		DDMDataProviderRequest ddmDataProviderRequest = builder.build();
 
+		String outputParameterId = StringUtil.randomString();
+
 		DDMRESTDataProviderSettings ddmRESTDataProviderSettings =
 			_createSettingsWithOutputParameter(
-				"list output", "value;key", "list", false);
+				outputParameterId, "list output", false, "value;key", "list");
 
 		when(
 			documentContext.read(".value", List.class)
@@ -589,9 +689,9 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 
 		Optional<List<KeyValuePair>> optional =
 			ddmDataProviderResponse.getOutputOptional(
-				"list output", List.class);
+				outputParameterId, List.class);
 
-		List<KeyValuePair> keyValuePairs = new ArrayList() {
+		List<KeyValuePair> keyValuePairs = new ArrayList<KeyValuePair>() {
 			{
 				add(new KeyValuePair("5", "Rio de Janeiro"));
 				add(new KeyValuePair("6", "São Paulo"));
@@ -618,9 +718,11 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 			"paginationEnd", "3"
 		).build();
 
+		String outputParameterId = StringUtil.randomString();
+
 		DDMRESTDataProviderSettings ddmRESTDataProviderSettings =
 			_createSettingsWithOutputParameter(
-				"list output", "value;key", "list", true);
+				outputParameterId, "list output", true, "value;key", "list");
 
 		when(
 			documentContext.read(".value", List.class)
@@ -655,9 +757,9 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 
 		Optional<List<KeyValuePair>> optional =
 			ddmDataProviderResponse.getOutputOptional(
-				"list output", List.class);
+				outputParameterId, List.class);
 
-		List<KeyValuePair> keyValuePairs = new ArrayList() {
+		List<KeyValuePair> keyValuePairs = new ArrayList<KeyValuePair>() {
 			{
 				add(new KeyValuePair("1", "Pernambuco"));
 				add(new KeyValuePair("2", "Paraiba"));
@@ -699,9 +801,12 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 
 		DDMDataProviderRequest ddmDataProviderRequest = builder.build();
 
+		String outputParameterId = StringUtil.randomString();
+
 		DDMRESTDataProviderSettings ddmRESTDataProviderSettings =
 			_createSettingsWithOutputParameter(
-				"number output", "numberProp", "number", false);
+				outputParameterId, "number output", false, "numberProp",
+				"number");
 
 		when(
 			documentContext.read(".numberProp", Number.class)
@@ -715,7 +820,7 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 				ddmRESTDataProviderSettings);
 
 		Optional<Number> optional = ddmDataProviderResponse.getOutputOptional(
-			"number output", Number.class);
+			outputParameterId, Number.class);
 
 		Assert.assertEquals(1, optional.get());
 	}
@@ -815,7 +920,7 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 			name.capture(), value.capture()
 		);
 
-		List<String> names = new ArrayList() {
+		List<String> names = new ArrayList<String>() {
 			{
 				add("country");
 				add("start");
@@ -825,7 +930,7 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 
 		Assert.assertEquals(names, name.getAllValues());
 
-		List<String> values = new ArrayList() {
+		List<String> values = new ArrayList<String>() {
 			{
 				add("brazil");
 				add("1");
@@ -845,9 +950,11 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 
 		DDMDataProviderRequest ddmDataProviderRequest = builder.build();
 
+		String outputParameterId = StringUtil.randomString();
+
 		DDMRESTDataProviderSettings ddmRESTDataProviderSettings =
 			_createSettingsWithOutputParameter(
-				"text output", "textProp", "text", false);
+				outputParameterId, "text output", false, "textProp", "text");
 
 		when(
 			documentContext.read(".textProp", String.class)
@@ -861,7 +968,7 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 				ddmRESTDataProviderSettings);
 
 		Optional<String> optional = ddmDataProviderResponse.getOutputOptional(
-			"text output", String.class);
+			outputParameterId, String.class);
 
 		Assert.assertEquals("brazil", optional.get());
 	}
@@ -945,7 +1052,7 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 	}
 
 	private DDMRESTDataProviderSettings _createSettingsWithOutputParameter(
-		String name, String path, String type, boolean pagination) {
+		String id, String name, boolean pagination, String path, String type) {
 
 		DDMForm ddmForm = DDMFormFactory.create(
 			DDMRESTDataProviderSettings.class);
@@ -979,8 +1086,18 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
 				"outputParameterType", String.format("[\"%s\"]", type)));
 
+		outputParameters.addNestedDDMFormFieldValue(
+			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
+				"outputParameterId", id));
+
 		return DDMFormInstanceFactory.create(
 			DDMRESTDataProviderSettings.class, ddmFormValues);
+	}
+
+	private void _setUpHtmlUtil() {
+		HtmlUtil htmlUtil = new HtmlUtil();
+
+		htmlUtil.setHtml(new HtmlImpl());
 	}
 
 	private void _setUpJSONFactoryUtil() {
@@ -995,6 +1112,22 @@ public class DDMRESTDataProviderTest extends PowerMockito {
 		Language language = PowerMockito.mock(Language.class);
 
 		languageUtil.setLanguage(language);
+	}
+
+	private void _setUpPortalUtil() {
+		PortalUtil portalUtil = new PortalUtil();
+
+		Portal portal = mock(Portal.class);
+
+		ResourceBundle resourceBundle = mock(ResourceBundle.class);
+
+		when(
+			portal.getResourceBundle(Matchers.any(Locale.class))
+		).thenReturn(
+			resourceBundle
+		);
+
+		portalUtil.setPortal(portal);
 	}
 
 	private void _setUpResourceBundleUtil() {

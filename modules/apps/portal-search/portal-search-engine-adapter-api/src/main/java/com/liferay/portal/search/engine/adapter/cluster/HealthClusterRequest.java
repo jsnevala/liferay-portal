@@ -14,16 +14,19 @@
 
 package com.liferay.portal.search.engine.adapter.cluster;
 
-import aQute.bnd.annotation.ProviderType;
+import com.liferay.portal.search.engine.adapter.ccr.CrossClusterRequest;
 
 /**
  * @author Dylan Rebelak
  */
-@ProviderType
 public class HealthClusterRequest
+	extends CrossClusterRequest
 	implements ClusterRequest<HealthClusterResponse> {
 
-	public HealthClusterRequest(String[] indexNames) {
+	public HealthClusterRequest() {
+	}
+
+	public HealthClusterRequest(String... indexNames) {
 		_indexNames = indexNames;
 	}
 
@@ -39,6 +42,26 @@ public class HealthClusterRequest
 		return _indexNames;
 	}
 
-	private final String[] _indexNames;
+	public long getTimeout() {
+		return _timeout;
+	}
+
+	public ClusterHealthStatus getWaitForClusterHealthStatus() {
+		return _waitForClusterHealthStatus;
+	}
+
+	public void setTimeout(long timeout) {
+		_timeout = timeout;
+	}
+
+	public void setWaitForClusterHealthStatus(
+		ClusterHealthStatus waitForClusterHealthStatus) {
+
+		_waitForClusterHealthStatus = waitForClusterHealthStatus;
+	}
+
+	private String[] _indexNames;
+	private long _timeout;
+	private ClusterHealthStatus _waitForClusterHealthStatus;
 
 }

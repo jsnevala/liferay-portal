@@ -14,13 +14,10 @@
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.tools.service.builder.test.model.VersionedEntry;
 
 import java.io.Externalizable;
@@ -32,12 +29,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing VersionedEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see VersionedEntry
  * @generated
  */
-@ProviderType
-public class VersionedEntryCacheModel implements CacheModel<VersionedEntry>,
-	Externalizable, MVCCModel {
+public class VersionedEntryCacheModel
+	implements CacheModel<VersionedEntry>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -48,10 +44,12 @@ public class VersionedEntryCacheModel implements CacheModel<VersionedEntry>,
 			return false;
 		}
 
-		VersionedEntryCacheModel versionedEntryCacheModel = (VersionedEntryCacheModel)obj;
+		VersionedEntryCacheModel versionedEntryCacheModel =
+			(VersionedEntryCacheModel)obj;
 
 		if ((versionedEntryId == versionedEntryCacheModel.versionedEntryId) &&
-				(mvccVersion == versionedEntryCacheModel.mvccVersion)) {
+			(mvccVersion == versionedEntryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -98,6 +96,7 @@ public class VersionedEntryCacheModel implements CacheModel<VersionedEntry>,
 
 		versionedEntryImpl.setMvccVersion(mvccVersion);
 		versionedEntryImpl.setHeadId(headId);
+		versionedEntryImpl.setHead(head);
 		versionedEntryImpl.setVersionedEntryId(versionedEntryId);
 		versionedEntryImpl.setGroupId(groupId);
 
@@ -112,17 +111,20 @@ public class VersionedEntryCacheModel implements CacheModel<VersionedEntry>,
 
 		headId = objectInput.readLong();
 
+		head = objectInput.readBoolean();
+
 		versionedEntryId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
 		objectOutput.writeLong(headId);
+
+		objectOutput.writeBoolean(head);
 
 		objectOutput.writeLong(versionedEntryId);
 
@@ -131,6 +133,8 @@ public class VersionedEntryCacheModel implements CacheModel<VersionedEntry>,
 
 	public long mvccVersion;
 	public long headId;
+	public boolean head;
 	public long versionedEntryId;
 	public long groupId;
+
 }

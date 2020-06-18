@@ -25,7 +25,7 @@ import java.util.Objects;
 public class UserAssignment extends Assignment {
 
 	public UserAssignment() {
-		this (0, null, null);
+		this(0, null, null);
 	}
 
 	public UserAssignment(long userId, String screenName, String emailAddress) {
@@ -72,8 +72,11 @@ public class UserAssignment extends Assignment {
 
 	@Override
 	public int hashCode() {
-		return _emailAddress.concat(_screenName).concat(
-			String.valueOf(_userId)).hashCode();
+		return _emailAddress.concat(
+			_screenName
+		).concat(
+			String.valueOf(_userId)
+		).hashCode();
 	}
 
 	@Override

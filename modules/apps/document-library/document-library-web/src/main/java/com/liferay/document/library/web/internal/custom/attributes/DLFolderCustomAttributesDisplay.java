@@ -25,7 +25,6 @@ import org.osgi.service.component.annotations.Component;
  * @author Jorge Ferrer
  */
 @Component(
-	immediate = true,
 	property = "javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
 	service = CustomAttributesDisplay.class
 )
@@ -35,6 +34,11 @@ public class DLFolderCustomAttributesDisplay
 	@Override
 	public String getClassName() {
 		return DLFolder.class.getName();
+	}
+
+	@Override
+	public String getIconCssClass() {
+		return "document";
 	}
 
 }

@@ -14,39 +14,42 @@
 
 package com.liferay.fragment.web.internal.portlet;
 
+import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.constants.FragmentPortletKeys;
+import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
+import com.liferay.fragment.model.FragmentCollection;
+import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.fragment.renderer.FragmentRendererController;
+import com.liferay.fragment.service.FragmentCollectionService;
 import com.liferay.fragment.web.internal.configuration.FragmentPortletConfiguration;
 import com.liferay.fragment.web.internal.constants.FragmentWebKeys;
 import com.liferay.item.selector.ItemSelector;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.GroupService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.staging.StagingGroupHelper;
 
 import java.io.IOException;
 
-import java.util.HashMap;
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -59,7 +62,6 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.css-class-wrapper=portlet-fragment-web",
 		"com.liferay.portlet.display-category=category.hidden",
 		"com.liferay.portlet.header-portlet-css=/css/main.css",
-		"com.liferay.portlet.header-portlet-javascript=/js/html2canvas/html2canvas.min.js",
 		"com.liferay.portlet.preferences-owned-by-group=true",
 		"com.liferay.portlet.private-request-attributes=false",
 		"com.liferay.portlet.private-session-attributes=false",
@@ -70,92 +72,133 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + FragmentPortletKeys.FRAGMENT,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=administrator"
 	},
 	service = Portlet.class
 )
 public class FragmentPortlet extends MVCPortlet {
-
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		_fragmentPortletConfiguration = ConfigurableUtil.createConfigurable(
-			FragmentPortletConfiguration.class, properties);
-	}
 
 	@Override
 	protected void doDispatch(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
 
-		try {
-			_createAssetDisplayLayout(renderRequest);
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		Group scopeGroup = themeDisplay.getScopeGroup();
+
+		if (_stagingGroupHelper.isLocalLiveGroup(scopeGroup) ||
+			_stagingGroupHelper.isRemoteLiveGroup(scopeGroup)) {
+
+			throw new PortletException();
 		}
-		catch (PortalException pe) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+
+		FragmentPortletConfiguration fragmentPortletConfiguration = null;
+
+		try {
+			fragmentPortletConfiguration =
+				_configurationProvider.getCompanyConfiguration(
+					FragmentPortletConfiguration.class,
+					themeDisplay.getCompanyId());
+		}
+		catch (ConfigurationException configurationException) {
+			throw new PortletException(configurationException);
+		}
+
+		renderRequest.setAttribute(
+			FragmentWebKeys.FRAGMENT_COLLECTION_CONTRIBUTOR_TRACKER,
+			_fragmentCollectionContributorTracker);
+		renderRequest.setAttribute(
+			FragmentWebKeys.FRAGMENT_COLLECTIONS,
+			_fragmentCollectionService.getFragmentCollections(
+				themeDisplay.getScopeGroupId()));
+		renderRequest.setAttribute(
+			FragmentPortletConfiguration.class.getName(),
+			fragmentPortletConfiguration);
+		renderRequest.setAttribute(
+			FragmentActionKeys.FRAGMENT_RENDERER_CONTROLLER,
+			_fragmentRendererController);
+		renderRequest.setAttribute(
+			FragmentWebKeys.FRAGMENT_ENTRY_PROCESSOR_REGISTRY,
+			_fragmentEntryProcessorRegistry);
+
+		try {
+			renderRequest.setAttribute(
+				FragmentWebKeys.INHERITED_FRAGMENT_COLLECTIONS,
+				_getInheritedFragmentCollections(themeDisplay));
+		}
+		catch (PortalException portalException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(portalException, portalException);
 			}
 		}
 
 		renderRequest.setAttribute(
-			FragmentPortletConfiguration.class.getName(),
-			_fragmentPortletConfiguration);
-		renderRequest.setAttribute(
 			FragmentWebKeys.ITEM_SELECTOR, _itemSelector);
+		renderRequest.setAttribute(
+			FragmentWebKeys.SYSTEM_FRAGMENT_COLLECTIONS,
+			_fragmentCollectionService.getFragmentCollections(
+				CompanyConstants.SYSTEM));
 
 		super.doDispatch(renderRequest, renderResponse);
 	}
 
-	private void _createAssetDisplayLayout(RenderRequest renderRequest)
+	private Map<String, List<FragmentCollection>>
+			_getInheritedFragmentCollections(ThemeDisplay themeDisplay)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		if (themeDisplay.getScopeGroupId() ==
+				themeDisplay.getCompanyGroupId()) {
 
-		Group group = themeDisplay.getScopeGroup();
-
-		if (_layoutLocalService.hasLayouts(group)) {
-			return;
+			return new TreeMap<>();
 		}
 
-		long defaultUserId = _userLocalService.getDefaultUserId(
-			group.getCompanyId());
+		Map<String, List<FragmentCollection>> inheritedFragmentCollections =
+			new TreeMap<>();
 
-		Locale locale = LocaleUtil.getSiteDefault();
+		List<FragmentCollection> fragmentCollections =
+			_fragmentCollectionService.getFragmentCollections(
+				themeDisplay.getCompanyGroupId());
 
-		Map<Locale, String> nameMap = new HashMap<>();
+		if (ListUtil.isNotEmpty(fragmentCollections)) {
+			Group group = _groupService.getGroup(
+				themeDisplay.getCompanyGroupId());
 
-		nameMap.put(locale, "Asset Display Page");
+			inheritedFragmentCollections.put(
+				group.getDescriptiveName(themeDisplay.getLocale()),
+				fragmentCollections);
+		}
 
-		UnicodeProperties typeSettingsProperties = new UnicodeProperties();
-
-		typeSettingsProperties.put("visible", Boolean.FALSE.toString());
-
-		ServiceContext serviceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
-		serviceContext.setAttribute(
-			"layout.instanceable.allowed", Boolean.TRUE);
-
-		_layoutLocalService.addLayout(
-			defaultUserId, group.getGroupId(), false, 0, nameMap, null, null,
-			null, null, "asset_display", typeSettingsProperties.toString(),
-			true, new HashMap<>(), serviceContext);
+		return inheritedFragmentCollections;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		FragmentPortlet.class);
 
-	private volatile FragmentPortletConfiguration _fragmentPortletConfiguration;
+	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private FragmentCollectionContributorTracker
+		_fragmentCollectionContributorTracker;
+
+	@Reference
+	private FragmentCollectionService _fragmentCollectionService;
+
+	@Reference
+	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
+
+	@Reference
+	private FragmentRendererController _fragmentRendererController;
+
+	@Reference
+	private GroupService _groupService;
 
 	@Reference
 	private ItemSelector _itemSelector;
 
 	@Reference
-	private LayoutLocalService _layoutLocalService;
-
-	@Reference
-	private UserLocalService _userLocalService;
+	private StagingGroupHelper _stagingGroupHelper;
 
 }

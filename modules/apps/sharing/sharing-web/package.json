@@ -1,20 +1,26 @@
 {
 	"dependencies": {
-		"clay-select": "^2.3.2",
-		"clay-sticker": "^2.3.2",
-		"metal-component": "^2.13.2",
-		"metal-soy": "^2.13.2"
-	},
-	"devDependencies": {
-		"check-source-formatting": "^2.0.12",
-		"liferay-module-config-generator": "^1.2.1",
-		"metal-cli": "^4.0.1"
+		"@clayui/alert": "3.3.1",
+		"@clayui/autocomplete": "3.1.3",
+		"@clayui/button": "3.3.1",
+		"@clayui/data-provider": "3.1.1",
+		"@clayui/drop-down": "3.4.2",
+		"@clayui/form": "3.7.1",
+		"@clayui/icon": "3.0.5",
+		"@clayui/modal": "3.5.0",
+		"@clayui/multi-select": "3.5.2",
+		"@clayui/sticker": "3.1.1",
+		"frontend-js-react-web": "*",
+		"frontend-js-web": "*",
+		"metal-dom": "2.16.8",
+		"prop-types": "15.7.2",
+		"react": "16.12.0"
 	},
 	"name": "sharing-web",
 	"scripts": {
-		"checkFormat": "npm run csf",
-		"csf": "csf src/**/*.js",
-		"format": "npm run csf -- -i"
+		"build": "liferay-npm-scripts build",
+		"checkFormat": "liferay-npm-scripts check",
+		"format": "liferay-npm-scripts fix"
 	},
-	"version": "1.0.0"
+	"version": "2.0.15"
 }

@@ -24,10 +24,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
-	immediate = true,
 	property = "model.class.name=com.liferay.document.library.kernel.model.DLFileEntry",
 	service = ExpandoValueDeleteHandler.class
 )

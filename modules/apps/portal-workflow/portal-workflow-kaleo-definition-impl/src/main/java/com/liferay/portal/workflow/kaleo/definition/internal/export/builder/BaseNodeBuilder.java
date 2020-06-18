@@ -71,7 +71,8 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 		T node = createNode(kaleoNode);
 
 		Set<Action> actions = buildActions(
-			KaleoNode.class.getName(), kaleoNode.getKaleoNodeId());
+			kaleoNode.getCompanyId(), KaleoNode.class.getName(),
+			kaleoNode.getKaleoNodeId());
 
 		node.setActions(actions);
 
@@ -155,13 +156,13 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 	}
 
 	protected Set<Action> buildActions(
-		String kaleoClassName, long kaleoClassPK) {
+		long companyId, String kaleoClassName, long kaleoClassPK) {
 
 		List<KaleoAction> kaleoActions =
 			kaleoActionLocalService.getKaleoActions(
-				kaleoClassName, kaleoClassPK);
+				companyId, kaleoClassName, kaleoClassPK);
 
-		Set<Action> actions = new HashSet<>(kaleoActions.size());
+		Set<Action> actions = new HashSet<>();
 
 		for (KaleoAction kaleoAction : kaleoActions) {
 			Action action = new Action(
@@ -185,8 +186,7 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 			kaleoTaskAssignmentLocalService.getKaleoTaskAssignments(
 				kaleoClassName, kaleoClassPK);
 
-		Set<Assignment> assignments = new HashSet<>(
-			kaleoTaskAssignments.size());
+		Set<Assignment> assignments = new HashSet<>();
 
 		for (KaleoTaskAssignment kaleoTaskAssignment : kaleoTaskAssignments) {
 			String assigneeClassName =
@@ -239,8 +239,7 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 			kaleoNotificationLocalService.getKaleoNotifications(
 				kaleoClassName, kaleoClassPK);
 
-		Set<Notification> notifications = new HashSet<>(
-			kaleoNotifications.size());
+		Set<Notification> notifications = new HashSet<>();
 
 		for (KaleoNotification kaleoNotification : kaleoNotifications) {
 			Notification notification = new Notification(
@@ -251,10 +250,8 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 
 			notifications.add(notification);
 
-			String notificationTypes = kaleoNotification.getNotificationTypes();
-
 			String[] notificationTypeValues = StringUtil.split(
-				notificationTypes, StringPool.COMMA);
+				kaleoNotification.getNotificationTypes(), StringPool.COMMA);
 
 			for (String notificationTypeValue : notificationTypeValues) {
 				notification.addNotificationType(notificationTypeValue);
@@ -272,7 +269,7 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 		List<KaleoTimer> kaleoTimers = kaleoTimerLocalService.getKaleoTimers(
 			kaleoClassName, kaleoClassPK);
 
-		Set<Timer> timers = new HashSet<>(kaleoTimers.size());
+		Set<Timer> timers = new HashSet<>();
 
 		for (KaleoTimer kaleoTimer : kaleoTimers) {
 			Timer timer = new Timer(
@@ -300,7 +297,8 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 			}
 
 			Set<Action> timerActions = buildActions(
-				KaleoTimer.class.getName(), kaleoTimer.getKaleoTimerId());
+				kaleoTimer.getCompanyId(), KaleoTimer.class.getName(),
+				kaleoTimer.getKaleoTimerId());
 
 			timer.setActions(timerActions);
 

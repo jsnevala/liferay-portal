@@ -407,20 +407,8 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>Deprecated as of 7.0.0, with no direct replacement.</description>
-			<name>containerIcon</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
 			<description>The name of the container that the entry is in, such as the name of a folder.</description>
 			<name>containerName</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>Deprecated as of 7.0.0, with no direct replacement.</description>
-			<name>containerSrc</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -2038,7 +2026,7 @@
 			<type>boolean</type>
 		</attribute>
 		<attribute>
-			<description>A CSS class for styling the trigger for the icon menu. The default value is <![CDATA[<code>btn btn-default</code>]]>.</description>
+			<description>A CSS class for styling the trigger for the icon menu. The default value is <![CDATA[<code>btn btn-secondary</code>]]>.</description>
 			<name>triggerCssClass</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -4631,6 +4619,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.2.0, with no direct replacement.</description>
 			<name>servletContext</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -4774,6 +4763,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.3.0, with no direct replacement.</description>
 		<name>sites-directory</name>
 		<tag-class>com.liferay.taglib.ui.SitesDirectoryTag</tag-class>
 		<body-content>JSP</body-content>

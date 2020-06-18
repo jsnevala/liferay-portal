@@ -14,6 +14,7 @@
 
 package com.liferay.site.navigation.menu.web.internal.portlet;
 
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.display.template.PortletDisplayTemplate;
@@ -54,8 +55,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + SiteNavigationMenuPortletKeys.SITE_NAVIGATION_MENU,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=guest,power-user,user"
 	},
 	service = Portlet.class
 )
@@ -70,6 +70,13 @@ public class SiteNavigationMenuPortlet extends MVCPortlet {
 			WebKeys.PORTLET_DISPLAY_TEMPLATE, _portletDisplayTemplate);
 
 		super.doDispatch(renderRequest, renderResponse);
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.site.navigation.menu.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
 	}
 
 	@Reference

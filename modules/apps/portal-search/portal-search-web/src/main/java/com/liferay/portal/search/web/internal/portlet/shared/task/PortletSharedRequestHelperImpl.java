@@ -14,7 +14,6 @@
 
 package com.liferay.portal.search.web.internal.portlet.shared.task;
 
-import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.search.web.internal.util.SearchArrayUtil;
 import com.liferay.portal.search.web.internal.util.SearchStringUtil;
@@ -45,10 +44,8 @@ public class PortletSharedRequestHelperImpl
 
 	@Override
 	public String getCompleteURL(RenderRequest renderRequest) {
-		String urlString = _http.getCompleteURL(
-			getSharedRequest(renderRequest));
-
-		return urlString;
+		return SearchHttpUtil.getCompleteOriginalURL(
+			portal.getHttpServletRequest(renderRequest));
 	}
 
 	@Override
@@ -57,9 +54,7 @@ public class PortletSharedRequestHelperImpl
 
 		HttpServletRequest httpServletRequest = getSharedRequest(renderRequest);
 
-		String parameter = httpServletRequest.getParameter(name);
-
-		return SearchStringUtil.maybe(parameter);
+		return SearchStringUtil.maybe(httpServletRequest.getParameter(name));
 	}
 
 	@Override
@@ -68,9 +63,8 @@ public class PortletSharedRequestHelperImpl
 
 		HttpServletRequest httpServletRequest = getSharedRequest(renderRequest);
 
-		String[] parameterValues = httpServletRequest.getParameterValues(name);
-
-		return SearchArrayUtil.maybe(parameterValues);
+		return SearchArrayUtil.maybe(
+			httpServletRequest.getParameterValues(name));
 	}
 
 	@Override
@@ -96,8 +90,5 @@ public class PortletSharedRequestHelperImpl
 
 	@Reference
 	protected Portal portal;
-
-	@Reference
-	private Http _http;
 
 }

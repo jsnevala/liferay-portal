@@ -24,8 +24,8 @@ import org.osgi.service.component.annotations.Component;
  * @author Adolfo Pérez
  */
 @Component(
-	immediate = true,
 	property = {
+		"model.class.name=com.liferay.document.library.kernel.model.DLFileEntry",
 		"model.class.name=com.liferay.portal.kernel.repository.model.FileEntry",
 		"model.class.name=com.liferay.portal.kernel.repository.model.Folder"
 	},
@@ -38,7 +38,8 @@ public class DLPortletLayoutFinder extends BasePortletLayoutFinder {
 		return _PORTLET_IDS;
 	}
 
-	private static final String[] _PORTLET_IDS =
-		{DLPortletKeys.DOCUMENT_LIBRARY, DLPortletKeys.MEDIA_GALLERY_DISPLAY};
+	private static final String[] _PORTLET_IDS = {
+		DLPortletKeys.DOCUMENT_LIBRARY, DLPortletKeys.MEDIA_GALLERY_DISPLAY
+	};
 
 }

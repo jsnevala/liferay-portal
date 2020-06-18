@@ -58,7 +58,7 @@ import org.osgi.service.component.annotations.Reference;
 public class JournalArticleModelResourcePermissionRegistrar {
 
 	@Activate
-	public void activate(BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 		properties.put("model.class.name", JournalArticle.class.getName());
@@ -80,14 +80,32 @@ public class JournalArticleModelResourcePermissionRegistrar {
 				_portletResourcePermission,
 				(modelResourcePermission, consumer) -> {
 					consumer.accept(
-						new StagedModelPermissionLogic<>(
+						new StagedModelPermissionLogic<JournalArticle>(
 							_stagingPermission, JournalPortletKeys.JOURNAL,
-							JournalArticle::getResourcePrimKey));
+							JournalArticle::getResourcePrimKey) {
+
+							@Override
+							public Boolean contains(
+								PermissionChecker permissionChecker,
+								String name, JournalArticle journalArticle,
+								String actionId) {
+
+								if (actionId.equals(ActionKeys.SUBSCRIBE)) {
+									return null;
+								}
+
+								return super.contains(
+									permissionChecker, name, journalArticle,
+									actionId);
+							}
+
+						});
 					consumer.accept(
 						new WorkflowedModelPermissionLogic<>(
 							_workflowPermission, modelResourcePermission,
 							_groupLocalService, JournalArticle::getId));
-					consumer.accept(new JournalArticleConfigurationLogic());
+					consumer.accept(
+						new JournalArticleConfigurationModelResourcePermissionLogic());
 					consumer.accept(
 						new DynamicInheritancePermissionLogic<>(
 							_journalFolderModelResourcePermission,
@@ -97,7 +115,7 @@ public class JournalArticleModelResourcePermissionRegistrar {
 	}
 
 	@Deactivate
-	public void deactivate() {
+	protected void deactivate() {
 		_serviceRegistration.unregister();
 	}
 
@@ -153,7 +171,7 @@ public class JournalArticleModelResourcePermissionRegistrar {
 	@Reference
 	private WorkflowPermission _workflowPermission;
 
-	private class JournalArticleConfigurationLogic
+	private class JournalArticleConfigurationModelResourcePermissionLogic
 		implements ModelResourcePermissionLogic<JournalArticle> {
 
 		@Override
@@ -178,11 +196,11 @@ public class JournalArticleModelResourcePermissionRegistrar {
 					return true;
 				}
 			}
-			catch (ConfigurationException ce) {
+			catch (ConfigurationException configurationException) {
 				_log.error(
 					"Unable to get journal service configuration for company " +
 						permissionChecker.getCompanyId(),
-					ce);
+					configurationException);
 
 				return false;
 			}

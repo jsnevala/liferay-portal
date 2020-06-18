@@ -36,10 +36,12 @@
 		</c:when>
 		<c:when test="<%= type == AlertType.SUCCESS.getAlertCode() %>">
 			<i class="icon-ok-sign"></i>
+
 			<strong class="lead"><%= LanguageUtil.get(request, "alert-helper-success") %>: </strong>
 		</c:when>
 		<c:when test="<%= type == AlertType.WARNING.getAlertCode() %>">
 			<i class="icon-warning-sign"></i>
+
 			<strong class="lead"><%= LanguageUtil.get(request, "alert-helper-warning") %>: </strong>
 		</c:when>
 	</c:choose>
@@ -53,7 +55,7 @@
 	if (dismissible) {
 	%>
 
-		<button aria-label="Close" class="close" data-dismiss="alert" type="button">
+		<button aria-label="<%= LanguageUtil.get(request, "close") %>" class="close" data-dismiss="liferay-alert" type="button">
 			<svg aria-hidden="true" class="icon-monospaced lexicon-icon lexicon-icon-times">
 				<use xlink:href="<%= themeDisplayPath %>/lexicon/icons.svg#times" />
 			</svg>

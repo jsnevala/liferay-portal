@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,11 +26,12 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class KaleoInstanceTokenSoap implements Serializable {
+
 	public static KaleoInstanceTokenSoap toSoapModel(KaleoInstanceToken model) {
 		KaleoInstanceTokenSoap soapModel = new KaleoInstanceTokenSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setKaleoInstanceTokenId(model.getKaleoInstanceTokenId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -40,9 +39,12 @@ public class KaleoInstanceTokenSoap implements Serializable {
 		soapModel.setUserName(model.getUserName());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
-		soapModel.setKaleoDefinitionVersionId(model.getKaleoDefinitionVersionId());
+		soapModel.setKaleoDefinitionId(model.getKaleoDefinitionId());
+		soapModel.setKaleoDefinitionVersionId(
+			model.getKaleoDefinitionVersionId());
 		soapModel.setKaleoInstanceId(model.getKaleoInstanceId());
-		soapModel.setParentKaleoInstanceTokenId(model.getParentKaleoInstanceTokenId());
+		soapModel.setParentKaleoInstanceTokenId(
+			model.getParentKaleoInstanceTokenId());
 		soapModel.setCurrentKaleoNodeId(model.getCurrentKaleoNodeId());
 		soapModel.setCurrentKaleoNodeName(model.getCurrentKaleoNodeName());
 		soapModel.setClassName(model.getClassName());
@@ -55,7 +57,9 @@ public class KaleoInstanceTokenSoap implements Serializable {
 
 	public static KaleoInstanceTokenSoap[] toSoapModels(
 		KaleoInstanceToken[] models) {
-		KaleoInstanceTokenSoap[] soapModels = new KaleoInstanceTokenSoap[models.length];
+
+		KaleoInstanceTokenSoap[] soapModels =
+			new KaleoInstanceTokenSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -66,10 +70,12 @@ public class KaleoInstanceTokenSoap implements Serializable {
 
 	public static KaleoInstanceTokenSoap[][] toSoapModels(
 		KaleoInstanceToken[][] models) {
+
 		KaleoInstanceTokenSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new KaleoInstanceTokenSoap[models.length][models[0].length];
+			soapModels =
+				new KaleoInstanceTokenSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new KaleoInstanceTokenSoap[0][0];
@@ -84,13 +90,16 @@ public class KaleoInstanceTokenSoap implements Serializable {
 
 	public static KaleoInstanceTokenSoap[] toSoapModels(
 		List<KaleoInstanceToken> models) {
-		List<KaleoInstanceTokenSoap> soapModels = new ArrayList<KaleoInstanceTokenSoap>(models.size());
+
+		List<KaleoInstanceTokenSoap> soapModels =
+			new ArrayList<KaleoInstanceTokenSoap>(models.size());
 
 		for (KaleoInstanceToken model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new KaleoInstanceTokenSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new KaleoInstanceTokenSoap[soapModels.size()]);
 	}
 
 	public KaleoInstanceTokenSoap() {
@@ -102,6 +111,14 @@ public class KaleoInstanceTokenSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setKaleoInstanceTokenId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getKaleoInstanceTokenId() {
@@ -158,6 +175,14 @@ public class KaleoInstanceTokenSoap implements Serializable {
 
 	public void setModifiedDate(Date modifiedDate) {
 		_modifiedDate = modifiedDate;
+	}
+
+	public long getKaleoDefinitionId() {
+		return _kaleoDefinitionId;
+	}
+
+	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		_kaleoDefinitionId = kaleoDefinitionId;
 	}
 
 	public long getKaleoDefinitionVersionId() {
@@ -236,6 +261,7 @@ public class KaleoInstanceTokenSoap implements Serializable {
 		_completionDate = completionDate;
 	}
 
+	private long _mvccVersion;
 	private long _kaleoInstanceTokenId;
 	private long _groupId;
 	private long _companyId;
@@ -243,6 +269,7 @@ public class KaleoInstanceTokenSoap implements Serializable {
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
+	private long _kaleoDefinitionId;
 	private long _kaleoDefinitionVersionId;
 	private long _kaleoInstanceId;
 	private long _parentKaleoInstanceTokenId;
@@ -252,4 +279,5 @@ public class KaleoInstanceTokenSoap implements Serializable {
 	private long _classPK;
 	private boolean _completed;
 	private Date _completionDate;
+
 }

@@ -14,11 +14,12 @@
 
 package com.liferay.oauth2.provider.web.internal;
 
-import com.liferay.oauth2.provider.scope.liferay.ApplicationDescriptorLocator;
 import com.liferay.oauth2.provider.scope.liferay.LiferayOAuth2Scope;
-import com.liferay.oauth2.provider.scope.liferay.ScopeDescriptorLocator;
+import com.liferay.oauth2.provider.scope.liferay.spi.ApplicationDescriptorLocator;
+import com.liferay.oauth2.provider.scope.liferay.spi.ScopeDescriptorLocator;
 import com.liferay.oauth2.provider.scope.spi.application.descriptor.ApplicationDescriptor;
 import com.liferay.oauth2.provider.scope.spi.scope.descriptor.ScopeDescriptor;
+import com.liferay.petra.string.StringUtil;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -65,10 +66,20 @@ public class AssignableScopes {
 			_scopeDescriptorLocator);
 	}
 
+	public void addLiferayOAuth2Scope(LiferayOAuth2Scope liferayOAuth2Scope) {
+		if (liferayOAuth2Scope != null) {
+			_liferayOAuth2Scopes.add(liferayOAuth2Scope);
+		}
+	}
+
 	public void addLiferayOAuth2Scopes(
 		Collection<LiferayOAuth2Scope> liferayOAuth2Scopes) {
 
-		_liferayOAuth2Scopes.addAll(liferayOAuth2Scopes);
+		if (liferayOAuth2Scopes == null) {
+			return;
+		}
+
+		liferayOAuth2Scopes.forEach(this::addLiferayOAuth2Scope);
 	}
 
 	public boolean contains(AssignableScopes assignableScopes) {
@@ -109,8 +120,8 @@ public class AssignableScopes {
 		Stream<LiferayOAuth2Scope> stream = _liferayOAuth2Scopes.stream();
 
 		Set<LiferayOAuth2Scope> liferayOAuth2Scopes = stream.filter(
-			liferayOAuth2Scope ->
-				applicationName.equals(liferayOAuth2Scope.getApplicationName())
+			liferayOAuth2Scope -> applicationName.equals(
+				liferayOAuth2Scope.getApplicationName())
 		).collect(
 			Collectors.toSet()
 		);
@@ -142,14 +153,17 @@ public class AssignableScopes {
 		return applicationNames;
 	}
 
-	public Set<String> getApplicationScopeDescription(String applicationName) {
+	public Set<String> getApplicationScopeDescription(
+		long companyId, String applicationName) {
+
 		Stream<LiferayOAuth2Scope> stream = _liferayOAuth2Scopes.stream();
 
 		return stream.filter(
-			liferayOAuth2Scope ->
-				applicationName.equals(liferayOAuth2Scope.getApplicationName())
+			liferayOAuth2Scope -> applicationName.equals(
+				liferayOAuth2Scope.getApplicationName())
 		).map(
-			this::getScopeDescription
+			liferayOAuth2Scope -> getScopeDescription(
+				companyId, liferayOAuth2Scope)
 		).collect(
 			Collectors.toSet()
 		);
@@ -159,10 +173,12 @@ public class AssignableScopes {
 		return _liferayOAuth2Scopes;
 	}
 
-	public String getScopeDescription(LiferayOAuth2Scope liferayOAuth2Scope) {
+	public String getScopeDescription(
+		long companyId, LiferayOAuth2Scope liferayOAuth2Scope) {
+
 		ScopeDescriptor scopeDescriptor =
 			_scopeDescriptorLocator.getScopeDescriptor(
-				liferayOAuth2Scope.getApplicationName());
+				companyId, liferayOAuth2Scope.getApplicationName());
 
 		if (scopeDescriptor == null) {
 			return liferayOAuth2Scope.getScope();
@@ -200,6 +216,11 @@ public class AssignableScopes {
 		return new AssignableScopes(
 			_applicationDescriptorLocator, liferayOAuth2Scopes, _locale,
 			_scopeDescriptorLocator);
+	}
+
+	@Override
+	public String toString() {
+		return StringUtil.merge(_liferayOAuth2Scopes, " + ");
 	}
 
 	private final ApplicationDescriptorLocator _applicationDescriptorLocator;

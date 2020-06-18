@@ -28,14 +28,14 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 %>
 
 <portlet:renderURL var="viewUADExportProcesses">
-	<portlet:param name="mvcRenderCommandName" value="/view_uad_export_processes" />
 	<portlet:param name="p_u_i_d" value="<%= String.valueOf(selectedUser.getUserId()) %>" />
+	<portlet:param name="mvcRenderCommandName" value="/view_uad_export_processes" />
 </portlet:renderURL>
 
 <div class="container-fluid container-fluid-max-xl container-form-lg">
 	<aui:form method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "exportApplicationData();" %>'>
-		<aui:input name="redirect" type="hidden" value="<%= viewUADExportProcesses.toString() %>" />
 		<aui:input name="p_u_i_d" type="hidden" value="<%= String.valueOf(selectedUser.getUserId()) %>" />
+		<aui:input name="redirect" type="hidden" value="<%= viewUADExportProcesses.toString() %>" />
 		<aui:input name="applicationKeys" type="hidden" />
 
 		<div class="sheet sheet-lg">
@@ -136,16 +136,25 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 		var form = document.getElementById('<portlet:namespace />fm');
 
 		if (form) {
-			var applicationKeys = form.querySelector('#<portlet:namespace />applicationKeys');
+			var applicationKeys = form.querySelector(
+				'#<portlet:namespace />applicationKeys'
+			);
 
 			if (applicationKeys) {
 				applicationKeys.setAttribute(
 					'value',
-					Liferay.Util.listCheckedExcept(form, '<portlet:namespace />allRowIds', '<portlet:namespace />rowIds')
+					Liferay.Util.listCheckedExcept(
+						form,
+						'<portlet:namespace />allRowIds',
+						'<portlet:namespace />rowIds'
+					)
 				);
 			}
 
-			submitForm(form, '<portlet:actionURL name="/export_application_data" />');
+			submitForm(
+				form,
+				'<portlet:actionURL name="/export_application_data" />'
+			);
 		}
 	}
 </aui:script>

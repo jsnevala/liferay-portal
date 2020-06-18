@@ -14,10 +14,10 @@
 
 package com.liferay.portal.kernel.service.persistence.impl;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.NestedSetsTreeNodeModel;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -393,8 +393,8 @@ public class NestedSetsTreeManagerTest {
 			try {
 				return (SimpleNestedSetsTreeNode)super.clone();
 			}
-			catch (CloneNotSupportedException cnse) {
-				throw new RuntimeException(cnse);
+			catch (CloneNotSupportedException cloneNotSupportedException) {
+				throw new RuntimeException(cloneNotSupportedException);
 			}
 		}
 

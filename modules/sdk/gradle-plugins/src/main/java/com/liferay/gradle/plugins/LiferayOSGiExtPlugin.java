@@ -22,10 +22,8 @@ import com.liferay.gradle.plugins.internal.CSSBuilderDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.EclipseDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.IdeaDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.WatchOSGiPlugin;
-import com.liferay.gradle.plugins.internal.XMLFormatterDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.source.formatter.SourceFormatterPlugin;
-import com.liferay.gradle.plugins.xml.formatter.XMLFormatterPlugin;
 import com.liferay.gradle.util.Validator;
 
 import groovy.lang.Closure;
@@ -43,6 +41,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.UncheckedIOException;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.java.archives.Manifest;
@@ -85,7 +84,7 @@ public class LiferayOSGiExtPlugin implements Plugin<Project> {
 			project, originalModuleConfiguration);
 
 		_configureLiferay(project);
-		_configureTaskDeploy(jar);
+		_configureTaskDeploy(project, jar);
 
 		_configureTaskJar(jar, unzipOriginalModuleTask);
 
@@ -151,13 +150,11 @@ public class LiferayOSGiExtPlugin implements Plugin<Project> {
 		GradleUtil.applyPlugin(project, JavaPlugin.class);
 		GradleUtil.applyPlugin(project, LiferayBasePlugin.class);
 		GradleUtil.applyPlugin(project, SourceFormatterPlugin.class);
-		GradleUtil.applyPlugin(project, XMLFormatterPlugin.class);
 
 		CSSBuilderDefaultsPlugin.INSTANCE.apply(project);
 		EclipseDefaultsPlugin.INSTANCE.apply(project);
 		IdeaDefaultsPlugin.INSTANCE.apply(project);
 		WatchOSGiPlugin.INSTANCE.apply(project);
-		XMLFormatterDefaultsPlugin.INSTANCE.apply(project);
 	}
 
 	private Configuration _configureConfigurationCompileOnly(
@@ -217,18 +214,44 @@ public class LiferayOSGiExtPlugin implements Plugin<Project> {
 			basePluginConvention.setArchivesBaseName(
 				attributes.getValue(Constants.BUNDLE_SYMBOLICNAME));
 		}
-		catch (IOException ioe) {
-			throw new UncheckedIOException(ioe);
+		catch (IOException ioException) {
+			throw new UncheckedIOException(ioException);
 		}
 	}
 
-	private void _configureTaskDeploy(Jar jar) {
+	@SuppressWarnings("serial")
+	private void _configureTaskDeploy(final Project project, Jar jar) {
 		Copy copy = (Copy)GradleUtil.getTask(
-			jar.getProject(), LiferayBasePlugin.DEPLOY_TASK_NAME);
+			project, LiferayBasePlugin.DEPLOY_TASK_NAME);
 
-		copy.from(jar);
+		copy.from(
+			jar,
+			new Closure<Void>(project) {
+
+				@SuppressWarnings("unused")
+				public void doCall(CopySpec copySpec) {
+					copySpec.rename(
+						new Closure<String>(project) {
+
+							public String doCall(String fileName) {
+								LiferayExtension liferayExtension =
+									GradleUtil.getExtension(
+										project, LiferayExtension.class);
+
+								Closure<String> closure =
+									liferayExtension.
+										getDeployedFileNameClosure();
+
+								return closure.call(jar);
+							}
+
+						});
+				}
+
+			});
 	}
 
+	@SuppressWarnings("serial")
 	private Jar _configureTaskJar(
 		final Jar jar, final Sync unzipOriginalModuleTask) {
 

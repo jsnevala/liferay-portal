@@ -25,10 +25,20 @@ public class GitRemote {
 
 	public static final Pattern gitLsRemotePattern = Pattern.compile(
 		"(?<sha>[^\\s]{40}+)[\\s]+refs/(?<type>[^/]+)+/(?<name>[^\\s]+)");
-	public static final Pattern remoteURLPattern = Pattern.compile(
-		JenkinsResultsParserUtil.combine(
-			"git@(?<hostname>[^:]+):(?<username>[^/]+)/",
-			"(?<gitRepositoryName>[^\\.]+)(.git)?"));
+
+	public static Matcher getRemoteURLMatcher(String remoteURL) {
+		Matcher matcher = _remoteURLMultiPattern.matches(remoteURL);
+
+		if (matcher == null) {
+			matcher = _remoteURLMultiPattern.find(remoteURL);
+		}
+
+		if (matcher != null) {
+			matcher.reset();
+		}
+
+		return matcher;
+	}
 
 	public String getGitRepositoryName() {
 		return _gitRepositoryName;
@@ -62,9 +72,22 @@ public class GitRemote {
 		return _username;
 	}
 
+	@Override
 	public String toString() {
 		return JenkinsResultsParserUtil.combine(
 			getName(), " (", getRemoteURL(), ")");
+	}
+
+	protected GitRemote(
+		GitWorkingDirectory gitWorkingDirectory, String name,
+		String remoteURL) {
+
+		_gitWorkingDirectory = gitWorkingDirectory;
+		_fetchRemoteURL = remoteURL;
+		_name = name;
+		_pushRemoteURL = remoteURL;
+
+		parseRemoteURL();
 	}
 
 	protected GitRemote(
@@ -125,10 +148,13 @@ public class GitRemote {
 		_name = name;
 		_pushRemoteURL = pushRemoteURL;
 
-		Matcher remoteURLMatcher = _remoteURLMultiPattern.matches(
-			_fetchRemoteURL);
+		parseRemoteURL();
+	}
 
-		if (remoteURLMatcher == null) {
+	protected void parseRemoteURL() {
+		Matcher remoteURLMatcher = getRemoteURLMatcher(_fetchRemoteURL);
+
+		if ((remoteURLMatcher == null) || !remoteURLMatcher.find()) {
 			throw new RuntimeException(
 				JenkinsResultsParserUtil.combine(
 					"fetch remote URL ", _fetchRemoteURL,
@@ -136,7 +162,14 @@ public class GitRemote {
 		}
 
 		_hostname = remoteURLMatcher.group("hostname");
-		_username = remoteURLMatcher.group("username");
+
+		try {
+			_username = remoteURLMatcher.group("username");
+		}
+		catch (IllegalArgumentException illegalArgumentException) {
+			_username = "liferay";
+		}
+
 		_gitRepositoryName = remoteURLMatcher.group("gitRepositoryName");
 	}
 
@@ -148,14 +181,16 @@ public class GitRemote {
 		"git@(?<hostname>[^:]+):(?<username>[^/]+)" +
 			"/(?<gitRepositoryName>[^\\.^\\s]+)(\\.git)?+\\s*",
 		"https://(?<hostname>[^/]+)/(?<username>[^/]+)" +
-			"/(?<gitRepositoryName>[^\\.^\\s]+)(\\.git)?+\\s*");
+			"/(?<gitRepositoryName>[^\\.^\\s]+)(\\.git)?+\\s*",
+		"root@(?<hostname>[^:]+):/opt/dev/projects/github" +
+			"/(?<gitRepositoryName>[^\\\\.]+)");
 
 	private final String _fetchRemoteURL;
-	private final String _gitRepositoryName;
+	private String _gitRepositoryName;
 	private final GitWorkingDirectory _gitWorkingDirectory;
-	private final String _hostname;
+	private String _hostname;
 	private final String _name;
 	private final String _pushRemoteURL;
-	private final String _username;
+	private String _username;
 
 }

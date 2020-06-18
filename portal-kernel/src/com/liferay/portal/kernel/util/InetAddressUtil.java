@@ -14,7 +14,10 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -22,12 +25,60 @@ import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 
 import java.util.Enumeration;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Michael C. Han
  * @author Shuyang Zhou
+ * @author Marta Medio
  */
 public class InetAddressUtil {
+
+	public static InetAddress getInetAddressByName(String domain)
+		throws UnknownHostException {
+
+		AtomicInteger atomicInteger = new AtomicInteger(
+			_DNS_SECURITY_THREAD_LIMIT);
+
+		try {
+			if (atomicInteger.getAndDecrement() <= 0) {
+				_log.error(
+					"Thread limit exceeded to resolve domain: " + domain);
+
+				return null;
+			}
+
+			DefaultNoticeableFuture<InetAddress> defaultNoticeableFuture =
+				new DefaultNoticeableFuture<>(
+					() -> InetAddress.getByName(domain));
+
+			Thread thread = new Thread(
+				defaultNoticeableFuture, "Inet Address Util");
+
+			thread.setDaemon(true);
+
+			thread.start();
+
+			return defaultNoticeableFuture.get(
+				_DNS_SECURITY_ADDRESS_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+		}
+		catch (ExecutionException | InterruptedException | TimeoutException
+					exception) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
+			throw new UnknownHostException(
+				"Unable to resolve domain: " + domain);
+		}
+		finally {
+			atomicInteger.incrementAndGet();
+		}
+	}
 
 	public static String getLocalHostName() throws Exception {
 		return LocalHostNameHolder._LOCAL_HOST_NAME;
@@ -74,6 +125,16 @@ public class InetAddressUtil {
 		return false;
 	}
 
+	private static final int _DNS_SECURITY_ADDRESS_TIMEOUT_SECONDS =
+		GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.DNS_SECURITY_ADDRESS_TIMEOUT_SECONDS));
+
+	private static final int _DNS_SECURITY_THREAD_LIMIT = GetterUtil.getInteger(
+		PropsUtil.get(PropsKeys.DNS_SECURITY_THREAD_LIMIT));
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		InetAddressUtil.class);
+
 	private static class LocalHostNameHolder {
 
 		private static final String _LOCAL_HOST_NAME;
@@ -84,8 +145,8 @@ public class InetAddressUtil {
 
 				_LOCAL_HOST_NAME = inetAddress.getHostName();
 			}
-			catch (Exception e) {
-				throw new ExceptionInInitializerError(e);
+			catch (Exception exception) {
+				throw new ExceptionInInitializerError(exception);
 			}
 		}
 

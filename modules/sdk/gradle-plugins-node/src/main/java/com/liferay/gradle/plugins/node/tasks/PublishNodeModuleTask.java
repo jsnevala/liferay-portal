@@ -43,15 +43,19 @@ import org.codehaus.groovy.runtime.EncodingGroovyMethods;
 
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.util.GUtil;
 
 /**
  * @author Andrea Di Giorgi
  */
-public class PublishNodeModuleTask extends ExecuteNpmTask {
+@CacheableTask
+public class PublishNodeModuleTask extends ExecutePackageManagerTask {
 
 	@Override
 	public void executeNode() throws Exception {
@@ -174,6 +178,7 @@ public class PublishNodeModuleTask extends ExecuteNpmTask {
 
 	@InputDirectory
 	@Override
+	@PathSensitive(PathSensitivity.RELATIVE)
 	public File getWorkingDir() {
 		return super.getWorkingDir();
 	}
@@ -291,7 +296,13 @@ public class PublishNodeModuleTask extends ExecuteNpmTask {
 	}
 
 	private File _getNpmrcFile() {
-		return new File(getTemporaryDir(), "npmrc");
+		if (isUseNpm()) {
+			return new File(getTemporaryDir(), "npmrc");
+		}
+
+		File scriptFile = getScriptFile();
+
+		return new File(scriptFile.getParentFile(), ".npmrc");
 	}
 
 	private void _updatePackageJsonFile(Path packageJsonPath)

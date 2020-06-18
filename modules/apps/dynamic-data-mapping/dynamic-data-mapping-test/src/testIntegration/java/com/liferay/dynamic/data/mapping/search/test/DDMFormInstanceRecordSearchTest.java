@@ -46,15 +46,17 @@ import com.liferay.portal.kernel.test.util.SearchContextTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -75,7 +77,7 @@ public class DDMFormInstanceRecordSearchTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -134,6 +136,51 @@ public class DDMFormInstanceRecordSearchTest {
 	}
 
 	@Test
+	public void testNonindexableField() throws Exception {
+		Locale[] locales = {LocaleUtil.US};
+
+		DDMForm ddmForm = DDMFormTestUtil.createDDMForm(
+			DDMFormTestUtil.createAvailableLocales(locales), locales[0]);
+
+		DDMFormField nameDDMFormField = DDMFormTestUtil.createTextDDMFormField(
+			"name", true, false, false);
+
+		nameDDMFormField.setIndexType("keyword");
+
+		ddmForm.addDDMFormField(nameDDMFormField);
+
+		DDMFormField descriptionDDMFormField =
+			DDMFormTestUtil.createTextDDMFormField(
+				"description", true, false, false);
+
+		descriptionDDMFormField.setIndexType("");
+
+		ddmForm.addDDMFormField(descriptionDDMFormField);
+
+		DDMFormInstanceTestHelper ddmFormInstanceTestHelper =
+			new DDMFormInstanceTestHelper(_group);
+
+		DDMStructureTestHelper ddmStructureTestHelper =
+			new DDMStructureTestHelper(
+				PortalUtil.getClassNameId(DDMFormInstance.class), _group);
+
+		DDMStructure ddmStructure = ddmStructureTestHelper.addStructure(
+			ddmForm, StorageType.JSON.toString());
+
+		DDMFormInstance ddmFormInstance =
+			ddmFormInstanceTestHelper.addDDMFormInstance(ddmStructure);
+
+		_ddmFormInstanceRecordTestHelper = new DDMFormInstanceRecordTestHelper(
+			_group, ddmFormInstance);
+		_searchContext = getSearchContext(_group, _user, ddmFormInstance);
+
+		addDDMFormInstanceRecord("Liferay", "Not indexable name");
+
+		assertSearch("Liferay", 1);
+		assertSearch("Not indexable name", 0);
+	}
+
+	@Test
 	public void testStopwords() throws Exception {
 		addDDMFormInstanceRecord(RandomTestUtil.randomString(), "Simple text");
 		addDDMFormInstanceRecord(
@@ -141,6 +188,9 @@ public class DDMFormInstanceRecordSearchTest {
 
 		assertSearch("Another The Example", 1);
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected static SearchContext getSearchContext(
 			Group group, User user, DDMFormInstance ddmFormInstance)
@@ -177,7 +227,9 @@ public class DDMFormInstanceRecordSearchTest {
 
 		Locale[] locales = new Locale[name.size()];
 
-		name.keySet().toArray(locales);
+		Set<Locale> localesKeySet = name.keySet();
+
+		localesKeySet.toArray(locales);
 
 		DDMFormValues ddmFormValues = createDDMFormValues(locales);
 
@@ -198,13 +250,13 @@ public class DDMFormInstanceRecordSearchTest {
 	protected void addDDMFormInstanceRecord(String name, String description)
 		throws Exception {
 
-		Map<Locale, String> nameMap = new HashMap<>();
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.US, name
+		).build();
 
-		nameMap.put(LocaleUtil.US, name);
-
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.US, description);
+		Map<Locale, String> descriptionMap = HashMapBuilder.put(
+			LocaleUtil.US, description
+		).build();
 
 		addDDMFormInstanceRecord(nameMap, descriptionMap);
 	}

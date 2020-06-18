@@ -49,17 +49,13 @@ else {
 
 String headerTitle = (folder == null) ? ((parentFolderId > 0) ? LanguageUtil.get(request, "add-subfolder") : LanguageUtil.get(request, "add-folder")) : LanguageUtil.format(request, "edit-x", folder.getName(), false);
 
-boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getInitParameter("portlet-title-based-navigation"));
+portletDisplay.setShowBackIcon(true);
+portletDisplay.setURLBack(redirect);
 
-if (portletTitleBasedNavigation) {
-	portletDisplay.setShowBackIcon(true);
-	portletDisplay.setURLBack(redirect);
-
-	renderResponse.setTitle(headerTitle);
-}
+renderResponse.setTitle(headerTitle);
 %>
 
-<div <%= portletTitleBasedNavigation ? "class=\"container-fluid-1280\"" : StringPool.BLANK %>>
+<div class="container-fluid-1280">
 	<portlet:actionURL name="/bookmarks/edit_folder" var="editFolderURL">
 		<portlet:param name="mvcRenderCommandName" value="/bookmarks/edit_folder" />
 	</portlet:actionURL>
@@ -67,24 +63,17 @@ if (portletTitleBasedNavigation) {
 	<aui:form action="<%= editFolderURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveFolder();" %>'>
 		<aui:input name="<%= Constants.CMD %>" type="hidden" />
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+		<aui:input name="portletResource" type="hidden" value='<%= ParamUtil.getString(request, "portletResource") %>' />
 		<aui:input name="folderId" type="hidden" value="<%= folderId %>" />
 		<aui:input name="parentFolderId" type="hidden" value="<%= parentFolderId %>" />
 
-		<c:if test="<%= !portletTitleBasedNavigation %>">
-			<liferay-ui:header
-				backURL="<%= redirect %>"
-				localizeTitle="<%= folder == null %>"
-				title="<%= headerTitle %>"
-			/>
-		</c:if>
-
 		<liferay-ui:error exception="<%= FolderNameException.class %>">
 			<p>
-				<liferay-ui:message arguments="<%= new String[] {BookmarksFolderConstants.NAME_LABEL, BookmarksFolderConstants.NAME_GENERAL_RESTRICTIONS, BookmarksFolderConstants.NAME_RESERVED_WORDS} %>" key="the-x-cannot-be-x-or-a-reserved-word-such-as-x" />
+				<liferay-ui:message arguments="<%= new String[] {BookmarksFolderConstants.NAME_RESERVED_WORDS} %>" key="the-folder-name-cannot-be-blank-or-a-reserved-word-such-as-x" />
 			</p>
 
 			<p>
-				<liferay-ui:message arguments="<%= new String[] {BookmarksFolderConstants.NAME_LABEL, BookmarksFolderConstants.NAME_INVALID_CHARACTERS} %>" key="the-x-cannot-contain-the-following-invalid-characters-x" />
+				<liferay-ui:message arguments="<%= new String[] {BookmarksFolderConstants.NAME_INVALID_CHARACTERS} %>" key="the-folder-name-cannot-contain-the-following-invalid-characters-x" />
 			</p>
 		</liferay-ui:error>
 
@@ -118,37 +107,40 @@ if (portletTitleBasedNavigation) {
 						<aui:button name="selectFolderButton" value="select" />
 
 						<aui:script>
-							var <portlet:namespace />selectFolderButton = document.getElementById('<portlet:namespace />selectFolderButton');
+							var <portlet:namespace />selectFolderButton = document.getElementById(
+								'<portlet:namespace />selectFolderButton'
+							);
 
 							if (<portlet:namespace />selectFolderButton) {
-								<portlet:namespace />selectFolderButton.addEventListener(
-									'click',
-									function(event) {
-										Liferay.Util.selectEntity(
-											{
-												dialog: {
-													constrain: true,
-													destroyOnHide: true,
-													modal: true,
-													width: 680
-												},
-												id: '<portlet:namespace />selectFolder',
-												title: '<liferay-ui:message arguments="folder" key="select-x" />',
-												uri: '<liferay-portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcRenderCommandName" value="/bookmarks/select_folder" /></liferay-portlet:renderURL>'
+								<portlet:namespace />selectFolderButton.addEventListener('click', function (
+									event
+								) {
+									Liferay.Util.selectEntity(
+										{
+											dialog: {
+												constrain: true,
+												destroyOnHide: true,
+												modal: true,
+												width: 680,
 											},
-											function(event) {
-												var folderData = {
-													idString: 'parentFolderId',
-													idValue: event.entityid,
-													nameString: 'parentFolderName',
-													nameValue: event.entityname
-												};
+											id: '<portlet:namespace />selectFolder',
+											title:
+												'<liferay-ui:message arguments="folder" key="select-x" />',
+											uri:
+												'<liferay-portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcRenderCommandName" value="/bookmarks/select_folder" /></liferay-portlet:renderURL>',
+										},
+										function (event) {
+											var folderData = {
+												idString: 'parentFolderId',
+												idValue: event.entityid,
+												nameString: 'parentFolderName',
+												nameValue: event.entityname,
+											};
 
-												Liferay.Util.selectFolder(folderData, '<portlet:namespace />');
-											}
-										);
-									}
-								);
+											Liferay.Util.selectFolder(folderData, '<portlet:namespace />');
+										}
+									);
+								});
 							}
 						</aui:script>
 
@@ -200,10 +192,15 @@ if (portletTitleBasedNavigation) {
 		var form = document.getElementById('<portlet:namespace />fm');
 
 		if (form) {
-			var cmd = form.querySelector('#<portlet:namespace /><%= Constants.CMD %>');
+			var cmd = form.querySelector(
+				'#<portlet:namespace /><%= Constants.CMD %>'
+			);
 
 			if (cmd) {
-				cmd.setAttribute('value', '<%= (folder == null) ? Constants.ADD : Constants.UPDATE %>');
+				cmd.setAttribute(
+					'value',
+					'<%= (folder == null) ? Constants.ADD : Constants.UPDATE %>'
+				);
 
 				submitForm(form);
 			}

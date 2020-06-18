@@ -14,11 +14,8 @@
 
 package com.liferay.portal.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringBundler;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -30,8 +27,8 @@ import com.liferay.portal.kernel.exception.NoSuchPasswordPolicyRelException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PasswordPolicyRel;
-import com.liferay.portal.kernel.service.persistence.CompanyProvider;
-import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
+import com.liferay.portal.kernel.model.PasswordPolicyRelTable;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.PasswordPolicyRelPersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -43,10 +40,6 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,56 +52,32 @@ import java.util.Set;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see PasswordPolicyRelPersistence
- * @see com.liferay.portal.kernel.service.persistence.PasswordPolicyRelUtil
  * @generated
  */
-@ProviderType
-public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<PasswordPolicyRel>
+public class PasswordPolicyRelPersistenceImpl
+	extends BasePersistenceImpl<PasswordPolicyRel>
 	implements PasswordPolicyRelPersistence {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link PasswordPolicyRelUtil} to access the password policy rel persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
+	 * Never modify or reference this class directly. Always use <code>PasswordPolicyRelUtil</code> to access the password policy rel persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static final String FINDER_CLASS_NAME_ENTITY = PasswordPolicyRelImpl.class.getName();
-	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List1";
-	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List2";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_ALL = new FinderPath(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED,
-			PasswordPolicyRelImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL = new FinderPath(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED,
-			PasswordPolicyRelImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_COUNT_ALL = new FinderPath(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_PASSWORDPOLICYID =
-		new FinderPath(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED,
-			PasswordPolicyRelImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByPasswordPolicyId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_PASSWORDPOLICYID =
-		new FinderPath(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED,
-			PasswordPolicyRelImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByPasswordPolicyId", new String[] { Long.class.getName() },
-			PasswordPolicyRelModelImpl.PASSWORDPOLICYID_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_PASSWORDPOLICYID = new FinderPath(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"countByPasswordPolicyId", new String[] { Long.class.getName() });
+	public static final String FINDER_CLASS_NAME_ENTITY =
+		PasswordPolicyRelImpl.class.getName();
+
+	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List1";
+
+	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List2";
+
+	private FinderPath _finderPathWithPaginationFindAll;
+	private FinderPath _finderPathWithoutPaginationFindAll;
+	private FinderPath _finderPathCountAll;
+	private FinderPath _finderPathWithPaginationFindByPasswordPolicyId;
+	private FinderPath _finderPathWithoutPaginationFindByPasswordPolicyId;
+	private FinderPath _finderPathCountByPasswordPolicyId;
 
 	/**
 	 * Returns all the password policy rels where passwordPolicyId = &#63;.
@@ -117,16 +86,18 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 * @return the matching password policy rels
 	 */
 	@Override
-	public List<PasswordPolicyRel> findByPasswordPolicyId(long passwordPolicyId) {
-		return findByPasswordPolicyId(passwordPolicyId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+	public List<PasswordPolicyRel> findByPasswordPolicyId(
+		long passwordPolicyId) {
+
+		return findByPasswordPolicyId(
+			passwordPolicyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the password policy rels where passwordPolicyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link PasswordPolicyRelModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PasswordPolicyRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param passwordPolicyId the password policy ID
@@ -137,6 +108,7 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	@Override
 	public List<PasswordPolicyRel> findByPasswordPolicyId(
 		long passwordPolicyId, int start, int end) {
+
 		return findByPasswordPolicyId(passwordPolicyId, start, end, null);
 	}
 
@@ -144,7 +116,7 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 * Returns an ordered range of all the password policy rels where passwordPolicyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link PasswordPolicyRelModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PasswordPolicyRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param passwordPolicyId the password policy ID
@@ -157,57 +129,60 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	public List<PasswordPolicyRel> findByPasswordPolicyId(
 		long passwordPolicyId, int start, int end,
 		OrderByComparator<PasswordPolicyRel> orderByComparator) {
-		return findByPasswordPolicyId(passwordPolicyId, start, end,
-			orderByComparator, true);
+
+		return findByPasswordPolicyId(
+			passwordPolicyId, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the password policy rels where passwordPolicyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link PasswordPolicyRelModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PasswordPolicyRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param passwordPolicyId the password policy ID
 	 * @param start the lower bound of the range of password policy rels
 	 * @param end the upper bound of the range of password policy rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching password policy rels
 	 */
 	@Override
 	public List<PasswordPolicyRel> findByPasswordPolicyId(
 		long passwordPolicyId, int start, int end,
 		OrderByComparator<PasswordPolicyRel> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+		boolean useFinderCache) {
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_PASSWORDPOLICYID;
-			finderArgs = new Object[] { passwordPolicyId };
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByPasswordPolicyId;
+				finderArgs = new Object[] {passwordPolicyId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_PASSWORDPOLICYID;
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByPasswordPolicyId;
 			finderArgs = new Object[] {
-					passwordPolicyId,
-					
-					start, end, orderByComparator
-				};
+				passwordPolicyId, start, end, orderByComparator
+			};
 		}
 
 		List<PasswordPolicyRel> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<PasswordPolicyRel>)FinderCacheUtil.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache) {
+			list = (List<PasswordPolicyRel>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (PasswordPolicyRel passwordPolicyRel : list) {
-					if ((passwordPolicyId != passwordPolicyRel.getPasswordPolicyId())) {
+					if (passwordPolicyId !=
+							passwordPolicyRel.getPasswordPolicyId()) {
+
 						list = null;
 
 						break;
@@ -217,63 +192,56 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_PASSWORDPOLICYREL_WHERE);
+			sb.append(_SQL_SELECT_PASSWORDPOLICYREL_WHERE);
 
-			query.append(_FINDER_COLUMN_PASSWORDPOLICYID_PASSWORDPOLICYID_2);
+			sb.append(_FINDER_COLUMN_PASSWORDPOLICYID_PASSWORDPOLICYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(PasswordPolicyRelModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(PasswordPolicyRelModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(passwordPolicyId);
+				queryPos.add(passwordPolicyId);
 
-				if (!pagination) {
-					list = (List<PasswordPolicyRel>)QueryUtil.list(q,
-							getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<PasswordPolicyRel>)QueryUtil.list(q,
-							getDialect(), start, end);
-				}
+				list = (List<PasswordPolicyRel>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -293,26 +261,27 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 */
 	@Override
 	public PasswordPolicyRel findByPasswordPolicyId_First(
-		long passwordPolicyId,
-		OrderByComparator<PasswordPolicyRel> orderByComparator)
+			long passwordPolicyId,
+			OrderByComparator<PasswordPolicyRel> orderByComparator)
 		throws NoSuchPasswordPolicyRelException {
-		PasswordPolicyRel passwordPolicyRel = fetchByPasswordPolicyId_First(passwordPolicyId,
-				orderByComparator);
+
+		PasswordPolicyRel passwordPolicyRel = fetchByPasswordPolicyId_First(
+			passwordPolicyId, orderByComparator);
 
 		if (passwordPolicyRel != null) {
 			return passwordPolicyRel;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("passwordPolicyId=");
-		msg.append(passwordPolicyId);
+		sb.append("passwordPolicyId=");
+		sb.append(passwordPolicyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPasswordPolicyRelException(msg.toString());
+		throw new NoSuchPasswordPolicyRelException(sb.toString());
 	}
 
 	/**
@@ -326,8 +295,9 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	public PasswordPolicyRel fetchByPasswordPolicyId_First(
 		long passwordPolicyId,
 		OrderByComparator<PasswordPolicyRel> orderByComparator) {
-		List<PasswordPolicyRel> list = findByPasswordPolicyId(passwordPolicyId,
-				0, 1, orderByComparator);
+
+		List<PasswordPolicyRel> list = findByPasswordPolicyId(
+			passwordPolicyId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -346,26 +316,27 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 */
 	@Override
 	public PasswordPolicyRel findByPasswordPolicyId_Last(
-		long passwordPolicyId,
-		OrderByComparator<PasswordPolicyRel> orderByComparator)
+			long passwordPolicyId,
+			OrderByComparator<PasswordPolicyRel> orderByComparator)
 		throws NoSuchPasswordPolicyRelException {
-		PasswordPolicyRel passwordPolicyRel = fetchByPasswordPolicyId_Last(passwordPolicyId,
-				orderByComparator);
+
+		PasswordPolicyRel passwordPolicyRel = fetchByPasswordPolicyId_Last(
+			passwordPolicyId, orderByComparator);
 
 		if (passwordPolicyRel != null) {
 			return passwordPolicyRel;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("passwordPolicyId=");
-		msg.append(passwordPolicyId);
+		sb.append("passwordPolicyId=");
+		sb.append(passwordPolicyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPasswordPolicyRelException(msg.toString());
+		throw new NoSuchPasswordPolicyRelException(sb.toString());
 	}
 
 	/**
@@ -379,14 +350,15 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	public PasswordPolicyRel fetchByPasswordPolicyId_Last(
 		long passwordPolicyId,
 		OrderByComparator<PasswordPolicyRel> orderByComparator) {
+
 		int count = countByPasswordPolicyId(passwordPolicyId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<PasswordPolicyRel> list = findByPasswordPolicyId(passwordPolicyId,
-				count - 1, count, orderByComparator);
+		List<PasswordPolicyRel> list = findByPasswordPolicyId(
+			passwordPolicyId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -406,10 +378,12 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 */
 	@Override
 	public PasswordPolicyRel[] findByPasswordPolicyId_PrevAndNext(
-		long passwordPolicyRelId, long passwordPolicyId,
-		OrderByComparator<PasswordPolicyRel> orderByComparator)
+			long passwordPolicyRelId, long passwordPolicyId,
+			OrderByComparator<PasswordPolicyRel> orderByComparator)
 		throws NoSuchPasswordPolicyRelException {
-		PasswordPolicyRel passwordPolicyRel = findByPrimaryKey(passwordPolicyRelId);
+
+		PasswordPolicyRel passwordPolicyRel = findByPrimaryKey(
+			passwordPolicyRelId);
 
 		Session session = null;
 
@@ -418,19 +392,20 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 
 			PasswordPolicyRel[] array = new PasswordPolicyRelImpl[3];
 
-			array[0] = getByPasswordPolicyId_PrevAndNext(session,
-					passwordPolicyRel, passwordPolicyId, orderByComparator, true);
+			array[0] = getByPasswordPolicyId_PrevAndNext(
+				session, passwordPolicyRel, passwordPolicyId, orderByComparator,
+				true);
 
 			array[1] = passwordPolicyRel;
 
-			array[2] = getByPasswordPolicyId_PrevAndNext(session,
-					passwordPolicyRel, passwordPolicyId, orderByComparator,
-					false);
+			array[2] = getByPasswordPolicyId_PrevAndNext(
+				session, passwordPolicyRel, passwordPolicyId, orderByComparator,
+				false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -440,101 +415,105 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	protected PasswordPolicyRel getByPasswordPolicyId_PrevAndNext(
 		Session session, PasswordPolicyRel passwordPolicyRel,
 		long passwordPolicyId,
-		OrderByComparator<PasswordPolicyRel> orderByComparator, boolean previous) {
-		StringBundler query = null;
+		OrderByComparator<PasswordPolicyRel> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_PASSWORDPOLICYREL_WHERE);
+		sb.append(_SQL_SELECT_PASSWORDPOLICYREL_WHERE);
 
-		query.append(_FINDER_COLUMN_PASSWORDPOLICYID_PASSWORDPOLICYID_2);
+		sb.append(_FINDER_COLUMN_PASSWORDPOLICYID_PASSWORDPOLICYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(PasswordPolicyRelModelImpl.ORDER_BY_JPQL);
+			sb.append(PasswordPolicyRelModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(passwordPolicyId);
+		queryPos.add(passwordPolicyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(passwordPolicyRel);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						passwordPolicyRel)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<PasswordPolicyRel> list = q.list();
+		List<PasswordPolicyRel> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -551,8 +530,11 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 */
 	@Override
 	public void removeByPasswordPolicyId(long passwordPolicyId) {
-		for (PasswordPolicyRel passwordPolicyRel : findByPasswordPolicyId(
-				passwordPolicyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (PasswordPolicyRel passwordPolicyRel :
+				findByPasswordPolicyId(
+					passwordPolicyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
 			remove(passwordPolicyRel);
 		}
 	}
@@ -565,41 +547,41 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 */
 	@Override
 	public int countByPasswordPolicyId(long passwordPolicyId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_PASSWORDPOLICYID;
+		FinderPath finderPath = _finderPathCountByPasswordPolicyId;
 
-		Object[] finderArgs = new Object[] { passwordPolicyId };
+		Object[] finderArgs = new Object[] {passwordPolicyId};
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+		Long count = (Long)FinderCacheUtil.getResult(
+			finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_PASSWORDPOLICYREL_WHERE);
+			sb.append(_SQL_COUNT_PASSWORDPOLICYREL_WHERE);
 
-			query.append(_FINDER_COLUMN_PASSWORDPOLICYID_PASSWORDPOLICYID_2);
+			sb.append(_FINDER_COLUMN_PASSWORDPOLICYID_PASSWORDPOLICYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(passwordPolicyId);
+				queryPos.add(passwordPolicyId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -609,22 +591,15 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_PASSWORDPOLICYID_PASSWORDPOLICYID_2 =
-		"passwordPolicyRel.passwordPolicyId = ?";
-	public static final FinderPath FINDER_PATH_FETCH_BY_C_C = new FinderPath(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED,
-			PasswordPolicyRelImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByC_C",
-			new String[] { Long.class.getName(), Long.class.getName() },
-			PasswordPolicyRelModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			PasswordPolicyRelModelImpl.CLASSPK_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_C_C = new FinderPath(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C",
-			new String[] { Long.class.getName(), Long.class.getName() });
+	private static final String
+		_FINDER_COLUMN_PASSWORDPOLICYID_PASSWORDPOLICYID_2 =
+			"passwordPolicyRel.passwordPolicyId = ?";
+
+	private FinderPath _finderPathFetchByC_C;
+	private FinderPath _finderPathCountByC_C;
 
 	/**
-	 * Returns the password policy rel where classNameId = &#63; and classPK = &#63; or throws a {@link NoSuchPasswordPolicyRelException} if it could not be found.
+	 * Returns the password policy rel where classNameId = &#63; and classPK = &#63; or throws a <code>NoSuchPasswordPolicyRelException</code> if it could not be found.
 	 *
 	 * @param classNameId the class name ID
 	 * @param classPK the class pk
@@ -634,26 +609,27 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	@Override
 	public PasswordPolicyRel findByC_C(long classNameId, long classPK)
 		throws NoSuchPasswordPolicyRelException {
+
 		PasswordPolicyRel passwordPolicyRel = fetchByC_C(classNameId, classPK);
 
 		if (passwordPolicyRel == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("classNameId=");
-			msg.append(classNameId);
+			sb.append("classNameId=");
+			sb.append(classNameId);
 
-			msg.append(", classPK=");
-			msg.append(classPK);
+			sb.append(", classPK=");
+			sb.append(classPK);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchPasswordPolicyRelException(msg.toString());
+			throw new NoSuchPasswordPolicyRelException(sb.toString());
 		}
 
 		return passwordPolicyRel;
@@ -676,59 +652,67 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 *
 	 * @param classNameId the class name ID
 	 * @param classPK the class pk
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching password policy rel, or <code>null</code> if a matching password policy rel could not be found
 	 */
 	@Override
-	public PasswordPolicyRel fetchByC_C(long classNameId, long classPK,
-		boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] { classNameId, classPK };
+	public PasswordPolicyRel fetchByC_C(
+		long classNameId, long classPK, boolean useFinderCache) {
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {classNameId, classPK};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
-			result = FinderCacheUtil.getResult(FINDER_PATH_FETCH_BY_C_C,
-					finderArgs, this);
+		if (useFinderCache) {
+			result = FinderCacheUtil.getResult(
+				_finderPathFetchByC_C, finderArgs, this);
 		}
 
 		if (result instanceof PasswordPolicyRel) {
 			PasswordPolicyRel passwordPolicyRel = (PasswordPolicyRel)result;
 
 			if ((classNameId != passwordPolicyRel.getClassNameId()) ||
-					(classPK != passwordPolicyRel.getClassPK())) {
+				(classPK != passwordPolicyRel.getClassPK())) {
+
 				result = null;
 			}
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_PASSWORDPOLICYREL_WHERE);
+			sb.append(_SQL_SELECT_PASSWORDPOLICYREL_WHERE);
 
-			query.append(_FINDER_COLUMN_C_C_CLASSNAMEID_2);
+			sb.append(_FINDER_COLUMN_C_C_CLASSNAMEID_2);
 
-			query.append(_FINDER_COLUMN_C_C_CLASSPK_2);
+			sb.append(_FINDER_COLUMN_C_C_CLASSPK_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(classNameId);
+				queryPos.add(classNameId);
 
-				qPos.add(classPK);
+				queryPos.add(classPK);
 
-				List<PasswordPolicyRel> list = q.list();
+				List<PasswordPolicyRel> list = query.list();
 
 				if (list.isEmpty()) {
-					FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_C_C,
-						finderArgs, list);
+					if (useFinderCache) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByC_C, finderArgs, list);
+					}
 				}
 				else {
 					PasswordPolicyRel passwordPolicyRel = list.get(0);
@@ -738,11 +722,13 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 					cacheResult(passwordPolicyRel);
 				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_C_C,
-					finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					FinderCacheUtil.removeResult(
+						_finderPathFetchByC_C, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -767,6 +753,7 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	@Override
 	public PasswordPolicyRel removeByC_C(long classNameId, long classPK)
 		throws NoSuchPasswordPolicyRelException {
+
 		PasswordPolicyRel passwordPolicyRel = findByC_C(classNameId, classPK);
 
 		return remove(passwordPolicyRel);
@@ -781,45 +768,45 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 */
 	@Override
 	public int countByC_C(long classNameId, long classPK) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_C_C;
+		FinderPath finderPath = _finderPathCountByC_C;
 
-		Object[] finderArgs = new Object[] { classNameId, classPK };
+		Object[] finderArgs = new Object[] {classNameId, classPK};
 
-		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs,
-				this);
+		Long count = (Long)FinderCacheUtil.getResult(
+			finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_PASSWORDPOLICYREL_WHERE);
+			sb.append(_SQL_COUNT_PASSWORDPOLICYREL_WHERE);
 
-			query.append(_FINDER_COLUMN_C_C_CLASSNAMEID_2);
+			sb.append(_FINDER_COLUMN_C_C_CLASSNAMEID_2);
 
-			query.append(_FINDER_COLUMN_C_C_CLASSPK_2);
+			sb.append(_FINDER_COLUMN_C_C_CLASSPK_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(classNameId);
+				queryPos.add(classNameId);
 
-				qPos.add(classPK);
+				queryPos.add(classPK);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				FinderCacheUtil.removeResult(finderPath, finderArgs);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -829,11 +816,20 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_C_C_CLASSNAMEID_2 = "passwordPolicyRel.classNameId = ? AND ";
-	private static final String _FINDER_COLUMN_C_C_CLASSPK_2 = "passwordPolicyRel.classPK = ?";
+	private static final String _FINDER_COLUMN_C_C_CLASSNAMEID_2 =
+		"passwordPolicyRel.classNameId = ? AND ";
+
+	private static final String _FINDER_COLUMN_C_C_CLASSPK_2 =
+		"passwordPolicyRel.classPK = ?";
 
 	public PasswordPolicyRelPersistenceImpl() {
 		setModelClass(PasswordPolicyRel.class);
+
+		setModelImplClass(PasswordPolicyRelImpl.class);
+		setModelPKClass(long.class);
+		setEntityCacheEnabled(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED);
+
+		setTable(PasswordPolicyRelTable.INSTANCE);
 	}
 
 	/**
@@ -843,15 +839,18 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 */
 	@Override
 	public void cacheResult(PasswordPolicyRel passwordPolicyRel) {
-		EntityCacheUtil.putResult(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+		EntityCacheUtil.putResult(
+			PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
 			PasswordPolicyRelImpl.class, passwordPolicyRel.getPrimaryKey(),
 			passwordPolicyRel);
 
-		FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_C_C,
+		FinderCacheUtil.putResult(
+			_finderPathFetchByC_C,
 			new Object[] {
 				passwordPolicyRel.getClassNameId(),
 				passwordPolicyRel.getClassPK()
-			}, passwordPolicyRel);
+			},
+			passwordPolicyRel);
 
 		passwordPolicyRel.resetOriginalValues();
 	}
@@ -865,9 +864,10 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	public void cacheResult(List<PasswordPolicyRel> passwordPolicyRels) {
 		for (PasswordPolicyRel passwordPolicyRel : passwordPolicyRels) {
 			if (EntityCacheUtil.getResult(
-						PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-						PasswordPolicyRelImpl.class,
-						passwordPolicyRel.getPrimaryKey()) == null) {
+					PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+					PasswordPolicyRelImpl.class,
+					passwordPolicyRel.getPrimaryKey()) == null) {
+
 				cacheResult(passwordPolicyRel);
 			}
 			else {
@@ -880,7 +880,7 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 * Clears the cache for all password policy rels.
 	 *
 	 * <p>
-	 * The {@link com.liferay.portal.kernel.dao.orm.EntityCache} and {@link com.liferay.portal.kernel.dao.orm.FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
@@ -896,19 +896,20 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 * Clears the cache for the password policy rel.
 	 *
 	 * <p>
-	 * The {@link com.liferay.portal.kernel.dao.orm.EntityCache} and {@link com.liferay.portal.kernel.dao.orm.FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(PasswordPolicyRel passwordPolicyRel) {
-		EntityCacheUtil.removeResult(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+		EntityCacheUtil.removeResult(
+			PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
 			PasswordPolicyRelImpl.class, passwordPolicyRel.getPrimaryKey());
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
-		clearUniqueFindersCache((PasswordPolicyRelModelImpl)passwordPolicyRel,
-			true);
+		clearUniqueFindersCache(
+			(PasswordPolicyRelModelImpl)passwordPolicyRel, true);
 	}
 
 	@Override
@@ -917,49 +918,66 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		for (PasswordPolicyRel passwordPolicyRel : passwordPolicyRels) {
-			EntityCacheUtil.removeResult(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+			EntityCacheUtil.removeResult(
+				PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
 				PasswordPolicyRelImpl.class, passwordPolicyRel.getPrimaryKey());
 
-			clearUniqueFindersCache((PasswordPolicyRelModelImpl)passwordPolicyRel,
-				true);
+			clearUniqueFindersCache(
+				(PasswordPolicyRelModelImpl)passwordPolicyRel, true);
+		}
+	}
+
+	@Override
+	public void clearCache(Set<Serializable> primaryKeys) {
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		for (Serializable primaryKey : primaryKeys) {
+			EntityCacheUtil.removeResult(
+				PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+				PasswordPolicyRelImpl.class, primaryKey);
 		}
 	}
 
 	protected void cacheUniqueFindersCache(
 		PasswordPolicyRelModelImpl passwordPolicyRelModelImpl) {
-		Object[] args = new Object[] {
-				passwordPolicyRelModelImpl.getClassNameId(),
-				passwordPolicyRelModelImpl.getClassPK()
-			};
 
-		FinderCacheUtil.putResult(FINDER_PATH_COUNT_BY_C_C, args,
-			Long.valueOf(1), false);
-		FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_C_C, args,
-			passwordPolicyRelModelImpl, false);
+		Object[] args = new Object[] {
+			passwordPolicyRelModelImpl.getClassNameId(),
+			passwordPolicyRelModelImpl.getClassPK()
+		};
+
+		FinderCacheUtil.putResult(
+			_finderPathCountByC_C, args, Long.valueOf(1), false);
+		FinderCacheUtil.putResult(
+			_finderPathFetchByC_C, args, passwordPolicyRelModelImpl, false);
 	}
 
 	protected void clearUniqueFindersCache(
 		PasswordPolicyRelModelImpl passwordPolicyRelModelImpl,
 		boolean clearCurrent) {
+
 		if (clearCurrent) {
 			Object[] args = new Object[] {
-					passwordPolicyRelModelImpl.getClassNameId(),
-					passwordPolicyRelModelImpl.getClassPK()
-				};
+				passwordPolicyRelModelImpl.getClassNameId(),
+				passwordPolicyRelModelImpl.getClassPK()
+			};
 
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_C_C, args);
-			FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_C_C, args);
+			FinderCacheUtil.removeResult(_finderPathCountByC_C, args);
+			FinderCacheUtil.removeResult(_finderPathFetchByC_C, args);
 		}
 
 		if ((passwordPolicyRelModelImpl.getColumnBitmask() &
-				FINDER_PATH_FETCH_BY_C_C.getColumnBitmask()) != 0) {
-			Object[] args = new Object[] {
-					passwordPolicyRelModelImpl.getOriginalClassNameId(),
-					passwordPolicyRelModelImpl.getOriginalClassPK()
-				};
+			 _finderPathFetchByC_C.getColumnBitmask()) != 0) {
 
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_C_C, args);
-			FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_C_C, args);
+			Object[] args = new Object[] {
+				passwordPolicyRelModelImpl.getOriginalClassNameId(),
+				passwordPolicyRelModelImpl.getOriginalClassPK()
+			};
+
+			FinderCacheUtil.removeResult(_finderPathCountByC_C, args);
+			FinderCacheUtil.removeResult(_finderPathFetchByC_C, args);
 		}
 	}
 
@@ -976,7 +994,7 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 		passwordPolicyRel.setNew(true);
 		passwordPolicyRel.setPrimaryKey(passwordPolicyRelId);
 
-		passwordPolicyRel.setCompanyId(companyProvider.getCompanyId());
+		passwordPolicyRel.setCompanyId(CompanyThreadLocal.getCompanyId());
 
 		return passwordPolicyRel;
 	}
@@ -991,6 +1009,7 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	@Override
 	public PasswordPolicyRel remove(long passwordPolicyRelId)
 		throws NoSuchPasswordPolicyRelException {
+
 		return remove((Serializable)passwordPolicyRelId);
 	}
 
@@ -1004,30 +1023,32 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	@Override
 	public PasswordPolicyRel remove(Serializable primaryKey)
 		throws NoSuchPasswordPolicyRelException {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			PasswordPolicyRel passwordPolicyRel = (PasswordPolicyRel)session.get(PasswordPolicyRelImpl.class,
-					primaryKey);
+			PasswordPolicyRel passwordPolicyRel =
+				(PasswordPolicyRel)session.get(
+					PasswordPolicyRelImpl.class, primaryKey);
 
 			if (passwordPolicyRel == null) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 				}
 
-				throw new NoSuchPasswordPolicyRelException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-					primaryKey);
+				throw new NoSuchPasswordPolicyRelException(
+					_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
 			return remove(passwordPolicyRel);
 		}
-		catch (NoSuchPasswordPolicyRelException nsee) {
-			throw nsee;
+		catch (NoSuchPasswordPolicyRelException noSuchEntityException) {
+			throw noSuchEntityException;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1035,23 +1056,26 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	}
 
 	@Override
-	protected PasswordPolicyRel removeImpl(PasswordPolicyRel passwordPolicyRel) {
+	protected PasswordPolicyRel removeImpl(
+		PasswordPolicyRel passwordPolicyRel) {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
 			if (!session.contains(passwordPolicyRel)) {
-				passwordPolicyRel = (PasswordPolicyRel)session.get(PasswordPolicyRelImpl.class,
-						passwordPolicyRel.getPrimaryKeyObj());
+				passwordPolicyRel = (PasswordPolicyRel)session.get(
+					PasswordPolicyRelImpl.class,
+					passwordPolicyRel.getPrimaryKeyObj());
 			}
 
 			if (passwordPolicyRel != null) {
 				session.delete(passwordPolicyRel);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1072,19 +1096,21 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 			InvocationHandler invocationHandler = null;
 
 			if (ProxyUtil.isProxyClass(passwordPolicyRel.getClass())) {
-				invocationHandler = ProxyUtil.getInvocationHandler(passwordPolicyRel);
+				invocationHandler = ProxyUtil.getInvocationHandler(
+					passwordPolicyRel);
 
 				throw new IllegalArgumentException(
 					"Implement ModelWrapper in passwordPolicyRel proxy " +
-					invocationHandler.getClass());
+						invocationHandler.getClass());
 			}
 
 			throw new IllegalArgumentException(
 				"Implement ModelWrapper in custom PasswordPolicyRel implementation " +
-				passwordPolicyRel.getClass());
+					passwordPolicyRel.getClass());
 		}
 
-		PasswordPolicyRelModelImpl passwordPolicyRelModelImpl = (PasswordPolicyRelModelImpl)passwordPolicyRel;
+		PasswordPolicyRelModelImpl passwordPolicyRelModelImpl =
+			(PasswordPolicyRelModelImpl)passwordPolicyRel;
 
 		Session session = null;
 
@@ -1097,11 +1123,12 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 				passwordPolicyRel.setNew(false);
 			}
 			else {
-				passwordPolicyRel = (PasswordPolicyRel)session.merge(passwordPolicyRel);
+				passwordPolicyRel = (PasswordPolicyRel)session.merge(
+					passwordPolicyRel);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -1110,49 +1137,51 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 
 		if (!PasswordPolicyRelModelImpl.COLUMN_BITMASK_ENABLED) {
-			FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+			FinderCacheUtil.clearCache(
+				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 		}
-		else
-		 if (isNew) {
+		else if (isNew) {
 			Object[] args = new Object[] {
+				passwordPolicyRelModelImpl.getPasswordPolicyId()
+			};
+
+			FinderCacheUtil.removeResult(
+				_finderPathCountByPasswordPolicyId, args);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindByPasswordPolicyId, args);
+
+			FinderCacheUtil.removeResult(
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
+			FinderCacheUtil.removeResult(
+				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
+		}
+		else {
+			if ((passwordPolicyRelModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByPasswordPolicyId.
+					 getColumnBitmask()) != 0) {
+
+				Object[] args = new Object[] {
+					passwordPolicyRelModelImpl.getOriginalPasswordPolicyId()
+				};
+
+				FinderCacheUtil.removeResult(
+					_finderPathCountByPasswordPolicyId, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByPasswordPolicyId, args);
+
+				args = new Object[] {
 					passwordPolicyRelModelImpl.getPasswordPolicyId()
 				};
 
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_PASSWORDPOLICYID,
-				args);
-			FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_PASSWORDPOLICYID,
-				args);
-
-			FinderCacheUtil.removeResult(FINDER_PATH_COUNT_ALL,
-				FINDER_ARGS_EMPTY);
-			FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL,
-				FINDER_ARGS_EMPTY);
-		}
-
-		else {
-			if ((passwordPolicyRelModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_PASSWORDPOLICYID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						passwordPolicyRelModelImpl.getOriginalPasswordPolicyId()
-					};
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_PASSWORDPOLICYID,
-					args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_PASSWORDPOLICYID,
-					args);
-
-				args = new Object[] {
-						passwordPolicyRelModelImpl.getPasswordPolicyId()
-					};
-
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_PASSWORDPOLICYID,
-					args);
-				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_PASSWORDPOLICYID,
-					args);
+				FinderCacheUtil.removeResult(
+					_finderPathCountByPasswordPolicyId, args);
+				FinderCacheUtil.removeResult(
+					_finderPathWithoutPaginationFindByPasswordPolicyId, args);
 			}
 		}
 
-		EntityCacheUtil.putResult(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+		EntityCacheUtil.putResult(
+			PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
 			PasswordPolicyRelImpl.class, passwordPolicyRel.getPrimaryKey(),
 			passwordPolicyRel, false);
 
@@ -1165,7 +1194,7 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	}
 
 	/**
-	 * Returns the password policy rel with the primary key or throws a {@link com.liferay.portal.kernel.exception.NoSuchModelException} if it could not be found.
+	 * Returns the password policy rel with the primary key or throws a <code>com.liferay.portal.kernel.exception.NoSuchModelException</code> if it could not be found.
 	 *
 	 * @param primaryKey the primary key of the password policy rel
 	 * @return the password policy rel
@@ -1174,6 +1203,7 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	@Override
 	public PasswordPolicyRel findByPrimaryKey(Serializable primaryKey)
 		throws NoSuchPasswordPolicyRelException {
+
 		PasswordPolicyRel passwordPolicyRel = fetchByPrimaryKey(primaryKey);
 
 		if (passwordPolicyRel == null) {
@@ -1181,15 +1211,15 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 				_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
-			throw new NoSuchPasswordPolicyRelException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-				primaryKey);
+			throw new NoSuchPasswordPolicyRelException(
+				_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 		}
 
 		return passwordPolicyRel;
 	}
 
 	/**
-	 * Returns the password policy rel with the primary key or throws a {@link NoSuchPasswordPolicyRelException} if it could not be found.
+	 * Returns the password policy rel with the primary key or throws a <code>NoSuchPasswordPolicyRelException</code> if it could not be found.
 	 *
 	 * @param passwordPolicyRelId the primary key of the password policy rel
 	 * @return the password policy rel
@@ -1198,55 +1228,8 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	@Override
 	public PasswordPolicyRel findByPrimaryKey(long passwordPolicyRelId)
 		throws NoSuchPasswordPolicyRelException {
+
 		return findByPrimaryKey((Serializable)passwordPolicyRelId);
-	}
-
-	/**
-	 * Returns the password policy rel with the primary key or returns <code>null</code> if it could not be found.
-	 *
-	 * @param primaryKey the primary key of the password policy rel
-	 * @return the password policy rel, or <code>null</code> if a password policy rel with the primary key could not be found
-	 */
-	@Override
-	public PasswordPolicyRel fetchByPrimaryKey(Serializable primaryKey) {
-		Serializable serializable = EntityCacheUtil.getResult(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-				PasswordPolicyRelImpl.class, primaryKey);
-
-		if (serializable == nullModel) {
-			return null;
-		}
-
-		PasswordPolicyRel passwordPolicyRel = (PasswordPolicyRel)serializable;
-
-		if (passwordPolicyRel == null) {
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				passwordPolicyRel = (PasswordPolicyRel)session.get(PasswordPolicyRelImpl.class,
-						primaryKey);
-
-				if (passwordPolicyRel != null) {
-					cacheResult(passwordPolicyRel);
-				}
-				else {
-					EntityCacheUtil.putResult(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-						PasswordPolicyRelImpl.class, primaryKey, nullModel);
-				}
-			}
-			catch (Exception e) {
-				EntityCacheUtil.removeResult(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-					PasswordPolicyRelImpl.class, primaryKey);
-
-				throw processException(e);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return passwordPolicyRel;
 	}
 
 	/**
@@ -1258,100 +1241,6 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	@Override
 	public PasswordPolicyRel fetchByPrimaryKey(long passwordPolicyRelId) {
 		return fetchByPrimaryKey((Serializable)passwordPolicyRelId);
-	}
-
-	@Override
-	public Map<Serializable, PasswordPolicyRel> fetchByPrimaryKeys(
-		Set<Serializable> primaryKeys) {
-		if (primaryKeys.isEmpty()) {
-			return Collections.emptyMap();
-		}
-
-		Map<Serializable, PasswordPolicyRel> map = new HashMap<Serializable, PasswordPolicyRel>();
-
-		if (primaryKeys.size() == 1) {
-			Iterator<Serializable> iterator = primaryKeys.iterator();
-
-			Serializable primaryKey = iterator.next();
-
-			PasswordPolicyRel passwordPolicyRel = fetchByPrimaryKey(primaryKey);
-
-			if (passwordPolicyRel != null) {
-				map.put(primaryKey, passwordPolicyRel);
-			}
-
-			return map;
-		}
-
-		Set<Serializable> uncachedPrimaryKeys = null;
-
-		for (Serializable primaryKey : primaryKeys) {
-			Serializable serializable = EntityCacheUtil.getResult(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-					PasswordPolicyRelImpl.class, primaryKey);
-
-			if (serializable != nullModel) {
-				if (serializable == null) {
-					if (uncachedPrimaryKeys == null) {
-						uncachedPrimaryKeys = new HashSet<Serializable>();
-					}
-
-					uncachedPrimaryKeys.add(primaryKey);
-				}
-				else {
-					map.put(primaryKey, (PasswordPolicyRel)serializable);
-				}
-			}
-		}
-
-		if (uncachedPrimaryKeys == null) {
-			return map;
-		}
-
-		StringBundler query = new StringBundler((uncachedPrimaryKeys.size() * 2) +
-				1);
-
-		query.append(_SQL_SELECT_PASSWORDPOLICYREL_WHERE_PKS_IN);
-
-		for (Serializable primaryKey : uncachedPrimaryKeys) {
-			query.append((long)primaryKey);
-
-			query.append(",");
-		}
-
-		query.setIndex(query.index() - 1);
-
-		query.append(")");
-
-		String sql = query.toString();
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			Query q = session.createQuery(sql);
-
-			for (PasswordPolicyRel passwordPolicyRel : (List<PasswordPolicyRel>)q.list()) {
-				map.put(passwordPolicyRel.getPrimaryKeyObj(), passwordPolicyRel);
-
-				cacheResult(passwordPolicyRel);
-
-				uncachedPrimaryKeys.remove(passwordPolicyRel.getPrimaryKeyObj());
-			}
-
-			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				EntityCacheUtil.putResult(PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
-					PasswordPolicyRelImpl.class, primaryKey, nullModel);
-			}
-		}
-		catch (Exception e) {
-			throw processException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-
-		return map;
 	}
 
 	/**
@@ -1368,7 +1257,7 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 * Returns a range of all the password policy rels.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link PasswordPolicyRelModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PasswordPolicyRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of password policy rels
@@ -1384,7 +1273,7 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 * Returns an ordered range of all the password policy rels.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link PasswordPolicyRelModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PasswordPolicyRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of password policy rels
@@ -1393,8 +1282,10 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 * @return the ordered range of password policy rels
 	 */
 	@Override
-	public List<PasswordPolicyRel> findAll(int start, int end,
+	public List<PasswordPolicyRel> findAll(
+		int start, int end,
 		OrderByComparator<PasswordPolicyRel> orderByComparator) {
+
 		return findAll(start, end, orderByComparator, true);
 	}
 
@@ -1402,62 +1293,63 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 * Returns an ordered range of all the password policy rels.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link PasswordPolicyRelModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>PasswordPolicyRelModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of password policy rels
 	 * @param end the upper bound of the range of password policy rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of password policy rels
 	 */
 	@Override
-	public List<PasswordPolicyRel> findAll(int start, int end,
+	public List<PasswordPolicyRel> findAll(
+		int start, int end,
 		OrderByComparator<PasswordPolicyRel> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+		boolean useFinderCache) {
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL;
-			finderArgs = FINDER_ARGS_EMPTY;
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_ALL;
-			finderArgs = new Object[] { start, end, orderByComparator };
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindAll;
+			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<PasswordPolicyRel> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<PasswordPolicyRel>)FinderCacheUtil.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache) {
+			list = (List<PasswordPolicyRel>)FinderCacheUtil.getResult(
+				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(2 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_PASSWORDPOLICYREL);
+				sb.append(_SQL_SELECT_PASSWORDPOLICYREL);
 
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_PASSWORDPOLICYREL;
 
-				if (pagination) {
-					sql = sql.concat(PasswordPolicyRelModelImpl.ORDER_BY_JPQL);
-				}
+				sql = sql.concat(PasswordPolicyRelModelImpl.ORDER_BY_JPQL);
 			}
 
 			Session session = null;
@@ -1465,29 +1357,23 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				if (!pagination) {
-					list = (List<PasswordPolicyRel>)QueryUtil.list(q,
-							getDialect(), start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<PasswordPolicyRel>)QueryUtil.list(q,
-							getDialect(), start, end);
-				}
+				list = (List<PasswordPolicyRel>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1515,8 +1401,8 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)FinderCacheUtil.getResult(FINDER_PATH_COUNT_ALL,
-				FINDER_ARGS_EMPTY, this);
+		Long count = (Long)FinderCacheUtil.getResult(
+			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
 			Session session = null;
@@ -1524,18 +1410,18 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_PASSWORDPOLICYREL);
+				Query query = session.createQuery(_SQL_COUNT_PASSWORDPOLICYREL);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(FINDER_PATH_COUNT_ALL,
-					FINDER_ARGS_EMPTY, count);
+				FinderCacheUtil.putResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
-			catch (Exception e) {
-				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_ALL,
-					FINDER_ARGS_EMPTY);
+			catch (Exception exception) {
+				FinderCacheUtil.removeResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1543,6 +1429,21 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 		}
 
 		return count.intValue();
+	}
+
+	@Override
+	protected EntityCache getEntityCache() {
+		return EntityCacheUtil.getEntityCache();
+	}
+
+	@Override
+	protected String getPKDBName() {
+		return "passwordPolicyRelId";
+	}
+
+	@Override
+	protected String getSelectSQL() {
+		return _SQL_SELECT_PASSWORDPOLICYREL;
 	}
 
 	@Override
@@ -1554,6 +1455,62 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 	 * Initializes the password policy rel persistence.
 	 */
 	public void afterPropertiesSet() {
+		_finderPathWithPaginationFindAll = new FinderPath(
+			PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED,
+			PasswordPolicyRelImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
+			"findAll", new String[0]);
+
+		_finderPathWithoutPaginationFindAll = new FinderPath(
+			PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED,
+			PasswordPolicyRelImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
+			new String[0]);
+
+		_finderPathCountAll = new FinderPath(
+			PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
+			new String[0]);
+
+		_finderPathWithPaginationFindByPasswordPolicyId = new FinderPath(
+			PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED,
+			PasswordPolicyRelImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
+			"findByPasswordPolicyId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByPasswordPolicyId = new FinderPath(
+			PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED,
+			PasswordPolicyRelImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByPasswordPolicyId",
+			new String[] {Long.class.getName()},
+			PasswordPolicyRelModelImpl.PASSWORDPOLICYID_COLUMN_BITMASK);
+
+		_finderPathCountByPasswordPolicyId = new FinderPath(
+			PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+			"countByPasswordPolicyId", new String[] {Long.class.getName()});
+
+		_finderPathFetchByC_C = new FinderPath(
+			PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED,
+			PasswordPolicyRelImpl.class, FINDER_CLASS_NAME_ENTITY, "fetchByC_C",
+			new String[] {Long.class.getName(), Long.class.getName()},
+			PasswordPolicyRelModelImpl.CLASSNAMEID_COLUMN_BITMASK |
+			PasswordPolicyRelModelImpl.CLASSPK_COLUMN_BITMASK);
+
+		_finderPathCountByC_C = new FinderPath(
+			PasswordPolicyRelModelImpl.ENTITY_CACHE_ENABLED,
+			PasswordPolicyRelModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C",
+			new String[] {Long.class.getName(), Long.class.getName()});
 	}
 
 	public void destroy() {
@@ -1563,15 +1520,27 @@ public class PasswordPolicyRelPersistenceImpl extends BasePersistenceImpl<Passwo
 		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 	}
 
-	@BeanReference(type = CompanyProviderWrapper.class)
-	protected CompanyProvider companyProvider;
-	private static final String _SQL_SELECT_PASSWORDPOLICYREL = "SELECT passwordPolicyRel FROM PasswordPolicyRel passwordPolicyRel";
-	private static final String _SQL_SELECT_PASSWORDPOLICYREL_WHERE_PKS_IN = "SELECT passwordPolicyRel FROM PasswordPolicyRel passwordPolicyRel WHERE passwordPolicyRelId IN (";
-	private static final String _SQL_SELECT_PASSWORDPOLICYREL_WHERE = "SELECT passwordPolicyRel FROM PasswordPolicyRel passwordPolicyRel WHERE ";
-	private static final String _SQL_COUNT_PASSWORDPOLICYREL = "SELECT COUNT(passwordPolicyRel) FROM PasswordPolicyRel passwordPolicyRel";
-	private static final String _SQL_COUNT_PASSWORDPOLICYREL_WHERE = "SELECT COUNT(passwordPolicyRel) FROM PasswordPolicyRel passwordPolicyRel WHERE ";
+	private static final String _SQL_SELECT_PASSWORDPOLICYREL =
+		"SELECT passwordPolicyRel FROM PasswordPolicyRel passwordPolicyRel";
+
+	private static final String _SQL_SELECT_PASSWORDPOLICYREL_WHERE =
+		"SELECT passwordPolicyRel FROM PasswordPolicyRel passwordPolicyRel WHERE ";
+
+	private static final String _SQL_COUNT_PASSWORDPOLICYREL =
+		"SELECT COUNT(passwordPolicyRel) FROM PasswordPolicyRel passwordPolicyRel";
+
+	private static final String _SQL_COUNT_PASSWORDPOLICYREL_WHERE =
+		"SELECT COUNT(passwordPolicyRel) FROM PasswordPolicyRel passwordPolicyRel WHERE ";
+
 	private static final String _ORDER_BY_ENTITY_ALIAS = "passwordPolicyRel.";
-	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY = "No PasswordPolicyRel exists with the primary key ";
-	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No PasswordPolicyRel exists with the key {";
-	private static final Log _log = LogFactoryUtil.getLog(PasswordPolicyRelPersistenceImpl.class);
+
+	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY =
+		"No PasswordPolicyRel exists with the primary key ";
+
+	private static final String _NO_SUCH_ENTITY_WITH_KEY =
+		"No PasswordPolicyRel exists with the key {";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		PasswordPolicyRelPersistenceImpl.class);
+
 }

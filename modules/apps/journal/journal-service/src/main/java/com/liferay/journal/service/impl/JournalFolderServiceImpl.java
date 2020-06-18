@@ -18,13 +18,13 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.base.JournalFolderServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionHelper;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -36,9 +36,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Juan Fernández
  */
+@Component(
+	property = {
+		"json.web.service.context.name=journal",
+		"json.web.service.context.path=JournalFolder"
+	},
+	service = AopService.class
+)
 public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 
 	@Override
@@ -47,7 +57,7 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_journalFolderModelResourcePermission, getPermissionChecker(),
 			groupId, parentFolderId, ActionKeys.ADD_FOLDER);
 
@@ -58,10 +68,9 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 
 	@Override
 	public void deleteFolder(long folderId) throws PortalException {
-		JournalFolder folder = journalFolderLocalService.getFolder(folderId);
-
 		_journalFolderModelResourcePermission.check(
-			getPermissionChecker(), folder, ActionKeys.DELETE);
+			getPermissionChecker(),
+			journalFolderLocalService.getFolder(folderId), ActionKeys.DELETE);
 
 		journalFolderLocalService.deleteFolder(folderId);
 	}
@@ -70,10 +79,9 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	public void deleteFolder(long folderId, boolean includeTrashedEntries)
 		throws PortalException {
 
-		JournalFolder folder = journalFolderLocalService.getFolder(folderId);
-
 		_journalFolderModelResourcePermission.check(
-			getPermissionChecker(), folder, ActionKeys.DELETE);
+			getPermissionChecker(),
+			journalFolderLocalService.getFolder(folderId), ActionKeys.DELETE);
 
 		journalFolderLocalService.deleteFolder(folderId, includeTrashedEntries);
 	}
@@ -114,7 +122,7 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	public List<Long> getFolderIds(long groupId, long folderId)
 		throws PortalException {
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_journalFolderModelResourcePermission, getPermissionChecker(),
 			groupId, folderId, ActionKeys.VIEW);
 
@@ -214,22 +222,20 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 			return journalArticleFinder.filterCountByG_F(
 				groupId, folderIds, queryDefinition);
 		}
-		else {
-			int start = 0;
-			int end = PropsValues.SQL_DATA_MAX_PARAMETERS;
 
-			int articlesCount = journalArticleFinder.filterCountByG_F(
-				groupId, folderIds.subList(start, end), queryDefinition);
+		int start = 0;
+		int end = PropsValues.SQL_DATA_MAX_PARAMETERS;
 
-			List<Long> sublist = folderIds.subList(start, end);
+		int articlesCount = journalArticleFinder.filterCountByG_F(
+			groupId, folderIds.subList(start, end), queryDefinition);
 
-			sublist.clear();
+		List<Long> sublist = folderIds.subList(start, end);
 
-			articlesCount += getFoldersAndArticlesCount(
-				groupId, folderIds, status);
+		sublist.clear();
 
-			return articlesCount;
-		}
+		articlesCount += getFoldersAndArticlesCount(groupId, folderIds, status);
+
+		return articlesCount;
 	}
 
 	@Override
@@ -273,18 +279,6 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 			groupId, parentFolderId, status);
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #getSubfolderIds(List, long, long, boolean)}
-	 */
-	@Deprecated
-	@Override
-	public void getSubfolderIds(
-		List<Long> folderIds, long groupId, long folderId) {
-
-		getSubfolderIds(folderIds, groupId, folderId, true);
-	}
-
 	@Override
 	public void getSubfolderIds(
 		List<Long> folderIds, long groupId, long folderId, boolean recurse) {
@@ -320,10 +314,9 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 			long folderId, long parentFolderId, ServiceContext serviceContext)
 		throws PortalException {
 
-		JournalFolder folder = journalFolderLocalService.getFolder(folderId);
-
 		_journalFolderModelResourcePermission.check(
-			getPermissionChecker(), folder, ActionKeys.UPDATE);
+			getPermissionChecker(),
+			journalFolderLocalService.getFolder(folderId), ActionKeys.UPDATE);
 
 		return journalFolderLocalService.moveFolder(
 			folderId, parentFolderId, serviceContext);
@@ -334,10 +327,9 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 			long folderId, long parentFolderId, ServiceContext serviceContext)
 		throws PortalException {
 
-		JournalFolder folder = journalFolderLocalService.getFolder(folderId);
-
 		_journalFolderModelResourcePermission.check(
-			getPermissionChecker(), folder, ActionKeys.UPDATE);
+			getPermissionChecker(),
+			journalFolderLocalService.getFolder(folderId), ActionKeys.UPDATE);
 
 		return journalFolderLocalService.moveFolderFromTrash(
 			getUserId(), folderId, parentFolderId, serviceContext);
@@ -347,10 +339,9 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	public JournalFolder moveFolderToTrash(long folderId)
 		throws PortalException {
 
-		JournalFolder folder = journalFolderLocalService.getFolder(folderId);
-
 		_journalFolderModelResourcePermission.check(
-			getPermissionChecker(), folder, ActionKeys.DELETE);
+			getPermissionChecker(),
+			journalFolderLocalService.getFolder(folderId), ActionKeys.DELETE);
 
 		return journalFolderLocalService.moveFolderToTrash(
 			getUserId(), folderId);
@@ -358,10 +349,9 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 
 	@Override
 	public void restoreFolderFromTrash(long folderId) throws PortalException {
-		JournalFolder folder = journalFolderLocalService.getFolder(folderId);
-
 		_journalFolderModelResourcePermission.check(
-			getPermissionChecker(), folder, ActionKeys.UPDATE);
+			getPermissionChecker(),
+			journalFolderLocalService.getFolder(folderId), ActionKeys.UPDATE);
 
 		journalFolderLocalService.restoreFolderFromTrash(getUserId(), folderId);
 	}
@@ -381,7 +371,7 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 
 	@Override
 	public void subscribe(long groupId, long folderId) throws PortalException {
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_journalFolderModelResourcePermission, getPermissionChecker(),
 			groupId, folderId, ActionKeys.SUBSCRIBE);
 
@@ -392,7 +382,7 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	public void unsubscribe(long groupId, long folderId)
 		throws PortalException {
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_journalFolderModelResourcePermission, getPermissionChecker(),
 			groupId, folderId, ActionKeys.SUBSCRIBE);
 
@@ -406,10 +396,9 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		JournalFolder folder = journalFolderLocalService.getFolder(folderId);
-
 		_journalFolderModelResourcePermission.check(
-			getPermissionChecker(), folder, ActionKeys.UPDATE);
+			getPermissionChecker(),
+			journalFolderLocalService.getFolder(folderId), ActionKeys.UPDATE);
 
 		return journalFolderLocalService.updateFolder(
 			getUserId(), groupId, folderId, parentFolderId, name, description,
@@ -423,7 +412,7 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 			boolean mergeWithParentFolder, ServiceContext serviceContext)
 		throws PortalException {
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_journalFolderModelResourcePermission, getPermissionChecker(),
 			groupId, folderId, ActionKeys.UPDATE);
 
@@ -456,15 +445,16 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 		return ddmStructures;
 	}
 
-	private static volatile ModelResourcePermission<DDMStructure>
-		_ddmStructureModelResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				JournalFolderServiceImpl.class,
-				"_ddmStructureModelResourcePermission", DDMStructure.class);
-	private static volatile ModelResourcePermission<JournalFolder>
-		_journalFolderModelResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				JournalFolderServiceImpl.class,
-				"_journalFolderModelResourcePermission", JournalFolder.class);
+	@Reference(
+		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMStructure)"
+	)
+	private ModelResourcePermission<DDMStructure>
+		_ddmStructureModelResourcePermission;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.journal.model.JournalFolder)"
+	)
+	private ModelResourcePermission<JournalFolder>
+		_journalFolderModelResourcePermission;
 
 }

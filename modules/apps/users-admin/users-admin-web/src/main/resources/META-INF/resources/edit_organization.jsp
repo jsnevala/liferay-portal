@@ -62,7 +62,13 @@ renderResponse.setTitle(headerTitle);
 %>
 
 <liferay-frontend:screen-navigation
+	containerCssClass="col-lg-8"
+	containerWrapperCssClass="container-fluid container-fluid-max-xl container-form-lg"
 	context="<%= organization %>"
-	key="<%= UserFormConstants.SCREEN_NAVIGATION_KEY_ORGANIZATIONS %>"
+	headerContainerCssClass=""
+	inverted="<%= layout.isTypeControlPanel() %>"
+	key="<%= UserScreenNavigationEntryConstants.SCREEN_NAVIGATION_KEY_ORGANIZATIONS %>"
+	menubarCssClass="menubar menubar-transparent menubar-vertical-expand-lg"
+	navCssClass="col-lg-3"
 	portletURL="<%= portletURL %>"
 />

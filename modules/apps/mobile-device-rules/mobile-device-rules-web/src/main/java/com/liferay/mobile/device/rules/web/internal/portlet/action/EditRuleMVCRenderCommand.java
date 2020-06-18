@@ -16,7 +16,6 @@ package com.liferay.mobile.device.rules.web.internal.portlet.action;
 
 import com.liferay.mobile.device.rules.constants.MDRPortletKeys;
 import com.liferay.mobile.device.rules.model.MDRRule;
-import com.liferay.mobile.device.rules.model.MDRRuleGroup;
 import com.liferay.mobile.device.rules.service.MDRRuleGroupService;
 import com.liferay.mobile.device.rules.service.MDRRuleService;
 import com.liferay.mobile.device.rules.web.internal.constants.MDRWebKeys;
@@ -35,7 +34,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -71,20 +70,18 @@ public class EditRuleMVCRenderCommand implements MVCRenderCommand {
 			long ruleGroupId = BeanParamUtil.getLong(
 				rule, renderRequest, "ruleGroupId");
 
-			MDRRuleGroup ruleGroup = _mdrRuleGroupService.getRuleGroup(
-				ruleGroupId);
-
 			renderRequest.setAttribute(
-				MDRWebKeys.MOBILE_DEVICE_RULES_RULE_GROUP, ruleGroup);
+				MDRWebKeys.MOBILE_DEVICE_RULES_RULE_GROUP,
+				_mdrRuleGroupService.getRuleGroup(ruleGroupId));
 
 			return "/edit_rule.jsp";
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			return "/error.jsp";

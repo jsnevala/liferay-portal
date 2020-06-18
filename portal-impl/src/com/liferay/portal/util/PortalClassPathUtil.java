@@ -18,15 +18,14 @@ import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.process.ProcessConfig;
 import com.liferay.petra.process.ProcessLog;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.ServerDetector;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 
@@ -58,8 +57,11 @@ public class PortalClassPathUtil {
 
 		String classpath = _buildClassPath(classes);
 
-		classpath = classpath.concat(File.pathSeparator).concat(
-			_portalProcessConfig.getBootstrapClassPath());
+		classpath = classpath.concat(
+			File.pathSeparator
+		).concat(
+			_portalProcessConfig.getBootstrapClassPath()
+		);
 
 		builder.setBootstrapClassPath(classpath);
 
@@ -102,7 +104,9 @@ public class PortalClassPathUtil {
 		ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
 
 		if (classLoader == null) {
-			classLoader = ClassLoaderUtil.getContextClassLoader();
+			Thread currentThread = Thread.currentThread();
+
+			classLoader = currentThread.getContextClassLoader();
 		}
 
 		StringBundler sb = new StringBundler(8);
@@ -125,7 +129,8 @@ public class PortalClassPathUtil {
 		sb.append(File.pathSeparator);
 		sb.append(
 			_buildClassPath(
-				classLoader, "com.liferay.portal.servlet.MainServlet"));
+				classLoader,
+				"com.liferay.portal.internal.servlet.MainServlet"));
 
 		if (servletContext != null) {
 			sb.append(File.pathSeparator);
@@ -175,7 +180,7 @@ public class PortalClassPathUtil {
 			}
 		}
 
-		File[] files = fileSet.toArray(new File[fileSet.size()]);
+		File[] files = fileSet.toArray(new File[0]);
 
 		Arrays.sort(files);
 
@@ -220,8 +225,9 @@ public class PortalClassPathUtil {
 
 				url = (URL)getLocalURLMethod.invoke(urlConnection);
 			}
-			catch (Exception e) {
-				_log.error("Unable to resolve local URL from bundle", e);
+			catch (Exception exception) {
+				_log.error(
+					"Unable to resolve local URL from bundle", exception);
 
 				return null;
 			}

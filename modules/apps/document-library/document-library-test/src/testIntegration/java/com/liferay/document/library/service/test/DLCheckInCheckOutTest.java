@@ -28,8 +28,8 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
@@ -41,16 +41,16 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.context.ContextUserReplace;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.DateTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
 
 import java.io.InputStream;
@@ -76,7 +76,7 @@ public class DLCheckInCheckOutTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -201,8 +201,7 @@ public class DLCheckInCheckOutTest {
 
 		folder = DLAppServiceUtil.getFolder(_folder.getFolderId());
 
-		Assert.assertTrue(
-			DateUtil.equals(lastPostDate, folder.getLastPostDate()));
+		DateTestUtil.assertEquals(lastPostDate, folder.getLastPostDate());
 
 		fileEntry = DLAppServiceUtil.getFileEntry(_fileEntry.getFileEntryId());
 
@@ -277,8 +276,8 @@ public class DLCheckInCheckOutTest {
 
 			FileEntry fileEntry = null;
 
-			try (ContextUserReplace contextUserReplace =
-					new ContextUserReplace(_authorUser)) {
+			try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+					_authorUser)) {
 
 				fileEntry = createFileEntry(StringUtil.randomString());
 
@@ -286,8 +285,8 @@ public class DLCheckInCheckOutTest {
 					fileEntry.getFileEntryId(), _serviceContext);
 			}
 
-			try (ContextUserReplace contextUserReplace =
-					new ContextUserReplace(_overriderUser)) {
+			try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+					_overriderUser)) {
 
 				DLAppServiceUtil.cancelCheckOut(fileEntry.getFileEntryId());
 
@@ -380,8 +379,8 @@ public class DLCheckInCheckOutTest {
 
 			FileEntry fileEntry = null;
 
-			try (ContextUserReplace contextUserReplace =
-					new ContextUserReplace(_authorUser)) {
+			try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+					_authorUser)) {
 
 				fileEntry = createFileEntry(StringUtil.randomString());
 
@@ -389,8 +388,8 @@ public class DLCheckInCheckOutTest {
 					fileEntry.getFileEntryId(), _serviceContext);
 			}
 
-			try (ContextUserReplace contextUserReplace =
-					new ContextUserReplace(_overriderUser)) {
+			try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+					_overriderUser)) {
 
 				DLAppServiceUtil.checkInFileEntry(
 					fileEntry.getFileEntryId(), DLVersionNumberIncrease.MINOR,
@@ -413,8 +412,7 @@ public class DLCheckInCheckOutTest {
 
 		folder = DLAppServiceUtil.getFolder(_folder.getFolderId());
 
-		Assert.assertTrue(
-			DateUtil.equals(lastPostDate, folder.getLastPostDate()));
+		DateTestUtil.assertEquals(lastPostDate, folder.getLastPostDate());
 
 		FileVersion fileVersion = _fileEntry.getLatestFileVersion();
 
@@ -493,8 +491,8 @@ public class DLCheckInCheckOutTest {
 
 			FileEntry fileEntry = null;
 
-			try (ContextUserReplace contextUserReplace =
-					new ContextUserReplace(_authorUser)) {
+			try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+					_authorUser)) {
 
 				fileEntry = createFileEntry(StringUtil.randomString());
 
@@ -502,8 +500,8 @@ public class DLCheckInCheckOutTest {
 					fileEntry.getFileEntryId(), _serviceContext);
 			}
 
-			try (ContextUserReplace contextUserReplace =
-					new ContextUserReplace(_overriderUser)) {
+			try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+					_overriderUser)) {
 
 				updateFileEntry(fileEntry.getFileEntryId());
 			}
@@ -594,6 +592,8 @@ public class DLCheckInCheckOutTest {
 
 	private FileEntry _fileEntry;
 	private Folder _folder;
+
+	@DeleteAfterTestRun
 	private Group _group;
 
 	@DeleteAfterTestRun

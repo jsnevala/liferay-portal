@@ -18,10 +18,19 @@ import com.liferay.blogs.internal.upgrade.v1_1_0.UpgradeClassNames;
 import com.liferay.blogs.internal.upgrade.v1_1_0.UpgradeFriendlyURL;
 import com.liferay.blogs.internal.upgrade.v1_1_1.UpgradeUrlTitle;
 import com.liferay.blogs.internal.upgrade.v1_1_2.UpgradeBlogsImages;
+import com.liferay.blogs.internal.upgrade.v2_0_0.util.BlogsEntryTable;
+import com.liferay.blogs.internal.upgrade.v2_0_0.util.BlogsStatsUserTable;
+import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.comment.upgrade.UpgradeDiscussionSubscriptionClassName;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ImageLocalService;
+import com.liferay.portal.kernel.upgrade.BaseUpgradeSQLServerDatetime;
+import com.liferay.portal.kernel.upgrade.UpgradeMVCCVersion;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
+import com.liferay.subscription.service.SubscriptionLocalService;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,7 +54,43 @@ public class BlogsServiceUpgrade implements UpgradeStepRegistrator {
 		registry.register(
 			"1.1.1", "1.1.2",
 			new UpgradeBlogsImages(_imageLocalService, _portletFileRepository));
+
+		registry.register(
+			"1.1.2", "1.1.3",
+			new UpgradeDiscussionSubscriptionClassName(
+				_classNameLocalService, _subscriptionLocalService,
+				BlogsEntry.class.getName(),
+				UpgradeDiscussionSubscriptionClassName.DeletionMode.UPDATE));
+
+		registry.register(
+			"1.1.3", "2.0.0",
+			new BaseUpgradeSQLServerDatetime(
+				new Class<?>[] {
+					BlogsEntryTable.class, BlogsStatsUserTable.class
+				}));
+
+		registry.register(
+			"2.0.0", "2.0.1",
+			new UpgradeDiscussionSubscriptionClassName(
+				_classNameLocalService, _subscriptionLocalService,
+				BlogsEntry.class.getName(),
+				UpgradeDiscussionSubscriptionClassName.DeletionMode.
+					DELETE_OLD));
+
+		registry.register(
+			"2.0.1", "2.1.0",
+			new UpgradeMVCCVersion() {
+
+				@Override
+				protected String[] getModuleTableNames() {
+					return new String[] {"BlogsEntry", "BlogsStatsUser"};
+				}
+
+			});
 	}
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
@@ -53,7 +98,13 @@ public class BlogsServiceUpgrade implements UpgradeStepRegistrator {
 	@Reference
 	private ImageLocalService _imageLocalService;
 
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
+
 	@Reference
 	private PortletFileRepository _portletFileRepository;
+
+	@Reference
+	private SubscriptionLocalService _subscriptionLocalService;
 
 }

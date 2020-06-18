@@ -15,11 +15,13 @@
 package com.liferay.monitoring.web.internal.portlet;
 
 import com.liferay.monitoring.web.internal.constants.MonitoringPortletKeys;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 
 import javax.portlet.Portlet;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Philip Jones
@@ -42,10 +44,17 @@ import org.osgi.service.component.annotations.Component;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + MonitoringPortletKeys.MONITORING,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=administrator"
 	},
 	service = Portlet.class
 )
 public class MonitoringPortlet extends MVCPortlet {
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.monitoring.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
+	}
+
 }

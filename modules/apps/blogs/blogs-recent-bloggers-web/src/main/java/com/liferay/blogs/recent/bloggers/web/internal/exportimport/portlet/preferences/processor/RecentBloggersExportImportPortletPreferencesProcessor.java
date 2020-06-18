@@ -41,7 +41,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -72,9 +72,10 @@ public class RecentBloggersExportImportPortletPreferencesProcessor
 				portletDataContext, portletDataContext.getPortletId(),
 				portletPreferences);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new PortletDataException(
-				"Unable to update portlet preferences during export", e);
+				"Unable to update portlet preferences during export",
+				exception);
 		}
 	}
 
@@ -88,31 +89,11 @@ public class RecentBloggersExportImportPortletPreferencesProcessor
 			return updateImportPortletPreferences(
 				portletDataContext, portletPreferences);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new PortletDataException(
-				"Unable to update portlet preferences during import", e);
+				"Unable to update portlet preferences during import",
+				exception);
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setCompanyLocalService(
-		CompanyLocalService companyLocalService) {
-
-		_companyLocalService = companyLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setOrganizationLocalService(
-		OrganizationLocalService organizationLocalService) {
-
-		_organizationLocalService = organizationLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortletLocalService(
-		PortletLocalService portletLocalService) {
-
-		_portletLocalService = portletLocalService;
 	}
 
 	protected PortletPreferences updateExportPortletPreferences(
@@ -204,13 +185,17 @@ public class RecentBloggersExportImportPortletPreferencesProcessor
 		return portletPreferences;
 	}
 
+	@Reference
 	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private ExportImportPortletPreferencesProcessorHelper
 		_exportImportPortletPreferencesProcessorHelper;
 
+	@Reference
 	private OrganizationLocalService _organizationLocalService;
+
+	@Reference
 	private PortletLocalService _portletLocalService;
 
 }

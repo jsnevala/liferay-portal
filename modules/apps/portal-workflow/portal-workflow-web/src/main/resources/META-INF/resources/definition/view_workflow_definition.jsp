@@ -88,7 +88,7 @@ boolean previewBeforeRestore = WorkflowWebKeys.WORKFLOW_PREVIEW_BEFORE_RESTORE_S
 		<div class="card-horizontal main-content-card">
 			<div class="card-row-padded">
 				<aui:fieldset cssClass="workflow-definition-content">
-					<aui:col>
+					<clay:col>
 						<aui:field-wrapper label="title">
 							<liferay-ui:input-localized
 								disabled="<%= true %>"
@@ -96,11 +96,14 @@ boolean previewBeforeRestore = WorkflowWebKeys.WORKFLOW_PREVIEW_BEFORE_RESTORE_S
 								xml='<%= BeanPropertiesUtil.getString(workflowDefinition, "title") %>'
 							/>
 						</aui:field-wrapper>
-					</aui:col>
+					</clay:col>
 
-					<aui:col cssClass="workflow-definition-content-source-wrapper" id="contentSourceWrapper">
+					<clay:col
+						className="workflow-definition-content-source-wrapper"
+						id='<%= renderResponse.getNamespace() + "contentSourceWrapper" %>'
+					>
 						<div class="workflow-definition-content-source" id="<portlet:namespace />contentEditor"></div>
-					</aui:col>
+					</clay:col>
 				</aui:fieldset>
 			</div>
 		</div>
@@ -115,27 +118,24 @@ boolean previewBeforeRestore = WorkflowWebKeys.WORKFLOW_PREVIEW_BEFORE_RESTORE_S
 	</c:choose>
 </div>
 
-<aui:script use="aui-ace-editor,liferay-xml-formatter">
-	var STR_VALUE = 'value';
+<aui:script use="aui-ace-editor">
+	var contentEditor = new A.AceEditor({
+		boundingBox: '#<portlet:namespace />contentEditor',
+		height: 600,
+		mode: 'xml',
+		readOnly: 'true',
+		tabSize: 4,
+		width: '100%',
+	}).render();
 
-	var contentEditor = new A.AceEditor(
-		{
-			boundingBox: '#<portlet:namespace />contentEditor',
-			height: 600,
-			mode: 'xml',
-			readOnly: 'true',
-			tabSize: 4,
-			width: '100%'
-		}
-	).render();
-
-	var xmlFormatter = new Liferay.XMLFormatter();
-
-	var editorContentElement = A.one('#<portlet:namespace />content');
+	var editorContentElement = document.getElementById(
+		'<portlet:namespace />content'
+	);
 
 	if (editorContentElement) {
-		var content = xmlFormatter.format(editorContentElement.val());
-
-		contentEditor.set(STR_VALUE, content);
+		contentEditor.set(
+			'value',
+			Liferay.Util.formatXML(editorContentElement.value)
+		);
 	}
 </aui:script>

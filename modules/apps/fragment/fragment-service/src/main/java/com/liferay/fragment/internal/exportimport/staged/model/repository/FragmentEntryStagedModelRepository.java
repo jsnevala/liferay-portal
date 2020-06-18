@@ -57,9 +57,11 @@ public class FragmentEntryStagedModelRepository
 
 		return _fragmentEntryLocalService.addFragmentEntry(
 			userId, fragmentEntry.getGroupId(),
-			fragmentEntry.getFragmentCollectionId(), fragmentEntry.getName(),
+			fragmentEntry.getFragmentCollectionId(),
+			fragmentEntry.getFragmentEntryKey(), fragmentEntry.getName(),
 			fragmentEntry.getCss(), fragmentEntry.getHtml(),
-			fragmentEntry.getJs(), fragmentEntry.getPreviewFileEntryId(),
+			fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
+			fragmentEntry.getPreviewFileEntryId(), fragmentEntry.getType(),
 			fragmentEntry.getStatus(), serviceContext);
 	}
 
@@ -90,8 +92,8 @@ public class FragmentEntryStagedModelRepository
 
 	@Override
 	public FragmentEntry fetchMissingReference(String uuid, long groupId) {
-		return
-			(FragmentEntry)_stagedModelRepositoryHelper.fetchMissingReference(
+		return (FragmentEntry)
+			_stagedModelRepositoryHelper.fetchMissingReference(
 				uuid, groupId, this);
 	}
 
@@ -142,7 +144,8 @@ public class FragmentEntryStagedModelRepository
 		return _fragmentEntryLocalService.updateFragmentEntry(
 			userId, fragmentEntry.getFragmentEntryId(), fragmentEntry.getName(),
 			fragmentEntry.getCss(), fragmentEntry.getHtml(),
-			fragmentEntry.getJs(), fragmentEntry.getStatus());
+			fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
+			fragmentEntry.getStatus());
 	}
 
 	@Reference

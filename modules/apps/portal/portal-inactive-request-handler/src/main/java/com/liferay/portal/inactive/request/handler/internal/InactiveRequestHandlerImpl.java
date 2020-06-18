@@ -17,7 +17,6 @@ package com.liferay.portal.inactive.request.handler.internal;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.inactive.request.handler.configuration.InactiveRequestHandlerConfiguration;
-import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -36,7 +35,6 @@ import java.net.URL;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -57,32 +55,27 @@ import org.osgi.service.component.annotations.Reference;
 public class InactiveRequestHandlerImpl implements InactiveRequestHandler {
 
 	@Override
+	public boolean isShowInactiveRequestMessage() {
+		return _showInactiveRequestMessage;
+	}
+
+	@Override
 	public void processInactiveRequest(
-			HttpServletRequest request, HttpServletResponse response,
-			String messageKey)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String messageKey)
 		throws IOException {
 
-		response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-
-		PrintWriter printWriter = response.getWriter();
+		httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
 
 		if (!_showInactiveRequestMessage) {
-			try {
-				_portal.sendError(
-					HttpServletResponse.SC_NOT_FOUND,
-					new NoSuchLayoutException(),
-					_portal.getOriginalServletRequest(request), response);
-			}
-			catch (ServletException se) {
-				throw new IOException(se);
-			}
-
 			return;
 		}
 
-		response.setContentType(ContentTypes.TEXT_HTML_UTF8);
+		httpServletResponse.setContentType(ContentTypes.TEXT_HTML_UTF8);
 
-		Locale locale = _portal.getLocale(request);
+		PrintWriter printWriter = httpServletResponse.getWriter();
+
+		Locale locale = _portal.getLocale(httpServletRequest);
 
 		String message = null;
 
@@ -116,12 +109,13 @@ public class InactiveRequestHandlerImpl implements InactiveRequestHandler {
 			return;
 		}
 
-		try (InputStream inputStream = url.openStream();) {
+		try (InputStream inputStream = url.openStream()) {
 			_content = StringUtil.read(inputStream);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to read " + _INACTIVE_HTML_FILE_NAME, ioe);
+				_log.warn(
+					"Unable to read " + _INACTIVE_HTML_FILE_NAME, ioException);
 			}
 		}
 	}

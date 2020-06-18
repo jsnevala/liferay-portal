@@ -15,8 +15,8 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.checks.util.SourceUtil;
 
@@ -34,7 +34,7 @@ import org.dom4j.Element;
 public class XMLCustomSQLStylingCheck extends BaseFileCheck {
 
 	@Override
-	public boolean isPortalCheck() {
+	public boolean isLiferaySourceCheck() {
 		return true;
 	}
 
@@ -81,6 +81,10 @@ public class XMLCustomSQLStylingCheck extends BaseFileCheck {
 
 	private void _checkIncorrectLineBreakAfterComma(
 		String fileName, String content) {
+
+		if (true) {
+			return;
+		}
 
 		Matcher matcher = _incorrectLineBreakAfterCommaPattern.matcher(content);
 
@@ -170,11 +174,11 @@ public class XMLCustomSQLStylingCheck extends BaseFileCheck {
 			char c = content.charAt(endPos - 1);
 
 			if (c != CharPool.TAB) {
+				String s = StringUtil.trim(
+					content.substring(endLineStartPos, endPos));
+
 				addMessage(
-					fileName,
-					"There should be a line break after '" +
-						StringUtil.trim(
-							content.substring(endLineStartPos, endPos)),
+					fileName, "There should be a line break after '" + s,
 					endLineNumber);
 
 				continue;
@@ -206,9 +210,8 @@ public class XMLCustomSQLStylingCheck extends BaseFileCheck {
 				addMessage(
 					fileName,
 					StringBundler.concat(
-						"Line starts with '", String.valueOf(endLineTabCount),
-						"' tabs, but '", String.valueOf(startLineTabCount),
-						"' tabs are expected"),
+						"Line starts with '", endLineTabCount, "' tabs, but '",
+						startLineTabCount, "' tabs are expected"),
 					endLineNumber);
 			}
 		}

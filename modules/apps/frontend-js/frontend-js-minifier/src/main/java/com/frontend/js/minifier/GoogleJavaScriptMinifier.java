@@ -43,8 +43,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Carlos Sierra Andrés
  */
 @Component(
-	immediate = true, property = "service.ranking:Integer=100",
-	service = JavaScriptMinifier.class
+	property = "service.ranking:Integer=100", service = JavaScriptMinifier.class
 )
 public class GoogleJavaScriptMinifier implements JavaScriptMinifier {
 
@@ -70,6 +69,10 @@ public class GoogleJavaScriptMinifier implements JavaScriptMinifier {
 				SourceFile.fromCode("extern", StringPool.BLANK), sourceFile,
 				compilerOptions);
 
+			if (compiler.hasErrors()) {
+				return content;
+			}
+
 			return compiler.toSource();
 		}
 		finally {
@@ -77,11 +80,13 @@ public class GoogleJavaScriptMinifier implements JavaScriptMinifier {
 				try {
 					_clearThreadTraceMethod.invoke(null);
 				}
-				catch (ReflectiveOperationException roe) {
+				catch (ReflectiveOperationException
+							reflectiveOperationException) {
+
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to clear thread local for ThreadTrace",
-							roe);
+							reflectiveOperationException);
 					}
 				}
 			}
@@ -97,9 +102,9 @@ public class GoogleJavaScriptMinifier implements JavaScriptMinifier {
 				classLoader.loadClass("com.google.javascript.jscomp.Tracer"),
 				"clearThreadTrace");
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to find clear ThreadTrace method", e);
+				_log.warn("Unable to find clear ThreadTrace method", exception);
 			}
 		}
 	}

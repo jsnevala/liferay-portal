@@ -30,6 +30,7 @@ FormInstancePermissionCheckerHelper formInstancePermissionCheckerHelper = ddmFor
 
 		<liferay-ui:search-container
 			id="<%= ddmFormAdminDisplayContext.getSearchContainerId() %>"
+			rowChecker="<%= new EmptyOnClickRowChecker(renderResponse) %>"
 			searchContainer="<%= ddmFormAdminDisplayContext.getSearch() %>"
 		>
 			<liferay-ui:search-container-row
@@ -103,52 +104,27 @@ FormInstancePermissionCheckerHelper formInstancePermissionCheckerHelper = ddmFor
 	</aui:form>
 </div>
 
-<%@ include file="/admin/export_form_instance.jspf" %>
+<aui:script require='<%= mainRequire + "/admin/js/components/ShareFormPopover/ShareFormPopover.es as ShareFormPopover" %>'>
+	var spritemap = themeDisplay.getPathThemeImages() + '/lexicon/icons.svg';
 
-<aui:script use="liferay-ddm-form-portlet"></aui:script>
+	Liferay.after('<portlet:namespace />copyFormURL', function (data) {
+		var url = data.url;
+		var trigger = Liferay.Menu._INSTANCE._activeTrigger;
+
+		var popover = new ShareFormPopover.default({
+			alignElement: trigger.getDOM(),
+			events: {
+				popoverClosed: function () {
+					popover.dispose();
+				},
+			},
+			spritemap: spritemap,
+			url: url,
+			visible: true,
+		});
+	});
+</aui:script>
 
 <%@ include file="/admin/copy_form_publish_url.jspf" %>
 
-<aui:script use="liferay-ddm-form-builder-copy-publish-form-url-popover">
-	var A = AUI();
-
-	var copyPublishFormURLPopover = new Liferay.DDM.FormBuilderCopyPublishFormURLPopover(
-		{
-			portletNamespace: '<portlet:namespace />'
-		}
-	);
-
-	Liferay.on(
-		'<portlet:namespace />copyFormURL',
-		function(event) {
-			if (copyPublishFormURLPopover.isVisible()) {
-				copyPublishFormURLPopover.hide();
-			}
-
-			copyPublishFormURLPopover.set('publishURL', event.url);
-
-			copyPublishFormURLPopover.setAlign(
-				{
-					node: Liferay.Menu._INSTANCE._activeTrigger,
-					points: [A.WidgetPositionAlign.TR, A.WidgetPositionAlign.TR]
-				}
-			);
-
-			copyPublishFormURLPopover.show();
-		}
-	);
-
-	A.all('.searchcontainer-content .dropdown-toggle.icon-monospaced').before(
-		'click',
-		function() {
-			copyPublishFormURLPopover.hide();
-		}
-	);
-
-	Liferay.on(
-		'destroyPortlet',
-		function() {
-			copyPublishFormURLPopover.destroy();
-		}
-	);
-</aui:script>
+<%@ include file="/admin/export_form_instance.jspf" %>

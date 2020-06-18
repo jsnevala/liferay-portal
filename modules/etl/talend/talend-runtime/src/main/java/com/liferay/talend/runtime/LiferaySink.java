@@ -14,16 +14,12 @@
 
 package com.liferay.talend.runtime;
 
+import com.liferay.talend.properties.output.LiferayOutputProperties;
 import com.liferay.talend.runtime.writer.LiferayWriteOperation;
-import com.liferay.talend.tliferayoutput.TLiferayOutputProperties;
 
 import org.talend.components.api.component.runtime.Sink;
 import org.talend.components.api.component.runtime.WriteOperation;
 import org.talend.components.api.container.RuntimeContainer;
-import org.talend.components.api.exception.ComponentException;
-import org.talend.daikon.i18n.GlobalI18N;
-import org.talend.daikon.i18n.I18nMessageProvider;
-import org.talend.daikon.i18n.I18nMessages;
 import org.talend.daikon.properties.ValidationResult;
 
 /**
@@ -33,53 +29,45 @@ public class LiferaySink extends LiferaySourceOrSink implements Sink {
 
 	@Override
 	public WriteOperation<?> createWriteOperation() {
-		if (liferayConnectionPropertiesProvider instanceof
-				TLiferayOutputProperties) {
-
-			return new LiferayWriteOperation(
-				this,
-				(TLiferayOutputProperties)liferayConnectionPropertiesProvider);
-		}
-
-		Class<?> propertiesClass =
-			liferayConnectionPropertiesProvider.getClass();
-
-		throw new ComponentException(
-			new RuntimeException(
-				i18nMessages.getMessage(
-					"error.validation.properties",
-					propertiesClass.getCanonicalName())));
+		return new LiferayWriteOperation(this, _liferayOutputProperties);
 	}
 
 	@Override
 	public ValidationResult validate(RuntimeContainer runtimeContainer) {
-		ValidationResult validate = super.validate(runtimeContainer);
+		Object componentData = runtimeContainer.getComponentData(
+			runtimeContainer.getCurrentComponentId(),
+			"COMPONENT_RUNTIME_PROPERTIES");
 
-		if (validate.getStatus() != ValidationResult.Result.ERROR) {
-			Class<?> propertiesClass =
-				liferayConnectionPropertiesProvider.getClass();
-
-			if (!(liferayConnectionPropertiesProvider instanceof
-					TLiferayOutputProperties)) {
-
-				return new ValidationResult(
-					ValidationResult.Result.ERROR,
-					i18nMessages.getMessage(
-						"error.validation.properties",
-						propertiesClass.getCanonicalName()));
-			}
+		if (!(componentData instanceof LiferayOutputProperties)) {
+			return new ValidationResult(
+				ValidationResult.Result.ERROR,
+				String.format(
+					"Unable to locate %s in given runtime container",
+					LiferayOutputProperties.class));
 		}
 
-		return validate;
+		_liferayOutputProperties = (LiferayOutputProperties)componentData;
+
+		if (_liferayOutputProperties.getOperation() == null) {
+			return new ValidationResult(
+				ValidationResult.Result.ERROR,
+				"Unable to configure Sink without operation properly set");
+		}
+
+		ValidationResult validationResult = super.validate(runtimeContainer);
+
+		if (validationResult.getStatus() == ValidationResult.Result.ERROR) {
+			return validationResult;
+		}
+
+		return validationResult;
 	}
 
-	protected static final I18nMessages i18nMessages;
-
-	static {
-		I18nMessageProvider i18nMessageProvider =
-			GlobalI18N.getI18nMessageProvider();
-
-		i18nMessages = i18nMessageProvider.getI18nMessages(LiferaySink.class);
+	@Override
+	protected String getLiferayConnectionPropertiesPath() {
+		return "resource." + super.getLiferayConnectionPropertiesPath();
 	}
+
+	private LiferayOutputProperties _liferayOutputProperties;
 
 }

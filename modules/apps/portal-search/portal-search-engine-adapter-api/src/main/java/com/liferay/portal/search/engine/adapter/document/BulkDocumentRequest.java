@@ -14,6 +14,8 @@
 
 package com.liferay.portal.search.engine.adapter.document;
 
+import com.liferay.portal.search.engine.adapter.ccr.CrossClusterRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +23,7 @@ import java.util.List;
  * @author Michael C. Han
  */
 public class BulkDocumentRequest
+	extends CrossClusterRequest
 	implements DocumentRequest<BulkDocumentResponse> {
 
 	@Override
@@ -40,7 +43,16 @@ public class BulkDocumentRequest
 		return _bulkableDocumentRequests;
 	}
 
+	public boolean isRefresh() {
+		return _refresh;
+	}
+
+	public void setRefresh(boolean refresh) {
+		_refresh = refresh;
+	}
+
 	private final List<BulkableDocumentRequest<?>> _bulkableDocumentRequests =
 		new ArrayList<>();
+	private boolean _refresh;
 
 }

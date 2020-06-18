@@ -73,7 +73,7 @@ public class PortletConfigurationCSSPortletConfigurationIcon
 
 			return renderURL.toString();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return StringPool.BLANK;
@@ -88,6 +88,10 @@ public class PortletConfigurationCSSPortletConfigurationIcon
 	public boolean isShow(PortletRequest portletRequest) {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
+
+		if (isEmbeddedPersonalApplicationLayout(themeDisplay.getLayout())) {
+			return false;
+		}
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 

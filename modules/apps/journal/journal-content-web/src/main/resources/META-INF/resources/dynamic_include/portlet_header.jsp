@@ -20,8 +20,11 @@
 JournalArticle article = journalContentDisplayContext.getArticle();
 %>
 
+<liferay-ui:success key='<%= JournalContentPortletKeys.JOURNAL_CONTENT + "requestProcessed" %>' message="your-request-completed-successfully" />
+
 <div class="visible-interaction">
 	<liferay-ui:icon-menu
+		cssClass="btn btn-monospaced btn-sm"
 		direction="left-side"
 		icon="<%= StringPool.BLANK %>"
 		markupView="lexicon"
@@ -33,11 +36,13 @@ JournalArticle article = journalContentDisplayContext.getArticle();
 			<%
 			JournalArticle latestArticle = journalContentDisplayContext.getLatestArticle();
 
-			Map<String, Object> data = new HashMap<String, Object>();
-
-			data.put("destroyOnHide", true);
-			data.put("id", HtmlUtil.escape(portletDisplay.getNamespace()) + "editAsset");
-			data.put("title", HtmlUtil.escape(latestArticle.getTitle(locale)));
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"destroyOnHide", true
+			).put(
+				"id", HtmlUtil.escape(portletDisplay.getNamespace()) + "editAsset"
+			).put(
+				"title", HtmlUtil.escape(latestArticle.getTitle(locale))
+			).build();
 			%>
 
 			<liferay-ui:icon
@@ -45,28 +50,14 @@ JournalArticle article = journalContentDisplayContext.getArticle();
 				id="editWebContentIcon"
 				message="edit-web-content"
 				url="<%= journalContentDisplayContext.getURLEdit() %>"
-				useDialog="<%= true %>"
 			/>
 		</c:if>
 
 		<c:if test="<%= journalContentDisplayContext.isShowEditTemplateIcon() %>">
-
-			<%
-			DDMTemplate ddmTemplate = journalContentDisplayContext.getDDMTemplate();
-
-			Map<String, Object> data = new HashMap<String, Object>();
-
-			data.put("destroyOnHide", true);
-			data.put("id", HtmlUtil.escape(portletDisplay.getNamespace()) + "editAsset");
-			data.put("title", HtmlUtil.escape(ddmTemplate.getName(locale)));
-			%>
-
 			<liferay-ui:icon
-				data="<%= data %>"
 				id="editTemplateIcon"
 				message="edit-template"
 				url="<%= journalContentDisplayContext.getURLEditTemplate() %>"
-				useDialog="<%= true %>"
 			/>
 		</c:if>
 
@@ -84,6 +75,28 @@ JournalArticle article = journalContentDisplayContext.getArticle();
 				method="get"
 				url="<%= permissionsURL %>"
 				useDialog="<%= true %>"
+			/>
+		</c:if>
+
+		<c:if test="<%= JournalArticlePermission.contains(permissionChecker, article, ActionKeys.UPDATE) %>">
+
+			<%
+			JournalArticle latestArticle = journalContentDisplayContext.getLatestArticle();
+
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"destroyOnHide", true
+			).put(
+				"id", HtmlUtil.escape(portletDisplay.getNamespace()) + "editAsset"
+			).put(
+				"title", HtmlUtil.escape(latestArticle.getTitle(locale))
+			).build();
+			%>
+
+			<liferay-ui:icon
+				data="<%= data %>"
+				id="basicViewHistoryIcon"
+				message="view-history"
+				url="<%= journalContentDisplayContext.getURLViewHistory() %>"
 			/>
 		</c:if>
 	</liferay-ui:icon-menu>

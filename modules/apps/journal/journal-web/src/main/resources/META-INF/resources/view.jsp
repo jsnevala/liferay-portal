@@ -17,6 +17,21 @@
 <%@ include file="/init.jsp" %>
 
 <%
+JournalManagementToolbarDisplayContext journalManagementToolbarDisplayContext = null;
+
+if (!journalDisplayContext.isSearch() || journalDisplayContext.isWebContentTabSelected()) {
+	journalManagementToolbarDisplayContext = new JournalManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalDisplayContext, trashHelper);
+}
+else if (journalDisplayContext.isVersionsTabSelected()) {
+	journalManagementToolbarDisplayContext = new JournalArticleVersionsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalDisplayContext, trashHelper);
+}
+else if (journalDisplayContext.isCommentsTabSelected()) {
+	journalManagementToolbarDisplayContext = new JournalArticleCommentsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalDisplayContext, trashHelper);
+}
+else {
+	journalManagementToolbarDisplayContext = new JournalManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalDisplayContext, trashHelper);
+}
+
 String title = journalDisplayContext.getFolderTitle();
 
 if (Validator.isNotNull(title)) {
@@ -24,7 +39,7 @@ if (Validator.isNotNull(title)) {
 }
 %>
 
-<portlet:actionURL name="restoreTrashEntries" var="restoreTrashEntriesURL" />
+<portlet:actionURL name="/journal/restore_trash_entries" var="restoreTrashEntriesURL" />
 
 <liferay-trash:undo
 	portletURL="<%= restoreTrashEntriesURL %>"
@@ -35,133 +50,97 @@ if (Validator.isNotNull(title)) {
 	navigationItems='<%= journalDisplayContext.getNavigationBarItems("web-content") %>'
 />
 
-<liferay-util:include page="/toolbar.jsp" servletContext="<%= application %>">
-	<liferay-util:param name="searchContainerId" value="articles" />
-</liferay-util:include>
+<clay:management-toolbar
+	displayContext="<%= journalManagementToolbarDisplayContext %>"
+/>
 
-<div id="<portlet:namespace />journalContainer">
-	<div class="closed container-fluid-1280 sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
-		<c:if test="<%= journalDisplayContext.isShowInfoButton() %>">
-			<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/journal/info_panel" var="sidebarPanelURL" />
+<liferay-frontend:component
+	componentId="<%= journalManagementToolbarDisplayContext.getDefaultEventHandler() %>"
+	context="<%= journalManagementToolbarDisplayContext.getComponentContext() %>"
+	module="js/ManagementToolbarDefaultEventHandler.es"
+/>
 
-			<liferay-frontend:sidebar-panel
-				resourceURL="<%= sidebarPanelURL %>"
-				searchContainerId="articles"
-			>
-				<liferay-util:include page="/info_panel.jsp" servletContext="<%= application %>" />
-			</liferay-frontend:sidebar-panel>
+<div class="closed container-fluid-1280 sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
+	<c:if test="<%= journalDisplayContext.isShowInfoButton() %>">
+		<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/journal/info_panel" var="sidebarPanelURL">
+			<portlet:param name="folderId" value="<%= String.valueOf(journalDisplayContext.getFolderId()) %>" />
+		</liferay-portlet:resourceURL>
+
+		<liferay-frontend:sidebar-panel
+			resourceURL="<%= sidebarPanelURL %>"
+			searchContainerId="articles"
+		>
+			<liferay-util:include page="/info_panel.jsp" servletContext="<%= application %>" />
+		</liferay-frontend:sidebar-panel>
+	</c:if>
+
+	<div class="sidenav-content">
+		<c:if test="<%= !journalDisplayContext.isNavigationMine() && !journalDisplayContext.isNavigationRecent() %>">
+			<liferay-site-navigation:breadcrumb
+				breadcrumbEntries="<%= JournalPortletUtil.getPortletBreadcrumbEntries(journalDisplayContext.getFolder(), request, journalDisplayContext.getPortletURL()) %>"
+			/>
 		</c:if>
 
-		<div class="sidenav-content">
-			<div class="journal-breadcrumb" id="<portlet:namespace />breadcrumbContainer">
-				<c:if test="<%= !journalDisplayContext.isNavigationMine() && !journalDisplayContext.isNavigationRecent() %>">
-					<liferay-util:include page="/breadcrumb.jsp" servletContext="<%= application %>" />
-				</c:if>
-			</div>
+		<aui:form action="<%= journalDisplayContext.getPortletURL() %>" method="get" name="fm">
+			<aui:input name="<%= ActionRequest.ACTION_NAME %>" type="hidden" />
+			<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
+			<aui:input name="groupId" type="hidden" value="<%= scopeGroupId %>" />
+			<aui:input name="newFolderId" type="hidden" />
 
-			<%
-			PortletURL portletURL = journalDisplayContext.getPortletURL();
-			%>
+			<c:choose>
+				<c:when test="<%= !journalDisplayContext.isSearch() %>">
+					<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>" />
+				</c:when>
+				<c:otherwise>
 
-			<aui:form action="<%= portletURL.toString() %>" method="get" name="fm">
-				<aui:input name="<%= ActionRequest.ACTION_NAME %>" type="hidden" />
-				<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
-				<aui:input name="groupId" type="hidden" value="<%= scopeGroupId %>" />
-				<aui:input name="newFolderId" type="hidden" />
+					<%
+					String[] tabsNames = new String[0];
+					String[] tabsValues = new String[0];
 
-				<div class="journal-container" id="<portlet:namespace />entriesContainer">
+					if (journalDisplayContext.hasResults()) {
+						String tabName = StringUtil.appendParentheticalSuffix(LanguageUtil.get(request, "web-content"), journalDisplayContext.getTotalItems());
+
+						tabsNames = ArrayUtil.append(tabsNames, tabName);
+						tabsValues = ArrayUtil.append(tabsValues, "web-content");
+					}
+
+					if (journalDisplayContext.hasVersionsResults()) {
+						String tabName = StringUtil.appendParentheticalSuffix(LanguageUtil.get(request, "versions"), journalDisplayContext.getVersionsTotal());
+
+						tabsNames = ArrayUtil.append(tabsNames, tabName);
+						tabsValues = ArrayUtil.append(tabsValues, "versions");
+					}
+
+					if (journalDisplayContext.hasCommentsResults()) {
+						String tabName = StringUtil.appendParentheticalSuffix(LanguageUtil.get(request, "comments"), journalDisplayContext.getCommentsTotal());
+
+						tabsNames = ArrayUtil.append(tabsNames, tabName);
+						tabsValues = ArrayUtil.append(tabsValues, "comments");
+					}
+					%>
+
+					<liferay-ui:tabs
+						names="<%= StringUtil.merge(tabsNames) %>"
+						portletURL="<%= journalDisplayContext.getPortletURL() %>"
+						tabsValues="<%= StringUtil.merge(tabsValues) %>"
+					/>
+
 					<c:choose>
-						<c:when test="<%= !journalDisplayContext.isSearch() || (!journalDisplayContext.hasResults() && !journalDisplayContext.hasCommentsResults() && !journalDisplayContext.hasVersionsResults()) %>">
-							<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>">
-								<liferay-util:param name="searchContainerId" value="articles" />
-							</liferay-util:include>
+						<c:when test="<%= journalDisplayContext.isWebContentTabSelected() %>">
+							<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>" />
+						</c:when>
+						<c:when test="<%= journalDisplayContext.isVersionsTabSelected() %>">
+							<liferay-util:include page="/view_versions.jsp" servletContext="<%= application %>" />
+						</c:when>
+						<c:when test="<%= journalDisplayContext.isCommentsTabSelected() %>">
+							<liferay-util:include page="/view_comments.jsp" servletContext="<%= application %>" />
 						</c:when>
 						<c:otherwise>
-
-							<%
-							String[] tabsNames = new String[0];
-							String[] tabsValues = new String[0];
-
-							if (journalDisplayContext.hasResults()) {
-								String tabName = StringUtil.appendParentheticalSuffix(LanguageUtil.get(request, "web-content"), journalDisplayContext.getTotalItems());
-
-								tabsNames = ArrayUtil.append(tabsNames, tabName);
-								tabsValues = ArrayUtil.append(tabsValues, "web-content");
-							}
-
-							if (journalDisplayContext.hasVersionsResults()) {
-								String tabName = StringUtil.appendParentheticalSuffix(LanguageUtil.get(request, "versions"), journalDisplayContext.getVersionsTotal());
-
-								tabsNames = ArrayUtil.append(tabsNames, tabName);
-								tabsValues = ArrayUtil.append(tabsValues, "versions");
-							}
-
-							if (journalDisplayContext.hasCommentsResults()) {
-								String tabName = StringUtil.appendParentheticalSuffix(LanguageUtil.get(request, "comments"), journalDisplayContext.getCommentsTotal());
-
-								tabsNames = ArrayUtil.append(tabsNames, tabName);
-								tabsValues = ArrayUtil.append(tabsValues, "comments");
-							}
-							%>
-
-							<liferay-ui:tabs
-								names="<%= StringUtil.merge(tabsNames) %>"
-								portletURL="<%= portletURL %>"
-								tabsValues="<%= StringUtil.merge(tabsValues) %>"
-								type="tabs nav-tabs-default"
-							/>
-
-							<c:choose>
-								<c:when test='<%= Objects.equals(journalDisplayContext.getTabs1(), "web-content") || (journalDisplayContext.hasResults() && Validator.isNull(journalDisplayContext.getTabs1())) %>'>
-									<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>">
-										<liferay-util:param name="searchContainerId" value="articles" />
-									</liferay-util:include>
-								</c:when>
-								<c:when test='<%= Objects.equals(journalDisplayContext.getTabs1(), "versions") || (journalDisplayContext.hasVersionsResults() && Validator.isNull(journalDisplayContext.getTabs1())) %>'>
-									<liferay-util:include page="/view_versions.jsp" servletContext="<%= application %>">
-										<liferay-util:param name="searchContainerId" value="versions" />
-									</liferay-util:include>
-								</c:when>
-								<c:when test='<%= Objects.equals(journalDisplayContext.getTabs1(), "comments") || (journalDisplayContext.hasCommentsResults() && Validator.isNull(journalDisplayContext.getTabs1())) %>'>
-									<liferay-util:include page="/view_comments.jsp" servletContext="<%= application %>">
-										<liferay-util:param name="searchContainerId" value="comments" />
-									</liferay-util:include>
-								</c:when>
-								<c:otherwise>
-									<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>">
-										<liferay-util:param name="searchContainerId" value="articles" />
-									</liferay-util:include>
-								</c:otherwise>
-							</c:choose>
+							<liferay-util:include page="/view_entries.jsp" servletContext="<%= application %>" />
 						</c:otherwise>
 					</c:choose>
-				</div>
-			</aui:form>
-		</div>
+				</c:otherwise>
+			</c:choose>
+		</aui:form>
 	</div>
 </div>
-
-<aui:script use="liferay-journal-navigation">
-	var journalNavigation = new Liferay.Portlet.JournalNavigation(
-		{
-			editEntryUrl: '<portlet:actionURL />',
-			form: {
-					method: 'POST',
-					node: A.one(document.<portlet:namespace />fm)
-			},
-			moveEntryUrl: '<portlet:renderURL><portlet:param name="mvcPath" value="/move_entries.jsp" /><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:renderURL>',
-			namespace: '<portlet:namespace />',
-			searchContainerId: 'articles'
-		}
-	);
-
-	var clearJournalNavigationHandles = function(event) {
-		if (event.portletId === '<%= portletDisplay.getRootPortletId() %>') {
-			journalNavigation.destroy();
-
-			Liferay.detach('destroyPortlet', clearJournalNavigationHandles);
-		}
-	};
-
-	Liferay.on('destroyPortlet', clearJournalNavigationHandles);
-</aui:script>

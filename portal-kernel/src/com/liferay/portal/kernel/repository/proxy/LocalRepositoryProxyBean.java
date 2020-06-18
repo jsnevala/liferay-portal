@@ -97,22 +97,6 @@ public class LocalRepositoryProxyBean
 		return newFolderProxyBean(folder);
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #checkInFileEntry(long, long, DLVersionNumberIncrease, String, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public void checkInFileEntry(
-			long userId, long fileEntryId, boolean majorVersion,
-			String changeLog, ServiceContext serviceContext)
-		throws PortalException {
-
-		checkInFileEntry(
-			userId, fileEntryId,
-			DLVersionNumberIncrease.fromMajorVersion(majorVersion), changeLog,
-			serviceContext);
-	}
-
 	@Override
 	public void checkInFileEntry(
 			long userId, long fileEntryId,
@@ -165,6 +149,11 @@ public class LocalRepositoryProxyBean
 	@Override
 	public void deleteFileShortcuts(long toFileEntryId) throws PortalException {
 		_localRepository.deleteFileShortcuts(toFileEntryId);
+	}
+
+	@Override
+	public void deleteFileVersion(long fileVersionId) throws PortalException {
+		_localRepository.deleteFileVersion(fileVersionId);
 	}
 
 	@Override
@@ -226,9 +215,8 @@ public class LocalRepositoryProxyBean
 
 	@Override
 	public FileEntry getFileEntry(long fileEntryId) throws PortalException {
-		FileEntry fileEntry = _localRepository.getFileEntry(fileEntryId);
-
-		return newFileEntryProxyBean(fileEntry);
+		return newFileEntryProxyBean(
+			_localRepository.getFileEntry(fileEntryId));
 	}
 
 	@Override
@@ -251,27 +239,21 @@ public class LocalRepositoryProxyBean
 	public FileShortcut getFileShortcut(long fileShortcutId)
 		throws PortalException {
 
-		FileShortcut fileShortcut = _localRepository.getFileShortcut(
-			fileShortcutId);
-
-		return newFileShortcutProxyBean(fileShortcut);
+		return newFileShortcutProxyBean(
+			_localRepository.getFileShortcut(fileShortcutId));
 	}
 
 	@Override
 	public FileVersion getFileVersion(long fileVersionId)
 		throws PortalException {
 
-		FileVersion fileVersion = _localRepository.getFileVersion(
-			fileVersionId);
-
-		return newFileVersionProxyBean(fileVersion);
+		return newFileVersionProxyBean(
+			_localRepository.getFileVersion(fileVersionId));
 	}
 
 	@Override
 	public Folder getFolder(long folderId) throws PortalException {
-		Folder folder = _localRepository.getFolder(folderId);
-
-		return newFolderProxyBean(folder);
+		return newFolderProxyBean(_localRepository.getFolder(folderId));
 	}
 
 	@Override
@@ -391,57 +373,6 @@ public class LocalRepositoryProxyBean
 
 		_localRepository.revertFileEntry(
 			userId, fileEntryId, version, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void updateAsset(
-			long userId, FileEntry fileEntry, FileVersion fileVersion,
-			long[] assetCategoryIds, String[] assetTagNames,
-			long[] assetLinkEntryIds)
-		throws PortalException {
-
-		_localRepository.updateAsset(
-			userId, fileEntry, fileVersion, assetCategoryIds, assetTagNames,
-			assetLinkEntryIds);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #updateFileEntry(long, long, String, String, String, String, String, DLVersionNumberIncrease, File, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public FileEntry updateFileEntry(
-			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			boolean majorVersion, File file, ServiceContext serviceContext)
-		throws PortalException {
-
-		return updateFileEntry(
-			userId, fileEntryId, sourceFileName, mimeType, title, description,
-			changeLog, DLVersionNumberIncrease.fromMajorVersion(majorVersion),
-			file, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #updateFileEntry(long, long, String, String, String, String, String, DLVersionNumberIncrease, InputStream, long, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public FileEntry updateFileEntry(
-			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			boolean majorVersion, InputStream is, long size,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		return updateFileEntry(
-			userId, fileEntryId, sourceFileName, mimeType, title, description,
-			changeLog, DLVersionNumberIncrease.fromMajorVersion(majorVersion),
-			is, size, serviceContext);
 	}
 
 	@Override

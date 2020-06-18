@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,11 +26,12 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class KaleoConditionSoap implements Serializable {
+
 	public static KaleoConditionSoap toSoapModel(KaleoCondition model) {
 		KaleoConditionSoap soapModel = new KaleoConditionSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setKaleoConditionId(model.getKaleoConditionId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -40,7 +39,9 @@ public class KaleoConditionSoap implements Serializable {
 		soapModel.setUserName(model.getUserName());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
-		soapModel.setKaleoDefinitionVersionId(model.getKaleoDefinitionVersionId());
+		soapModel.setKaleoDefinitionId(model.getKaleoDefinitionId());
+		soapModel.setKaleoDefinitionVersionId(
+			model.getKaleoDefinitionVersionId());
 		soapModel.setKaleoNodeId(model.getKaleoNodeId());
 		soapModel.setScript(model.getScript());
 		soapModel.setScriptLanguage(model.getScriptLanguage());
@@ -59,11 +60,14 @@ public class KaleoConditionSoap implements Serializable {
 		return soapModels;
 	}
 
-	public static KaleoConditionSoap[][] toSoapModels(KaleoCondition[][] models) {
+	public static KaleoConditionSoap[][] toSoapModels(
+		KaleoCondition[][] models) {
+
 		KaleoConditionSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new KaleoConditionSoap[models.length][models[0].length];
+			soapModels =
+				new KaleoConditionSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new KaleoConditionSoap[0][0];
@@ -76,8 +80,11 @@ public class KaleoConditionSoap implements Serializable {
 		return soapModels;
 	}
 
-	public static KaleoConditionSoap[] toSoapModels(List<KaleoCondition> models) {
-		List<KaleoConditionSoap> soapModels = new ArrayList<KaleoConditionSoap>(models.size());
+	public static KaleoConditionSoap[] toSoapModels(
+		List<KaleoCondition> models) {
+
+		List<KaleoConditionSoap> soapModels = new ArrayList<KaleoConditionSoap>(
+			models.size());
 
 		for (KaleoCondition model : models) {
 			soapModels.add(toSoapModel(model));
@@ -95,6 +102,14 @@ public class KaleoConditionSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setKaleoConditionId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getKaleoConditionId() {
@@ -153,6 +168,14 @@ public class KaleoConditionSoap implements Serializable {
 		_modifiedDate = modifiedDate;
 	}
 
+	public long getKaleoDefinitionId() {
+		return _kaleoDefinitionId;
+	}
+
+	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		_kaleoDefinitionId = kaleoDefinitionId;
+	}
+
 	public long getKaleoDefinitionVersionId() {
 		return _kaleoDefinitionVersionId;
 	}
@@ -193,6 +216,7 @@ public class KaleoConditionSoap implements Serializable {
 		_scriptRequiredContexts = scriptRequiredContexts;
 	}
 
+	private long _mvccVersion;
 	private long _kaleoConditionId;
 	private long _groupId;
 	private long _companyId;
@@ -200,9 +224,11 @@ public class KaleoConditionSoap implements Serializable {
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
+	private long _kaleoDefinitionId;
 	private long _kaleoDefinitionVersionId;
 	private long _kaleoNodeId;
 	private String _script;
 	private String _scriptLanguage;
 	private String _scriptRequiredContexts;
+
 }

@@ -14,12 +14,27 @@
 
 package com.liferay.gradle.plugins.workspace.configurators;
 
+import com.bmuschko.gradle.docker.DockerRemoteApiPlugin;
+import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer;
+import com.bmuschko.gradle.docker.tasks.container.DockerLogsContainer;
+import com.bmuschko.gradle.docker.tasks.container.DockerRemoveContainer;
+import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer;
+import com.bmuschko.gradle.docker.tasks.container.DockerStopContainer;
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage;
+import com.bmuschko.gradle.docker.tasks.image.DockerPullImage;
+import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage;
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile;
+
+import com.liferay.gradle.plugins.LiferayBasePlugin;
 import com.liferay.gradle.plugins.workspace.WorkspaceExtension;
 import com.liferay.gradle.plugins.workspace.WorkspacePlugin;
 import com.liferay.gradle.plugins.workspace.internal.configurators.TargetPlatformRootProjectConfigurator;
 import com.liferay.gradle.plugins.workspace.internal.util.FileUtil;
 import com.liferay.gradle.plugins.workspace.internal.util.GradleUtil;
+import com.liferay.gradle.plugins.workspace.internal.util.StringUtil;
 import com.liferay.gradle.plugins.workspace.tasks.CreateTokenTask;
+import com.liferay.gradle.plugins.workspace.tasks.InitBundleTask;
+import com.liferay.gradle.util.OSDetector;
 import com.liferay.gradle.util.Validator;
 import com.liferay.gradle.util.copy.StripPathSegmentsAction;
 
@@ -28,17 +43,26 @@ import de.undercouch.gradle.tasks.download.Download;
 import groovy.lang.Closure;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 
+import java.nio.file.Files;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.http.HttpHeaders;
 
 import org.gradle.api.Action;
@@ -47,6 +71,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.file.CopySpec;
 import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.file.FileCollection;
@@ -70,12 +95,26 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin;
  */
 public class RootProjectConfigurator implements Plugin<Project> {
 
+	public static final String BUILD_DOCKER_IMAGE_TASK_NAME =
+		"buildDockerImage";
+
 	public static final String BUNDLE_CONFIGURATION_NAME = "bundle";
 
 	public static final String BUNDLE_GROUP = "bundle";
 
+	public static final String BUNDLE_SUPPORT_CONFIGURATION_NAME =
+		"bundleSupport";
+
+	public static final String CLEAN_DOCKER_IMAGE_TASK_NAME =
+		"cleanDockerImage";
+
 	public static final String CLEAN_TASK_NAME =
 		LifecycleBasePlugin.CLEAN_TASK_NAME;
+
+	public static final String CREATE_DOCKER_CONTAINER_TASK_NAME =
+		"createDockerContainer";
+
+	public static final String CREATE_DOCKERFILE_TASK_NAME = "createDockerfile";
 
 	public static final String CREATE_TOKEN_TASK_NAME = "createToken";
 
@@ -85,12 +124,30 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 	public static final String DIST_BUNDLE_ZIP_TASK_NAME = "distBundleZip";
 
+	public static final String DOCKER_DEPLOY_TASK_NAME = "dockerDeploy";
+
+	public static final String DOCKER_GROUP = "docker";
+
 	public static final String DOWNLOAD_BUNDLE_TASK_NAME = "downloadBundle";
 
 	public static final String INIT_BUNDLE_TASK_NAME = "initBundle";
 
+	public static final String LOGS_DOCKER_CONTAINER_TASK_NAME =
+		"logsDockerContainer";
+
 	public static final String PROVIDED_MODULES_CONFIGURATION_NAME =
 		"providedModules";
+
+	public static final String PULL_DOCKER_IMAGE_TASK_NAME = "pullDockerImage";
+
+	public static final String REMOVE_DOCKER_CONTAINER_TASK_NAME =
+		"removeDockerContainer";
+
+	public static final String START_DOCKER_CONTAINER_TASK_NAME =
+		"startDockerContainer";
+
+	public static final String STOP_DOCKER_CONTAINER_TASK_NAME =
+		"stopDockerContainer";
 
 	/**
 	 * @deprecated As of 1.4.0, replaced by {@link
@@ -103,7 +160,7 @@ public class RootProjectConfigurator implements Plugin<Project> {
 	public RootProjectConfigurator(Settings settings) {
 		_defaultRepositoryEnabled = GradleUtil.getProperty(
 			settings,
-			WorkspacePlugin.PROPERTY_PREFIX + ".default.repository.enabled",
+			WorkspacePlugin.PROPERTY_PREFIX + "default.repository.enabled",
 			_DEFAULT_REPOSITORY_ENABLED);
 	}
 
@@ -112,11 +169,15 @@ public class RootProjectConfigurator implements Plugin<Project> {
 		final WorkspaceExtension workspaceExtension = GradleUtil.getExtension(
 			(ExtensionAware)project.getGradle(), WorkspaceExtension.class);
 
+		GradleUtil.applyPlugin(project, DockerRemoteApiPlugin.class);
 		GradleUtil.applyPlugin(project, LifecycleBasePlugin.class);
 
 		if (isDefaultRepositoryEnabled()) {
 			GradleUtil.addDefaultRepositories(project);
 		}
+
+		Configuration bundleSupportConfiguration =
+			_addConfigurationBundleSupport(project);
 
 		final Configuration providedModulesConfiguration =
 			_addConfigurationProvidedModules(project);
@@ -146,7 +207,10 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 		_addTaskInitBundle(
 			project, downloadBundleTask, workspaceExtension,
-			providedModulesConfiguration);
+			bundleSupportConfiguration, providedModulesConfiguration);
+
+		_addDockerTasks(
+			project, workspaceExtension, providedModulesConfiguration);
 	}
 
 	public boolean isDefaultRepositoryEnabled() {
@@ -155,6 +219,29 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 	public void setDefaultRepositoryEnabled(boolean defaultRepositoryEnabled) {
 		_defaultRepositoryEnabled = defaultRepositoryEnabled;
+	}
+
+	private Configuration _addConfigurationBundleSupport(
+		final Project project) {
+
+		Configuration configuration = GradleUtil.addConfiguration(
+			project, BUNDLE_SUPPORT_CONFIGURATION_NAME);
+
+		configuration.defaultDependencies(
+			new Action<DependencySet>() {
+
+				@Override
+				public void execute(DependencySet dependencySet) {
+					_addDependenciesBundleSupport(project);
+				}
+
+			});
+
+		configuration.setDescription(
+			"Configures Liferay Bundle Support for this project.");
+		configuration.setVisible(false);
+
+		return configuration;
 	}
 
 	private Configuration _addConfigurationProvidedModules(Project project) {
@@ -169,6 +256,107 @@ public class RootProjectConfigurator implements Plugin<Project> {
 		return configuration;
 	}
 
+	private void _addDependenciesBundleSupport(Project project) {
+		GradleUtil.addDependency(
+			project, BUNDLE_SUPPORT_CONFIGURATION_NAME, "com.liferay",
+			"com.liferay.portal.tools.bundle.support", "latest.release");
+	}
+
+	private void _addDockerTasks(
+		Project project, WorkspaceExtension workspaceExtension,
+		Configuration providedModulesConfiguration) {
+
+		Copy dockerDeploy = _addTaskDockerDeploy(
+			project, workspaceExtension, providedModulesConfiguration);
+
+		Dockerfile dockerfile = _addTaskCreateDockerfile(
+			project, workspaceExtension, dockerDeploy);
+
+		DockerBuildImage dockerBuildImage = _addTaskBuildDockerImage(
+			dockerfile, workspaceExtension);
+
+		DockerStopContainer dockerStopContainer = _addTaskStopDockerContainer(
+			project);
+
+		DockerRemoveContainer dockerRemoveContainer =
+			_addTaskRemoveDockerContainer(project, dockerStopContainer);
+
+		DockerCreateContainer dockerCreateContainer =
+			_addTaskCreateDockerContainer(
+				project, workspaceExtension, dockerBuildImage,
+				dockerRemoveContainer);
+
+		_addTaskStartDockerContainer(project, dockerCreateContainer);
+
+		_addTaskLogsDockerContainer(project);
+		_addTaskPullDockerImage(project, workspaceExtension);
+	}
+
+	@SuppressWarnings("serial")
+	private DockerBuildImage _addTaskBuildDockerImage(
+		Dockerfile dockerfile, WorkspaceExtension workspaceExtension) {
+
+		Project project = dockerfile.getProject();
+
+		DockerBuildImage dockerBuildImage = GradleUtil.addTask(
+			project, BUILD_DOCKER_IMAGE_TASK_NAME, DockerBuildImage.class);
+
+		dockerBuildImage.dependsOn(dockerfile);
+
+		dockerBuildImage.setDescription(
+			"Builds a child docker image from Liferay base image with all " +
+				"configs deployed.");
+		dockerBuildImage.setGroup(DOCKER_GROUP);
+		dockerBuildImage.setInputDir(workspaceExtension.getDockerDir());
+
+		DockerRemoveImage dockerRemoveImage = GradleUtil.addTask(
+			project, CLEAN_DOCKER_IMAGE_TASK_NAME, DockerRemoveImage.class);
+
+		dockerRemoveImage.dependsOn(REMOVE_DOCKER_CONTAINER_TASK_NAME);
+
+		dockerRemoveImage.setDescription("Removes the Docker image.");
+		dockerRemoveImage.setForce(true);
+
+		dockerRemoveImage.setOnError(
+			new Closure<Void>(project) {
+
+				@SuppressWarnings("unused")
+				public void doCall(Exception exception) {
+					Logger logger = project.getLogger();
+
+					if (logger.isWarnEnabled()) {
+						logger.warn(
+							"No image with ID '" + _getDockerImageId(project) +
+								"' found.");
+					}
+				}
+
+			});
+
+		Project rootProject = project.getRootProject();
+
+		rootProject.afterEvaluate(
+			new Action<Project>() {
+
+				@Override
+				public void execute(Project p) {
+					String dockerImageId = _getDockerImageId(project);
+
+					dockerBuildImage.setTag(dockerImageId);
+					dockerRemoveImage.setImageId(dockerImageId);
+				}
+
+			});
+
+		Task cleanTask = GradleUtil.getTask(
+			project, LifecycleBasePlugin.CLEAN_TASK_NAME);
+
+		cleanTask.dependsOn(dockerRemoveImage);
+
+		return dockerBuildImage;
+	}
+
+	@SuppressWarnings("serial")
 	private Copy _addTaskCopyBundle(
 		Project project, String taskName, Download downloadBundleTask,
 		final WorkspaceExtension workspaceExtension,
@@ -235,6 +423,181 @@ public class RootProjectConfigurator implements Plugin<Project> {
 		copy.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
 
 		return copy;
+	}
+
+	private DockerCreateContainer _addTaskCreateDockerContainer(
+		Project project, WorkspaceExtension workspaceExtension,
+		DockerBuildImage dockerBuildImage,
+		DockerRemoveContainer dockerRemoveContainer) {
+
+		DockerCreateContainer dockerCreateContainer = GradleUtil.addTask(
+			project, CREATE_DOCKER_CONTAINER_TASK_NAME,
+			DockerCreateContainer.class);
+
+		dockerCreateContainer.dependsOn(dockerBuildImage);
+
+		File dockerDir = workspaceExtension.getDockerDir();
+
+		File deployDir = new File(dockerDir, "deploy");
+		File workDir = new File(dockerDir, "work");
+
+		String dockerPath = dockerDir.getAbsolutePath();
+
+		String workPath = workDir.getAbsolutePath();
+
+		if (OSDetector.isWindows()) {
+			String prefix = FilenameUtils.getPrefix(dockerPath);
+
+			if (prefix.contains(":")) {
+				dockerPath = '/' + dockerPath.replace(":", "");
+				workPath = '/' + workPath.replace(":", "");
+			}
+
+			dockerPath = dockerPath.replace('\\', '/');
+			workPath = workPath.replace('\\', '/');
+		}
+
+		Map<String, String> binds = new HashMap<>();
+
+		binds.put(deployDir.getAbsolutePath(), "/mnt/liferay/deploy");
+		binds.put(workPath, "/opt/liferay/work");
+
+		dockerCreateContainer.setBinds(binds);
+
+		dockerCreateContainer.setDescription(
+			"Creates a Docker container from your built image and mounts " +
+				dockerPath + " to /mnt/liferay.");
+
+		List<String> portBindings = new ArrayList<>();
+
+		portBindings.add("8000:8000");
+		portBindings.add("8080:8080");
+		portBindings.add("11311:11311");
+
+		dockerCreateContainer.setPortBindings(portBindings);
+
+		dockerCreateContainer.targetImageId(
+			new Callable<String>() {
+
+				@Override
+				public String call() throws Exception {
+					return _getDockerImageId(project);
+				}
+
+			});
+
+		dockerCreateContainer.withEnvVar("JPDA_ADDRESS", "0.0.0.0:8000");
+		dockerCreateContainer.withEnvVar("LIFERAY_JPDA_ENABLED", "true");
+		dockerCreateContainer.withEnvVar(
+			_getEnvVarOverride("module.framework.properties.osgi.console"),
+			"0.0.0.0:11311");
+		dockerCreateContainer.withEnvVar(
+			"LIFERAY_WORKSPACE_ENVIRONMENT",
+			workspaceExtension.getEnvironment());
+
+		Project rootProject = project.getRootProject();
+
+		rootProject.afterEvaluate(
+			new Action<Project>() {
+
+				@Override
+				public void execute(Project p) {
+					dockerCreateContainer.setContainerName(
+						_getDockerContainerId(project));
+				}
+
+			});
+
+		Task cleanTask = GradleUtil.getTask(
+			project, LifecycleBasePlugin.CLEAN_TASK_NAME);
+
+		cleanTask.dependsOn(dockerRemoveContainer);
+
+		return dockerCreateContainer;
+	}
+
+	private Dockerfile _addTaskCreateDockerfile(
+		Project project, final WorkspaceExtension workspaceExtension,
+		Copy dockerDeploy) {
+
+		Dockerfile dockerfile = GradleUtil.addTask(
+			project, CREATE_DOCKERFILE_TASK_NAME, Dockerfile.class);
+
+		dockerfile.dependsOn(dockerDeploy);
+
+		dockerfile.from(workspaceExtension.getDockerImageLiferay());
+
+		dockerfile.instruction(
+			"ENV LIFERAY_WORKSPACE_ENVIRONMENT=" +
+				workspaceExtension.getEnvironment());
+
+		dockerfile.instruction(
+			"COPY --chown=liferay:liferay deploy /mnt/liferay/deploy");
+		dockerfile.instruction(
+			"COPY --chown=liferay:liferay patching /mnt/liferay/patching");
+		dockerfile.instruction(
+			"COPY --chown=liferay:liferay scripts /mnt/liferay/scripts");
+		dockerfile.instruction(
+			"COPY --chown=liferay:liferay " + _LIFERAY_CONFIGS_DIR_NAME +
+				" /home/liferay/configs");
+		dockerfile.instruction(
+			"COPY --chown=liferay:liferay " + _LIFERAY_IMAGE_SETUP_SCRIPT +
+				" /usr/local/liferay/scripts/pre-configure/" +
+					_LIFERAY_IMAGE_SETUP_SCRIPT);
+
+		dockerfile.setDescription(
+			"Creates a Dockerfile to build the Liferay Workspace Docker " +
+				"image.");
+		dockerfile.setGroup(DOCKER_GROUP);
+
+		dockerfile.doFirst(
+			new Action<Task>() {
+
+				@Override
+				public void execute(Task task) {
+					try {
+						File destinationDir = workspaceExtension.getDockerDir();
+
+						_createTouchFile(new File(destinationDir, "deploy"));
+						_createTouchFile(new File(destinationDir, "patching"));
+						_createTouchFile(new File(destinationDir, "scripts"));
+						_createTouchFile(new File(destinationDir, "work"));
+
+						File file = new File(
+							destinationDir, _LIFERAY_IMAGE_SETUP_SCRIPT);
+
+						try {
+							String template = _loadTemplate(
+								_LIFERAY_IMAGE_SETUP_SCRIPT + ".tpl");
+
+							Files.write(file.toPath(), template.getBytes());
+						}
+						catch (IOException ioException) {
+							throw new GradleException(
+								"Unable to write script file: " +
+									file.getAbsolutePath(),
+								ioException);
+						}
+					}
+					catch (IOException ioException) {
+						Logger logger = dockerfile.getLogger();
+
+						if (logger.isWarnEnabled()) {
+							StringBuilder sb = new StringBuilder();
+
+							sb.append("Could not create a placeholder file. ");
+							sb.append("Please make sure you have at least ");
+							sb.append("one config or the buildDockerImage ");
+							sb.append("task will fail.");
+
+							logger.warn(sb.toString());
+						}
+					}
+				}
+
+			});
+
+		return dockerfile;
 	}
 
 	private CreateTokenTask _addTaskCreateToken(
@@ -316,6 +679,7 @@ public class RootProjectConfigurator implements Plugin<Project> {
 		return copy;
 	}
 
+	@SuppressWarnings("serial")
 	private <T extends AbstractArchiveTask> T _addTaskDistBundle(
 		Project project, String taskName, Class<T> clazz,
 		final Copy distBundleTask,
@@ -358,6 +722,111 @@ public class RootProjectConfigurator implements Plugin<Project> {
 		return task;
 	}
 
+	@SuppressWarnings("serial")
+	private Copy _addTaskDockerDeploy(
+		Project project, final WorkspaceExtension workspaceExtension,
+		Configuration providedModulesConfiguration) {
+
+		Copy copy = GradleUtil.addTask(
+			project, DOCKER_DEPLOY_TASK_NAME, Copy.class);
+
+		copy.setDescription(
+			"Copy the Liferay configs and provided configurations to the " +
+				"docker build directory.");
+
+		copy.setDestinationDir(workspaceExtension.getDockerDir());
+
+		copy.from(
+			providedModulesConfiguration,
+			new Closure<Void>(project) {
+
+				@SuppressWarnings("unused")
+				public void doCall(CopySpec copySpec) {
+					copySpec.into("deploy");
+				}
+
+			});
+
+		File configsDir = workspaceExtension.getConfigsDir();
+
+		if (configsDir.exists()) {
+			List<String> commonConfigDirNames = Arrays.asList(
+				"common", "docker");
+
+			File[] configDirs = configsDir.listFiles(
+				(dir, name) -> {
+					File file = new File(dir, name);
+
+					if (!file.isDirectory()) {
+						return false;
+					}
+
+					if (commonConfigDirNames.contains(name)) {
+						return false;
+					}
+
+					return true;
+				});
+
+			if ((configDirs == null) || (configDirs.length == 0)) {
+				throw new GradleException(
+					"The 'configs' directory must contain one directory not " +
+						"named: " + StringUtil.toString(commonConfigDirNames));
+			}
+
+			for (String commonConfigDirName : commonConfigDirNames) {
+				for (File configDir : configDirs) {
+					copy.from(
+						new Callable<File>() {
+
+							@Override
+							public File call() throws Exception {
+								return new File(
+									configsDir, commonConfigDirName);
+							}
+
+						},
+						new Closure<Void>(project) {
+
+							@SuppressWarnings("unused")
+							public void doCall(CopySpec copySpec) {
+								copySpec.into(
+									_LIFERAY_CONFIGS_DIR_NAME + "/" +
+										configDir.getName());
+							}
+
+						});
+				}
+			}
+
+			copy.from(
+				new Callable<File>() {
+
+					@Override
+					public File call() throws Exception {
+						return configsDir;
+					}
+
+				},
+				new Closure<Void>(project) {
+
+					@SuppressWarnings("unused")
+					public void doCall(CopySpec copySpec) {
+						copySpec.exclude(commonConfigDirNames);
+						copySpec.into(_LIFERAY_CONFIGS_DIR_NAME);
+					}
+
+				});
+		}
+
+		Task deployTask = GradleUtil.addTask(
+			project, LiferayBasePlugin.DEPLOY_TASK_NAME, Copy.class);
+
+		deployTask.finalizedBy(copy);
+
+		return copy;
+	}
+
 	private Download _addTaskDownloadBundle(
 		final CreateTokenTask createTokenTask,
 		final WorkspaceExtension workspaceExtension) {
@@ -393,9 +862,9 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 							file = project.file(uri);
 						}
-						catch (Exception e) {
+						catch (Exception exception) {
 							if (logger.isDebugEnabled()) {
-								logger.debug(e.getMessage(), e);
+								logger.debug(exception.getMessage(), exception);
 							}
 						}
 
@@ -466,8 +935,10 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 						download.src(bundleUrl);
 					}
-					catch (MalformedURLException murle) {
-						throw new GradleException(murle.getMessage(), murle);
+					catch (MalformedURLException malformedURLException) {
+						throw new GradleException(
+							malformedURLException.getMessage(),
+							malformedURLException);
 					}
 				}
 
@@ -476,16 +947,38 @@ public class RootProjectConfigurator implements Plugin<Project> {
 		return download;
 	}
 
-	private Copy _addTaskInitBundle(
+	private InitBundleTask _addTaskInitBundle(
 		Project project, Download downloadBundleTask,
 		final WorkspaceExtension workspaceExtension,
+		Configuration configurationBundleSupport,
 		Configuration configurationOsgiModules) {
 
-		Copy copy = _addTaskCopyBundle(
-			project, INIT_BUNDLE_TASK_NAME, downloadBundleTask,
-			workspaceExtension, configurationOsgiModules);
+		InitBundleTask initBundleTask = GradleUtil.addTask(
+			project, INIT_BUNDLE_TASK_NAME, InitBundleTask.class);
 
-		copy.into(
+		initBundleTask.dependsOn(downloadBundleTask);
+
+		initBundleTask.setClasspath(configurationBundleSupport);
+		initBundleTask.setConfigEnvironment(
+			new Callable<String>() {
+
+				@Override
+				public String call() throws Exception {
+					return workspaceExtension.getEnvironment();
+				}
+
+			});
+		initBundleTask.setConfigsDir(
+			new Callable<File>() {
+
+				@Override
+				public File call() throws Exception {
+					return workspaceExtension.getConfigsDir();
+				}
+
+			});
+		initBundleTask.setDescription("Downloads and unzips the bundle.");
+		initBundleTask.setDestinationDir(
 			new Callable<File>() {
 
 				@Override
@@ -494,13 +987,166 @@ public class RootProjectConfigurator implements Plugin<Project> {
 				}
 
 			});
+		initBundleTask.setFile(
+			new Callable<File>() {
 
-		copy.setDescription("Downloads and unzips the bundle.");
-		copy.setGroup(BUNDLE_GROUP);
+				@Override
+				public File call() throws Exception {
+					return _getDownloadFile(downloadBundleTask);
+				}
 
-		return copy;
+			});
+		initBundleTask.setGroup(BUNDLE_GROUP);
+		initBundleTask.setProvidedModules(configurationOsgiModules);
+
+		return initBundleTask;
 	}
 
+	private DockerLogsContainer _addTaskLogsDockerContainer(Project project) {
+		DockerLogsContainer dockerLogsContainer = GradleUtil.addTask(
+			project, LOGS_DOCKER_CONTAINER_TASK_NAME,
+			DockerLogsContainer.class);
+
+		dockerLogsContainer.setDescription("Logs the Docker container.");
+		dockerLogsContainer.setFollow(true);
+		dockerLogsContainer.setTailAll(true);
+
+		dockerLogsContainer.targetContainerId(
+			new Callable<String>() {
+
+				@Override
+				public String call() throws Exception {
+					return _getDockerContainerId(project);
+				}
+
+			});
+
+		return dockerLogsContainer;
+	}
+
+	private DockerPullImage _addTaskPullDockerImage(
+		Project project, WorkspaceExtension workspaceExtension) {
+
+		DockerPullImage dockerPullImage = GradleUtil.addTask(
+			project, PULL_DOCKER_IMAGE_TASK_NAME, DockerPullImage.class);
+
+		dockerPullImage.setDescription("Pull the Docker image.");
+
+		String dockerImageLiferay = workspaceExtension.getDockerImageLiferay();
+
+		int index = dockerImageLiferay.indexOf(":");
+
+		dockerPullImage.setRepository(dockerImageLiferay.substring(0, index));
+		dockerPullImage.setTag(dockerImageLiferay.substring(index + 1));
+
+		return dockerPullImage;
+	}
+
+	@SuppressWarnings("serial")
+	private DockerRemoveContainer _addTaskRemoveDockerContainer(
+		Project project, DockerStopContainer stopDockerContainer) {
+
+		DockerRemoveContainer dockerRemoveContainer = GradleUtil.addTask(
+			project, REMOVE_DOCKER_CONTAINER_TASK_NAME,
+			DockerRemoveContainer.class);
+
+		dockerRemoveContainer.setDescription("Removes the Docker container.");
+		dockerRemoveContainer.setForce(true);
+		dockerRemoveContainer.setRemoveVolumes(true);
+
+		dockerRemoveContainer.targetContainerId(
+			new Callable<String>() {
+
+				@Override
+				public String call() throws Exception {
+					return _getDockerContainerId(project);
+				}
+
+			});
+
+		dockerRemoveContainer.dependsOn(stopDockerContainer);
+
+		dockerRemoveContainer.setOnError(
+			new Closure<Void>(project) {
+
+				@SuppressWarnings("unused")
+				public void doCall(Exception exception) {
+					Logger logger = project.getLogger();
+
+					if (logger.isWarnEnabled()) {
+						logger.warn(
+							"No container with ID '" +
+								_getDockerContainerId(project) + "' found.");
+					}
+				}
+
+			});
+
+		return dockerRemoveContainer;
+	}
+
+	private DockerStartContainer _addTaskStartDockerContainer(
+		Project project, DockerCreateContainer dockerCreateContainer) {
+
+		DockerStartContainer dockerStartContainer = GradleUtil.addTask(
+			project, START_DOCKER_CONTAINER_TASK_NAME,
+			DockerStartContainer.class);
+
+		dockerStartContainer.dependsOn(dockerCreateContainer);
+
+		dockerStartContainer.setDescription("Starts the Docker container.");
+
+		dockerStartContainer.targetContainerId(
+			new Callable<String>() {
+
+				@Override
+				public String call() throws Exception {
+					return _getDockerContainerId(project);
+				}
+
+			});
+
+		return dockerStartContainer;
+	}
+
+	@SuppressWarnings("serial")
+	private DockerStopContainer _addTaskStopDockerContainer(Project project) {
+		DockerStopContainer dockerStopContainer = GradleUtil.addTask(
+			project, STOP_DOCKER_CONTAINER_TASK_NAME,
+			DockerStopContainer.class);
+
+		dockerStopContainer.setDescription("Stops the Docker container.");
+
+		dockerStopContainer.targetContainerId(
+			new Callable<String>() {
+
+				@Override
+				public String call() throws Exception {
+					return _getDockerContainerId(project);
+				}
+
+			});
+
+		dockerStopContainer.setOnError(
+			new Closure<Void>(project) {
+
+				@SuppressWarnings("unused")
+				public void doCall(Exception exception) {
+					Logger logger = project.getLogger();
+
+					if (logger.isWarnEnabled()) {
+						logger.warn(
+							"No container with ID '" +
+								_getDockerContainerId(project) + "' running.");
+					}
+				}
+
+			});
+
+		return dockerStopContainer;
+	}
+
+	@SuppressWarnings("serial")
 	private void _configureTaskCopyBundleFromConfig(
 		Copy copy, Callable<File> dir) {
 
@@ -516,6 +1162,7 @@ public class RootProjectConfigurator implements Plugin<Project> {
 			});
 	}
 
+	@SuppressWarnings("serial")
 	private void _configureTaskCopyBundleFromDownload(
 		Copy copy, final Download download) {
 
@@ -548,16 +1195,9 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 				@Override
 				public FileCollection call() throws Exception {
-					File dir = download.getDest();
+					File file = _getDownloadFile(download);
 
-					URL url = (URL)download.getSrc();
-
-					String fileName = url.toString();
-
-					fileName = fileName.substring(
-						fileName.lastIndexOf('/') + 1);
-
-					File file = new File(dir, fileName);
+					String fileName = file.getName();
 
 					if (fileName.endsWith(".tar.gz")) {
 						return project.tarTree(file);
@@ -657,6 +1297,58 @@ public class RootProjectConfigurator implements Plugin<Project> {
 			});
 	}
 
+	private void _createTouchFile(File dir) throws IOException {
+		if (!dir.exists()) {
+			dir.mkdirs();
+		}
+
+		File file = new File(dir, ".touch");
+
+		file.createNewFile();
+	}
+
+	private String _getDockerContainerId(Project project) {
+		WorkspaceExtension workspaceExtension = GradleUtil.getExtension(
+			(ExtensionAware)project.getGradle(), WorkspaceExtension.class);
+
+		return workspaceExtension.getDockerContainerId();
+	}
+
+	private String _getDockerImageId(Project project) {
+		WorkspaceExtension workspaceExtension = GradleUtil.getExtension(
+			(ExtensionAware)project.getGradle(), WorkspaceExtension.class);
+
+		return workspaceExtension.getDockerImageId();
+	}
+
+	private File _getDownloadFile(Download download) {
+		URL url = (URL)download.getSrc();
+
+		String fileName = url.toString();
+
+		return new File(
+			download.getDest(),
+			fileName.substring(fileName.lastIndexOf('/') + 1));
+	}
+
+	private String _getEnvVarOverride(String string) {
+		String[] segments = string.split("\\.");
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("LIFERAY_");
+
+		for (int i = 0; i < segments.length; i++) {
+			sb.append(segments[i].toUpperCase());
+
+			if (i < (segments.length - 1)) {
+				sb.append("_PERIOD_");
+			}
+		}
+
+		return sb.toString();
+	}
+
 	private List<?> _getSrcList(Download download) {
 		Object src = download.getSrc();
 
@@ -671,7 +1363,24 @@ public class RootProjectConfigurator implements Plugin<Project> {
 		return Collections.singletonList(src);
 	}
 
+	private String _loadTemplate(String name) {
+		try (InputStream inputStream =
+				RootProjectConfigurator.class.getResourceAsStream(name)) {
+
+			return StringUtil.read(inputStream);
+		}
+		catch (Exception exception) {
+			throw new GradleException(
+				"Unable to read template " + name, exception);
+		}
+	}
+
 	private static final boolean _DEFAULT_REPOSITORY_ENABLED = true;
+
+	private static final String _LIFERAY_CONFIGS_DIR_NAME = "configs";
+
+	private static final String _LIFERAY_IMAGE_SETUP_SCRIPT =
+		"100_liferay_image_setup.sh";
 
 	private boolean _defaultRepositoryEnabled;
 

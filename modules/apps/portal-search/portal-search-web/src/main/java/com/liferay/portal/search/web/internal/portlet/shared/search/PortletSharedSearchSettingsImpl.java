@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.web.internal.display.context.PortletRequestThemeDisplaySupplier;
 import com.liferay.portal.search.web.internal.display.context.ThemeDisplaySupplier;
 import com.liferay.portal.search.web.internal.portlet.shared.task.PortletSharedRequestHelper;
@@ -48,6 +49,8 @@ public class PortletSharedSearchSettingsImpl
 		_portletPreferencesOptional = portletPreferencesOptional;
 		_portletSharedRequestHelper = portletSharedRequestHelper;
 		_renderRequest = renderRequest;
+
+		_searchRequestBuilder = searchSettings.getSearchRequestBuilder();
 	}
 
 	@Override
@@ -58,6 +61,14 @@ public class PortletSharedSearchSettingsImpl
 	@Override
 	public void addFacet(Facet facet) {
 		_searchSettings.addFacet(facet);
+	}
+
+	@Override
+	public SearchRequestBuilder getFederatedSearchRequestBuilder(
+		Optional<String> federatedSearchKeyOptional) {
+
+		return _searchSettings.getFederatedSearchRequestBuilder(
+			federatedSearchKeyOptional);
 	}
 
 	@Override
@@ -86,12 +97,26 @@ public class PortletSharedSearchSettingsImpl
 	}
 
 	@Override
-	public Optional<String> getParameter(String name) {
+	public Optional<String> getParameter71(String name) {
 		return _portletSharedRequestHelper.getParameter(name, _renderRequest);
 	}
 
 	@Override
-	public Optional<String[]> getParameterValues(String name) {
+	public Optional<String> getParameterOptional(String name) {
+		return _portletSharedRequestHelper.getParameter(name, _renderRequest);
+	}
+
+	@Override
+	public String[] getParameterValues(String name) {
+		Optional<String[]> optional =
+			_portletSharedRequestHelper.getParameterValues(
+				name, _renderRequest);
+
+		return optional.orElse(new String[0]);
+	}
+
+	@Override
+	public Optional<String[]> getParameterValues71(String name) {
 		return _portletSharedRequestHelper.getParameterValues(
 			name, _renderRequest);
 	}
@@ -102,7 +127,12 @@ public class PortletSharedSearchSettingsImpl
 	}
 
 	@Override
-	public Optional<PortletPreferences> getPortletPreferences() {
+	public Optional<PortletPreferences> getPortletPreferences71() {
+		return _portletPreferencesOptional;
+	}
+
+	@Override
+	public Optional<PortletPreferences> getPortletPreferencesOptional() {
 		return _portletPreferencesOptional;
 	}
 
@@ -117,8 +147,18 @@ public class PortletSharedSearchSettingsImpl
 	}
 
 	@Override
+	public Optional<String> getScopeParameterName() {
+		return _searchSettings.getScopeParameterName();
+	}
+
+	@Override
 	public SearchContext getSearchContext() {
 		return _searchSettings.getSearchContext();
+	}
+
+	@Override
+	public SearchRequestBuilder getSearchRequestBuilder() {
+		return _searchRequestBuilder;
 	}
 
 	@Override
@@ -162,10 +202,16 @@ public class PortletSharedSearchSettingsImpl
 			paginationStartParameterName);
 	}
 
+	@Override
+	public void setScopeParameterName(String scopeParameterName) {
+		_searchSettings.setScopeParameterName(scopeParameterName);
+	}
+
 	private final String _portletId;
 	private final Optional<PortletPreferences> _portletPreferencesOptional;
 	private final PortletSharedRequestHelper _portletSharedRequestHelper;
 	private final RenderRequest _renderRequest;
+	private final SearchRequestBuilder _searchRequestBuilder;
 	private final SearchSettings _searchSettings;
 
 }

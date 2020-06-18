@@ -14,8 +14,7 @@
 
 package com.liferay.portal.tools.service.builder.test.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -35,6 +34,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -63,17 +63,16 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.portal.tools.service.builder.test.service.impl.LocalizedEntryLocalServiceImpl
- * @see com.liferay.portal.tools.service.builder.test.service.LocalizedEntryLocalServiceUtil
  * @generated
  */
-@ProviderType
 public abstract class LocalizedEntryLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements LocalizedEntryLocalService,
-		IdentifiableOSGiService {
+	extends BaseLocalServiceImpl
+	implements IdentifiableOSGiService, LocalizedEntryLocalService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.portal.tools.service.builder.test.service.LocalizedEntryLocalServiceUtil} to access the localized entry local service.
+	 * Never modify or reference this class directly. Use <code>LocalizedEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.tools.service.builder.test.service.LocalizedEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -113,6 +112,7 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	@Override
 	public LocalizedEntry deleteLocalizedEntry(long localizedEntryId)
 		throws PortalException {
+
 		return localizedEntryPersistence.remove(localizedEntryId);
 	}
 
@@ -129,11 +129,16 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	}
 
 	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return localizedEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(LocalizedEntry.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			LocalizedEntry.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -151,7 +156,7 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.tools.service.builder.test.model.impl.LocalizedEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.LocalizedEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -160,17 +165,18 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return localizedEntryPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return localizedEntryPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.tools.service.builder.test.model.impl.LocalizedEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.LocalizedEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -180,10 +186,12 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return localizedEntryPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return localizedEntryPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -205,10 +213,11 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return localizedEntryPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return localizedEntryPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
@@ -226,12 +235,14 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	@Override
 	public LocalizedEntry getLocalizedEntry(long localizedEntryId)
 		throws PortalException {
+
 		return localizedEntryPersistence.findByPrimaryKey(localizedEntryId);
 	}
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
 		actionableDynamicQuery.setBaseLocalService(localizedEntryLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
@@ -243,10 +254,14 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(localizedEntryLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			localizedEntryLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(LocalizedEntry.class);
 
@@ -258,6 +273,7 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
+
 		actionableDynamicQuery.setBaseLocalService(localizedEntryLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(LocalizedEntry.class);
@@ -268,15 +284,35 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return localizedEntryPersistence.create(
+			((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
-		return localizedEntryLocalService.deleteLocalizedEntry((LocalizedEntry)persistedModel);
+
+		return localizedEntryLocalService.deleteLocalizedEntry(
+			(LocalizedEntry)persistedModel);
 	}
 
+	public BasePersistence<LocalizedEntry> getBasePersistence() {
+		return localizedEntryPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return localizedEntryPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -284,7 +320,7 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	 * Returns a range of all the localized entries.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.tools.service.builder.test.model.impl.LocalizedEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.tools.service.builder.test.model.impl.LocalizedEntryModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of localized entries
@@ -321,43 +357,58 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	@Override
 	public LocalizedEntryLocalization fetchLocalizedEntryLocalization(
 		long localizedEntryId, String languageId) {
-		return localizedEntryLocalizationPersistence.fetchByLocalizedEntryId_LanguageId(localizedEntryId,
-			languageId);
+
+		return localizedEntryLocalizationPersistence.
+			fetchByLocalizedEntryId_LanguageId(localizedEntryId, languageId);
 	}
 
 	@Override
 	public LocalizedEntryLocalization getLocalizedEntryLocalization(
-		long localizedEntryId, String languageId) throws PortalException {
-		return localizedEntryLocalizationPersistence.findByLocalizedEntryId_LanguageId(localizedEntryId,
-			languageId);
+			long localizedEntryId, String languageId)
+		throws PortalException {
+
+		return localizedEntryLocalizationPersistence.
+			findByLocalizedEntryId_LanguageId(localizedEntryId, languageId);
 	}
 
 	@Override
 	public List<LocalizedEntryLocalization> getLocalizedEntryLocalizations(
 		long localizedEntryId) {
-		return localizedEntryLocalizationPersistence.findByLocalizedEntryId(localizedEntryId);
+
+		return localizedEntryLocalizationPersistence.findByLocalizedEntryId(
+			localizedEntryId);
 	}
 
 	@Override
 	public LocalizedEntryLocalization updateLocalizedEntryLocalization(
-		LocalizedEntry localizedEntry, String languageId, String title,
-		String content) throws PortalException {
-		localizedEntry = localizedEntryPersistence.findByPrimaryKey(localizedEntry.getPrimaryKey());
+			LocalizedEntry localizedEntry, String languageId, String title,
+			String content)
+		throws PortalException {
 
-		LocalizedEntryLocalization localizedEntryLocalization = localizedEntryLocalizationPersistence.fetchByLocalizedEntryId_LanguageId(localizedEntry.getLocalizedEntryId(),
-				languageId);
+		localizedEntry = localizedEntryPersistence.findByPrimaryKey(
+			localizedEntry.getPrimaryKey());
 
-		return _updateLocalizedEntryLocalization(localizedEntry,
-			localizedEntryLocalization, languageId, title, content);
+		LocalizedEntryLocalization localizedEntryLocalization =
+			localizedEntryLocalizationPersistence.
+				fetchByLocalizedEntryId_LanguageId(
+					localizedEntry.getLocalizedEntryId(), languageId);
+
+		return _updateLocalizedEntryLocalization(
+			localizedEntry, localizedEntryLocalization, languageId, title,
+			content);
 	}
 
 	@Override
 	public List<LocalizedEntryLocalization> updateLocalizedEntryLocalizations(
-		LocalizedEntry localizedEntry, Map<String, String> titleMap,
-		Map<String, String> contentMap) throws PortalException {
-		localizedEntry = localizedEntryPersistence.findByPrimaryKey(localizedEntry.getPrimaryKey());
+			LocalizedEntry localizedEntry, Map<String, String> titleMap,
+			Map<String, String> contentMap)
+		throws PortalException {
 
-		Map<String, String[]> localizedValuesMap = new HashMap<String, String[]>();
+		localizedEntry = localizedEntryPersistence.findByPrimaryKey(
+			localizedEntry.getPrimaryKey());
+
+		Map<String, String[]> localizedValuesMap =
+			new HashMap<String, String[]>();
 
 		for (Map.Entry<String, String> entry : titleMap.entrySet()) {
 			String languageId = entry.getKey();
@@ -387,41 +438,55 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 			localizedValues[1] = entry.getValue();
 		}
 
-		List<LocalizedEntryLocalization> localizedEntryLocalizations = new ArrayList<LocalizedEntryLocalization>(localizedValuesMap.size());
+		List<LocalizedEntryLocalization> localizedEntryLocalizations =
+			new ArrayList<LocalizedEntryLocalization>(
+				localizedValuesMap.size());
 
-		for (LocalizedEntryLocalization localizedEntryLocalization : localizedEntryLocalizationPersistence.findByLocalizedEntryId(
-				localizedEntry.getLocalizedEntryId())) {
-			String[] localizedValues = localizedValuesMap.remove(localizedEntryLocalization.getLanguageId());
+		for (LocalizedEntryLocalization localizedEntryLocalization :
+				localizedEntryLocalizationPersistence.findByLocalizedEntryId(
+					localizedEntry.getLocalizedEntryId())) {
+
+			String[] localizedValues = localizedValuesMap.remove(
+				localizedEntryLocalization.getLanguageId());
 
 			if (localizedValues == null) {
-				localizedEntryLocalizationPersistence.remove(localizedEntryLocalization);
+				localizedEntryLocalizationPersistence.remove(
+					localizedEntryLocalization);
 			}
 			else {
 				localizedEntryLocalization.setTitle(localizedValues[0]);
 				localizedEntryLocalization.setContent(localizedValues[1]);
 
-				localizedEntryLocalizations.add(localizedEntryLocalizationPersistence.update(
+				localizedEntryLocalizations.add(
+					localizedEntryLocalizationPersistence.update(
 						localizedEntryLocalization));
 			}
 		}
 
-		long batchCounter = counterLocalService.increment(LocalizedEntryLocalization.class.getName(),
+		long batchCounter =
+			counterLocalService.increment(
+				LocalizedEntryLocalization.class.getName(),
 				localizedValuesMap.size()) - localizedValuesMap.size();
 
-		for (Map.Entry<String, String[]> entry : localizedValuesMap.entrySet()) {
+		for (Map.Entry<String, String[]> entry :
+				localizedValuesMap.entrySet()) {
+
 			String languageId = entry.getKey();
 			String[] localizedValues = entry.getValue();
 
-			LocalizedEntryLocalization localizedEntryLocalization = localizedEntryLocalizationPersistence.create(++batchCounter);
+			LocalizedEntryLocalization localizedEntryLocalization =
+				localizedEntryLocalizationPersistence.create(++batchCounter);
 
-			localizedEntryLocalization.setLocalizedEntryId(localizedEntry.getLocalizedEntryId());
+			localizedEntryLocalization.setLocalizedEntryId(
+				localizedEntry.getLocalizedEntryId());
 
 			localizedEntryLocalization.setLanguageId(languageId);
 
 			localizedEntryLocalization.setTitle(localizedValues[0]);
 			localizedEntryLocalization.setContent(localizedValues[1]);
 
-			localizedEntryLocalizations.add(localizedEntryLocalizationPersistence.update(
+			localizedEntryLocalizations.add(
+				localizedEntryLocalizationPersistence.update(
 					localizedEntryLocalization));
 		}
 
@@ -429,23 +494,29 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	}
 
 	private LocalizedEntryLocalization _updateLocalizedEntryLocalization(
-		LocalizedEntry localizedEntry,
-		LocalizedEntryLocalization localizedEntryLocalization,
-		String languageId, String title, String content)
+			LocalizedEntry localizedEntry,
+			LocalizedEntryLocalization localizedEntryLocalization,
+			String languageId, String title, String content)
 		throws PortalException {
+
 		if (localizedEntryLocalization == null) {
-			long localizedEntryLocalizationId = counterLocalService.increment(LocalizedEntryLocalization.class.getName());
+			long localizedEntryLocalizationId = counterLocalService.increment(
+				LocalizedEntryLocalization.class.getName());
 
-			localizedEntryLocalization = localizedEntryLocalizationPersistence.create(localizedEntryLocalizationId);
+			localizedEntryLocalization =
+				localizedEntryLocalizationPersistence.create(
+					localizedEntryLocalizationId);
 
-			localizedEntryLocalization.setLocalizedEntryId(localizedEntry.getLocalizedEntryId());
+			localizedEntryLocalization.setLocalizedEntryId(
+				localizedEntry.getLocalizedEntryId());
 			localizedEntryLocalization.setLanguageId(languageId);
 		}
 
 		localizedEntryLocalization.setTitle(title);
 		localizedEntryLocalization.setContent(content);
 
-		return localizedEntryLocalizationPersistence.update(localizedEntryLocalization);
+		return localizedEntryLocalizationPersistence.update(
+			localizedEntryLocalization);
 	}
 
 	/**
@@ -464,6 +535,7 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	 */
 	public void setLocalizedEntryLocalService(
 		LocalizedEntryLocalService localizedEntryLocalService) {
+
 		this.localizedEntryLocalService = localizedEntryLocalService;
 	}
 
@@ -483,6 +555,7 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	 */
 	public void setLocalizedEntryPersistence(
 		LocalizedEntryPersistence localizedEntryPersistence) {
+
 		this.localizedEntryPersistence = localizedEntryPersistence;
 	}
 
@@ -491,7 +564,9 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	 *
 	 * @return the counter local service
 	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
+	public com.liferay.counter.kernel.service.CounterLocalService
+		getCounterLocalService() {
+
 		return counterLocalService;
 	}
 
@@ -501,7 +576,9 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	 * @param counterLocalService the counter local service
 	 */
 	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
+		com.liferay.counter.kernel.service.CounterLocalService
+			counterLocalService) {
+
 		this.counterLocalService = counterLocalService;
 	}
 
@@ -510,7 +587,9 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	 *
 	 * @return the localized entry localization persistence
 	 */
-	public LocalizedEntryLocalizationPersistence getLocalizedEntryLocalizationPersistence() {
+	public LocalizedEntryLocalizationPersistence
+		getLocalizedEntryLocalizationPersistence() {
+
 		return localizedEntryLocalizationPersistence;
 	}
 
@@ -520,12 +599,16 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 	 * @param localizedEntryLocalizationPersistence the localized entry localization persistence
 	 */
 	public void setLocalizedEntryLocalizationPersistence(
-		LocalizedEntryLocalizationPersistence localizedEntryLocalizationPersistence) {
-		this.localizedEntryLocalizationPersistence = localizedEntryLocalizationPersistence;
+		LocalizedEntryLocalizationPersistence
+			localizedEntryLocalizationPersistence) {
+
+		this.localizedEntryLocalizationPersistence =
+			localizedEntryLocalizationPersistence;
 	}
 
 	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.portal.tools.service.builder.test.model.LocalizedEntry",
+		persistedModelLocalServiceRegistry.register(
+			"com.liferay.portal.tools.service.builder.test.model.LocalizedEntry",
 			localizedEntryLocalService);
 	}
 
@@ -566,24 +649,34 @@ public abstract class LocalizedEntryLocalServiceBaseImpl
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
 	@BeanReference(type = LocalizedEntryLocalService.class)
 	protected LocalizedEntryLocalService localizedEntryLocalService;
+
 	@BeanReference(type = LocalizedEntryPersistence.class)
 	protected LocalizedEntryPersistence localizedEntryPersistence;
-	@ServiceReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
+
+	@ServiceReference(
+		type = com.liferay.counter.kernel.service.CounterLocalService.class
+	)
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
 	@BeanReference(type = LocalizedEntryLocalizationPersistence.class)
-	protected LocalizedEntryLocalizationPersistence localizedEntryLocalizationPersistence;
+	protected LocalizedEntryLocalizationPersistence
+		localizedEntryLocalizationPersistence;
+
 	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+	protected PersistedModelLocalServiceRegistry
+		persistedModelLocalServiceRegistry;
+
 }

@@ -17,7 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String redirect = ParamUtil.getString(request, "redirect");
+String redirect = PortalUtil.getLayoutFullURL(layout, themeDisplay);
 %>
 
 <div class="container-fluid-1280">
@@ -25,13 +25,6 @@ String redirect = ParamUtil.getString(request, "redirect");
 		<aui:fieldset>
 
 			<%
-			PortletURL redirectURL = renderResponse.createRenderURL();
-
-			redirectURL.setParameter("hideDefaultSuccessMessage", Boolean.TRUE.toString());
-			redirectURL.setParameter("mvcPath", "/add_asset_redirect.jsp");
-			redirectURL.setParameter("redirect", redirect);
-			redirectURL.setWindowState(LiferayWindowState.POP_UP);
-
 			long[] groupIds = assetPublisherDisplayContext.getGroupIds();
 
 			Map<Long, List<AssetPublisherAddItemHolder>> scopeAssetPublisherAddItemHolders = assetPublisherDisplayContext.getScopeAssetPublisherAddItemHolders(groupIds.length);
@@ -72,10 +65,15 @@ String redirect = ParamUtil.getString(request, "redirect");
 								curGroupId = group.getLiveGroupId();
 							}
 
-							Map<String, Object> data = new HashMap<String, Object>();
+							PortletURL portletURL = assetPublisherAddItemHolder.getPortletURL();
 
-							data.put("title", LanguageUtil.format((HttpServletRequest)pageContext.getRequest(), "new-x", HtmlUtil.escape(message), false));
-							data.put("url", assetHelper.getAddURLPopUp(curGroupId, plid, assetPublisherAddItemHolder.getPortletURL(), false, null));
+							portletURL.setParameter("redirect", redirect);
+
+							Map<String, Object> data = HashMapBuilder.<String, Object>put(
+								"title", LanguageUtil.format((HttpServletRequest)pageContext.getRequest(), "new-x", HtmlUtil.escape(message), false)
+							).put(
+								"url", assetHelper.getAddURLPopUp(curGroupId, plid, portletURL, false, null)
+							).build();
 						%>
 
 							<aui:option data="<%= data %>" label="<%= HtmlUtil.escape(message) %>" />
@@ -88,7 +86,11 @@ String redirect = ParamUtil.getString(request, "redirect");
 				</div>
 
 				<aui:script>
-					Liferay.Util.toggleSelectBox('<portlet:namespace />selectScope', '<%= groupId %>', '<portlet:namespace /><%= groupId %>');
+					Liferay.Util.toggleSelectBox(
+						'<portlet:namespace />selectScope',
+						'<%= groupId %>',
+						'<portlet:namespace /><%= groupId %>'
+					);
 				</aui:script>
 
 			<%
@@ -100,27 +102,22 @@ String redirect = ParamUtil.getString(request, "redirect");
 
 	<aui:button-row>
 		<aui:button onClick='<%= renderResponse.getNamespace() + "addAssetEntry();" %>' primary="<%= true %>" value="add" />
+
+		<aui:button href="<%= redirect %>" type="cancel" />
 	</aui:button-row>
 </div>
 
 <aui:script>
 	function <portlet:namespace />addAssetEntry() {
-		var A = AUI();
+		var visibleItem = document.querySelector('.asset-entry-type:not(.hide)');
 
-		var visibleItem = A.one('.asset-entry-type:not(.hide)');
+		var assetEntryTypeSelector = visibleItem.querySelector(
+			'.asset-entry-type-select'
+		);
 
-		var assetEntryTypeSelector = visibleItem.one('.asset-entry-type-select');
+		var selectedOption =
+			assetEntryTypeSelector.options[assetEntryTypeSelector.selectedIndex];
 
-		var index = assetEntryTypeSelector.get('selectedIndex');
-
-		var selectedOption = assetEntryTypeSelector.get('options').item(index);
-
-		var title = selectedOption.attr('data-title');
-		var url = selectedOption.attr('data-url');
-
-		var dialog = Liferay.Util.getWindow();
-
-		dialog.iframe.set('uri', url);
-		dialog.titleNode.html(title);
+		Liferay.Util.navigate(selectedOption.dataset.url);
 	}
 </aui:script>

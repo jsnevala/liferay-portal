@@ -42,9 +42,14 @@ import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
+import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.IndexSearcherHelperUtil;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.PortalPreferencesLocalServiceUtil;
@@ -54,18 +59,18 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.SearchContextTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.test.util.BaseSearchTestCase;
-import com.liferay.portal.service.test.ServiceTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -73,7 +78,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -93,7 +97,7 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 	@Before
 	@Override
 	public void setUp() throws Exception {
-		ServiceTestUtil.setUser(TestPropsValues.getUser());
+		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		super.setUp();
 
@@ -139,13 +143,15 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(group.getGroupId());
 
-		Map<Locale, String> keywordsMap = new HashMap<>();
-
 		String keywords = "keywords";
 
-		keywordsMap.put(LocaleUtil.getDefault(), keywords);
-		keywordsMap.put(LocaleUtil.GERMANY, keywords);
-		keywordsMap.put(LocaleUtil.SPAIN, keywords);
+		Map<Locale, String> keywordsMap = HashMapBuilder.put(
+			LocaleUtil.getDefault(), keywords
+		).put(
+			LocaleUtil.GERMANY, keywords
+		).put(
+			LocaleUtil.SPAIN, keywords
+		).build();
 
 		String articleId = "Article.Id";
 
@@ -279,9 +285,78 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 		testOrderHelper.testOrderByDDMTextFieldRepeatable();
 	}
 
-	@Ignore
-	@Override
 	@Test
+	public void testOrderByRelevancePhrase() throws Exception {
+		JournalTestUtil.addArticle(
+			group.getGroupId(), "article 1", "test test some");
+
+		JournalArticle article = JournalTestUtil.addArticle(
+			group.getGroupId(), "article 2", "some some test");
+
+		SearchContext searchContext = SearchContextTestUtil.getSearchContext(
+			group.getGroupId());
+
+		searchContext.setEntryClassNames(
+			new String[] {JournalArticle.class.getName()});
+
+		Sort sort = new Sort(null, Sort.SCORE_TYPE, false);
+
+		searchContext.setSorts(sort);
+
+		Indexer indexer = IndexerRegistryUtil.getIndexer(JournalArticle.class);
+
+		searchContext.setAttribute(Field.CONTENT, "some test");
+
+		Hits hits = indexer.search(searchContext);
+
+		Document[] documents = hits.getDocs();
+
+		Assert.assertEquals(
+			documents[0].get(Field.ENTRY_CLASS_PK),
+			String.valueOf(article.getResourcePrimKey()));
+	}
+
+	@Test
+	public void testOrderByRelevanceWord() throws Exception {
+		JournalArticle article1 = JournalTestUtil.addArticle(
+			group.getGroupId(), "article 1", "test test some");
+		JournalArticle article2 = JournalTestUtil.addArticle(
+			group.getGroupId(), "article 2", "some some test");
+
+		SearchContext searchContext = SearchContextTestUtil.getSearchContext(
+			group.getGroupId());
+
+		searchContext.setEntryClassNames(
+			new String[] {JournalArticle.class.getName()});
+
+		Sort sort = new Sort(null, Sort.SCORE_TYPE, false);
+
+		searchContext.setSorts(sort);
+
+		Indexer indexer = IndexerRegistryUtil.getIndexer(JournalArticle.class);
+
+		searchContext.setAttribute(Field.CONTENT, "test");
+
+		Hits hits = indexer.search(searchContext);
+
+		Document[] documents = hits.getDocs();
+
+		Assert.assertEquals(
+			documents[0].get(Field.ENTRY_CLASS_PK),
+			String.valueOf(article1.getResourcePrimKey()));
+
+		searchContext.setAttribute(Field.CONTENT, "some");
+
+		hits = indexer.search(searchContext);
+
+		documents = hits.getDocs();
+
+		Assert.assertEquals(
+			documents[0].get(Field.ENTRY_CLASS_PK),
+			String.valueOf(article2.getResourcePrimKey()));
+	}
+
+	@Override
 	public void testSearchAttachments() throws Exception {
 	}
 
@@ -445,8 +520,8 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 
 	@Override
 	protected boolean isCheckBaseModelPermission() {
-		return
-			_journalServiceConfiguration.articleViewPermissionsCheckEnabled();
+		return _journalServiceConfiguration.
+			articleViewPermissionsCheckEnabled();
 	}
 
 	@Override
@@ -482,7 +557,8 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 	protected void setUpDDMIndexer() {
 		Registry registry = RegistryUtil.getRegistry();
 
-		_ddmIndexer = registry.getService(DDMIndexer.class);
+		_ddmIndexer = registry.getService(
+			registry.getServiceReference(DDMIndexer.class));
 	}
 
 	@Override
@@ -549,9 +625,9 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 				fieldValues.length);
 
 			for (String fieldValue : fieldValues) {
-				Map<Locale, String> map = new HashMap<>();
-
-				map.put(Locale.US, fieldValue);
+				Map<Locale, String> map = HashMapBuilder.put(
+					LocaleUtil.US, fieldValue
+				).build();
 
 				contents.add(map);
 			}

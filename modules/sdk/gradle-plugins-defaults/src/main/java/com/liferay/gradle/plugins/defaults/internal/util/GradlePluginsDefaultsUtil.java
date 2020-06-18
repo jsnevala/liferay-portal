@@ -16,14 +16,15 @@ package com.liferay.gradle.plugins.defaults.internal.util;
 
 import com.liferay.gradle.util.Validator;
 
+import groovy.json.JsonSlurper;
+
 import java.io.File;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import org.dm.gradle.plugins.bundle.BundleExtension;
 
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -41,8 +42,13 @@ public class GradlePluginsDefaultsUtil {
 	public static final String DEFAULT_REPOSITORY_URL =
 		"https://repository-cdn.liferay.com/nexus/content/groups/public";
 
-	public static final String[] JSON_VERSION_FILE_NAMES =
-		{"npm-shrinkwrap.json", "package-lock.json", "package.json"};
+	public static final String[] JSON_VERSION_FILE_NAMES = {
+		"npm-shrinkwrap.json", "package-lock.json", "package.json"
+	};
+
+	public static final String[] PARENT_THEME_PROJECT_NAMES = {
+		"frontend-theme-styled", "frontend-theme-unstyled"
+	};
 
 	public static final String SNAPSHOT_PROPERTY_NAME = "snapshot";
 
@@ -51,7 +57,7 @@ public class GradlePluginsDefaultsUtil {
 	public static final String TMP_MAVEN_REPOSITORY_DIR_NAME = ".m2-tmp";
 
 	public static final Pattern jsonVersionPattern = Pattern.compile(
-		"\\n\\t\"version\": \"(.+)\"");
+		"\\n(\\t|  )\"version\": \"(.+)\"");
 
 	public static void configureRepositories(
 		Project project, File portalRootDir) {
@@ -151,36 +157,67 @@ public class GradlePluginsDefaultsUtil {
 
 		Set<String> fileNames = new HashSet<>();
 
+		if (Objects.equals(buildProfile, "dxp")) {
+			buildProfile = "portal";
+		}
+
+		fileNames.add(_BUILD_PROFILE_FILE_NAME_PREFIX + buildProfile);
 		fileNames.add(
 			_BUILD_PROFILE_FILE_NAME_PREFIX + buildProfile + "-" + suffix);
-		fileNames.add(_BUILD_PROFILE_FILE_NAME_PREFIX + buildProfile);
 
 		if (buildProfile.equals("portal-deprecated")) {
-			fileNames.add(_BUILD_PROFILE_FILE_NAME_PREFIX + "portal-" + suffix);
 			fileNames.add(_BUILD_PROFILE_FILE_NAME_PREFIX + "portal");
+			fileNames.add(_BUILD_PROFILE_FILE_NAME_PREFIX + "portal-" + suffix);
 		}
 
 		return fileNames;
 	}
 
-	public static String getBundleInstruction(Project project, String key) {
-		Map<String, String> bundleInstructions = getBundleInstructions(project);
-
-		return bundleInstructions.get(key);
-	}
-
 	@SuppressWarnings("unchecked")
-	public static Map<String, String> getBundleInstructions(Project project) {
-		BundleExtension bundleExtension = GradleUtil.getExtension(
-			project, BundleExtension.class);
+	public static boolean hasNPMParentThemesDependencies(Project project) {
+		if (!isSubrepository(project)) {
+			return false;
+		}
 
-		return (Map<String, String>)bundleExtension.getInstructions();
+		File packageJSONFile = project.file("package.json");
+
+		if (!packageJSONFile.exists()) {
+			return false;
+		}
+
+		JsonSlurper jsonSlurper = new JsonSlurper();
+
+		Map<String, Object> packageJSONMap =
+			(Map<String, Object>)jsonSlurper.parse(packageJSONFile);
+
+		Map<String, Object> devDependencies =
+			(Map<String, Object>)packageJSONMap.get("devDependencies");
+
+		if (devDependencies == null) {
+			return false;
+		}
+
+		for (String key : devDependencies.keySet()) {
+			if (key.startsWith("liferay-theme-deps-")) {
+				return true;
+			}
+		}
+
+		for (String parentThemeProjectName : PARENT_THEME_PROJECT_NAMES) {
+			String name = "liferay-" + parentThemeProjectName;
+
+			if (!devDependencies.containsKey(name)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public static boolean isPrivateProject(Project project) {
 		String path = project.getPath();
 
-		if (path.startsWith(":private:")) {
+		if (path.startsWith(":dxp:") || path.startsWith(":private:")) {
 			return true;
 		}
 
@@ -218,6 +255,25 @@ public class GradlePluginsDefaultsUtil {
 		}
 
 		return snapshot;
+	}
+
+	public static boolean isSubrepository(Project project) {
+		File gitRepoDir = GradleUtil.getRootDir(
+			project, GitRepo.GIT_REPO_FILE_NAME);
+
+		if (gitRepoDir != null) {
+			return true;
+		}
+
+		String[] dirNames = {"build-working-dir.xml", "portal-impl"};
+
+		for (String dirName : dirNames) {
+			if (GradleUtil.getRootDir(project, dirName) != null) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public static boolean isTestProject(File dir) {

@@ -14,29 +14,30 @@
 
 package com.liferay.portal.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the Company service. Represents a row in the &quot;Company&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see CompanyModel
- * @see com.liferay.portal.model.impl.CompanyImpl
- * @see com.liferay.portal.model.impl.CompanyModelImpl
  * @generated
  */
 @ImplementationClassName("com.liferay.portal.model.impl.CompanyImpl")
 @ProviderType
 public interface Company extends CompanyModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.model.impl.CompanyImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.portal.model.impl.CompanyImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<Company, Long> COMPANY_ID_ACCESSOR = new Accessor<Company, Long>() {
+	public static final Accessor<Company, Long> COMPANY_ID_ACCESSOR =
+		new Accessor<Company, Long>() {
+
 			@Override
 			public Long get(Company company) {
 				return company.getCompanyId();
@@ -51,7 +52,10 @@ public interface Company extends CompanyModel, PersistedModel {
 			public Class<Company> getTypeClass() {
 				return Company.class;
 			}
+
 		};
+
+	public int compareTo(Company company);
 
 	public Account getAccount()
 		throws com.liferay.portal.kernel.exception.PortalException;
@@ -59,6 +63,8 @@ public interface Company extends CompanyModel, PersistedModel {
 	public String getAdminName();
 
 	public String getAuthType();
+
+	public CompanyInfo getCompanyInfo();
 
 	public User getDefaultUser()
 		throws com.liferay.portal.kernel.exception.PortalException;
@@ -73,12 +79,14 @@ public interface Company extends CompanyModel, PersistedModel {
 	public long getGroupId()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	public String getKey();
+
 	public java.security.Key getKeyObj();
 
 	public java.util.Locale getLocale()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	@com.liferay.portal.kernel.bean.AutoEscape()
+	@com.liferay.portal.kernel.bean.AutoEscape
 	public String getName()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
@@ -97,6 +105,10 @@ public interface Company extends CompanyModel, PersistedModel {
 
 	public boolean isAutoLogin();
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public boolean isSendPassword();
 
 	public boolean isSendPasswordResetLink();
@@ -109,7 +121,10 @@ public interface Company extends CompanyModel, PersistedModel {
 
 	public boolean isStrangersWithMx();
 
+	public void setKey(String key);
+
 	public void setKeyObj(java.security.Key keyObj);
 
 	public void setVirtualHostname(String virtualHostname);
+
 }

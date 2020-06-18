@@ -25,36 +25,37 @@
 
 	<aui:button name="selectLayoutButton" value="select" />
 
-	<aui:script use="liferay-item-selector-dialog">
-		$('#<portlet:namespace />selectLayoutButton').on(
-			'click',
-			function(event) {
-				event.preventDefault();
+	<aui:script require="frontend-js-web/liferay/ItemSelectorDialog.es as ItemSelectorDialog">
+		var selectLayoutButton = document.getElementById('<portlet:namespace />selectLayoutButton');
 
-				var itemSelectorDialog = new A.LiferayItemSelectorDialog(
-					{
+		if (selectLayoutButton) {
+			selectLayoutButton.addEventListener(
+				'click',
+				function(event) {
+					event.preventDefault();
+
+					const itemSelectorDialog = new ItemSelectorDialog.default({
 						eventName: '<%= linkToPageLayoutTypeControllerDisplayContext.getEventName() %>',
-						on: {
-							selectedItemChange: function(event) {
-								var selectedItem = event.newVal;
-
-								var linkToLayoutName = A.one('#<portlet:namespace />linkToLayoutName');
-								var linkToLayoutUuid = A.one('#<portlet:namespace />linkToLayoutUuid');
-
-								if (selectedItem) {
-									linkToLayoutName.val(selectedItem.name);
-									linkToLayoutUuid.val(selectedItem.id);
-								}
-							}
-						},
-						'strings.add': '<liferay-ui:message key="done" />',
+						singleSelect: true,
 						title: '<liferay-ui:message key="select-layout" />',
 						url: '<%= linkToPageLayoutTypeControllerDisplayContext.getItemSelectorURL() %>'
-					}
-				);
+					});
 
-				itemSelectorDialog.open();
-			}
-		);
+					itemSelectorDialog.on('selectedItemChange', function(event) {
+						const selectedItem = event.selectedItem;
+
+						const linkToLayoutName = document.getElementById('<portlet:namespace />linkToLayoutName');
+						const linkToLayoutUuid = document.getElementById('<portlet:namespace />linkToLayoutUuid');
+
+						if (selectedItem && linkToLayoutName && linkToLayoutUuid) {
+							linkToLayoutName.value = selectedItem.name;
+							linkToLayoutUuid.value = selectedItem.id;
+						}
+					});
+
+					itemSelectorDialog.open();
+				}
+			);
+		}
 	</aui:script>
 </div>

@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,13 +25,17 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class DDMDataProviderInstanceLinkSoap implements Serializable {
+
 	public static DDMDataProviderInstanceLinkSoap toSoapModel(
 		DDMDataProviderInstanceLink model) {
-		DDMDataProviderInstanceLinkSoap soapModel = new DDMDataProviderInstanceLinkSoap();
 
-		soapModel.setDataProviderInstanceLinkId(model.getDataProviderInstanceLinkId());
+		DDMDataProviderInstanceLinkSoap soapModel =
+			new DDMDataProviderInstanceLinkSoap();
+
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setDataProviderInstanceLinkId(
+			model.getDataProviderInstanceLinkId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setDataProviderInstanceId(model.getDataProviderInstanceId());
 		soapModel.setStructureId(model.getStructureId());
@@ -43,7 +45,9 @@ public class DDMDataProviderInstanceLinkSoap implements Serializable {
 
 	public static DDMDataProviderInstanceLinkSoap[] toSoapModels(
 		DDMDataProviderInstanceLink[] models) {
-		DDMDataProviderInstanceLinkSoap[] soapModels = new DDMDataProviderInstanceLinkSoap[models.length];
+
+		DDMDataProviderInstanceLinkSoap[] soapModels =
+			new DDMDataProviderInstanceLinkSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -54,10 +58,12 @@ public class DDMDataProviderInstanceLinkSoap implements Serializable {
 
 	public static DDMDataProviderInstanceLinkSoap[][] toSoapModels(
 		DDMDataProviderInstanceLink[][] models) {
+
 		DDMDataProviderInstanceLinkSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new DDMDataProviderInstanceLinkSoap[models.length][models[0].length];
+			soapModels = new DDMDataProviderInstanceLinkSoap
+				[models.length][models[0].length];
 		}
 		else {
 			soapModels = new DDMDataProviderInstanceLinkSoap[0][0];
@@ -72,13 +78,16 @@ public class DDMDataProviderInstanceLinkSoap implements Serializable {
 
 	public static DDMDataProviderInstanceLinkSoap[] toSoapModels(
 		List<DDMDataProviderInstanceLink> models) {
-		List<DDMDataProviderInstanceLinkSoap> soapModels = new ArrayList<DDMDataProviderInstanceLinkSoap>(models.size());
+
+		List<DDMDataProviderInstanceLinkSoap> soapModels =
+			new ArrayList<DDMDataProviderInstanceLinkSoap>(models.size());
 
 		for (DDMDataProviderInstanceLink model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new DDMDataProviderInstanceLinkSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new DDMDataProviderInstanceLinkSoap[soapModels.size()]);
 	}
 
 	public DDMDataProviderInstanceLinkSoap() {
@@ -90,6 +99,14 @@ public class DDMDataProviderInstanceLinkSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setDataProviderInstanceLinkId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getDataProviderInstanceLinkId() {
@@ -124,8 +141,10 @@ public class DDMDataProviderInstanceLinkSoap implements Serializable {
 		_structureId = structureId;
 	}
 
+	private long _mvccVersion;
 	private long _dataProviderInstanceLinkId;
 	private long _companyId;
 	private long _dataProviderInstanceId;
 	private long _structureId;
+
 }

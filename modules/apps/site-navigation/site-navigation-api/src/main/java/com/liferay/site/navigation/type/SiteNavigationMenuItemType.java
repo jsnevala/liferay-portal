@@ -17,9 +17,9 @@ package com.liferay.site.navigation.type;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
@@ -41,9 +41,10 @@ import javax.servlet.http.HttpServletResponse;
 public interface SiteNavigationMenuItemType {
 
 	public default boolean exportData(
-		PortletDataContext portletDataContext,
-		Element siteNavigationMenuItemElement,
-		SiteNavigationMenuItem siteNavigationMenuItem) {
+			PortletDataContext portletDataContext,
+			Element siteNavigationMenuItemElement,
+			SiteNavigationMenuItem siteNavigationMenuItem)
+		throws PortalException {
 
 		return true;
 	}
@@ -67,15 +68,16 @@ public interface SiteNavigationMenuItemType {
 	}
 
 	public default String getName(String typeSettings) {
-		UnicodeProperties typeSettingsProperties = new UnicodeProperties();
+		UnicodeProperties typeSettingsUnicodeProperties =
+			new UnicodeProperties();
 
-		typeSettingsProperties.fastLoad(typeSettings);
+		typeSettingsUnicodeProperties.fastLoad(typeSettings);
 
-		return typeSettingsProperties.get("name");
+		return typeSettingsUnicodeProperties.get("name");
 	}
 
 	public default String getRegularURL(
-			HttpServletRequest request,
+			HttpServletRequest httpServletRequest,
 			SiteNavigationMenuItem siteNavigationMenuItem)
 		throws Exception {
 
@@ -83,7 +85,7 @@ public interface SiteNavigationMenuItemType {
 	}
 
 	public default String getResetLayoutURL(
-			HttpServletRequest request,
+			HttpServletRequest httpServletRequest,
 			SiteNavigationMenuItem siteNavigationMenuItem)
 		throws Exception {
 
@@ -91,7 +93,7 @@ public interface SiteNavigationMenuItemType {
 	}
 
 	public default String getResetMaxStateURL(
-			HttpServletRequest request,
+			HttpServletRequest httpServletRequest,
 			SiteNavigationMenuItem siteNavigationMenuItem)
 		throws Exception {
 
@@ -128,7 +130,7 @@ public interface SiteNavigationMenuItemType {
 		SiteNavigationMenuItem siteNavigationMenuItem, String languageId) {
 
 		return getTitle(
-			siteNavigationMenuItem, LanguageUtil.getLocale(languageId));
+			siteNavigationMenuItem, LocaleUtil.fromLanguageId(languageId));
 	}
 
 	public default boolean hasPermission(
@@ -146,9 +148,16 @@ public interface SiteNavigationMenuItemType {
 	}
 
 	public default boolean importData(
-		PortletDataContext portletDataContext,
-		SiteNavigationMenuItem siteNavigationMenuItem,
-		SiteNavigationMenuItem importedSiteNavigationMenuItem) {
+			PortletDataContext portletDataContext,
+			SiteNavigationMenuItem siteNavigationMenuItem,
+			SiteNavigationMenuItem importedSiteNavigationMenuItem)
+		throws PortalException {
+
+		return true;
+	}
+
+	public default boolean isAvailable(
+		SiteNavigationMenuItemTypeContext siteNavigationMenuItemTypeContext) {
 
 		return true;
 	}
@@ -176,12 +185,14 @@ public interface SiteNavigationMenuItemType {
 	}
 
 	public default void renderAddPage(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 	}
 
 	public default void renderEditPage(
-			HttpServletRequest request, HttpServletResponse response,
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse,
 			SiteNavigationMenuItem siteNavigationMenuItem)
 		throws IOException {
 	}

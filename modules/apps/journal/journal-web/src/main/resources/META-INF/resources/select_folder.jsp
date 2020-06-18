@@ -19,16 +19,18 @@
 <%
 String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectFolder");
 
-Map<String, Object> context = new HashMap<>();
-
-context.put("itemSelectorSaveEvent", eventName);
-context.put("namespace", liferayPortletResponse.getNamespace());
-context.put("nodes", journalDisplayContext.getFoldersJSONArray());
-context.put("pathThemeImages", themeDisplay.getPathThemeImages());
+Map<String, Object> data = HashMapBuilder.<String, Object>put(
+	"itemSelectorSaveEvent", eventName
+).put(
+	"namespace", liferayPortletResponse.getNamespace()
+).put(
+	"nodes", journalDisplayContext.getFoldersJSONArray()
+).put(
+	"pathThemeImages", themeDisplay.getPathThemeImages()
+).build();
 %>
 
-<soy:component-renderer
-	context="<%= context %>"
-	module="journal-web/js/SelectFolder.es"
-	templateNamespace="com.liferay.journal.web.SelectFolder.render"
+<react:component
+	data="<%= data %>"
+	module="js/SelectFolder.es"
 />

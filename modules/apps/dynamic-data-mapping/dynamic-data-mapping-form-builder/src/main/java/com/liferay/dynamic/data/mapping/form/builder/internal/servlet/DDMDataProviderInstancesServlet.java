@@ -15,7 +15,7 @@
 package com.liferay.dynamic.data.mapping.form.builder.internal.servlet;
 
 import com.liferay.dynamic.data.mapping.model.DDMDataProviderInstance;
-import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceService;
 import com.liferay.dynamic.data.mapping.util.comparator.DataProviderInstanceNameComparator;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -62,52 +63,65 @@ public class DDMDataProviderInstancesServlet extends BaseDDMFormBuilderServlet {
 
 	@Override
 	protected void doGet(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		JSONArray dataProviderInstancesJSONArray =
-			getDataProviderInstancesJSONArray(request);
+			getDataProviderInstancesJSONArray(httpServletRequest);
 
 		if (dataProviderInstancesJSONArray == null) {
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			httpServletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST);
 
 			return;
 		}
 
-		response.setContentType(ContentTypes.APPLICATION_JSON);
-		response.setStatus(HttpServletResponse.SC_OK);
+		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
+		httpServletResponse.setStatus(HttpServletResponse.SC_OK);
 
 		ServletResponseUtil.write(
-			response, dataProviderInstancesJSONArray.toJSONString());
+			httpServletResponse, dataProviderInstancesJSONArray.toJSONString());
 	}
 
 	protected JSONArray getDataProviderInstancesJSONArray(
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest) {
 
 		try {
-			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
-			String languageId = themeDisplay.getLanguageId();
+			String languageId = ParamUtil.getString(
+				httpServletRequest, "languageId", themeDisplay.getLanguageId());
 
 			Locale locale = LocaleUtil.fromLanguageId(languageId);
 
-			long scopeGroupId = themeDisplay.getScopeGroupId();
+			long scopeGroupId = ParamUtil.getLong(
+				httpServletRequest, "scopeGroupId",
+				themeDisplay.getScopeGroupId());
+
+			Group scopeGroup = themeDisplay.getScopeGroup();
+
+			if (scopeGroup.isStagingGroup()) {
+				scopeGroupId = scopeGroup.getLiveGroupId();
+			}
 
 			long[] groupIds = _portal.getCurrentAndAncestorSiteGroupIds(
 				scopeGroupId);
 
 			int start = ParamUtil.getInteger(
-				request, "start", QueryUtil.ALL_POS);
-			int end = ParamUtil.getInteger(request, "end", QueryUtil.ALL_POS);
+				httpServletRequest, "start", QueryUtil.ALL_POS);
+			int end = ParamUtil.getInteger(
+				httpServletRequest, "end", QueryUtil.ALL_POS);
 
 			DataProviderInstanceNameComparator
 				dataProviderInstanceNameComparator =
 					new DataProviderInstanceNameComparator(true);
 
 			List<DDMDataProviderInstance> ddmDataProviderInstances =
-				_ddmDataProviderInstanceLocalService.getDataProviderInstances(
-					groupIds, start, end, dataProviderInstanceNameComparator);
+				_ddmDataProviderInstanceService.search(
+					themeDisplay.getCompanyId(), groupIds, null, start, end,
+					dataProviderInstanceNameComparator);
 
 			JSONArray dataProviderInstancesJSONArray =
 				_jsonFactory.createJSONArray();
@@ -119,11 +133,12 @@ public class DDMDataProviderInstancesServlet extends BaseDDMFormBuilderServlet {
 					_jsonFactory.createJSONObject();
 
 				dataProviderInstanceJSONObject.put(
-					"id", ddmDataProviderInstance.getDataProviderInstanceId());
-				dataProviderInstanceJSONObject.put(
-					"name", ddmDataProviderInstance.getName(locale));
-				dataProviderInstanceJSONObject.put(
-					"uuid", ddmDataProviderInstance.getUuid());
+					"id", ddmDataProviderInstance.getDataProviderInstanceId()
+				).put(
+					"name", ddmDataProviderInstance.getName(locale)
+				).put(
+					"uuid", ddmDataProviderInstance.getUuid()
+				);
 
 				dataProviderInstancesJSONArray.put(
 					dataProviderInstanceJSONObject);
@@ -131,9 +146,9 @@ public class DDMDataProviderInstancesServlet extends BaseDDMFormBuilderServlet {
 
 			return dataProviderInstancesJSONArray;
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 
@@ -146,8 +161,7 @@ public class DDMDataProviderInstancesServlet extends BaseDDMFormBuilderServlet {
 	private static final long serialVersionUID = 1L;
 
 	@Reference
-	private DDMDataProviderInstanceLocalService
-		_ddmDataProviderInstanceLocalService;
+	private DDMDataProviderInstanceService _ddmDataProviderInstanceService;
 
 	@Reference
 	private JSONFactory _jsonFactory;

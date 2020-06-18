@@ -32,6 +32,13 @@ public class WorkspaceUtil {
 			new WorkspaceGitRepositoryData(
 				repositoryType, workspaceGitRepository);
 
+		String upstreamBranchName =
+			workspaceGitRepositoryData.getUpstreamBranchName();
+
+		if (upstreamBranchName == null) {
+			return null;
+		}
+
 		String gitHubURL = workspaceGitRepositoryData.getRepositoryGitHubURL();
 
 		WorkspaceGitRepository dependencyWorkspaceGitRepository = null;
@@ -48,15 +55,13 @@ public class WorkspaceUtil {
 			dependencyWorkspaceGitRepository =
 				GitRepositoryFactory.getDependencyWorkspaceGitRepository(
 					repositoryType, workspaceGitRepository, pullRequest,
-					workspaceGitRepositoryData.getUpstreamBranchName());
+					upstreamBranchName);
 		}
 		else if (GitUtil.isValidGitHubRefURL(gitHubURL)) {
-			RemoteGitRef remoteGitRef = GitUtil.getRemoteGitRef(gitHubURL);
-
 			dependencyWorkspaceGitRepository =
 				GitRepositoryFactory.getDependencyWorkspaceGitRepository(
-					repositoryType, workspaceGitRepository, remoteGitRef,
-					workspaceGitRepositoryData.getUpstreamBranchName());
+					repositoryType, workspaceGitRepository,
+					GitUtil.getRemoteGitRef(gitHubURL), upstreamBranchName);
 		}
 
 		if (dependencyWorkspaceGitRepository == null) {
@@ -99,11 +104,10 @@ public class WorkspaceUtil {
 					gitHubURL, pullRequest, upstreamBranchName);
 		}
 		else if (GitUtil.isValidGitHubRefURL(gitHubURL)) {
-			RemoteGitRef remoteGitRef = GitUtil.getRemoteGitRef(gitHubURL);
-
 			workspaceGitRepository =
 				GitRepositoryFactory.getWorkspaceGitRepository(
-					gitHubURL, remoteGitRef, upstreamBranchName);
+					gitHubURL, GitUtil.getRemoteGitRef(gitHubURL),
+					upstreamBranchName);
 		}
 
 		if (workspaceGitRepository == null) {
@@ -128,11 +132,11 @@ public class WorkspaceUtil {
 			_workspaceProperties.load(
 				new StringReader(
 					JenkinsResultsParserUtil.toString(
-						_WORKSPACE_PROPERTIES_URL, false)));
+						_URL_WORKSPACE_PROPERTIES, false)));
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			System.out.println(
-				"Skipped downloading " + _WORKSPACE_PROPERTIES_URL);
+				"Skipped downloading " + _URL_WORKSPACE_PROPERTIES);
 		}
 
 		File propertiesFile = new File("workspace.properties");
@@ -143,7 +147,7 @@ public class WorkspaceUtil {
 		return _workspaceProperties;
 	}
 
-	private static final String _WORKSPACE_PROPERTIES_URL =
+	private static final String _URL_WORKSPACE_PROPERTIES =
 		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
 			"/liferay-jenkins-ee/commands/workspace.properties";
 

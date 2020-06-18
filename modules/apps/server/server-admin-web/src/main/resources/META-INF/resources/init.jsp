@@ -30,6 +30,7 @@ page import="com.liferay.document.library.kernel.model.DLFileVersion" %><%@
 page import="com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil" %><%@
 page import="com.liferay.expando.kernel.model.ExpandoBridge" %><%@
 page import="com.liferay.expando.kernel.model.ExpandoColumnConstants" %><%@
+page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu" %><%@
 page import="com.liferay.petra.log4j.Levels" %><%@
 page import="com.liferay.petra.string.CharPool" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
@@ -42,6 +43,9 @@ page import="com.liferay.portal.kernel.image.ImageMagickUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.*" %><%@
 page import="com.liferay.portal.kernel.model.impl.*" %><%@
+page import="com.liferay.portal.kernel.patcher.PatcherUtil" %><%@
+page import="com.liferay.portal.kernel.portlet.PortletURLUtil" %><%@
+page import="com.liferay.portal.kernel.scripting.ScriptingException" %><%@
 page import="com.liferay.portal.kernel.scripting.ScriptingUtil" %><%@
 page import="com.liferay.portal.kernel.service.*" %><%@
 page import="com.liferay.portal.kernel.servlet.SessionMessages" %><%@
@@ -64,12 +68,13 @@ page import="com.liferay.portal.kernel.workflow.WorkflowConstants" %><%@
 page import="com.liferay.portal.kernel.xuggler.XugglerInstallException" %><%@
 page import="com.liferay.portal.kernel.xuggler.XugglerUtil" %><%@
 page import="com.liferay.portal.model.impl.*" %><%@
-page import="com.liferay.portal.service.*" %><%@
 page import="com.liferay.portal.util.PrefsPropsUtil" %><%@
 page import="com.liferay.portal.util.PropsUtil" %><%@
 page import="com.liferay.portal.util.PropsValues" %><%@
 page import="com.liferay.portal.util.ShutdownUtil" %><%@
-page import="com.liferay.server.admin.web.internal.display.context.ServerDisplayContext" %>
+page import="com.liferay.server.admin.web.internal.constants.ServerAdminNavigationEntryConstants" %><%@
+page import="com.liferay.server.admin.web.internal.display.context.ServerDisplayContext" %><%@
+page import="com.liferay.taglib.servlet.PipingServletResponse" %>
 
 <%@ page import="java.text.NumberFormat" %>
 
@@ -82,8 +87,7 @@ page import="java.util.Map" %><%@
 page import="java.util.Properties" %><%@
 page import="java.util.TreeMap" %>
 
-<%@ page import="javax.portlet.PortletMode" %><%@
-page import="javax.portlet.PortletPreferences" %><%@
+<%@ page import="javax.portlet.PortletPreferences" %><%@
 page import="javax.portlet.PortletURL" %><%@
 page import="javax.portlet.WindowState" %>
 
@@ -96,10 +100,6 @@ page import="org.apache.log4j.Logger" %>
 <liferay-theme:defineObjects />
 
 <portlet:defineObjects />
-
-<%
-PortletMode portletMode = liferayPortletRequest.getPortletMode();
-%>
 
 <%
 String tabs1 = ParamUtil.getString(request, "tabs1", "resources");

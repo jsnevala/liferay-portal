@@ -16,45 +16,37 @@
 
 <%@ include file="/html/taglib/ui/input_localized/init.jsp" %>
 
-<div class="input-group input-localized input-localized-<%= type %>" id="<portlet:namespace /><%= id %>BoundingBox">
-	<c:if test="<%= Validator.isNotNull(inputAddon) %>">
-		<div class="input-group-item input-group-item-shrink input-group-prepend">
-			<span class="input-group-text" id="<portlet:namespace /><%= id %>InputAddon">
-				<liferay-ui:message key="<%= StringUtil.shorten(inputAddon, 40) %>" />
-			</span>
-		</div>
-	</c:if>
+<c:if test="<%= Validator.isNotNull(inputAddon) %>">
+	<div class="form-text">
+		<span class="lfr-portal-tooltip" title="<%= HtmlUtil.escape(inputAddon) %>">
+			<liferay-ui:message key="<%= HtmlUtil.escape(StringUtil.shorten(inputAddon, 40)) %>" />
+		</span>
+	</div>
+</c:if>
 
+<div class="input-group input-localized input-localized-<%= type %>" id="<portlet:namespace /><%= id %>BoundingBox">
 	<div class="input-group-item">
 		<c:choose>
 			<c:when test='<%= type.equals("editor") %>'>
 				<liferay-ui:input-editor
 					contents="<%= mainLanguageValue %>"
 					contentsLanguageId="<%= languageId %>"
-					cssClass='<%= \"language-value \" + cssClass %>'
+					cssClass='<%= "language-value " + cssClass %>'
 					editorName="<%= editorName %>"
-					name='<%= inputEditorName %>'
-					onChangeMethod='<%= randomNamespace + \"OnChangeEditor\" %>'
+					name="<%= inputEditorName %>"
+					onChangeMethod='<%= randomNamespace + "onChangeEditor" %>'
 					placeholder="<%= placeholder %>"
 					toolbarSet="<%= toolbarSet %>"
 				/>
 
 				<aui:script>
-					function <portlet:namespace /><%= randomNamespace %>OnChangeEditor() {
+					function <portlet:namespace /><%= randomNamespace %>onChangeEditor() {
 						var inputLocalized = Liferay.component('<portlet:namespace /><%= HtmlUtil.escapeJS(fieldName) %>');
 
 						var editor = window['<portlet:namespace /><%= HtmlUtil.escapeJS(inputEditorName) %>'];
 
 						inputLocalized.updateInputLanguage(editor.getHTML());
 					}
-
-					$('#<portlet:namespace /><%= id %>ContentBox').on(
-						'click',
-						'.palette-item-inner',
-						function() {
-							window['<portlet:namespace /><%= HtmlUtil.escapeJS(inputEditorName) %>'].focus();
-						}
-					);
 				</aui:script>
 			</c:when>
 			<c:when test='<%= type.equals("input") %>'>
@@ -128,10 +120,20 @@
 		<div class="input-group-item input-group-item-shrink input-localized-content" role="menu">
 
 			<%
-			String normalizedDefaultLanguageId = StringUtil.replace(defaultLanguageId, '_', '-');
+			String normalizedSelectedLanguageId = StringUtil.replace(selectedLanguageId, '_', '-');
 			%>
 
-			<liferay-ui:icon-menu direction="left-side" id="<%= namespace + id + \"Menu\" %>" icon="<%= StringUtil.toLowerCase(normalizedDefaultLanguageId) %>" markupView="lexicon" message="<%= StringPool.BLANK %>" showWhenSingleIcon="<%= true %>" triggerCssClass="input-localized-trigger" triggerLabel="<%= normalizedDefaultLanguageId %>" triggerType="button">
+			<liferay-ui:icon-menu
+				direction="left-side"
+				icon="<%= StringUtil.toLowerCase(normalizedSelectedLanguageId) %>"
+				id='<%= namespace + id + "Menu" %>'
+				markupView="lexicon"
+				message="<%= StringPool.BLANK %>"
+				showWhenSingleIcon="<%= true %>"
+				triggerCssClass="input-localized-trigger"
+				triggerLabel="<%= normalizedSelectedLanguageId %>"
+				triggerType="button"
+			>
 				<div id="<portlet:namespace /><%= id %>PaletteBoundingBox">
 					<div class="input-localized-palette-container palette-container" id="<portlet:namespace /><%= id %>PaletteContentBox">
 
@@ -159,14 +161,17 @@
 
 							String title = HtmlUtil.escapeAttribute(curLocale.getDisplayName(LocaleUtil.fromLanguageId(LanguageUtil.getLanguageId(request)))) + " " + LanguageUtil.get(LocaleUtil.getDefault(), "translation");
 
-							Map<String, Object> data = new HashMap<String, Object>();
+							Map<String, Object> data = HashMapBuilder.<String, Object>put(
+								"languageid", curLanguageId
+							).build();
 
-							data.put("languageid", curLanguageId);
-
-							Map<String, Object> iconData = new HashMap<>();
-							iconData.put("index", index++);
-							iconData.put("languageid", curLanguageId);
-							iconData.put("value", curLanguageId);
+							Map<String, Object> iconData = HashMapBuilder.<String, Object>put(
+								"index", index++
+							).put(
+								"languageid", curLanguageId
+							).put(
+								"value", curLanguageId
+							).build();
 
 							String translationStatus = LanguageUtil.get(request, "untranslated");
 							String translationStatusCssClass = "warning";
@@ -223,21 +228,6 @@
 				maxLength: <%= maxLength %>
 			}
 		);
-	</aui:script>
-</c:if>
-
-<c:if test="<%= Validator.isNotNull(inputAddon) %>">
-	<aui:script sandbox="<%= true %>">
-		var inputAddon = '<%= inputAddon.toString() %>';
-
-		if (inputAddon.length > 40) {
-			$('#<portlet:namespace /><%= id %>InputAddon').on(
-				'mouseenter',
-				function(event) {
-					Liferay.Portal.ToolTip.show(event.currentTarget, inputAddon);
-				}
-			);
-		}
 	</aui:script>
 </c:if>
 

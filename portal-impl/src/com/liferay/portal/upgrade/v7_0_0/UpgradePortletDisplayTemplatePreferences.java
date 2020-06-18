@@ -31,7 +31,7 @@ import java.util.Map;
 import javax.portlet.PortletPreferences;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 public class UpgradePortletDisplayTemplatePreferences
 	extends BaseUpgradePortletPreferences {
@@ -96,25 +96,6 @@ public class UpgradePortletDisplayTemplatePreferences
 
 			return objectValuePair;
 		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #getTemplateGroupAndKey(long, String)}
-	 */
-	@Deprecated
-	protected String getTemplateKey(
-			long displayStyleGroupId, String displayStyle)
-		throws Exception {
-
-		ObjectValuePair<Long, String> objectValuePair = getTemplateGroupAndKey(
-			displayStyleGroupId, displayStyle);
-
-		if (objectValuePair == null) {
-			return null;
-		}
-
-		return objectValuePair.getValue();
 	}
 
 	@Override

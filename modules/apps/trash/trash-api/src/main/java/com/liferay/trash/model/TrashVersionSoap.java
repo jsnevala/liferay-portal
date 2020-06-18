@@ -14,8 +14,6 @@
 
 package com.liferay.trash.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,11 +25,12 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class TrashVersionSoap implements Serializable {
+
 	public static TrashVersionSoap toSoapModel(TrashVersion model) {
 		TrashVersionSoap soapModel = new TrashVersionSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setVersionId(model.getVersionId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setEntryId(model.getEntryId());
@@ -71,7 +70,8 @@ public class TrashVersionSoap implements Serializable {
 	}
 
 	public static TrashVersionSoap[] toSoapModels(List<TrashVersion> models) {
-		List<TrashVersionSoap> soapModels = new ArrayList<TrashVersionSoap>(models.size());
+		List<TrashVersionSoap> soapModels = new ArrayList<TrashVersionSoap>(
+			models.size());
 
 		for (TrashVersion model : models) {
 			soapModels.add(toSoapModel(model));
@@ -89,6 +89,14 @@ public class TrashVersionSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setVersionId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getVersionId() {
@@ -147,6 +155,7 @@ public class TrashVersionSoap implements Serializable {
 		_status = status;
 	}
 
+	private long _mvccVersion;
 	private long _versionId;
 	private long _companyId;
 	private long _entryId;
@@ -154,4 +163,5 @@ public class TrashVersionSoap implements Serializable {
 	private long _classPK;
 	private String _typeSettings;
 	private int _status;
+
 }

@@ -14,21 +14,13 @@
 
 package com.liferay.sharing.model;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
-import com.liferay.portal.kernel.service.ServiceContext;
-
-import java.io.Serializable;
+import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * <p>
@@ -39,21 +31,12 @@ import java.util.Objects;
  * @see SharingEntry
  * @generated
  */
-@ProviderType
-public class SharingEntryWrapper implements SharingEntry,
-	ModelWrapper<SharingEntry> {
+public class SharingEntryWrapper
+	extends BaseModelWrapper<SharingEntry>
+	implements ModelWrapper<SharingEntry>, SharingEntry {
+
 	public SharingEntryWrapper(SharingEntry sharingEntry) {
-		_sharingEntry = sharingEntry;
-	}
-
-	@Override
-	public Class<?> getModelClass() {
-		return SharingEntry.class;
-	}
-
-	@Override
-	public String getModelClassName() {
-		return SharingEntry.class.getName();
+		super(sharingEntry);
 	}
 
 	@Override
@@ -64,9 +47,10 @@ public class SharingEntryWrapper implements SharingEntry,
 		attributes.put("sharingEntryId", getSharingEntryId());
 		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
+		attributes.put("userId", getUserId());
+		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
-		attributes.put("fromUserId", getFromUserId());
 		attributes.put("toUserId", getToUserId());
 		attributes.put("classNameId", getClassNameId());
 		attributes.put("classPK", getClassPK());
@@ -103,6 +87,18 @@ public class SharingEntryWrapper implements SharingEntry,
 			setCompanyId(companyId);
 		}
 
+		Long userId = (Long)attributes.get("userId");
+
+		if (userId != null) {
+			setUserId(userId);
+		}
+
+		String userName = (String)attributes.get("userName");
+
+		if (userName != null) {
+			setUserName(userName);
+		}
+
 		Date createDate = (Date)attributes.get("createDate");
 
 		if (createDate != null) {
@@ -113,12 +109,6 @@ public class SharingEntryWrapper implements SharingEntry,
 
 		if (modifiedDate != null) {
 			setModifiedDate(modifiedDate);
-		}
-
-		Long fromUserId = (Long)attributes.get("fromUserId");
-
-		if (fromUserId != null) {
-			setFromUserId(fromUserId);
 		}
 
 		Long toUserId = (Long)attributes.get("toUserId");
@@ -158,495 +148,400 @@ public class SharingEntryWrapper implements SharingEntry,
 		}
 	}
 
-	@Override
-	public Object clone() {
-		return new SharingEntryWrapper((SharingEntry)_sharingEntry.clone());
-	}
-
-	@Override
-	public int compareTo(SharingEntry sharingEntry) {
-		return _sharingEntry.compareTo(sharingEntry);
-	}
-
 	/**
-	* Returns the action IDs of this sharing entry.
-	*
-	* @return the action IDs of this sharing entry
-	*/
+	 * Returns the action IDs of this sharing entry.
+	 *
+	 * @return the action IDs of this sharing entry
+	 */
 	@Override
 	public long getActionIds() {
-		return _sharingEntry.getActionIds();
+		return model.getActionIds();
 	}
 
 	/**
-	* Returns the fully qualified class name of this sharing entry.
-	*
-	* @return the fully qualified class name of this sharing entry
-	*/
+	 * Returns the fully qualified class name of this sharing entry.
+	 *
+	 * @return the fully qualified class name of this sharing entry
+	 */
 	@Override
 	public String getClassName() {
-		return _sharingEntry.getClassName();
+		return model.getClassName();
 	}
 
 	/**
-	* Returns the class name ID of this sharing entry.
-	*
-	* @return the class name ID of this sharing entry
-	*/
+	 * Returns the class name ID of this sharing entry.
+	 *
+	 * @return the class name ID of this sharing entry
+	 */
 	@Override
 	public long getClassNameId() {
-		return _sharingEntry.getClassNameId();
+		return model.getClassNameId();
 	}
 
 	/**
-	* Returns the class pk of this sharing entry.
-	*
-	* @return the class pk of this sharing entry
-	*/
+	 * Returns the class pk of this sharing entry.
+	 *
+	 * @return the class pk of this sharing entry
+	 */
 	@Override
 	public long getClassPK() {
-		return _sharingEntry.getClassPK();
+		return model.getClassPK();
 	}
 
 	/**
-	* Returns the company ID of this sharing entry.
-	*
-	* @return the company ID of this sharing entry
-	*/
+	 * Returns the company ID of this sharing entry.
+	 *
+	 * @return the company ID of this sharing entry
+	 */
 	@Override
 	public long getCompanyId() {
-		return _sharingEntry.getCompanyId();
+		return model.getCompanyId();
 	}
 
 	/**
-	* Returns the create date of this sharing entry.
-	*
-	* @return the create date of this sharing entry
-	*/
+	 * Returns the create date of this sharing entry.
+	 *
+	 * @return the create date of this sharing entry
+	 */
 	@Override
 	public Date getCreateDate() {
-		return _sharingEntry.getCreateDate();
-	}
-
-	@Override
-	public ExpandoBridge getExpandoBridge() {
-		return _sharingEntry.getExpandoBridge();
+		return model.getCreateDate();
 	}
 
 	/**
-	* Returns the expiration date of this sharing entry.
-	*
-	* @return the expiration date of this sharing entry
-	*/
+	 * Returns the expiration date of this sharing entry.
+	 *
+	 * @return the expiration date of this sharing entry
+	 */
 	@Override
 	public Date getExpirationDate() {
-		return _sharingEntry.getExpirationDate();
+		return model.getExpirationDate();
 	}
 
 	/**
-	* Returns the from user ID of this sharing entry.
-	*
-	* @return the from user ID of this sharing entry
-	*/
-	@Override
-	public long getFromUserId() {
-		return _sharingEntry.getFromUserId();
-	}
-
-	/**
-	* Returns the from user uuid of this sharing entry.
-	*
-	* @return the from user uuid of this sharing entry
-	*/
-	@Override
-	public String getFromUserUuid() {
-		return _sharingEntry.getFromUserUuid();
-	}
-
-	/**
-	* Returns the group ID of this sharing entry.
-	*
-	* @return the group ID of this sharing entry
-	*/
+	 * Returns the group ID of this sharing entry.
+	 *
+	 * @return the group ID of this sharing entry
+	 */
 	@Override
 	public long getGroupId() {
-		return _sharingEntry.getGroupId();
+		return model.getGroupId();
 	}
 
 	/**
-	* Returns the modified date of this sharing entry.
-	*
-	* @return the modified date of this sharing entry
-	*/
+	 * Returns the modified date of this sharing entry.
+	 *
+	 * @return the modified date of this sharing entry
+	 */
 	@Override
 	public Date getModifiedDate() {
-		return _sharingEntry.getModifiedDate();
+		return model.getModifiedDate();
 	}
 
 	/**
-	* Returns the primary key of this sharing entry.
-	*
-	* @return the primary key of this sharing entry
-	*/
+	 * Returns the primary key of this sharing entry.
+	 *
+	 * @return the primary key of this sharing entry
+	 */
 	@Override
 	public long getPrimaryKey() {
-		return _sharingEntry.getPrimaryKey();
-	}
-
-	@Override
-	public Serializable getPrimaryKeyObj() {
-		return _sharingEntry.getPrimaryKeyObj();
+		return model.getPrimaryKey();
 	}
 
 	/**
-	* Returns the shareable of this sharing entry.
-	*
-	* @return the shareable of this sharing entry
-	*/
+	 * Returns the shareable of this sharing entry.
+	 *
+	 * @return the shareable of this sharing entry
+	 */
 	@Override
 	public boolean getShareable() {
-		return _sharingEntry.getShareable();
+		return model.getShareable();
 	}
 
 	/**
-	* Returns the sharing entry ID of this sharing entry.
-	*
-	* @return the sharing entry ID of this sharing entry
-	*/
+	 * Returns the sharing entry ID of this sharing entry.
+	 *
+	 * @return the sharing entry ID of this sharing entry
+	 */
 	@Override
 	public long getSharingEntryId() {
-		return _sharingEntry.getSharingEntryId();
+		return model.getSharingEntryId();
 	}
 
 	/**
-	* Returns the to user ID of this sharing entry.
-	*
-	* @return the to user ID of this sharing entry
-	*/
+	 * Returns the to user ID of this sharing entry.
+	 *
+	 * @return the to user ID of this sharing entry
+	 */
 	@Override
 	public long getToUserId() {
-		return _sharingEntry.getToUserId();
+		return model.getToUserId();
 	}
 
 	/**
-	* Returns the to user uuid of this sharing entry.
-	*
-	* @return the to user uuid of this sharing entry
-	*/
+	 * Returns the to user uuid of this sharing entry.
+	 *
+	 * @return the to user uuid of this sharing entry
+	 */
 	@Override
 	public String getToUserUuid() {
-		return _sharingEntry.getToUserUuid();
+		return model.getToUserUuid();
 	}
 
 	/**
-	* Returns the uuid of this sharing entry.
-	*
-	* @return the uuid of this sharing entry
-	*/
+	 * Returns the user ID of this sharing entry.
+	 *
+	 * @return the user ID of this sharing entry
+	 */
+	@Override
+	public long getUserId() {
+		return model.getUserId();
+	}
+
+	/**
+	 * Returns the user name of this sharing entry.
+	 *
+	 * @return the user name of this sharing entry
+	 */
+	@Override
+	public String getUserName() {
+		return model.getUserName();
+	}
+
+	/**
+	 * Returns the user uuid of this sharing entry.
+	 *
+	 * @return the user uuid of this sharing entry
+	 */
+	@Override
+	public String getUserUuid() {
+		return model.getUserUuid();
+	}
+
+	/**
+	 * Returns the uuid of this sharing entry.
+	 *
+	 * @return the uuid of this sharing entry
+	 */
 	@Override
 	public String getUuid() {
-		return _sharingEntry.getUuid();
-	}
-
-	@Override
-	public int hashCode() {
-		return _sharingEntry.hashCode();
-	}
-
-	@Override
-	public boolean isCachedModel() {
-		return _sharingEntry.isCachedModel();
-	}
-
-	@Override
-	public boolean isEscapedModel() {
-		return _sharingEntry.isEscapedModel();
-	}
-
-	@Override
-	public boolean isNew() {
-		return _sharingEntry.isNew();
+		return model.getUuid();
 	}
 
 	/**
-	* Returns <code>true</code> if this sharing entry is shareable.
-	*
-	* @return <code>true</code> if this sharing entry is shareable; <code>false</code> otherwise
-	*/
+	 * Returns {@code true} if the sharing entry has the sharing entry action.
+	 *
+	 * @param sharingEntryAction the sharing entry action
+	 * @return {@code true} if the sharing entry has the sharing entry action;
+	 {@code false} otherwise
+	 * @review
+	 */
+	@Override
+	public boolean hasSharingPermission(
+		com.liferay.sharing.security.permission.SharingEntryAction
+			sharingEntryAction) {
+
+		return model.hasSharingPermission(sharingEntryAction);
+	}
+
+	/**
+	 * Returns <code>true</code> if this sharing entry is shareable.
+	 *
+	 * @return <code>true</code> if this sharing entry is shareable; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isShareable() {
-		return _sharingEntry.isShareable();
+		return model.isShareable();
 	}
 
 	@Override
 	public void persist() {
-		_sharingEntry.persist();
+		model.persist();
 	}
 
 	/**
-	* Sets the action IDs of this sharing entry.
-	*
-	* @param actionIds the action IDs of this sharing entry
-	*/
+	 * Sets the action IDs of this sharing entry.
+	 *
+	 * @param actionIds the action IDs of this sharing entry
+	 */
 	@Override
 	public void setActionIds(long actionIds) {
-		_sharingEntry.setActionIds(actionIds);
-	}
-
-	@Override
-	public void setCachedModel(boolean cachedModel) {
-		_sharingEntry.setCachedModel(cachedModel);
+		model.setActionIds(actionIds);
 	}
 
 	@Override
 	public void setClassName(String className) {
-		_sharingEntry.setClassName(className);
+		model.setClassName(className);
 	}
 
 	/**
-	* Sets the class name ID of this sharing entry.
-	*
-	* @param classNameId the class name ID of this sharing entry
-	*/
+	 * Sets the class name ID of this sharing entry.
+	 *
+	 * @param classNameId the class name ID of this sharing entry
+	 */
 	@Override
 	public void setClassNameId(long classNameId) {
-		_sharingEntry.setClassNameId(classNameId);
+		model.setClassNameId(classNameId);
 	}
 
 	/**
-	* Sets the class pk of this sharing entry.
-	*
-	* @param classPK the class pk of this sharing entry
-	*/
+	 * Sets the class pk of this sharing entry.
+	 *
+	 * @param classPK the class pk of this sharing entry
+	 */
 	@Override
 	public void setClassPK(long classPK) {
-		_sharingEntry.setClassPK(classPK);
+		model.setClassPK(classPK);
 	}
 
 	/**
-	* Sets the company ID of this sharing entry.
-	*
-	* @param companyId the company ID of this sharing entry
-	*/
+	 * Sets the company ID of this sharing entry.
+	 *
+	 * @param companyId the company ID of this sharing entry
+	 */
 	@Override
 	public void setCompanyId(long companyId) {
-		_sharingEntry.setCompanyId(companyId);
+		model.setCompanyId(companyId);
 	}
 
 	/**
-	* Sets the create date of this sharing entry.
-	*
-	* @param createDate the create date of this sharing entry
-	*/
+	 * Sets the create date of this sharing entry.
+	 *
+	 * @param createDate the create date of this sharing entry
+	 */
 	@Override
 	public void setCreateDate(Date createDate) {
-		_sharingEntry.setCreateDate(createDate);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(
-		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
-		_sharingEntry.setExpandoBridgeAttributes(baseModel);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ExpandoBridge expandoBridge) {
-		_sharingEntry.setExpandoBridgeAttributes(expandoBridge);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ServiceContext serviceContext) {
-		_sharingEntry.setExpandoBridgeAttributes(serviceContext);
+		model.setCreateDate(createDate);
 	}
 
 	/**
-	* Sets the expiration date of this sharing entry.
-	*
-	* @param expirationDate the expiration date of this sharing entry
-	*/
+	 * Sets the expiration date of this sharing entry.
+	 *
+	 * @param expirationDate the expiration date of this sharing entry
+	 */
 	@Override
 	public void setExpirationDate(Date expirationDate) {
-		_sharingEntry.setExpirationDate(expirationDate);
+		model.setExpirationDate(expirationDate);
 	}
 
 	/**
-	* Sets the from user ID of this sharing entry.
-	*
-	* @param fromUserId the from user ID of this sharing entry
-	*/
-	@Override
-	public void setFromUserId(long fromUserId) {
-		_sharingEntry.setFromUserId(fromUserId);
-	}
-
-	/**
-	* Sets the from user uuid of this sharing entry.
-	*
-	* @param fromUserUuid the from user uuid of this sharing entry
-	*/
-	@Override
-	public void setFromUserUuid(String fromUserUuid) {
-		_sharingEntry.setFromUserUuid(fromUserUuid);
-	}
-
-	/**
-	* Sets the group ID of this sharing entry.
-	*
-	* @param groupId the group ID of this sharing entry
-	*/
+	 * Sets the group ID of this sharing entry.
+	 *
+	 * @param groupId the group ID of this sharing entry
+	 */
 	@Override
 	public void setGroupId(long groupId) {
-		_sharingEntry.setGroupId(groupId);
+		model.setGroupId(groupId);
 	}
 
 	/**
-	* Sets the modified date of this sharing entry.
-	*
-	* @param modifiedDate the modified date of this sharing entry
-	*/
+	 * Sets the modified date of this sharing entry.
+	 *
+	 * @param modifiedDate the modified date of this sharing entry
+	 */
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
-		_sharingEntry.setModifiedDate(modifiedDate);
-	}
-
-	@Override
-	public void setNew(boolean n) {
-		_sharingEntry.setNew(n);
+		model.setModifiedDate(modifiedDate);
 	}
 
 	/**
-	* Sets the primary key of this sharing entry.
-	*
-	* @param primaryKey the primary key of this sharing entry
-	*/
+	 * Sets the primary key of this sharing entry.
+	 *
+	 * @param primaryKey the primary key of this sharing entry
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
-		_sharingEntry.setPrimaryKey(primaryKey);
-	}
-
-	@Override
-	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
-		_sharingEntry.setPrimaryKeyObj(primaryKeyObj);
+		model.setPrimaryKey(primaryKey);
 	}
 
 	/**
-	* Sets whether this sharing entry is shareable.
-	*
-	* @param shareable the shareable of this sharing entry
-	*/
+	 * Sets whether this sharing entry is shareable.
+	 *
+	 * @param shareable the shareable of this sharing entry
+	 */
 	@Override
 	public void setShareable(boolean shareable) {
-		_sharingEntry.setShareable(shareable);
+		model.setShareable(shareable);
 	}
 
 	/**
-	* Sets the sharing entry ID of this sharing entry.
-	*
-	* @param sharingEntryId the sharing entry ID of this sharing entry
-	*/
+	 * Sets the sharing entry ID of this sharing entry.
+	 *
+	 * @param sharingEntryId the sharing entry ID of this sharing entry
+	 */
 	@Override
 	public void setSharingEntryId(long sharingEntryId) {
-		_sharingEntry.setSharingEntryId(sharingEntryId);
+		model.setSharingEntryId(sharingEntryId);
 	}
 
 	/**
-	* Sets the to user ID of this sharing entry.
-	*
-	* @param toUserId the to user ID of this sharing entry
-	*/
+	 * Sets the to user ID of this sharing entry.
+	 *
+	 * @param toUserId the to user ID of this sharing entry
+	 */
 	@Override
 	public void setToUserId(long toUserId) {
-		_sharingEntry.setToUserId(toUserId);
+		model.setToUserId(toUserId);
 	}
 
 	/**
-	* Sets the to user uuid of this sharing entry.
-	*
-	* @param toUserUuid the to user uuid of this sharing entry
-	*/
+	 * Sets the to user uuid of this sharing entry.
+	 *
+	 * @param toUserUuid the to user uuid of this sharing entry
+	 */
 	@Override
 	public void setToUserUuid(String toUserUuid) {
-		_sharingEntry.setToUserUuid(toUserUuid);
+		model.setToUserUuid(toUserUuid);
 	}
 
 	/**
-	* Sets the uuid of this sharing entry.
-	*
-	* @param uuid the uuid of this sharing entry
-	*/
+	 * Sets the user ID of this sharing entry.
+	 *
+	 * @param userId the user ID of this sharing entry
+	 */
+	@Override
+	public void setUserId(long userId) {
+		model.setUserId(userId);
+	}
+
+	/**
+	 * Sets the user name of this sharing entry.
+	 *
+	 * @param userName the user name of this sharing entry
+	 */
+	@Override
+	public void setUserName(String userName) {
+		model.setUserName(userName);
+	}
+
+	/**
+	 * Sets the user uuid of this sharing entry.
+	 *
+	 * @param userUuid the user uuid of this sharing entry
+	 */
+	@Override
+	public void setUserUuid(String userUuid) {
+		model.setUserUuid(userUuid);
+	}
+
+	/**
+	 * Sets the uuid of this sharing entry.
+	 *
+	 * @param uuid the uuid of this sharing entry
+	 */
 	@Override
 	public void setUuid(String uuid) {
-		_sharingEntry.setUuid(uuid);
-	}
-
-	@Override
-	public com.liferay.portal.kernel.model.CacheModel<SharingEntry> toCacheModel() {
-		return _sharingEntry.toCacheModel();
-	}
-
-	@Override
-	public SharingEntry toEscapedModel() {
-		return new SharingEntryWrapper(_sharingEntry.toEscapedModel());
-	}
-
-	@Override
-	public String toString() {
-		return _sharingEntry.toString();
-	}
-
-	@Override
-	public SharingEntry toUnescapedModel() {
-		return new SharingEntryWrapper(_sharingEntry.toUnescapedModel());
-	}
-
-	@Override
-	public String toXmlString() {
-		return _sharingEntry.toXmlString();
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-
-		if (!(obj instanceof SharingEntryWrapper)) {
-			return false;
-		}
-
-		SharingEntryWrapper sharingEntryWrapper = (SharingEntryWrapper)obj;
-
-		if (Objects.equals(_sharingEntry, sharingEntryWrapper._sharingEntry)) {
-			return true;
-		}
-
-		return false;
+		model.setUuid(uuid);
 	}
 
 	@Override
 	public StagedModelType getStagedModelType() {
-		return _sharingEntry.getStagedModelType();
+		return model.getStagedModelType();
 	}
 
 	@Override
-	public SharingEntry getWrappedModel() {
-		return _sharingEntry;
+	protected SharingEntryWrapper wrap(SharingEntry sharingEntry) {
+		return new SharingEntryWrapper(sharingEntry);
 	}
 
-	@Override
-	public boolean isEntityCacheEnabled() {
-		return _sharingEntry.isEntityCacheEnabled();
-	}
-
-	@Override
-	public boolean isFinderCacheEnabled() {
-		return _sharingEntry.isFinderCacheEnabled();
-	}
-
-	@Override
-	public void resetOriginalValues() {
-		_sharingEntry.resetOriginalValues();
-	}
-
-	private final SharingEntry _sharingEntry;
 }

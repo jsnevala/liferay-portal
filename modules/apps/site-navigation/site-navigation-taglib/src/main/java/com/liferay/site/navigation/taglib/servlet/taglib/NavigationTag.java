@@ -19,10 +19,10 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portletdisplaytemplate.PortletDisplayTemplateManagerUtil;
 import com.liferay.portal.kernel.theme.NavItem;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.display.template.PortletDisplayTemplate;
@@ -32,9 +32,6 @@ import com.liferay.site.navigation.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.site.navigation.taglib.internal.util.NavItemUtil;
 import com.liferay.taglib.util.IncludeTag;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +46,38 @@ import javax.servlet.jsp.PageContext;
  * @author Tibor Lipusz
  */
 public class NavigationTag extends IncludeTag {
+
+	public long getDdmTemplateGroupId() {
+		return _ddmTemplateGroupId;
+	}
+
+	public String getDdmTemplateKey() {
+		return _ddmTemplateKey;
+	}
+
+	public int getDisplayDepth() {
+		return _displayDepth;
+	}
+
+	public String getIncludedLayouts() {
+		return _includedLayouts;
+	}
+
+	public int getRootLayoutLevel() {
+		return _rootLayoutLevel;
+	}
+
+	public String getRootLayoutType() {
+		return _rootLayoutType;
+	}
+
+	public String getRootLayoutUuid() {
+		return _rootLayoutUuid;
+	}
+
+	public boolean isPreview() {
+		return _preview;
+	}
 
 	@Override
 	public int processEndTag() throws Exception {
@@ -79,24 +108,29 @@ public class NavigationTag extends IncludeTag {
 				request, _rootLayoutType, _rootLayoutLevel, _rootLayoutUuid,
 				branchNavItems);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
-		HttpServletResponse response =
+		HttpServletResponse httpServletResponse =
 			(HttpServletResponse)pageContext.getResponse();
 
-		Map<String, Object> contextObjects = new HashMap<>();
-
-		contextObjects.put("branchNavItems", branchNavItems);
-		contextObjects.put("displayDepth", _displayDepth);
-		contextObjects.put("includedLayouts", _includedLayouts);
-		contextObjects.put("preview", _preview);
-		contextObjects.put("rootLayoutLevel", _rootLayoutLevel);
-		contextObjects.put("rootLayoutType", _rootLayoutType);
+		Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
+			"branchNavItems", branchNavItems
+		).put(
+			"displayDepth", _displayDepth
+		).put(
+			"includedLayouts", _includedLayouts
+		).put(
+			"preview", _preview
+		).put(
+			"rootLayoutLevel", _rootLayoutLevel
+		).put(
+			"rootLayoutType", _rootLayoutType
+		).build();
 
 		String result = portletDisplayTemplate.renderDDMTemplate(
-			request, response, portletDisplayDDMTemplate, navItems,
+			request, httpServletResponse, portletDisplayDDMTemplate, navItems,
 			contextObjects);
 
 		JspWriter jspWriter = pageContext.getOut();
@@ -159,33 +193,11 @@ public class NavigationTag extends IncludeTag {
 		_rootLayoutUuid = null;
 	}
 
-	protected List<NavItem> getBranchNavItems(HttpServletRequest request)
+	protected List<NavItem> getBranchNavItems(
+			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		Layout layout = themeDisplay.getLayout();
-
-		if (layout.isRootLayout()) {
-			return Collections.singletonList(
-				new NavItem(request, themeDisplay, layout, null));
-		}
-
-		List<Layout> ancestorLayouts = layout.getAncestors();
-
-		List<NavItem> navItems = new ArrayList<>(ancestorLayouts.size() + 1);
-
-		for (int i = ancestorLayouts.size() - 1; i >= 0; i--) {
-			Layout ancestorLayout = ancestorLayouts.get(i);
-
-			navItems.add(
-				new NavItem(request, themeDisplay, ancestorLayout, null));
-		}
-
-		navItems.add(new NavItem(request, themeDisplay, layout, null));
-
-		return navItems;
+		return NavItemUtil.getBranchNavItems(httpServletRequest);
 	}
 
 	protected String getDisplayStyle() {
@@ -208,25 +220,13 @@ public class NavigationTag extends IncludeTag {
 		return themeDisplay.getScopeGroupId();
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	protected List<NavItem> getNavItems(List<NavItem> branchNavItems)
-		throws Exception {
-
-		return NavItemUtil.getNavItems(
-			request, _rootLayoutType, _rootLayoutLevel, _rootLayoutUuid,
-			branchNavItems);
-	}
-
 	@Override
 	protected String getPage() {
 		return _PAGE;
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
 	}
 
 	private static final String _PAGE = "/navigation/page.jsp";

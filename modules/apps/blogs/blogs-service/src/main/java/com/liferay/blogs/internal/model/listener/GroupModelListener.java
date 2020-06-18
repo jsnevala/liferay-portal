@@ -25,7 +25,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(immediate = true, service = ModelListener.class)
 public class GroupModelListener extends BaseModelListener<Group> {
@@ -37,8 +37,8 @@ public class GroupModelListener extends BaseModelListener<Group> {
 				group.getCompanyId(), BlogsEntry.class.getName(),
 				group.getGroupId());
 		}
-		catch (Exception e) {
-			throw new ModelListenerException(e);
+		catch (Exception exception) {
+			throw new ModelListenerException(exception);
 		}
 	}
 

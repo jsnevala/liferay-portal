@@ -35,13 +35,18 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author André de Oliveira
  */
-@Component(immediate = true, service = UpdateDocumentIndexWriter.class)
+@Component(
+	configurationPid = "com.liferay.portal.search.configuration.IndexWriterHelperConfiguration",
+	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
+	service = UpdateDocumentIndexWriter.class
+)
 public class UpdateDocumentIndexWriterImpl
 	implements UpdateDocumentIndexWriter {
 
@@ -78,8 +83,8 @@ public class UpdateDocumentIndexWriterImpl
 		try {
 			indexWriter.updateDocument(searchContext, document);
 		}
-		catch (SearchException se) {
-			throw new SystemException(se);
+		catch (SearchException searchException) {
+			throw new SystemException(searchException);
 		}
 	}
 
@@ -111,8 +116,8 @@ public class UpdateDocumentIndexWriterImpl
 		try {
 			indexWriter.partiallyUpdateDocument(searchContext, document);
 		}
-		catch (SearchException se) {
-			throw new SystemException(se);
+		catch (SearchException searchException) {
+			throw new SystemException(searchException);
 		}
 	}
 
@@ -151,8 +156,8 @@ public class UpdateDocumentIndexWriterImpl
 		try {
 			indexWriter.updateDocuments(searchContext, documents);
 		}
-		catch (SearchException se) {
-			throw new SystemException(se);
+		catch (SearchException searchException) {
+			throw new SystemException(searchException);
 		}
 	}
 
@@ -182,8 +187,8 @@ public class UpdateDocumentIndexWriterImpl
 		try {
 			indexWriter.partiallyUpdateDocuments(searchContext, documents);
 		}
-		catch (SearchException se) {
-			throw new SystemException(se);
+		catch (SearchException searchException) {
+			throw new SystemException(searchException);
 		}
 	}
 

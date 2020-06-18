@@ -32,6 +32,7 @@ import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsUtil;
@@ -39,7 +40,6 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.util.PropsImpl;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -77,13 +77,16 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 		setUpAddRecordMVCCommandHelper();
 		setUpLanguageUtil();
 		setUpResourceBundleUtil();
+
+		mockGetDDMFormLayout();
 	}
 
 	@Test
 	public void testNotRequiredAndInvisibleField() throws Exception {
-		Map<String, Object> changedProperties = new HashMap<>();
-
-		changedProperties.put("visible", false);
+		Map<String, Object> changedProperties =
+			HashMapBuilder.<String, Object>put(
+				"visible", false
+			).build();
 
 		mockDDMFormEvaluator(changedProperties);
 
@@ -97,9 +100,10 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 
 	@Test
 	public void testNotRequiredAndVisibleField() throws Exception {
-		Map<String, Object> changedProperties = new HashMap<>();
-
-		changedProperties.put("visible", true);
+		Map<String, Object> changedProperties =
+			HashMapBuilder.<String, Object>put(
+				"visible", true
+			).build();
 
 		mockDDMFormEvaluator(changedProperties);
 
@@ -113,13 +117,12 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 
 	@Test
 	public void testRequiredAndInvisibleField() throws Exception {
-		Map<String, Object> changedProperties = new HashMap<>();
-
-		changedProperties.put("visible", false);
+		Map<String, Object> changedProperties =
+			HashMapBuilder.<String, Object>put(
+				"visible", false
+			).build();
 
 		mockDDMFormEvaluator(changedProperties);
-
-		mockGetDDMFormLayout();
 
 		_addRecordMVCCommandHelper.updateRequiredFieldsAccordingToVisibility(
 			_actionRequest, _ddmForm, _ddmFormValues, LocaleUtil.US);
@@ -129,13 +132,12 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 
 	@Test
 	public void testRequiredAndVisibleField() throws Exception {
-		Map<String, Object> changedProperties = new HashMap<>();
-
-		changedProperties.put("visible", true);
+		Map<String, Object> changedProperties =
+			HashMapBuilder.<String, Object>put(
+				"visible", true
+			).build();
 
 		mockDDMFormEvaluator(changedProperties);
-
-		mockGetDDMFormLayout();
 
 		_addRecordMVCCommandHelper.updateRequiredFieldsAccordingToVisibility(
 			_actionRequest, _ddmForm, _ddmFormValues, LocaleUtil.US);
@@ -165,12 +167,13 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 		_ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
 
 		Map<DDMFormEvaluatorFieldContextKey, Map<String, Object>>
-			ddmFormFieldsPropertyChanges = new HashMap<>();
-
-		ddmFormFieldsPropertyChanges.put(
-			new DDMFormEvaluatorFieldContextKey(
-				"field0", ddmFormFieldValue.getInstanceId()),
-			fieldChangesProperties);
+			ddmFormFieldsPropertyChanges =
+				HashMapBuilder.
+					<DDMFormEvaluatorFieldContextKey, Map<String, Object>>put(
+						new DDMFormEvaluatorFieldContextKey(
+							"field0", ddmFormFieldValue.getInstanceId()),
+						fieldChangesProperties
+					).build();
 
 		DDMFormEvaluatorEvaluateResponse.Builder builder =
 			DDMFormEvaluatorEvaluateResponse.Builder.newBuilder(
@@ -243,7 +246,7 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 		when(
 			_portal, "getHttpServletRequest", _actionRequest
 		).thenReturn(
-			_request
+			_httpServletRequest
 		);
 	}
 
@@ -287,9 +290,9 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 	private DDMStructureLocalService _ddmStructureLocalService;
 
 	@Mock
-	private Portal _portal;
+	private HttpServletRequest _httpServletRequest;
 
 	@Mock
-	private HttpServletRequest _request;
+	private Portal _portal;
 
 }

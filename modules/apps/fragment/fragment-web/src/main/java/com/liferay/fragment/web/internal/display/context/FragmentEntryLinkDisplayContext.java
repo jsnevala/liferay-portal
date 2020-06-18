@@ -21,15 +21,12 @@ import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
 import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
 import com.liferay.fragment.util.comparator.FragmentEntryLinkLastPropagationDateComparator;
 import com.liferay.fragment.web.internal.security.permission.resource.FragmentPermission;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -46,8 +43,6 @@ import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * @author Pavel Savinov
  */
@@ -58,23 +53,6 @@ public class FragmentEntryLinkDisplayContext {
 
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
-
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
-	}
-
-	public List<DropdownItem> getActionItemsDropdownItemList() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData("action", "propagate");
-						dropdownItem.setIcon("propagation");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "propagate"));
-						dropdownItem.setQuickAction(true);
-					});
-			}
-		};
 	}
 
 	public int getAllUsageCount() throws PortalException {
@@ -91,20 +69,6 @@ public class FragmentEntryLinkDisplayContext {
 			fragmentEntry.getGroupId(), getFragmentEntryId(),
 			PortalUtil.getClassNameId(LayoutPageTemplateEntry.class),
 			LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE);
-	}
-
-	public List<DropdownItem> getFilterItemsDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
-			}
-		};
 	}
 
 	public long getFragmentCollectionId() {
@@ -154,21 +118,20 @@ public class FragmentEntryLinkDisplayContext {
 
 			return layout.getName(themeDisplay.getLocale());
 		}
-		else {
-			LayoutPageTemplateEntry layoutPageTemplateEntry =
-				LayoutPageTemplateEntryLocalServiceUtil.
-					getLayoutPageTemplateEntry(fragmentEntryLink.getClassPK());
 
-			return layoutPageTemplateEntry.getName();
-		}
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateEntryLocalServiceUtil.getLayoutPageTemplateEntry(
+				fragmentEntryLink.getClassPK());
+
+		return layoutPageTemplateEntry.getName();
 	}
 
 	public String getFragmentEntryLinkTypeLabel(
 			FragmentEntryLink fragmentEntryLink)
 		throws PortalException {
 
-		if (fragmentEntryLink.getClassNameId() ==
-				PortalUtil.getClassNameId(Layout.class)) {
+		if (fragmentEntryLink.getClassNameId() == PortalUtil.getClassNameId(
+				Layout.class)) {
 
 			return "page";
 		}
@@ -180,20 +143,10 @@ public class FragmentEntryLinkDisplayContext {
 		if (layoutPageTemplateEntry.getType() ==
 				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE) {
 
-			return "display-page";
+			return "display-page-template";
 		}
 
 		return "page-template";
-	}
-
-	public String getKeywords() {
-		if (Validator.isNotNull(_keywords)) {
-			return _keywords;
-		}
-
-		_keywords = ParamUtil.getString(_renderRequest, "keywords", null);
-
-		return _keywords;
 	}
 
 	public String getNavigation() {
@@ -249,6 +202,7 @@ public class FragmentEntryLinkDisplayContext {
 
 		portletURL.setParameter(
 			"mvcRenderCommandName", "/fragment/view_fragment_entry_usages");
+		portletURL.setParameter("navigation", getNavigation());
 		portletURL.setParameter("redirect", getRedirect());
 		portletURL.setParameter(
 			"fragmentCollectionId", String.valueOf(getFragmentCollectionId()));
@@ -277,8 +231,11 @@ public class FragmentEntryLinkDisplayContext {
 			WebKeys.THEME_DISPLAY);
 
 		SearchContainer fragmentEntryLinksSearchContainer = new SearchContainer(
-			_renderRequest, _renderResponse.createRenderURL(), null,
+			_renderRequest, getPortletURL(), null,
 			"there-are-no-fragment-usages");
+
+		fragmentEntryLinksSearchContainer.setId(
+			"fragmentEntryLinks" + getFragmentCollectionId());
 
 		if (FragmentPermission.contains(
 				themeDisplay.getPermissionChecker(),
@@ -340,7 +297,7 @@ public class FragmentEntryLinkDisplayContext {
 					PortalUtil.getClassNameId(LayoutPageTemplateEntry.class),
 					LayoutPageTemplateEntryTypeConstants.TYPE_BASIC);
 		}
-		else if (Objects.equals(getNavigation(), "display-pages")) {
+		else if (Objects.equals(getNavigation(), "display-page-templates")) {
 			fragmentEntryLinks =
 				FragmentEntryLinkLocalServiceUtil.getFragmentEntryLinks(
 					fragmentEntry.getGroupId(), getFragmentEntryId(),
@@ -377,42 +334,15 @@ public class FragmentEntryLinkDisplayContext {
 		return _searchContainer;
 	}
 
-	public String getSortingURL() {
-		PortletURL sortingURL = getPortletURL();
-
-		sortingURL.setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL.toString();
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "last-propagation");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "last-propagation"));
-					});
-			}
-		};
-	}
-
 	private Long _fragmentCollectionId;
 	private FragmentEntry _fragmentEntry;
 	private Long _fragmentEntryId;
-	private String _keywords;
 	private String _navigation;
 	private String _orderByCol;
 	private String _orderByType;
 	private String _redirect;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private SearchContainer _searchContainer;
 
 }

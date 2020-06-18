@@ -15,13 +15,14 @@
 package com.liferay.asset.publisher.web.internal;
 
 import com.liferay.asset.publisher.constants.AssetPublisherWebKeys;
-import com.liferay.asset.publisher.web.display.context.ParentSitesItemSelectorViewDisplayContext;
+import com.liferay.asset.publisher.util.AssetPublisherHelper;
+import com.liferay.asset.publisher.web.internal.display.context.ParentSitesItemSelectorViewDisplayContext;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
+import com.liferay.item.selector.criteria.GroupItemSelectorReturnType;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.site.item.selector.criteria.SiteItemSelectorReturnType;
@@ -29,10 +30,9 @@ import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
 
 import java.io.IOException;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 import javax.portlet.PortletURL;
 
@@ -68,13 +68,15 @@ public class ParentSitesItemSelectorView
 
 	@Override
 	public String getTitle(Locale locale) {
-		ResourceBundle resourceBundle = _portal.getResourceBundle(locale);
-
-		return ResourceBundleUtil.getString(resourceBundle, "parent-sites");
+		return ResourceBundleUtil.getString(
+			_portal.getResourceBundle(locale), "parent-sites");
 	}
 
 	@Override
-	public boolean isVisible(ThemeDisplay themeDisplay) {
+	public boolean isVisible(
+		SiteItemSelectorCriterion siteItemSelectorCriterion,
+		ThemeDisplay themeDisplay) {
+
 		Group siteGroup = themeDisplay.getSiteGroup();
 
 		if (siteGroup.isLayoutPrototype()) {
@@ -94,7 +96,7 @@ public class ParentSitesItemSelectorView
 
 	@Override
 	public void renderHTML(
-			ServletRequest request, ServletResponse response,
+			ServletRequest servletRequest, ServletResponse servletResponse,
 			SiteItemSelectorCriterion siteItemSelectorCriterion,
 			PortletURL portletURL, String itemSelectedEventName, boolean search)
 		throws IOException, ServletException {
@@ -102,44 +104,37 @@ public class ParentSitesItemSelectorView
 		ParentSitesItemSelectorViewDisplayContext
 			parentSitesItemSelectorViewDisplayContext =
 				new ParentSitesItemSelectorViewDisplayContext(
-					(HttpServletRequest)request, siteItemSelectorCriterion,
-					itemSelectedEventName, portletURL);
+					(HttpServletRequest)servletRequest, _assetPublisherHelper,
+					siteItemSelectorCriterion, itemSelectedEventName,
+					portletURL);
 
-		request.setAttribute(
+		servletRequest.setAttribute(
 			AssetPublisherWebKeys.ITEM_SELECTOR_DISPLAY_CONTEXT,
 			parentSitesItemSelectorViewDisplayContext);
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher("/view_sites.jsp");
 
-		requestDispatcher.include(request, response);
-	}
-
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.asset.publisher.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
+		requestDispatcher.include(servletRequest, servletResponse);
 	}
 
 	private static final List<ItemSelectorReturnType>
-		_supportedItemSelectorReturnTypes = Collections.unmodifiableList(
-			ListUtil.fromArray(
-				new ItemSelectorReturnType[] {
-					new SiteItemSelectorReturnType()
-				}));
+		_supportedItemSelectorReturnTypes = Arrays.asList(
+			new GroupItemSelectorReturnType(),
+			new SiteItemSelectorReturnType());
 
+	@Reference
+	private AssetPublisherHelper _assetPublisherHelper;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.asset.publisher.web)"
+	)
 	private ServletContext _servletContext;
 
 }

@@ -18,9 +18,9 @@ import com.liferay.document.library.display.context.BaseDLViewFileVersionDisplay
 import com.liferay.document.library.display.context.DLUIItemKeys;
 import com.liferay.document.library.display.context.DLViewFileVersionDisplayContext;
 import com.liferay.document.library.opener.constants.DLOpenerFileEntryReferenceConstants;
-import com.liferay.document.library.opener.google.drive.DLOpenerGoogleDriveManager;
 import com.liferay.document.library.opener.google.drive.constants.DLOpenerGoogleDriveMimeTypes;
-import com.liferay.document.library.opener.google.drive.web.internal.constants.DLOpenerGoogleDriveWebConstants;
+import com.liferay.document.library.opener.google.drive.web.internal.DLOpenerGoogleDriveManager;
+import com.liferay.document.library.opener.google.drive.web.internal.constants.DLOpenerGoogleDriveConstants;
 import com.liferay.document.library.opener.model.DLOpenerFileEntryReference;
 import com.liferay.document.library.opener.service.DLOpenerFileEntryReferenceLocalService;
 import com.liferay.petra.string.StringBundler;
@@ -31,15 +31,22 @@ import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.servlet.HttpMethods;
+import com.liferay.portal.kernel.servlet.taglib.ui.BaseUIItem;
 import com.liferay.portal.kernel.servlet.taglib.ui.JavaScriptUIItem;
 import com.liferay.portal.kernel.servlet.taglib.ui.Menu;
 import com.liferay.portal.kernel.servlet.taglib.ui.MenuItem;
 import com.liferay.portal.kernel.servlet.taglib.ui.URLMenuItem;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Collection;
 import java.util.List;
@@ -61,55 +68,101 @@ public class DLOpenerGoogleDriveDLViewFileVersionDisplayContext
 
 	public DLOpenerGoogleDriveDLViewFileVersionDisplayContext(
 		DLViewFileVersionDisplayContext parentDLDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileVersion fileVersion, ResourceBundle resourceBundle,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileVersion fileVersion,
+		ResourceBundle resourceBundle,
+		ModelResourcePermission<FileEntry> fileEntryModelResourcePermission,
 		DLOpenerFileEntryReferenceLocalService
 			dlOpenerFileEntryReferenceLocalService,
 		DLOpenerGoogleDriveManager dlOpenerGoogleDriveManager, Portal portal) {
 
-		super(_UUID, parentDLDisplayContext, request, response, fileVersion);
+		super(
+			_UUID, parentDLDisplayContext, httpServletRequest,
+			httpServletResponse, fileVersion);
 
 		_resourceBundle = resourceBundle;
+		_fileEntryModelResourcePermission = fileEntryModelResourcePermission;
 		_dlOpenerFileEntryReferenceLocalService =
 			dlOpenerFileEntryReferenceLocalService;
 		_dlOpenerGoogleDriveManager = dlOpenerGoogleDriveManager;
 		_portal = portal;
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		_permissionChecker = themeDisplay.getPermissionChecker();
 	}
 
 	@Override
 	public Menu getMenu() throws PortalException {
 		if (!isActionsVisible() ||
-			!DLOpenerGoogleDriveMimeTypes.isMimeTypeSupported(
+			!DLOpenerGoogleDriveMimeTypes.isGoogleMimeTypeSupported(
 				fileVersion.getMimeType()) ||
-			!_dlOpenerGoogleDriveManager.isConfigured()) {
+			!_dlOpenerGoogleDriveManager.isConfigured(
+				fileVersion.getCompanyId()) ||
+			!_fileEntryModelResourcePermission.contains(
+				_permissionChecker, fileVersion.getFileEntry(),
+				ActionKeys.UPDATE)) {
 
 			return super.getMenu();
 		}
 
 		Menu menu = super.getMenu();
 
+		FileEntry fileEntry = fileVersion.getFileEntry();
+
 		if (_isCheckedOutInGoogleDrive()) {
-			Collection<MenuItem> menuItems = menu.getMenuItems();
+			if (fileEntry.hasLock()) {
+				List<MenuItem> menuItems = menu.getMenuItems();
 
-			_updateCancelCheckoutAndCheckinMenuItems(menuItems);
+				_updateCancelCheckoutAndCheckinMenuItems(menuItems);
 
-			menuItems.add(
-				_createEditInGoogleDocsMenuItem(
-					DLOpenerGoogleDriveWebConstants.GOOGLE_DRIVE_EDIT));
+				_addEditInGoogleDocsUIItem(
+					menuItems, _createEditInGoogleDocsMenuItem(Constants.EDIT));
+			}
 
 			return menu;
 		}
 
-		List<MenuItem> menuItems = menu.getMenuItems();
-
-		menuItems.add(
-			_createEditInGoogleDocsMenuItem(
-				DLOpenerGoogleDriveWebConstants.GOOGLE_DRIVE_CHECKOUT));
+		if (!_isCheckedOutByAnotherUser(fileEntry)) {
+			_addEditInGoogleDocsUIItem(
+				menu.getMenuItems(),
+				_createEditInGoogleDocsMenuItem(Constants.CHECKOUT));
+		}
 
 		return menu;
 	}
 
-	private MenuItem _createEditInGoogleDocsMenuItem(String cmd) {
+	/**
+	 * @see com.liferay.frontend.image.editor.integration.document.library.internal.display.context.ImageEditorDLViewFileVersionDisplayContext#_addEditWithImageEditorUIItem
+	 */
+	private <T extends BaseUIItem> List<T> _addEditInGoogleDocsUIItem(
+		List<T> uiItems, T editInGoogleDocsUIItem) {
+
+		int i = 1;
+
+		for (T uiItem : uiItems) {
+			if (DLUIItemKeys.EDIT.equals(uiItem.getKey())) {
+				break;
+			}
+
+			i++;
+		}
+
+		if (i >= uiItems.size()) {
+			uiItems.add(editInGoogleDocsUIItem);
+		}
+		else {
+			uiItems.add(i, editInGoogleDocsUIItem);
+		}
+
+		return uiItems;
+	}
+
+	private MenuItem _createEditInGoogleDocsMenuItem(String cmd)
+		throws PortalException {
+
 		URLMenuItem urlMenuItem = new URLMenuItem();
 
 		urlMenuItem.setLabel(LanguageUtil.get(_resourceBundle, _getLabelKey()));
@@ -119,7 +172,7 @@ public class DLOpenerGoogleDriveDLViewFileVersionDisplayContext
 		return urlMenuItem;
 	}
 
-	private String _getActionURL(String cmd) {
+	private String _getActionURL(String cmd) throws PortalException {
 		LiferayPortletURL liferayPortletURL = PortletURLFactoryUtil.create(
 			request, _portal.getPortletId(request),
 			PortletRequest.ACTION_PHASE);
@@ -129,21 +182,33 @@ public class DLOpenerGoogleDriveDLViewFileVersionDisplayContext
 		liferayPortletURL.setParameter(Constants.CMD, cmd);
 		liferayPortletURL.setParameter(
 			"fileEntryId", String.valueOf(fileVersion.getFileEntryId()));
+
+		FileEntry fileEntry = fileVersion.getFileEntry();
+
 		liferayPortletURL.setParameter(
-			"googleDocsRedirect", _portal.getCurrentCompleteURL(request));
+			"folderId", String.valueOf(fileEntry.getFolderId()));
+
+		liferayPortletURL.setParameter(
+			"googleDocsRedirect", _portal.getCurrentURL(request));
 
 		return liferayPortletURL.toString();
 	}
 
 	private String _getLabelKey() {
-		if (DLOpenerGoogleDriveMimeTypes.APPLICATION_VND_PPTX.equals(
-				fileVersion.getMimeType())) {
+		String googleDocsMimeType =
+			DLOpenerGoogleDriveMimeTypes.getGoogleDocsMimeType(
+				fileVersion.getMimeType());
+
+		if (DLOpenerGoogleDriveMimeTypes.
+				APPLICATION_VND_GOOGLE_APPS_PRESENTATION.equals(
+					googleDocsMimeType)) {
 
 			return "edit-in-google-slides";
 		}
 
-		if (DLOpenerGoogleDriveMimeTypes.APPLICATION_VND_XSLX.equals(
-				fileVersion.getMimeType())) {
+		if (DLOpenerGoogleDriveMimeTypes.
+				APPLICATION_VND_GOOGLE_APPS_SPREADSHEET.equals(
+					googleDocsMimeType)) {
 
 			return "edit-in-google-sheets";
 		}
@@ -165,6 +230,14 @@ public class DLOpenerGoogleDriveDLViewFileVersionDisplayContext
 		return liferayPortletResponse.getNamespace();
 	}
 
+	private boolean _isCheckedOutByAnotherUser(FileEntry fileEntry) {
+		if (fileEntry.isCheckedOut() && !fileEntry.hasLock()) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean _isCheckedOutInGoogleDrive() throws PortalException {
 		FileEntry fileEntry = fileVersion.getFileEntry();
 
@@ -180,7 +253,9 @@ public class DLOpenerGoogleDriveDLViewFileVersionDisplayContext
 	private boolean _isCheckingInNewFile() throws PortalException {
 		DLOpenerFileEntryReference dlOpenerFileEntryReference =
 			_dlOpenerFileEntryReferenceLocalService.
-				getDLOpenerFileEntryReference(fileVersion.getFileEntry());
+				getDLOpenerFileEntryReference(
+					DLOpenerGoogleDriveConstants.GOOGLE_DRIVE_REFERENCE_TYPE,
+					fileVersion.getFileEntry());
 
 		if (dlOpenerFileEntryReference.getType() ==
 				DLOpenerFileEntryReferenceConstants.TYPE_NEW) {
@@ -205,18 +280,16 @@ public class DLOpenerGoogleDriveDLViewFileVersionDisplayContext
 						javaScriptUIItem.setOnClick(
 							StringBundler.concat(
 								"window.location.href = '",
-								_getActionURL(
-									DLOpenerGoogleDriveWebConstants.
-										GOOGLE_DRIVE_CHECKIN),
+								HtmlUtil.escapeJS(
+									_getActionURL(Constants.CHECKIN)),
 								"'"));
 					}
 					else {
 						javaScriptUIItem.setOnClick(
 							StringBundler.concat(
 								_getNamespace(), "showVersionDetailsDialog('",
-								_getActionURL(
-									DLOpenerGoogleDriveWebConstants.
-										GOOGLE_DRIVE_CHECKIN),
+								HtmlUtil.escapeJS(
+									_getActionURL(Constants.CHECKIN)),
 								"');"));
 					}
 				}
@@ -227,9 +300,7 @@ public class DLOpenerGoogleDriveDLViewFileVersionDisplayContext
 
 					urlMenuItem.setMethod(HttpMethods.POST);
 					urlMenuItem.setURL(
-						_getActionURL(
-							DLOpenerGoogleDriveWebConstants.
-								GOOGLE_DRIVE_CANCEL_CHECKOUT));
+						_getActionURL(Constants.CANCEL_CHECKOUT));
 				}
 			}
 		}
@@ -241,6 +312,9 @@ public class DLOpenerGoogleDriveDLViewFileVersionDisplayContext
 	private final DLOpenerFileEntryReferenceLocalService
 		_dlOpenerFileEntryReferenceLocalService;
 	private final DLOpenerGoogleDriveManager _dlOpenerGoogleDriveManager;
+	private final ModelResourcePermission<FileEntry>
+		_fileEntryModelResourcePermission;
+	private final PermissionChecker _permissionChecker;
 	private final Portal _portal;
 	private final ResourceBundle _resourceBundle;
 

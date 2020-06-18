@@ -37,33 +37,27 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = DynamicInclude.class)
 public class DDMFormBuilderTopHeadDynamicInclude extends BaseDynamicInclude {
 
-	@Activate
-	public void activate() {
-		_postfix = _portal.getPathProxy();
-
-		if (_postfix.isEmpty()) {
-			_postfix = _servletContext.getContextPath();
-		}
-		else {
-			_postfix = _postfix.concat(_servletContext.getContextPath());
-		}
-	}
-
 	@Override
 	public void include(
-			HttpServletRequest request, HttpServletResponse response,
-			String key)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		PrintWriter printWriter = response.getWriter();
+		PrintWriter printWriter = httpServletResponse.getWriter();
 
 		String cdnBaseURL = themeDisplay.getCDNBaseURL();
 
 		String staticResourceURL = _portal.getStaticResourceURL(
-			request, cdnBaseURL.concat(_postfix).concat("/css/main.css"));
+			httpServletRequest,
+			cdnBaseURL.concat(
+				_postfix
+			).concat(
+				"/css/main.css"
+			));
 
 		String content = "<link href=\"".concat(staticResourceURL);
 
@@ -73,7 +67,27 @@ public class DDMFormBuilderTopHeadDynamicInclude extends BaseDynamicInclude {
 
 	@Override
 	public void register(DynamicIncludeRegistry dynamicIncludeRegistry) {
-		dynamicIncludeRegistry.register("/html/common/themes/top_head.jsp#pre");
+		dynamicIncludeRegistry.register(
+			"com.liferay.data.engine.taglib#/data_layout_builder/start.jsp" +
+				"#pre");
+		dynamicIncludeRegistry.register(
+			"com.liferay.dynamic.data.mapping.form.web#" +
+				"EditElementSetInstanceMVCRenderCommand#render");
+		dynamicIncludeRegistry.register(
+			"com.liferay.dynamic.data.mapping.form.web#" +
+				"EditFormInstanceMVCRenderCommand#render");
+	}
+
+	@Activate
+	protected void activate() {
+		_postfix = _portal.getPathProxy();
+
+		if (_postfix.isEmpty()) {
+			_postfix = _servletContext.getContextPath();
+		}
+		else {
+			_postfix = _postfix.concat(_servletContext.getContextPath());
+		}
 	}
 
 	@Reference

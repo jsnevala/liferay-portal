@@ -14,13 +14,10 @@
 
 package com.liferay.trash.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.trash.model.TrashVersion;
 
 import java.io.Externalizable;
@@ -32,12 +29,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing TrashVersion in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see TrashVersion
  * @generated
  */
-@ProviderType
-public class TrashVersionCacheModel implements CacheModel<TrashVersion>,
-	Externalizable {
+public class TrashVersionCacheModel
+	implements CacheModel<TrashVersion>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -48,9 +44,12 @@ public class TrashVersionCacheModel implements CacheModel<TrashVersion>,
 			return false;
 		}
 
-		TrashVersionCacheModel trashVersionCacheModel = (TrashVersionCacheModel)obj;
+		TrashVersionCacheModel trashVersionCacheModel =
+			(TrashVersionCacheModel)obj;
 
-		if (versionId == trashVersionCacheModel.versionId) {
+		if ((versionId == trashVersionCacheModel.versionId) &&
+			(mvccVersion == trashVersionCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -59,14 +58,28 @@ public class TrashVersionCacheModel implements CacheModel<TrashVersion>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, versionId);
+		int hashCode = HashUtil.hash(0, versionId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(15);
+		StringBundler sb = new StringBundler(17);
 
-		sb.append("{versionId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", versionId=");
 		sb.append(versionId);
 		sb.append(", companyId=");
 		sb.append(companyId);
@@ -89,6 +102,7 @@ public class TrashVersionCacheModel implements CacheModel<TrashVersion>,
 	public TrashVersion toEntityModel() {
 		TrashVersionImpl trashVersionImpl = new TrashVersionImpl();
 
+		trashVersionImpl.setMvccVersion(mvccVersion);
 		trashVersionImpl.setVersionId(versionId);
 		trashVersionImpl.setCompanyId(companyId);
 		trashVersionImpl.setEntryId(entryId);
@@ -110,7 +124,11 @@ public class TrashVersionCacheModel implements CacheModel<TrashVersion>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
+
 		versionId = objectInput.readLong();
 
 		companyId = objectInput.readLong();
@@ -120,14 +138,15 @@ public class TrashVersionCacheModel implements CacheModel<TrashVersion>,
 		classNameId = objectInput.readLong();
 
 		classPK = objectInput.readLong();
-		typeSettings = objectInput.readUTF();
+		typeSettings = (String)objectInput.readObject();
 
 		status = objectInput.readInt();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		objectOutput.writeLong(versionId);
 
 		objectOutput.writeLong(companyId);
@@ -139,15 +158,16 @@ public class TrashVersionCacheModel implements CacheModel<TrashVersion>,
 		objectOutput.writeLong(classPK);
 
 		if (typeSettings == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(typeSettings);
+			objectOutput.writeObject(typeSettings);
 		}
 
 		objectOutput.writeInt(status);
 	}
 
+	public long mvccVersion;
 	public long versionId;
 	public long companyId;
 	public long entryId;
@@ -155,4 +175,5 @@ public class TrashVersionCacheModel implements CacheModel<TrashVersion>,
 	public long classPK;
 	public String typeSettings;
 	public int status;
+
 }

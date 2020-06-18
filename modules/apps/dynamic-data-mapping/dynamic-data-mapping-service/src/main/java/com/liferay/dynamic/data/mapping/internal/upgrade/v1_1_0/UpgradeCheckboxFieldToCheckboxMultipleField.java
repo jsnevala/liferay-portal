@@ -90,20 +90,26 @@ public class UpgradeCheckboxFieldToCheckboxMultipleField
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		StringBundler sb = new StringBundler(5);
+		StringBundler sb = new StringBundler(6);
 
-		sb.append("select DDMStructure.definition, DDLRecordSet.recordSetId, ");
-		sb.append("DDMStructure.structureId from DDLRecordSet inner join ");
-		sb.append("DDMStructure on DDLRecordSet.DDMStructureId = ");
-		sb.append("DDMStructure.structureId where DDLRecordSet.scope = ? and ");
-		sb.append("DDMStructure.definition like ?");
+		sb.append("select DDMStructure.definition, DDMStructure.version, ");
+		sb.append("DDMStructure.structureId, DDLRecordSet.recordSetId from ");
+		sb.append("DDLRecordSet inner join DDMStructure on ");
+		sb.append("DDLRecordSet.DDMStructureId = DDMStructure.structureId ");
+		sb.append("where DDLRecordSet.scope = ? and DDMStructure.definition ");
+		sb.append("like ?");
 
 		try (PreparedStatement ps1 = connection.prepareStatement(sb.toString());
 			PreparedStatement ps2 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
 					"update DDMStructure set definition = ? where " +
-						"structureId = ?")) {
+						"structureId = ?");
+			PreparedStatement ps3 =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					"update DDMStructureVersion set definition = ? where " +
+						"structureId = ? and version = ?")) {
 
 			ps1.setInt(1, _SCOPE_FORMS);
 			ps1.setString(2, "%checkbox%");
@@ -111,8 +117,9 @@ public class UpgradeCheckboxFieldToCheckboxMultipleField
 			try (ResultSet rs = ps1.executeQuery()) {
 				while (rs.next()) {
 					String definition = rs.getString(1);
-					long recordSetId = rs.getLong(2);
+					String version = rs.getString(2);
 					long structureId = rs.getLong(3);
+					long recordSetId = rs.getLong(4);
 
 					String newDefinition = upgradeRecordSetStructureDefinition(
 						definition);
@@ -123,10 +130,18 @@ public class UpgradeCheckboxFieldToCheckboxMultipleField
 
 					ps2.addBatch();
 
+					ps3.setString(1, newDefinition);
+					ps3.setLong(2, structureId);
+					ps3.setString(3, version);
+
+					ps3.addBatch();
+
 					updateRecords(deserialize(definition), recordSetId);
 				}
 
 				ps2.executeBatch();
+
+				ps3.executeBatch();
 			}
 		}
 	}
@@ -139,16 +154,17 @@ public class UpgradeCheckboxFieldToCheckboxMultipleField
 		JSONObject optionJSONObject = _jsonFactory.createJSONObject();
 
 		optionJSONObject.put(
-			"label", checkboxFieldJSONObject.getJSONObject("label"));
-		optionJSONObject.put(
-			"value", checkboxFieldJSONObject.getString("name"));
+			"label", checkboxFieldJSONObject.getJSONObject("label")
+		).put(
+			"value", checkboxFieldJSONObject.getString("name")
+		);
 
 		optionsJSONArray.put(optionJSONObject);
 
 		return optionsJSONArray;
 	}
 
-	protected JSONObject getPredefinedValue(
+	protected JSONObject getPredefinedValueJSONObject(
 		JSONObject checkboxFieldJSONObject) {
 
 		JSONObject oldPredefinedValueJSONObject =
@@ -193,12 +209,16 @@ public class UpgradeCheckboxFieldToCheckboxMultipleField
 	protected void transformCheckboxDDMFormField(
 		JSONObject checkboxFieldJSONObject) {
 
-		checkboxFieldJSONObject.put("dataType", "string");
 		checkboxFieldJSONObject.put(
-			"options", getOptionsJSONArray(checkboxFieldJSONObject));
-		checkboxFieldJSONObject.put(
-			"predefinedValue", getPredefinedValue(checkboxFieldJSONObject));
-		checkboxFieldJSONObject.put("type", "checkbox_multiple");
+			"dataType", "string"
+		).put(
+			"options", getOptionsJSONArray(checkboxFieldJSONObject)
+		).put(
+			"predefinedValue",
+			getPredefinedValueJSONObject(checkboxFieldJSONObject)
+		).put(
+			"type", "checkbox_multiple"
+		);
 	}
 
 	protected void transformCheckboxDDMFormFieldValues(

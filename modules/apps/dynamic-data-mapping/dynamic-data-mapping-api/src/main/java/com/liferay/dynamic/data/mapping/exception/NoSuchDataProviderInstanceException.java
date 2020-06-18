@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchDataProviderInstanceException extends NoSuchModelException {
 
 	public NoSuchDataProviderInstanceException() {

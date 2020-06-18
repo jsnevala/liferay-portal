@@ -15,9 +15,9 @@
 package com.liferay.portal.util;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.CustomJspRegistry;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.util.Map;
 import java.util.Set;
@@ -40,8 +40,11 @@ public class CustomJspRegistryImpl implements CustomJspRegistry {
 		int pos = fileName.lastIndexOf(CharPool.PERIOD);
 
 		if (pos == -1) {
-			return fileName.concat(StringPool.PERIOD).concat(
-				servletContextName);
+			return fileName.concat(
+				StringPool.PERIOD
+			).concat(
+				servletContextName
+			);
 		}
 
 		StringBundler sb = new StringBundler(4);

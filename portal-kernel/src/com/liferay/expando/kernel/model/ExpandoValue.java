@@ -14,30 +14,33 @@
 
 package com.liferay.expando.kernel.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the ExpandoValue service. Represents a row in the &quot;ExpandoValue&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see ExpandoValueModel
- * @see com.liferay.portlet.expando.model.impl.ExpandoValueImpl
- * @see com.liferay.portlet.expando.model.impl.ExpandoValueModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.portlet.expando.model.impl.ExpandoValueImpl")
+@ImplementationClassName(
+	"com.liferay.portlet.expando.model.impl.ExpandoValueImpl"
+)
 @ProviderType
 public interface ExpandoValue extends ExpandoValueModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.portlet.expando.model.impl.ExpandoValueImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.portlet.expando.model.impl.ExpandoValueImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<ExpandoValue, Long> VALUE_ID_ACCESSOR = new Accessor<ExpandoValue, Long>() {
+	public static final Accessor<ExpandoValue, Long> VALUE_ID_ACCESSOR =
+		new Accessor<ExpandoValue, Long>() {
+
 			@Override
 			public Long get(ExpandoValue expandoValue) {
 				return expandoValue.getValueId();
@@ -52,6 +55,7 @@ public interface ExpandoValue extends ExpandoValueModel, PersistedModel {
 			public Class<ExpandoValue> getTypeClass() {
 				return ExpandoValue.class;
 			}
+
 		};
 
 	public java.util.List<java.util.Locale> getAvailableLocales()
@@ -162,7 +166,7 @@ public interface ExpandoValue extends ExpandoValueModel, PersistedModel {
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public void setGeolocationJSONObject(
-		com.liferay.portal.kernel.json.JSONObject data)
+			com.liferay.portal.kernel.json.JSONObject data)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public void setInteger(int data)
@@ -192,23 +196,27 @@ public interface ExpandoValue extends ExpandoValueModel, PersistedModel {
 	public void setString(String data)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	public void setString(String data, java.util.Locale locale,
-		java.util.Locale defaultLocale)
+	public void setString(
+			String data, java.util.Locale locale,
+			java.util.Locale defaultLocale)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public void setStringArray(String[] data)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	public void setStringArray(String[] data, java.util.Locale locale,
-		java.util.Locale defaultLocale)
+	public void setStringArray(
+			String[] data, java.util.Locale locale,
+			java.util.Locale defaultLocale)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public void setStringArrayMap(
-		java.util.Map<java.util.Locale, String[]> dataMap,
-		java.util.Locale defaultLocale)
+			java.util.Map<java.util.Locale, String[]> dataMap,
+			java.util.Locale defaultLocale)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	public void setStringMap(java.util.Map<java.util.Locale, String> dataMap,
-		java.util.Locale defaultLocale)
+	public void setStringMap(
+			java.util.Map<java.util.Locale, String> dataMap,
+			java.util.Locale defaultLocale)
 		throws com.liferay.portal.kernel.exception.PortalException;
+
 }

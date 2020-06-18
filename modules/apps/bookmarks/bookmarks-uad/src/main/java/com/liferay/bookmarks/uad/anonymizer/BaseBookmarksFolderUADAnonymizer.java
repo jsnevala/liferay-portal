@@ -14,14 +14,14 @@
 
 package com.liferay.bookmarks.uad.anonymizer;
 
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.service.BookmarksFolderLocalService;
 import com.liferay.bookmarks.uad.constants.BookmarksUADConstants;
-
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
-
 import com.liferay.user.associated.data.anonymizer.DynamicQueryUADAnonymizer;
 
 import org.osgi.service.component.annotations.Reference;
@@ -40,12 +40,17 @@ import org.osgi.service.component.annotations.Reference;
  */
 public abstract class BaseBookmarksFolderUADAnonymizer
 	extends DynamicQueryUADAnonymizer<BookmarksFolder> {
+
 	@Override
-	public void autoAnonymize(BookmarksFolder bookmarksFolder, long userId,
-		User anonymousUser) throws PortalException {
+	public void autoAnonymize(
+			BookmarksFolder bookmarksFolder, long userId, User anonymousUser)
+		throws PortalException {
+
 		if (bookmarksFolder.getUserId() == userId) {
 			bookmarksFolder.setUserId(anonymousUser.getUserId());
 			bookmarksFolder.setUserName(anonymousUser.getFullName());
+
+			autoAnonymizeAssetEntry(bookmarksFolder, anonymousUser);
 		}
 
 		if (bookmarksFolder.getStatusByUserId() == userId) {
@@ -57,14 +62,26 @@ public abstract class BaseBookmarksFolderUADAnonymizer
 	}
 
 	@Override
-	public void delete(BookmarksFolder bookmarksFolder)
-		throws PortalException {
+	public void delete(BookmarksFolder bookmarksFolder) throws PortalException {
 		bookmarksFolderLocalService.deleteFolder(bookmarksFolder);
 	}
 
 	@Override
 	public Class<BookmarksFolder> getTypeClass() {
 		return BookmarksFolder.class;
+	}
+
+	protected void autoAnonymizeAssetEntry(
+		BookmarksFolder bookmarksFolder, User anonymousUser) {
+
+		AssetEntry assetEntry = fetchAssetEntry(bookmarksFolder);
+
+		if (assetEntry != null) {
+			assetEntry.setUserId(anonymousUser.getUserId());
+			assetEntry.setUserName(anonymousUser.getFullName());
+
+			assetEntryLocalService.updateAssetEntry(assetEntry);
+		}
 	}
 
 	@Override
@@ -77,6 +94,15 @@ public abstract class BaseBookmarksFolderUADAnonymizer
 		return BookmarksUADConstants.USER_ID_FIELD_NAMES_BOOKMARKS_FOLDER;
 	}
 
+	protected AssetEntry fetchAssetEntry(BookmarksFolder bookmarksFolder) {
+		return assetEntryLocalService.fetchEntry(
+			BookmarksFolder.class.getName(), bookmarksFolder.getFolderId());
+	}
+
+	@Reference
+	protected AssetEntryLocalService assetEntryLocalService;
+
 	@Reference
 	protected BookmarksFolderLocalService bookmarksFolderLocalService;
+
 }

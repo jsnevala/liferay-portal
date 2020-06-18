@@ -15,12 +15,10 @@
 package com.liferay.segments.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
-import com.liferay.portal.kernel.service.OrganizationLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.segments.constants.SegmentsPortletKeys;
-import com.liferay.segments.odata.retriever.UserODataRetriever;
-import com.liferay.segments.service.SegmentsEntryRelService;
+import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributorRegistry;
+import com.liferay.segments.provider.SegmentsEntryProviderRegistry;
 import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.web.internal.constants.SegmentsWebKeys;
 import com.liferay.segments.web.internal.display.context.EditSegmentsEntryDisplayContext;
@@ -29,13 +27,11 @@ import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	immediate = true,
@@ -52,15 +48,11 @@ public class EditSegmentsEntryMVCRenderCommand implements MVCRenderCommand {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
-			renderRequest);
-
 		EditSegmentsEntryDisplayContext editSegmentsEntryDisplayContext =
 			new EditSegmentsEntryDisplayContext(
-				httpServletRequest, renderRequest, renderResponse,
-				_organizationLocalService, _segmentsEntryService,
-				_segmentsEntryRelService, _userLocalService,
-				_userODataRetriever);
+				_portal.getHttpServletRequest(renderRequest), renderRequest,
+				renderResponse, _segmentsCriteriaContributorRegistry,
+				_segmentsEntryProviderRegistry, _segmentsEntryService);
 
 		renderRequest.setAttribute(
 			SegmentsWebKeys.EDIT_SEGMENTS_ENTRY_DISPLAY_CONTEXT,
@@ -70,21 +62,16 @@ public class EditSegmentsEntryMVCRenderCommand implements MVCRenderCommand {
 	}
 
 	@Reference
-	private OrganizationLocalService _organizationLocalService;
-
-	@Reference
 	private Portal _portal;
 
 	@Reference
-	private SegmentsEntryRelService _segmentsEntryRelService;
+	private SegmentsCriteriaContributorRegistry
+		_segmentsCriteriaContributorRegistry;
+
+	@Reference
+	private SegmentsEntryProviderRegistry _segmentsEntryProviderRegistry;
 
 	@Reference
 	private SegmentsEntryService _segmentsEntryService;
-
-	@Reference
-	private UserLocalService _userLocalService;
-
-	@Reference
-	private UserODataRetriever _userODataRetriever;
 
 }

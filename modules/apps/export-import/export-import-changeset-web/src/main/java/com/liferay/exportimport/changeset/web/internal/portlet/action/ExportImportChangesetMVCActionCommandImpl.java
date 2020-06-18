@@ -25,6 +25,7 @@ import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationCo
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationParameterMapFactory;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactory;
 import com.liferay.exportimport.kernel.lar.ExportImportHelper;
+import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.exportimport.kernel.service.ExportImportLocalService;
@@ -32,7 +33,6 @@ import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.exportimport.kernel.staging.StagingURLHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -47,15 +47,13 @@ import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.service.http.GroupServiceHttp;
 import com.liferay.portal.service.http.LayoutServiceHttp;
 
 import java.io.IOException;
@@ -79,8 +77,9 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + ChangesetPortletKeys.CHANGESET,
 		"mvc.command.name=exportImportChangeset"
 	},
-	service =
-		{ExportImportChangesetMVCActionCommand.class, MVCActionCommand.class}
+	service = {
+		ExportImportChangesetMVCActionCommand.class, MVCActionCommand.class
+	}
 )
 public class ExportImportChangesetMVCActionCommandImpl
 	extends BaseMVCActionCommand
@@ -177,6 +176,9 @@ public class ExportImportChangesetMVCActionCommandImpl
 		Map<String, String[]> parameterMap =
 			_exportImportConfigurationParameterMapFactory.buildParameterMap();
 
+		parameterMap.put(
+			PortletDataHandlerKeys.DELETIONS,
+			new String[] {Boolean.FALSE.toString()});
 		parameterMap.put("changesetUuid", new String[] {changesetUuid});
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
@@ -274,11 +276,9 @@ public class ExportImportChangesetMVCActionCommandImpl
 					stagingGroup = scopeGroup.getParentGroup();
 				}
 
-				UnicodeProperties typeSettingsProperties =
-					stagingGroup.getTypeSettingsProperties();
-
 				HttpPrincipal httpPrincipal = new HttpPrincipal(
-					_stagingURLHelper.buildRemoteURL(typeSettingsProperties),
+					_stagingURLHelper.buildRemoteURL(
+						stagingGroup.getTypeSettingsProperties()),
 					user.getLogin(), user.getPassword(),
 					user.isPasswordEncrypted());
 
@@ -289,17 +289,10 @@ public class ExportImportChangesetMVCActionCommandImpl
 
 				try {
 					currentThread.setContextClassLoader(
-						ClassLoaderUtil.getPortalClassLoader());
+						PortalClassLoaderUtil.getClassLoader());
 
-					Group liveGroup = GroupServiceHttp.getGroup(
-						httpPrincipal, liveGroupId);
-
-					Group controlPanelGroup = GroupServiceHttp.getGroup(
-						httpPrincipal, liveGroup.getCompanyId(),
-						GroupConstants.CONTROL_PANEL);
-
-					targetPlid = LayoutServiceHttp.getDefaultPlid(
-						httpPrincipal, controlPanelGroup.getGroupId(), true);
+					targetPlid = LayoutServiceHttp.getControlPanelLayoutPlid(
+						httpPrincipal);
 				}
 				finally {
 					currentThread.setContextClassLoader(contextClassLoader);

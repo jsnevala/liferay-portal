@@ -16,6 +16,7 @@ package com.liferay.mobile.device.rules.internal.exportimport.data.handler.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.exportimport.test.util.lar.BaseStagedModelDataHandlerTestCase;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.mobile.device.rules.model.MDRAction;
 import com.liferay.mobile.device.rules.model.MDRRuleGroup;
 import com.liferay.mobile.device.rules.model.MDRRuleGroupInstance;
@@ -23,6 +24,7 @@ import com.liferay.mobile.device.rules.service.MDRActionLocalServiceUtil;
 import com.liferay.mobile.device.rules.service.MDRRuleGroupInstanceLocalServiceUtil;
 import com.liferay.mobile.device.rules.service.MDRRuleGroupLocalServiceUtil;
 import com.liferay.mobile.device.rules.util.test.MDRTestUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.StagedModel;
@@ -31,7 +33,6 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.test.LayoutTestUtil;
 
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +44,7 @@ import org.junit.Rule;
 import org.junit.runner.RunWith;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @RunWith(Arquillian.class)
 public class MDRActionStagedModelDataHandlerTest
@@ -114,14 +115,11 @@ public class MDRActionStagedModelDataHandlerTest
 	}
 
 	@Override
-	protected StagedModel getStagedModel(String uuid, Group group) {
-		try {
-			return MDRActionLocalServiceUtil.getMDRActionByUuidAndGroupId(
-				uuid, group.getGroupId());
-		}
-		catch (Exception e) {
-			return null;
-		}
+	protected StagedModel getStagedModel(String uuid, Group group)
+		throws PortalException {
+
+		return MDRActionLocalServiceUtil.getMDRActionByUuidAndGroupId(
+			uuid, group.getGroupId());
 	}
 
 	@Override

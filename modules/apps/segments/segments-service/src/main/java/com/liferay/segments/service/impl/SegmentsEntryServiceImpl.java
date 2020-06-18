@@ -14,16 +14,17 @@
 
 package com.liferay.segments.service.impl;
 
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.segments.constants.SegmentsActionKeys;
 import com.liferay.segments.constants.SegmentsConstants;
 import com.liferay.segments.model.SegmentsEntry;
@@ -33,16 +34,26 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
+@Component(
+	property = {
+		"json.web.service.context.name=segments",
+		"json.web.service.context.path=SegmentsEntry"
+	},
+	service = AopService.class
+)
 public class SegmentsEntryServiceImpl extends SegmentsEntryServiceBaseImpl {
 
 	@Override
 	public SegmentsEntry addSegmentsEntry(
-			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-			boolean active, String criteria, String key, String type,
-			ServiceContext serviceContext)
+			String segmentsEntryKey, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, boolean active, String criteria,
+			String type, ServiceContext serviceContext)
 		throws PortalException {
 
 		_portletResourcePermission.check(
@@ -50,8 +61,37 @@ public class SegmentsEntryServiceImpl extends SegmentsEntryServiceBaseImpl {
 			SegmentsActionKeys.MANAGE_SEGMENTS_ENTRIES);
 
 		return segmentsEntryLocalService.addSegmentsEntry(
-			nameMap, descriptionMap, active, criteria, key, type,
+			segmentsEntryKey, nameMap, descriptionMap, active, criteria, type,
 			serviceContext);
+	}
+
+	@Override
+	public SegmentsEntry addSegmentsEntry(
+			String segmentsEntryKey, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, boolean active, String criteria,
+			String source, String type, ServiceContext serviceContext)
+		throws PortalException {
+
+		_portletResourcePermission.check(
+			getPermissionChecker(), serviceContext.getScopeGroupId(),
+			SegmentsActionKeys.MANAGE_SEGMENTS_ENTRIES);
+
+		return segmentsEntryLocalService.addSegmentsEntry(
+			segmentsEntryKey, nameMap, descriptionMap, active, criteria, source,
+			type, serviceContext);
+	}
+
+	@Override
+	public void addSegmentsEntryClassPKs(
+			long segmentsEntryId, long[] classPKs,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_segmentsEntryResourcePermission.check(
+			getPermissionChecker(), segmentsEntryId, ActionKeys.UPDATE);
+
+		segmentsEntryLocalService.addSegmentsEntryClassPKs(
+			segmentsEntryId, classPKs, serviceContext);
 	}
 
 	@Override
@@ -65,39 +105,75 @@ public class SegmentsEntryServiceImpl extends SegmentsEntryServiceBaseImpl {
 	}
 
 	@Override
-	public List<SegmentsEntry> getSegmentsEntries(
-			long groupId, int start, int end,
-			OrderByComparator<SegmentsEntry> orderByComparator)
+	public void deleteSegmentsEntryClassPKs(
+			long segmentsEntryId, long[] classPKs)
 		throws PortalException {
 
-		_portletResourcePermission.check(
-			getPermissionChecker(), groupId, ActionKeys.VIEW);
+		_segmentsEntryResourcePermission.check(
+			getPermissionChecker(), segmentsEntryId, ActionKeys.UPDATE);
 
-		return segmentsEntryPersistence.filterFindByGroupId(
-			groupId, start, end, orderByComparator);
+		segmentsEntryLocalService.deleteSegmentsEntryClassPKs(
+			segmentsEntryId, classPKs);
 	}
 
 	@Override
-	public int getSegmentsEntriesCount(long groupId) throws PortalException {
-		_portletResourcePermission.check(
-			getPermissionChecker(), groupId, ActionKeys.VIEW);
+	public List<SegmentsEntry> getSegmentsEntries(
+		long groupId, boolean includeAncestorSegmentsEntries) {
 
-		return segmentsEntryPersistence.filterCountByGroupId(groupId);
+		if (!includeAncestorSegmentsEntries) {
+			return segmentsEntryPersistence.filterFindByGroupId(groupId);
+		}
+
+		return segmentsEntryPersistence.filterFindByGroupId(
+			ArrayUtil.append(
+				_portal.getAncestorSiteGroupIds(groupId), groupId));
+	}
+
+	@Override
+	public List<SegmentsEntry> getSegmentsEntries(
+		long groupId, boolean includeAncestorSegmentsEntries, int start,
+		int end, OrderByComparator<SegmentsEntry> orderByComparator) {
+
+		if (!includeAncestorSegmentsEntries) {
+			return segmentsEntryPersistence.filterFindByGroupId(
+				groupId, start, end, orderByComparator);
+		}
+
+		return segmentsEntryPersistence.filterFindByGroupId(
+			ArrayUtil.append(_portal.getAncestorSiteGroupIds(groupId), groupId),
+			start, end, orderByComparator);
+	}
+
+	@Override
+	public int getSegmentsEntriesCount(
+		long groupId, boolean includeAncestorSegmentsEntries) {
+
+		if (!includeAncestorSegmentsEntries) {
+			return segmentsEntryPersistence.filterCountByGroupId(groupId);
+		}
+
+		return segmentsEntryPersistence.filterCountByGroupId(
+			ArrayUtil.append(
+				_portal.getAncestorSiteGroupIds(groupId), groupId));
 	}
 
 	@Override
 	public SegmentsEntry getSegmentsEntry(long segmentsEntryId)
 		throws PortalException {
 
+		SegmentsEntry segmentsEntry =
+			segmentsEntryLocalService.getSegmentsEntry(segmentsEntryId);
+
 		_segmentsEntryResourcePermission.check(
 			getPermissionChecker(), segmentsEntryId, ActionKeys.VIEW);
 
-		return segmentsEntryLocalService.getSegmentsEntry(segmentsEntryId);
+		return segmentsEntry;
 	}
 
 	@Override
 	public BaseModelSearchResult<SegmentsEntry> searchSegmentsEntries(
-			long companyId, long groupId, String keywords, int start, int end,
+			long companyId, long groupId, String keywords,
+			boolean includeAncestorSegmentsEntries, int start, int end,
 			Sort sort)
 		throws PortalException {
 
@@ -105,33 +181,37 @@ public class SegmentsEntryServiceImpl extends SegmentsEntryServiceBaseImpl {
 			getPermissionChecker(), groupId, ActionKeys.VIEW);
 
 		return segmentsEntryLocalService.searchSegmentsEntries(
-			companyId, groupId, keywords, start, end, sort);
+			companyId, groupId, keywords, includeAncestorSegmentsEntries, start,
+			end, sort);
 	}
 
 	@Override
 	public SegmentsEntry updateSegmentsEntry(
-			long segmentsEntryId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, boolean active, String criteria,
-			String key, ServiceContext serviceContext)
+			long segmentsEntryId, String segmentsEntryKey,
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			boolean active, String criteria, ServiceContext serviceContext)
 		throws PortalException {
 
 		_segmentsEntryResourcePermission.check(
 			getPermissionChecker(), segmentsEntryId, ActionKeys.UPDATE);
 
 		return segmentsEntryLocalService.updateSegmentsEntry(
-			segmentsEntryId, nameMap, descriptionMap, active, criteria, key,
-			serviceContext);
+			segmentsEntryId, segmentsEntryKey, nameMap, descriptionMap, active,
+			criteria, serviceContext);
 	}
 
-	private static volatile PortletResourcePermission
-		_portletResourcePermission =
-			PortletResourcePermissionFactory.getInstance(
-				SegmentsEntryServiceImpl.class, "_portletResourcePermission",
-				SegmentsConstants.RESOURCE_NAME);
-	private static volatile ModelResourcePermission<SegmentsEntry>
-		_segmentsEntryResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				SegmentsEntryServiceImpl.class,
-				"_segmentsEntryResourcePermission", SegmentsEntry.class);
+	@Reference
+	private Portal _portal;
+
+	@Reference(
+		target = "(resource.name=" + SegmentsConstants.RESOURCE_NAME + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.segments.model.SegmentsEntry)"
+	)
+	private ModelResourcePermission<SegmentsEntry>
+		_segmentsEntryResourcePermission;
 
 }

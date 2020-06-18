@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.PredicateFilter;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuCategory;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.util.ProductNavigationControlMenuCategoryRegistry;
@@ -71,7 +70,7 @@ public class ProductNavigationControlMenuCategoryRegistryImpl
 	public List<ProductNavigationControlMenuCategory>
 		getProductNavigationControlMenuCategories(
 			String productNavigationControlMenuCategoryKey,
-			final HttpServletRequest request) {
+			final HttpServletRequest httpServletRequest) {
 
 		List<ProductNavigationControlMenuCategory>
 			productNavigationControlMenuCategories =
@@ -84,40 +83,32 @@ public class ProductNavigationControlMenuCategoryRegistryImpl
 
 		return ListUtil.filter(
 			productNavigationControlMenuCategories,
-			new PredicateFilter<ProductNavigationControlMenuCategory>() {
+			productNavigationControlMenuCategory -> {
+				try {
+					if (!productNavigationControlMenuCategory.
+							hasAccessPermission(httpServletRequest)) {
 
-				@Override
-				public boolean filter(
-					ProductNavigationControlMenuCategory
-						productNavigationControlMenuCategory) {
-
-					try {
-						if (!productNavigationControlMenuCategory.
-								hasAccessPermission(request)) {
-
-							return false;
-						}
-
-						List<ProductNavigationControlMenuEntry>
-							productNavigationControlMenuEntries =
-								_productNavigationControlMenuEntryRegistry.
-									getProductNavigationControlMenuEntries(
-										productNavigationControlMenuCategory,
-										request);
-
-						if (productNavigationControlMenuEntries.isEmpty()) {
-							return false;
-						}
-
-						return true;
-					}
-					catch (PortalException pe) {
-						_log.error(pe, pe);
+						return false;
 					}
 
-					return false;
+					List<ProductNavigationControlMenuEntry>
+						productNavigationControlMenuEntries =
+							_productNavigationControlMenuEntryRegistry.
+								getProductNavigationControlMenuEntries(
+									productNavigationControlMenuCategory,
+									httpServletRequest);
+
+					if (productNavigationControlMenuEntries.isEmpty()) {
+						return false;
+					}
+
+					return true;
+				}
+				catch (PortalException portalException) {
+					_log.error(portalException, portalException);
 				}
 
+				return false;
 			});
 	}
 

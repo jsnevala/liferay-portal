@@ -17,10 +17,19 @@ package com.liferay.frontend.js.loader.modules.extender.npm;
 import java.util.Collection;
 import java.util.Map;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Iván Zaera Avellón
  */
+@ProviderType
 public interface NPMRegistry {
+
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
+	public void addJSBundleTracker(JSBundleTracker jsBundleTracker);
 
 	public Map<String, String> getGlobalAliases();
 
@@ -34,7 +43,17 @@ public interface NPMRegistry {
 
 	public Collection<JSModule> getResolvedJSModules();
 
+	public JSPackage getResolvedJSPackage(String identifier);
+
 	public Collection<JSPackage> getResolvedJSPackages();
+
+	public String mapModuleName(String moduleName);
+
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
+	public void removeJSBundleTracker(JSBundleTracker jsBundleTracker);
 
 	public JSPackage resolveJSPackageDependency(
 		JSPackageDependency jsPackageDependency);

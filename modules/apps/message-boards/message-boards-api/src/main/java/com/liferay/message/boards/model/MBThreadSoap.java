@@ -14,8 +14,6 @@
 
 package com.liferay.message.boards.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,11 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.message.boards.service.http.MBThreadServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.message.boards.service.http.MBThreadServiceSoap
  * @generated
  */
-@ProviderType
 public class MBThreadSoap implements Serializable {
+
 	public static MBThreadSoap toSoapModel(MBThread model) {
 		MBThreadSoap soapModel = new MBThreadSoap();
 
@@ -47,7 +44,6 @@ public class MBThreadSoap implements Serializable {
 		soapModel.setRootMessageUserId(model.getRootMessageUserId());
 		soapModel.setTitle(model.getTitle());
 		soapModel.setMessageCount(model.getMessageCount());
-		soapModel.setViewCount(model.getViewCount());
 		soapModel.setLastPostByUserId(model.getLastPostByUserId());
 		soapModel.setLastPostDate(model.getLastPostDate());
 		soapModel.setPriority(model.getPriority());
@@ -89,7 +85,8 @@ public class MBThreadSoap implements Serializable {
 	}
 
 	public static MBThreadSoap[] toSoapModels(List<MBThread> models) {
-		List<MBThreadSoap> soapModels = new ArrayList<MBThreadSoap>(models.size());
+		List<MBThreadSoap> soapModels = new ArrayList<MBThreadSoap>(
+			models.size());
 
 		for (MBThread model : models) {
 			soapModels.add(toSoapModel(model));
@@ -213,14 +210,6 @@ public class MBThreadSoap implements Serializable {
 		_messageCount = messageCount;
 	}
 
-	public int getViewCount() {
-		return _viewCount;
-	}
-
-	public void setViewCount(int viewCount) {
-		_viewCount = viewCount;
-	}
-
 	public long getLastPostByUserId() {
 		return _lastPostByUserId;
 	}
@@ -310,7 +299,6 @@ public class MBThreadSoap implements Serializable {
 	private long _rootMessageUserId;
 	private String _title;
 	private int _messageCount;
-	private int _viewCount;
 	private long _lastPostByUserId;
 	private Date _lastPostDate;
 	private double _priority;
@@ -320,4 +308,5 @@ public class MBThreadSoap implements Serializable {
 	private long _statusByUserId;
 	private String _statusByUserName;
 	private Date _statusDate;
+
 }

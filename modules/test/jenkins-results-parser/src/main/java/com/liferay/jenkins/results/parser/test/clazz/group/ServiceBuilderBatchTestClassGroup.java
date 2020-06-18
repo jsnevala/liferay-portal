@@ -38,6 +38,10 @@ public class ServiceBuilderBatchTestClassGroup
 
 	@Override
 	public int getAxisCount() {
+		if (!isStableTestSuiteBatch() && testRelevantIntegrationUnitOnly) {
+			return 0;
+		}
+
 		if ((_buildType == BuildType.FULL) ||
 			(testClasses.isEmpty() && (_buildType == BuildType.CORE))) {
 
@@ -65,16 +69,19 @@ public class ServiceBuilderBatchTestClassGroup
 			List<File> modulesProjectDirs) {
 
 			return new ServiceBuilderBatchTestClass(
-				moduleBaseDir, modulesDir, modulesProjectDirs);
+				new TestClassFile(
+					JenkinsResultsParserUtil.getCanonicalPath(moduleBaseDir)),
+				modulesDir, modulesProjectDirs);
 		}
 
 		protected ServiceBuilderBatchTestClass(
-			File moduleBaseDir, File modulesDir,
+			TestClassFile testClassFile, File modulesDir,
 			List<File> modulesProjectDirs) {
 
-			super(moduleBaseDir);
+			super(testClassFile);
 
-			initTestMethods(modulesProjectDirs, modulesDir, "buildService");
+			initTestClassMethods(
+				modulesProjectDirs, modulesDir, "buildService");
 		}
 
 	}
@@ -129,20 +136,21 @@ public class ServiceBuilderBatchTestClassGroup
 
 				});
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			throw new RuntimeException(
 				"Unable to get module marker files from " +
 					moduleBaseDir.getPath(),
-				ioe);
+				ioException);
 		}
 
 		return modulesProjectDirs;
 	}
 
 	protected ServiceBuilderBatchTestClassGroup(
-		String batchName, PortalTestClassJob portalTestClassJob) {
+		String batchName, BuildProfile buildProfile,
+		PortalTestClassJob portalTestClassJob) {
 
-		super(batchName, portalTestClassJob);
+		super(batchName, buildProfile, portalTestClassJob);
 	}
 
 	@Override
@@ -168,7 +176,9 @@ public class ServiceBuilderBatchTestClassGroup
 		File portalModulesBaseDir = new File(
 			portalGitWorkingDirectory.getWorkingDirectory(), "modules");
 
-		if (testRelevantChanges) {
+		if (testRelevantChanges &&
+			!(includeStableTestSuite && isStableTestSuiteBatch())) {
+
 			List<File> modifiedFiles =
 				portalGitWorkingDirectory.getModifiedFilesList();
 
@@ -176,7 +186,7 @@ public class ServiceBuilderBatchTestClassGroup
 				JenkinsResultsParserUtil.getIncludedFiles(
 					null,
 					getPathMatchers(
-						"portal-tools-service-builder/**",
+						"util/portal-tools-service-builder/**",
 						portalModulesBaseDir),
 					modifiedFiles);
 
@@ -222,12 +232,12 @@ public class ServiceBuilderBatchTestClassGroup
 		}
 
 		for (File moduleDir : moduleDirsList) {
-			List<File> modulesProjectsDirs = getModulesProjectDirs(moduleDir);
+			List<File> modulesProjectDirs = getModulesProjectDirs(moduleDir);
 
-			if (!modulesProjectsDirs.isEmpty()) {
+			if (!modulesProjectDirs.isEmpty()) {
 				testClasses.add(
 					ServiceBuilderBatchTestClass.getInstance(
-						moduleDir, portalModulesBaseDir, modulesProjectsDirs));
+						moduleDir, portalModulesBaseDir, modulesProjectDirs));
 			}
 		}
 	}

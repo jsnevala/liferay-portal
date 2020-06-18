@@ -36,6 +36,15 @@ import java.util.List;
 public class ModulesSemVerBatchTestClassGroup
 	extends ModulesBatchTestClassGroup {
 
+	@Override
+	public int getAxisCount() {
+		if (!isStableTestSuiteBatch() && testRelevantIntegrationUnitOnly) {
+			return 0;
+		}
+
+		return super.getAxisCount();
+	}
+
 	public static class ModulesSemVerBatchTestClass
 		extends ModulesBatchTestClass {
 
@@ -44,16 +53,18 @@ public class ModulesSemVerBatchTestClassGroup
 			List<File> modulesProjectDirs) {
 
 			return new ModulesSemVerBatchTestClass(
-				moduleBaseDir, modulesDir, modulesProjectDirs);
+				new TestClassFile(
+					JenkinsResultsParserUtil.getCanonicalPath(moduleBaseDir)),
+				modulesDir, modulesProjectDirs);
 		}
 
 		protected ModulesSemVerBatchTestClass(
-			File moduleBaseDir, File modulesDir,
+			TestClassFile moduleBaseDir, File modulesDir,
 			List<File> modulesProjectDirs) {
 
 			super(moduleBaseDir);
 
-			initTestMethods(modulesProjectDirs, modulesDir, "baseline");
+			initTestClassMethods(modulesProjectDirs, modulesDir, "baseline");
 		}
 
 	}
@@ -107,20 +118,21 @@ public class ModulesSemVerBatchTestClassGroup
 
 				});
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			throw new RuntimeException(
 				"Unable to get module marker files from " +
 					moduleBaseDir.getPath(),
-				ioe);
+				ioException);
 		}
 
 		return modulesProjectDirs;
 	}
 
 	protected ModulesSemVerBatchTestClassGroup(
-		String batchName, PortalTestClassJob portalTestClassJob) {
+		String batchName, BuildProfile buildProfile,
+		PortalTestClassJob portalTestClassJob) {
 
-		super(batchName, portalTestClassJob);
+		super(batchName, buildProfile, portalTestClassJob);
 	}
 
 	@Override
@@ -131,7 +143,14 @@ public class ModulesSemVerBatchTestClassGroup
 		File portalModulesBaseDir = new File(
 			portalGitWorkingDirectory.getWorkingDirectory(), "modules");
 
-		if ((testSuiteName == null) || testSuiteName.equals("default")) {
+		if (testRelevantChanges &&
+			!(includeStableTestSuite && isStableTestSuiteBatch())) {
+
+			moduleDirsList.addAll(
+				portalGitWorkingDirectory.getModifiedModuleDirsList(
+					excludesPathMatchers, includesPathMatchers));
+		}
+		else {
 			moduleDirsList.addAll(
 				portalGitWorkingDirectory.getModuleDirsList(
 					excludesPathMatchers, includesPathMatchers));
@@ -143,20 +162,18 @@ public class ModulesSemVerBatchTestClassGroup
 				moduleDirsList.add(semVerMarkerFile.getParentFile());
 			}
 		}
-		else {
-			moduleDirsList.addAll(
-				portalGitWorkingDirectory.getModifiedModuleDirsList(
-					excludesPathMatchers, includesPathMatchers));
-		}
 
 		for (File moduleDir : moduleDirsList) {
-			List<File> modulesProjectsDirs = getModulesProjectDirs(
+			List<File> modulesProjectDirs = getModulesProjectDirs(
 				moduleDir, portalModulesBaseDir);
 
-			if (!modulesProjectsDirs.isEmpty()) {
+			if (!modulesProjectDirs.isEmpty()) {
 				testClasses.add(
 					ModulesSemVerBatchTestClass.getInstance(
-						moduleDir, portalModulesBaseDir, modulesProjectsDirs));
+						new TestClass.TestClassFile(
+							JenkinsResultsParserUtil.getCanonicalPath(
+								moduleDir)),
+						portalModulesBaseDir, modulesProjectDirs));
 			}
 		}
 	}

@@ -14,7 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.web.internal.portlet;
 
-import com.liferay.dynamic.data.mapping.web.configuration.DDMWebConfiguration;
+import com.liferay.dynamic.data.mapping.web.internal.configuration.DDMWebConfiguration;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 
@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Modified;
  * @author Marcellus Tavares
  */
 @Component(
-	configurationPid = "com.liferay.dynamic.data.mapping.web.configuration.DDMWebConfiguration",
+	configurationPid = "com.liferay.dynamic.data.mapping.web.internal.configuration.DDMWebConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	property = {
 		"com.liferay.portlet.add-default-resource=true",
@@ -43,11 +43,12 @@ import org.osgi.service.component.annotations.Modified;
 		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.icon=/icons/portlet_display_template.png",
 		"com.liferay.portlet.preferences-owned-by-group=true",
+		"com.liferay.portlet.preferences-unique-per-layout=false",
 		"com.liferay.portlet.private-request-attributes=false",
 		"com.liferay.portlet.private-session-attributes=false",
 		"com.liferay.portlet.render-weight=50",
 		"com.liferay.portlet.use-default-template=true",
-		"javax.portlet.display-name=Application Display Templates",
+		"javax.portlet.display-name=Widget Templates",
 		"javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.always-send-redirect=true",
 		"javax.portlet.init-param.refererWebDAVToken=application_display_template",
@@ -55,8 +56,7 @@ import org.osgi.service.component.annotations.Modified;
 		"javax.portlet.init-param.view-template=/view_template.jsp",
 		"javax.portlet.name=" + PortletKeys.PORTLET_DISPLAY_TEMPLATE,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=administrator"
 	},
 	service = Portlet.class
 )

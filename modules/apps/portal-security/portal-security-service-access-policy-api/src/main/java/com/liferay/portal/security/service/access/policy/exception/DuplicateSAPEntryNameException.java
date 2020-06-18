@@ -14,14 +14,11 @@
 
 package com.liferay.portal.security.service.access.policy.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class DuplicateSAPEntryNameException extends PortalException {
 
 	public DuplicateSAPEntryNameException() {

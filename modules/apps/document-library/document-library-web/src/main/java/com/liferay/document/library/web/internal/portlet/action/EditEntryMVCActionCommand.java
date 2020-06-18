@@ -16,9 +16,12 @@ package com.liferay.document.library.web.internal.portlet.action;
 
 import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.asset.kernel.exception.AssetTagException;
+import com.liferay.bulk.selection.BulkSelection;
+import com.liferay.bulk.selection.BulkSelectionFactory;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.exception.DuplicateFileEntryException;
 import com.liferay.document.library.kernel.exception.DuplicateFolderNameException;
+import com.liferay.document.library.kernel.exception.FileEntryLockException;
 import com.liferay.document.library.kernel.exception.InvalidFolderException;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.exception.NoSuchFolderException;
@@ -27,7 +30,8 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLTrashService;
-import com.liferay.petra.string.StringPool;
+import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.lock.DuplicateLockException;
 import com.liferay.portal.kernel.model.TrashedModel;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -41,8 +45,8 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.ServletResponseConstants;
 import com.liferay.portal.kernel.servlet.SessionErrors;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -50,13 +54,11 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.trash.service.TrashEntryService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletException;
 import javax.portlet.WindowState;
 
 import javax.servlet.http.HttpServletResponse;
@@ -82,151 +84,6 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 
-	protected void cancelCheckedOutEntries(ActionRequest actionRequest)
-		throws Exception {
-
-		long[] fileEntryIds = ParamUtil.getLongValues(
-			actionRequest, "rowIdsFileEntry");
-
-		for (long fileEntryId : fileEntryIds) {
-			_dlAppService.cancelCheckOut(fileEntryId);
-		}
-	}
-
-	protected void checkInEntries(ActionRequest actionRequest)
-		throws Exception {
-
-		long[] fileEntryIds = ParamUtil.getLongValues(
-			actionRequest, "rowIdsFileEntry");
-
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			actionRequest);
-
-		for (long fileEntryId : fileEntryIds) {
-			_dlAppService.checkInFileEntry(
-				fileEntryId, DLVersionNumberIncrease.MINOR, StringPool.BLANK,
-				serviceContext);
-		}
-
-		long[] fileShortcutIds = ParamUtil.getLongValues(
-			actionRequest, "rowIdsDLFileShortcut");
-
-		for (long fileShortcutId : fileShortcutIds) {
-			FileShortcut fileShortcut = _dlAppService.getFileShortcut(
-				fileShortcutId);
-
-			long toFileEntryId = fileShortcut.getToFileEntryId();
-
-			if (!ArrayUtil.contains(fileEntryIds, toFileEntryId)) {
-				_dlAppService.checkInFileEntry(
-					toFileEntryId, DLVersionNumberIncrease.MINOR,
-					StringPool.BLANK, serviceContext);
-			}
-		}
-	}
-
-	protected void checkOutEntries(ActionRequest actionRequest)
-		throws Exception {
-
-		long[] fileEntryIds = ParamUtil.getLongValues(
-			actionRequest, "rowIdsFileEntry");
-
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			actionRequest);
-
-		for (long fileEntryId : fileEntryIds) {
-			_dlAppService.checkOutFileEntry(fileEntryId, serviceContext);
-		}
-
-		long[] fileShortcutIds = ParamUtil.getLongValues(
-			actionRequest, "rowIdsDLFileShortcut");
-
-		for (long fileShortcutId : fileShortcutIds) {
-			FileShortcut fileShortcut = _dlAppService.getFileShortcut(
-				fileShortcutId);
-
-			long toFileEntryId = fileShortcut.getToFileEntryId();
-
-			if (!ArrayUtil.contains(fileEntryIds, toFileEntryId)) {
-				_dlAppService.checkOutFileEntry(toFileEntryId, serviceContext);
-			}
-		}
-	}
-
-	protected void deleteEntries(
-			ActionRequest actionRequest, boolean moveToTrash)
-		throws Exception {
-
-		long[] deleteFolderIds = ParamUtil.getLongValues(
-			actionRequest, "rowIdsFolder");
-
-		List<TrashedModel> trashedModels = new ArrayList<>();
-
-		for (long deleteFolderId : deleteFolderIds) {
-			if (moveToTrash) {
-				Folder folder = _dlAppService.getFolder(deleteFolderId);
-
-				if (folder.isMountPoint()) {
-					continue;
-				}
-
-				folder = _dlTrashService.moveFolderToTrash(deleteFolderId);
-
-				if (folder.getModel() instanceof TrashedModel) {
-					trashedModels.add((TrashedModel)folder.getModel());
-				}
-			}
-			else {
-				_dlAppService.deleteFolder(deleteFolderId);
-			}
-		}
-
-		// Delete file shortcuts before file entries. See LPS-21348.
-
-		long[] deleteFileShortcutIds = ParamUtil.getLongValues(
-			actionRequest, "rowIdsDLFileShortcut");
-
-		for (long deleteFileShortcutId : deleteFileShortcutIds) {
-			if (moveToTrash) {
-				FileShortcut fileShortcut =
-					_dlTrashService.moveFileShortcutToTrash(
-						deleteFileShortcutId);
-
-				if (fileShortcut.getModel() instanceof TrashedModel) {
-					trashedModels.add((TrashedModel)fileShortcut.getModel());
-				}
-			}
-			else {
-				_dlAppService.deleteFileShortcut(deleteFileShortcutId);
-			}
-		}
-
-		long[] deleteFileEntryIds = ParamUtil.getLongValues(
-			actionRequest, "rowIdsFileEntry");
-
-		for (long deleteFileEntryId : deleteFileEntryIds) {
-			if (moveToTrash) {
-				FileEntry fileEntry = _dlTrashService.moveFileEntryToTrash(
-					deleteFileEntryId);
-
-				if (fileEntry.getModel() instanceof TrashedModel) {
-					trashedModels.add((TrashedModel)fileEntry.getModel());
-				}
-			}
-			else {
-				_dlAppService.deleteFileEntry(deleteFileEntryId);
-			}
-		}
-
-		if (moveToTrash && !trashedModels.isEmpty()) {
-			Map<String, Object> data = new HashMap<>();
-
-			data.put("trashedModels", trashedModels);
-
-			addDeleteSuccessData(actionRequest, data);
-		}
-	}
-
 	@Override
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
@@ -236,25 +93,25 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			if (cmd.equals(Constants.CANCEL_CHECKOUT)) {
-				cancelCheckedOutEntries(actionRequest);
+				_cancelCheckedOutEntries(actionRequest);
 			}
 			else if (cmd.equals(Constants.CHECKIN)) {
-				checkInEntries(actionRequest);
+				_checkInEntries(actionRequest);
 			}
 			else if (cmd.equals(Constants.CHECKOUT)) {
-				checkOutEntries(actionRequest);
+				_checkOutEntries(actionRequest);
 			}
 			else if (cmd.equals(Constants.DELETE)) {
-				deleteEntries(actionRequest, false);
+				_deleteEntries(actionRequest, false);
 			}
 			else if (cmd.equals(Constants.MOVE)) {
-				moveEntries(actionRequest);
+				_moveEntries(actionRequest);
 			}
 			else if (cmd.equals(Constants.MOVE_TO_TRASH)) {
-				deleteEntries(actionRequest, true);
+				_deleteEntries(actionRequest, true);
 			}
 			else if (cmd.equals(Constants.RESTORE)) {
-				restoreTrashEntries(actionRequest);
+				_restoreTrashEntries(actionRequest);
 			}
 
 			WindowState windowState = actionRequest.getWindowState();
@@ -268,84 +125,250 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 				}
 			}
 		}
-		catch (DuplicateLockException | NoSuchFileEntryException |
-			   NoSuchFolderException | PrincipalException e) {
-
-			if (e instanceof DuplicateLockException) {
-				DuplicateLockException dle = (DuplicateLockException)e;
-
-				SessionErrors.add(actionRequest, dle.getClass(), dle.getLock());
-			}
-			else {
-				SessionErrors.add(actionRequest, e.getClass());
-			}
+		catch (DuplicateLockException duplicateLockException) {
+			SessionErrors.add(
+				actionRequest, duplicateLockException.getClass(),
+				duplicateLockException.getLock());
 
 			actionResponse.setRenderParameter(
 				"mvcPath", "/document_library/error.jsp");
 		}
-		catch (DuplicateFileEntryException | DuplicateFolderNameException |
-			   SourceFileNameException e) {
+		catch (NoSuchFileEntryException | NoSuchFolderException |
+			   PrincipalException exception) {
 
-			if (e instanceof DuplicateFileEntryException) {
-				HttpServletResponse response = _portal.getHttpServletResponse(
-					actionResponse);
+			SessionErrors.add(actionRequest, exception.getClass());
 
-				response.setStatus(
-					ServletResponseConstants.SC_DUPLICATE_FILE_EXCEPTION);
-			}
+			actionResponse.setRenderParameter(
+				"mvcPath", "/document_library/error.jsp");
+		}
+		catch (DuplicateFileEntryException duplicateFileEntryException) {
+			HttpServletResponse httpServletResponse =
+				_portal.getHttpServletResponse(actionResponse);
 
-			SessionErrors.add(actionRequest, e.getClass());
+			httpServletResponse.setStatus(
+				ServletResponseConstants.SC_DUPLICATE_FILE_EXCEPTION);
+
+			SessionErrors.add(
+				actionRequest, duplicateFileEntryException.getClass(),
+				duplicateFileEntryException);
 		}
 		catch (AssetCategoryException | AssetTagException |
-			   InvalidFolderException e) {
+			   DuplicateFolderNameException | FileEntryLockException |
+			   InvalidFolderException | SourceFileNameException exception) {
 
-			SessionErrors.add(actionRequest, e.getClass(), e);
-		}
-		catch (Exception e) {
-			throw new PortletException(e);
+			SessionErrors.add(actionRequest, exception.getClass(), exception);
 		}
 	}
 
-	protected void moveEntries(ActionRequest actionRequest) throws Exception {
-		long newFolderId = ParamUtil.getLong(actionRequest, "newFolderId");
-
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			DLFileEntry.class.getName(), actionRequest);
-
-		long[] folderIds = ParamUtil.getLongValues(
-			actionRequest, "rowIdsFolder");
-
-		for (long folderId : folderIds) {
-			_dlAppService.moveFolder(folderId, newFolderId, serviceContext);
-		}
+	private void _cancelCheckedOutEntries(ActionRequest actionRequest)
+		throws PortalException {
 
 		long[] fileEntryIds = ParamUtil.getLongValues(
 			actionRequest, "rowIdsFileEntry");
 
 		for (long fileEntryId : fileEntryIds) {
-			_dlAppService.moveFileEntry(
-				fileEntryId, newFolderId, serviceContext);
-		}
-
-		long[] fileShortcutIds = ParamUtil.getLongValues(
-			actionRequest, "rowIdsDLFileShortcut");
-
-		for (long fileShortcutId : fileShortcutIds) {
-			if (fileShortcutId == 0) {
-				continue;
-			}
-
-			FileShortcut fileShortcut = _dlAppService.getFileShortcut(
-				fileShortcutId);
-
-			_dlAppService.updateFileShortcut(
-				fileShortcutId, newFolderId, fileShortcut.getToFileEntryId(),
-				serviceContext);
+			_dlAppService.cancelCheckOut(fileEntryId);
 		}
 	}
 
-	protected void restoreTrashEntries(ActionRequest actionRequest)
-		throws Exception {
+	private void _checkInEntries(ActionRequest actionRequest)
+		throws PortalException {
+
+		BulkSelection<FileShortcut> fileShortcutBulkSelection =
+			_fileShortcutBulkSelectionFactory.create(
+				actionRequest.getParameterMap());
+
+		DLVersionNumberIncrease dlVersionNumberIncrease =
+			DLVersionNumberIncrease.valueOf(
+				actionRequest.getParameter("versionIncrease"),
+				DLVersionNumberIncrease.MINOR);
+		String changeLog = ParamUtil.getString(actionRequest, "changeLog");
+
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			actionRequest);
+
+		fileShortcutBulkSelection.forEach(
+			fileShortcut -> _dlAppService.checkInFileEntry(
+				fileShortcut.getToFileEntryId(), dlVersionNumberIncrease,
+				changeLog, serviceContext));
+
+		BulkSelection<FileEntry> fileEntryBulkSelection =
+			_fileEntryBulkSelectionFactory.create(
+				actionRequest.getParameterMap());
+
+		fileEntryBulkSelection.forEach(
+			fileEntry -> _dlAppService.checkInFileEntry(
+				fileEntry.getFileEntryId(), dlVersionNumberIncrease, changeLog,
+				serviceContext));
+	}
+
+	private void _checkOutEntries(ActionRequest actionRequest)
+		throws PortalException {
+
+		BulkSelection<FileShortcut> fileShortcutBulkSelection =
+			_fileShortcutBulkSelectionFactory.create(
+				actionRequest.getParameterMap());
+
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			actionRequest);
+
+		fileShortcutBulkSelection.forEach(
+			fileShortcut -> _dlAppService.checkOutFileEntry(
+				fileShortcut.getToFileEntryId(), serviceContext));
+
+		BulkSelection<FileEntry> fileEntryBulkSelection =
+			_fileEntryBulkSelectionFactory.create(
+				actionRequest.getParameterMap());
+
+		fileEntryBulkSelection.forEach(
+			fileEntry -> _dlAppService.checkOutFileEntry(
+				fileEntry.getFileEntryId(), serviceContext));
+	}
+
+	private void _deleteEntries(
+			ActionRequest actionRequest, boolean moveToTrash)
+		throws PortalException {
+
+		List<TrashedModel> trashedModels = new ArrayList<>();
+
+		BulkSelection<Folder> folderBulkSelection =
+			_folderBulkSelectionFactory.create(actionRequest.getParameterMap());
+
+		folderBulkSelection.forEach(
+			folder -> _deleteFolder(folder, moveToTrash, trashedModels));
+
+		// Delete file shortcuts before file entries. See LPS-21348.
+
+		BulkSelection<FileShortcut> fileShortcutBulkSelection =
+			_fileShortcutBulkSelectionFactory.create(
+				actionRequest.getParameterMap());
+
+		fileShortcutBulkSelection.forEach(
+			fileShortcut -> _deleteFileShortcut(
+				fileShortcut, moveToTrash, trashedModels));
+
+		BulkSelection<FileEntry> fileEntryBulkSelection =
+			_fileEntryBulkSelectionFactory.create(
+				actionRequest.getParameterMap());
+
+		fileEntryBulkSelection.forEach(
+			fileEntry -> _deleteFileEntry(
+				fileEntry, moveToTrash, trashedModels));
+
+		if (moveToTrash && !trashedModels.isEmpty()) {
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"trashedModels", trashedModels
+			).build();
+
+			addDeleteSuccessData(actionRequest, data);
+		}
+	}
+
+	private void _deleteFileEntry(
+		FileEntry fileEntry, boolean moveToTrash,
+		List<TrashedModel> trashedModels) {
+
+		try {
+			if (moveToTrash) {
+				_dlTrashService.moveFileEntryToTrash(
+					fileEntry.getFileEntryId());
+
+				if (fileEntry.getModel() instanceof TrashedModel) {
+					trashedModels.add((TrashedModel)fileEntry.getModel());
+				}
+			}
+			else {
+				_dlAppService.deleteFileEntry(fileEntry.getFileEntryId());
+			}
+		}
+		catch (PortalException portalException) {
+			ReflectionUtil.throwException(portalException);
+		}
+	}
+
+	private void _deleteFileShortcut(
+		FileShortcut fileShortcut, boolean moveToTrash,
+		List<TrashedModel> trashedModels) {
+
+		try {
+			if (moveToTrash) {
+				fileShortcut = _dlTrashService.moveFileShortcutToTrash(
+					fileShortcut.getFileShortcutId());
+
+				if (fileShortcut.getModel() instanceof TrashedModel) {
+					trashedModels.add((TrashedModel)fileShortcut.getModel());
+				}
+			}
+			else {
+				_dlAppService.deleteFileShortcut(
+					fileShortcut.getFileShortcutId());
+			}
+		}
+		catch (PortalException portalException) {
+			ReflectionUtil.throwException(portalException);
+		}
+	}
+
+	private void _deleteFolder(
+		Folder folder, boolean moveToTrash, List<TrashedModel> trashedModels) {
+
+		try {
+			if (moveToTrash) {
+				if (folder.isMountPoint()) {
+					return;
+				}
+
+				folder = _dlTrashService.moveFolderToTrash(
+					folder.getFolderId());
+
+				if (folder.getModel() instanceof TrashedModel) {
+					trashedModels.add((TrashedModel)folder.getModel());
+				}
+			}
+			else {
+				_dlAppService.deleteFolder(folder.getFolderId());
+			}
+		}
+		catch (PortalException portalException) {
+			ReflectionUtil.throwException(portalException);
+		}
+	}
+
+	private void _moveEntries(ActionRequest actionRequest)
+		throws PortalException {
+
+		long newFolderId = ParamUtil.getLong(actionRequest, "newFolderId");
+
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			DLFileEntry.class.getName(), actionRequest);
+
+		BulkSelection<Folder> folderBulkSelection =
+			_folderBulkSelectionFactory.create(actionRequest.getParameterMap());
+
+		folderBulkSelection.forEach(
+			folder -> _dlAppService.moveFolder(
+				folder.getFolderId(), newFolderId, serviceContext));
+
+		BulkSelection<FileEntry> fileEntryBulkSelection =
+			_fileEntryBulkSelectionFactory.create(
+				actionRequest.getParameterMap());
+
+		fileEntryBulkSelection.forEach(
+			fileEntry -> _dlAppService.moveFileEntry(
+				fileEntry.getFileEntryId(), newFolderId, serviceContext));
+
+		BulkSelection<FileShortcut> fileShortcutBulkSelection =
+			_fileShortcutBulkSelectionFactory.create(
+				actionRequest.getParameterMap());
+
+		fileShortcutBulkSelection.forEach(
+			fileShortcut -> _dlAppService.updateFileShortcut(
+				fileShortcut.getFileShortcutId(), newFolderId,
+				fileShortcut.getToFileEntryId(), serviceContext));
+	}
+
+	private void _restoreTrashEntries(ActionRequest actionRequest)
+		throws PortalException {
 
 		long[] restoreTrashEntryIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "restoreTrashEntryIds"), 0L);
@@ -355,27 +378,32 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setDLAppService(DLAppService dlAppService) {
-		_dlAppService = dlAppService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDLTrashService(DLTrashService dlTrashService) {
-		_dlTrashService = dlTrashService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setTrashEntryService(TrashEntryService trashEntryService) {
-		_trashEntryService = trashEntryService;
-	}
-
+	@Reference
 	private DLAppService _dlAppService;
+
+	@Reference
 	private DLTrashService _dlTrashService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.document.library.kernel.model.DLFileEntry)"
+	)
+	private BulkSelectionFactory<FileEntry> _fileEntryBulkSelectionFactory;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.document.library.kernel.model.DLFileShortcut)"
+	)
+	private BulkSelectionFactory<FileShortcut>
+		_fileShortcutBulkSelectionFactory;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.document.library.kernel.model.DLFolder)"
+	)
+	private BulkSelectionFactory<Folder> _folderBulkSelectionFactory;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private TrashEntryService _trashEntryService;
 
 }

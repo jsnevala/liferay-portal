@@ -21,18 +21,7 @@ SelectOrganizationsDisplayContext selectOrganizationsDisplayContext = new Select
 %>
 
 <clay:management-toolbar
-	clearResultsURL="<%= selectOrganizationsDisplayContext.getClearResultsURL() %>"
-	componentId="organizationsManagementToolbar"
-	disabled="<%= selectOrganizationsDisplayContext.isDisabledManagementBar() %>"
-	filterDropdownItems="<%= selectOrganizationsDisplayContext.getFilterDropdownItems() %>"
-	itemsTotal="<%= selectOrganizationsDisplayContext.getTotalItems() %>"
-	searchActionURL="<%= selectOrganizationsDisplayContext.getSearchActionURL() %>"
-	searchContainerId="organizations"
-	searchFormName="searchFm"
-	showSearch="<%= selectOrganizationsDisplayContext.isShowSearch() %>"
-	sortingOrder="<%= selectOrganizationsDisplayContext.getOrderByType() %>"
-	sortingURL="<%= selectOrganizationsDisplayContext.getSortingURL() %>"
-	viewTypeItems="<%= selectOrganizationsDisplayContext.getViewTypeItems() %>"
+	displayContext="<%= new SelectOrganizationsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectOrganizationsDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid-1280" name="fm">
@@ -64,24 +53,24 @@ SelectOrganizationsDisplayContext selectOrganizationsDisplayContext = new Select
 </aui:form>
 
 <aui:script use="liferay-search-container">
-	var searchContainer = Liferay.SearchContainer.get('<portlet:namespace />organizations');
-
-	searchContainer.on(
-		'rowToggled',
-		function(event) {
-			var result = {};
-
-			var data = event.elements.allSelectedElements.getDOMNodes();
-
-			if (data.length) {
-				result = {
-					data: data
-				};
-			}
-
-			Liferay.Util.getOpener().Liferay.fire(
-				'<%= HtmlUtil.escapeJS(selectOrganizationsDisplayContext.getEventName()) %>',
-				result);
-		}
+	var searchContainer = Liferay.SearchContainer.get(
+		'<portlet:namespace />organizations'
 	);
+
+	searchContainer.on('rowToggled', function (event) {
+		var result = {};
+
+		var data = event.elements.allSelectedElements.getDOMNodes();
+
+		if (data.length) {
+			result = {
+				data: data,
+			};
+		}
+
+		Liferay.Util.getOpener().Liferay.fire(
+			'<%= HtmlUtil.escapeJS(selectOrganizationsDisplayContext.getEventName()) %>',
+			result
+		);
+	});
 </aui:script>

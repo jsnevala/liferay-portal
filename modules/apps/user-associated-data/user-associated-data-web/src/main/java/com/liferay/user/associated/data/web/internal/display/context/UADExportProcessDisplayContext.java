@@ -48,9 +48,9 @@ import javax.servlet.http.HttpServletRequest;
 public class UADExportProcessDisplayContext {
 
 	public UADExportProcessDisplayContext(
-		HttpServletRequest request, RenderResponse renderResponse) {
+		HttpServletRequest httpServletRequest, RenderResponse renderResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderResponse = renderResponse;
 	}
 
@@ -79,18 +79,18 @@ public class UADExportProcessDisplayContext {
 				(BackgroundTask backgroundTask1,
 				 BackgroundTask backgroundTask2) -> {
 
-				Map<String, Serializable> taskContextMap1 =
-					backgroundTask1.getTaskContextMap();
-				Map<String, Serializable> taskContextMap2 =
-					backgroundTask2.getTaskContextMap();
+					Map<String, Serializable> taskContextMap1 =
+						backgroundTask1.getTaskContextMap();
+					Map<String, Serializable> taskContextMap2 =
+						backgroundTask2.getTaskContextMap();
 
-				String applicationKey1 = (String)taskContextMap1.get(
-					"applicationKey");
-				String applicationKey2 = (String)taskContextMap2.get(
-					"applicationKey");
+					String applicationKey1 = (String)taskContextMap1.get(
+						"applicationKey");
+					String applicationKey2 = (String)taskContextMap2.get(
+						"applicationKey");
 
-				return applicationKey1.compareTo(applicationKey2);
-			};
+					return applicationKey1.compareTo(applicationKey2);
+				};
 		}
 
 		if (orderByType.equals("desc")) {
@@ -105,7 +105,8 @@ public class UADExportProcessDisplayContext {
 			return _navigation;
 		}
 
-		_navigation = ParamUtil.getString(_request, "navigation", "all");
+		_navigation = ParamUtil.getString(
+			_httpServletRequest, "navigation", "all");
 
 		return _navigation;
 	}
@@ -116,7 +117,7 @@ public class UADExportProcessDisplayContext {
 		}
 
 		_orderByCol = ParamUtil.getString(
-			_request, "orderByCol", "create-date");
+			_httpServletRequest, "orderByCol", "create-date");
 
 		return _orderByCol;
 	}
@@ -126,30 +127,31 @@ public class UADExportProcessDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "desc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "desc");
 
 		return _orderByType;
 	}
 
 	public PortletURL getPortletURL() throws PortalException {
-		PortletRequest portletRequest = (PortletRequest)_request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+		PortletRequest portletRequest =
+			(PortletRequest)_httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
 		PortletResponse portletResponse =
-			(PortletResponse)_request.getAttribute(
+			(PortletResponse)_httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 		PortletURL portletURL = PortletURLUtil.getCurrent(
 			PortalUtil.getLiferayPortletRequest(portletRequest),
 			PortalUtil.getLiferayPortletResponse(portletResponse));
 
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/view_uad_export_processes");
-
-		User selectedUser = PortalUtil.getSelectedUser(_request);
+		User selectedUser = PortalUtil.getSelectedUser(_httpServletRequest);
 
 		portletURL.setParameter(
 			"p_u_i_d", String.valueOf(selectedUser.getUserId()));
 
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/view_uad_export_processes");
 		portletURL.setParameter("navigation", getNavigation());
 		portletURL.setParameter("orderByCol", getOrderByCol());
 		portletURL.setParameter("orderByType", getOrderByType());
@@ -162,8 +164,9 @@ public class UADExportProcessDisplayContext {
 			return _searchContainer;
 		}
 
-		PortletRequest portletRequest = (PortletRequest)_request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
+		PortletRequest portletRequest =
+			(PortletRequest)_httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
 
 		SearchContainer searchContainer = new SearchContainer(
 			portletRequest, getPortletURL(), null,
@@ -174,10 +177,11 @@ public class UADExportProcessDisplayContext {
 
 		String navigation = getNavigation();
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		User selectedUser = PortalUtil.getSelectedUser(_request);
+		User selectedUser = PortalUtil.getSelectedUser(_httpServletRequest);
 
 		List<BackgroundTask> results = null;
 
@@ -225,11 +229,11 @@ public class UADExportProcessDisplayContext {
 		return _searchContainer;
 	}
 
+	private final HttpServletRequest _httpServletRequest;
 	private String _navigation;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private SearchContainer _searchContainer;
 
 }

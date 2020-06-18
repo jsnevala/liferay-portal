@@ -14,8 +14,6 @@
 
 package com.liferay.friendly.url.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil;
 
@@ -31,13 +29,13 @@ import com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil;
  * @see FriendlyURLEntry
  * @generated
  */
-@ProviderType
-public abstract class FriendlyURLEntryBaseImpl extends FriendlyURLEntryModelImpl
-	implements FriendlyURLEntry {
+public abstract class FriendlyURLEntryBaseImpl
+	extends FriendlyURLEntryModelImpl implements FriendlyURLEntry {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a friendly url entry model instance should use the {@link FriendlyURLEntry} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a friendly url entry model instance should use the <code>FriendlyURLEntry</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +46,5 @@ public abstract class FriendlyURLEntryBaseImpl extends FriendlyURLEntryModelImpl
 			FriendlyURLEntryLocalServiceUtil.updateFriendlyURLEntry(this);
 		}
 	}
+
 }

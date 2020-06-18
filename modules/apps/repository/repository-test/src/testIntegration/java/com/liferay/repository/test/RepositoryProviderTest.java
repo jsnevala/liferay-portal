@@ -21,6 +21,7 @@ import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolder;
+import com.liferay.document.library.test.util.DLTestUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.RepositoryException;
 import com.liferay.portal.kernel.repository.RepositoryProviderUtil;
@@ -33,8 +34,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.security.permission.SimplePermissionChecker;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
-import com.liferay.portlet.documentlibrary.util.test.DLTestUtil;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -53,7 +53,7 @@ public class RepositoryProviderTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {

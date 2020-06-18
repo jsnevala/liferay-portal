@@ -30,8 +30,6 @@ import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.osgi.framework.Bundle;
-
 /**
  * @author Pei-Jung Lan
  */
@@ -39,11 +37,12 @@ public class AppManagerSearchResultsManagementToolbarDisplayContext
 	extends BaseAppManagerManagementToolbarDisplayContext {
 
 	public AppManagerSearchResultsManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request) {
+		LiferayPortletResponse liferayPortletResponse) {
 
-		super(liferayPortletRequest, liferayPortletResponse, request);
+		super(
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse);
 	}
 
 	public String getKeywords() {
@@ -94,10 +93,8 @@ public class AppManagerSearchResultsManagementToolbarDisplayContext
 		searchContainer.setOrderByCol(getOrderByCol());
 		searchContainer.setOrderByType(getOrderByType());
 
-		List<Bundle> bundles = BundleManagerUtil.getBundles();
-
 		List<Object> results = MarketplaceAppManagerSearchUtil.getResults(
-			bundles, getKeywords());
+			BundleManagerUtil.getBundles(), getKeywords(), request.getLocale());
 
 		results = ListUtil.sort(
 			results, new MarketplaceAppManagerComparator(getOrderByType()));

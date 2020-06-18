@@ -15,6 +15,7 @@
 package com.liferay.jenkins.results.parser;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Michael Hashimoto
@@ -32,6 +33,7 @@ public abstract class BaseBatchBuildData
 		return getList("test_list");
 	}
 
+	@Override
 	public TopLevelBuildData getTopLevelBuildData() {
 		if (_topLevelBuildData != null) {
 			return _topLevelBuildData;
@@ -55,6 +57,13 @@ public abstract class BaseBatchBuildData
 		TopLevelBuildData topLevelBuildData = getTopLevelBuildData();
 
 		return topLevelBuildData.getBuildNumber();
+	}
+
+	@Override
+	public Map<String, String> getTopLevelBuildParameters() {
+		TopLevelBuildData topLevelBuildData = getTopLevelBuildData();
+
+		return topLevelBuildData.getBuildParameters();
 	}
 
 	@Override
@@ -97,7 +106,7 @@ public abstract class BaseBatchBuildData
 
 		_setTopLevelRunID();
 
-		validateKeys(_REQUIRED_KEYS);
+		validateKeys(_KEYS_REQUIRED);
 	}
 
 	private static String _getDefaultRunID(String runID) {
@@ -118,8 +127,9 @@ public abstract class BaseBatchBuildData
 		put("top_level_run_id", topLevelRunID);
 	}
 
-	private static final String[] _REQUIRED_KEYS =
-		{"batch_name", "top_level_run_id", "test_list"};
+	private static final String[] _KEYS_REQUIRED = {
+		"batch_name", "top_level_run_id", "test_list"
+	};
 
 	private TopLevelBuildData _topLevelBuildData;
 

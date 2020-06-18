@@ -32,6 +32,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletRequestModel;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
@@ -48,6 +49,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -195,11 +197,13 @@ public class JournalTestUtil {
 		int expirationDateHour = 0;
 		int expirationDateMinute = 0;
 
+		User user = TestPropsValues.getUser();
+
 		if (expirationDate != null) {
 			neverExpire = false;
 
 			Calendar expirationCal = CalendarFactoryUtil.getCalendar(
-				TestPropsValues.getUser().getTimeZone());
+				user.getTimeZone());
 
 			expirationCal.setTime(expirationDate);
 
@@ -211,7 +215,7 @@ public class JournalTestUtil {
 		}
 
 		Calendar displayCal = CalendarFactoryUtil.getCalendar(
-			TestPropsValues.getUser().getTimeZone());
+			user.getTimeZone());
 
 		if (displayDate != null) {
 			displayCal.setTime(displayDate);
@@ -482,12 +486,10 @@ public class JournalTestUtil {
 			Locale defaultLocale)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(groupId);
-
 		return addArticleWithXMLContent(
 			folderId, classNameId, classPK, xml, ddmStructureKey,
-			ddmTemplateKey, defaultLocale, null, serviceContext);
+			ddmTemplateKey, defaultLocale, null,
+			ServiceContextTestUtil.getServiceContext(groupId));
 	}
 
 	public static JournalArticle addArticleWithXMLContent(
@@ -516,9 +518,9 @@ public class JournalTestUtil {
 			Map<String, byte[]> images, ServiceContext serviceContext)
 		throws Exception {
 
-		Map<Locale, String> titleMap = new HashMap<>();
-
-		titleMap.put(defaultLocale, "Test Article");
+		Map<Locale, String> titleMap = HashMapBuilder.put(
+			defaultLocale, "Test Article"
+		).build();
 
 		return JournalArticleLocalServiceUtil.addArticle(
 			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
@@ -658,48 +660,82 @@ public class JournalTestUtil {
 			feedFormat, feedVersion, serviceContext);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             JournalFolderFixture#addFolder(long, long, long, String)}
+	 */
+	@Deprecated
 	public static JournalFolder addFolder(
 			long userId, long groupId, long parentFolderId, String name)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(groupId, userId);
+		JournalFolderFixture journalFolderFixture = new JournalFolderFixture(
+			JournalFolderLocalServiceUtil.getService());
 
-		return addFolder(parentFolderId, name, serviceContext);
+		return journalFolderFixture.addFolder(
+			userId, groupId, parentFolderId, name);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             JournalFolderFixture#addFolder(long, long, String)}
+	 */
+	@Deprecated
 	public static JournalFolder addFolder(
 			long groupId, long parentFolderId, String name)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				groupId, TestPropsValues.getUserId());
+		JournalFolderFixture journalFolderFixture = new JournalFolderFixture(
+			JournalFolderLocalServiceUtil.getService());
 
-		return addFolder(parentFolderId, name, serviceContext);
+		return journalFolderFixture.addFolder(groupId, parentFolderId, name);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             JournalFolderFixture#addFolder(long, String)}
+	 */
+	@Deprecated
 	public static JournalFolder addFolder(long groupId, String name)
 		throws Exception {
 
-		return addFolder(
-			groupId, JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, name);
+		JournalFolderFixture journalFolderFixture = new JournalFolderFixture(
+			JournalFolderLocalServiceUtil.getService());
+
+		return journalFolderFixture.addFolder(groupId, name);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             JournalFolderFixture#addFolder(long, String, ServiceContext)}
+	 */
+	@Deprecated
 	public static JournalFolder addFolder(
 			long parentFolderId, String name, ServiceContext serviceContext)
 		throws Exception {
 
-		JournalFolder folder = JournalFolderLocalServiceUtil.fetchFolder(
-			serviceContext.getScopeGroupId(), parentFolderId, name);
+		JournalFolderFixture journalFolderFixture = new JournalFolderFixture(
+			JournalFolderLocalServiceUtil.getService());
 
-		if (folder != null) {
-			return folder;
-		}
+		return journalFolderFixture.addFolder(
+			parentFolderId, name, serviceContext);
+	}
 
-		return JournalFolderLocalServiceUtil.addFolder(
-			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-			parentFolderId, name, "This is a test folder.", serviceContext);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             JournalFolderFixture#addFolder(long, String, String, ServiceContext)}
+	 */
+	@Deprecated
+	public static JournalFolder addFolder(
+			long parentFolderId, String name, String description,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		JournalFolderFixture journalFolderFixture = new JournalFolderFixture(
+			JournalFolderLocalServiceUtil.getService());
+
+		return journalFolderFixture.addFolder(
+			parentFolderId, name, description, serviceContext);
 	}
 
 	public static Element addMetadataElement(
@@ -890,8 +926,10 @@ public class JournalTestUtil {
 		int displayDateMinute = 0;
 
 		if (displayDate != null) {
+			User user = TestPropsValues.getUser();
+
 			Calendar displayCal = CalendarFactoryUtil.getCalendar(
-				TestPropsValues.getUser().getTimeZone());
+				user.getTimeZone());
 
 			displayCal.setTime(displayDate);
 
@@ -1020,8 +1058,9 @@ public class JournalTestUtil {
 
 	private static final Class<?> _JOURNAL_UTIL_CLASS;
 
-	private static final Locale[] _locales =
-		{LocaleUtil.US, LocaleUtil.GERMANY, LocaleUtil.SPAIN};
+	private static final Locale[] _locales = {
+		LocaleUtil.US, LocaleUtil.GERMANY, LocaleUtil.SPAIN
+	};
 
 	static {
 		Bundle testBundle = FrameworkUtil.getBundle(JournalTestUtil.class);
@@ -1052,10 +1091,10 @@ public class JournalTestUtil {
 
 		try {
 			_JOURNAL_UTIL_CLASS = classLoader.loadClass(
-				"com.liferay.journal.util.impl.JournalUtil");
+				"com.liferay.journal.internal.util.JournalUtil");
 		}
-		catch (ClassNotFoundException cnfe) {
-			throw new ExceptionInInitializerError(cnfe);
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new ExceptionInInitializerError(classNotFoundException);
 		}
 	}
 

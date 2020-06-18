@@ -3,7 +3,7 @@
 <workflow-definition
 	xmlns="urn:liferay.com:liferay-workflow_7.1.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="urn:liferay.com:liferay-workflow_7.1.0 http://www.liferay.com/dtd/liferay-workflow-definition_7_1_0.xsd"
+	xsi:schemaLocation="urn:liferay.com:liferay-workflow_7.3.0 http://www.liferay.com/dtd/liferay-workflow-definition_7_3_0.xsd"
 >
 	<name>Single Approver</name>
 	<description>A single approver can approve a workflow content.</description>
@@ -47,6 +47,9 @@
 				<template-language>freemarker</template-language>
 				<notification-type>email</notification-type>
 				<notification-type>user-notification</notification-type>
+				<recipients receptionType="to">
+					<user />
+				</recipients>
 				<execution-type>onAssignment</execution-type>
 			</notification>
 		</actions>
@@ -72,6 +75,9 @@
 				<template-language>freemarker</template-language>
 				<notification-type>email</notification-type>
 				<notification-type>user-notification</notification-type>
+				<recipients receptionType="to">
+					<assignees />
+				</recipients>
 				<execution-type>onAssignment</execution-type>
 			</notification>
 			<notification>
@@ -79,7 +85,7 @@
 				<template><![CDATA[Your submission was reviewed<#if taskComments?has_content> and the reviewer applied the following ${taskComments}</#if>.]]></template>
 				<template-language>freemarker</template-language>
 				<notification-type>email</notification-type>
-				<recipients>
+				<recipients receptionType="to">
 					<user />
 				</recipients>
 				<execution-type>onExit</execution-type>
@@ -87,6 +93,18 @@
 		</actions>
 		<assignments>
 			<roles>
+				<role>
+					<role-type>depot</role-type>
+					<name>Asset Library Administrator</name>
+				</role>
+				<role>
+					<role-type>depot</role-type>
+					<name>Asset Library Content Reviewer</name>
+				</role>
+				<role>
+					<role-type>depot</role-type>
+					<name>Asset Library Owner</name>
+				</role>
 				<role>
 					<role-type>organization</role-type>
 					<name>Organization Administrator</name>

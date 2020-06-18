@@ -77,7 +77,6 @@ public class PQLOperatorFactory {
 						Properties properties)
 					throws Exception {
 
-					String operator = getOperator();
 					Object pqlResultObject1 = pqlEntity1.getPQLResult(
 						properties);
 					Object pqlResultObject2 = pqlEntity2.getPQLResult(
@@ -89,16 +88,10 @@ public class PQLOperatorFactory {
 						return false;
 					}
 
-					if (!(pqlResultObject1 instanceof String) ||
-						!(pqlResultObject2 instanceof String)) {
+					String operator = getOperator();
 
-						throw new Exception(
-							"Operator only works for string values: " +
-								operator);
-					}
-
-					String pqlResultString1 = (String)pqlResultObject1;
-					String pqlResultString2 = (String)pqlResultObject2;
+					String pqlResultString1 = String.valueOf(pqlResultObject1);
+					String pqlResultString2 = String.valueOf(pqlResultObject2);
 
 					if (operator.equals("~")) {
 						return pqlResultString1.contains(pqlResultString2);

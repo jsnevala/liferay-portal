@@ -36,6 +36,7 @@ import com.liferay.exportimport.kernel.lar.UserIdStrategy;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.service.MBMessageLocalServiceUtil;
 import com.liferay.portal.kernel.comment.CommentManagerUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
@@ -47,11 +48,13 @@ import com.liferay.portal.kernel.service.IdentityServiceContextFunction;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.DateTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -62,10 +65,9 @@ import com.liferay.portal.kernel.zip.ZipReader;
 import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactoryUtil;
-import com.liferay.portal.service.test.ServiceTestUtil;
-import com.liferay.portlet.ratings.util.test.RatingsTestUtil;
 import com.liferay.ratings.kernel.model.RatingsEntry;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalServiceUtil;
+import com.liferay.ratings.test.util.RatingsTestUtil;
 
 import java.io.Serializable;
 
@@ -73,28 +75,31 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * @author Daniel Kocsis
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public abstract class BaseStagedModelDataHandlerTestCase {
 
 	@Before
 	public void setUp() throws Exception {
 		liveGroup = GroupTestUtil.addGroup();
+
 		stagingGroup = GroupTestUtil.addGroup();
 
-		ServiceTestUtil.setUser(TestPropsValues.getUser());
+		stagingGroup.setLiveGroupId(liveGroup.getGroupId());
+
+		stagingGroup = GroupLocalServiceUtil.updateGroup(stagingGroup);
+
+		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(stagingGroup.getGroupId());
@@ -107,7 +112,6 @@ public abstract class BaseStagedModelDataHandlerTestCase {
 		ServiceContextThreadLocal.popServiceContext();
 	}
 
-	@Ignore
 	@Test
 	public void testCleanAssetCategoriesAndTags() throws Exception {
 		Map<String, List<StagedModel>> dependentStagedModelsMap =
@@ -130,7 +134,7 @@ public abstract class BaseStagedModelDataHandlerTestCase {
 
 		AssetTag assetTag = AssetTestUtil.addTag(stagingGroup.getGroupId());
 
-		assetEntry = AssetEntryLocalServiceUtil.updateEntry(
+		AssetEntryLocalServiceUtil.updateEntry(
 			TestPropsValues.getUserId(), stagingGroup.getGroupId(),
 			assetEntry.getCreateDate(), assetEntry.getModifiedDate(),
 			assetEntry.getClassName(), assetEntry.getClassPK(),
@@ -169,7 +173,7 @@ public abstract class BaseStagedModelDataHandlerTestCase {
 
 		assetEntry = fetchAssetEntry(stagedModel, stagingGroup);
 
-		assetEntry = AssetEntryLocalServiceUtil.updateEntry(
+		AssetEntryLocalServiceUtil.updateEntry(
 			TestPropsValues.getUserId(), stagingGroup.getGroupId(),
 			assetEntry.getCreateDate(), assetEntry.getModifiedDate(),
 			assetEntry.getClassName(), assetEntry.getClassPK(),
@@ -195,11 +199,11 @@ public abstract class BaseStagedModelDataHandlerTestCase {
 
 		assetTags = importedAssetEntry.getTags();
 
-		Assert.assertFalse(assetTags.toString(), assetTags.isEmpty());
+		Assert.assertTrue(assetTags.toString(), assetTags.isEmpty());
 
 		assetCategories = importedAssetEntry.getCategories();
 
-		Assert.assertFalse(
+		Assert.assertTrue(
 			assetCategories.toString(), assetCategories.isEmpty());
 	}
 
@@ -301,9 +305,8 @@ public abstract class BaseStagedModelDataHandlerTestCase {
 		StagedModelDataHandlerUtil.importStagedModel(
 			portletDataContext, exportedStagedModel);
 
-		String uuid = exportedStagedModel.getUuid();
-
-		StagedModel importedModel = getStagedModel(uuid, liveGroup);
+		StagedModel importedModel = getStagedModel(
+			exportedStagedModel.getUuid(), liveGroup);
 
 		Assert.assertNotNull(importedModel);
 	}
@@ -661,36 +664,32 @@ public abstract class BaseStagedModelDataHandlerTestCase {
 	}
 
 	protected Map<String, String[]> getParameterMap() {
-		Map<String, String[]> parameterMap = new LinkedHashMap<>();
-
-		parameterMap.put(
+		return LinkedHashMapBuilder.put(
 			PortletDataHandlerKeys.DATA_STRATEGY,
-			new String[] {
-				PortletDataHandlerKeys.DATA_STRATEGY_MIRROR_OVERWRITE
-			});
-		parameterMap.put(
+			new String[] {PortletDataHandlerKeys.DATA_STRATEGY_MIRROR_OVERWRITE}
+		).put(
 			PortletDataHandlerKeys.IGNORE_LAST_PUBLISH_DATE,
-			new String[] {Boolean.TRUE.toString()});
-		parameterMap.put(
+			new String[] {Boolean.TRUE.toString()}
+		).put(
 			PortletDataHandlerKeys.PORTLET_CONFIGURATION,
-			new String[] {Boolean.TRUE.toString()});
-		parameterMap.put(
+			new String[] {Boolean.TRUE.toString()}
+		).put(
 			PortletDataHandlerKeys.PORTLET_CONFIGURATION_ALL,
-			new String[] {Boolean.TRUE.toString()});
-		parameterMap.put(
+			new String[] {Boolean.TRUE.toString()}
+		).put(
 			PortletDataHandlerKeys.PORTLET_DATA,
-			new String[] {Boolean.TRUE.toString()});
-		parameterMap.put(
+			new String[] {Boolean.TRUE.toString()}
+		).put(
 			PortletDataHandlerKeys.PORTLET_DATA_ALL,
-			new String[] {Boolean.TRUE.toString()});
-		parameterMap.put(
+			new String[] {Boolean.TRUE.toString()}
+		).put(
 			PortletDataHandlerKeys.PORTLET_SETUP_ALL,
-			new String[] {Boolean.TRUE.toString()});
-
-		return parameterMap;
+			new String[] {Boolean.TRUE.toString()}
+		).build();
 	}
 
-	protected abstract StagedModel getStagedModel(String uuid, Group group);
+	protected abstract StagedModel getStagedModel(String uuid, Group group)
+		throws PortalException;
 
 	protected abstract Class<? extends StagedModel> getStagedModelClass();
 
@@ -793,11 +792,8 @@ public abstract class BaseStagedModelDataHandlerTestCase {
 	protected StagedModel readExportedStagedModel(StagedModel stagedModel) {
 		String stagedModelPath = ExportImportPathUtil.getModelPath(stagedModel);
 
-		StagedModel exportedStagedModel =
-			(StagedModel)portletDataContext.getZipEntryAsObject(
-				stagedModelPath);
-
-		return exportedStagedModel;
+		return (StagedModel)portletDataContext.getZipEntryAsObject(
+			stagedModelPath);
 	}
 
 	protected boolean supportLastPublishDateUpdate() {
@@ -1079,18 +1075,12 @@ public abstract class BaseStagedModelDataHandlerTestCase {
 			StagedModel stagedModel, StagedModel importedStagedModel)
 		throws Exception {
 
-		Assert.assertTrue(
-			stagedModel.getCreateDate() + " " +
-				importedStagedModel.getCreateDate(),
-			DateUtil.equals(
-				stagedModel.getCreateDate(),
-				importedStagedModel.getCreateDate()));
-		Assert.assertTrue(
-			stagedModel.getModifiedDate() + " " +
-				importedStagedModel.getModifiedDate(),
-			DateUtil.equals(
-				stagedModel.getModifiedDate(),
-				importedStagedModel.getModifiedDate()));
+		DateTestUtil.assertEquals(
+			stagedModel.getCreateDate(), importedStagedModel.getCreateDate());
+		DateTestUtil.assertEquals(
+			stagedModel.getModifiedDate(),
+			importedStagedModel.getModifiedDate());
+
 		Assert.assertEquals(
 			stagedModel.getUuid(), importedStagedModel.getUuid());
 	}
@@ -1142,10 +1132,7 @@ public abstract class BaseStagedModelDataHandlerTestCase {
 	protected Element missingReferencesElement;
 	protected PortletDataContext portletDataContext;
 	protected Element rootElement;
-
-	@DeleteAfterTestRun
 	protected Group stagingGroup;
-
 	protected UserIdStrategy userIdStrategy;
 	protected ZipReader zipReader;
 	protected ZipWriter zipWriter;
@@ -1203,15 +1190,29 @@ public abstract class BaseStagedModelDataHandlerTestCase {
 
 	protected class TestUserIdStrategy implements UserIdStrategy {
 
+		public TestUserIdStrategy() {
+			_userId = _initializeUserId();
+		}
+
+		public TestUserIdStrategy(User user) {
+			_userId = user.getUserId();
+		}
+
 		@Override
 		public long getUserId(String userUuid) {
+			return _userId;
+		}
+
+		private long _initializeUserId() {
 			try {
 				return TestPropsValues.getUserId();
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				return 0;
 			}
 		}
+
+		private final long _userId;
 
 	}
 

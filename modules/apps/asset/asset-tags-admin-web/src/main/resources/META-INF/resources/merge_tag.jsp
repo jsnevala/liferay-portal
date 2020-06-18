@@ -82,61 +82,70 @@ renderResponse.setTitle(LanguageUtil.get(request, "merge-tags"));
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<aui:script sandbox="<%= true %>">
-	var form = $('#<portlet:namespace />fm');
+<aui:script require="metal-dom/src/all/dom as dom">
+	var targetTagNameSelect = document.getElementById(
+		'<portlet:namespace />targetTagName'
+	);
 
-	window['<portlet:namespace />onAddTag'] = function(item) {
-		if (item.value !== undefined) {
-			var targetTag = $('#<portlet:namespace />targetTagName');
+	if (targetTagNameSelect) {
+		window['<portlet:namespace />onAddTag'] = function (item) {
+			var value = item.value;
 
-			var addedValue = item.value;
+			if (value !== undefined) {
+				dom.append(
+					targetTagNameSelect,
+					Liferay.Util.sub(
+						'<option value="{0}">{1}</option>',
+						value,
+						value
+					)
+				);
+			}
+		};
 
-			targetTag.append(
-				$(
-					'<option>',
-					{
-						text: addedValue,
-						value: addedValue
-					}
-				)
-			);
-		}
-	};
+		window['<portlet:namespace />onRemoveTag'] = function (item) {
+			var value = item.value;
 
-	window['<portlet:namespace />onRemoveTag'] = function(item) {
-		if (item.value !== undefined) {
-			var removedValue = item.value;
+			if (value !== undefined) {
+				var targetTagNameOption = targetTagNameSelect.querySelector(
+					'option[value="' + value + '"]'
+				);
 
-			$('#<portlet:namespace />targetTagName option[value="' + removedValue + '"]').remove();
-		}
-	};
+				dom.exitDocument(targetTagNameOption);
+			}
+		};
+	}
 
-	form.on(
-		'submit',
-		function(event) {
-			var mergeTagNames = $('#<portlet:namespace />mergeTagNames').val();
+	var form = document.<portlet:namespace />fm;
+	var mergeTagNamesInputs = document.getElementsByName(
+		'<portlet:namespace />mergeTagNames'
+	);
 
-			var mergeTagNamesArray = mergeTagNames.split(',');
+	if (form && mergeTagNamesInputs && targetTagNameSelect) {
+		form.addEventListener('submit', function (event) {
+			var mergeTagNames = Array.from(mergeTagNamesInputs).map(function (
+				mergeTagNamesInput
+			) {
+				return mergeTagNamesInput.value;
+			});
 
-			if (mergeTagNamesArray.length < 2) {
-				alert('<liferay-ui:message arguments="2" key="please-choose-at-least-x-tags" />');
+			if (mergeTagNames.length < 2) {
+				alert(
+					'<liferay-ui:message arguments="2" key="please-choose-at-least-x-tags" />'
+				);
 
 				return;
 			}
 
-			var mergeText = '<liferay-ui:message key="are-you-sure-you-want-to-merge-x-into-x" />';
-
-			var targetTag = $('#<portlet:namespace />targetTagName');
-
-			var tag = targetTag.find(':selected');
-
-			tag = String(tag.html()).trim();
-
-			mergeText = Liferay.Util.sub(mergeText, mergeTagNamesArray, tag);
+			var mergeText = Liferay.Util.sub(
+				'<liferay-ui:message key="are-you-sure-you-want-to-merge-x-into-x" />',
+				mergeTagNames,
+				targetTagNameSelect.value
+			);
 
 			if (confirm(mergeText)) {
-				submitForm(form, form.attr('action'));
+				submitForm(form);
 			}
-		}
-	);
+		});
+	}
 </aui:script>

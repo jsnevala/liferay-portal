@@ -14,18 +14,15 @@
 
 package com.liferay.exportimport.kernel.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 /**
  * @author Zsolt Berentey
  */
-@ProviderType
 public class StagedModelType {
 
 	public static final String REFERRER_CLASS_NAME_ALL =
@@ -61,7 +58,7 @@ public class StagedModelType {
 
 			return new StagedModelType(className, referrerClassName);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return null;
 		}
 	}
@@ -147,7 +144,11 @@ public class StagedModelType {
 			return _className;
 		}
 
-		return _className.concat(StringPool.POUND).concat(_referrerClassName);
+		return _className.concat(
+			StringPool.POUND
+		).concat(
+			_referrerClassName
+		);
 	}
 
 	protected String getSimpleName(String className) {

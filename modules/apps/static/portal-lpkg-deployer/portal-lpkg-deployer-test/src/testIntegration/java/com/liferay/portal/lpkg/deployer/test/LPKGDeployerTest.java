@@ -14,9 +14,9 @@
 
 package com.liferay.portal.lpkg.deployer.test;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.lpkg.StaticLPKGResolver;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
@@ -27,9 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.lang.reflect.Method;
-
-import java.net.URI;
-import java.net.URL;
 
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -102,8 +99,9 @@ public class LPKGDeployerTest {
 
 					if (!fileName.endsWith(".lpkg")) {
 						Assert.fail(
-							"Unexpected file " + filePath + " in " +
-								lpkgDeployerDirString);
+							StringBundler.concat(
+								"Unexpected file ", filePath, " in ",
+								lpkgDeployerDirString));
 					}
 
 					lpkgFiles.add(filePath.toFile());
@@ -128,11 +126,12 @@ public class LPKGDeployerTest {
 			lpkgDeployer.getClass());
 
 		Class<?> clazz = lpkgDeployerBundle.loadClass(
-			"com.liferay.portal.lpkg.deployer.internal." +
-				"LPKGInnerBundleLocationUtil");
+			"com.liferay.portal.lpkg.deployer.internal.LPKGLocationUtil");
 
-		Method method = clazz.getDeclaredMethod(
+		Method generateInnerBundleLocationMethod = clazz.getDeclaredMethod(
 			"generateInnerBundleLocation", Bundle.class, String.class);
+		Method lpkgLocationMethod = clazz.getDeclaredMethod(
+			"getLPKGLocation", File.class);
 
 		serviceTracker.close();
 
@@ -140,19 +139,21 @@ public class LPKGDeployerTest {
 			lpkgDeployer.getDeployedLPKGBundles();
 
 		for (File lpkgFile : lpkgFiles) {
-			Bundle lpkgBundle = bundleContext.getBundle(
-				lpkgFile.getCanonicalPath());
+			String lpkgLocation = (String)lpkgLocationMethod.invoke(
+				null, lpkgFile);
+
+			Bundle lpkgBundle = bundleContext.getBundle(lpkgLocation);
 
 			Assert.assertNotNull(
-				"No matching LPKG bundle for " + lpkgFile.getCanonicalPath(),
-				lpkgBundle);
+				"No matching LPKG bundle for " + lpkgLocation, lpkgBundle);
 
 			List<Bundle> expectedAppBundles = new ArrayList<>(
 				deployedLPKGBundles.get(lpkgBundle));
 
 			Assert.assertNotNull(
-				"Registered LPKG bundles " + deployedLPKGBundles.keySet() +
-					" do not contain " + lpkgBundle,
+				StringBundler.concat(
+					"Registered LPKG bundles ", deployedLPKGBundles.keySet(),
+					" do not contain ", lpkgBundle),
 				expectedAppBundles);
 
 			Collections.sort(expectedAppBundles);
@@ -176,17 +177,10 @@ public class LPKGDeployerTest {
 							lpkgDeployerDirString + StringPool.SLASH +
 								lpkgFile.getName());
 
-						URI uri = file.toURI();
-
-						URL url = uri.toURL();
-
-						String path = url.getPath();
-
-						path = URLCodec.decodeURL(path);
-
-						String location =
-							name + "?lpkgPath=" + path +
-								"&protocol=lpkg&static=true";
+						String location = StringBundler.concat(
+							name, "?lpkgPath=",
+							lpkgLocationMethod.invoke(null, file),
+							"&protocol=lpkg&static=true");
 
 						Bundle bundle = bundleContext.getBundle(location);
 
@@ -195,8 +189,9 @@ public class LPKGDeployerTest {
 							bundle);
 					}
 					else {
-						String location = (String)method.invoke(
-							null, lpkgBundle, name);
+						String location =
+							(String)generateInnerBundleLocationMethod.invoke(
+								null, lpkgBundle, name);
 
 						Bundle bundle = bundleContext.getBundle(location);
 
@@ -207,101 +202,103 @@ public class LPKGDeployerTest {
 					}
 				}
 
-				if (name.endsWith(".war")) {
-					String location = (String)method.invoke(
+				if (!name.endsWith(".war")) {
+					continue;
+				}
+
+				String location =
+					(String)generateInnerBundleLocationMethod.invoke(
 						null, lpkgBundle, name);
 
-					Bundle bundle = bundleContext.getBundle(location);
+				Bundle bundle = bundleContext.getBundle(location);
 
-					Assert.assertNotNull(
-						"No matching app bundle for " + location, bundle);
+				Assert.assertNotNull(
+					"No matching app bundle for " + location, bundle);
 
-					actualAppBundles.add(bundle);
+				actualAppBundles.add(bundle);
 
-					String contextName = name.substring(
-						0, name.lastIndexOf(".war"));
+				String contextName = name.substring(
+					0, name.lastIndexOf(".war"));
 
-					int index = contextName.lastIndexOf('-');
+				int index = contextName.lastIndexOf('-');
 
-					if (index >= 0) {
-						contextName = contextName.substring(0, index);
-					}
+				if (index >= 0) {
+					contextName = contextName.substring(0, index);
+				}
 
-					String portalProfileNames = null;
+				String portalProfileNames = null;
 
-					Path tempFilePath = Files.createTempFile(null, null);
+				Path tempFilePath = Files.createTempFile(null, null);
 
-					try (InputStream inputStream1 = zipFile.getInputStream(
-							zipEntry)) {
+				try (InputStream inputStream1 = zipFile.getInputStream(
+						zipEntry)) {
 
-						Files.copy(
-							inputStream1, tempFilePath,
-							StandardCopyOption.REPLACE_EXISTING);
+					Files.copy(
+						inputStream1, tempFilePath,
+						StandardCopyOption.REPLACE_EXISTING);
 
-						try (ZipFile zipFile2 = new ZipFile(
-								tempFilePath.toFile());
-							InputStream inputStream2 = zipFile2.getInputStream(
-								new ZipEntry(
-									"WEB-INF/liferay-plugin-package." +
-										"properties"))) {
+					try (ZipFile zipFile2 = new ZipFile(tempFilePath.toFile());
+						InputStream inputStream2 = zipFile2.getInputStream(
+							new ZipEntry(
+								"WEB-INF/liferay-plugin-package.properties"))) {
 
-							if (inputStream2 != null) {
-								Properties properties = new Properties();
+						if (inputStream2 != null) {
+							Properties properties = new Properties();
 
-								properties.load(inputStream2);
+							properties.load(inputStream2);
 
-								String configuredServletContextName =
-									properties.getProperty(
-										"servlet-context-name");
+							String configuredServletContextName =
+								properties.getProperty("servlet-context-name");
 
-								if (configuredServletContextName != null) {
-									contextName = configuredServletContextName;
-								}
-
-								portalProfileNames = properties.getProperty(
-									"liferay-portal-profile-names");
+							if (configuredServletContextName != null) {
+								contextName = configuredServletContextName;
 							}
+
+							portalProfileNames = properties.getProperty(
+								"liferay-portal-profile-names");
 						}
 					}
-					finally {
-						Files.delete(tempFilePath);
-					}
-
-					StringBundler sb = new StringBundler(13);
-
-					sb.append("webbundle:/");
-					sb.append(URLCodec.encodeURL(lpkgBundle.getSymbolicName()));
-					sb.append(StringPool.DASH);
-					sb.append(lpkgBundle.getVersion());
-					sb.append(StringPool.SLASH);
-					sb.append(contextName);
-					sb.append(".war?Bundle-Version=");
-					sb.append(bundle.getVersion());
-					sb.append("&Web-ContextPath=/");
-					sb.append(contextName);
-					sb.append("&protocol=lpkg");
-
-					if (Validator.isNotNull(portalProfileNames)) {
-						sb.append("&liferay-portal-profile-names=");
-						sb.append(portalProfileNames);
-					}
-
-					location = sb.toString();
-
-					Assert.assertNotNull(
-						"Missing WAR bundle for wrapper bundle " + bundle +
-							" with expected location " + location,
-						bundleContext.getBundle(location));
 				}
+				finally {
+					Files.delete(tempFilePath);
+				}
+
+				StringBundler sb = new StringBundler(13);
+
+				sb.append("webbundle:/");
+				sb.append(URLCodec.encodeURL(lpkgBundle.getSymbolicName()));
+				sb.append(StringPool.DASH);
+				sb.append(lpkgBundle.getVersion());
+				sb.append(StringPool.SLASH);
+				sb.append(contextName);
+				sb.append(".war?Bundle-Version=");
+				sb.append(bundle.getVersion());
+				sb.append("&Web-ContextPath=/");
+				sb.append(contextName);
+				sb.append("&protocol=lpkg");
+
+				if (Validator.isNotNull(portalProfileNames)) {
+					sb.append("&liferay-portal-profile-names=");
+					sb.append(portalProfileNames);
+				}
+
+				location = sb.toString();
+
+				Assert.assertNotNull(
+					StringBundler.concat(
+						"Missing WAR bundle for wrapper bundle ", bundle,
+						" with expected location ", location),
+					bundleContext.getBundle(location));
 			}
 
 			if (!symbolicName.equals("static")) {
 				Collections.sort(actualAppBundles);
 
 				Assert.assertEquals(
-					"LPKG bundle " + lpkgBundle + " expects app bundles " +
-						expectedAppBundles + " but has actual app bundles " +
-							actualAppBundles,
+					StringBundler.concat(
+						"LPKG bundle ", lpkgBundle, " expects app bundles ",
+						expectedAppBundles, " but has actual app bundles ",
+						actualAppBundles),
 					expectedAppBundles, actualAppBundles);
 			}
 		}

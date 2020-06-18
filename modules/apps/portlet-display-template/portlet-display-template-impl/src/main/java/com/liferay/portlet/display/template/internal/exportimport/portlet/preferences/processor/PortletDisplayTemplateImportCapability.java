@@ -36,7 +36,7 @@ import java.util.Map;
 import javax.portlet.PortletPreferences;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class PortletDisplayTemplateImportCapability implements Capability {
 
@@ -63,7 +63,7 @@ public class PortletDisplayTemplateImportCapability implements Capability {
 				portletDataContext, portletDataContext.getPortletId(),
 				portletPreferences);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return portletPreferences;
 		}
 	}
@@ -80,9 +80,7 @@ public class PortletDisplayTemplateImportCapability implements Capability {
 			return 0;
 		}
 
-		String className = templateHandler.getClassName();
-
-		return _portal.getClassNameId(className);
+		return _portal.getClassNameId(templateHandler.getClassName());
 	}
 
 	protected PortletPreferences importDisplayStyle(

@@ -23,13 +23,16 @@ import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alexander Chow
  */
+@Component(service = DLFileRankFinder.class)
 public class DLFileRankFinderImpl
 	extends DLFileRankFinderBaseImpl implements DLFileRankFinder {
 
@@ -48,19 +51,19 @@ public class DLFileRankFinderImpl
 
 			String sql = _customSQL.get(getClass(), FIND_BY_STALE_RANKS);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar("groupId", Type.LONG);
-			q.addScalar("userId", Type.LONG);
+			sqlQuery.addScalar("groupId", Type.LONG);
+			sqlQuery.addScalar("userId", Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(count);
+			queryPos.add(count);
 
-			return q.list(true);
+			return sqlQuery.list(true);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -76,25 +79,25 @@ public class DLFileRankFinderImpl
 
 			String sql = _customSQL.get(getClass(), FIND_BY_FOLDER_ID);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("DLFileRank", DLFileRankImpl.class);
+			sqlQuery.addEntity("DLFileRank", DLFileRankImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(folderId);
+			queryPos.add(folderId);
 
-			return q.list(true);
+			return sqlQuery.list(true);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

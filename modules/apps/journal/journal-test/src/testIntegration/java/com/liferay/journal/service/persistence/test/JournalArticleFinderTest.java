@@ -41,11 +41,13 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
 
 import java.util.ArrayList;
@@ -53,7 +55,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -73,7 +74,7 @@ import org.osgi.framework.ServiceReference;
 
 /**
  * @author Zsolt Berentey
- * @author Laszlo Csontos
+ * @author László Csontos
  */
 @RunWith(Arquillian.class)
 public class JournalArticleFinderTest {
@@ -83,6 +84,7 @@ public class JournalArticleFinderTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE,
 			new TransactionalTestRule(
 				Propagation.SUPPORTS, "com.liferay.journal.service"));
 
@@ -267,6 +269,30 @@ public class JournalArticleFinderTest {
 	}
 
 	@Test
+	public void testFindByG_F_C_L() throws Exception {
+		List<Long> folderIds = new ArrayList<>();
+
+		folderIds.add(_folder.getFolderId());
+
+		QueryDefinition<JournalArticle> queryDefinition =
+			new QueryDefinition<>();
+
+		queryDefinition.setIncludeOwner(true);
+		queryDefinition.setOwnerUserId(TestPropsValues.getUserId());
+		queryDefinition.setStatus(WorkflowConstants.STATUS_ANY);
+
+		List<JournalArticle> articles =
+			_journalArticleFinder.filterFindByG_F_C_L(
+				_group.getGroupId(), folderIds,
+				JournalArticleConstants.CLASSNAME_ID_DEFAULT,
+				LocaleUtil.getSiteDefault(), queryDefinition);
+
+		Assert.assertEquals(articles.toString(), 1, articles.size());
+
+		Assert.assertEquals(articles.get(0), _article);
+	}
+
+	@Test
 	public void testFindByR_D() throws Exception {
 		JournalArticle article = _journalArticleFinder.findByR_D(
 			_article.getResourcePrimKey(), new Date());
@@ -301,15 +327,16 @@ public class JournalArticleFinderTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId());
 
-		Map<Locale, String> titleMap = new HashMap<>();
-
-		titleMap.put(Locale.US, "Localized Article");
-		titleMap.put(Locale.FRANCE, "Localized Article");
+		Map<Locale, String> titleMap = HashMapBuilder.put(
+			LocaleUtil.FRANCE, "Localized Article"
+		).put(
+			LocaleUtil.US, "Localized Article"
+		).build();
 
 		JournalTestUtil.addArticle(
 			_group.getGroupId(), _folder.getFolderId(),
 			JournalArticleConstants.CLASSNAME_ID_DEFAULT, titleMap, titleMap,
-			titleMap, Locale.US, true, true, serviceContext);
+			titleMap, LocaleUtil.US, true, true, serviceContext);
 
 		QueryDefinition<JournalArticle> queryDefinition =
 			new QueryDefinition<>();
@@ -511,6 +538,9 @@ public class JournalArticleFinderTest {
 
 			JournalArticle article = _articles.get(i);
 
+			article = JournalArticleLocalServiceUtil.getArticle(
+				article.getId());
+
 			article.setCreateDate(calendar.getTime());
 			article.setModifiedDate(calendar.getTime());
 			article.setArticleId("a" + i);
@@ -518,7 +548,10 @@ public class JournalArticleFinderTest {
 			article.setDisplayDate(calendar.getTime());
 			article.setReviewDate(calendar.getTime());
 
-			JournalArticleLocalServiceUtil.updateJournalArticle(article);
+			article = JournalArticleLocalServiceUtil.updateJournalArticle(
+				article);
+
+			_articles.set(i, article);
 		}
 	}
 

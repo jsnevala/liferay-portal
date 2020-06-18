@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.PredicateFilter;
 
 import java.util.Collections;
 import java.util.List;
@@ -89,20 +88,15 @@ public class PanelCategoryRegistry {
 
 		return ListUtil.filter(
 			panelCategories,
-			new PredicateFilter<PanelCategory>() {
-
-				@Override
-				public boolean filter(PanelCategory panelCategory) {
-					try {
-						return panelCategory.isShow(permissionChecker, group);
-					}
-					catch (PortalException pe) {
-						_log.error(pe, pe);
-					}
-
-					return false;
+			panelCategory -> {
+				try {
+					return panelCategory.isShow(permissionChecker, group);
+				}
+				catch (PortalException portalException) {
+					_log.error(portalException, portalException);
 				}
 
+				return false;
 			});
 	}
 
@@ -125,8 +119,8 @@ public class PanelCategoryRegistry {
 					count += notificationsCount;
 				}
 			}
-			catch (PortalException pe) {
-				_log.error(pe, pe);
+			catch (PortalException portalException) {
+				_log.error(portalException, portalException);
 			}
 		}
 
@@ -146,8 +140,8 @@ public class PanelCategoryRegistry {
 					return panelCategory;
 				}
 			}
-			catch (PortalException pe) {
-				_log.error(pe, pe);
+			catch (PortalException portalException) {
+				_log.error(portalException, portalException);
 			}
 		}
 

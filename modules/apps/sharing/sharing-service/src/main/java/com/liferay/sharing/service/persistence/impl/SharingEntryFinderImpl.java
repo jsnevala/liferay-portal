@@ -14,7 +14,6 @@
 
 package com.liferay.sharing.service.persistence.impl;
 
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -24,7 +23,6 @@ import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.model.impl.SharingEntryImpl;
 import com.liferay.sharing.service.persistence.SharingEntryFinder;
@@ -32,41 +30,46 @@ import com.liferay.sharing.service.persistence.SharingEntryFinder;
 import java.util.Iterator;
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Alejandro Tardín
  */
+@Component(service = SharingEntryFinder.class)
 public class SharingEntryFinderImpl
 	extends SharingEntryFinderBaseImpl implements SharingEntryFinder {
 
-	public static final String COUNT_BY_TO_USER_ID =
-		SharingEntryFinder.class.getName() + ".countByToUserId";
+	public static final String COUNT_BY_USER_ID =
+		SharingEntryFinder.class.getName() + ".countByUserId";
 
-	public static final String FIND_BY_TO_USER_ID =
-		SharingEntryFinder.class.getName() + ".findByToUserId";
+	public static final String FIND_BY_USER_ID =
+		SharingEntryFinder.class.getName() + ".findByUserId";
 
-	public int countByToUserId(long toUserId, long classNameId) {
+	@Override
+	public int countByUserId(long userId, long classNameId) {
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			String sql = _customSQL.get(getClass(), COUNT_BY_TO_USER_ID);
+			String sql = _customSQL.get(getClass(), COUNT_BY_USER_ID);
 
 			sql = _replaceClassNameIdWhere(sql, classNameId);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(toUserId);
+			queryPos.add(userId);
 
 			if (classNameId > 0) {
-				qPos.add(classNameId);
+				queryPos.add(classNameId);
 			}
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -78,16 +81,17 @@ public class SharingEntryFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	public List<SharingEntry> findByToUserId(
-		long toUserId, long classNameId, int begin, int end,
+	@Override
+	public List<SharingEntry> findByUserId(
+		long userId, long classNameId, int begin, int end,
 		OrderByComparator<SharingEntry> orderByComparator) {
 
 		Session session = null;
@@ -95,7 +99,7 @@ public class SharingEntryFinderImpl
 		try {
 			session = openSession();
 
-			String sql = _customSQL.get(getClass(), FIND_BY_TO_USER_ID);
+			String sql = _customSQL.get(getClass(), FIND_BY_USER_ID);
 
 			if (orderByComparator != null) {
 				sql = _customSQL.replaceOrderBy(sql, orderByComparator);
@@ -103,23 +107,23 @@ public class SharingEntryFinderImpl
 
 			sql = _replaceClassNameIdWhere(sql, classNameId);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("SharingEntry", SharingEntryImpl.class);
+			sqlQuery.addEntity("SharingEntry", SharingEntryImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(toUserId);
+			queryPos.add(userId);
 
 			if (classNameId > 0) {
-				qPos.add(classNameId);
+				queryPos.add(classNameId);
 			}
 
 			return (List<SharingEntry>)QueryUtil.list(
-				q, getDialect(), begin, end);
+				sqlQuery, getDialect(), begin, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -133,14 +137,13 @@ public class SharingEntryFinderImpl
 				"AND SharingEntry.classNameId = ?");
 		}
 		else {
-			sql = StringUtil.replace(
-				sql, "[$CLASS_NAME_ID_WHERE$]", StringPool.BLANK);
+			sql = StringUtil.removeSubstring(sql, "[$CLASS_NAME_ID_WHERE$]");
 		}
 
 		return sql;
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

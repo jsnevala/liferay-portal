@@ -57,8 +57,9 @@ import org.osgi.service.component.annotations.Reference;
 public class CalendarBookingStagedModelDataHandler
 	extends BaseStagedModelDataHandler<CalendarBooking> {
 
-	public static final String[] CLASS_NAMES =
-		{CalendarBooking.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		CalendarBooking.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(CalendarBooking calendarBooking)
@@ -291,7 +292,7 @@ public class CalendarBookingStagedModelDataHandler
 					calendarBooking.getSecondReminderType(), serviceContext);
 		}
 
-		_calendarBookingLocalService.updateStatus(
+		importedCalendarBooking = _calendarBookingLocalService.updateStatus(
 			userId, importedCalendarBooking, calendarBooking.getStatus(),
 			serviceContext);
 
@@ -340,20 +341,6 @@ public class CalendarBookingStagedModelDataHandler
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setCalendarBookingLocalService(
-		CalendarBookingLocalService calendarBookingLocalService) {
-
-		_calendarBookingLocalService = calendarBookingLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setMBMessageLocalService(
-		MBMessageLocalService mbMessageLocalService) {
-
-		_mbMessageLocalService = mbMessageLocalService;
-	}
-
 	private long[] _getChildCalendarIds(
 		PortletDataContext portletDataContext, Map<Long, Long> calendarIds,
 		CalendarBooking calendarBooking) {
@@ -382,7 +369,10 @@ public class CalendarBookingStagedModelDataHandler
 		CalendarBookingWorkflowConstants.STATUS_MAYBE
 	};
 
+	@Reference
 	private CalendarBookingLocalService _calendarBookingLocalService;
+
+	@Reference
 	private MBMessageLocalService _mbMessageLocalService;
 
 }

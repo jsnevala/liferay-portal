@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 /**
  * @author Hugo Huijser
  */
-public class JSPLineBreakCheck extends LineBreakCheck {
+public class JSPLineBreakCheck extends BaseLineBreakCheck {
 
 	@Override
 	protected String doProcess(
@@ -41,12 +41,38 @@ public class JSPLineBreakCheck extends LineBreakCheck {
 			String line = null;
 			String previousLine = StringPool.BLANK;
 
+			boolean javaSource = false;
+			boolean jsSource = false;
+
 			int lineNumber = 0;
 
 			while ((line = unsyncBufferedReader.readLine()) != null) {
 				lineNumber++;
 
-				if (!line.startsWith(StringPool.POUND)) {
+				String trimmedLine = StringUtil.trimLeading(line);
+
+				if (trimmedLine.equals("<%") || trimmedLine.equals("<%!")) {
+					javaSource = true;
+				}
+				else if (trimmedLine.equals("%>")) {
+					javaSource = false;
+				}
+				else if (trimmedLine.equals("<aui:script>") ||
+						 trimmedLine.startsWith("<aui:script ") ||
+						 trimmedLine.equals("<script>") ||
+						 trimmedLine.startsWith("<script ")) {
+
+					jsSource = true;
+				}
+				else if (trimmedLine.equals("</aui:script>") ||
+						 trimmedLine.equals("</script>")) {
+
+					jsSource = false;
+				}
+
+				if (!line.startsWith(StringPool.POUND) &&
+					(!jsSource || javaSource)) {
+
 					checkLineBreaks(line, previousLine, fileName, lineNumber);
 				}
 
@@ -56,7 +82,21 @@ public class JSPLineBreakCheck extends LineBreakCheck {
 
 		content = _fixRedundantLineBreaks(content);
 
-		return fixRedundantCommaInsideArray(content);
+		return _fixRedundantCommaInsideArray(content);
+	}
+
+	private String _fixRedundantCommaInsideArray(String content) {
+		Matcher matcher = _redundantCommaPattern.matcher(content);
+
+		while (matcher.find()) {
+			if (JSPSourceUtil.isJavaSource(content, matcher.start())) {
+				return StringUtil.replaceFirst(
+					content, StringPool.COMMA, StringPool.BLANK,
+					matcher.start());
+			}
+		}
+
+		return content;
 	}
 
 	private String _fixRedundantLineBreaks(String content) {
@@ -86,6 +126,13 @@ public class JSPLineBreakCheck extends LineBreakCheck {
 					continue;
 				}
 
+				String lastLine = StringUtil.trim(
+					getLine(content, getLineNumber(content, x)));
+
+				if (lastLine.startsWith(StringPool.CLOSE_PARENTHESIS)) {
+					break;
+				}
+
 				String codeSingleLine = StringUtil.replace(
 					codeBlock, new String[] {StringPool.TAB, ",\n", "\n"},
 					new String[] {StringPool.BLANK, ", ", StringPool.BLANK});
@@ -108,6 +155,8 @@ public class JSPLineBreakCheck extends LineBreakCheck {
 		return content;
 	}
 
+	private static final Pattern _redundantCommaPattern = Pattern.compile(
+		",\n\t*\\}");
 	private static final Pattern _redundantLineBreakPattern1 = Pattern.compile(
 		"[\n\t][^/\n\t].*(\\(\n)");
 	private static final Pattern _redundantLineBreakPattern2 = Pattern.compile(

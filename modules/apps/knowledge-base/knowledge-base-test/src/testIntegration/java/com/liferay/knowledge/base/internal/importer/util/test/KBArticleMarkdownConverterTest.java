@@ -15,7 +15,10 @@
 package com.liferay.knowledge.base.internal.importer.util.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.lang.reflect.Constructor;
@@ -68,7 +71,7 @@ public class KBArticleMarkdownConverterTest {
 				"KBArticleMarkdownConverter");
 
 		_constructor = clazz.getConstructor(
-			String.class, String.class, Map.class);
+			String.class, String.class, Map.class, DLURLHelper.class);
 
 		_method = clazz.getMethod("getSourceURL");
 	}
@@ -80,12 +83,12 @@ public class KBArticleMarkdownConverterTest {
 		String markdown = "Title [](id=1234)\n=============";
 		String fileEntryName = "some/unix/file";
 
-		Map<String, String> metadata = new HashMap<>();
-
-		metadata.put("base.source.url", "http://baseURL");
+		Map<String, String> metadata = HashMapBuilder.put(
+			"base.source.url", "http://baseURL"
+		).build();
 
 		Object object = _constructor.newInstance(
-			markdown, fileEntryName, metadata);
+			markdown, fileEntryName, metadata, _dlURLHelper);
 
 		Assert.assertEquals(
 			"http://baseURL/some/unix/file", _method.invoke(object));
@@ -98,12 +101,12 @@ public class KBArticleMarkdownConverterTest {
 		String markdown = "Title [](id=1234)\n=============";
 		String fileEntryName = "some\\windows\\file";
 
-		Map<String, String> metadata = new HashMap<>();
-
-		metadata.put("base.source.url", "http://baseURL");
+		Map<String, String> metadata = HashMapBuilder.put(
+			"base.source.url", "http://baseURL"
+		).build();
 
 		Object object = _constructor.newInstance(
-			markdown, fileEntryName, metadata);
+			markdown, fileEntryName, metadata, _dlURLHelper);
 
 		Assert.assertEquals(
 			"http://baseURL/some/windows/file", _method.invoke(object));
@@ -118,7 +121,7 @@ public class KBArticleMarkdownConverterTest {
 		Map<String, String> metadata = new HashMap<>();
 
 		Object object = _constructor.newInstance(
-			markdown, fileEntryName, metadata);
+			markdown, fileEntryName, metadata, _dlURLHelper);
 
 		Assert.assertNull(_method.invoke(object));
 	}
@@ -128,12 +131,12 @@ public class KBArticleMarkdownConverterTest {
 		String markdown = "Title [](id=1234)\n=============";
 		String fileEntryName = "some/unix/file";
 
-		Map<String, String> metadata = new HashMap<>();
-
-		metadata.put("base.source.url", "http://baseURL/");
+		Map<String, String> metadata = HashMapBuilder.put(
+			"base.source.url", "http://baseURL/"
+		).build();
 
 		Object object = _constructor.newInstance(
-			markdown, fileEntryName, metadata);
+			markdown, fileEntryName, metadata, _dlURLHelper);
 
 		Assert.assertEquals(
 			"http://baseURL/some/unix/file", _method.invoke(object));
@@ -141,5 +144,8 @@ public class KBArticleMarkdownConverterTest {
 
 	private static Constructor _constructor;
 	private static Method _method;
+
+	@Inject
+	private DLURLHelper _dlURLHelper;
 
 }

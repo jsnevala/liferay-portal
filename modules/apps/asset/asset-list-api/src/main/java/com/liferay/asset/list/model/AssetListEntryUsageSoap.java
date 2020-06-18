@@ -14,8 +14,6 @@
 
 package com.liferay.asset.list.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,11 +26,15 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class AssetListEntryUsageSoap implements Serializable {
-	public static AssetListEntryUsageSoap toSoapModel(AssetListEntryUsage model) {
+
+	public static AssetListEntryUsageSoap toSoapModel(
+		AssetListEntryUsage model) {
+
 		AssetListEntryUsageSoap soapModel = new AssetListEntryUsageSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setAssetListEntryUsageId(model.getAssetListEntryUsageId());
 		soapModel.setGroupId(model.getGroupId());
@@ -52,7 +54,9 @@ public class AssetListEntryUsageSoap implements Serializable {
 
 	public static AssetListEntryUsageSoap[] toSoapModels(
 		AssetListEntryUsage[] models) {
-		AssetListEntryUsageSoap[] soapModels = new AssetListEntryUsageSoap[models.length];
+
+		AssetListEntryUsageSoap[] soapModels =
+			new AssetListEntryUsageSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -63,10 +67,12 @@ public class AssetListEntryUsageSoap implements Serializable {
 
 	public static AssetListEntryUsageSoap[][] toSoapModels(
 		AssetListEntryUsage[][] models) {
+
 		AssetListEntryUsageSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new AssetListEntryUsageSoap[models.length][models[0].length];
+			soapModels =
+				new AssetListEntryUsageSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new AssetListEntryUsageSoap[0][0];
@@ -81,13 +87,16 @@ public class AssetListEntryUsageSoap implements Serializable {
 
 	public static AssetListEntryUsageSoap[] toSoapModels(
 		List<AssetListEntryUsage> models) {
-		List<AssetListEntryUsageSoap> soapModels = new ArrayList<AssetListEntryUsageSoap>(models.size());
+
+		List<AssetListEntryUsageSoap> soapModels =
+			new ArrayList<AssetListEntryUsageSoap>(models.size());
 
 		for (AssetListEntryUsage model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new AssetListEntryUsageSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new AssetListEntryUsageSoap[soapModels.size()]);
 	}
 
 	public AssetListEntryUsageSoap() {
@@ -99,6 +108,22 @@ public class AssetListEntryUsageSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setAssetListEntryUsageId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public String getUuid() {
@@ -205,6 +230,8 @@ public class AssetListEntryUsageSoap implements Serializable {
 		_lastPublishDate = lastPublishDate;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _assetListEntryUsageId;
 	private long _groupId;
@@ -218,4 +245,5 @@ public class AssetListEntryUsageSoap implements Serializable {
 	private long _classPK;
 	private String _portletId;
 	private Date _lastPublishDate;
+
 }

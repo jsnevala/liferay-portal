@@ -14,8 +14,6 @@
 
 package com.liferay.asset.category.property.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.category.property.model.AssetCategoryProperty;
 import com.liferay.asset.category.property.service.AssetCategoryPropertyLocalServiceUtil;
 
@@ -31,21 +29,24 @@ import com.liferay.asset.category.property.service.AssetCategoryPropertyLocalSer
  * @see AssetCategoryProperty
  * @generated
  */
-@ProviderType
 public abstract class AssetCategoryPropertyBaseImpl
 	extends AssetCategoryPropertyModelImpl implements AssetCategoryProperty {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a asset category property model instance should use the {@link AssetCategoryProperty} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a asset category property model instance should use the <code>AssetCategoryProperty</code> interface instead.
 	 */
 	@Override
 	public void persist() {
 		if (this.isNew()) {
-			AssetCategoryPropertyLocalServiceUtil.addAssetCategoryProperty(this);
+			AssetCategoryPropertyLocalServiceUtil.addAssetCategoryProperty(
+				this);
 		}
 		else {
-			AssetCategoryPropertyLocalServiceUtil.updateAssetCategoryProperty(this);
+			AssetCategoryPropertyLocalServiceUtil.updateAssetCategoryProperty(
+				this);
 		}
 	}
+
 }

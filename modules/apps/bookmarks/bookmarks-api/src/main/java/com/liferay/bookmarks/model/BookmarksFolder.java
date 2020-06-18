@@ -14,32 +14,33 @@
 
 package com.liferay.bookmarks.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.TreeModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the BookmarksFolder service. Represents a row in the &quot;BookmarksFolder&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see BookmarksFolderModel
- * @see com.liferay.bookmarks.model.impl.BookmarksFolderImpl
- * @see com.liferay.bookmarks.model.impl.BookmarksFolderModelImpl
  * @generated
  */
 @ImplementationClassName("com.liferay.bookmarks.model.impl.BookmarksFolderImpl")
 @ProviderType
-public interface BookmarksFolder extends BookmarksFolderModel, PersistedModel,
-	TreeModel {
+public interface BookmarksFolder
+	extends BookmarksFolderModel, PersistedModel, TreeModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.bookmarks.model.impl.BookmarksFolderImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.bookmarks.model.impl.BookmarksFolderImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<BookmarksFolder, Long> FOLDER_ID_ACCESSOR = new Accessor<BookmarksFolder, Long>() {
+	public static final Accessor<BookmarksFolder, Long> FOLDER_ID_ACCESSOR =
+		new Accessor<BookmarksFolder, Long>() {
+
 			@Override
 			public Long get(BookmarksFolder bookmarksFolder) {
 				return bookmarksFolder.getFolderId();
@@ -54,6 +55,7 @@ public interface BookmarksFolder extends BookmarksFolderModel, PersistedModel,
 			public Class<BookmarksFolder> getTypeClass() {
 				return BookmarksFolder.class;
 			}
+
 		};
 
 	public java.util.List<Long> getAncestorFolderIds()
@@ -66,4 +68,5 @@ public interface BookmarksFolder extends BookmarksFolderModel, PersistedModel,
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public boolean isRoot();
+
 }

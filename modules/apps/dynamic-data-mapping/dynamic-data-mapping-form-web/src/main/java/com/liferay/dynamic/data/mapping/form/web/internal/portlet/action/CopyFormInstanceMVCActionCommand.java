@@ -30,8 +30,7 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
 import java.util.Locale;
@@ -107,10 +106,9 @@ public class CopyFormInstanceMVCActionCommand
 
 		Map<Locale, String> nameMap = formInstance.getNameMap();
 
-		ResourceBundle resourceBundle = getResourceBundle(defaultLocale);
-
 		String name = LanguageUtil.format(
-			resourceBundle, "copy-of-x", nameMap.get(defaultLocale));
+			getResourceBundle(defaultLocale), "copy-of-x",
+			nameMap.get(defaultLocale));
 
 		nameMap.put(defaultLocale, name);
 
@@ -118,11 +116,7 @@ public class CopyFormInstanceMVCActionCommand
 	}
 
 	protected ResourceBundle getResourceBundle(Locale locale) {
-		ResourceBundleLoader portalResourceBundleLoader =
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
-
-		ResourceBundle portalResourceBundle =
-			portalResourceBundleLoader.loadResourceBundle(locale);
+		ResourceBundle portalResourceBundle = portal.getResourceBundle(locale);
 
 		ResourceBundle moduleResourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
@@ -148,6 +142,9 @@ public class CopyFormInstanceMVCActionCommand
 
 	@Reference
 	protected DDMStructureService ddmStructureService;
+
+	@Reference
+	protected Portal portal;
 
 	@Reference
 	protected SaveFormInstanceMVCCommandHelper saveFormInstanceMVCCommandHelper;

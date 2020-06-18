@@ -17,35 +17,9 @@
 <%@ include file="/init.jsp" %>
 
 <%
-long fragmentEntryId = ParamUtil.getLong(renderRequest, "fragmentEntryId");
+FragmentRendererController fragmentRendererController = (FragmentRendererController)request.getAttribute(FragmentActionKeys.FRAGMENT_RENDERER_CONTROLLER);
 
-FragmentEntry fragmentEntry = FragmentEntryLocalServiceUtil.fetchFragmentEntry(fragmentEntryId);
-
-String css = BeanParamUtil.getString(fragmentEntry, renderRequest, "css");
-String html = BeanParamUtil.getString(fragmentEntry, renderRequest, "html");
-String js = BeanParamUtil.getString(fragmentEntry, renderRequest, "js");
-
-FragmentEntryLink fragmentEntryLink = FragmentEntryLinkLocalServiceUtil.createFragmentEntryLink(0);
-
-fragmentEntryLink.setCss(css);
-fragmentEntryLink.setHtml(html);
-fragmentEntryLink.setJs(js);
-fragmentEntryLink.setFragmentEntryId(fragmentEntryId);
-
-try {
+RenderFragmentEntryDisplayContext renderFragmentEntryDisplayContext = new RenderFragmentEntryDisplayContext(request);
 %>
 
-	<%= FragmentEntryRenderUtil.renderFragmentEntryLink(fragmentEntryLink, FragmentEntryLinkConstants.VIEW, request, response) %>
-
-<%
-}
-catch (FragmentEntryContentException fece) {
-%>
-
-	<div class="alert alert-danger">
-		<liferay-ui:message key="<%= fece.getMessage() %>" />
-	</div>
-
-<%
-}
-%>
+<%= fragmentRendererController.render(renderFragmentEntryDisplayContext.getDefaultFragmentRendererContext(), request, response) %>

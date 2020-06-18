@@ -14,14 +14,11 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.LayoutSetBranch;
 import com.liferay.portal.kernel.model.MVCCModel;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing LayoutSetBranch in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see LayoutSetBranch
  * @generated
  */
-@ProviderType
-public class LayoutSetBranchCacheModel implements CacheModel<LayoutSetBranch>,
-	Externalizable, MVCCModel {
+public class LayoutSetBranchCacheModel
+	implements CacheModel<LayoutSetBranch>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,10 +46,13 @@ public class LayoutSetBranchCacheModel implements CacheModel<LayoutSetBranch>,
 			return false;
 		}
 
-		LayoutSetBranchCacheModel layoutSetBranchCacheModel = (LayoutSetBranchCacheModel)obj;
+		LayoutSetBranchCacheModel layoutSetBranchCacheModel =
+			(LayoutSetBranchCacheModel)obj;
 
-		if ((layoutSetBranchId == layoutSetBranchCacheModel.layoutSetBranchId) &&
-				(mvccVersion == layoutSetBranchCacheModel.mvccVersion)) {
+		if ((layoutSetBranchId ==
+				layoutSetBranchCacheModel.layoutSetBranchId) &&
+			(mvccVersion == layoutSetBranchCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -206,10 +205,12 @@ public class LayoutSetBranchCacheModel implements CacheModel<LayoutSetBranch>,
 			layoutSetBranchImpl.setLayoutSetPrototypeUuid("");
 		}
 		else {
-			layoutSetBranchImpl.setLayoutSetPrototypeUuid(layoutSetPrototypeUuid);
+			layoutSetBranchImpl.setLayoutSetPrototypeUuid(
+				layoutSetPrototypeUuid);
 		}
 
-		layoutSetBranchImpl.setLayoutSetPrototypeLinkEnabled(layoutSetPrototypeLinkEnabled);
+		layoutSetBranchImpl.setLayoutSetPrototypeLinkEnabled(
+			layoutSetPrototypeLinkEnabled);
 
 		layoutSetBranchImpl.resetOriginalValues();
 
@@ -217,7 +218,9 @@ public class LayoutSetBranchCacheModel implements CacheModel<LayoutSetBranch>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		mvccVersion = objectInput.readLong();
 
 		layoutSetBranchId = objectInput.readLong();
@@ -240,16 +243,15 @@ public class LayoutSetBranchCacheModel implements CacheModel<LayoutSetBranch>,
 		logoId = objectInput.readLong();
 		themeId = objectInput.readUTF();
 		colorSchemeId = objectInput.readUTF();
-		css = objectInput.readUTF();
-		settings = objectInput.readUTF();
+		css = (String)objectInput.readObject();
+		settings = (String)objectInput.readObject();
 		layoutSetPrototypeUuid = objectInput.readUTF();
 
 		layoutSetPrototypeLinkEnabled = objectInput.readBoolean();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
 		objectOutput.writeLong(layoutSetBranchId);
@@ -305,17 +307,17 @@ public class LayoutSetBranchCacheModel implements CacheModel<LayoutSetBranch>,
 		}
 
 		if (css == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(css);
+			objectOutput.writeObject(css);
 		}
 
 		if (settings == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(settings);
+			objectOutput.writeObject(settings);
 		}
 
 		if (layoutSetPrototypeUuid == null) {
@@ -347,4 +349,5 @@ public class LayoutSetBranchCacheModel implements CacheModel<LayoutSetBranch>,
 	public String settings;
 	public String layoutSetPrototypeUuid;
 	public boolean layoutSetPrototypeLinkEnabled;
+
 }

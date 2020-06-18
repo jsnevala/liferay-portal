@@ -41,8 +41,9 @@ public class DefaultNoticeableFutureTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Future listener is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Future listener is null", nullPointerException.getMessage());
 		}
 
 		try {
@@ -50,8 +51,9 @@ public class DefaultNoticeableFutureTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Future listener is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Future listener is null", nullPointerException.getMessage());
 		}
 
 		Object futureListeners = ReflectionTestUtil.getFieldValue(
@@ -73,8 +75,7 @@ public class DefaultNoticeableFutureTest {
 		Assert.assertTrue(
 			_defaultNoticeableFuture.addFutureListener(testFutureListener2));
 		Assert.assertEquals(
-			testFutureListener1.hashCode() +
-				testFutureListener2.hashCode(),
+			testFutureListener1.hashCode() + testFutureListener2.hashCode(),
 			futureListeners.hashCode());
 
 		Assert.assertFalse(
@@ -111,8 +112,8 @@ public class DefaultNoticeableFutureTest {
 
 			Assert.fail();
 		}
-		catch (ExecutionException ee) {
-			Assert.assertSame(exception, ee.getCause());
+		catch (ExecutionException executionException) {
+			Assert.assertSame(exception, executionException.getCause());
 		}
 
 		TestFutureListener<Object> testFutureListener2 =

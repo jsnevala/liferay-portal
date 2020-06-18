@@ -14,6 +14,7 @@
 
 package com.liferay.portal.odata.entity;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Locale;
@@ -26,46 +27,6 @@ import java.util.function.Function;
  * @review
  */
 public class EntityField {
-
-	/**
-	 * Creates a new {@code EntityField} with a {@code Function} to convert the
-	 * entity field's name to a filterable/sortable field name for a locale.
-	 *
-	 * @param  name the entity field's name
-	 * @param  type the type
-	 * @param  filterableAndSortableFieldNameFunction the {@code Function}
-	 * @review
-	 */
-	public EntityField(
-		String name, Type type,
-		Function<Locale, String> filterableAndSortableFieldNameFunction) {
-
-		this(
-			name, type, filterableAndSortableFieldNameFunction,
-			filterableAndSortableFieldNameFunction);
-	}
-
-	/**
-	 * Creates a new {@code EntityField} with a {@code Function} to convert the
-	 * entity field's name to a filterable/sortable field name for a locale.
-	 *
-	 * @param  name the entity field's name
-	 * @param  type the type
-	 * @param  sortableFieldNameFunction the sortable field name {@code
-	 *         Function}
-	 * @param  filterableFieldNameFunction the filterable field name {@code
-	 *         Function}
-	 * @review
-	 */
-	public EntityField(
-		String name, Type type,
-		Function<Locale, String> sortableFieldNameFunction,
-		Function<Locale, String> filterableFieldNameFunction) {
-
-		this(
-			name, type, sortableFieldNameFunction, filterableFieldNameFunction,
-			fieldValue -> String.valueOf(fieldValue));
-	}
 
 	/**
 	 * Creates a new {@code EntityField} with separate functions for converting
@@ -113,7 +74,7 @@ public class EntityField {
 
 		_name = name;
 		_type = type;
-		_sortableNameFunction = sortableFieldNameFunction;
+		_sortableFieldNameFunction = sortableFieldNameFunction;
 		_filterableFieldNameFunction = filterableFieldNameFunction;
 		_filterableFieldValueFunction = filterableFieldValueFunction;
 	}
@@ -158,7 +119,7 @@ public class EntityField {
 	 * @review
 	 */
 	public String getSortableName(Locale locale) {
-		return _sortableNameFunction.apply(locale);
+		return _sortableFieldNameFunction.apply(locale);
 	}
 
 	/**
@@ -171,16 +132,23 @@ public class EntityField {
 		return _type;
 	}
 
+	@Override
+	public String toString() {
+		return StringBundler.concat(
+			"{name:", _name, ", type:", _type.name(), "}");
+	}
+
 	public enum Type {
 
-		DATE, ID, STRING
+		BOOLEAN, COLLECTION, COMPLEX, DATE, DATE_TIME, DOUBLE, ID, INTEGER,
+		STRING
 
 	}
 
 	private final Function<Locale, String> _filterableFieldNameFunction;
 	private final Function<Object, String> _filterableFieldValueFunction;
 	private final String _name;
-	private final Function<Locale, String> _sortableNameFunction;
+	private final Function<Locale, String> _sortableFieldNameFunction;
 	private final Type _type;
 
 }

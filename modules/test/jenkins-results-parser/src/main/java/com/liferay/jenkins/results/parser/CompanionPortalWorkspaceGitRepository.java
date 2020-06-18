@@ -40,9 +40,25 @@ public class CompanionPortalWorkspaceGitRepository
 			_parentWorkspaceGitRepository.getUpstreamBranchName();
 
 		if (parentUpstreamBranchName.contains("-private")) {
-			AntUtil.callTarget(
-				_parentWorkspaceGitRepository.getDirectory(),
-				"build-working-dir.xml", "prepare-working-dir");
+			try {
+				JenkinsResultsParserUtil.write(
+					new File(
+						_parentWorkspaceGitRepository.getDirectory(),
+						"git-commit-portal"),
+					getBranchSHA());
+			}
+			catch (IOException ioException) {
+				throw new RuntimeException(ioException);
+			}
+
+			try {
+				AntUtil.callTarget(
+					_parentWorkspaceGitRepository.getDirectory(),
+					"build-working-dir.xml", "prepare-working-dir");
+			}
+			catch (AntException antException) {
+				throw new RuntimeException(antException);
+			}
 
 			return;
 		}
@@ -60,8 +76,8 @@ public class CompanionPortalWorkspaceGitRepository
 			JenkinsResultsParserUtil.copy(
 				modulesPrivateDir, parentModulesPrivateDir);
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 

@@ -24,6 +24,7 @@ import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.ios.IOSDriver;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -54,15 +55,15 @@ import org.openqa.selenium.safari.SafariDriver;
 public class WebDriverUtil extends PropsValues {
 
 	public static WebDriver getWebDriver() {
-		return _instance._getWebDriver();
+		return _webDriverUtil._getWebDriver();
 	}
 
 	public static void startWebDriver() {
-		_instance._startWebDriver();
+		_webDriverUtil._startWebDriver();
 	}
 
 	public static void stopWebDriver() {
-		_instance._stopWebDriver();
+		_webDriverUtil._stopWebDriver();
 	}
 
 	private WebDriver _getAndroidDriver() {
@@ -80,7 +81,7 @@ public class WebDriverUtil extends PropsValues {
 		try {
 			url = new URL("http://0.0.0.0:4723/wd/hub/");
 		}
-		catch (MalformedURLException murle) {
+		catch (MalformedURLException malformedURLException) {
 		}
 
 		return new AndroidDriver(url, desiredCapabilities);
@@ -102,7 +103,7 @@ public class WebDriverUtil extends PropsValues {
 		try {
 			url = new URL("http://0.0.0.0:4723/wd/hub/");
 		}
-		catch (MalformedURLException murle) {
+		catch (MalformedURLException malformedURLException) {
 		}
 
 		return new AndroidDriver(url, desiredCapabilities);
@@ -119,6 +120,16 @@ public class WebDriverUtil extends PropsValues {
 
 		String outputDirName = PropsValues.OUTPUT_DIR_NAME;
 
+		try {
+			File file = new File(outputDirName);
+
+			outputDirName = file.getCanonicalPath();
+		}
+		catch (IOException ioException) {
+			System.out.println(
+				"Unable to get canonical path for " + outputDirName);
+		}
+
 		if (OSDetector.isWindows()) {
 			outputDirName = StringUtil.replace(
 				outputDirName, StringPool.FORWARD_SLASH, StringPool.BACK_SLASH);
@@ -128,13 +139,30 @@ public class WebDriverUtil extends PropsValues {
 
 		preferences.put("download.prompt_for_download", false);
 
-		chromeOptions.setCapability("chrome.prefs", preferences);
+		preferences.put("profile.default_content_settings.popups", 0);
+
+		chromeOptions.setExperimentalOption("prefs", preferences);
 
 		if (Validator.isNotNull(PropsValues.BROWSER_CHROME_BIN_ARGS)) {
-			chromeOptions.addArguments(PropsValues.BROWSER_CHROME_BIN_ARGS);
+			chromeOptions.addArguments(
+				PropsValues.BROWSER_CHROME_BIN_ARGS.split("\\s+"));
+		}
+
+		if (Validator.isNotNull(PropsValues.BROWSER_CHROME_BIN_FILE)) {
+			chromeOptions.setBinary(PropsValues.BROWSER_CHROME_BIN_FILE);
 		}
 
 		return new ChromeDriver(chromeOptions);
+	}
+
+	private InternetExplorerOptions _getDefaultInternetExplorerOptions() {
+		InternetExplorerOptions internetExplorerOptions =
+			new InternetExplorerOptions();
+
+		internetExplorerOptions.destructivelyEnsureCleanSession();
+		internetExplorerOptions.introduceFlakinessByIgnoringSecurityDomains();
+
+		return internetExplorerOptions;
 	}
 
 	private WebDriver _getEdgeDriver() {
@@ -152,7 +180,7 @@ public class WebDriverUtil extends PropsValues {
 			url = new URL(
 				PropsValues.SELENIUM_REMOTE_DRIVER_HUB + ":4444/wd/hub");
 		}
-		catch (MalformedURLException murle) {
+		catch (MalformedURLException malformedURLException) {
 		}
 
 		return new RemoteWebDriver(url, edgeOptions);
@@ -206,7 +234,7 @@ public class WebDriverUtil extends PropsValues {
 
 			firefoxOptions.setProfile(firefoxProfile);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			System.out.println(
 				"Unable to add the jserrorcollector.xpi extension to the " +
 					"Firefox profile.");
@@ -216,25 +244,13 @@ public class WebDriverUtil extends PropsValues {
 	}
 
 	private WebDriver _getInternetExplorerDriver() {
-		InternetExplorerOptions internetExplorerOptions =
-			new InternetExplorerOptions();
-
-		internetExplorerOptions.setCapability(
-			InternetExplorerDriver.
-				INTRODUCE_FLAKINESS_BY_IGNORING_SECURITY_DOMAINS,
-			true);
-
-		return new InternetExplorerDriver(internetExplorerOptions);
+		return new InternetExplorerDriver(_getDefaultInternetExplorerOptions());
 	}
 
 	private WebDriver _getInternetExplorerRemoteDriver() {
 		InternetExplorerOptions internetExplorerOptions =
-			new InternetExplorerOptions();
+			_getDefaultInternetExplorerOptions();
 
-		internetExplorerOptions.setCapability(
-			InternetExplorerDriver.
-				INTRODUCE_FLAKINESS_BY_IGNORING_SECURITY_DOMAINS,
-			true);
 		internetExplorerOptions.setCapability(
 			"platform", PropsValues.SELENIUM_DESIRED_CAPABILITIES_PLATFORM);
 		internetExplorerOptions.setCapability(
@@ -246,7 +262,7 @@ public class WebDriverUtil extends PropsValues {
 			url = new URL(
 				PropsValues.SELENIUM_REMOTE_DRIVER_HUB + ":4444/wd/hub");
 		}
-		catch (MalformedURLException murle) {
+		catch (MalformedURLException malformedURLException) {
 		}
 
 		return new RemoteWebDriver(url, internetExplorerOptions);
@@ -268,7 +284,7 @@ public class WebDriverUtil extends PropsValues {
 		try {
 			url = new URL("http://0.0.0.0:4723/wd/hub/");
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return new IOSDriver(url, desiredCapabilities);
@@ -342,7 +358,7 @@ public class WebDriverUtil extends PropsValues {
 		_webDriver = null;
 	}
 
-	private static final WebDriverUtil _instance = new WebDriverUtil();
+	private static final WebDriverUtil _webDriverUtil = new WebDriverUtil();
 
 	private WebDriver _webDriver;
 

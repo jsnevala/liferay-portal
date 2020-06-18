@@ -28,6 +28,7 @@ import com.liferay.exportimport.kernel.service.ExportImportLocalServiceUtil;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
@@ -40,18 +41,17 @@ import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.test.log.CaptureAppender;
 import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.test.LayoutTestUtil;
 
 import java.io.File;
 import java.io.Serializable;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.apache.log4j.Level;
@@ -98,7 +98,7 @@ public class ExportImportLifecycleEventTest {
 			ExportImportConfigurationSettingsMapFactoryUtil.
 				buildExportLayoutSettingsMap(
 					TestPropsValues.getUserId(), 0, false, new long[0],
-					_parameterMap, Locale.US, TimeZoneUtil.GMT);
+					_parameterMap, LocaleUtil.US, TimeZoneUtil.GMT);
 
 		ExportImportConfiguration exportImportConfiguration =
 			ExportImportConfigurationLocalServiceUtil.
@@ -113,15 +113,16 @@ public class ExportImportLifecycleEventTest {
 
 			Assert.fail();
 		}
-		catch (NoSuchGroupException nsge) {
+		catch (NoSuchGroupException noSuchGroupException) {
 			Assert.assertEquals(
-				"No Group exists with the primary key 0", nsge.getMessage());
+				"No Group exists with the primary key 0",
+				noSuchGroupException.getMessage());
 		}
-		catch (NoSuchLayoutSetException nslse) {
+		catch (NoSuchLayoutSetException noSuchLayoutSetException) {
 			Assert.assertEquals(
 				"No LayoutSet exists with the key {groupId=0, " +
 					"privateLayout=false}",
-				nslse.getMessage());
+				noSuchLayoutSetException.getMessage());
 		}
 
 		Assert.assertTrue(
@@ -135,7 +136,7 @@ public class ExportImportLifecycleEventTest {
 			ExportImportConfigurationSettingsMapFactoryUtil.
 				buildImportLayoutSettingsMap(
 					TestPropsValues.getUserId(), 0, false, new long[0],
-					_parameterMap, Locale.US, TimeZoneUtil.GMT);
+					_parameterMap, LocaleUtil.US, TimeZoneUtil.GMT);
 
 		ExportImportConfiguration exportImportConfiguration =
 			ExportImportConfigurationLocalServiceUtil.
@@ -150,9 +151,10 @@ public class ExportImportLifecycleEventTest {
 
 			Assert.fail();
 		}
-		catch (NoSuchGroupException nsge) {
+		catch (NoSuchGroupException noSuchGroupException) {
 			Assert.assertEquals(
-				"No Group exists with the primary key 0", nsge.getMessage());
+				"No Group exists with the primary key 0",
+				noSuchGroupException.getMessage());
 		}
 
 		Assert.assertTrue(
@@ -204,7 +206,7 @@ public class ExportImportLifecycleEventTest {
 			ExportImportConfigurationSettingsMapFactoryUtil.
 				buildExportPortletSettingsMap(
 					TestPropsValues.getUserId(), plid, _group.getGroupId(),
-					StringPool.BLANK, _parameterMap, Locale.US,
+					StringPool.BLANK, _parameterMap, LocaleUtil.US,
 					TimeZoneUtil.GMT, StringPool.BLANK);
 
 		ExportImportConfiguration exportImportConfiguration =
@@ -220,10 +222,10 @@ public class ExportImportLifecycleEventTest {
 
 			Assert.fail();
 		}
-		catch (NoSuchLayoutException nsle) {
+		catch (NoSuchLayoutException noSuchLayoutException) {
 			Assert.assertEquals(
 				"No Layout exists with the primary key " + plid,
-				nsle.getMessage());
+				noSuchLayoutException.getMessage());
 		}
 
 		Assert.assertTrue(
@@ -237,7 +239,7 @@ public class ExportImportLifecycleEventTest {
 			ExportImportConfigurationSettingsMapFactoryUtil.
 				buildImportPortletSettingsMap(
 					TestPropsValues.getUserId(), 0, _group.getGroupId(),
-					StringPool.BLANK, _parameterMap, Locale.US,
+					StringPool.BLANK, _parameterMap, LocaleUtil.US,
 					TimeZoneUtil.GMT);
 
 		ExportImportConfiguration exportImportConfiguration =
@@ -253,9 +255,10 @@ public class ExportImportLifecycleEventTest {
 
 			Assert.fail();
 		}
-		catch (NoSuchLayoutException nsle) {
+		catch (NoSuchLayoutException noSuchLayoutException) {
 			Assert.assertEquals(
-				"No Layout exists with the primary key 0", nsle.getMessage());
+				"No Layout exists with the primary key 0",
+				noSuchLayoutException.getMessage());
 		}
 
 		Assert.assertTrue(

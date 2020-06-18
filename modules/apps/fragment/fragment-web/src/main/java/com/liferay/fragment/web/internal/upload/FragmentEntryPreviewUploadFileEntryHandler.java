@@ -59,8 +59,8 @@ public class FragmentEntryPreviewUploadFileEntryHandler
 		String contentType = uploadPortletRequest.getContentType(
 			_PARAMETER_NAME);
 
-		try (InputStream inputStream =
-				uploadPortletRequest.getFileAsStream(_PARAMETER_NAME)) {
+		try (InputStream inputStream = uploadPortletRequest.getFileAsStream(
+				_PARAMETER_NAME)) {
 
 			String uniqueFileName = _uniqueFileNameProvider.provide(
 				fileName, curFileName -> _exists(themeDisplay, curFileName));
@@ -73,18 +73,19 @@ public class FragmentEntryPreviewUploadFileEntryHandler
 
 	private boolean _exists(ThemeDisplay themeDisplay, String curFileName) {
 		try {
-			if (TempFileEntryUtil.getTempFileEntry(
-					themeDisplay.getScopeGroupId(), themeDisplay.getUserId(),
-					_TEMP_FOLDER_NAME, curFileName) != null) {
+			FileEntry tempFileEntry = TempFileEntryUtil.getTempFileEntry(
+				themeDisplay.getScopeGroupId(), themeDisplay.getUserId(),
+				_TEMP_FOLDER_NAME, curFileName);
 
+			if (tempFileEntry != null) {
 				return true;
 			}
 
 			return false;
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			return false;

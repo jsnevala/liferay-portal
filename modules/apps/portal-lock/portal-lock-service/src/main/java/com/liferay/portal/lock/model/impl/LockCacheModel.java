@@ -14,13 +14,10 @@
 
 package com.liferay.portal.lock.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.lock.model.Lock;
 
 import java.io.Externalizable;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing Lock in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see Lock
  * @generated
  */
-@ProviderType
-public class LockCacheModel implements CacheModel<Lock>, Externalizable,
-	MVCCModel {
+public class LockCacheModel
+	implements CacheModel<Lock>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -53,7 +49,8 @@ public class LockCacheModel implements CacheModel<Lock>, Externalizable,
 		LockCacheModel lockCacheModel = (LockCacheModel)obj;
 
 		if ((lockId == lockCacheModel.lockId) &&
-				(mvccVersion == lockCacheModel.mvccVersion)) {
+			(mvccVersion == lockCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -197,8 +194,7 @@ public class LockCacheModel implements CacheModel<Lock>, Externalizable,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
 		if (uuid == null) {
@@ -260,4 +256,5 @@ public class LockCacheModel implements CacheModel<Lock>, Externalizable,
 	public String owner;
 	public boolean inheritable;
 	public long expirationDate;
+
 }

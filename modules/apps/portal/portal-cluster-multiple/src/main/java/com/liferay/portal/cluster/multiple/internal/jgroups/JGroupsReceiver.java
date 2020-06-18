@@ -75,9 +75,11 @@ public class JGroupsReceiver extends ReceiverAdapter {
 					rawBuffer, message.getOffset(), message.getLength()),
 				new AddressImpl(message.getSrc()));
 		}
-		catch (ClassNotFoundException cnfe) {
+		catch (ClassNotFoundException classNotFoundException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to deserialize message payload", cnfe);
+				_log.warn(
+					"Unable to deserialize message payload",
+					classNotFoundException);
 			}
 		}
 		finally {
@@ -106,8 +108,9 @@ public class JGroupsReceiver extends ReceiverAdapter {
 			addresses.add(address);
 		}
 
-		_clusterReceiver.addressesUpdated(addresses);
 		_clusterReceiver.coordinatorAddressUpdated(coordinatorAddress);
+
+		_clusterReceiver.addressesUpdated(addresses);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

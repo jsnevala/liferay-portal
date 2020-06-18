@@ -31,8 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @author Shuyang Zhou
  */
-class LocalProcessChannel<T extends Serializable>
-	implements ProcessChannel<T> {
+class LocalProcessChannel<T extends Serializable> implements ProcessChannel<T> {
 
 	LocalProcessChannel(
 		NoticeableFuture<T> noticeableFuture,
@@ -51,7 +50,7 @@ class LocalProcessChannel<T extends Serializable>
 					try {
 						_objectOutputStream.close();
 					}
-					catch (IOException ioe) {
+					catch (IOException ioException) {
 					}
 					finally {
 						Map<Long, NoticeableFuture<Serializable>> map =
@@ -89,8 +88,8 @@ class LocalProcessChannel<T extends Serializable>
 				_objectOutputStream.flush();
 			}
 		}
-		catch (IOException ioe) {
-			_asyncBroker.takeWithException(id, ioe);
+		catch (IOException ioException) {
+			_asyncBroker.takeWithException(id, ioException);
 		}
 
 		return (NoticeableFuture<V>)noticeableFuture;

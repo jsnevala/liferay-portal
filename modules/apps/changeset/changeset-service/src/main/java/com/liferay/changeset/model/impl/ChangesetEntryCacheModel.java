@@ -14,14 +14,10 @@
 
 package com.liferay.changeset.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.changeset.model.ChangesetEntry;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +30,11 @@ import java.util.Date;
  * The cache model class for representing ChangesetEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see ChangesetEntry
  * @generated
  */
-@ProviderType
-public class ChangesetEntryCacheModel implements CacheModel<ChangesetEntry>,
-	Externalizable {
+public class ChangesetEntryCacheModel
+	implements CacheModel<ChangesetEntry>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,7 +45,8 @@ public class ChangesetEntryCacheModel implements CacheModel<ChangesetEntry>,
 			return false;
 		}
 
-		ChangesetEntryCacheModel changesetEntryCacheModel = (ChangesetEntryCacheModel)obj;
+		ChangesetEntryCacheModel changesetEntryCacheModel =
+			(ChangesetEntryCacheModel)obj;
 
 		if (changesetEntryId == changesetEntryCacheModel.changesetEntryId) {
 			return true;
@@ -153,8 +149,7 @@ public class ChangesetEntryCacheModel implements CacheModel<ChangesetEntry>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(changesetEntryId);
 
 		objectOutput.writeLong(groupId);
@@ -190,4 +185,5 @@ public class ChangesetEntryCacheModel implements CacheModel<ChangesetEntry>,
 	public long changesetCollectionId;
 	public long classNameId;
 	public long classPK;
+
 }

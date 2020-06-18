@@ -14,16 +14,18 @@
 
 package com.liferay.portal.upgrade.v7_0_0;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DB;
+import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.dao.orm.WildcardMode;
 import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.sql.PreparedStatement;
@@ -49,9 +51,6 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 				"ResourceAction", "name", getClassNames(),
 				WildcardMode.SURROUND);
 			upgradeTable(
-				"ResourceBlock", "name", getClassNames(),
-				WildcardMode.SURROUND);
-			upgradeTable(
 				"ResourcePermission", "name", getClassNames(),
 				WildcardMode.SURROUND);
 			upgradeLongTextTable(
@@ -64,17 +63,26 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 				"ResourceAction", "name", getResourceNames(),
 				WildcardMode.LEADING);
 			upgradeTable(
-				"ResourceBlock", "name", getResourceNames(),
-				WildcardMode.LEADING);
-			upgradeTable(
 				"ResourcePermission", "name", getResourceNames(),
 				WildcardMode.LEADING);
 			upgradeLongTextTable(
 				"UserNotificationEvent", "payload", "userNotificationEventId",
 				getResourceNames(), WildcardMode.LEADING);
+
+			DBInspector dbInspector = new DBInspector(connection);
+
+			if (dbInspector.hasTable("ResourceBlock")) {
+				upgradeTable(
+					"ResourceBlock", "name", getClassNames(),
+					WildcardMode.SURROUND);
+
+				upgradeTable(
+					"ResourceBlock", "name", getResourceNames(),
+					WildcardMode.LEADING);
+			}
 		}
-		catch (Exception e) {
-			throw new UpgradeException(e);
+		catch (Exception exception) {
+			throw new UpgradeException(exception);
 		}
 	}
 
@@ -111,21 +119,6 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 		}
 	}
 
-	/**
-	* @deprecated As of Judson (7.1.x), replaced by {@link
-	* #upgradeLongTextTable(String, String, String, String, String[])}
-	*/
-	@Deprecated
-	protected void upgradeLongTextTable(
-			String columnName, String selectSQL, String updateSQL,
-			String[] name)
-		throws SQLException {
-
-		throw new UnsupportedOperationException(
-			"This method is deprecated and replaced by upgradeLongTextTable(" +
-				"String, String, String, String, String[])");
-	}
-
 	protected void upgradeLongTextTable(
 			String tableName, String columnName, String primaryKeyColumnName,
 			String[][] names, WildcardMode wildcardMode)
@@ -139,8 +132,8 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 			return;
 		}
 
-		try (LoggingTimer loggingTimer =
-				new LoggingTimer(getClass(), tableName)) {
+		try (LoggingTimer loggingTimer = new LoggingTimer(
+				getClass(), tableName)) {
 
 			StringBundler updateSB = new StringBundler(7);
 
@@ -175,25 +168,14 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 			for (String[] name : names) {
 				upgradeLongTextTable(
 					columnName, primaryKeyColumnName,
-					selectPrefix.concat(name[0]).concat(selectPostfix),
+					selectPrefix.concat(
+						name[0]
+					).concat(
+						selectPostfix
+					),
 					updateSQL, name);
 			}
 		}
-	}
-
-	/**
-	* @deprecated As of Judson (7.1.x), replaced by {@link
-	* #upgradeLongTextTable(String, String, String, String[][], WildcardMode)}
-	*/
-	@Deprecated
-	protected void upgradeLongTextTable(
-			String tableName, String columnName, String[][] names,
-			WildcardMode wildcardMode)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method is deprecated and replaced by upgradeLongTextTable(" +
-				"String, String, String, String[][], WildcardMode)");
 	}
 
 	protected void upgradeTable(
@@ -209,8 +191,8 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 			WildcardMode wildcardMode, boolean preventDuplicates)
 		throws Exception {
 
-		try (LoggingTimer loggingTimer =
-				new LoggingTimer(getClass(), tableName)) {
+		try (LoggingTimer loggingTimer = new LoggingTimer(
+				getClass(), tableName)) {
 
 			if (preventDuplicates) {
 				_executeDelete(tableName, columnName, names, wildcardMode);
@@ -226,9 +208,17 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 		throws Exception {
 
 		for (String[] name : names) {
-			runSQL(
-				"delete from " + tableName +
-					_getWhereClause(columnName, name[1], wildcardMode));
+			StringBundler sb = new StringBundler(4);
+
+			sb.append("delete from ");
+			sb.append(tableName);
+			sb.append(_getWhereClause(columnName, name[1], wildcardMode));
+			sb.append(
+				_getNotLikeClause(
+					columnName, (String)ArrayUtil.getValue(name, 2),
+					wildcardMode));
+
+			runSQL(sb.toString());
 		}
 	}
 
@@ -267,6 +257,27 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 
 			sb2.setIndex(0);
 		}
+	}
+
+	private String _getNotLikeClause(
+		String columnName, String value, WildcardMode wildcardMode) {
+
+		if (value == null) {
+			return StringPool.BLANK;
+		}
+
+		StringBundler sb = new StringBundler(8);
+
+		sb.append(" and ");
+		sb.append(columnName);
+		sb.append(" not like ");
+		sb.append(StringPool.APOSTROPHE);
+		sb.append(wildcardMode.getLeadingWildcard());
+		sb.append(value);
+		sb.append(wildcardMode.getTrailingWildcard());
+		sb.append(StringPool.APOSTROPHE);
+
+		return sb.toString();
 	}
 
 	private String _getWhereClause(
@@ -309,23 +320,14 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 			"com.liferay.portal.model.BackgroundTask",
 			"com.liferay.portal.background.task.model.BackgroundTask"
 		},
-		{
-			"com.liferay.portal.model.Lock",
-			"com.liferay.portal.lock.model.Lock"
-		},
+		{"com.liferay.portal.model.Lock", "com.liferay.portal.lock.model.Lock"},
 		{"com.liferay.portal.model.", "com.liferay.portal.kernel.model."},
 		{
 			"com.liferay.portlet.announcements.model.",
 			"com.liferay.announcements.kernel.model."
 		},
-		{
-			"com.liferay.portlet.asset.model.",
-			"com.liferay.asset.kernel.model."
-		},
-		{
-			"com.liferay.portlet.blogs.model.",
-			"com.liferay.blogs.kernel.model."
-		},
+		{"com.liferay.portlet.asset.model.", "com.liferay.asset.kernel.model."},
+		{"com.liferay.portlet.blogs.model.", "com.liferay.blogs.kernel.model."},
 		{
 			"com.liferay.portlet.documentlibrary.model.",
 			"com.liferay.document.library.kernel.model."
@@ -354,10 +356,7 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 			"com.liferay.portlet.social.model.",
 			"com.liferay.social.kernel.model."
 		},
-		{
-			"com.liferay.portlet.trash.model.",
-			"com.liferay.trash.kernel.model."
-		},
+		{"com.liferay.portlet.trash.model.", "com.liferay.trash.kernel.model."},
 		{
 			"com.liferay.socialnetworking.model.",
 			"com.liferay.social.networking.model."
@@ -367,10 +366,7 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 	private static final String[][] _RESOURCE_NAMES = {
 		{"com.liferay.portlet.asset", "com.liferay.asset"},
 		{"com.liferay.portlet.blogs", "com.liferay.blogs"},
-		{
-			"com.liferay.portlet.documentlibrary",
-			"com.liferay.document.library"
-		},
+		{"com.liferay.portlet.documentlibrary", "com.liferay.document.library"},
 		{"com.liferay.portlet.messageboards", "com.liferay.message.boards"}
 	};
 

@@ -14,16 +14,16 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.source.formatter.checks.util.GradleSourceUtil;
 
 import java.io.IOException;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 
 /**
  * @author Peter Shin
+ * @author Hugo Huijser
  */
 public class GradleDependencyVersionCheck extends BaseFileCheck {
 
@@ -54,15 +55,19 @@ public class GradleDependencyVersionCheck extends BaseFileCheck {
 		String moduleName = absolutePath.substring(y + 1, x);
 
 		if (!moduleName.contains("test")) {
-			for (String dependencies : _getDependenciesBlocks(content)) {
-				content = _formatDependencies(content, dependencies);
+			for (String dependencies :
+					GradleSourceUtil.getDependenciesBlocks(content)) {
+
+				content = _formatDependencies(
+					absolutePath, content, dependencies);
 			}
 		}
 
 		return content;
 	}
 
-	private String _formatDependencies(String content, String dependencies)
+	private String _formatDependencies(
+			String absolutePath, String content, String dependencies)
 		throws IOException {
 
 		int x = dependencies.indexOf("\n");
@@ -89,10 +94,11 @@ public class GradleDependencyVersionCheck extends BaseFileCheck {
 				String dependencyVersion = _getDependencyVersion(line);
 
 				if (dependencyVersion.matches("^[0-9.]+") &&
-					!_isValidVersion(dependencyName, dependencyVersion)) {
+					!_isValidVersion(
+						absolutePath, dependencyName, dependencyVersion)) {
 
 					Map<String, Integer> publishedMajorVersionsMap =
-						_getPublishedMajorVersionsMap();
+						_getPublishedMajorVersionsMap(absolutePath);
 
 					line = StringUtil.replaceFirst(
 						line, dependencyVersion,
@@ -107,39 +113,6 @@ public class GradleDependencyVersionCheck extends BaseFileCheck {
 		return StringUtil.replace(
 			content, StringUtil.trim(dependencies),
 			StringUtil.trim(sb.toString()));
-	}
-
-	private List<String> _getDependenciesBlocks(String content) {
-		List<String> dependenciesBlocks = new ArrayList<>();
-
-		Matcher matcher = _dependenciesPattern.matcher(content);
-
-		while (matcher.find()) {
-			int y = matcher.start();
-
-			while (true) {
-				y = content.indexOf("}", y + 1);
-
-				if (y == -1) {
-					return dependenciesBlocks;
-				}
-
-				String dependencies = content.substring(
-					matcher.start(2), y + 1);
-
-				int level = getLevel(dependencies, "{", "}");
-
-				if (level == 0) {
-					if (!dependencies.contains("}\n")) {
-						dependenciesBlocks.add(dependencies);
-					}
-
-					break;
-				}
-			}
-		}
-
-		return dependenciesBlocks;
 	}
 
 	private String _getDependencyName(String dependency) {
@@ -172,14 +145,15 @@ public class GradleDependencyVersionCheck extends BaseFileCheck {
 		return matcher.group();
 	}
 
-	private synchronized Map<String, Integer> _getPublishedMajorVersionsMap()
+	private synchronized Map<String, Integer> _getPublishedMajorVersionsMap(
+			String absolutePath)
 		throws IOException {
 
 		if (_publishedMajorVersionsMap != null) {
 			return _publishedMajorVersionsMap;
 		}
 
-		String content = getPortalContent(_MODULES_PROPERTIES_FILE_NAME);
+		String content = getModulesPropertiesContent(absolutePath);
 
 		if (Validator.isNull(content)) {
 			_publishedMajorVersionsMap = Collections.emptyMap();
@@ -194,8 +168,15 @@ public class GradleDependencyVersionCheck extends BaseFileCheck {
 		for (String line : lines) {
 			String[] array = StringUtil.split(line, StringPool.EQUAL);
 
-			if (array.length == 2) {
-				bundleVersionsMap.put(array[0], array[1]);
+			if (array.length != 2) {
+				continue;
+			}
+
+			String key = array[0];
+
+			if (key.startsWith("bundle.version[")) {
+				bundleVersionsMap.put(
+					key.substring(15, key.length() - 1), array[1]);
 			}
 		}
 
@@ -226,11 +207,12 @@ public class GradleDependencyVersionCheck extends BaseFileCheck {
 	}
 
 	private boolean _isValidVersion(
-			String dependencyName, String dependencyVersion)
+			String absolutePath, String dependencyName,
+			String dependencyVersion)
 		throws IOException {
 
 		Map<String, Integer> publishedMajorVersionsMap =
-			_getPublishedMajorVersionsMap();
+			_getPublishedMajorVersionsMap(absolutePath);
 
 		Set<String> bundleSymbolicNames = publishedMajorVersionsMap.keySet();
 
@@ -249,11 +231,6 @@ public class GradleDependencyVersionCheck extends BaseFileCheck {
 		return false;
 	}
 
-	private static final String _MODULES_PROPERTIES_FILE_NAME =
-		"modules/modules.properties";
-
-	private static final Pattern _dependenciesPattern = Pattern.compile(
-		"(\n|\\A)(\t*)dependencies \\{\n");
 	private static final Pattern _dependencyNamePattern = Pattern.compile(
 		".*, name: \"([^\"]*)\".*");
 	private static final Pattern _dependencyVersionPattern = Pattern.compile(

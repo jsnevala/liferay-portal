@@ -28,8 +28,10 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.test.util.HitsAssert;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.test.rule.SynchronousMailTestRule;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -48,7 +50,8 @@ public class CalendarBookingIndexerTest extends BaseCalendarIndexerTestCase {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE,
+			SynchronousMailTestRule.INSTANCE);
 
 	@Before
 	@Override
@@ -115,6 +118,9 @@ public class CalendarBookingIndexerTest extends BaseCalendarIndexerTestCase {
 						title, LocaleUtil.US))));
 	}
 
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
 	protected CalendarBooking addCalendarBooking(
 		LocalizedValuesMap titleLocalizedValuesMap) {
 
@@ -125,7 +131,7 @@ public class CalendarBookingIndexerTest extends BaseCalendarIndexerTestCase {
 				new LocalizedValuesMap() {
 					{
 						put(
-							LocaleUtil.getDefault(),
+							LocaleUtil.getSiteDefault(),
 							RandomTestUtil.randomString());
 					}
 				},
@@ -134,8 +140,8 @@ public class CalendarBookingIndexerTest extends BaseCalendarIndexerTestCase {
 			return calendarFixture.addCalendarBooking(
 				titleLocalizedValuesMap, calendar, serviceContext);
 		}
-		catch (PortalException pe) {
-			throw new RuntimeException(pe);
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
 		}
 	}
 

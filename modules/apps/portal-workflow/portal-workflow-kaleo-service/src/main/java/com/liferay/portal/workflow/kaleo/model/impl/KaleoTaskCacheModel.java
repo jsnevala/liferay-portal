@@ -14,12 +14,10 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.workflow.kaleo.model.KaleoTask;
 
 import java.io.Externalizable;
@@ -33,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing KaleoTask in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see KaleoTask
  * @generated
  */
-@ProviderType
-public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
-	Externalizable {
+public class KaleoTaskCacheModel
+	implements CacheModel<KaleoTask>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -51,7 +48,9 @@ public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
 
 		KaleoTaskCacheModel kaleoTaskCacheModel = (KaleoTaskCacheModel)obj;
 
-		if (kaleoTaskId == kaleoTaskCacheModel.kaleoTaskId) {
+		if ((kaleoTaskId == kaleoTaskCacheModel.kaleoTaskId) &&
+			(mvccVersion == kaleoTaskCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -60,14 +59,28 @@ public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, kaleoTaskId);
+		int hashCode = HashUtil.hash(0, kaleoTaskId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(23);
+		StringBundler sb = new StringBundler(27);
 
-		sb.append("{kaleoTaskId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", kaleoTaskId=");
 		sb.append(kaleoTaskId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -81,6 +94,8 @@ public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
+		sb.append(", kaleoDefinitionId=");
+		sb.append(kaleoDefinitionId);
 		sb.append(", kaleoDefinitionVersionId=");
 		sb.append(kaleoDefinitionVersionId);
 		sb.append(", kaleoNodeId=");
@@ -98,6 +113,7 @@ public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
 	public KaleoTask toEntityModel() {
 		KaleoTaskImpl kaleoTaskImpl = new KaleoTaskImpl();
 
+		kaleoTaskImpl.setMvccVersion(mvccVersion);
 		kaleoTaskImpl.setKaleoTaskId(kaleoTaskId);
 		kaleoTaskImpl.setGroupId(groupId);
 		kaleoTaskImpl.setCompanyId(companyId);
@@ -124,6 +140,7 @@ public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
 			kaleoTaskImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
+		kaleoTaskImpl.setKaleoDefinitionId(kaleoDefinitionId);
 		kaleoTaskImpl.setKaleoDefinitionVersionId(kaleoDefinitionVersionId);
 		kaleoTaskImpl.setKaleoNodeId(kaleoNodeId);
 
@@ -148,6 +165,8 @@ public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
+
 		kaleoTaskId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -159,6 +178,8 @@ public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
 
+		kaleoDefinitionId = objectInput.readLong();
+
 		kaleoDefinitionVersionId = objectInput.readLong();
 
 		kaleoNodeId = objectInput.readLong();
@@ -167,8 +188,9 @@ public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		objectOutput.writeLong(kaleoTaskId);
 
 		objectOutput.writeLong(groupId);
@@ -186,6 +208,8 @@ public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
 
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
+
+		objectOutput.writeLong(kaleoDefinitionId);
 
 		objectOutput.writeLong(kaleoDefinitionVersionId);
 
@@ -206,6 +230,7 @@ public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
 		}
 	}
 
+	public long mvccVersion;
 	public long kaleoTaskId;
 	public long groupId;
 	public long companyId;
@@ -213,8 +238,10 @@ public class KaleoTaskCacheModel implements CacheModel<KaleoTask>,
 	public String userName;
 	public long createDate;
 	public long modifiedDate;
+	public long kaleoDefinitionId;
 	public long kaleoDefinitionVersionId;
 	public long kaleoNodeId;
 	public String name;
 	public String description;
+
 }

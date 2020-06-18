@@ -14,6 +14,8 @@
 
 package com.liferay.dynamic.data.mapping.validator.internal;
 
+import com.liferay.dynamic.data.mapping.expression.DDMExpressionFunction;
+import com.liferay.dynamic.data.mapping.expression.DDMExpressionFunctionFactory;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFunctionTracker;
 import com.liferay.dynamic.data.mapping.expression.internal.DDMExpressionFactoryImpl;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
@@ -21,6 +23,7 @@ import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidation;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidationExpression;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
@@ -36,23 +39,23 @@ import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationExcepti
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException.RequiredValue;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
  * @author Marcellus Tavares
  */
-@RunWith(PowerMockRunner.class)
-public class DDMFormValuesValidatorTest extends PowerMockito {
+public class DDMFormValuesValidatorTest {
 
 	@Before
 	public void setUp() throws Exception {
@@ -72,8 +75,18 @@ public class DDMFormValuesValidatorTest extends PowerMockito {
 		DDMFormFieldValidation ddmFormFieldValidation =
 			new DDMFormFieldValidation();
 
-		ddmFormFieldValidation.setExpression("Height <= 3.5");
-		ddmFormFieldValidation.setErrorMessage("maximum height allowed 3.5.");
+		ddmFormFieldValidation.setDDMFormFieldValidationExpression(
+			new DDMFormFieldValidationExpression() {
+				{
+					setName("lteq");
+					setValue("Height<={parameter}");
+				}
+			});
+		ddmFormFieldValidation.setErrorMessageLocalizedValue(
+			DDMFormValuesTestUtil.createLocalizedValue(
+				"maximum height allowed 3.5.", LocaleUtil.US));
+		ddmFormFieldValidation.setParameterLocalizedValue(
+			DDMFormValuesTestUtil.createLocalizedValue("3.5", LocaleUtil.US));
 
 		ddmFormField.setDDMFormFieldValidation(ddmFormFieldValidation);
 
@@ -102,8 +115,18 @@ public class DDMFormValuesValidatorTest extends PowerMockito {
 		DDMFormFieldValidation ddmFormFieldValidation =
 			new DDMFormFieldValidation();
 
-		ddmFormFieldValidation.setExpression("Age > 18");
-		ddmFormFieldValidation.setErrorMessage("Age must be greater than 18.");
+		ddmFormFieldValidation.setDDMFormFieldValidationExpression(
+			new DDMFormFieldValidationExpression() {
+				{
+					setName("gt");
+					setValue("Age>{parameter}");
+				}
+			});
+		ddmFormFieldValidation.setErrorMessageLocalizedValue(
+			DDMFormValuesTestUtil.createLocalizedValue(
+				"Age must be greater than 18.", LocaleUtil.US));
+		ddmFormFieldValidation.setParameterLocalizedValue(
+			DDMFormValuesTestUtil.createLocalizedValue("18", LocaleUtil.US));
 
 		ddmFormField.setDDMFormFieldValidation(ddmFormFieldValidation);
 
@@ -706,8 +729,18 @@ public class DDMFormValuesValidatorTest extends PowerMockito {
 		DDMFormFieldValidation ddmFormFieldValidation =
 			new DDMFormFieldValidation();
 
-		ddmFormFieldValidation.setExpression("Age > 18");
-		ddmFormFieldValidation.setErrorMessage("Age must be greater than 18.");
+		ddmFormFieldValidation.setDDMFormFieldValidationExpression(
+			new DDMFormFieldValidationExpression() {
+				{
+					setName("gt");
+					setValue("Age>{parameter}");
+				}
+			});
+		ddmFormFieldValidation.setErrorMessageLocalizedValue(
+			DDMFormValuesTestUtil.createLocalizedValue(
+				"Age must be greater than 18.", LocaleUtil.US));
+		ddmFormFieldValidation.setParameterLocalizedValue(
+			DDMFormValuesTestUtil.createLocalizedValue("18", LocaleUtil.US));
 
 		ddmFormField.setDDMFormFieldValidation(ddmFormFieldValidation);
 
@@ -766,23 +799,42 @@ public class DDMFormValuesValidatorTest extends PowerMockito {
 		DDMExpressionFactoryImpl ddmExpressionFactoryImpl =
 			new DDMExpressionFactoryImpl();
 
-		field(
-			DDMExpressionFactoryImpl.class, "ddmExpressionFunctionTracker"
-		).set(
-			ddmExpressionFactoryImpl, mock(DDMExpressionFunctionTracker.class)
-		);
+		ReflectionTestUtil.setFieldValue(
+			ddmExpressionFactoryImpl, "ddmExpressionFunctionTracker",
+			new DDMExpressionFunctionTracker() {
+
+				@Override
+				public Map<String, DDMExpressionFunctionFactory>
+					getDDMExpressionFunctionFactories(
+						Set<String> functionNames) {
+
+					return Collections.emptyMap();
+				}
+
+				@Override
+				public Map<String, DDMExpressionFunction>
+					getDDMExpressionFunctions(Set<String> functionNames) {
+
+					return Collections.emptyMap();
+				}
+
+				@Override
+				public void ungetDDMExpressionFunctions(
+					Map<String, DDMExpressionFunction>
+						ddmExpressionFunctionsMap) {
+				}
+
+			});
 
 		_ddmFormValuesValidatorImpl.setDDMExpressionFactory(
 			ddmExpressionFactoryImpl);
 
 		_ddmFormValuesValidatorImpl.setJSONFactory(new JSONFactoryImpl());
 
-		field(
-			DDMFormValuesValidatorImpl.class, "_ddmFormFieldTypeServicesTracker"
-		).set(
-			_ddmFormValuesValidatorImpl,
-			mock(DDMFormFieldTypeServicesTracker.class)
-		);
+		ReflectionTestUtil.setFieldValue(
+			_ddmFormValuesValidatorImpl, "_ddmFormFieldTypeServicesTracker",
+			ProxyFactory.newDummyInstance(
+				DDMFormFieldTypeServicesTracker.class));
 	}
 
 	private final DDMFormValuesValidatorImpl _ddmFormValuesValidatorImpl =

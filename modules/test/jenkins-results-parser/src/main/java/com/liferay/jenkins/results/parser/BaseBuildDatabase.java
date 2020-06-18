@@ -17,6 +17,8 @@ package com.liferay.jenkins.results.parser;
 import java.io.File;
 import java.io.IOException;
 
+import java.net.URL;
+
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,8 +43,8 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 				JenkinsResultsParserUtil.combine(
 					"build_database=", _jsonObject.toString()));
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 
 		return buildDatabaseJSFile;
@@ -53,10 +55,32 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 		JSONObject buildsJSONObject = _jsonObject.getJSONObject("builds");
 
 		if (!buildsJSONObject.has(key)) {
-			buildsJSONObject.put(key, new JSONObject());
+			return new JSONObject();
 		}
 
 		return buildsJSONObject.getJSONObject(key);
+	}
+
+	@Override
+	public JSONObject getBuildDataJSONObject(URL buildURL) {
+		String buildURLString = buildURL.toString();
+
+		JSONObject buildsJSONObject = _jsonObject.getJSONObject("builds");
+
+		for (Object key : buildsJSONObject.keySet()) {
+			JSONObject buildJSONObject = buildsJSONObject.getJSONObject(
+				key.toString());
+
+			if (!buildJSONObject.has("build_url")) {
+				continue;
+			}
+
+			if (buildURLString.equals(buildJSONObject.getString("build_url"))) {
+				return buildJSONObject;
+			}
+		}
+
+		return new JSONObject();
 	}
 
 	@Override
@@ -201,8 +225,8 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 		try {
 			JenkinsResultsParserUtil.write(destFilePath, sb.toString());
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 
@@ -213,7 +237,7 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 
 	protected BaseBuildDatabase(File baseDir) {
 		_jsonObjectFile = new File(
-			baseDir, BuildDatabase.BUILD_DATABASE_FILE_NAME);
+			baseDir, BuildDatabase.FILE_NAME_BUILD_DATABASE);
 
 		_jsonObject = _getJSONObject();
 
@@ -238,8 +262,8 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 				return new JSONObject(
 					JenkinsResultsParserUtil.read(_jsonObjectFile));
 			}
-			catch (IOException ioe) {
-				throw new RuntimeException(ioe);
+			catch (IOException ioException) {
+				throw new RuntimeException(ioException);
 			}
 		}
 
@@ -270,8 +294,8 @@ public abstract class BaseBuildDatabase implements BuildDatabase {
 			JenkinsResultsParserUtil.write(
 				_jsonObjectFile, _jsonObject.toString());
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 

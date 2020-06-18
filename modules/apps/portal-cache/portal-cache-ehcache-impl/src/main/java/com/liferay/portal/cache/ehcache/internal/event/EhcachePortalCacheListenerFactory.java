@@ -18,8 +18,6 @@ import com.liferay.portal.cache.PortalCacheListenerFactory;
 import com.liferay.portal.cache.PortalCacheReplicator;
 import com.liferay.portal.cache.PortalCacheReplicatorFactory;
 import com.liferay.portal.cache.ehcache.internal.EhcacheConstants;
-import com.liferay.portal.cache.ehcache.spi.event.ConfigurableEhcachePortalCacheListener;
-import com.liferay.portal.cache.ehcache.spi.event.EhcachePortalCacheListenerAdapter;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheException;
 import com.liferay.portal.kernel.cache.PortalCacheListener;
@@ -54,8 +52,8 @@ public class EhcachePortalCacheListenerFactory
 
 		if (replicator) {
 			PortalCacheListener<K, V> portalCacheListener =
-				(PortalCacheListener<K, V>)
-					_portalCacheReplicatorFactory.create(properties);
+				(PortalCacheListener<K, V>)_portalCacheReplicatorFactory.create(
+					properties);
 
 			if (portalCacheListener == null) {
 				return null;
@@ -67,35 +65,37 @@ public class EhcachePortalCacheListenerFactory
 						portalCacheListener);
 		}
 
-		String className = properties.getProperty(
+		String className = (String)properties.remove(
 			EhcacheConstants.CACHE_LISTENER_PROPERTIES_KEY_FACTORY_CLASS_NAME);
 
 		if (Validator.isNull(className)) {
 			return null;
 		}
 
+		ClassLoader classLoader = (ClassLoader)properties.remove(
+			EhcacheConstants.
+				CACHE_LISTENER_PROPERTIES_KEY_FACTORY_CLASS_LOADER);
+
+		if (classLoader == null) {
+			return null;
+		}
+
 		try {
 			CacheEventListenerFactory cacheEventListenerFactory =
 				(CacheEventListenerFactory)InstanceFactory.newInstance(
-					getClassLoader(), className);
+					classLoader, className);
 
 			CacheEventListener cacheEventListener =
 				cacheEventListenerFactory.createCacheEventListener(properties);
 
 			return new EhcachePortalCacheListenerAdapter<>(cacheEventListener);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new SystemException(
 				"Unable to instantiate cache event listener factory " +
 					className,
-				e);
+				exception);
 		}
-	}
-
-	protected ClassLoader getClassLoader() {
-		Class<?> clazz = getClass();
-
-		return clazz.getClassLoader();
 	}
 
 	@Reference(unbind = "-")

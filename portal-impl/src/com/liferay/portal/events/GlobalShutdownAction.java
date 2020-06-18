@@ -18,7 +18,6 @@ import com.liferay.document.library.kernel.document.conversion.DocumentConversio
 import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.deploy.RequiredPluginsUtil;
 import com.liferay.portal.fabric.server.FabricServerUtil;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -33,7 +32,6 @@ import com.liferay.portal.kernel.log.Jdk14LogFactoryImpl;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
-import com.liferay.portal.kernel.resiliency.mpi.MPIHelperUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
@@ -79,9 +77,8 @@ public class GlobalShutdownAction extends SimpleAction {
 			if (threadGroup.getParent() == null) {
 				break;
 			}
-			else {
-				threadGroup = threadGroup.getParent();
-			}
+
+			threadGroup = threadGroup.getParent();
 		}
 
 		return threadGroup;
@@ -108,10 +105,6 @@ public class GlobalShutdownAction extends SimpleAction {
 		// OpenOffice
 
 		DocumentConversionUtil.disconnect();
-
-		// Plugins
-
-		RequiredPluginsUtil.stopCheckingRequiredPlugins();
 	}
 
 	protected void shutdownLevel2() {
@@ -141,8 +134,8 @@ public class GlobalShutdownAction extends SimpleAction {
 					PropsValues.PORTAL_FABRIC_SHUTDOWN_TIMEOUT,
 					TimeUnit.MILLISECONDS);
 			}
-			catch (Exception e) {
-				_log.error("Unable to stop fabric server", e);
+			catch (Exception exception) {
+				_log.error("Unable to stop fabric server", exception);
 			}
 		}
 	}
@@ -154,27 +147,15 @@ public class GlobalShutdownAction extends SimpleAction {
 		DB db = DBManagerUtil.getDB();
 
 		if (db.getDBType() == DBType.HYPERSONIC) {
-			Connection connection = null;
-			Statement statement = null;
-
-			try {
-				connection = DataAccess.getConnection();
-
-				statement = connection.createStatement();
+			try (Connection connection = DataAccess.getConnection();
+				Statement statement = connection.createStatement()) {
 
 				statement.executeUpdate("SHUTDOWN");
 			}
-			catch (Exception e) {
-				_log.error(e, e);
-			}
-			finally {
-				DataAccess.cleanUp(connection, statement);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
-
-		// Portal Resiliency
-
-		MPIHelperUtil.shutdown();
 	}
 
 	protected void shutdownLevel5() {
@@ -197,7 +178,7 @@ public class GlobalShutdownAction extends SimpleAction {
 		try {
 			LogFactoryUtil.setLogFactory(new Jdk14LogFactoryImpl());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		// Thread local registry
@@ -227,7 +208,7 @@ public class GlobalShutdownAction extends SimpleAction {
 				try {
 					thread.interrupt();
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 				}
 			}
 

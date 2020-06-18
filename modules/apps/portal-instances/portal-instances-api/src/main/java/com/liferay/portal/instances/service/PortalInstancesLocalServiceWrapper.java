@@ -14,8 +14,6 @@
 
 package com.liferay.portal.instances.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,12 +23,13 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see PortalInstancesLocalService
  * @generated
  */
-@ProviderType
 public class PortalInstancesLocalServiceWrapper
 	implements PortalInstancesLocalService,
-		ServiceWrapper<PortalInstancesLocalService> {
+			   ServiceWrapper<PortalInstancesLocalService> {
+
 	public PortalInstancesLocalServiceWrapper(
 		PortalInstancesLocalService portalInstancesLocalService) {
+
 		_portalInstancesLocalService = portalInstancesLocalService;
 	}
 
@@ -40,8 +39,10 @@ public class PortalInstancesLocalServiceWrapper
 	}
 
 	@Override
-	public long getCompanyId(javax.servlet.http.HttpServletRequest request) {
-		return _portalInstancesLocalService.getCompanyId(request);
+	public long getCompanyId(
+		javax.servlet.http.HttpServletRequest httpServletRequest) {
+
+		return _portalInstancesLocalService.getCompanyId(httpServletRequest);
 	}
 
 	@Override
@@ -60,10 +61,10 @@ public class PortalInstancesLocalServiceWrapper
 	}
 
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
 	public String getOSGiServiceIdentifier() {
 		return _portalInstancesLocalService.getOSGiServiceIdentifier();
@@ -77,8 +78,9 @@ public class PortalInstancesLocalServiceWrapper
 	@Override
 	public void initializePortalInstance(
 		javax.servlet.ServletContext servletContext, String webId) {
-		_portalInstancesLocalService.initializePortalInstance(servletContext,
-			webId);
+
+		_portalInstancesLocalService.initializePortalInstance(
+			servletContext, webId);
 	}
 
 	@Override
@@ -129,8 +131,10 @@ public class PortalInstancesLocalServiceWrapper
 	@Override
 	public void setWrappedService(
 		PortalInstancesLocalService portalInstancesLocalService) {
+
 		_portalInstancesLocalService = portalInstancesLocalService;
 	}
 
 	private PortalInstancesLocalService _portalInstancesLocalService;
+
 }

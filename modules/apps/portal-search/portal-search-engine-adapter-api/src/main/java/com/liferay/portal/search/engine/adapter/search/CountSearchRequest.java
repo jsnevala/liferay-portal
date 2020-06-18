@@ -14,13 +14,11 @@
 
 package com.liferay.portal.search.engine.adapter.search;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * @author Dylan Rebelak
  */
-@ProviderType
-public class CountSearchRequest extends BaseSearchRequest<CountSearchResponse> {
+public class CountSearchRequest
+	extends BaseSearchRequest implements SearchRequest<CountSearchResponse> {
 
 	@Override
 	public CountSearchResponse accept(

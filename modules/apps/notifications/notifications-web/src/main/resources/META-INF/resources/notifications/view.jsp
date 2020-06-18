@@ -35,7 +35,7 @@ if (actionRequired) {
 
 notificationsSearchContainer.setId(searchContainerId);
 
-NotificationsManagementToolbarDisplayContext notificationsManagementToolbarDisplayContext = new NotificationsManagementToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request, currentURLObj);
+NotificationsManagementToolbarDisplayContext notificationsManagementToolbarDisplayContext = new NotificationsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, currentURLObj);
 
 NotificationsUtil.populateResults(themeDisplay.getUserId(), actionRequired, navigation, notificationsManagementToolbarDisplayContext.getOrderByType(), notificationsSearchContainer);
 
@@ -45,8 +45,8 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 %>
 
 <clay:navigation-bar
-	inverted="<%= true %>"
-	navigationItems="<%=
+	inverted="<%= layout.isTypeControlPanel() %>"
+	navigationItems='<%=
 		new JSPNavigationItemList(pageContext) {
 			{
 				add(
@@ -61,18 +61,20 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 
 						navigationItem.setActive(actionRequired);
 						navigationItem.setHref(renderResponse.createRenderURL(), "actionRequired", StringPool.TRUE);
-						navigationItem.setLabel(LanguageUtil.format(request, "requests-list-x", String.valueOf(UserNotificationEventLocalServiceUtil.getArchivedUserNotificationEventsCount(themeDisplay.getUserId(), UserNotificationDeliveryConstants.TYPE_WEBSITE, true, false))));
+						navigationItem.setLabel(LanguageUtil.format(request, "requests-list-x", String.valueOf(UserNotificationEventLocalServiceUtil.getArchivedUserNotificationEventsCount(themeDisplay.getUserId(), UserNotificationDeliveryConstants.TYPE_WEBSITE, true, true, false))));
 					});
 			}
 		}
-	%>"
+	%>'
 />
 
 <clay:management-toolbar
 	actionDropdownItems="<%= notificationsManagementToolbarDisplayContext.getActionDropdownItems() %>"
+	clearResultsURL="<%= notificationsManagementToolbarDisplayContext.getClearResultsURL() %>"
 	componentId="notificationsManagementToolbar"
 	disabled="<%= NotificationsUtil.getAllNotificationsCount(themeDisplay.getUserId(), actionRequired) == 0 %>"
 	filterDropdownItems="<%= notificationsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
+	filterLabelItems="<%= notificationsManagementToolbarDisplayContext.getFilterLabelItems() %>"
 	itemsTotal="<%= notificationsSearchContainer.getTotal() %>"
 	searchContainerId="<%= searchContainerId %>"
 	selectable="<%= actionRequired ? false : true %>"
@@ -97,11 +99,13 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 				>
 
 					<%
-					Map<String, Object> rowData = new HashMap<String, Object>();
-
 					UserNotificationFeedEntry userNotificationFeedEntry = UserNotificationManagerUtil.interpret(StringPool.BLANK, userNotificationEvent, ServiceContextFactory.getInstance(request));
 
-					rowData.put("userNotificationFeedEntry", userNotificationFeedEntry);
+					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(notificationsManagementToolbarDisplayContext.getAvailableActions(userNotificationEvent, userNotificationFeedEntry))
+					).put(
+						"userNotificationFeedEntry", userNotificationFeedEntry
+					).build();
 
 					row.setData(rowData);
 					%>
@@ -119,50 +123,56 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 </div>
 
 <aui:script sandbox="<%= true %>">
-	var deleteAllNotifications = function() {
+	var deleteNotifications = function () {
 		var form = document.getElementById('<portlet:namespace />fm');
 
 		form.setAttribute('method', 'post');
 
-		submitForm(form, '<portlet:actionURL name="deleteAllNotifications"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>');
+		submitForm(
+			form,
+			'<portlet:actionURL name="deleteNotifications"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>'
+		);
 	};
 
-	var markNotificationsAsRead = function() {
+	var markNotificationsAsRead = function () {
 		var form = document.getElementById('<portlet:namespace />fm');
 
 		form.setAttribute('method', 'post');
 
-		submitForm(form, '<portlet:actionURL name="markNotificationsAsRead"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>');
+		submitForm(
+			form,
+			'<portlet:actionURL name="markNotificationsAsRead"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>'
+		);
 	};
 
-	var markNotificationsAsUnread = function() {
+	var markNotificationsAsUnread = function () {
 		var form = document.getElementById('<portlet:namespace />fm');
 
 		form.setAttribute('method', 'post');
 
-		submitForm(form, '<portlet:actionURL name="markNotificationsAsUnread"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>');
+		submitForm(
+			form,
+			'<portlet:actionURL name="markNotificationsAsUnread"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>'
+		);
 	};
 
 	var ACTIONS = {
-		'deleteAllNotifications': deleteAllNotifications,
-		'markNotificationsAsRead': markNotificationsAsRead,
-		'markNotificationsAsUnread': markNotificationsAsUnread
+		deleteNotifications: deleteNotifications,
+		markNotificationsAsRead: markNotificationsAsRead,
+		markNotificationsAsUnread: markNotificationsAsUnread,
 	};
 
-	Liferay.componentReady('notificationsManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				'actionItemClicked',
-				function(event) {
-					var itemData = event.data.item.data;
+	Liferay.componentReady('notificationsManagementToolbar').then(function (
+		managementToolbar
+	) {
+		managementToolbar.on('actionItemClicked', function (event) {
+			var itemData = event.data.item.data;
 
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action]();
-					}
-				}
-			);
-		}
-	);
+			if (itemData && itemData.action && ACTIONS[itemData.action]) {
+				ACTIONS[itemData.action]();
+			}
+		});
+	});
 </aui:script>
 
 <aui:script use="aui-base,liferay-notice">
@@ -170,39 +180,39 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 
 	form.delegate(
 		'click',
-		function(event) {
+		function (event) {
 			event.preventDefault();
 
 			var currentTarget = event.currentTarget;
 
-			A.io.request(
-				currentTarget.attr('href'),
-				{
-					dataType: 'JSON',
-					on: {
-						success: function() {
-							var responseData = this.get('responseData');
+			Liferay.Util.fetch(currentTarget.attr('href'), {
+				method: 'POST',
+			})
+				.then(function (response) {
+					return response.json();
+				})
+				.then(function (response) {
+					if (response.success) {
+						var notificationContainer = currentTarget.ancestor(
+							'li.list-group-item'
+						);
 
-							if (responseData.success) {
-								var notificationContainer = currentTarget.ancestor('li.list-group-item');
+						if (notificationContainer) {
+							var markAsReadURL = notificationContainer
+								.one('a')
+								.attr('href');
 
-								if (notificationContainer) {
-									var markAsReadURL = notificationContainer.one('a').attr('href');
+							form.attr('method', 'post');
 
-									form.attr('method', 'post');
+							submitForm(form, markAsReadURL);
 
-									submitForm(form, markAsReadURL);
-
-									notificationContainer.remove();
-								}
-							}
-							else {
-								getNotice().show();
-							}
+							notificationContainer.remove();
 						}
 					}
-				}
-			);
+					else {
+						getNotice().show();
+					}
+				});
 		},
 		'.user-notification-action'
 	);
@@ -211,16 +221,17 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 
 	function getNotice() {
 		if (!notice) {
-			notice = new Liferay.Notice(
-				{
-					closeText: false,
-					content: '<liferay-ui:message key="an-unexpected-error-occurred" /><button class="close" type="button">&times;</button>',
-					timeout: 5000,
-					toggleText: false,
-					type: 'warning',
-					useAnimation: false
-				}
-			);
+			notice = new Liferay.Notice({
+				closeText: false,
+				content:
+					'<liferay-ui:message key="an-unexpected-error-occurred" /><button aria-label="' +
+					Liferay.Language.get('close') +
+					'" class="close" type="button">&times;</button>',
+				timeout: 5000,
+				toggleText: false,
+				type: 'warning',
+				useAnimation: false,
+			});
 		}
 
 		return notice;

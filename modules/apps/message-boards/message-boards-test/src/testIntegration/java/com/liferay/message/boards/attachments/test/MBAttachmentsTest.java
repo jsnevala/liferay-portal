@@ -38,7 +38,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.InputStream;
 
@@ -49,7 +49,6 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -67,14 +66,13 @@ public class MBAttachmentsTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
-		_group = GroupTestUtil.addGroup();
+		addGroup();
 	}
 
-	@Ignore
 	@Test
 	public void testDeleteAttachmentsWhenDeletingMessage() throws Exception {
 		int initialFileEntriesCount =
@@ -209,7 +207,6 @@ public class MBAttachmentsTest {
 			initialFoldersCount, DLFolderLocalServiceUtil.getDLFoldersCount());
 	}
 
-	@Ignore
 	@Test
 	public void testFoldersCountWhenDeletingMessageWithAttachments()
 		throws Exception {
@@ -304,7 +301,7 @@ public class MBAttachmentsTest {
 
 	protected void addCategory() throws Exception {
 		if (_group == null) {
-			_group = GroupTestUtil.addGroup();
+			addGroup();
 		}
 
 		ServiceContext serviceContext =
@@ -315,6 +312,12 @@ public class MBAttachmentsTest {
 			TestPropsValues.getUserId(),
 			MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
 			RandomTestUtil.randomString(), StringPool.BLANK, serviceContext);
+	}
+
+	protected void addGroup() throws Exception {
+		_group = GroupTestUtil.addGroup();
+
+		_groups.add(_group);
 	}
 
 	protected void addMessage() throws Exception {
@@ -342,7 +345,7 @@ public class MBAttachmentsTest {
 			User user = TestPropsValues.getUser();
 
 			if (_group == null) {
-				_group = GroupTestUtil.addGroup();
+				addGroup();
 			}
 
 			List<ObjectValuePair<String, InputStream>> objectValuePairs =
@@ -368,18 +371,9 @@ public class MBAttachmentsTest {
 				MBTestUtil.getInputStreamOVPs(
 					"OSX_Test.docx", getClass(), StringPool.BLANK);
 
-			List<String> existingFiles = new ArrayList<>();
-
-			List<FileEntry> fileEntries = _message.getAttachmentsFileEntries();
-
-			for (FileEntry fileEntry : fileEntries) {
-				existingFiles.add(String.valueOf(fileEntry.getFileEntryId()));
-			}
-
 			_message = MBMessageLocalServiceUtil.updateMessage(
 				TestPropsValues.getUserId(), _message.getMessageId(), "Subject",
-				"Body", objectValuePairs, existingFiles, 0, false,
-				serviceContext);
+				"Body", objectValuePairs, 0, false, serviceContext);
 		}
 	}
 
@@ -425,7 +419,7 @@ public class MBAttachmentsTest {
 
 		_message = MBMessageLocalServiceUtil.updateMessage(
 			TestPropsValues.getUserId(), _message.getMessageId(), "Subject",
-			"Body", objectValuePairs, existingFiles, 0, false, serviceContext);
+			"Body", objectValuePairs, 0, false, serviceContext);
 
 		Assert.assertEquals(
 			initialNotInTrashCount + 1,
@@ -475,9 +469,10 @@ public class MBAttachmentsTest {
 	}
 
 	private MBCategory _category;
+	private Group _group;
 
 	@DeleteAfterTestRun
-	private Group _group;
+	private final List<Group> _groups = new ArrayList<>();
 
 	private MBMessage _message;
 

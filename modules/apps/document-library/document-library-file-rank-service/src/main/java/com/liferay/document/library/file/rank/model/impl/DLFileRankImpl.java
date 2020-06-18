@@ -14,8 +14,6 @@
 
 package com.liferay.document.library.file.rank.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 /**
  * The extended model implementation for the DLFileRank service. Represents a
  * row in the &quot;DLFileRank&quot; database table, with each column mapped to
@@ -30,7 +28,6 @@ import aQute.bnd.annotation.ProviderType;
  *
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class DLFileRankImpl extends DLFileRankBaseImpl {
 
 	/**

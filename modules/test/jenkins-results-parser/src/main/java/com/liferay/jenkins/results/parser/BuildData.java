@@ -16,6 +16,8 @@ package com.liferay.jenkins.results.parser;
 
 import java.io.File;
 
+import java.util.Map;
+
 import org.json.JSONObject;
 
 /**
@@ -23,26 +25,50 @@ import org.json.JSONObject;
  */
 public interface BuildData {
 
-	public static final String DEFAULT_JENKINS_GITHUB_URL =
+	public static final File DIR_WORKSPACE_DEFAULT = new File(".");
+
+	public static final String FILE_PATH_DIST_ROOT = "/tmp/dist";
+
+	public static final String URL_JENKINS_GITHUB_DEFAULT =
 		"https://github.com/liferay/liferay-jenkins-ee/tree/master";
 
-	public static final File DEFAULT_WORKSPACE_DIR = new File(".");
-
-	public static final String DIST_ROOT_PATH = "/tmp/dist";
+	public File getArtifactDir();
 
 	public String getBuildDescription();
 
+	public Long getBuildDuration();
+
+	public String getBuildDurationString();
+
 	public Integer getBuildNumber();
+
+	public String getBuildParameter(String key);
+
+	public Map<String, String> getBuildParameters();
+
+	public String getBuildResult();
+
+	public String getBuildStatus();
 
 	public String getBuildURL();
 
 	public String getCohortName();
 
+	public Host getHost();
+
 	public String getHostname();
+
+	public String getJenkinsGitHubBranchName();
+
+	public String getJenkinsGitHubRepositoryName();
 
 	public String getJenkinsGitHubURL();
 
+	public String getJenkinsGitHubUsername();
+
 	public String getJobName();
+
+	public String getJobURL();
 
 	public JSONObject getJSONObject();
 
@@ -50,7 +76,15 @@ public interface BuildData {
 
 	public String getRunID();
 
+	public Long getStartTime();
+
+	public String getStartTimeString();
+
+	public TopLevelBuildData getTopLevelBuildData();
+
 	public Integer getTopLevelBuildNumber();
+
+	public Map<String, String> getTopLevelBuildParameters();
 
 	public String getTopLevelJobName();
 
@@ -64,7 +98,15 @@ public interface BuildData {
 
 	public void setBuildDescription(String buildDescription);
 
+	public void setBuildDuration(Long buildDuration);
+
+	public void setBuildResult(String buildResult);
+
+	public void setBuildStatus(String buildStatus);
+
 	public void setBuildURL(String buildURL);
+
+	public void setInvocationTime(Long invocationTime);
 
 	public void setJenkinsGitHubURL(String jenkinsGitHubURL);
 

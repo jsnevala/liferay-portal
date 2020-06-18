@@ -151,9 +151,10 @@ public class PageRatingsPortletDataHandler extends BasePortletDataHandler {
 			persistedModel = persistedModelLocalService.getPersistedModel(
 				ratingsEntry.getClassPK());
 		}
-		catch (NoSuchModelException nsme) {
+		catch (NoSuchModelException noSuchModelException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(nsme.getMessage(), nsme);
+				_log.debug(
+					noSuchModelException.getMessage(), noSuchModelException);
 			}
 
 			return GroupConstants.DEFAULT_PARENT_GROUP_ID;
@@ -209,10 +210,8 @@ public class PageRatingsPortletDataHandler extends BasePortletDataHandler {
 				ManifestSummary manifestSummary =
 					portletDataContext.getManifestSummary();
 
-				StagedModelType stagedModelType =
-					exportActionableDynamicQuery.getStagedModelType();
-
-				manifestSummary.incrementModelAdditionCount(stagedModelType);
+				manifestSummary.incrementModelAdditionCount(
+					exportActionableDynamicQuery.getStagedModelType());
 			});
 		exportActionableDynamicQuery.setPerformCountMethod(
 			new ActionableDynamicQuery.PerformCountMethod() {

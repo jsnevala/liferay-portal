@@ -37,7 +37,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
 
 import org.junit.Assert;
@@ -58,7 +58,7 @@ public class DLDirectoryNameAndFileNameTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -165,14 +165,16 @@ public class DLDirectoryNameAndFileNameTest {
 			String name = sb.toString();
 
 			Assert.assertEquals(
-				name.replace(blacklistChar, StringPool.UNDERLINE),
-				DLValidatorUtil.fixName(sb.toString()));
+				StringUtil.replace(name, blacklistChar, StringPool.UNDERLINE),
+				DLValidatorUtil.fixName(name));
 
 			sb.append(".txt");
 
+			name = sb.toString();
+
 			Assert.assertEquals(
-				sb.toString().replace(blacklistChar, StringPool.UNDERLINE),
-				DLValidatorUtil.fixName(sb.toString()));
+				StringUtil.replace(name, blacklistChar, StringPool.UNDERLINE),
+				DLValidatorUtil.fixName(name));
 		}
 	}
 
@@ -305,8 +307,9 @@ public class DLDirectoryNameAndFileNameTest {
 			serviceContext);
 	}
 
-	private static final String[] _DL_CHAR_LAST_BLACKLIST =
-		{StringPool.SPACE, StringPool.PERIOD};
+	private static final String[] _DL_CHAR_LAST_BLACKLIST = {
+		StringPool.SPACE, StringPool.PERIOD
+	};
 
 	@DeleteAfterTestRun
 	private Group _group;

@@ -14,6 +14,7 @@
 
 package com.liferay.portal.service.persistence.impl;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -26,7 +27,6 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.service.persistence.ResourcePermissionFinder;
 import com.liferay.portal.kernel.service.persistence.ResourcePermissionUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.impl.ResourcePermissionImpl;
 import com.liferay.portal.model.impl.ResourcePermissionModelImpl;
@@ -82,16 +82,16 @@ public class ResourcePermissionFinderImpl
 
 			sql = StringUtil.replace(sql, "[$SCOPE$]", getScopes(scopes));
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(roleId);
-			qPos.add(scopes);
+			queryPos.add(roleId);
+			queryPos.add(scopes);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -103,8 +103,8 @@ public class ResourcePermissionFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -149,24 +149,24 @@ public class ResourcePermissionFinderImpl
 					sql, "ResourcePermission.roleId = ?", sb.toString());
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
-			qPos.add(name);
-			qPos.add(scope);
-			qPos.add(primKey);
-			qPos.add(roleIds);
-			qPos.add(actionId);
-			qPos.add(actionId);
+			queryPos.add(companyId);
+			queryPos.add(name);
+			queryPos.add(scope);
+			queryPos.add(primKey);
+			queryPos.add(roleIds);
+			queryPos.add(actionId);
+			queryPos.add(actionId);
 
-			count = (Long)q.uniqueResult();
+			count = (Long)sqlQuery.uniqueResult();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			if (count == null) {
@@ -200,22 +200,23 @@ public class ResourcePermissionFinderImpl
 
 			String sql = CustomSQLUtil.get(FIND_BY_RESOURCE);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("ResourcePermission", ResourcePermissionImpl.class);
+			sqlQuery.addEntity(
+				"ResourcePermission", ResourcePermissionImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
-			qPos.add(name);
-			qPos.add(primKey);
-			qPos.add(String.valueOf(groupId));
+			queryPos.add(companyId);
+			queryPos.add(name);
+			queryPos.add(primKey);
+			queryPos.add(String.valueOf(groupId));
 
 			return (List<ResourcePermission>)QueryUtil.list(
-				q, getDialect(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+				sqlQuery, getDialect(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -235,20 +236,21 @@ public class ResourcePermissionFinderImpl
 
 			sql = StringUtil.replace(sql, "[$SCOPE$]", getScopes(scopes));
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("ResourcePermission", ResourcePermissionImpl.class);
+			sqlQuery.addEntity(
+				"ResourcePermission", ResourcePermissionImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(roleId);
-			qPos.add(scopes);
+			queryPos.add(roleId);
+			queryPos.add(scopes);
 
 			return (List<ResourcePermission>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);

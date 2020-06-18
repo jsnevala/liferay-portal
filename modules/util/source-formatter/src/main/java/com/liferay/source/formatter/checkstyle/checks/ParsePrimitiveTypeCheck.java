@@ -15,7 +15,6 @@
 package com.liferay.source.formatter.checkstyle.checks;
 
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
@@ -34,7 +33,7 @@ public class ParsePrimitiveTypeCheck extends BaseCheck {
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		if (isRunOutsidePortalExclude()) {
+		if (isExcludedPath(_RUN_OUTSIDE_PORTAL_EXCLUDES)) {
 			return;
 		}
 
@@ -46,40 +45,43 @@ public class ParsePrimitiveTypeCheck extends BaseCheck {
 	}
 
 	private boolean _catchesException(
-		DetailAST methodCallAST, String... exceptionNames) {
+		DetailAST methodCallDetailAST, String... exceptionNames) {
 
-		DetailAST parentAST = methodCallAST.getParent();
+		DetailAST parentDetailAST = methodCallDetailAST.getParent();
 
 		while (true) {
-			if (parentAST == null) {
+			if (parentDetailAST == null) {
 				return false;
 			}
 
-			if (parentAST.getType() != TokenTypes.LITERAL_TRY) {
-				parentAST = parentAST.getParent();
+			if (parentDetailAST.getType() != TokenTypes.LITERAL_TRY) {
+				parentDetailAST = parentDetailAST.getParent();
 
 				continue;
 			}
 
-			DetailAST literalCatchAST = parentAST.findFirstToken(
+			DetailAST literalCatchDetailAST = parentDetailAST.findFirstToken(
 				TokenTypes.LITERAL_CATCH);
 
-			parentAST = parentAST.getParent();
+			parentDetailAST = parentDetailAST.getParent();
 
-			if (literalCatchAST == null) {
+			if (literalCatchDetailAST == null) {
 				continue;
 			}
 
-			DetailAST parameterDefAST = literalCatchAST.findFirstToken(
-				TokenTypes.PARAMETER_DEF);
+			DetailAST parameterDefinitionDetailAST =
+				literalCatchDetailAST.findFirstToken(TokenTypes.PARAMETER_DEF);
 
-			DetailAST typeAST = parameterDefAST.findFirstToken(TokenTypes.TYPE);
+			DetailAST typeDetailAST =
+				parameterDefinitionDetailAST.findFirstToken(TokenTypes.TYPE);
 
-			List<DetailAST> identASTList = DetailASTUtil.getAllChildTokens(
-				typeAST, true, TokenTypes.IDENT);
+			List<DetailAST> identDetailASTList = getAllChildTokens(
+				typeDetailAST, true, TokenTypes.IDENT);
 
-			for (DetailAST identAST : identASTList) {
-				if (ArrayUtil.contains(exceptionNames, identAST.getText())) {
+			for (DetailAST identDetailAST : identDetailASTList) {
+				if (ArrayUtil.contains(
+						exceptionNames, identDetailAST.getText())) {
+
 					return true;
 				}
 			}
@@ -90,21 +92,23 @@ public class ParsePrimitiveTypeCheck extends BaseCheck {
 		DetailAST detailAST, String className, String methodName,
 		String getterUtilMethodName) {
 
-		List<DetailAST> methodCallASTList = DetailASTUtil.getMethodCalls(
+		List<DetailAST> methodCallDetailASTList = getMethodCalls(
 			detailAST, className, methodName);
 
-		for (DetailAST methodCallAST : methodCallASTList) {
-			DetailAST elistAST = methodCallAST.findFirstToken(TokenTypes.ELIST);
+		for (DetailAST methodCallDetailAST : methodCallDetailASTList) {
+			DetailAST elistDetailAST = methodCallDetailAST.findFirstToken(
+				TokenTypes.ELIST);
 
-			List<DetailAST> exprASTList = DetailASTUtil.getAllChildTokens(
-				elistAST, false, TokenTypes.EXPR);
+			List<DetailAST> exprDetailASTList = getAllChildTokens(
+				elistDetailAST, false, TokenTypes.EXPR);
 
-			if ((exprASTList.size() == 1) &&
+			if ((exprDetailASTList.size() == 1) &&
 				!_catchesException(
-					methodCallAST, "Exception", "NumberFormatException")) {
+					methodCallDetailAST, "Exception",
+					"NumberFormatException")) {
 
 				log(
-					methodCallAST, _MSG_USE_GETTER_UTIL_METHOD,
+					methodCallDetailAST, _MSG_USE_GETTER_UTIL_METHOD,
 					getterUtilMethodName, className, methodName);
 			}
 		}
@@ -112,5 +116,8 @@ public class ParsePrimitiveTypeCheck extends BaseCheck {
 
 	private static final String _MSG_USE_GETTER_UTIL_METHOD =
 		"getter.util.method.use";
+
+	private static final String _RUN_OUTSIDE_PORTAL_EXCLUDES =
+		"run.outside.portal.excludes";
 
 }

@@ -19,11 +19,17 @@ import aQute.bnd.annotation.metatype.Meta;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
 /**
+ * Defines the configuration property keys and default values.
+ *
+ * <p>
+ * This class also defines the identity of the configuration schema which, among
+ * other things, defines the filename (minus the <code>.cfg</code> extension)
+ * for setting values via a file.
+ * </p>
+ *
  * @author Thuong Dinh
  */
-@ExtendedObjectClassDefinition(
-	category = "sso", scope = ExtendedObjectClassDefinition.Scope.COMPANY
-)
+@ExtendedObjectClassDefinition(category = "sso")
 @Meta.OCD(
 	id = "com.liferay.portal.security.sso.openid.connect.configuration.OpenIdConnectConfiguration",
 	localization = "content/Language",

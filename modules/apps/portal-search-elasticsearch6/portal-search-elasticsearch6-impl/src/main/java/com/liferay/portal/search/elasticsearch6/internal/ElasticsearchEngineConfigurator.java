@@ -14,7 +14,9 @@
 
 package com.liferay.portal.search.elasticsearch6.internal;
 
-import com.liferay.portal.kernel.search.AbstractSearchEngineConfigurator;
+import com.liferay.portal.kernel.messaging.DestinationFactory;
+import com.liferay.portal.kernel.messaging.MessageBus;
+import com.liferay.portal.kernel.search.BaseSearchEngineConfigurator;
 import com.liferay.portal.kernel.search.IndexSearcher;
 import com.liferay.portal.kernel.search.IndexWriter;
 import com.liferay.portal.kernel.search.SearchEngine;
@@ -27,6 +29,7 @@ import com.liferay.portal.search.elasticsearch6.internal.connection.Elasticsearc
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.FutureTask;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -40,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = SearchEngineConfigurator.class
 )
 public class ElasticsearchEngineConfigurator
-	extends AbstractSearchEngineConfigurator {
+	extends BaseSearchEngineConfigurator {
 
 	@Override
 	public void destroy() {
@@ -73,7 +76,7 @@ public class ElasticsearchEngineConfigurator
 	}
 
 	@Override
-	protected ClassLoader getOperatingClassloader() {
+	protected ClassLoader getOperatingClassLoader() {
 		Class<?> clazz = getClass();
 
 		return clazz.getClassLoader();
@@ -86,22 +89,26 @@ public class ElasticsearchEngineConfigurator
 
 	@Override
 	protected void initialize() {
-		Thread thread = new Thread(
+		FutureTask<Void> futureTask = new FutureTask<Void>(
 			() -> {
 				_elasticsearchConnectionManager.connect();
-			},
-			"Elasticsearch initialization thread");
+
+				return null;
+			});
+
+		Thread thread = new Thread(
+			futureTask, "Elasticsearch Initialization Thread");
 
 		thread.setDaemon(true);
 
 		thread.start();
 
 		try {
-			thread.join();
+			futureTask.get();
 		}
-		catch (InterruptedException ie) {
+		catch (Exception exception) {
 			throw new RuntimeException(
-				"Unable to initialize Elasticsearch engine", ie);
+				"Unable to initialize Elasticsearch engine", exception);
 		}
 
 		super.initialize();
@@ -136,6 +143,9 @@ public class ElasticsearchEngineConfigurator
 	protected SearchEngineHelper searchEngineHelper;
 
 	@Reference
+	private DestinationFactory _destinationFactory;
+
+	@Reference
 	private ElasticsearchConnectionManager _elasticsearchConnectionManager;
 
 	@Reference(target = "(!(search.engine.impl=*))")
@@ -143,6 +153,9 @@ public class ElasticsearchEngineConfigurator
 
 	@Reference(target = "(!(search.engine.impl=*))")
 	private IndexWriter _indexWriter;
+
+	@Reference
+	private MessageBus _messageBus;
 
 	private final Map<String, SearchEngine> _searchEngines =
 		new ConcurrentHashMap<>();

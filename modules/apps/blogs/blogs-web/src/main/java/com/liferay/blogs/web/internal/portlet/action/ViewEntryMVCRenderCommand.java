@@ -14,6 +14,7 @@
 
 package com.liferay.blogs.web.internal.portlet.action;
 
+import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.blogs.constants.BlogsPortletKeys;
 import com.liferay.blogs.exception.NoSuchEntryException;
 import com.liferay.blogs.model.BlogsEntry;
@@ -23,6 +24,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderConstants;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -73,6 +75,23 @@ public class ViewEntryMVCRenderCommand implements MVCRenderCommand {
 
 			BlogsEntry entry = ActionUtil.getEntry(renderRequest);
 
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
+
+			String assetDisplayPageFriendlyURL =
+				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
+					BlogsEntry.class.getName(), entry.getEntryId(),
+					themeDisplay);
+
+			if (assetDisplayPageFriendlyURL != null) {
+				HttpServletResponse httpServletResponse =
+					_portal.getHttpServletResponse(renderResponse);
+
+				httpServletResponse.sendRedirect(assetDisplayPageFriendlyURL);
+
+				return MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH;
+			}
+
 			FriendlyURLEntry mainFriendlyURLEntry =
 				_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
 					BlogsEntry.class, entry.getEntryId());
@@ -89,54 +108,50 @@ public class ViewEntryMVCRenderCommand implements MVCRenderCommand {
 				portletURL.setParameter(
 					"urlTitle", mainFriendlyURLEntry.getUrlTitle());
 
-				HttpServletResponse response = _portal.getHttpServletResponse(
-					renderResponse);
+				HttpServletResponse httpServletResponse =
+					_portal.getHttpServletResponse(renderResponse);
 
-				response.sendRedirect(portletURL.toString());
+				httpServletResponse.sendRedirect(portletURL.toString());
 
 				return MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH;
 			}
 
-			HttpServletRequest request = _portal.getHttpServletRequest(
-				renderRequest);
+			HttpServletRequest httpServletRequest =
+				_portal.getHttpServletRequest(renderRequest);
 
-			request.setAttribute(WebKeys.BLOGS_ENTRY, entry);
+			httpServletRequest.setAttribute(WebKeys.BLOGS_ENTRY, entry);
 
-			if (PropsValues.BLOGS_PINGBACK_ENABLED) {
-				if ((entry != null) && entry.isAllowPingbacks()) {
-					HttpServletResponse response =
-						_portal.getHttpServletResponse(renderResponse);
+			if (PropsValues.BLOGS_PINGBACK_ENABLED && (entry != null) &&
+				entry.isAllowPingbacks()) {
 
-					response.addHeader(
-						"X-Pingback",
-						_portal.getPortalURL(renderRequest) +
-							"/xmlrpc/pingback");
-				}
+				HttpServletResponse httpServletResponse =
+					_portal.getHttpServletResponse(renderResponse);
+
+				httpServletResponse.addHeader(
+					"X-Pingback",
+					_portal.getPortalURL(renderRequest) + "/xmlrpc/pingback");
 			}
 		}
-		catch (Exception e) {
-			if (e instanceof NoSuchEntryException ||
-				e instanceof PrincipalException) {
+		catch (Exception exception) {
+			if (exception instanceof NoSuchEntryException ||
+				exception instanceof PrincipalException) {
 
-				SessionErrors.add(renderRequest, e.getClass());
+				SessionErrors.add(renderRequest, exception.getClass());
 
 				return "/blogs/error.jsp";
 			}
-			else {
-				throw new PortletException(e);
-			}
+
+			throw new PortletException(exception);
 		}
 
 		return "/blogs/view_entry.jsp";
 	}
 
-	@Reference(unbind = "-")
-	protected void setFriendlyURLEntryLocalService(
-		FriendlyURLEntryLocalService friendlyURLEntryLocalService) {
+	@Reference
+	private AssetDisplayPageFriendlyURLProvider
+		_assetDisplayPageFriendlyURLProvider;
 
-		_friendlyURLEntryLocalService = friendlyURLEntryLocalService;
-	}
-
+	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
 
 	@Reference

@@ -17,9 +17,13 @@ package com.liferay.bookmarks.web.internal.portlet.action;
 import com.liferay.bookmarks.constants.BookmarksWebKeys;
 import com.liferay.bookmarks.exception.NoSuchFolderException;
 import com.liferay.bookmarks.model.BookmarksFolder;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
@@ -38,23 +42,35 @@ public abstract class GetFolderMVCRenderCommand implements MVCRenderCommand {
 		try {
 			BookmarksFolder folder = ActionUtil.getFolder(renderRequest);
 
+			if (folder != null) {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)renderRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				checkPermissions(themeDisplay.getPermissionChecker(), folder);
+			}
+
 			renderRequest.setAttribute(
 				BookmarksWebKeys.BOOKMARKS_FOLDER, folder);
 		}
-		catch (Exception e) {
-			if (e instanceof NoSuchFolderException ||
-				e instanceof PrincipalException) {
+		catch (Exception exception) {
+			if (exception instanceof NoSuchFolderException ||
+				exception instanceof PrincipalException) {
 
-				SessionErrors.add(renderRequest, e.getClass());
+				SessionErrors.add(renderRequest, exception.getClass());
 
 				return "/bookmarks/error.jsp";
 			}
-			else {
-				throw new PortletException(e);
-			}
+
+			throw new PortletException(exception);
 		}
 
 		return getPath();
+	}
+
+	protected void checkPermissions(
+			PermissionChecker permissionChecker, BookmarksFolder folder)
+		throws PortalException {
 	}
 
 	protected abstract String getPath();

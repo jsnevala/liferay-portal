@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMTemplateVersion;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing DDMTemplateVersion in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see DDMTemplateVersion
  * @generated
  */
-@ProviderType
-public class DDMTemplateVersionCacheModel implements CacheModel<DDMTemplateVersion>,
-	Externalizable {
+public class DDMTemplateVersionCacheModel
+	implements CacheModel<DDMTemplateVersion>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,13 @@ public class DDMTemplateVersionCacheModel implements CacheModel<DDMTemplateVersi
 			return false;
 		}
 
-		DDMTemplateVersionCacheModel ddmTemplateVersionCacheModel = (DDMTemplateVersionCacheModel)obj;
+		DDMTemplateVersionCacheModel ddmTemplateVersionCacheModel =
+			(DDMTemplateVersionCacheModel)obj;
 
-		if (templateVersionId == ddmTemplateVersionCacheModel.templateVersionId) {
+		if ((templateVersionId ==
+				ddmTemplateVersionCacheModel.templateVersionId) &&
+			(mvccVersion == ddmTemplateVersionCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +61,30 @@ public class DDMTemplateVersionCacheModel implements CacheModel<DDMTemplateVersi
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, templateVersionId);
+		int hashCode = HashUtil.hash(0, templateVersionId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(37);
+		StringBundler sb = new StringBundler(41);
 
-		sb.append("{templateVersionId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
+		sb.append(", templateVersionId=");
 		sb.append(templateVersionId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -111,8 +127,11 @@ public class DDMTemplateVersionCacheModel implements CacheModel<DDMTemplateVersi
 
 	@Override
 	public DDMTemplateVersion toEntityModel() {
-		DDMTemplateVersionImpl ddmTemplateVersionImpl = new DDMTemplateVersionImpl();
+		DDMTemplateVersionImpl ddmTemplateVersionImpl =
+			new DDMTemplateVersionImpl();
 
+		ddmTemplateVersionImpl.setMvccVersion(mvccVersion);
+		ddmTemplateVersionImpl.setCtCollectionId(ctCollectionId);
 		ddmTemplateVersionImpl.setTemplateVersionId(templateVersionId);
 		ddmTemplateVersionImpl.setGroupId(groupId);
 		ddmTemplateVersionImpl.setCompanyId(companyId);
@@ -194,7 +213,13 @@ public class DDMTemplateVersionCacheModel implements CacheModel<DDMTemplateVersi
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
+
 		templateVersionId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -211,10 +236,10 @@ public class DDMTemplateVersionCacheModel implements CacheModel<DDMTemplateVersi
 
 		templateId = objectInput.readLong();
 		version = objectInput.readUTF();
-		name = objectInput.readUTF();
-		description = objectInput.readUTF();
+		name = (String)objectInput.readObject();
+		description = (String)objectInput.readObject();
 		language = objectInput.readUTF();
-		script = objectInput.readUTF();
+		script = (String)objectInput.readObject();
 
 		status = objectInput.readInt();
 
@@ -224,8 +249,11 @@ public class DDMTemplateVersionCacheModel implements CacheModel<DDMTemplateVersi
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
+
 		objectOutput.writeLong(templateVersionId);
 
 		objectOutput.writeLong(groupId);
@@ -257,17 +285,17 @@ public class DDMTemplateVersionCacheModel implements CacheModel<DDMTemplateVersi
 		}
 
 		if (name == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(name);
+			objectOutput.writeObject(name);
 		}
 
 		if (description == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(description);
+			objectOutput.writeObject(description);
 		}
 
 		if (language == null) {
@@ -278,10 +306,10 @@ public class DDMTemplateVersionCacheModel implements CacheModel<DDMTemplateVersi
 		}
 
 		if (script == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(script);
+			objectOutput.writeObject(script);
 		}
 
 		objectOutput.writeInt(status);
@@ -298,6 +326,8 @@ public class DDMTemplateVersionCacheModel implements CacheModel<DDMTemplateVersi
 		objectOutput.writeLong(statusDate);
 	}
 
+	public long mvccVersion;
+	public long ctCollectionId;
 	public long templateVersionId;
 	public long groupId;
 	public long companyId;
@@ -316,4 +346,5 @@ public class DDMTemplateVersionCacheModel implements CacheModel<DDMTemplateVersi
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

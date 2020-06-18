@@ -42,7 +42,10 @@ import java.util.Map;
 
 /**
  * @author Shuyang Zhou
+ * @deprecated As of Athanasius (7.3.x), replaced by {@link
+ *             TransactionalPortalCacheUtil}
  */
+@Deprecated
 public class TransactionalPortalCacheHelper {
 
 	public static final TransactionLifecycleListener
@@ -139,14 +142,6 @@ public class TransactionalPortalCacheHelper {
 		portalCacheMaps.add(new PortalCacheMap());
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #commit(boolean)}
-	 */
-	@Deprecated
-	public static void commit() {
-		commit(false);
-	}
-
 	public static void commit(boolean readOnly) {
 		PortalCacheMap portalCacheMap = _popPortalCacheMap();
 
@@ -192,17 +187,6 @@ public class TransactionalPortalCacheHelper {
 		return !portalCacheMaps.isEmpty();
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 * 			#put(PortalCache, Serializable, Object, int, boolean)}
-	 */
-	@Deprecated
-	public static <K extends Serializable, V> void put(
-		PortalCache<K, V> portalCache, K key, V value, int ttl) {
-
-		put(portalCache, key, value, ttl, false);
-	}
-
 	public static <K extends Serializable, V> void put(
 		PortalCache<K, V> portalCache, K key, V value, int ttl, boolean mvcc) {
 
@@ -226,17 +210,6 @@ public class TransactionalPortalCacheHelper {
 		uncommittedBuffer.put(
 			key,
 			new ValueEntry(value, ttl, SkipReplicationThreadLocal.isEnabled()));
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 * 			#removeAll(PortalCache, boolean)}
-	 */
-	@Deprecated
-	public static <K extends Serializable, V> void removeAll(
-		PortalCache<K, V> portalCache) {
-
-		removeAll(portalCache, false);
 	}
 
 	public static <K extends Serializable, V> void removeAll(
@@ -302,17 +275,15 @@ public class TransactionalPortalCacheHelper {
 		_NULL_HOLDER, PortalCache.DEFAULT_TIME_TO_LIVE, false);
 
 	private static final ThreadLocal<List<List<PortalCacheMap>>>
-		_backupPortalCacheMapsThreadLocal =
-			new CentralizedThreadLocal<>(
-				TransactionalPortalCacheHelper.class.getName() +
-					"._backupPortalCacheMapsThreadLocal",
-				ArrayList::new, false);
+		_backupPortalCacheMapsThreadLocal = new CentralizedThreadLocal<>(
+			TransactionalPortalCacheUtil.class.getName() +
+				"._backupPortalCacheMapsThreadLocal",
+			ArrayList::new, false);
 	private static final ThreadLocal<List<PortalCacheMap>>
-		_portalCacheMapsThreadLocal =
-			new CentralizedThreadLocal<>(
-				TransactionalPortalCacheHelper.class.getName() +
-					"._portalCacheMapsThreadLocal",
-				ArrayList::new, false);
+		_portalCacheMapsThreadLocal = new CentralizedThreadLocal<>(
+			TransactionalPortalCacheUtil.class.getName() +
+				"._portalCacheMapsThreadLocal",
+			ArrayList::new, false);
 	private static volatile Boolean _transactionalCacheEnabled;
 
 	private static class MarkerUncommittedBuffer extends UncommittedBuffer {
@@ -340,6 +311,16 @@ public class TransactionalPortalCacheHelper {
 
 					return null;
 				});
+		}
+
+		@Override
+		public void put(Serializable key, ValueEntry valueEntry) {
+			ValueEntry oldValueEntry = super._uncommittedMap.put(
+				key, valueEntry);
+
+			if (oldValueEntry != null) {
+				oldValueEntry.merge(valueEntry);
+			}
 		}
 
 		private MarkerUncommittedBuffer(
@@ -387,6 +368,10 @@ public class TransactionalPortalCacheHelper {
 
 			if (oldValueEntry != null) {
 				oldValueEntry.merge(valueEntry);
+
+				if (oldValueEntry.isRemove()) {
+					valueEntry._removed = true;
+				}
 			}
 		}
 
@@ -467,16 +452,12 @@ public class TransactionalPortalCacheHelper {
 
 	private static class ValueEntry {
 
-		public ValueEntry(Object value, int ttl, boolean skipReplicator) {
-			_value = value;
-			_ttl = ttl;
-			_skipReplicator = skipReplicator;
-		}
-
 		public void commitTo(
 			PortalCache<Serializable, Object> portalCache, Serializable key) {
 
-			if (_value == _NULL_HOLDER) {
+			boolean remove = isRemove();
+
+			if (remove || _removed) {
 				if (_skipReplicator) {
 					PortalCacheHelperUtil.removeWithoutReplicator(
 						portalCache, key);
@@ -485,7 +466,8 @@ public class TransactionalPortalCacheHelper {
 					portalCache.remove(key);
 				}
 			}
-			else {
+
+			if (!remove) {
 				if (_skipReplicator) {
 					PortalCacheHelperUtil.putWithoutReplicator(
 						portalCache, key, _value, _ttl);
@@ -521,6 +503,13 @@ public class TransactionalPortalCacheHelper {
 			}
 		}
 
+		private ValueEntry(Object value, int ttl, boolean skipReplicator) {
+			_value = value;
+			_ttl = ttl;
+			_skipReplicator = skipReplicator;
+		}
+
+		private boolean _removed;
 		private boolean _skipReplicator;
 		private final int _ttl;
 		private final Object _value;

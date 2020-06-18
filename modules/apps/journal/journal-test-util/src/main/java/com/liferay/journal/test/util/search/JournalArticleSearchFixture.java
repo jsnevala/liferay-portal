@@ -40,14 +40,24 @@ public class JournalArticleSearchFixture {
 	public JournalArticle addArticle(
 		JournalArticleBlueprint journalArticleBlueprint) {
 
+		String ddmStructureKey = "BASIC-WEB-CONTENT";
+		String ddmTemplateKey = "BASIC-WEB-CONTENT";
+
+		return addArticle(
+			journalArticleBlueprint, ddmStructureKey, ddmTemplateKey);
+	}
+
+	public JournalArticle addArticle(
+		JournalArticleBlueprint journalArticleBlueprint, String ddmStructureKey,
+		String ddmTemplateKey) {
+
 		long userId = journalArticleBlueprint.getUserId();
 		long groupId = journalArticleBlueprint.getGroupId();
 		long folderId = JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID;
 		Map<Locale, String> titleMap = journalArticleBlueprint.getTitleMap();
-		Map<Locale, String> descriptionMap = null;
+		Map<Locale, String> descriptionMap =
+			journalArticleBlueprint.getDescriptionMap();
 		String contentString = journalArticleBlueprint.getContentString();
-		String ddmStructureKey = "BASIC-WEB-CONTENT";
-		String ddmTemplateKey = "BASIC-WEB-CONTENT";
 
 		ServiceContext serviceContext = getServiceContext(groupId, userId);
 
@@ -106,8 +116,8 @@ public class JournalArticleSearchFixture {
 				userId, groupId, folderId, titleMap, descriptionMap,
 				contentString, ddmStructureKey, ddmTemplateKey, serviceContext);
 		}
-		catch (PortalException pe) {
-			throw new RuntimeException(pe);
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
 		}
 	}
 
@@ -115,8 +125,8 @@ public class JournalArticleSearchFixture {
 		try {
 			return ServiceContextTestUtil.getServiceContext(groupId, userId);
 		}
-		catch (PortalException pe) {
-			throw new RuntimeException(pe);
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
 		}
 	}
 

@@ -15,11 +15,13 @@
 package com.liferay.license.manager.web.internal.portlet;
 
 import com.liferay.license.manager.web.internal.constants.LicenseManagerPortletKeys;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 
 import javax.portlet.Portlet;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Peter Fellwock
@@ -40,10 +42,17 @@ import org.osgi.service.component.annotations.Component;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + LicenseManagerPortletKeys.LICENSE_MANAGER,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=administrator"
 	},
 	service = Portlet.class
 )
 public class LicenseManagerPortlet extends MVCPortlet {
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.license.manager.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
+	}
+
 }

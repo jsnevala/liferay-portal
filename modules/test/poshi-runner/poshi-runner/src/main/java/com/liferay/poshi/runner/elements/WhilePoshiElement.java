@@ -14,6 +14,8 @@
 
 package com.liferay.poshi.runner.elements;
 
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -37,7 +39,8 @@ public class WhilePoshiElement extends IfPoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		if (_isElementType(parentPoshiElement, poshiScript)) {
 			return new WhilePoshiElement(parentPoshiElement, poshiScript);
@@ -58,7 +61,8 @@ public class WhilePoshiElement extends IfPoshiElement {
 	}
 
 	protected WhilePoshiElement(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}
@@ -72,6 +76,13 @@ public class WhilePoshiElement extends IfPoshiElement {
 
 		sb.append(getPoshiScriptKeyword());
 		sb.append(" (");
+
+		List<EqualsPoshiElement> equalsPoshiElement = elements("equals");
+
+		if (equalsPoshiElement.size() == 1) {
+			parentheticalContent = "(" + parentheticalContent + ")";
+		}
+
 		sb.append(parentheticalContent);
 
 		if (attributeValue("max-iterations") != null) {

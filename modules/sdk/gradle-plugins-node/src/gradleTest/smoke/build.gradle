@@ -1,10 +1,10 @@
 apply plugin: "com.liferay.node"
 
-task runGradleTest
-
 node {
-	nodeVersion = "8.4.0"
+	useNpm = true
 }
+
+task runGradleTest
 
 runGradleTest {
 	dependsOn npmInstall

@@ -14,13 +14,12 @@
 
 package com.liferay.portal.search.elasticsearch6.internal.search.engine.adapter.index;
 
-import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.engine.adapter.index.CreateIndexRequest;
 import com.liferay.portal.search.engine.adapter.index.CreateIndexResponse;
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexAction;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentType;
 
 import org.osgi.service.component.annotations.Component;
@@ -41,19 +40,16 @@ public class CreateIndexRequestExecutorImpl
 		org.elasticsearch.action.admin.indices.create.CreateIndexResponse
 			elasticsearchCreateIndexResponse = createIndexRequestBuilder.get();
 
-		CreateIndexResponse createIndexResponse = new CreateIndexResponse(
+		return new CreateIndexResponse(
 			elasticsearchCreateIndexResponse.isAcknowledged());
-
-		return createIndexResponse;
 	}
 
 	protected CreateIndexRequestBuilder createCreateIndexRequestBuilder(
 		CreateIndexRequest createIndexRequest) {
 
-		Client client = elasticsearchConnectionManager.getClient();
-
 		CreateIndexRequestBuilder createIndexRequestBuilder =
-			CreateIndexAction.INSTANCE.newRequestBuilder(client);
+			CreateIndexAction.INSTANCE.newRequestBuilder(
+				_elasticsearchClientResolver.getClient());
 
 		createIndexRequestBuilder.setIndex(createIndexRequest.getIndexName());
 		createIndexRequestBuilder.setSource(
@@ -62,7 +58,13 @@ public class CreateIndexRequestExecutorImpl
 		return createIndexRequestBuilder;
 	}
 
-	@Reference
-	protected ElasticsearchConnectionManager elasticsearchConnectionManager;
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private ElasticsearchClientResolver _elasticsearchClientResolver;
 
 }

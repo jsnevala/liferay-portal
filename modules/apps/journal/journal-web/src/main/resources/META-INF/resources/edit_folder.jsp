@@ -25,8 +25,6 @@ long folderId = BeanParamUtil.getLong(folder, request, "folderId");
 
 long parentFolderId = BeanParamUtil.getLong(folder, request, "parentFolderId", JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
-boolean mergeWithParentFolderDisabled = ParamUtil.getBoolean(request, "mergeWithParentFolderDisabled");
-
 boolean rootFolder = ParamUtil.getBoolean(request, "rootFolder");
 
 boolean workflowEnabled = WorkflowEngineManagerUtil.isDeployed() && (WorkflowHandlerRegistryUtil.getWorkflowHandler(JournalArticle.class.getName()) != null);
@@ -59,7 +57,7 @@ else {
 renderResponse.setTitle(title);
 %>
 
-<portlet:actionURL name='<%= rootFolder ? "updateWorkflowDefinitions" : ((folder == null) ? "addFolder" : "updateFolder") %>' var="editFolderURL">
+<portlet:actionURL name='<%= rootFolder ? "/journal/update_workflow_definitions" : ((folder == null) ? "/journal/add_folder" : "/journal/update_folder") %>' var="editFolderURL">
 	<portlet:param name="mvcPath" value="/edit_folder.jsp" />
 </portlet:actionURL>
 
@@ -67,7 +65,7 @@ renderResponse.setTitle(title);
 	var="removeDDMStructureIcon"
 >
 	<liferay-ui:icon
-		icon="times"
+		icon="times-circle"
 		markupView="lexicon"
 		message="remove"
 	/>
@@ -87,11 +85,11 @@ renderResponse.setTitle(title);
 
 		<liferay-ui:error exception="<%= FolderNameException.class %>">
 			<p>
-				<liferay-ui:message arguments="<%= new String[] {JournalFolderConstants.NAME_LABEL, JournalFolderConstants.NAME_GENERAL_RESTRICTIONS, JournalFolderConstants.NAME_RESERVED_WORDS} %>" key="the-x-cannot-be-x-or-a-reserved-word-such-as-x" />
+				<liferay-ui:message arguments="<%= new String[] {JournalFolderConstants.NAME_RESERVED_WORDS} %>" key="the-folder-name-cannot-be-blank-or-a-reserved-word-such-as-x" />
 			</p>
 
 			<p>
-				<liferay-ui:message arguments="<%= new String[] {JournalFolderConstants.NAME_LABEL, JournalFolderConstants.getNameInvalidCharacters(journalDisplayContext.getCharactersBlacklist())} %>" key="the-x-cannot-contain-the-following-invalid-characters-x" />
+				<liferay-ui:message arguments="<%= new String[] {JournalFolderConstants.getNameInvalidCharacters(journalDisplayContext.getCharactersBlacklist())} %>" key="the-folder-name-cannot-contain-the-following-invalid-characters-x" />
 			</p>
 		</liferay-ui:error>
 
@@ -151,47 +149,47 @@ renderResponse.setTitle(title);
 
 						<aui:button name="selectFolderButton" value="select" />
 
-						<aui:script use="liferay-item-selector-dialog">
-							$('#<portlet:namespace />selectFolderButton').on(
-								'click',
-								function(event) {
+						<aui:script require="frontend-js-web/liferay/ItemSelectorDialog.es as ItemSelectorDialog">
+							var selectFolderButton = document.getElementById(
+								'<portlet:namespace />selectFolderButton'
+							);
+
+							if (selectFolderButton) {
+								selectFolderButton.addEventListener('click', function (event) {
 									event.preventDefault();
 
-									var itemSelectorDialog = new A.LiferayItemSelectorDialog(
-										{
-											eventName: '<portlet:namespace />selectFolder',
-											on: {
-												selectedItemChange: function(event) {
-													var selectedItem = event.newVal;
+									var itemSelectorDialog = new ItemSelectorDialog.default({
+										eventName: '<portlet:namespace />selectFolder',
+										singleSelect: true,
+										title: '<liferay-ui:message arguments="folder" key="select-x" />',
 
-													if (selectedItem) {
-														var folderData = {
-															idString: 'parentFolderId',
-															idValue: selectedItem.folderId,
-															nameString: 'parentFolderName',
-															nameValue: selectedItem.folderName
-														};
+										<portlet:renderURL var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+											<portlet:param name="mvcPath" value="/select_folder.jsp" />
+											<portlet:param name="folderId" value="<%= String.valueOf(folderId) %>" />
+											<portlet:param name="parentFolderId" value="<%= String.valueOf(parentFolderId) %>" />
+										</portlet:renderURL>
 
-														Liferay.Util.selectFolder(folderData, '<portlet:namespace />');
-													}
-												}
-											},
-											'strings.add': '<liferay-ui:message key="done" />',
-											title: '<liferay-ui:message arguments="folder" key="select-x" />',
-
-											<portlet:renderURL var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-												<portlet:param name="mvcPath" value="/select_folder.jsp" />
-												<portlet:param name="folderId" value="<%= String.valueOf(folderId) %>" />
-												<portlet:param name="parentFolderId" value="<%= String.valueOf(parentFolderId) %>" />
-											</portlet:renderURL>
-
-											url: '<%= selectFolderURL.toString() %>'
-										}
-									);
+										url: '<%= selectFolderURL.toString() %>',
+									});
 
 									itemSelectorDialog.open();
-								}
-							);
+
+									itemSelectorDialog.on('selectedItemChange', function (event) {
+										var selectedItem = event.selectedItem;
+
+										if (selectedItem) {
+											var folderData = {
+												idString: 'parentFolderId',
+												idValue: selectedItem.folderId,
+												nameString: 'parentFolderName',
+												nameValue: selectedItem.folderName,
+											};
+
+											Liferay.Util.selectFolder(folderData, '<portlet:namespace />');
+										}
+									});
+								});
+							}
 						</aui:script>
 
 						<%
@@ -200,8 +198,6 @@ renderResponse.setTitle(title);
 
 						<aui:button disabled="<%= parentFolderId <= 0 %>" name="removeFolderButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
 					</div>
-
-					<aui:input disabled="<%= mergeWithParentFolderDisabled %>" label="merge-with-parent-folder" name="mergeWithParentFolder" type="toggle-switch" />
 				</liferay-frontend:fieldset>
 			</c:if>
 
@@ -223,6 +219,7 @@ renderResponse.setTitle(title);
 				<liferay-frontend:fieldset
 					collapsed="<%= true %>"
 					collapsible="<%= true %>"
+					cssClass="structure-restrictions"
 					helpMessage='<%= rootFolder ? "" : "structure-restrictions-help" %>'
 					label='<%= rootFolder ? "" : (workflowEnabled ? "structure-restrictions-and-workflow" : "structure-restrictions") %>'
 				>
@@ -257,31 +254,26 @@ renderResponse.setTitle(title);
 									modelVar="ddmStructure"
 								>
 									<liferay-ui:search-container-column-text
+										cssClass="table-cell-expand table-cell-minw-200 table-title"
 										name="name"
-										truncate="<%= true %>"
 										value="<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>"
 									/>
 
 									<c:if test="<%= workflowEnabled %>">
 										<liferay-ui:search-container-column-text
+											cssClass="table-cell-expand table-cell-minw-200"
 											name="workflow"
 										>
-											<aui:select label="" name='<%= "workflowDefinition" + ddmStructure.getStructureId() %>'>
+											<aui:select label="" name='<%= "workflowDefinition" + ddmStructure.getStructureId() %>' wrapperCssClass="mb-0">
 												<aui:option label="no-workflow" value="" />
 
 												<%
-												WorkflowDefinitionLink workflowDefinitionLink = null;
-
-												try {
-													workflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.getWorkflowDefinitionLink(company.getCompanyId(), scopeGroupId, JournalFolder.class.getName(), folderId, ddmStructure.getStructureId(), true);
-												}
-												catch (NoSuchWorkflowDefinitionLinkException nswdle) {
-												}
+												WorkflowDefinitionLink workflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.fetchWorkflowDefinitionLink(company.getCompanyId(), scopeGroupId, JournalFolder.class.getName(), folderId, ddmStructure.getStructureId(), true);
 
 												for (WorkflowDefinition workflowDefinition : workflowDefinitions) {
 													boolean selected = false;
 
-													if ((workflowDefinitionLink != null) && workflowDefinitionLink.getWorkflowDefinitionName().equals(workflowDefinition.getName()) && (workflowDefinitionLink.getWorkflowDefinitionVersion() == workflowDefinition.getVersion())) {
+													if ((workflowDefinitionLink != null) && Objects.equals(workflowDefinitionLink.getWorkflowDefinitionName(), workflowDefinition.getName()) && (workflowDefinitionLink.getWorkflowDefinitionVersion() == workflowDefinition.getVersion())) {
 														selected = true;
 													}
 												%>
@@ -326,18 +318,12 @@ renderResponse.setTitle(title);
 								<aui:option label="no-workflow" value="" />
 
 								<%
-								WorkflowDefinitionLink workflowDefinitionLink = null;
-
-								try {
-									workflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.getWorkflowDefinitionLink(company.getCompanyId(), scopeGroupId, JournalFolder.class.getName(), folderId, JournalArticleConstants.DDM_STRUCTURE_ID_ALL, true);
-								}
-								catch (NoSuchWorkflowDefinitionLinkException nswdle) {
-								}
+								WorkflowDefinitionLink workflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.fetchWorkflowDefinitionLink(company.getCompanyId(), scopeGroupId, JournalFolder.class.getName(), folderId, JournalArticleConstants.DDM_STRUCTURE_ID_ALL, true);
 
 								for (WorkflowDefinition workflowDefinition : workflowDefinitions) {
 									boolean selected = false;
 
-									if ((workflowDefinitionLink != null) && workflowDefinitionLink.getWorkflowDefinitionName().equals(workflowDefinition.getName()) && (workflowDefinitionLink.getWorkflowDefinitionVersion() == workflowDefinition.getVersion())) {
+									if ((workflowDefinitionLink != null) && Objects.equals(workflowDefinitionLink.getWorkflowDefinitionName(), workflowDefinition.getName()) && (workflowDefinitionLink.getWorkflowDefinitionVersion() == workflowDefinition.getVersion())) {
 										selected = true;
 									}
 								%>
@@ -386,7 +372,7 @@ renderResponse.setTitle(title);
 			for (WorkflowDefinition workflowDefinition : workflowDefinitions) {
 			%>
 
-				<aui:option label="<%= HtmlUtil.escape(workflowDefinition.getTitle(languageId)) %>" selected="<% selected %>" value="<%= HtmlUtil.escapeAttribute(workflowDefinition.getName()) + StringPool.AT + workflowDefinition.getVersion() %>" />
+				<aui:option label="<%= HtmlUtil.escape(workflowDefinition.getTitle(languageId)) %>" value="<%= HtmlUtil.escapeAttribute(workflowDefinition.getName()) + StringPool.AT + workflowDefinition.getVersion() %>" />
 
 			<%
 			}
@@ -397,46 +383,65 @@ renderResponse.setTitle(title);
 </liferay-util:buffer>
 
 <aui:script use="liferay-search-container">
-	var searchContainer = Liferay.SearchContainer.get('<portlet:namespace />ddmStructuresSearchContainer');
+	var searchContainer = Liferay.SearchContainer.get(
+		'<portlet:namespace />ddmStructuresSearchContainer'
+	);
 
-	$('#<portlet:namespace />selectDDMStructure').on(
-		'click',
-		function(event) {
+	var selectDDMStructureButton = document.getElementById(
+		'<portlet:namespace />selectDDMStructure'
+	);
+
+	if (selectDDMStructureButton) {
+		selectDDMStructureButton.addEventListener('click', function (event) {
 			Liferay.Util.selectEntity(
 				{
 					dialog: {
 						constrain: true,
-						modal: true
+						modal: true,
 					},
 					eventName: '<portlet:namespace />selectDDMStructure',
 					title: '<%= UnicodeLanguageUtil.get(request, "structures") %>',
-					uri: '<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcPath" value="/select_ddm_structure.jsp" /></portlet:renderURL>'
+					uri:
+						'<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcPath" value="/select_ddm_structure.jsp" /></portlet:renderURL>',
 				},
-				function(event) {
-					var ddmStructureLink = '<a class="modify-link" data-rowId="' + event.ddmstructureid + '" href="javascript:;"><%= UnicodeFormatter.toString(removeDDMStructureIcon) %></a>';
+				function (event) {
+					var ddmStructureLink =
+						'<a class="modify-link" data-rowId="' +
+						event.ddmstructureid +
+						'" href="javascript:;"><%= UnicodeFormatter.toString(removeDDMStructureIcon) %></a>';
 
 					<c:choose>
 						<c:when test="<%= workflowEnabled %>">
-							var workflowDefinitions = '<%= UnicodeFormatter.toString(workflowDefinitionsBuffer) %>';
+							var workflowDefinitions =
+								'<%= UnicodeFormatter.toString(workflowDefinitionsBuffer) %>';
 
-							workflowDefinitions = workflowDefinitions.replace(/LIFERAY_WORKFLOW_DEFINITION_DDM_STRUCTURE/g, 'workflowDefinition' + event.ddmstructureid);
+							workflowDefinitions = workflowDefinitions.replace(
+								/LIFERAY_WORKFLOW_DEFINITION_DDM_STRUCTURE/g,
+								'workflowDefinition' + event.ddmstructureid
+							);
 
-							searchContainer.addRow([event.name, workflowDefinitions, ddmStructureLink], event.ddmstructureid);
+							searchContainer.addRow(
+								[event.name, workflowDefinitions, ddmStructureLink],
+								event.ddmstructureid
+							);
 						</c:when>
 						<c:otherwise>
-							searchContainer.addRow([event.name, ddmStructureLink], event.ddmstructureid);
+							searchContainer.addRow(
+								[event.name, ddmStructureLink],
+								event.ddmstructureid
+							);
 						</c:otherwise>
 					</c:choose>
 
 					searchContainer.updateDataStore();
 				}
 			);
-		}
-	);
+		});
+	}
 
 	searchContainer.get('contentBox').delegate(
 		'click',
-		function(event) {
+		function (event) {
 			var link = event.currentTarget;
 
 			var tr = link.ancestor('tr');
@@ -448,25 +453,21 @@ renderResponse.setTitle(title);
 </aui:script>
 
 <aui:script>
-	Liferay.Util.toggleRadio('<portlet:namespace />restrictionTypeInherit', '', ['<portlet:namespace />restrictionTypeDefinedDiv', '<portlet:namespace />restrictionTypeWorkflowDiv']);
-	Liferay.Util.toggleRadio('<portlet:namespace />restrictionTypeDefined', '<portlet:namespace />restrictionTypeDefinedDiv', '<portlet:namespace />restrictionTypeWorkflowDiv');
+	Liferay.Util.toggleRadio('<portlet:namespace />restrictionTypeInherit', '', [
+		'<portlet:namespace />restrictionTypeDefinedDiv',
+		'<portlet:namespace />restrictionTypeWorkflowDiv',
+	]);
+	Liferay.Util.toggleRadio(
+		'<portlet:namespace />restrictionTypeDefined',
+		'<portlet:namespace />restrictionTypeDefinedDiv',
+		'<portlet:namespace />restrictionTypeWorkflowDiv'
+	);
 
 	<c:if test="<%= !rootFolder %>">
-		Liferay.Util.toggleRadio('<portlet:namespace />restrictionTypeWorkflow', '<portlet:namespace />restrictionTypeWorkflowDiv', '<portlet:namespace />restrictionTypeDefinedDiv');
+		Liferay.Util.toggleRadio(
+			'<portlet:namespace />restrictionTypeWorkflow',
+			'<portlet:namespace />restrictionTypeWorkflowDiv',
+			'<portlet:namespace />restrictionTypeDefinedDiv'
+		);
 	</c:if>
 </aui:script>
-
-<%
-if (folder != null) {
-	JournalPortletUtil.addPortletBreadcrumbEntries(folderId, request, journalDisplayContext.getPortletURL());
-
-	PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "edit"), currentURL);
-}
-else {
-	if (parentFolderId > 0) {
-		JournalPortletUtil.addPortletBreadcrumbEntries(parentFolderId, request, journalDisplayContext.getPortletURL());
-	}
-
-	PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "add-folder"), currentURL);
-}
-%>

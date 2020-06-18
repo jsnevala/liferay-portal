@@ -46,27 +46,29 @@ public class XmlRpcServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
 		PortalUtil.sendError(
 			HttpServletResponse.SC_NOT_FOUND,
 			new IllegalArgumentException("The GET method is not supported"),
-			request, response);
+			httpServletRequest, httpServletResponse);
 	}
 
 	@Override
 	protected void doPost(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
 		Response xmlRpcResponse = null;
 
 		try {
-			long companyId = PortalInstances.getCompanyId(request);
+			long companyId = PortalInstances.getCompanyId(httpServletRequest);
 
-			String token = getToken(request);
+			String token = getToken(httpServletRequest);
 
-			InputStream is = request.getInputStream();
+			InputStream is = httpServletRequest.getInputStream();
 
 			String xml = StringUtil.read(is);
 
@@ -77,16 +79,16 @@ public class XmlRpcServlet extends HttpServlet {
 
 			xmlRpcResponse = invokeMethod(companyId, token, methodName, args);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			xmlRpcResponse = XmlRpcUtil.createFault(
 				XmlRpcConstants.NOT_WELL_FORMED, "XML is not well formed");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(ioe, ioe);
+				_log.debug(ioException, ioException);
 			}
 		}
-		catch (XmlRpcException xre) {
-			_log.error(xre, xre);
+		catch (XmlRpcException xmlRpcException) {
+			_log.error(xmlRpcException, xmlRpcException);
 		}
 
 		if (xmlRpcResponse == null) {
@@ -94,24 +96,26 @@ public class XmlRpcServlet extends HttpServlet {
 				XmlRpcConstants.SYSTEM_ERROR, "Unknown error occurred");
 		}
 
-		response.setCharacterEncoding(StringPool.UTF8);
-		response.setContentType(ContentTypes.TEXT_XML);
-		response.setStatus(HttpServletResponse.SC_OK);
+		httpServletResponse.setCharacterEncoding(StringPool.UTF8);
+		httpServletResponse.setContentType(ContentTypes.TEXT_XML);
+		httpServletResponse.setStatus(HttpServletResponse.SC_OK);
 
 		try {
-			ServletResponseUtil.write(response, xmlRpcResponse.toXml());
+			ServletResponseUtil.write(
+				httpServletResponse, xmlRpcResponse.toXml());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 
-			response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
+			httpServletResponse.setStatus(
+				HttpServletResponse.SC_PRECONDITION_FAILED);
 		}
 	}
 
-	protected String getToken(HttpServletRequest request) {
-		String token = request.getPathInfo();
+	protected String getToken(HttpServletRequest httpServletRequest) {
+		String token = httpServletRequest.getPathInfo();
 
 		return HttpUtil.fixPath(token);
 	}

@@ -40,10 +40,10 @@ public class AdaptiveMediaConfigurationCategory
 		return _CATEGORY_SECTION;
 	}
 
-	private static final String _CATEGORY_ICON = "picture";
+	private static final String _CATEGORY_ICON = "autosize";
 
 	private static final String _CATEGORY_KEY = "adaptive-media";
 
-	private static final String _CATEGORY_SECTION = "content";
+	private static final String _CATEGORY_SECTION = "content-and-data";
 
 }

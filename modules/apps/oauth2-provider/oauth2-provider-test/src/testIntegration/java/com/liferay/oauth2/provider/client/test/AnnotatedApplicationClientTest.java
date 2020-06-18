@@ -14,61 +14,59 @@
 
 package com.liferay.oauth2.provider.client.test;
 
-import com.liferay.oauth2.provider.test.internal.TestAnnotatedApplication;
-import com.liferay.oauth2.provider.test.internal.activator.BaseTestPreparatorBundleActivator;
+import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.oauth2.provider.internal.test.TestAnnotatedApplication;
+import com.liferay.oauth2.provider.internal.test.TestInterfaceAnnotatedApplication;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.test.log.CaptureAppender;
+import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
+import java.util.Arrays;
 import java.util.Dictionary;
 
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.RunAsClient;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.Archive;
+import org.apache.log4j.Level;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.BundleActivator;
 
 /**
  * @author Carlos Sierra Andrés
  */
-@RunAsClient
 @RunWith(Arquillian.class)
 public class AnnotatedApplicationClientTest extends BaseClientTestCase {
 
-	@Deployment
-	public static Archive<?> getArchive() throws Exception {
-		return BaseClientTestCase.getArchive(
-			AnnotatedApplicationTestPreparatorBundleActivator.class);
-	}
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new LiferayIntegrationTestRule();
 
 	@Test
 	public void test() throws Exception {
-		WebTarget webTarget = getWebTarget("/annotated");
+		try (CaptureAppender captureAppender =
+				Log4JLoggerTestUtil.configureLog4JLogger(
+					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
 
-		Invocation.Builder invocationBuilder = authorize(
-			webTarget.request(),
-			getToken(
-				"oauthTestApplicationAfter", null,
-				getResourceOwnerPasswordBiFunction("test@liferay.com", "test"),
-				this::parseTokenString));
+			testNoScopeAnnotation("/annotated-impl/no-scope");
+			testRequiresScopeAnnotation("/annotated-impl");
 
-		Assert.assertEquals(
-			"everything.read", invocationBuilder.get(String.class));
-
-		invocationBuilder = authorize(
-			webTarget.request(), getToken("oauthTestApplicationBefore"));
-
-		Response response = invocationBuilder.get();
-
-		Assert.assertEquals(403, response.getStatus());
+			testNoScopeAnnotation("/annotated-interface/no-scope");
+			testRequiresScopeAnnotation("/annotated-interface");
+		}
 	}
 
 	public static class AnnotatedApplicationTestPreparatorBundleActivator
@@ -82,18 +80,81 @@ public class AnnotatedApplicationClientTest extends BaseClientTestCase {
 
 			Dictionary<String, Object> properties = new HashMapDictionary<>();
 
-			properties.put("oauth2.scopechecker.type", "annotations");
-
-			createOAuth2Application(
-				defaultCompanyId, user, "oauthTestApplicationBefore");
+			properties.put("auth.verifier.guest.allowed", false);
+			properties.put("oauth2.scope.checker.type", "annotations");
 
 			registerJaxRsApplication(
-				new TestAnnotatedApplication(), "annotated", properties);
+				new TestInterfaceAnnotatedApplication(), "annotated-interface",
+				properties);
+
+			registerJaxRsApplication(
+				new TestAnnotatedApplication(), "annotated-impl", properties);
 
 			createOAuth2Application(
-				defaultCompanyId, user, "oauthTestApplicationAfter");
+				defaultCompanyId, user, "oauthTestApplication",
+				Arrays.asList(
+					"everything", "everything.read", "everything.write"));
 		}
 
+	}
+
+	@Override
+	protected BundleActivator getBundleActivator() {
+		return new AnnotatedApplicationTestPreparatorBundleActivator();
+	}
+
+	protected void testNoScopeAnnotation(String path) {
+		WebTarget webTarget = getWebTarget(path);
+
+		Invocation.Builder invocationBuilder = webTarget.request();
+
+		Response response = invocationBuilder.get();
+
+		Assert.assertEquals(403, response.getStatus());
+
+		invocationBuilder = authorize(
+			invocationBuilder,
+			getToken(
+				"oauthTestApplication", null,
+				getClientCredentialsResponseBiFunction(StringPool.BLANK),
+				this::parseTokenString));
+
+		invocationBuilder.get();
+
+		Assert.assertEquals("no-scope", invocationBuilder.get(String.class));
+	}
+
+	protected void testRequiresScopeAnnotation(String path) {
+		WebTarget webTarget = getWebTarget(path);
+
+		Invocation.Builder invocationBuilder = webTarget.request();
+
+		Response response = invocationBuilder.get();
+
+		Assert.assertEquals(403, response.getStatus());
+
+		invocationBuilder = authorize(
+			webTarget.request(),
+			getToken(
+				"oauthTestApplication", null,
+				getClientCredentialsResponseBiFunction("everything.write"),
+				this::parseTokenString));
+
+		response = invocationBuilder.get();
+
+		Assert.assertEquals(403, response.getStatus());
+
+		invocationBuilder = authorize(
+			webTarget.request(),
+			getToken(
+				"oauthTestApplication", null,
+				getClientCredentialsResponseBiFunction("everything.read"),
+				this::parseTokenString));
+
+		invocationBuilder.get();
+
+		Assert.assertEquals(
+			"everything.read", invocationBuilder.get(String.class));
 	}
 
 }

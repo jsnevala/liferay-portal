@@ -21,4 +21,6 @@ public class SiteNavigationMenuItemTypeLayoutWebKeys {
 
 	public static final String ITEM_SELECTOR = "ITEM_SELECTOR";
 
+	public static final String SET_CUSTOM_NAME = "SET_CUSTOM_NAME";
+
 }

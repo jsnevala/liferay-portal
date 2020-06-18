@@ -1,11 +1,12 @@
-<definition default="isChecked">
-	<command name="isChecked">
-		<execute function="WaitForSPARefresh" />
+@default = "isChecked"
+definition {
 
-		<execute selenium="waitForElementPresent" />
+	function isChecked {
+		WaitForSPARefresh();
 
-		<execute selenium="waitForVisible" />
+		selenium.waitForElementPresent();
 
-		<execute selenium="isChecked" />
-	</command>
-</definition>
+		selenium.isChecked();
+	}
+
+}

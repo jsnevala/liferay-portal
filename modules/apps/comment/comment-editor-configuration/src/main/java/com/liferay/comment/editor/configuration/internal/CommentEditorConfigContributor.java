@@ -28,7 +28,7 @@ import java.util.Map;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Ambrin Chaudhary
+ * @author Ambrín Chaudhary
  */
 @Component(
 	property = "editor.config.key=commentEditor",
@@ -44,8 +44,10 @@ public class CommentEditorConfigContributor
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory) {
 
 		jsonObject.put(
-			"allowedContent", PropsValues.DISCUSSION_COMMENTS_ALLOWED_CONTENT);
-		jsonObject.put("toolbars", JSONFactoryUtil.createJSONObject());
+			"allowedContent", PropsValues.DISCUSSION_COMMENTS_ALLOWED_CONTENT
+		).put(
+			"toolbars", JSONFactoryUtil.createJSONObject()
+		);
 
 		if (PropsValues.DISCUSSION_COMMENTS_FORMAT.equals("bbcode")) {
 			String extraPlugins = jsonObject.getString("extraPlugins");

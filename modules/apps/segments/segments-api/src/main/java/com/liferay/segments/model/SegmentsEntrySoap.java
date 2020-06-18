@@ -14,8 +14,6 @@
 
 package com.liferay.segments.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,15 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.segments.service.http.SegmentsEntryServiceSoap}.
  *
  * @author Eduardo Garcia
- * @see com.liferay.segments.service.http.SegmentsEntryServiceSoap
  * @generated
  */
-@ProviderType
 public class SegmentsEntrySoap implements Serializable {
+
 	public static SegmentsEntrySoap toSoapModel(SegmentsEntry model) {
 		SegmentsEntrySoap soapModel = new SegmentsEntrySoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setUuid(model.getUuid());
 		soapModel.setSegmentsEntryId(model.getSegmentsEntryId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -41,12 +40,14 @@ public class SegmentsEntrySoap implements Serializable {
 		soapModel.setUserName(model.getUserName());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
+		soapModel.setSegmentsEntryKey(model.getSegmentsEntryKey());
 		soapModel.setName(model.getName());
 		soapModel.setDescription(model.getDescription());
 		soapModel.setActive(model.isActive());
 		soapModel.setCriteria(model.getCriteria());
-		soapModel.setKey(model.getKey());
+		soapModel.setSource(model.getSource());
 		soapModel.setType(model.getType());
+		soapModel.setLastPublishDate(model.getLastPublishDate());
 
 		return soapModel;
 	}
@@ -79,7 +80,8 @@ public class SegmentsEntrySoap implements Serializable {
 	}
 
 	public static SegmentsEntrySoap[] toSoapModels(List<SegmentsEntry> models) {
-		List<SegmentsEntrySoap> soapModels = new ArrayList<SegmentsEntrySoap>(models.size());
+		List<SegmentsEntrySoap> soapModels = new ArrayList<SegmentsEntrySoap>(
+			models.size());
 
 		for (SegmentsEntry model : models) {
 			soapModels.add(toSoapModel(model));
@@ -97,6 +99,22 @@ public class SegmentsEntrySoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setSegmentsEntryId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public String getUuid() {
+		return _uuid;
+	}
+
+	public void setUuid(String uuid) {
+		_uuid = uuid;
 	}
 
 	public long getSegmentsEntryId() {
@@ -155,6 +173,14 @@ public class SegmentsEntrySoap implements Serializable {
 		_modifiedDate = modifiedDate;
 	}
 
+	public String getSegmentsEntryKey() {
+		return _segmentsEntryKey;
+	}
+
+	public void setSegmentsEntryKey(String segmentsEntryKey) {
+		_segmentsEntryKey = segmentsEntryKey;
+	}
+
 	public String getName() {
 		return _name;
 	}
@@ -191,12 +217,12 @@ public class SegmentsEntrySoap implements Serializable {
 		_criteria = criteria;
 	}
 
-	public String getKey() {
-		return _key;
+	public String getSource() {
+		return _source;
 	}
 
-	public void setKey(String key) {
-		_key = key;
+	public void setSource(String source) {
+		_source = source;
 	}
 
 	public String getType() {
@@ -207,6 +233,16 @@ public class SegmentsEntrySoap implements Serializable {
 		_type = type;
 	}
 
+	public Date getLastPublishDate() {
+		return _lastPublishDate;
+	}
+
+	public void setLastPublishDate(Date lastPublishDate) {
+		_lastPublishDate = lastPublishDate;
+	}
+
+	private long _mvccVersion;
+	private String _uuid;
 	private long _segmentsEntryId;
 	private long _groupId;
 	private long _companyId;
@@ -214,10 +250,13 @@ public class SegmentsEntrySoap implements Serializable {
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
+	private String _segmentsEntryKey;
 	private String _name;
 	private String _description;
 	private boolean _active;
 	private String _criteria;
-	private String _key;
+	private String _source;
 	private String _type;
+	private Date _lastPublishDate;
+
 }

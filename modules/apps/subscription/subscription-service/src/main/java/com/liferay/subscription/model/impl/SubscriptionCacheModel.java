@@ -14,14 +14,10 @@
 
 package com.liferay.subscription.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
-import com.liferay.portal.kernel.util.HashUtil;
-
 import com.liferay.subscription.model.Subscription;
 
 import java.io.Externalizable;
@@ -35,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing Subscription in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see Subscription
  * @generated
  */
-@ProviderType
-public class SubscriptionCacheModel implements CacheModel<Subscription>,
-	Externalizable, MVCCModel {
+public class SubscriptionCacheModel
+	implements CacheModel<Subscription>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -51,10 +46,12 @@ public class SubscriptionCacheModel implements CacheModel<Subscription>,
 			return false;
 		}
 
-		SubscriptionCacheModel subscriptionCacheModel = (SubscriptionCacheModel)obj;
+		SubscriptionCacheModel subscriptionCacheModel =
+			(SubscriptionCacheModel)obj;
 
 		if ((subscriptionId == subscriptionCacheModel.subscriptionId) &&
-				(mvccVersion == subscriptionCacheModel.mvccVersion)) {
+			(mvccVersion == subscriptionCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -177,8 +174,7 @@ public class SubscriptionCacheModel implements CacheModel<Subscription>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
 		objectOutput.writeLong(subscriptionId);
@@ -222,4 +218,5 @@ public class SubscriptionCacheModel implements CacheModel<Subscription>,
 	public long classNameId;
 	public long classPK;
 	public String frequency;
+
 }

@@ -16,71 +16,84 @@ package com.liferay.dynamic.data.mapping.service.persistence.impl;
 
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstancePersistence;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.dynamic.data.mapping.service.persistence.impl.constants.DDMPersistenceConstants;
+import com.liferay.portal.kernel.configuration.Configuration;
+import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-
-import java.lang.reflect.Field;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Brian Wing Shun Chan
  * @generated
  */
-public class DDMFormInstanceFinderBaseImpl extends BasePersistenceImpl<DDMFormInstance> {
+public abstract class DDMFormInstanceFinderBaseImpl
+	extends BasePersistenceImpl<DDMFormInstance> {
+
 	public DDMFormInstanceFinderBaseImpl() {
 		setModelClass(DDMFormInstance.class);
 
-		try {
-			Field field = BasePersistenceImpl.class.getDeclaredField(
-					"_dbColumnNames");
+		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
-			field.setAccessible(true);
+		dbColumnNames.put("uuid", "uuid_");
+		dbColumnNames.put("settings", "settings_");
 
-			Map<String, String> dbColumnNames = new HashMap<String, String>();
-
-			dbColumnNames.put("uuid", "uuid_");
-			dbColumnNames.put("settings", "settings_");
-
-			field.set(this, dbColumnNames);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-		}
+		setDBColumnNames(dbColumnNames);
 	}
 
 	@Override
 	public Set<String> getBadColumnNames() {
-		return getDDMFormInstancePersistence().getBadColumnNames();
+		return ddmFormInstancePersistence.getBadColumnNames();
 	}
 
-	/**
-	 * Returns the ddm form instance persistence.
-	 *
-	 * @return the ddm form instance persistence
-	 */
-	public DDMFormInstancePersistence getDDMFormInstancePersistence() {
-		return ddmFormInstancePersistence;
+	@Override
+	@Reference(
+		target = DDMPersistenceConstants.SERVICE_CONFIGURATION_FILTER,
+		unbind = "-"
+	)
+	public void setConfiguration(Configuration configuration) {
+		super.setConfiguration(configuration);
 	}
 
-	/**
-	 * Sets the ddm form instance persistence.
-	 *
-	 * @param ddmFormInstancePersistence the ddm form instance persistence
-	 */
-	public void setDDMFormInstancePersistence(
-		DDMFormInstancePersistence ddmFormInstancePersistence) {
-		this.ddmFormInstancePersistence = ddmFormInstancePersistence;
+	@Override
+	@Reference(
+		target = DDMPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
 	}
 
-	@BeanReference(type = DDMFormInstancePersistence.class)
+	@Override
+	@Reference(
+		target = DDMPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		super.setSessionFactory(sessionFactory);
+	}
+
+	@Reference
 	protected DDMFormInstancePersistence ddmFormInstancePersistence;
-	private static final Log _log = LogFactoryUtil.getLog(DDMFormInstanceFinderBaseImpl.class);
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DDMFormInstanceFinderBaseImpl.class);
+
+	static {
+		try {
+			Class.forName(DDMPersistenceConstants.class.getName());
+		}
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new ExceptionInInitializerError(classNotFoundException);
+		}
+	}
+
 }

@@ -45,11 +45,13 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.SearchContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -76,7 +78,7 @@ public class DDLRecordSearchTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -118,18 +120,18 @@ public class DDLRecordSearchTest {
 
 		DDMFormValues ddmFormValues = createDDMFormValues(LocaleUtil.US);
 
-		Map<Locale, String> values = new HashMap<>();
-
-		values.put(LocaleUtil.US, "Joe Bloggs");
+		Map<Locale, String> values = HashMapBuilder.put(
+			LocaleUtil.US, "Joe Bloggs"
+		).build();
 
 		DDMFormFieldValue nameDDMFormFieldValue =
 			createLocalizedDDMFormFieldValue("name", values);
 
 		ddmFormValues.addDDMFormFieldValue(nameDDMFormFieldValue);
 
-		values = new HashMap<>();
-
-		values.put(LocaleUtil.US, "Simple description");
+		values = HashMapBuilder.put(
+			LocaleUtil.US, "Simple description"
+		).build();
 
 		DDMFormFieldValue descriptionDDMFormFieldValue =
 			createLocalizedDDMFormFieldValue("description", values);
@@ -230,10 +232,11 @@ public class DDLRecordSearchTest {
 		DDMFormValues ddmFormValues = DDMFormValuesTestUtil.createDDMFormValues(
 			ddmForm);
 
-		Map<Locale, String> nameMap = new HashMap<>();
-
-		nameMap.put(LocaleUtil.US, "simple text");
-		nameMap.put(LocaleUtil.JAPAN, "単純なテキスト");
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.JAPAN, "単純なテキスト"
+		).put(
+			LocaleUtil.US, "simple text"
+		).build();
 
 		DDMFormFieldValue nameDDMFormFieldValue =
 			createLocalizedDDMFormFieldValue("name", nameMap);
@@ -339,6 +342,9 @@ public class DDLRecordSearchTest {
 		assertSearch("\"The Bloggs\"", 3);
 	}
 
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
 	protected static SearchContext getSearchContext(
 			Group group, User user, DDLRecordSet recordSet)
 		throws Exception {
@@ -369,7 +375,9 @@ public class DDLRecordSearchTest {
 
 		Locale[] locales = new Locale[name.size()];
 
-		name.keySet().toArray(locales);
+		Set<Locale> localesKeySet = name.keySet();
+
+		localesKeySet.toArray(locales);
 
 		DDMFormValues ddmFormValues = createDDMFormValues(locales);
 
@@ -388,21 +396,21 @@ public class DDLRecordSearchTest {
 	}
 
 	protected void addRecord(String name) throws Exception {
-		Map<Locale, String> nameMap = new HashMap<>();
-
-		nameMap.put(LocaleUtil.US, name);
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.US, name
+		).build();
 
 		addRecord(nameMap);
 	}
 
 	protected void addRecord(String name, String description) throws Exception {
-		Map<Locale, String> nameMap = new HashMap<>();
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.US, name
+		).build();
 
-		nameMap.put(LocaleUtil.US, name);
-
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.US, description);
+		Map<Locale, String> descriptionMap = HashMapBuilder.put(
+			LocaleUtil.US, description
+		).build();
 
 		addRecord(nameMap, descriptionMap);
 	}

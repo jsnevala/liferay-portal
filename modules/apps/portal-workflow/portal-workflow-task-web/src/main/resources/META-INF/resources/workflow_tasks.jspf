@@ -14,9 +14,11 @@
  */
 --%>
 
+<liferay-ui:error exception="<%= WorkflowTaskDueDateException.class %>" message="please-enter-a-valid-due-date" />
+
 <liferay-ui:search-container
 	id="workflowTasks"
-	searchContainer="<%= workflowTaskDisplayContext.getSearchContainer() %>"
+	searchContainer="<%= workflowTaskDisplayContext.getWorkflowTaskSearch() %>"
 >
 	<liferay-ui:search-container-row
 		className="com.liferay.portal.kernel.workflow.WorkflowTask"
@@ -48,7 +50,7 @@
 					<h5 class="text-default">
 
 						<%
-						dateSearchEntry.setDate(workflowTask.getCreateDate());
+						dateSearchEntry.setDate(workflowTaskDisplayContext.getLastActivityDate(workflowTask));
 						%>
 
 						<liferay-ui:message key="last-activity-date" />, <%= dateSearchEntry.getName(request) %>
@@ -152,6 +154,6 @@
 		displayStyle="<%= displayStyle %>"
 		markupView="lexicon"
 		resultRowSplitter="<%= new WorkflowTaskResultRowSplitter() %>"
-		searchContainer="<%= workflowTaskDisplayContext.getSearchContainer() %>"
+		searchContainer="<%= workflowTaskDisplayContext.getWorkflowTaskSearch() %>"
 	/>
 </liferay-ui:search-container>

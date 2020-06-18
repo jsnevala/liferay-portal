@@ -34,7 +34,20 @@ public class XMLWhitespaceCheck extends WhitespaceCheck {
 	}
 
 	@Override
-	protected boolean isAllowLeadingSpaces(String fileName) {
+	protected String formatDoubleSpace(String line) {
+		if (line.contains("<contains") || line.contains("<replacetoken") ||
+			line.contains("<replacevalue")) {
+
+			return line;
+		}
+
+		return super.formatDoubleSpace(line);
+	}
+
+	@Override
+	protected boolean isAllowLeadingSpaces(
+		String fileName, String absolutePath) {
+
 		if (fileName.startsWith(getBaseDirName() + "build") ||
 			fileName.contains("/build")) {
 

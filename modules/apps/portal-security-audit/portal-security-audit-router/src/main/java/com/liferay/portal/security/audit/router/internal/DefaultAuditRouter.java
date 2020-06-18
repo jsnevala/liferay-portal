@@ -94,10 +94,8 @@ public class DefaultAuditRouter implements AuditRouter {
 			globalAuditMessageProcessor.process(auditMessage);
 		}
 
-		String eventType = auditMessage.getEventType();
-
 		Set<AuditMessageProcessor> auditMessageProcessors =
-			_auditMessageProcessors.get(eventType);
+			_auditMessageProcessors.get(auditMessage.getEventType());
 
 		if (auditMessageProcessors != null) {
 			for (AuditMessageProcessor auditMessageProcessor :
@@ -160,7 +158,7 @@ public class DefaultAuditRouter implements AuditRouter {
 		_auditEnabled = auditConfiguration.enabled();
 	}
 
-	@Reference (
+	@Reference(
 		cardinality = ReferenceCardinality.MULTIPLE,
 		policy = ReferencePolicy.DYNAMIC,
 		policyOption = ReferencePolicyOption.GREEDY

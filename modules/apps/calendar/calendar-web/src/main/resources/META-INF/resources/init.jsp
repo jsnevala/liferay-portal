@@ -22,9 +22,11 @@
 taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/comment" prefix="liferay-comment" %><%@
+taglib uri="http://liferay.com/tld/editor" prefix="liferay-editor" %><%@
 taglib uri="http://liferay.com/tld/expando" prefix="liferay-expando" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
+taglib uri="http://liferay.com/tld/ratings" prefix="liferay-ratings" %><%@
 taglib uri="http://liferay.com/tld/rss" prefix="liferay-rss" %><%@
 taglib uri="http://liferay.com/tld/security" prefix="liferay-security" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
@@ -67,6 +69,7 @@ page import="com.liferay.calendar.web.internal.constants.CalendarWebKeys" %><%@
 page import="com.liferay.calendar.web.internal.display.context.CalendarDisplayContext" %><%@
 page import="com.liferay.calendar.web.internal.search.CalendarResourceDisplayTerms" %><%@
 page import="com.liferay.calendar.web.internal.search.CalendarResourceSearch" %><%@
+page import="com.liferay.calendar.web.internal.security.permission.resource.CalendarBookingPermission" %><%@
 page import="com.liferay.calendar.web.internal.security.permission.resource.CalendarPermission" %><%@
 page import="com.liferay.calendar.web.internal.security.permission.resource.CalendarPortletPermission" %><%@
 page import="com.liferay.calendar.web.internal.security.permission.resource.CalendarResourcePermission" %><%@
@@ -88,9 +91,11 @@ page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Group" %><%@
 page import="com.liferay.portal.kernel.model.User" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
+page import="com.liferay.portal.kernel.portlet.PortletURLFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.security.permission.ActionKeys" %><%@
 page import="com.liferay.portal.kernel.security.permission.ResourceActionsUtil" %><%@
 page import="com.liferay.portal.kernel.service.ClassNameLocalServiceUtil" %><%@
+page import="com.liferay.portal.kernel.service.GroupLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.GroupServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.UserLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil" %><%@
@@ -124,13 +129,13 @@ page import="com.liferay.taglib.search.ResultRow" %>
 <%@ page import="java.util.ArrayList" %><%@
 page import="java.util.Arrays" %><%@
 page import="java.util.Collections" %><%@
-page import="java.util.Date" %><%@
 page import="java.util.Iterator" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Objects" %><%@
 page import="java.util.TimeZone" %>
 
-<%@ page import="javax.portlet.PortletURL" %>
+<%@ page import="javax.portlet.PortletRequest" %><%@
+page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 
@@ -221,16 +226,7 @@ if (calendarDisplayContext != null) {
 	defaultCalendar = calendarDisplayContext.getDefaultCalendar(groupCalendars, userCalendars);
 }
 
-TimeZone userTimeZone = null;
-
-if ((calendarBooking != null) && calendarBooking.isAllDay()) {
-	userTimeZone = TimeZone.getTimeZone(StringPool.UTC);
-}
-else {
-	userTimeZone = TimeZone.getTimeZone(timeZoneId);
-}
-
-TimeZone utcTimeZone = TimeZone.getTimeZone(StringPool.UTC);
+TimeZone userTimeZone = TimeZone.getTimeZone(timeZoneId);
 
 Format dateFormatLongDate = FastDateFormatFactoryUtil.getDate(FastDateFormatConstants.LONG, locale, userTimeZone);
 
@@ -245,3 +241,5 @@ else {
 	dateFormatTime = FastDateFormatFactoryUtil.getSimpleDateFormat("hh:mm a", locale, userTimeZone);
 }
 %>
+
+<%@ include file="/init-ext.jsp" %>

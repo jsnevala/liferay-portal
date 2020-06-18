@@ -22,11 +22,14 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.segments.constants.SegmentsConstants;
+import com.liferay.segments.constants.SegmentsEntryConstants;
+import com.liferay.segments.criteria.Criteria;
+import com.liferay.segments.criteria.CriteriaSerializer;
 import com.liferay.segments.demo.data.creator.SegmentsEntryDemoDataCreator;
 import com.liferay.segments.exception.NoSuchEntryException;
 import com.liferay.segments.model.SegmentsEntry;
@@ -36,7 +39,6 @@ import com.liferay.segments.service.SegmentsEntryRelLocalService;
 import java.io.IOException;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -49,18 +51,11 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(service = SegmentsEntryDemoDataCreator.class)
 public class SegmentsEntryDemoDataCreatorImpl
 	implements SegmentsEntryDemoDataCreator {
-
-	@Activate
-	public void activate(BundleContext bundleContext) {
-		Collections.addAll(_availableIndexes, new Integer[] {1, 2});
-
-		Collections.shuffle(_availableIndexes);
-	}
 
 	@Override
 	public SegmentsEntry create(long userId, long groupId)
@@ -79,19 +74,14 @@ public class SegmentsEntryDemoDataCreatorImpl
 
 		SegmentsEntry segmentsEntry =
 			_segmentsEntryLocalService.addSegmentsEntry(
-				nameMap, descriptionMap, true, criteria,
-				StringUtil.randomString(), SegmentsConstants.TYPE_USERS,
-				serviceContext);
+				StringUtil.randomString(), nameMap, descriptionMap, true,
+				criteria, SegmentsEntryConstants.SOURCE_DEFAULT,
+				User.class.getName(), serviceContext);
 
 		if (Validator.isNull(criteria)) {
-			long[] groupUserIds = _userLocalService.getGroupUserIds(groupId);
-
-			for (long groupUserId : groupUserIds) {
-				 _segmentsEntryRelLocalService.addSegmentsEntryRel(
-					segmentsEntry.getSegmentsEntryId(),
-					_portal.getClassNameId(User.class), groupUserId,
-					serviceContext);
-			}
+			_segmentsEntryLocalService.addSegmentsEntryClassPKs(
+				segmentsEntry.getSegmentsEntryId(),
+				_userLocalService.getGroupUserIds(groupId), serviceContext);
 		}
 
 		_segmentsEntryIds.add(segmentsEntry.getSegmentsEntryId());
@@ -105,14 +95,21 @@ public class SegmentsEntryDemoDataCreatorImpl
 			try {
 				_segmentsEntryLocalService.deleteSegmentsEntry(entryId);
 			}
-			catch (NoSuchEntryException nsee) {
+			catch (NoSuchEntryException noSuchEntryException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(nsee, nsee);
+					_log.warn(noSuchEntryException, noSuchEntryException);
 				}
 			}
 
 			_segmentsEntryIds.remove(entryId);
 		}
+	}
+
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		Collections.addAll(_availableIndexes, new Integer[] {1, 2});
+
+		Collections.shuffle(_availableIndexes);
 	}
 
 	private String _getCriteria(int index) {
@@ -123,9 +120,16 @@ public class SegmentsEntryDemoDataCreatorImpl
 			"/segment", index, "/criteria.txt");
 
 		try {
-			return StringUtil.read(clazz.getClassLoader(), contentPath, false);
+			Criteria criteria = new Criteria();
+
+			criteria.addCriterion(
+				"user", Criteria.Type.MODEL,
+				StringUtil.read(clazz.getClassLoader(), contentPath, false),
+				Criteria.Conjunction.AND);
+
+			return CriteriaSerializer.serialize(criteria);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			return StringPool.BLANK;
 		}
 	}
@@ -133,36 +137,34 @@ public class SegmentsEntryDemoDataCreatorImpl
 	private Map<Locale, String> _getDescriptionMap(int index)
 		throws IOException {
 
-		Class<?> clazz = getClass();
+		return HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(),
+			() -> {
+				Class<?> clazz = getClass();
 
-		String descriptionPath = StringBundler.concat(
-			"com/liferay/segments/demo/data/creator/internal/dependencies",
-			"/segment", index, "/description.txt");
+				String descriptionPath = StringBundler.concat(
+					"com/liferay/segments/demo/data/creator/internal",
+					"/dependencies/segment", index, "/description.txt");
 
-		String description = StringUtil.read(
-			clazz.getClassLoader(), descriptionPath, false);
-
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.getSiteDefault(), description);
-
-		return descriptionMap;
+				return StringUtil.read(
+					clazz.getClassLoader(), descriptionPath, false);
+			}
+		).build();
 	}
 
 	private Map<Locale, String> _getNameMap(int index) throws IOException {
-		Class<?> clazz = getClass();
+		return HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(),
+			() -> {
+				Class<?> clazz = getClass();
 
-		String namePath = StringBundler.concat(
-			"com/liferay/segments/demo/data/creator/internal/dependencies",
-			"/segment", index, "/name.txt");
+				String namePath = StringBundler.concat(
+					"com/liferay/segments/demo/data/creator/internal",
+					"/dependencies/segment", index, "/name.txt");
 
-		String name = StringUtil.read(clazz.getClassLoader(), namePath, false);
-
-		Map<Locale, String> nameMap = new HashMap<>();
-
-		nameMap.put(LocaleUtil.getSiteDefault(), name);
-
-		return nameMap;
+				return StringUtil.read(clazz.getClassLoader(), namePath, false);
+			}
+		).build();
 	}
 
 	private int _getNextIndex() {

@@ -28,7 +28,7 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class PublishModelMenuItemTag extends IncludeTag {
 
@@ -46,6 +46,10 @@ public class PublishModelMenuItemTag extends IncludeTag {
 		changesetManager.addChangeset(changeset);
 
 		return EVAL_BODY_INCLUDE;
+	}
+
+	public StagedModel getStagedModel() {
+		return _stagedModel;
 	}
 
 	@Override
@@ -73,8 +77,8 @@ public class PublishModelMenuItemTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:publish-model-menu-item:" +
 				"changesetUuid",
 			_changesetUuid);
@@ -83,14 +87,11 @@ public class PublishModelMenuItemTag extends IncludeTag {
 			return;
 		}
 
-		String className = ExportImportClassedModelUtil.getClassName(
-			_stagedModel);
-
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:publish-model-menu-item:className",
-			className);
+			ExportImportClassedModelUtil.getClassName(_stagedModel));
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-export-import-changeset:publish-model-menu-item:uuid",
 			_stagedModel.getUuid());
 	}

@@ -15,8 +15,8 @@
 package com.liferay.site.navigation.admin.web.internal.handler;
 
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -39,24 +39,22 @@ public class SiteNavigationMenuExceptionRequestHandler {
 
 	public void handlePortalException(
 			ActionRequest actionRequest, ActionResponse actionResponse,
-			PortalException pe)
+			PortalException portalException)
 		throws Exception {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
 		String errorMessage = "an-unexpected-error-occurred";
 
-		if (pe instanceof DuplicateSiteNavigationMenuException) {
+		if (portalException instanceof DuplicateSiteNavigationMenuException) {
 			errorMessage = "please-enter-a-unique-name";
 		}
-		else if (pe instanceof SiteNavigationMenuNameException) {
+		else if (portalException instanceof SiteNavigationMenuNameException) {
 			errorMessage = "please-enter-a-valid-name";
 		}
 
-		jsonObject.put(
+		JSONObject jsonObject = JSONUtil.put(
 			"error", LanguageUtil.get(themeDisplay.getLocale(), errorMessage));
 
 		JSONPortletResponseUtil.writeJSON(

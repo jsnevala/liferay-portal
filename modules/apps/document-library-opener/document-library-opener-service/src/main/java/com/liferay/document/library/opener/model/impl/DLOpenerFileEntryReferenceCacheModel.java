@@ -14,14 +14,10 @@
 
 package com.liferay.document.library.opener.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.document.library.opener.model.DLOpenerFileEntryReference;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +30,11 @@ import java.util.Date;
  * The cache model class for representing DLOpenerFileEntryReference in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see DLOpenerFileEntryReference
  * @generated
  */
-@ProviderType
-public class DLOpenerFileEntryReferenceCacheModel implements CacheModel<DLOpenerFileEntryReference>,
-	Externalizable {
+public class DLOpenerFileEntryReferenceCacheModel
+	implements CacheModel<DLOpenerFileEntryReference>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,10 +45,14 @@ public class DLOpenerFileEntryReferenceCacheModel implements CacheModel<DLOpener
 			return false;
 		}
 
-		DLOpenerFileEntryReferenceCacheModel dlOpenerFileEntryReferenceCacheModel =
-			(DLOpenerFileEntryReferenceCacheModel)obj;
+		DLOpenerFileEntryReferenceCacheModel
+			dlOpenerFileEntryReferenceCacheModel =
+				(DLOpenerFileEntryReferenceCacheModel)obj;
 
-		if (dlOpenerFileEntryReferenceId == dlOpenerFileEntryReferenceCacheModel.dlOpenerFileEntryReferenceId) {
+		if (dlOpenerFileEntryReferenceId ==
+				dlOpenerFileEntryReferenceCacheModel.
+					dlOpenerFileEntryReferenceId) {
+
 			return true;
 		}
 
@@ -67,7 +66,7 @@ public class DLOpenerFileEntryReferenceCacheModel implements CacheModel<DLOpener
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(21);
+		StringBundler sb = new StringBundler(23);
 
 		sb.append("{dlOpenerFileEntryReferenceId=");
 		sb.append(dlOpenerFileEntryReferenceId);
@@ -85,6 +84,8 @@ public class DLOpenerFileEntryReferenceCacheModel implements CacheModel<DLOpener
 		sb.append(modifiedDate);
 		sb.append(", referenceKey=");
 		sb.append(referenceKey);
+		sb.append(", referenceType=");
+		sb.append(referenceType);
 		sb.append(", fileEntryId=");
 		sb.append(fileEntryId);
 		sb.append(", type=");
@@ -96,9 +97,11 @@ public class DLOpenerFileEntryReferenceCacheModel implements CacheModel<DLOpener
 
 	@Override
 	public DLOpenerFileEntryReference toEntityModel() {
-		DLOpenerFileEntryReferenceImpl dlOpenerFileEntryReferenceImpl = new DLOpenerFileEntryReferenceImpl();
+		DLOpenerFileEntryReferenceImpl dlOpenerFileEntryReferenceImpl =
+			new DLOpenerFileEntryReferenceImpl();
 
-		dlOpenerFileEntryReferenceImpl.setDlOpenerFileEntryReferenceId(dlOpenerFileEntryReferenceId);
+		dlOpenerFileEntryReferenceImpl.setDlOpenerFileEntryReferenceId(
+			dlOpenerFileEntryReferenceId);
 		dlOpenerFileEntryReferenceImpl.setGroupId(groupId);
 		dlOpenerFileEntryReferenceImpl.setCompanyId(companyId);
 		dlOpenerFileEntryReferenceImpl.setUserId(userId);
@@ -121,8 +124,8 @@ public class DLOpenerFileEntryReferenceCacheModel implements CacheModel<DLOpener
 			dlOpenerFileEntryReferenceImpl.setModifiedDate(null);
 		}
 		else {
-			dlOpenerFileEntryReferenceImpl.setModifiedDate(new Date(
-					modifiedDate));
+			dlOpenerFileEntryReferenceImpl.setModifiedDate(
+				new Date(modifiedDate));
 		}
 
 		if (referenceKey == null) {
@@ -130,6 +133,13 @@ public class DLOpenerFileEntryReferenceCacheModel implements CacheModel<DLOpener
 		}
 		else {
 			dlOpenerFileEntryReferenceImpl.setReferenceKey(referenceKey);
+		}
+
+		if (referenceType == null) {
+			dlOpenerFileEntryReferenceImpl.setReferenceType("");
+		}
+		else {
+			dlOpenerFileEntryReferenceImpl.setReferenceType(referenceType);
 		}
 
 		dlOpenerFileEntryReferenceImpl.setFileEntryId(fileEntryId);
@@ -153,6 +163,7 @@ public class DLOpenerFileEntryReferenceCacheModel implements CacheModel<DLOpener
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
 		referenceKey = objectInput.readUTF();
+		referenceType = objectInput.readUTF();
 
 		fileEntryId = objectInput.readLong();
 
@@ -160,8 +171,7 @@ public class DLOpenerFileEntryReferenceCacheModel implements CacheModel<DLOpener
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(dlOpenerFileEntryReferenceId);
 
 		objectOutput.writeLong(groupId);
@@ -187,6 +197,13 @@ public class DLOpenerFileEntryReferenceCacheModel implements CacheModel<DLOpener
 			objectOutput.writeUTF(referenceKey);
 		}
 
+		if (referenceType == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(referenceType);
+		}
+
 		objectOutput.writeLong(fileEntryId);
 
 		objectOutput.writeInt(type);
@@ -200,6 +217,8 @@ public class DLOpenerFileEntryReferenceCacheModel implements CacheModel<DLOpener
 	public long createDate;
 	public long modifiedDate;
 	public String referenceKey;
+	public String referenceType;
 	public long fileEntryId;
 	public int type;
+
 }

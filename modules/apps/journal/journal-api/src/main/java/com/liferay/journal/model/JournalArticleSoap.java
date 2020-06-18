@@ -14,8 +14,6 @@
 
 package com.liferay.journal.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,15 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.journal.service.http.JournalArticleServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.journal.service.http.JournalArticleServiceSoap
  * @generated
  */
-@ProviderType
 public class JournalArticleSoap implements Serializable {
+
 	public static JournalArticleSoap toSoapModel(JournalArticle model) {
 		JournalArticleSoap soapModel = new JournalArticleSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setId(model.getId());
 		soapModel.setResourcePrimKey(model.getResourcePrimKey());
@@ -81,11 +80,14 @@ public class JournalArticleSoap implements Serializable {
 		return soapModels;
 	}
 
-	public static JournalArticleSoap[][] toSoapModels(JournalArticle[][] models) {
+	public static JournalArticleSoap[][] toSoapModels(
+		JournalArticle[][] models) {
+
 		JournalArticleSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new JournalArticleSoap[models.length][models[0].length];
+			soapModels =
+				new JournalArticleSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new JournalArticleSoap[0][0];
@@ -98,8 +100,11 @@ public class JournalArticleSoap implements Serializable {
 		return soapModels;
 	}
 
-	public static JournalArticleSoap[] toSoapModels(List<JournalArticle> models) {
-		List<JournalArticleSoap> soapModels = new ArrayList<JournalArticleSoap>(models.size());
+	public static JournalArticleSoap[] toSoapModels(
+		List<JournalArticle> models) {
+
+		List<JournalArticleSoap> soapModels = new ArrayList<JournalArticleSoap>(
+			models.size());
 
 		for (JournalArticle model : models) {
 			soapModels.add(toSoapModel(model));
@@ -117,6 +122,22 @@ public class JournalArticleSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public String getUuid() {
@@ -391,6 +412,8 @@ public class JournalArticleSoap implements Serializable {
 		_statusDate = statusDate;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _id;
 	private long _resourcePrimKey;
@@ -424,4 +447,5 @@ public class JournalArticleSoap implements Serializable {
 	private long _statusByUserId;
 	private String _statusByUserName;
 	private Date _statusDate;
+
 }

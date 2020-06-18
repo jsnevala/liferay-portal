@@ -32,8 +32,7 @@ import org.osgi.service.component.annotations.Component;
 @Component(
 	immediate = true,
 	property = {
-		"javax.portlet.name=" +
-			StagingConfigurationPortletKeys.STAGING_CONFIGURATION,
+		"javax.portlet.name=" + StagingConfigurationPortletKeys.STAGING_CONFIGURATION,
 		"mvc.command.name=staging"
 	},
 	service = MVCRenderCommand.class
@@ -50,13 +49,13 @@ public class ViewMVCRenderCommand implements MVCRenderCommand {
 		try {
 			portlet = ActionUtil.getPortlet(renderRequest);
 		}
-		catch (PrincipalException pe) {
-			SessionErrors.add(renderRequest, pe.getClass());
+		catch (PrincipalException principalException) {
+			SessionErrors.add(renderRequest, principalException.getClass());
 
 			return "/error.jsp";
 		}
-		catch (Exception e) {
-			throw new PortletException(e);
+		catch (Exception exception) {
+			throw new PortletException(exception);
 		}
 
 		try {
@@ -68,8 +67,8 @@ public class ViewMVCRenderCommand implements MVCRenderCommand {
 
 			return "/view.jsp";
 		}
-		catch (Exception e) {
-			SessionErrors.add(renderRequest, e.getClass());
+		catch (Exception exception) {
+			SessionErrors.add(renderRequest, exception.getClass());
 
 			return "/error.jsp";
 		}

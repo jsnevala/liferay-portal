@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing DDMStructure in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see DDMStructure
  * @generated
  */
-@ProviderType
-public class DDMStructureCacheModel implements CacheModel<DDMStructure>,
-	Externalizable {
+public class DDMStructureCacheModel
+	implements CacheModel<DDMStructure>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,12 @@ public class DDMStructureCacheModel implements CacheModel<DDMStructure>,
 			return false;
 		}
 
-		DDMStructureCacheModel ddmStructureCacheModel = (DDMStructureCacheModel)obj;
+		DDMStructureCacheModel ddmStructureCacheModel =
+			(DDMStructureCacheModel)obj;
 
-		if (structureId == ddmStructureCacheModel.structureId) {
+		if ((structureId == ddmStructureCacheModel.structureId) &&
+			(mvccVersion == ddmStructureCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +60,30 @@ public class DDMStructureCacheModel implements CacheModel<DDMStructure>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, structureId);
+		int hashCode = HashUtil.hash(0, structureId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(41);
+		StringBundler sb = new StringBundler(45);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", structureId=");
 		sb.append(structureId);
@@ -116,6 +131,9 @@ public class DDMStructureCacheModel implements CacheModel<DDMStructure>,
 	@Override
 	public DDMStructure toEntityModel() {
 		DDMStructureImpl ddmStructureImpl = new DDMStructureImpl();
+
+		ddmStructureImpl.setMvccVersion(mvccVersion);
+		ddmStructureImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			ddmStructureImpl.setUuid("");
@@ -225,6 +243,10 @@ public class DDMStructureCacheModel implements CacheModel<DDMStructure>,
 	@Override
 	public void readExternal(ObjectInput objectInput)
 		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		structureId = objectInput.readLong();
@@ -247,20 +269,25 @@ public class DDMStructureCacheModel implements CacheModel<DDMStructure>,
 		structureKey = objectInput.readUTF();
 		version = objectInput.readUTF();
 		name = objectInput.readUTF();
-		description = objectInput.readUTF();
-		definition = objectInput.readUTF();
+		description = (String)objectInput.readObject();
+		definition = (String)objectInput.readObject();
 		storageType = objectInput.readUTF();
 
 		type = objectInput.readInt();
 		lastPublishDate = objectInput.readLong();
 
 		_className = (String)objectInput.readObject();
-		_ddmForm = (com.liferay.dynamic.data.mapping.model.DDMForm)objectInput.readObject();
+		_ddmForm =
+			(com.liferay.dynamic.data.mapping.model.DDMForm)
+				objectInput.readObject();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -321,17 +348,17 @@ public class DDMStructureCacheModel implements CacheModel<DDMStructure>,
 		}
 
 		if (description == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(description);
+			objectOutput.writeObject(description);
 		}
 
 		if (definition == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(definition);
+			objectOutput.writeObject(definition);
 		}
 
 		if (storageType == null) {
@@ -348,6 +375,8 @@ public class DDMStructureCacheModel implements CacheModel<DDMStructure>,
 		objectOutput.writeObject(_ddmForm);
 	}
 
+	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long structureId;
 	public long groupId;
@@ -370,4 +399,5 @@ public class DDMStructureCacheModel implements CacheModel<DDMStructure>,
 	public long lastPublishDate;
 	public String _className;
 	public com.liferay.dynamic.data.mapping.model.DDMForm _ddmForm;
+
 }

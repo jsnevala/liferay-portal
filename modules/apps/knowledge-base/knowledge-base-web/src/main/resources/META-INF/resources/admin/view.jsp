@@ -22,11 +22,9 @@ long kbFolderClassNameId = PortalUtil.getClassNameId(KBFolderConstants.getClassN
 long parentResourceClassNameId = ParamUtil.getLong(request, "parentResourceClassNameId", kbFolderClassNameId);
 long parentResourcePrimKey = ParamUtil.getLong(request, "parentResourcePrimKey", KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
-String keywords = ParamUtil.getString(request, "keywords");
+boolean kbFolderView = parentResourceClassNameId == kbFolderClassNameId;
 
-boolean kbFolderView = (parentResourceClassNameId == kbFolderClassNameId);
-
-KBAdminManagementToolbarDisplayContext kbAdminManagementToolbarDisplayContext = new KBAdminManagementToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request, renderRequest, renderResponse, portletConfig);
+KBAdminManagementToolbarDisplayContext kbAdminManagementToolbarDisplayContext = new KBAdminManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, renderRequest, renderResponse, portletConfig);
 KBArticleURLHelper kbArticleURLHelper = new KBArticleURLHelper(renderRequest, renderResponse, templatePath);
 
 if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
@@ -144,11 +142,11 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 						<c:when test="<%= kbObject instanceof KBFolder %>">
 
 							<%
-							Map<String, Object> rowData = new HashMap<String, Object>();
-
 							KBFolder kbFolder = (KBFolder)kbObject;
 
-							rowData.put("actions", String.join(StringPool.COMMA, kbAdminManagementToolbarDisplayContext.getAvailableActionDropdownItems(kbFolder)));
+							Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+								"actions", StringUtil.merge(kbAdminManagementToolbarDisplayContext.getAvailableActions(kbFolder))
+							).build();
 
 							row.setData(rowData);
 
@@ -163,7 +161,7 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 							<liferay-ui:search-container-column-text
 								colspan="<%= 2 %>"
 							>
-								<h5 class="text-default">
+								<span class="text-default">
 
 									<%
 									Date modifiedDate = kbFolder.getModifiedDate();
@@ -172,7 +170,7 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 									%>
 
 									<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(kbFolder.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
-								</h5>
+								</span>
 
 								<liferay-portlet:renderURL varImpl="rowURL">
 									<portlet:param name="mvcPath" value="/admin/view_folders.jsp" />
@@ -181,13 +179,13 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 									<portlet:param name="redirect" value="<%= currentURL %>" />
 								</liferay-portlet:renderURL>
 
-								<h4>
+								<h2 class="h5">
 									<aui:a href="<%= rowURL.toString() %>">
 										<%= HtmlUtil.escape(kbFolder.getName()) %>
 									</aui:a>
-								</h4>
+								</h2>
 
-								<h5 class="text-default">
+								<span class="text-default">
 									<span>
 
 										<%
@@ -218,7 +216,7 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 											</c:otherwise>
 										</c:choose>
 									</span>
-								</h5>
+								</span>
 							</liferay-ui:search-container-column-text>
 
 							<liferay-ui:search-container-column-jsp
@@ -228,11 +226,11 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 						<c:otherwise>
 
 							<%
-							Map<String, Object> rowData = new HashMap<String, Object>();
-
 							KBArticle kbArticle = (KBArticle)kbObject;
 
-							rowData.put("actions", String.join(StringPool.COMMA, kbAdminManagementToolbarDisplayContext.getAvailableActionDropdownItems(kbArticle)));
+							Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+								"actions", StringUtil.merge(kbAdminManagementToolbarDisplayContext.getAvailableActions(kbArticle))
+							).build();
 
 							row.setData(rowData);
 
@@ -247,7 +245,7 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 							<liferay-ui:search-container-column-text
 								colspan="<%= 2 %>"
 							>
-								<h5 class="text-default">
+								<span class="text-default">
 
 									<%
 									Date modifiedDate = kbArticle.getModifiedDate();
@@ -256,9 +254,9 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 									%>
 
 									<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(kbArticle.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
-								</h5>
+								</span>
 
-								<h4>
+								<h2 class="h5">
 
 									<%
 									PortletURL viewURL = kbArticleURLHelper.createViewWithRedirectURL(kbArticle, currentURL);
@@ -267,9 +265,9 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 									<aui:a href="<%= viewURL.toString() %>">
 										<%= HtmlUtil.escape(kbArticle.getTitle()) %>
 									</aui:a>
-								</h4>
+								</h2>
 
-								<h5 class="text-default">
+								<span class="text-default">
 									<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= kbArticle.getStatus() %>" />
 
 									<%
@@ -297,7 +295,7 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 									<span class="kb-descriptive-details">
 										<liferay-ui:message arguments="<%= kbArticle.getViewCount() %>" key="x-views" />
 									</span>
-								</h5>
+								</span>
 							</liferay-ui:search-container-column-text>
 
 							<liferay-ui:search-container-column-jsp
@@ -319,10 +317,14 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 	</div>
 </div>
 
-<aui:script sandbox="<%= true %>">
-	var deleteEntries = function() {
-		if (confirm('<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-entries" />')) {
-			var form = document.querySelector('#<portlet:namespace />fm');
+<aui:script>
+	var deleteEntries = function () {
+		if (
+			confirm(
+				'<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-entries" />'
+			)
+		) {
+			var form = document.getElementById('<portlet:namespace />fm');
 
 			if (form) {
 				submitForm(form);
@@ -331,21 +333,18 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 	};
 
 	var ACTIONS = {
-		'deleteEntries': deleteEntries
+		deleteEntries: deleteEntries,
 	};
 
-	Liferay.componentReady('kbAdminManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				'actionItemClicked',
-				function(event) {
-					var itemData = event.data.item.data;
+	Liferay.componentReady('kbAdminManagementToolbar').then(function (
+		managementToolbar
+	) {
+		managementToolbar.on('actionItemClicked', function (event) {
+			var itemData = event.data.item.data;
 
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action]();
-					}
-				}
-			);
-		}
-	);
+			if (itemData && itemData.action && ACTIONS[itemData.action]) {
+				ACTIONS[itemData.action]();
+			}
+		});
+	});
 </aui:script>

@@ -14,12 +14,14 @@
 
 package com.liferay.portal.search.web.internal.search.request;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.BooleanClause;
 import com.liferay.portal.kernel.search.Query;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.web.search.request.SearchSettings;
 
 import java.util.Map;
@@ -30,7 +32,11 @@ import java.util.Optional;
  */
 public class SearchSettingsImpl implements SearchSettings {
 
-	public SearchSettingsImpl(SearchContext searchContext) {
+	public SearchSettingsImpl(
+		SearchRequestBuilder searchRequestBuilder,
+		SearchContext searchContext) {
+
+		_searchRequestBuilder = searchRequestBuilder;
 		_searchContext = searchContext;
 	}
 
@@ -54,6 +60,14 @@ public class SearchSettingsImpl implements SearchSettings {
 		Map<String, Facet> facets = _searchContext.getFacets();
 
 		facets.put(getAggregationName(facet), facet);
+	}
+
+	@Override
+	public SearchRequestBuilder getFederatedSearchRequestBuilder(
+		Optional<String> federatedSearchKeyOptional) {
+
+		return _searchRequestBuilder.getFederatedSearchRequestBuilder(
+			federatedSearchKeyOptional.orElse(StringPool.BLANK));
 	}
 
 	@Override
@@ -87,8 +101,18 @@ public class SearchSettingsImpl implements SearchSettings {
 	}
 
 	@Override
+	public Optional<String> getScopeParameterName() {
+		return Optional.ofNullable(_scopeParameterName);
+	}
+
+	@Override
 	public SearchContext getSearchContext() {
 		return _searchContext;
+	}
+
+	@Override
+	public SearchRequestBuilder getSearchRequestBuilder() {
+		return _searchRequestBuilder;
 	}
 
 	@Override
@@ -125,6 +149,11 @@ public class SearchSettingsImpl implements SearchSettings {
 		_paginationStartParameterName = paginationStartParameterName;
 	}
 
+	@Override
+	public void setScopeParameterName(String scopeParameterName) {
+		_scopeParameterName = scopeParameterName;
+	}
+
 	protected String getAggregationName(Facet facet) {
 		if (facet instanceof com.liferay.portal.search.facet.Facet) {
 			com.liferay.portal.search.facet.Facet osgiFacet =
@@ -141,6 +170,8 @@ public class SearchSettingsImpl implements SearchSettings {
 	private String _paginationDeltaParameterName;
 	private Integer _paginationStart;
 	private String _paginationStartParameterName;
+	private String _scopeParameterName;
 	private final SearchContext _searchContext;
+	private final SearchRequestBuilder _searchRequestBuilder;
 
 }

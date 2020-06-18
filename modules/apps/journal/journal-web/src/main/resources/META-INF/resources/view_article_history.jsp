@@ -31,6 +31,8 @@ JournalArticle article = journalDisplayContext.getArticle();
 		<%
 		JournalHistoryDisplayContext journalHistoryDisplayContext = new JournalHistoryDisplayContext(renderRequest, renderResponse, journalDisplayContext.getArticle());
 
+		JournalHistoryManagementToolbarDisplayContext journalHistoryManagementToolbarDisplayContext = new JournalHistoryManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, article, journalHistoryDisplayContext);
+
 		portletDisplay.setShowBackIcon(true);
 		portletDisplay.setURLBack(journalHistoryDisplayContext.getBackURL());
 
@@ -43,15 +45,7 @@ JournalArticle article = journalDisplayContext.getArticle();
 		/>
 
 		<clay:management-toolbar
-			actionDropdownItems="<%= journalHistoryDisplayContext.getActionItemsDropdownItems() %>"
-			componentId="journalHistoryManagementToolbar"
-			filterDropdownItems="<%= journalHistoryDisplayContext.getFilterItemsDropdownItems() %>"
-			itemsTotal="<%= journalHistoryDisplayContext.getTotalItems() %>"
-			searchContainerId="articleVersions"
-			showSearch="<%= false %>"
-			sortingOrder="<%= journalHistoryDisplayContext.getOrderByType() %>"
-			sortingURL="<%= journalHistoryDisplayContext.getSortingURL() %>"
-			viewTypeItems="<%= journalHistoryDisplayContext.getViewTypeItems() %>"
+			displayContext="<%= journalHistoryManagementToolbarDisplayContext %>"
 		/>
 
 		<%
@@ -72,6 +66,12 @@ JournalArticle article = journalDisplayContext.getArticle();
 				>
 
 					<%
+					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+						"actions", journalHistoryManagementToolbarDisplayContext.getAvailableActions(articleVersion)
+					).build();
+
+					row.setData(rowData);
+
 					row.setPrimaryKey(articleVersion.getArticleId() + JournalPortlet.VERSION_SEPARATOR + articleVersion.getVersion());
 					%>
 
@@ -106,9 +106,12 @@ JournalArticle article = journalDisplayContext.getArticle();
 								</h6>
 							</liferay-ui:search-container-column-text>
 
-							<liferay-ui:search-container-column-jsp
-								path="/article_history_action.jsp"
-							/>
+							<liferay-ui:search-container-column-text>
+								<clay:dropdown-actions
+									defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+									dropdownItems="<%= journalDisplayContext.getArticleHistoryActionDropdownItems(articleVersion) %>"
+								/>
+							</liferay-ui:search-container-column-text>
 						</c:when>
 						<c:when test='<%= Objects.equals(journalHistoryDisplayContext.getDisplayStyle(), "icon") %>'>
 
@@ -117,37 +120,9 @@ JournalArticle article = journalDisplayContext.getArticle();
 							%>
 
 							<liferay-ui:search-container-column-text>
-
-								<%
-								String articleImageURL = articleVersion.getArticleImageURL(themeDisplay);
-								%>
-
-								<c:choose>
-									<c:when test="<%= Validator.isNotNull(articleImageURL) %>">
-										<liferay-frontend:vertical-card
-											actionJsp="/article_history_action.jsp"
-											actionJspServletContext="<%= application %>"
-											imageUrl="<%= articleImageURL %>"
-											resultRow="<%= row %>"
-											rowChecker="<%= searchContainer.getRowChecker() %>"
-											title="<%= articleVersion.getTitle(locale) %>"
-										>
-											<%@ include file="/article_version_vertical_card.jspf" %>
-										</liferay-frontend:vertical-card>
-									</c:when>
-									<c:otherwise>
-										<liferay-frontend:icon-vertical-card
-											actionJsp="/article_history_action.jsp"
-											actionJspServletContext="<%= application %>"
-											icon="web-content"
-											resultRow="<%= row %>"
-											rowChecker="<%= searchContainer.getRowChecker() %>"
-											title="<%= articleVersion.getTitle(locale) %>"
-										>
-											<%@ include file="/article_version_vertical_card.jspf" %>
-										</liferay-frontend:icon-vertical-card>
-									</c:otherwise>
-								</c:choose>
+								<clay:vertical-card
+									verticalCard="<%= new JournalArticleHistoryVerticalCard(articleVersion, renderRequest, renderResponse, searchContainer.getRowChecker(), assetDisplayPageFriendlyURLProvider, trashHelper) %>"
+								/>
 							</liferay-ui:search-container-column-text>
 						</c:when>
 						<c:when test='<%= Objects.equals(journalHistoryDisplayContext.getDisplayStyle(), "list") %>'>
@@ -194,9 +169,12 @@ JournalArticle article = journalDisplayContext.getArticle();
 								value="<%= HtmlUtil.escape(PortalUtil.getUserName(articleVersion)) %>"
 							/>
 
-							<liferay-ui:search-container-column-jsp
-								path="/article_history_action.jsp"
-							/>
+							<liferay-ui:search-container-column-text>
+								<clay:dropdown-actions
+									defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+									dropdownItems="<%= journalDisplayContext.getArticleHistoryActionDropdownItems(articleVersion) %>"
+								/>
+							</liferay-ui:search-container-column-text>
 						</c:when>
 					</c:choose>
 				</liferay-ui:search-container-row>
@@ -208,80 +186,14 @@ JournalArticle article = journalDisplayContext.getArticle();
 			</liferay-ui:search-container>
 		</aui:form>
 
-		<aui:script>
-			AUI.$('body').on(
-				'click',
-				'.compare-to-link a',
-				function(event) {
-					var currentTarget = AUI.$(event.currentTarget);
+		<liferay-frontend:component
+			componentId="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+			module="js/ElementsDefaultEventHandler.es"
+		/>
 
-					Liferay.Util.selectEntity(
-						{
-							dialog: {
-								constrain: true,
-								destroyOnHide: true,
-								modal: true
-							},
-							eventName: '<portlet:namespace />selectVersionFm',
-							id: '<portlet:namespace />compareVersions' + currentTarget.attr('id'),
-							title: '<liferay-ui:message key="compare-versions" />',
-							uri: currentTarget.data('uri')
-						},
-						function(event) {
-							<portlet:renderURL var="compareVersionURL">
-								<portlet:param name="mvcPath" value="/compare_versions.jsp" />
-								<portlet:param name="redirect" value="<%= currentURL %>" />
-								<portlet:param name="groupId" value="<%= String.valueOf(article.getGroupId()) %>" />
-								<portlet:param name="articleId" value="<%= article.getArticleId() %>" />
-							</portlet:renderURL>
-
-							var uri = '<%= compareVersionURL %>';
-
-							uri = Liferay.Util.addParams('<portlet:namespace />sourceVersion=' + event.sourceversion, uri);
-							uri = Liferay.Util.addParams('<portlet:namespace />targetVersion=' + event.targetversion, uri);
-
-							location.href = uri;
-						}
-					);
-				}
-			);
-
-			var ACTIONS = {};
-
-			<c:if test="<%= JournalArticlePermission.contains(permissionChecker, article, ActionKeys.DELETE) %>">
-				ACTIONS.deleteArticles = function() {
-					if (confirm('<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-the-selected-version") %>')) {
-						var form = AUI.$(document.<portlet:namespace />fm);
-
-						submitForm(form, '<portlet:actionURL name="deleteArticles"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>');
-					}
-				}
-			</c:if>
-
-			<c:if test="<%= JournalArticlePermission.contains(permissionChecker, article, ActionKeys.EXPIRE) %>">
-				ACTIONS.expireArticles = function() {
-					if (confirm('<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-expire-the-selected-version") %>')) {
-						var form = AUI.$(document.<portlet:namespace />fm);
-
-						submitForm(form, '<portlet:actionURL name="expireArticles"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>');
-					}
-				}
-			</c:if>
-
-			Liferay.componentReady('journalHistoryManagementToolbar').then(
-				function(managementToolbar) {
-					managementToolbar.on(
-						'actionItemClicked',
-						function(event) {
-							var itemData = event.data.item.data;
-
-							if (itemData && itemData.action && ACTIONS[itemData.action]) {
-								ACTIONS[itemData.action]();
-							}
-						}
-					);
-				}
-			);
-		</aui:script>
+		<liferay-frontend:component
+			componentId="<%= journalHistoryManagementToolbarDisplayContext.getDefaultEventHandler() %>"
+			module="js/ArticleHistoryManagementToolbarDefaultEventHandler.es"
+		/>
 	</c:otherwise>
 </c:choose>

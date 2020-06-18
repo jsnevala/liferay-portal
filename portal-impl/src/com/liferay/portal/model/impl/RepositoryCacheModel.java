@@ -14,14 +14,11 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.Repository;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing Repository in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see Repository
  * @generated
  */
-@ProviderType
-public class RepositoryCacheModel implements CacheModel<Repository>,
-	Externalizable, MVCCModel {
+public class RepositoryCacheModel
+	implements CacheModel<Repository>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -53,7 +49,8 @@ public class RepositoryCacheModel implements CacheModel<Repository>,
 		RepositoryCacheModel repositoryCacheModel = (RepositoryCacheModel)obj;
 
 		if ((repositoryId == repositoryCacheModel.repositoryId) &&
-				(mvccVersion == repositoryCacheModel.mvccVersion)) {
+			(mvccVersion == repositoryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -202,7 +199,9 @@ public class RepositoryCacheModel implements CacheModel<Repository>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
@@ -221,15 +220,14 @@ public class RepositoryCacheModel implements CacheModel<Repository>,
 		name = objectInput.readUTF();
 		description = objectInput.readUTF();
 		portletId = objectInput.readUTF();
-		typeSettings = objectInput.readUTF();
+		typeSettings = (String)objectInput.readObject();
 
 		dlFolderId = objectInput.readLong();
 		lastPublishDate = objectInput.readLong();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
 		if (uuid == null) {
@@ -281,10 +279,10 @@ public class RepositoryCacheModel implements CacheModel<Repository>,
 		}
 
 		if (typeSettings == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(typeSettings);
+			objectOutput.writeObject(typeSettings);
 		}
 
 		objectOutput.writeLong(dlFolderId);
@@ -307,4 +305,5 @@ public class RepositoryCacheModel implements CacheModel<Repository>,
 	public String typeSettings;
 	public long dlFolderId;
 	public long lastPublishDate;
+
 }

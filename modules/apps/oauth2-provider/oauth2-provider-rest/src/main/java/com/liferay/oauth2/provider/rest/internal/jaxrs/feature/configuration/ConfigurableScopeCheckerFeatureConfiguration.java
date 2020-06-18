@@ -28,7 +28,7 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 	factory = true,
 	id = "com.liferay.oauth2.provider.rest.internal.jaxrs.feature.configuration.ConfigurableScopeCheckerFeatureConfiguration",
 	localization = "content/Language",
-	name = "oauth2-configurable-scope-checker-feature-configuration-name"
+	name = "configurable-scope-checker-feature-configuration-name"
 )
 public interface ConfigurableScopeCheckerFeatureConfiguration {
 
@@ -36,20 +36,20 @@ public interface ConfigurableScopeCheckerFeatureConfiguration {
 		deflt = "(component.name=)",
 		description = "osgi-jaxrs-application-select-description",
 		id = "osgi.jaxrs.application.select",
-		name = "osgi-jaxrs-application-select", required = true
+		name = "osgi-jaxrs-application-select"
 	)
-	public String osgiJAXRSSelect();
+	public String osgiJaxRsSelect();
 
 	@Meta.AD(
 		deflt = "Liferay.OAuth2.HTTP.configurable.request.checker",
 		description = "osgi-jaxrs-name-description", id = "osgi.jaxrs.name",
-		name = "osgi-jaxrs-name", required = true
+		name = "osgi-jaxrs-name"
 	)
-	public String osgiJAXRSName();
+	public String osgiJaxRsName();
 
 	@Meta.AD(
 		deflt = "", description = "patterns-description", id = "patters",
-		name = "patterns", required = true
+		name = "patterns"
 	)
 	public String[] patterns();
 

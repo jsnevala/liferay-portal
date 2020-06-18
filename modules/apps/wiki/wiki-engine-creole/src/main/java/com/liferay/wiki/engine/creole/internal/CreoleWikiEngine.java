@@ -102,9 +102,10 @@ public class CreoleWikiEngine extends BaseWikiEngine {
 
 				boolean existingLink = false;
 
-				if (_wikiPageLocalService.getPagesCount(
-						page.getNodeId(), title, true) > 0) {
+				int count = _wikiPageLocalService.getPagesCount(
+					page.getNodeId(), title, true);
 
+				if (count > 0) {
 					existingLink = true;
 				}
 
@@ -115,8 +116,8 @@ public class CreoleWikiEngine extends BaseWikiEngine {
 				outgoingLinks.put(title, existingLink);
 			}
 		}
-		catch (SystemException se) {
-			throw new PageContentException(se);
+		catch (SystemException systemException) {
+			throw new PageContentException(systemException);
 		}
 
 		return outgoingLinks;
@@ -156,9 +157,10 @@ public class CreoleWikiEngine extends BaseWikiEngine {
 		try {
 			creole10Parser.wikipage();
 		}
-		catch (RecognitionException re) {
+		catch (RecognitionException recognitionException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("Unable to parse:\n" + creoleCode, re);
+				_log.debug(
+					"Unable to parse:\n" + creoleCode, recognitionException);
 
 				for (String error : creole10Parser.getErrors()) {
 					_log.debug(error);
@@ -169,37 +171,12 @@ public class CreoleWikiEngine extends BaseWikiEngine {
 		return creole10Parser.getWikiPageNode();
 	}
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.wiki.engine.creole)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-	}
-
-	@Reference
-	protected void setWikiGroupServiceConfiguration(
-		WikiGroupServiceConfiguration wikiGroupServiceConfiguration) {
-
-		_wikiGroupServiceConfiguration = wikiGroupServiceConfiguration;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiPageLocalService(
-		WikiPageLocalService wikiPageLocalService) {
-
-		_wikiPageLocalService = wikiPageLocalService;
-	}
-
-	protected void unsetWikiGroupServiceConfiguration(
-		WikiGroupServiceConfiguration wikiGroupServiceConfiguration) {
-
-		_wikiGroupServiceConfiguration = null;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		CreoleWikiEngine.class);
 
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.wiki.engine.creole)"
+	)
 	private ServletContext _servletContext;
 
 	@Reference(
@@ -207,7 +184,10 @@ public class CreoleWikiEngine extends BaseWikiEngine {
 	)
 	private ServletContext _wikiEngineInputEditorServletContext;
 
+	@Reference
 	private WikiGroupServiceConfiguration _wikiGroupServiceConfiguration;
+
+	@Reference
 	private WikiPageLocalService _wikiPageLocalService;
 
 }

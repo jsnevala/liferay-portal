@@ -54,6 +54,18 @@ public class ManagementToolbarTag extends BaseClayTag {
 
 		Map<String, Object> context = getContext();
 
+		String searchContainerId = (String)context.get("searchContainerId");
+
+		if (Validator.isNotNull(searchContainerId)) {
+			String componentId = getComponentId();
+
+			putValue("cacheState", _CACHE_STATE);
+
+			if (Validator.isNull(componentId)) {
+				setComponentId(searchContainerId + "ManagementToolbar");
+			}
+		}
+
 		String searchInputName = (String)context.get("searchInputName");
 
 		if (Validator.isNull(searchInputName)) {
@@ -118,6 +130,17 @@ public class ManagementToolbarTag extends BaseClayTag {
 
 		setShowInfoButton(showInfoButton);
 
+		if (Validator.isNotNull(context.get("searchValue"))) {
+			setShowResultsBar(true);
+		}
+		else {
+			List filterLabels = (List)context.get("filterLabels");
+
+			if ((filterLabels != null) && !filterLabels.isEmpty()) {
+				setShowResultsBar(true);
+			}
+		}
+
 		return super.doStartTag();
 	}
 
@@ -141,12 +164,16 @@ public class ManagementToolbarTag extends BaseClayTag {
 		putValue("actionItems", actionDropdownItems);
 	}
 
-	public void setActionHandler(String actionHandler) {
-		putValue("actionHandler", actionHandler);
+	public void setCheckboxStatus(String checkboxStatus) {
+		putValue("checkboxStatus", checkboxStatus);
 	}
 
 	public void setClearResultsURL(String clearResultsURL) {
 		putValue("clearResultsURL", clearResultsURL);
+	}
+
+	public void setClearSelectionURL(String clearSelectionURL) {
+		putValue("clearSelectionURL", clearSelectionURL);
 	}
 
 	public void setContentRenderer(String contentRenderer) {
@@ -211,6 +238,10 @@ public class ManagementToolbarTag extends BaseClayTag {
 		putValue("selectable", selectable);
 	}
 
+	public void setSelectAllURL(String selectAllURL) {
+		putValue("selectAllURL", selectAllURL);
+	}
+
 	public void setSelectedItems(int selectedItems) {
 		putValue("selectedItems", selectedItems);
 	}
@@ -231,8 +262,16 @@ public class ManagementToolbarTag extends BaseClayTag {
 		putValue("showInfoButton", showInfoButton);
 	}
 
+	public void setShowResultsBar(Boolean showResultsBar) {
+		putValue("showResultsBar", showResultsBar);
+	}
+
 	public void setShowSearch(Boolean showSearch) {
 		putValue("showSearch", showSearch);
+	}
+
+	public void setShowSelectAllButton(Boolean showSelectAllButton) {
+		putValue("showSelectAllButton", showSelectAllButton);
 	}
 
 	public void setSortingOrder(String sortingOrder) {
@@ -241,6 +280,10 @@ public class ManagementToolbarTag extends BaseClayTag {
 
 	public void setSortingURL(String sortingURL) {
 		putValue("sortingURL", sortingURL);
+	}
+
+	public void setSupportsBulkActions(Boolean supportsBulkActions) {
+		putValue("supportsBulkActions", supportsBulkActions);
 	}
 
 	public void setViewTypeItems(List<ViewTypeItem> viewTypeItems) {
@@ -285,6 +328,11 @@ public class ManagementToolbarTag extends BaseClayTag {
 
 		if (context.get("creationMenu") == null) {
 			setCreationMenu(managementToolbarDisplayContext.getCreationMenu());
+		}
+
+		if (context.get("defaultEventHandler") == null) {
+			setDefaultEventHandler(
+				managementToolbarDisplayContext.getDefaultEventHandler());
 		}
 
 		if (context.get("disabled") == null) {
@@ -379,6 +427,11 @@ public class ManagementToolbarTag extends BaseClayTag {
 			setSortingURL(managementToolbarDisplayContext.getSortingURL());
 		}
 
+		if (context.get("supportsBulkActions") == null) {
+			setSupportsBulkActions(
+				managementToolbarDisplayContext.getSupportsBulkActions());
+		}
+
 		if (context.get("viewTypes") == null) {
 			setViewTypeItems(
 				managementToolbarDisplayContext.getViewTypeItems());
@@ -388,9 +441,8 @@ public class ManagementToolbarTag extends BaseClayTag {
 	private Map<String, Object> _getSearchData(String searchActionURL) {
 		Map<String, Object> searchData = new HashMap<>();
 
-		String queryString = HttpUtil.getQueryString(searchActionURL);
-
-		String[] parameters = StringUtil.split(queryString, CharPool.AMPERSAND);
+		String[] parameters = StringUtil.split(
+			HttpUtil.getQueryString(searchActionURL), CharPool.AMPERSAND);
 
 		for (String parameter : parameters) {
 			if (parameter.length() == 0) {
@@ -419,6 +471,10 @@ public class ManagementToolbarTag extends BaseClayTag {
 
 		return searchData;
 	}
+
+	private static final String[] _CACHE_STATE = {
+		"checkboxStatus", "showSelectAllButton", "selectedItems"
+	};
 
 	private static final String[] _NAMESPACED_PARAMS = {
 		"infoPanelId", "searchContainerId", "searchFormName", "searchInputName"

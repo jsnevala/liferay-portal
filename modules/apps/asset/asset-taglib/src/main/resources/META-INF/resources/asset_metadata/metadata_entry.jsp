@@ -75,7 +75,7 @@ else if (metadataField.equals("tags")) {
 	}
 }
 else if (metadataField.equals("view-count")) {
-	int viewCount = assetEntry.getViewCount();
+	long viewCount = assetEntry.getViewCount();
 
 	value = viewCount + StringPool.SPACE + LanguageUtil.get(resourceBundle, (viewCount == 1) ? "view" : "views");
 }
@@ -112,7 +112,12 @@ else if (metadataField.equals("view-count")) {
 		</div>
 	</c:when>
 	<c:when test="<%= Validator.isNotNull(value) %>">
-		<aui:col cssClass="help-block" md="3" sm="4" xs="6">
+		<clay:col
+			className="form-feedback-item"
+			md="3"
+			size="6"
+			sm="4"
+		>
 			<dt class="metadata-entry-label <%= showLabel ? StringPool.BLANK : "hide" %>"><%= label %></dt>
 
 			<dd class="metadata-entry <%= metadataFieldCssClass %>">
@@ -136,6 +141,6 @@ else if (metadataField.equals("view-count")) {
 					</c:otherwise>
 				</c:choose>
 			</dd>
-		</aui:col>
+		</clay:col>
 	</c:when>
 </c:choose>

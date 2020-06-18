@@ -14,12 +14,9 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
-import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.checks.util.JavaSourceUtil;
-import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
 import com.liferay.source.formatter.util.ThreadSafeSortedClassLibraryBuilder;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
@@ -52,18 +49,17 @@ public class UnprocessedExceptionCheck extends BaseCheck {
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		FileContents fileContents = getFileContents();
+		String absolutePath = getAbsolutePath();
 
-		String fileName = StringUtil.replace(
-			fileContents.getFileName(), CharPool.BACK_SLASH, CharPool.SLASH);
-
-		if (fileName.contains("/test/") ||
-			fileName.contains("/testIntegration/")) {
+		if (absolutePath.contains("/test/") ||
+			absolutePath.contains("/testIntegration/")) {
 
 			return;
 		}
 
 		if (detailAST.getType() == TokenTypes.LITERAL_CATCH) {
+			FileContents fileContents = getFileContents();
+
 			FileText fileText = fileContents.getText();
 
 			_checkUnprocessedException(
@@ -77,10 +73,10 @@ public class UnprocessedExceptionCheck extends BaseCheck {
 	private void _checkUnprocessedException(
 		DetailAST detailAST, String content) {
 
-		DetailAST parameterDefAST = detailAST.findFirstToken(
+		DetailAST parameterDefinitionDetailAST = detailAST.findFirstToken(
 			TokenTypes.PARAMETER_DEF);
 
-		String exceptionVariableName = _getName(parameterDefAST);
+		String exceptionVariableName = _getName(parameterDefinitionDetailAST);
 
 		if (_containsVariable(
 				detailAST.findFirstToken(TokenTypes.SLIST),
@@ -89,7 +85,8 @@ public class UnprocessedExceptionCheck extends BaseCheck {
 			return;
 		}
 
-		String exceptionClassName = _getExceptionClassName(parameterDefAST);
+		String exceptionClassName = _getExceptionClassName(
+			parameterDefinitionDetailAST);
 
 		if ((exceptionClassName == null) ||
 			exceptionClassName.equals("JSONException")) {
@@ -145,7 +142,7 @@ public class UnprocessedExceptionCheck extends BaseCheck {
 				exceptionClassName.equals("SystemException")) {
 
 				log(
-					parameterDefAST, _MSG_UNPROCESSED_EXCEPTION,
+					parameterDefinitionDetailAST, _MSG_UNPROCESSED_EXCEPTION,
 					originalExceptionClassName);
 
 				break;
@@ -168,48 +165,49 @@ public class UnprocessedExceptionCheck extends BaseCheck {
 			return;
 		}
 
-		DetailAST parentAST = detailAST.getParent();
+		DetailAST parentDetailAST = detailAST.getParent();
 
-		if (parentAST.getType() != TokenTypes.EXPR) {
+		if (parentDetailAST.getType() != TokenTypes.EXPR) {
 			return;
 		}
 
-		DetailAST exprAST = parentAST;
+		DetailAST exprDetailAST = parentDetailAST;
 
 		while (true) {
-			if (parentAST == null) {
+			if (parentDetailAST == null) {
 				return;
 			}
 
-			if (parentAST.getType() == TokenTypes.LITERAL_CATCH) {
+			if (parentDetailAST.getType() == TokenTypes.LITERAL_CATCH) {
 				break;
 			}
 
-			parentAST = parentAST.getParent();
+			parentDetailAST = parentDetailAST.getParent();
 		}
 
-		DetailAST parameterDefAST = parentAST.findFirstToken(
+		DetailAST parameterDefinitionDetailAST = parentDetailAST.findFirstToken(
 			TokenTypes.PARAMETER_DEF);
 
-		String exceptionClassName = _getExceptionClassName(parameterDefAST);
+		String exceptionClassName = _getExceptionClassName(
+			parameterDefinitionDetailAST);
 
 		if (Objects.equals(exceptionClassName, "JSONException")) {
 			return;
 		}
 
-		String exceptionVariableName = _getName(parameterDefAST);
+		String exceptionVariableName = _getName(parameterDefinitionDetailAST);
 
 		if (_containsVariable(
-				parentAST.findFirstToken(TokenTypes.SLIST),
+				parentDetailAST.findFirstToken(TokenTypes.SLIST),
 				exceptionVariableName)) {
 
 			return;
 		}
 
-		parentAST = exprAST.getParent();
+		parentDetailAST = exprDetailAST.getParent();
 
-		if ((parentAST.getType() == TokenTypes.LITERAL_THROW) ||
-			(parentAST.getType() == TokenTypes.SLIST)) {
+		if ((parentDetailAST.getType() == TokenTypes.LITERAL_THROW) ||
+			(parentDetailAST.getType() == TokenTypes.SLIST)) {
 
 			log(detailAST, _MSG_UNPROCESSED_EXCEPTION, exceptionVariableName);
 		}
@@ -218,11 +216,11 @@ public class UnprocessedExceptionCheck extends BaseCheck {
 	private boolean _containsVariable(
 		DetailAST detailAST, String variableName) {
 
-		List<DetailAST> nameASTList = DetailASTUtil.getAllChildTokens(
+		List<DetailAST> nameDetailASTList = getAllChildTokens(
 			detailAST, true, TokenTypes.IDENT);
 
-		for (DetailAST nameAST : nameASTList) {
-			String name = nameAST.getText();
+		for (DetailAST nameDetailAST : nameDetailASTList) {
+			String name = nameDetailAST.getText();
 
 			if (name.equals(variableName)) {
 				return true;
@@ -232,10 +230,13 @@ public class UnprocessedExceptionCheck extends BaseCheck {
 		return false;
 	}
 
-	private String _getExceptionClassName(DetailAST parameterDefAST) {
-		DetailAST typeAST = parameterDefAST.findFirstToken(TokenTypes.TYPE);
+	private String _getExceptionClassName(
+		DetailAST parameterDefinitionDetailAST) {
 
-		FullIdent typeIdent = FullIdent.createFullIdentBelow(typeAST);
+		DetailAST typeDetailAST = parameterDefinitionDetailAST.findFirstToken(
+			TokenTypes.TYPE);
+
+		FullIdent typeIdent = FullIdent.createFullIdentBelow(typeDetailAST);
 
 		return typeIdent.getText();
 	}
@@ -267,7 +268,7 @@ public class UnprocessedExceptionCheck extends BaseCheck {
 		try {
 			javaProjectBuilder.addSource(new UnsyncStringReader(content));
 		}
-		catch (ParseException pe) {
+		catch (ParseException parseException) {
 			return null;
 		}
 
@@ -275,18 +276,18 @@ public class UnprocessedExceptionCheck extends BaseCheck {
 	}
 
 	private String _getName(DetailAST detailAST) {
-		DetailAST nameAST = detailAST.findFirstToken(TokenTypes.IDENT);
+		DetailAST nameDetailAST = detailAST.findFirstToken(TokenTypes.IDENT);
 
-		if (nameAST != null) {
-			return nameAST.getText();
+		if (nameDetailAST != null) {
+			return nameDetailAST.getText();
 		}
 
-		DetailAST dotAST = detailAST.findFirstToken(TokenTypes.DOT);
+		DetailAST dotDetailAST = detailAST.findFirstToken(TokenTypes.DOT);
 
-		if (dotAST != null) {
-			nameAST = dotAST.findFirstToken(TokenTypes.IDENT);
+		if (dotDetailAST != null) {
+			nameDetailAST = dotDetailAST.findFirstToken(TokenTypes.IDENT);
 
-			return nameAST.getText();
+			return nameDetailAST.getText();
 		}
 
 		return null;

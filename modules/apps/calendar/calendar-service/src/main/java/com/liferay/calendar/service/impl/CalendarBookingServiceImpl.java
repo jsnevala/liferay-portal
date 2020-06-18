@@ -18,12 +18,14 @@ import com.liferay.calendar.configuration.CalendarServiceConfigurationValues;
 import com.liferay.calendar.constants.CalendarActionKeys;
 import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarBooking;
-import com.liferay.calendar.model.CalendarBookingConstants;
+import com.liferay.calendar.service.CalendarLocalService;
+import com.liferay.calendar.service.CalendarService;
 import com.liferay.calendar.service.base.CalendarBookingServiceBaseImpl;
 import com.liferay.calendar.util.JCalendarUtil;
 import com.liferay.calendar.workflow.CalendarBookingWorkflowConstants;
 import com.liferay.petra.content.ContentUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -31,17 +33,15 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.rss.export.RSSExporter;
 import com.liferay.rss.model.SyndContent;
 import com.liferay.rss.model.SyndEntry;
@@ -62,12 +62,22 @@ import java.util.TimeZone;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Eduardo Lundgren
  * @author Fabio Pezzutto
  * @author Bruno Basto
  * @author Pier Paolo Ramon
  */
+@Component(
+	property = {
+		"json.web.service.context.name=calendar",
+		"json.web.service.context.path=CalendarBooking"
+	},
+	service = AopService.class
+)
 public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 
 	@Override
@@ -127,59 +137,6 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 			startTime, endTime, allDay, recurrence, firstReminder,
 			firstReminderType, secondReminder, secondReminderType,
 			serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #addCalendarBooking(long, long[], long, long, Map, Map,
-	 *             String, long, long, boolean, String, long, String, long,
-	 *             String, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public CalendarBooking addCalendarBooking(
-			long calendarId, long[] childCalendarIds,
-			long parentCalendarBookingId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String location,
-			int startTimeYear, int startTimeMonth, int startTimeDay,
-			int startTimeHour, int startTimeMinute, int endTimeYear,
-			int endTimeMonth, int endTimeDay, int endTimeHour,
-			int endTimeMinute, String timeZoneId, boolean allDay,
-			String recurrence, long firstReminder, String firstReminderType,
-			long secondReminder, String secondReminderType,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		return calendarBookingService.addCalendarBooking(
-			calendarId, childCalendarIds, parentCalendarBookingId,
-			CalendarBookingConstants.RECURRING_CALENDAR_BOOKING_ID_DEFAULT,
-			titleMap, descriptionMap, location, startTimeYear, startTimeMonth,
-			startTimeDay, startTimeHour, startTimeMinute, endTimeYear,
-			endTimeMonth, endTimeDay, endTimeHour, endTimeMinute, timeZoneId,
-			allDay, recurrence, firstReminder, firstReminderType,
-			secondReminder, secondReminderType, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public CalendarBooking addCalendarBooking(
-			long calendarId, long[] childCalendarIds,
-			long parentCalendarBookingId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String location, long startTime,
-			long endTime, boolean allDay, String recurrence, long firstReminder,
-			String firstReminderType, long secondReminder,
-			String secondReminderType, ServiceContext serviceContext)
-		throws PortalException {
-
-		return calendarBookingService.addCalendarBooking(
-			calendarId, childCalendarIds, parentCalendarBookingId,
-			CalendarBookingConstants.RECURRING_CALENDAR_BOOKING_ID_DEFAULT,
-			titleMap, descriptionMap, location, startTime, endTime, allDay,
-			recurrence, firstReminder, firstReminderType, secondReminder,
-			secondReminderType, serviceContext);
 	}
 
 	@Override
@@ -354,7 +311,7 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 			double version, String displayStyle, ThemeDisplay themeDisplay)
 		throws PortalException {
 
-		Calendar calendar = calendarService.getCalendar(calendarId);
+		Calendar calendar = _calendarService.getCalendar(calendarId);
 
 		int[] statuses = {
 			WorkflowConstants.STATUS_APPROVED,
@@ -369,7 +326,7 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 		return exportToRSS(
 			calendar.getName(themeDisplay.getLocale()),
 			calendar.getDescription(themeDisplay.getLocale()), type, version,
-			displayStyle, PortalUtil.getLayoutFullURL(themeDisplay),
+			displayStyle, _portal.getLayoutFullURL(themeDisplay),
 			calendarBookings, themeDisplay);
 	}
 
@@ -407,12 +364,12 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 		stream = stream.filter(
 			calendarBooking -> {
 				try {
-					return !calendarLocalService.isStagingCalendar(
+					return !_calendarLocalService.isStagingCalendar(
 						calendarBooking.getCalendar());
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(pe, pe);
+						_log.warn(portalException, portalException);
 					}
 
 					return true;
@@ -497,21 +454,6 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 		return invokeTransition(
 			calendarBookingId, calendarBookingInstance.getStartTime(), status,
 			updateInstance, allFollowing, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #invokeTransition(long, int, long, boolean, boolean,
-	 *             ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public void invokeTransition(
-			long calendarBookingId, int status, ServiceContext serviceContext)
-		throws PortalException {
-
-		invokeTransition(
-			calendarBookingId, 0, status, false, false, serviceContext);
 	}
 
 	@Override
@@ -864,34 +806,6 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 			secondReminderType, serviceContext);
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #updateRecurringCalendarBooking(long, long, long[], Map, Map,
-	 *             String, long, long, boolean, long, String, long, String,
-	 *             ServiceContext)
-	 */
-	@Deprecated
-	@Override
-	public CalendarBooking updateRecurringCalendarBooking(
-			long calendarBookingId, long calendarId, long[] childCalendarIds,
-			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
-			String location, long startTime, long endTime, boolean allDay,
-			String recurrence, long firstReminder, String firstReminderType,
-			long secondReminder, String secondReminderType,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		_calendarModelResourcePermission.check(
-			getPermissionChecker(), calendarId,
-			CalendarActionKeys.MANAGE_BOOKINGS);
-
-		return updateRecurringCalendarBooking(
-			calendarBookingId, calendarId, childCalendarIds, titleMap,
-			descriptionMap, location, startTime, endTime, allDay, firstReminder,
-			firstReminderType, secondReminder, secondReminderType,
-			serviceContext);
-	}
-
 	protected String exportToRSS(
 		String name, String description, String type, double version,
 		String displayStyle, String feedURL,
@@ -910,7 +824,7 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 		for (CalendarBooking calendarBooking : calendarBookings) {
 			SyndEntry syndEntry = _syndModelFactory.createSyndEntry();
 
-			String author = PortalUtil.getUserName(calendarBooking);
+			String author = _portal.getUserName(calendarBooking);
 
 			syndEntry.setAuthor(author);
 
@@ -1053,7 +967,7 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 		Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(
 			themeDisplay.getLocale(), timeZone);
 
-		content = StringUtil.replace(
+		return StringUtil.replace(
 			content,
 			new String[] {
 				"[$EVENT_DESCRIPTION$]", "[$EVENT_END_DATE$]",
@@ -1066,23 +980,29 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 				dateFormatDateTime.format(calendarBooking.getStartTime()),
 				calendarBooking.getTitle(themeDisplay.getLocale())
 			});
-
-		return content;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CalendarBookingServiceImpl.class);
 
-	private static volatile ModelResourcePermission<Calendar>
-		_calendarModelResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				CalendarBookingServiceImpl.class,
-				"_calendarModelResourcePermission", Calendar.class);
+	@Reference
+	private CalendarLocalService _calendarLocalService;
 
-	@ServiceReference(type = RSSExporter.class)
+	@Reference(
+		target = "(model.class.name=com.liferay.calendar.model.Calendar)"
+	)
+	private ModelResourcePermission<Calendar> _calendarModelResourcePermission;
+
+	@Reference
+	private CalendarService _calendarService;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
 	private RSSExporter _rssExporter;
 
-	@ServiceReference(type = SyndModelFactory.class)
+	@Reference
 	private SyndModelFactory _syndModelFactory;
 
 }

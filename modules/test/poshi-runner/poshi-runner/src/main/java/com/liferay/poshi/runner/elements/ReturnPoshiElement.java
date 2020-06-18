@@ -14,10 +14,12 @@
 
 package com.liferay.poshi.runner.elements;
 
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
 import com.liferay.poshi.runner.util.RegexUtil;
 import com.liferay.poshi.runner.util.StringUtil;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
@@ -39,7 +41,8 @@ public class ReturnPoshiElement extends PoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		if (_isElementType(parentPoshiElement, poshiScript)) {
 			return new ReturnPoshiElement(parentPoshiElement, poshiScript);
@@ -49,7 +52,9 @@ public class ReturnPoshiElement extends PoshiElement {
 	}
 
 	@Override
-	public void parsePoshiScript(String poshiScript) {
+	public void parsePoshiScript(String poshiScript)
+		throws PoshiScriptParserException {
+
 		if (getParent() instanceof ExecutePoshiElement) {
 			String returnName = RegexUtil.getGroup(
 				poshiScript, "var\\s*(.+?)\\s*=", 1);
@@ -72,6 +77,10 @@ public class ReturnPoshiElement extends PoshiElement {
 			"\n\n", getPad(), "return \"", attributeValue("value"), "\";");
 	}
 
+	@Override
+	public void validatePoshiScript() throws PoshiScriptParserException {
+	}
+
 	protected ReturnPoshiElement() {
 	}
 
@@ -84,7 +93,8 @@ public class ReturnPoshiElement extends PoshiElement {
 	}
 
 	protected ReturnPoshiElement(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}
@@ -93,12 +103,9 @@ public class ReturnPoshiElement extends PoshiElement {
 	protected String createPoshiScriptSnippet(String content) {
 		StringBuilder sb = new StringBuilder();
 
-		String blockName = getBlockName();
-		String pad = getPad();
-
 		sb.append("\n\n");
-		sb.append(pad);
-		sb.append(blockName);
+		sb.append(getPad());
+		sb.append(getBlockName());
 		sb.append(content.trim());
 
 		return sb.toString();
@@ -132,15 +139,12 @@ public class ReturnPoshiElement extends PoshiElement {
 			return false;
 		}
 
-		if (poshiScript.startsWith("return ") &&
-			isBalancedPoshiScript(poshiScript)) {
-
-			return true;
-		}
-
-		return false;
+		return isValidPoshiScriptStatement(_returnPattern, poshiScript);
 	}
 
 	private static final String _ELEMENT_NAME = "return";
+
+	private Pattern _returnPattern = Pattern.compile(
+		"^return[\\s]*\"[\\s\\S]*\"[\\s]*;$");
 
 }

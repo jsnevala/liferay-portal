@@ -14,7 +14,7 @@
 
 package com.liferay.asset.categories.admin.web.internal.portlet.configuration.icon;
 
-import com.liferay.asset.categories.admin.web.internal.constants.AssetCategoriesAdminPortletKeys;
+import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPortletKeys;
 import com.liferay.asset.categories.admin.web.internal.display.context.AssetCategoriesDisplayContext;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
@@ -35,8 +35,6 @@ import com.liferay.taglib.security.PermissionsURLTag;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -65,7 +63,7 @@ public class AssetCategoryPermissionsPortletConfigurationIcon
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		long categoryId = ParamUtil.getLong(portletRequest, "categoryId", 0);
+		long categoryId = ParamUtil.getLong(portletRequest, "categoryId");
 
 		if (categoryId <= 0) {
 			return StringPool.BLANK;
@@ -87,7 +85,7 @@ public class AssetCategoryPermissionsPortletConfigurationIcon
 				LiferayWindowState.POP_UP.toString(), null,
 				themeDisplay.getRequest());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return url;
@@ -100,11 +98,9 @@ public class AssetCategoryPermissionsPortletConfigurationIcon
 
 	@Override
 	public boolean isShow(PortletRequest portletRequest) {
-		HttpServletRequest request = _portal.getHttpServletRequest(
-			portletRequest);
-
 		AssetCategoriesDisplayContext assetCategoriesDisplayContext =
-			new AssetCategoriesDisplayContext(null, null, request);
+			new AssetCategoriesDisplayContext(
+				_portal.getHttpServletRequest(portletRequest), null, null);
 
 		AssetCategory category = assetCategoriesDisplayContext.getCategory();
 
@@ -116,9 +112,9 @@ public class AssetCategoryPermissionsPortletConfigurationIcon
 			return assetCategoriesDisplayContext.hasPermission(
 				category, ActionKeys.PERMISSIONS);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 		}
 

@@ -16,7 +16,6 @@ package com.liferay.asset.auto.tagger.internal.configuration;
 
 import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfiguration;
 import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfigurationFactory;
-import com.liferay.asset.auto.tagger.constants.AssetAutoTaggerConstants;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -26,7 +25,6 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.service.CompanyLocalService;
-import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 
@@ -48,7 +46,37 @@ public class AssetAutoTaggerConfigurationFactoryImpl
 	implements AssetAutoTaggerConfigurationFactory {
 
 	@Override
-	public AssetAutoTaggerConfiguration getAssetAutoTaggerConfiguration() {
+	public AssetAutoTaggerConfiguration getCompanyAssetAutoTaggerConfiguration(
+		Company company) {
+
+		try {
+			return new CompanyAssetAutoTaggerConfiguration(company);
+		}
+		catch (ConfigurationException configurationException) {
+			_log.error(configurationException, configurationException);
+
+			return getSystemAssetAutoTaggerConfiguration();
+		}
+	}
+
+	@Override
+	public AssetAutoTaggerConfiguration getGroupAssetAutoTaggerConfiguration(
+		Group group) {
+
+		try {
+			return new GroupAssetAutoTaggerConfiguration(group);
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
+
+			return getSystemAssetAutoTaggerConfiguration();
+		}
+	}
+
+	@Override
+	public AssetAutoTaggerConfiguration
+		getSystemAssetAutoTaggerConfiguration() {
+
 		return new AssetAutoTaggerConfiguration() {
 
 			@Override
@@ -68,32 +96,6 @@ public class AssetAutoTaggerConfigurationFactoryImpl
 			}
 
 		};
-	}
-
-	public AssetAutoTaggerConfiguration getAssetAutoTaggerConfiguration(
-		Company company) {
-
-		try {
-			return new CompanyAssetAutoTaggerConfiguration(company);
-		}
-		catch (ConfigurationException ce) {
-			_log.error(ce, ce);
-
-			return getAssetAutoTaggerConfiguration();
-		}
-	}
-
-	public AssetAutoTaggerConfiguration getAssetAutoTaggerConfiguration(
-		Group group) {
-
-		try {
-			return new GroupAssetAutoTaggerConfiguration(group);
-		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
-
-			return getAssetAutoTaggerConfiguration();
-		}
 	}
 
 	@Activate
@@ -123,11 +125,9 @@ public class AssetAutoTaggerConfigurationFactoryImpl
 			throws ConfigurationException {
 
 			_assetAutoTaggerCompanyConfiguration =
-				_configurationProvider.getConfiguration(
+				_configurationProvider.getCompanyConfiguration(
 					AssetAutoTaggerCompanyConfiguration.class,
-					new CompanyServiceSettingsLocator(
-						company.getCompanyId(),
-						AssetAutoTaggerConstants.SERVICE_NAME));
+					company.getCompanyId());
 		}
 
 		@Override
@@ -165,7 +165,7 @@ public class AssetAutoTaggerConfigurationFactoryImpl
 			return _assetAutoTaggerCompanyConfiguration.enabled();
 		}
 
-		private AssetAutoTaggerCompanyConfiguration
+		private final AssetAutoTaggerCompanyConfiguration
 			_assetAutoTaggerCompanyConfiguration;
 
 	}
@@ -201,14 +201,15 @@ public class AssetAutoTaggerConfigurationFactoryImpl
 					return false;
 				}
 
-				UnicodeProperties typeSettingsProperties =
+				UnicodeProperties typeSettingsUnicodeProperties =
 					_group.getTypeSettingsProperties();
 
-				if (typeSettingsProperties.containsKey(
+				if (typeSettingsUnicodeProperties.containsKey(
 						"assetAutoTaggingEnabled")) {
 
 					return GetterUtil.getBoolean(
-						typeSettingsProperties.get("assetAutoTaggingEnabled"));
+						typeSettingsUnicodeProperties.get(
+							"assetAutoTaggingEnabled"));
 				}
 
 				AssetAutoTaggerGroupConfiguration
@@ -219,16 +220,16 @@ public class AssetAutoTaggerConfigurationFactoryImpl
 
 				return assetAutoTaggerGroupConfiguration.enabled();
 			}
-			catch (ConfigurationException ce) {
+			catch (ConfigurationException configurationException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(ce, ce);
+					_log.debug(configurationException, configurationException);
 				}
 
 				return _assetAutoTaggerCompanyConfiguration.isEnabled();
 			}
 		}
 
-		private AssetAutoTaggerConfiguration
+		private final AssetAutoTaggerConfiguration
 			_assetAutoTaggerCompanyConfiguration;
 		private final Group _group;
 

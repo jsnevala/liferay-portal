@@ -16,11 +16,11 @@ package com.liferay.dynamic.data.mapping.storage;
 
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 
@@ -162,9 +162,7 @@ public class Field implements Serializable {
 	}
 
 	public Serializable getValue() {
-		Locale defaultLocale = getDefaultLocale();
-
-		return getValue(defaultLocale);
+		return getValue(getDefaultLocale());
 	}
 
 	public Serializable getValue(Locale locale) {
@@ -187,8 +185,8 @@ public class Field implements Serializable {
 
 			return values.get(0);
 		}
-		catch (Exception e) {
-			_log.error("Unable to extract field value", e);
+		catch (Exception exception) {
+			_log.error("Unable to extract field value", exception);
 		}
 
 		return null;
@@ -229,7 +227,7 @@ public class Field implements Serializable {
 
 			return false;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return false;
 		}
 	}

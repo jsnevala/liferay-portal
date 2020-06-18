@@ -19,7 +19,9 @@ import com.liferay.calendar.constants.CalendarActionKeys;
 import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarBooking;
 import com.liferay.calendar.model.CalendarResource;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -28,17 +30,20 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -60,7 +65,7 @@ public class CalendarBookingIndexerIndexedFieldsTest
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE,
+			PermissionCheckerMethodTestRule.INSTANCE,
 			SynchronousDestinationTestRule.INSTANCE);
 
 	@Before
@@ -100,11 +105,10 @@ public class CalendarBookingIndexerIndexedFieldsTest
 				}
 			});
 
-		Map<String, String> map = new HashMap<>();
-
-		map.put(
+		Map<String, String> map = HashMapBuilder.put(
 			Field.CLASS_NAME_ID,
-			String.valueOf(portal.getClassNameId(Calendar.class)));
+			String.valueOf(portal.getClassNameId(Calendar.class))
+		).build();
 
 		indexedFieldsFixture.populatePriority("0.0", map);
 
@@ -147,6 +151,9 @@ public class CalendarBookingIndexerIndexedFieldsTest
 		FieldValuesAssert.assertFieldValues(map, document, keywords);
 	}
 
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
 	protected CalendarBooking addCalendarBooking(
 			LocalizedValuesMap titleLocalizedValuesMap,
 			LocalizedValuesMap nameLocalizedValuesMap,
@@ -174,7 +181,8 @@ public class CalendarBookingIndexerIndexedFieldsTest
 	}
 
 	protected void populateCalendarBooking(
-		CalendarBooking calendarBooking, Map<String, String> map) {
+			CalendarBooking calendarBooking, Map<String, String> map)
+		throws Exception {
 
 		map.put(
 			Field.CLASS_PK, String.valueOf(calendarBooking.getCalendarId()));
@@ -192,6 +200,9 @@ public class CalendarBookingIndexerIndexedFieldsTest
 		map.put(
 			"startTime_sortable",
 			String.valueOf(calendarBooking.getStartTime()));
+
+		indexedFieldsFixture.populateViewCount(
+			CalendarBooking.class, calendarBooking.getCalendarBookingId(), map);
 
 		populateDates(calendarBooking, map);
 	}
@@ -223,28 +234,21 @@ public class CalendarBookingIndexerIndexedFieldsTest
 		map.put(Field.TITLE + "_en_US", title);
 
 		map.put("localized_title", title);
-		map.put("localized_title_ca_ES", title);
-		map.put("localized_title_ca_ES_sortable", title);
-		map.put("localized_title_de_DE", title);
-		map.put("localized_title_de_DE_sortable", title);
-		map.put("localized_title_en_US", title);
-		map.put("localized_title_en_US_sortable", title);
-		map.put("localized_title_es_ES", title);
-		map.put("localized_title_es_ES_sortable", title);
-		map.put("localized_title_fi_FI", title);
-		map.put("localized_title_fi_FI_sortable", title);
-		map.put("localized_title_fr_FR", title);
-		map.put("localized_title_fr_FR_sortable", title);
-		map.put("localized_title_iw_IL", title);
-		map.put("localized_title_iw_IL_sortable", title);
-		map.put("localized_title_ja_JP", title);
-		map.put("localized_title_ja_JP_sortable", title);
-		map.put("localized_title_nl_NL", title);
-		map.put("localized_title_nl_NL_sortable", title);
-		map.put("localized_title_pt_BR", title);
-		map.put("localized_title_pt_BR_sortable", title);
-		map.put("localized_title_zh_CN", title);
-		map.put("localized_title_zh_CN_sortable", title);
+
+		Set<Locale> locales = LanguageUtil.getAvailableLocales();
+
+		locales.forEach(
+			locale -> {
+				String mapKey = StringBundler.concat(
+					"localized_title_", locale.getLanguage(), "_",
+					locale.getCountry());
+
+				String mapKeySortable = mapKey + "_sortable";
+
+				map.put(mapKey, title);
+
+				map.put(mapKeySortable, title);
+			});
 	}
 
 	protected void populateTranslatedTitle(

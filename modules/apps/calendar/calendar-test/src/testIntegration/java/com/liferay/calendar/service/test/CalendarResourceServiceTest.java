@@ -18,10 +18,11 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.calendar.model.CalendarResource;
 import com.liferay.calendar.service.CalendarResourceLocalServiceUtil;
 import com.liferay.calendar.service.CalendarResourceServiceUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.service.permission.ModelPermissionsFactory;
@@ -30,13 +31,12 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
-import com.liferay.portal.service.test.ServiceTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -62,7 +62,7 @@ public class CalendarResourceServiceTest {
 	public void setUp() throws Exception {
 		_user = UserTestUtil.addUser();
 
-		ServiceTestUtil.setUser(_user);
+		UserTestUtil.setUser(_user);
 	}
 
 	@Test
@@ -105,26 +105,24 @@ public class CalendarResourceServiceTest {
 
 		int count = CalendarResourceServiceUtil.searchCount(
 			_user.getCompanyId(), new long[] {_user.getGroupId()},
-			new long[] {classNameId}, nameMap.get(LocaleUtil.getDefault()),
+			new long[] {classNameId}, nameMap.get(LocaleUtil.getSiteDefault()),
 			true);
 
 		Assert.assertEquals(1, count);
 	}
 
 	protected Map<Locale, String> createNameMap() {
-		Map<Locale, String> nameMap = new HashMap<>();
-
-		String name =
-			RandomTestUtil.randomString() + StringPool.SPACE +
-				RandomTestUtil.randomString();
-
-		nameMap.put(LocaleUtil.getDefault(), name);
-
-		return nameMap;
+		return HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(),
+			StringBundler.concat(
+				RandomTestUtil.randomString(), StringPool.SPACE,
+				RandomTestUtil.randomString())
+		).build();
 	}
 
-	private static final String[] _CALENDAR_RESOURCE_GROUP_PERMISSIONS =
-		{"ADD_CALENDAR", "DELETE", "PERMISSIONS", "UPDATE", "VIEW"};
+	private static final String[] _CALENDAR_RESOURCE_GROUP_PERMISSIONS = {
+		"ADD_CALENDAR", "DELETE", "PERMISSIONS", "UPDATE", "VIEW"
+	};
 
 	@DeleteAfterTestRun
 	private User _user;

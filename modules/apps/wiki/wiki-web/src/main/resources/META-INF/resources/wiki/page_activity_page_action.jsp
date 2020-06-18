@@ -49,7 +49,7 @@ else {
 		direction="left-side"
 		icon="<%= StringPool.BLANK %>"
 		markupView="lexicon"
-		message="<%= StringPool.BLANK %>"
+		message="actions"
 		showWhenSingleIcon="<%= true %>"
 	>
 		<c:if test="<%= (version != wikiPage.getVersion()) && socialActivityWikiPage.isApproved() && WikiPagePermission.contains(permissionChecker, wikiPage, ActionKeys.UPDATE) %>">
@@ -76,9 +76,9 @@ else {
 		</portlet:renderURL>
 
 		<%
-		Map<String, Object> data = new HashMap<String, Object>();
-
-		data.put("uri", compareVersionsURL);
+		Map<String, Object> data = HashMapBuilder.<String, Object>put(
+			"uri", compareVersionsURL
+		).build();
 		%>
 
 		<liferay-ui:icon

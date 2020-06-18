@@ -37,13 +37,10 @@ public class BuildLauncher {
 
 		BuildRunner buildRunner = BuildRunnerFactory.newBuildRunner(buildData);
 
-		if (buildCommand.equals(_RUN_COMMAND)) {
+		if (buildCommand.equals(_COMMAND_RUN)) {
 			buildRunner.run();
 		}
-		else if (buildCommand.equals(_SETUP_COMMAND)) {
-			buildRunner.setUp();
-		}
-		else if (buildCommand.equals(_TEARDOWN_COMMAND)) {
+		else if (buildCommand.equals(_COMMAND_TEARDOWN)) {
 			buildRunner.tearDown();
 		}
 	}
@@ -52,9 +49,7 @@ public class BuildLauncher {
 		String buildCommand = null;
 
 		for (String arg : args) {
-			if (!arg.equals(_RUN_COMMAND) && !arg.equals(_SETUP_COMMAND) &&
-				!arg.equals(_TEARDOWN_COMMAND)) {
-
+			if (!arg.equals(_COMMAND_RUN) && !arg.equals(_COMMAND_TEARDOWN)) {
 				continue;
 			}
 
@@ -97,6 +92,26 @@ public class BuildLauncher {
 			buildData.setWorkspaceDir(new File(workspace));
 		}
 
+		if (buildData instanceof PortalBuildData) {
+			PortalBuildData portalBuildData = (PortalBuildData)buildData;
+
+			String portalGitHubURL = buildProperties.get("PORTAL_GITHUB_URL");
+
+			if ((portalGitHubURL != null) && !portalGitHubURL.isEmpty()) {
+				portalBuildData.setPortalGitHubURL(portalGitHubURL);
+			}
+
+			String portalUpstreamBranchName = buildProperties.get(
+				"PORTAL_UPSTREAM_BRANCH_NAME");
+
+			if ((portalUpstreamBranchName != null) &&
+				!portalUpstreamBranchName.isEmpty()) {
+
+				portalBuildData.setPortalUpstreamBranchName(
+					portalUpstreamBranchName);
+			}
+		}
+
 		return buildData;
 	}
 
@@ -121,6 +136,11 @@ public class BuildLauncher {
 
 		environmentVariables.put("BUILD_URL", System.getenv("BUILD_URL"));
 		environmentVariables.put("JOB_NAME", System.getenv("JOB_NAME"));
+		environmentVariables.put(
+			"PORTAL_GITHUB_URL", System.getenv("PORTAL_GITHUB_URL"));
+		environmentVariables.put(
+			"PORTAL_UPSTREAM_BRANCH_NAME",
+			System.getenv("PORTAL_UPSTREAM_BRANCH_NAME"));
 		environmentVariables.put("RUN_ID", System.getenv("RUN_ID"));
 
 		String workspace = System.getenv("WORKSPACE");
@@ -144,11 +164,9 @@ public class BuildLauncher {
 		return JenkinsResultsParserUtil.getBuildParameters(buildURL);
 	}
 
-	private static final String _RUN_COMMAND = "run";
+	private static final String _COMMAND_RUN = "run";
 
-	private static final String _SETUP_COMMAND = "setup";
-
-	private static final String _TEARDOWN_COMMAND = "teardown";
+	private static final String _COMMAND_TEARDOWN = "teardown";
 
 	private static final Pattern _buildOptionPattern = Pattern.compile(
 		"-D(?<name>[^=\\s]+)=(?<value>.+)");

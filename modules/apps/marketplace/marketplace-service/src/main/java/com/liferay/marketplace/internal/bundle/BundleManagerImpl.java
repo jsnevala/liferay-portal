@@ -56,6 +56,7 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class BundleManagerImpl implements BundleManager {
 
+	@Override
 	public Bundle getBundle(String symbolicName, String versionString) {
 		Version version = Version.parseVersion(versionString);
 
@@ -70,6 +71,7 @@ public class BundleManagerImpl implements BundleManager {
 		return null;
 	}
 
+	@Override
 	public List<Bundle> getBundles() {
 		return ListUtil.fromArray(_bundleContext.getBundles());
 	}
@@ -103,7 +105,7 @@ public class BundleManagerImpl implements BundleManager {
 				return new Manifest(inputStream);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return null;
@@ -143,8 +145,8 @@ public class BundleManagerImpl implements BundleManager {
 		try {
 			bundle.uninstall();
 		}
-		catch (BundleException be) {
-			_log.error(be, be);
+		catch (BundleException bundleException) {
+			_log.error(bundleException, bundleException);
 		}
 	}
 
@@ -203,7 +205,7 @@ public class BundleManagerImpl implements BundleManager {
 			return GetterUtil.getBoolean(
 				properties.getProperty("restart-required"), true);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					"Unable to read liferay-marketplace.properties from " +
@@ -214,8 +216,9 @@ public class BundleManagerImpl implements BundleManager {
 		return false;
 	}
 
-	private static final int[] _INSTALLED_BUNDLE_STATES =
-		{Bundle.ACTIVE, Bundle.INSTALLED, Bundle.RESOLVED};
+	private static final int[] _INSTALLED_BUNDLE_STATES = {
+		Bundle.ACTIVE, Bundle.INSTALLED, Bundle.RESOLVED
+	};
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		BundleManagerImpl.class);

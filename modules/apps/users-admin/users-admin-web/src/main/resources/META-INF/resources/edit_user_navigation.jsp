@@ -32,7 +32,7 @@ if (selUser != null) {
 
 long selUserId = (selUser != null) ? selUser.getUserId() : 0;
 
-String screenNavigationCategoryKey = ParamUtil.getString(request, "screenNavigationCategoryKey", UserFormConstants.CATEGORY_KEY_GENERAL);
+String screenNavigationCategoryKey = ParamUtil.getString(request, "screenNavigationCategoryKey", UserScreenNavigationEntryConstants.CATEGORY_KEY_GENERAL);
 String screenNavigationEntryKey = ParamUtil.getString(request, "screenNavigationEntryKey");
 %>
 
@@ -47,43 +47,52 @@ if (!portletName.equals(UsersAdminPortletKeys.MY_ACCOUNT)) {
 
 	renderResponse.setTitle((selUser == null) ? LanguageUtil.get(request, "add-user") : LanguageUtil.format(request, "edit-user-x", selUser.getFullName(), false));
 }
-%>
 
-<portlet:renderURL var="redirect">
-	<portlet:param name="mvcRenderCommandName" value="/users_admin/edit_user" />
-	<portlet:param name="backURL" value="<%= backURL %>" />
-	<portlet:param name="p_u_i_d" value="<%= String.valueOf(selUserId) %>" />
-	<portlet:param name="screenNavigationCategoryKey" value="<%= screenNavigationCategoryKey %>" />
-	<portlet:param name="screenNavigationEntryKey" value="<%= screenNavigationEntryKey %>" />
-</portlet:renderURL>
+String redirect = ParamUtil.getString(request, "redirect");
+
+if (Validator.isNull(redirect)) {
+	PortletURL redirectURL = renderResponse.createRenderURL();
+
+	redirectURL.setParameter("p_u_i_d", String.valueOf(selUserId));
+	redirectURL.setParameter("mvcRenderCommandName", "/users_admin/edit_user");
+	redirectURL.setParameter("backURL", backURL);
+
+	redirect = redirectURL.toString();
+}
+
+redirect = HttpUtil.addParameter(redirect, renderResponse.getNamespace() + "screenNavigationCategoryKey", screenNavigationCategoryKey);
+redirect = HttpUtil.addParameter(redirect, renderResponse.getNamespace() + "screenNavigationEntryKey", screenNavigationEntryKey);
+%>
 
 <liferay-ui:success key="userAdded" message="the-user-was-created-successfully" />
 
 <portlet:actionURL name="<%= actionCommandName %>" var="actionCommandURL" />
 
-<aui:form action="<%= actionCommandURL %>" cssClass="container-fluid-1280 portlet-users-admin-edit-user" data-senna-off="true" method="post" name="fm">
-	<aui:input name="redirect" type="hidden" value="<%= redirect.toString() %>" />
+<aui:form action="<%= actionCommandURL %>" cssClass="portlet-users-admin-edit-user" data-senna-off="true" method="post" name="fm">
 	<aui:input name="p_u_i_d" type="hidden" value="<%= selUserId %>" />
+	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="screenNavigationCategoryKey" type="hidden" value="<%= screenNavigationCategoryKey %>" />
 	<aui:input name="screenNavigationEntryKey" type="hidden" value="<%= screenNavigationEntryKey %>" />
 
-	<aui:fieldset-group markupView="lexicon">
-		<div class="sheet">
-			<h2 class="sheet-title"><%= formLabel %></h2>
-
-			<div class="sheet-section">
-				<liferay-util:include page="<%= jspPath %>" servletContext="<%= application %>" />
+	<div class="sheet sheet-lg">
+		<c:if test="<%= (boolean)request.getAttribute(UsersAdminWebKeys.SHOW_TITLE) %>">
+			<div class="sheet-header">
+				<h2 class="sheet-title"><%= formLabel %></h2>
 			</div>
+		</c:if>
 
-			<c:if test="<%= editable %>">
-				<div class="sheet-footer">
-					<aui:button primary="<%= true %>" type="submit" />
-
-					<c:if test="<%= !portletName.equals(UsersAdminPortletKeys.MY_ACCOUNT) %>">
-						<aui:button href="<%= backURL %>" type="cancel" />
-					</c:if>
-				</div>
-			</c:if>
+		<div class="sheet-section">
+			<liferay-util:include page="<%= jspPath %>" servletContext="<%= application %>" />
 		</div>
-	</aui:fieldset-group>
+
+		<c:if test="<%= editable && (boolean)request.getAttribute(UsersAdminWebKeys.SHOW_CONTROLS) %>">
+			<div class="sheet-footer">
+				<aui:button primary="<%= true %>" type="submit" />
+
+				<c:if test="<%= !portletName.equals(UsersAdminPortletKeys.MY_ACCOUNT) %>">
+					<aui:button href="<%= backURL %>" type="cancel" />
+				</c:if>
+			</div>
+		</c:if>
+	</div>
 </aui:form>

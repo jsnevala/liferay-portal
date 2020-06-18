@@ -1,5 +1,41 @@
-import dom from 'metal-dom';
-import {ClayToast} from 'clay-alert';
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
+import ClayAlert from '@clayui/alert';
+import {render} from 'frontend-js-react-web';
+import React from 'react';
+import {unmountComponentAtNode} from 'react-dom';
+
+const DEFAULT_ALERT_CONTAINER_ID = 'alertContainer';
+
+const DEFAULT_RENDER_DATA = {
+	portletId: 'UNKNOWN_PORTLET_ID',
+};
+
+const TOAST_AUTO_CLOSE_INTERVAL = 5000;
+
+const getDefaultAlertContainer = () => {
+	let container = document.getElementById(DEFAULT_ALERT_CONTAINER_ID);
+
+	if (!container) {
+		container = document.createElement('div');
+		container.id = DEFAULT_ALERT_CONTAINER_ID;
+		document.body.appendChild(container);
+	}
+
+	return container;
+};
 
 /**
  * Function that implements the Toast pattern, which allows to present feedback
@@ -7,66 +43,44 @@ import {ClayToast} from 'clay-alert';
  *
  * @param {string} message The message to show in the toast notification
  * @param {string} title The title associated with the message
- * @param {string} type The type of notification to show. It can be one of the
+ * @param {string} displayType The displayType of notification to show. It can be one of the
  * following: 'danger', 'info', 'success', 'warning'
  * @return {ClayToast} The Alert toast created
  * @review
  */
 
-function openToast(
-	{
-		events = {},
-		message = '',
-		title = Liferay.Language.get('success'),
-		type = 'success'
-	} = {}
-) {
-	var alertContainer = document.getElementById('alertContainer');
+function openToast({
+	containerId,
+	message = '',
+	renderData = DEFAULT_RENDER_DATA,
+	title = Liferay.Language.get('success'),
+	toastProps = {},
+	type = 'success',
+	variant,
+}) {
+	const container =
+		document.getElementById(containerId) || getDefaultAlertContainer();
 
-	if (!alertContainer) {
-		alertContainer = document.createElement('div');
-		alertContainer.id = 'alertContainer';
+	unmountComponentAtNode(container);
 
-		dom.addClasses(alertContainer, 'alert-notifications alert-notifications-fixed');
-		dom.enterDocument(alertContainer);
-	}
-	else {
-		dom.removeChildren(alertContainer);
-	}
+	const onClose = () => unmountComponentAtNode(container);
 
-	const mergedEvents = Object.assign(
-		{
-			'disposed': function(event) {
-				if (!alertContainer.hasChildNodes()) {
-					dom.exitDocument(alertContainer);
-				}
-			}
-		},
-		events
+	render(
+		<ClayAlert.ToastContainer>
+			<ClayAlert
+				autoClose={TOAST_AUTO_CLOSE_INTERVAL}
+				displayType={type}
+				onClose={onClose}
+				title={title}
+				variant={variant}
+				{...toastProps}
+			>
+				{message}
+			</ClayAlert>
+		</ClayAlert.ToastContainer>,
+		renderData,
+		container
 	);
-
-	const clayToast = new ClayToast(
-		{
-			autoClose: true,
-			destroyOnHide: true,
-			events: mergedEvents,
-			message: message,
-			spritemap: themeDisplay.getPathThemeImages() + '/lexicon/icons.svg',
-			style: type,
-			title: title
-		},
-		alertContainer
-	);
-
-	dom.removeClasses(clayToast.element, 'show');
-
-	requestAnimationFrame(
-		function() {
-			dom.addClasses(clayToast.element, 'show');
-		}
-	);
-
-	return clayToast;
 }
 
 export {openToast};

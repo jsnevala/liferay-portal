@@ -34,8 +34,10 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 %>
 
 <div class="container-fluid container-fluid-max-xl container-form-lg">
-	<div class="row">
-		<div class="col-lg-3">
+	<clay:row>
+		<clay:col
+			lg="3"
+		>
 			<nav class="menubar menubar-transparent menubar-vertical-expand-lg">
 				<ul class="nav nav-nested">
 					<li class="nav-item">
@@ -85,20 +87,22 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 								<%
 								PortletURL displayPagesNavigationURL = assetListEntryUsagesDisplayContext.getPortletURL();
 
-								displayPagesNavigationURL.setParameter("navigation", "display-pages");
+								displayPagesNavigationURL.setParameter("navigation", "display-page-templates");
 								%>
 
-								<a class="nav-link <%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "display-pages") ? "active" : StringPool.BLANK %>" href="<%= displayPagesNavigationURL.toString() %>">
-									<liferay-ui:message arguments="<%= assetListEntryUsagesDisplayContext.getDisplayPagesUsageCount() %>" key="display-pages-x" />
+								<a class="nav-link <%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "display-page-templates") ? "active" : StringPool.BLANK %>" href="<%= displayPagesNavigationURL.toString() %>">
+									<liferay-ui:message arguments="<%= assetListEntryUsagesDisplayContext.getDisplayPagesUsageCount() %>" key="display-page-templates-x" />
 								</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 			</nav>
-		</div>
+		</clay:col>
 
-		<div class="col-lg-9">
+		<clay:col
+			lg="9"
+		>
 			<div class="sheet">
 				<h3 class="sheet-title">
 					<c:choose>
@@ -108,8 +112,8 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 						<c:when test='<%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "page-templates") %>'>
 							<liferay-ui:message arguments="<%= assetListEntryUsagesDisplayContext.getPageTemplatesUsageCount() %>" key="page-templates-x" />
 						</c:when>
-						<c:when test='<%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "display-pages") %>'>
-							<liferay-ui:message arguments="<%= assetListEntryUsagesDisplayContext.getDisplayPagesUsageCount() %>" key="display-pages-x" />
+						<c:when test='<%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "display-page-templates") %>'>
+							<liferay-ui:message arguments="<%= assetListEntryUsagesDisplayContext.getDisplayPagesUsageCount() %>" key="display-page-templates-x" />
 						</c:when>
 						<c:otherwise>
 							<liferay-ui:message arguments="<%= assetListEntryUsagesDisplayContext.getAllUsageCount() %>" key="all-x" />
@@ -118,7 +122,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 				</h3>
 
 				<%
-				AssetListEntryUsagesManagementToolbarDisplayContext assetListEntryUsagesManagementToolbarDisplayContext = new AssetListEntryUsagesManagementToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request, assetListEntryUsagesDisplayContext.getSearchContainer());
+				AssetListEntryUsagesManagementToolbarDisplayContext assetListEntryUsagesManagementToolbarDisplayContext = new AssetListEntryUsagesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetListEntryUsagesDisplayContext.getSearchContainer());
 				%>
 
 				<clay:management-toolbar
@@ -136,7 +140,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 					>
 						<liferay-ui:search-container-column-text
 							name="name"
-							value="<%= assetListEntryUsagesDisplayContext.getAssetListEntryUsageName(assetListEntryUsage) %>"
+							value="<%= HtmlUtil.escape(assetListEntryUsagesDisplayContext.getAssetListEntryUsageName(assetListEntryUsage)) %>"
 						/>
 
 						<liferay-ui:search-container-column-text
@@ -158,6 +162,6 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 					/>
 				</liferay-ui:search-container>
 			</div>
-		</div>
-	</div>
+		</clay:col>
+	</clay:row>
 </div>

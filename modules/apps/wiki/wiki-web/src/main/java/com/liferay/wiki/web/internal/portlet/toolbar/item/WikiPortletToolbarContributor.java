@@ -62,8 +62,9 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + WikiPortletKeys.WIKI,
 		"mvc.render.command.name=/wiki/view_pages"
 	},
-	service =
-		{WikiPortletToolbarContributor.class, PortletToolbarContributor.class}
+	service = {
+		PortletToolbarContributor.class, WikiPortletToolbarContributor.class
+	}
 )
 public class WikiPortletToolbarContributor
 	extends BasePortletToolbarContributor {
@@ -122,8 +123,8 @@ public class WikiPortletToolbarContributor
 					menuItems, node, themeDisplay, portletRequest);
 			}
 		}
-		catch (PortalException pe) {
-			_log.error("Unable to add page menu item", pe);
+		catch (PortalException portalException) {
+			_log.error("Unable to add page menu item", portalException);
 		}
 
 		return menuItems;
@@ -158,11 +159,11 @@ public class WikiPortletToolbarContributor
 			initialNodeName =
 				wikiGroupServiceOverriddenConfiguration.initialNodeName();
 		}
-		catch (ConfigurationException ce) {
+		catch (ConfigurationException configurationException) {
 			_log.error(
 				"Unable to get initial node name for group " +
 					themeDisplay.getScopeGroupId(),
-				ce);
+				configurationException);
 		}
 
 		String name = BeanParamUtil.getString(
@@ -173,11 +174,11 @@ public class WikiPortletToolbarContributor
 				node = _wikiNodeService.getNode(
 					themeDisplay.getScopeGroupId(), name);
 			}
-			catch (NoSuchNodeException nsne) {
+			catch (NoSuchNodeException noSuchNodeException) {
 				node = null;
 			}
-			catch (PortalException pe) {
-				_log.error(pe, pe);
+			catch (PortalException portalException) {
+				_log.error(portalException, portalException);
 			}
 		}
 

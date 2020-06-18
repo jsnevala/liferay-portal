@@ -14,14 +14,11 @@
 
 package com.liferay.calendar.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.calendar.model.Calendar;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,11 +31,11 @@ import java.util.Date;
  * The cache model class for representing Calendar in entity cache.
  *
  * @author Eduardo Lundgren
- * @see Calendar
  * @generated
  */
-@ProviderType
-public class CalendarCacheModel implements CacheModel<Calendar>, Externalizable {
+public class CalendarCacheModel
+	implements CacheModel<Calendar>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -51,7 +48,9 @@ public class CalendarCacheModel implements CacheModel<Calendar>, Externalizable 
 
 		CalendarCacheModel calendarCacheModel = (CalendarCacheModel)obj;
 
-		if (calendarId == calendarCacheModel.calendarId) {
+		if ((calendarId == calendarCacheModel.calendarId) &&
+			(mvccVersion == calendarCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -60,14 +59,28 @@ public class CalendarCacheModel implements CacheModel<Calendar>, Externalizable 
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, calendarId);
+		int hashCode = HashUtil.hash(0, calendarId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(35);
+		StringBundler sb = new StringBundler(37);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", calendarId=");
 		sb.append(calendarId);
@@ -109,6 +122,8 @@ public class CalendarCacheModel implements CacheModel<Calendar>, Externalizable 
 	@Override
 	public Calendar toEntityModel() {
 		CalendarImpl calendarImpl = new CalendarImpl();
+
+		calendarImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			calendarImpl.setUuid("");
@@ -185,6 +200,7 @@ public class CalendarCacheModel implements CacheModel<Calendar>, Externalizable 
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		calendarId = objectInput.readLong();
@@ -214,8 +230,9 @@ public class CalendarCacheModel implements CacheModel<Calendar>, Externalizable 
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -274,6 +291,7 @@ public class CalendarCacheModel implements CacheModel<Calendar>, Externalizable 
 		objectOutput.writeLong(lastPublishDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long calendarId;
 	public long groupId;
@@ -291,4 +309,5 @@ public class CalendarCacheModel implements CacheModel<Calendar>, Externalizable 
 	public boolean enableComments;
 	public boolean enableRatings;
 	public long lastPublishDate;
+
 }

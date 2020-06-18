@@ -17,6 +17,7 @@ package com.liferay.exportimport.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.lar.PermissionImporter;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -24,7 +25,7 @@ import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.model.Resource;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.LayoutSetPrototypeLocalServiceUtil;
@@ -36,22 +37,21 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
-import com.liferay.portal.service.test.ServiceTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.ResourcePermissionUtil;
-import com.liferay.portal.util.test.LayoutTestUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -63,7 +63,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @RunWith(Arquillian.class)
 public class PermissionExportImportTest {
@@ -75,7 +75,7 @@ public class PermissionExportImportTest {
 
 	@Before
 	public void setUp() throws Exception {
-		ServiceTestUtil.setUser(TestPropsValues.getUser());
+		UserTestUtil.setUser(TestPropsValues.getUser());
 	}
 
 	@Test
@@ -128,9 +128,9 @@ public class PermissionExportImportTest {
 			Group exportGroup, Role role, String exportResourcePrimKey)
 		throws Exception {
 
-		Map<Long, String[]> roleIdsToActionIds = new HashMap<>();
-
-		roleIdsToActionIds.put(role.getRoleId(), _ACTION_IDS);
+		Map<Long, String[]> roleIdsToActionIds = HashMapBuilder.put(
+			role.getRoleId(), _ACTION_IDS
+		).build();
 
 		ResourcePermissionServiceUtil.setIndividualResourcePermissions(
 			exportGroup.getGroupId(), TestPropsValues.getCompanyId(),
@@ -179,7 +179,7 @@ public class PermissionExportImportTest {
 		clazz = classLoader.loadClass(
 			"com.liferay.exportimport.internal.lar.PermissionExporter");
 
-		Field field = clazz.getDeclaredField("_instance");
+		Field field = clazz.getDeclaredField("_permissionExporter");
 
 		field.setAccessible(true);
 
@@ -213,7 +213,7 @@ public class PermissionExportImportTest {
 			Group importGroup, Role role, String importResourcePrimKey)
 		throws Exception {
 
-		List<String> actions = ResourceActionsUtil.getResourceActions(
+		List<String> resourceActions = ResourceActionsUtil.getResourceActions(
 			_PORTLET_ID, null);
 
 		Resource resource = ResourceLocalServiceUtil.getResource(
@@ -223,7 +223,7 @@ public class PermissionExportImportTest {
 		List<String> currentIndividualActions = new ArrayList<>();
 
 		ResourcePermissionUtil.populateResourcePermissionActionIds(
-			importGroup.getGroupId(), role, resource, actions,
+			importGroup.getGroupId(), role, resource, resourceActions,
 			currentIndividualActions, new ArrayList<String>(),
 			new ArrayList<String>(), new ArrayList<String>());
 
@@ -246,8 +246,9 @@ public class PermissionExportImportTest {
 		}
 	}
 
-	private static final String[] _ACTION_IDS =
-		{ActionKeys.ADD_TO_PAGE, ActionKeys.VIEW};
+	private static final String[] _ACTION_IDS = {
+		ActionKeys.ADD_TO_PAGE, ActionKeys.VIEW
+	};
 
 	private static final String _PORTLET_ID = PortletKeys.EXPORT_IMPORT;
 

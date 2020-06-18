@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Search Elasticsearch 6 Implementation
 Bundle-SymbolicName: com.liferay.portal.search.elasticsearch6.impl
-Bundle-Version: 3.0.0
+Bundle-Version: 4.0.12
 Import-Package:\
 	!com.barchart.udt.*,\
 	\
@@ -11,7 +11,7 @@ Import-Package:\
 	!com.conversantmedia.util.concurrent.*,\
 	\
 	!com.fasterxml.aalto.*,\
-	!com.fasterxml.jackson.*,\
+	!com.fasterxml.jackson.dataformat.*,\
 	\
 	!com.github.mustachejava.*,\
 	\
@@ -24,12 +24,12 @@ Import-Package:\
 	\
 	!com.ning.compress.*,\
 	\
+	!com.oracle.svm.*,\
+	\
 	!com.puppycrawl.tools.checkstyle.*,\
 	\
 	!com.sun.jna.*,\
 	!com.sun.nio.sctp.*,\
-	\
-	!com.tdunning.math.stats.*,\
 	\
 	!com.thoughtworks.qdox.*,\
 	!com.thoughtworks.xstream.*,\
@@ -39,6 +39,8 @@ Import-Package:\
 	!gnu.io.*,\
 	\
 	!groovy.*,\
+	\
+	!io.netty.internal.*,\
 	\
 	!javassist.*,\
 	\
@@ -95,11 +97,15 @@ Import-Package:\
 	\
 	!org.junit.*,\
 	\
+	!org.locationtech.jts.geom.*,\
+	\
 	!org.noggit.*,\
 	\
 	!org.owasp.html.*,\
 	\
 	!org.zeromq.*,\
+	\
+	!reactor.blockhound.*,\
 	\
 	!sun.security.*,\
 	\
@@ -107,3 +113,4 @@ Import-Package:\
 	\
 	*
 -dsannotations-options: inherit
+-fixupmessages: Classes found in the wrong directory: ...;is:=ignore

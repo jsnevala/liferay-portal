@@ -15,11 +15,11 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.IOException;
@@ -70,7 +70,8 @@ public class GradlePropertiesCheck extends BaseFileCheck {
 		return sb.toString();
 	}
 
-	private static final String[] _KEYS_WITH_QUOTED_VALUE =
-		{"sourceCompatibility", "targetCompatibility"};
+	private static final String[] _KEYS_WITH_QUOTED_VALUE = {
+		"sourceCompatibility", "targetCompatibility"
+	};
 
 }

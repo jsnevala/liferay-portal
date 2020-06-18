@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.web.internal.modified.facet.portlet;
 
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -25,6 +26,7 @@ import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.facet.modified.ModifiedFacetFactory;
+import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.web.internal.display.context.PortletRequestThemeDisplaySupplier;
 import com.liferay.portal.search.web.internal.display.context.ThemeDisplaySupplier;
 import com.liferay.portal.search.web.internal.modified.facet.constants.ModifiedFacetPortletKeys;
@@ -57,6 +59,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.css-class-wrapper=portlet-modified-facet",
 		"com.liferay.portlet.display-category=category.search",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.icon=/icons/search.png",
 		"com.liferay.portlet.instanceable=true",
 		"com.liferay.portlet.layout-cacheable=true",
@@ -71,8 +74,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/modified/facet/view.jsp",
 		"javax.portlet.name=" + ModifiedFacetPortletKeys.MODIFIED_FACET,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=guest,power-user,user"
 	},
 	service = Portlet.class
 )
@@ -88,6 +90,11 @@ public class ModifiedFacetPortlet extends MVCPortlet {
 
 		ModifiedFacetDisplayContext modifiedFacetDisplayContext =
 			buildDisplayContext(portletSharedSearchResponse, renderRequest);
+
+		if (modifiedFacetDisplayContext.isRenderNothing()) {
+			renderRequest.setAttribute(
+				WebKeys.PORTLET_CONFIGURATOR_VISIBILITY, Boolean.TRUE);
+		}
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, modifiedFacetDisplayContext);
@@ -105,8 +112,9 @@ public class ModifiedFacetPortlet extends MVCPortlet {
 					renderRequest));
 
 		ModifiedFacetDisplayBuilder modifiedFacetDisplayBuilder =
-			new ModifiedFacetDisplayBuilder(
-				getCalendarFactory(), getDateFormatFactory(), http);
+			createModifiedFacetDisplayBuilder(
+				getCalendarFactory(), getDateFormatFactory(), http,
+				renderRequest);
 
 		modifiedFacetDisplayBuilder.setCurrentURL(
 			portal.getCurrentURL(renderRequest));
@@ -140,10 +148,25 @@ public class ModifiedFacetPortlet extends MVCPortlet {
 				parameterName + "To", renderRequest),
 			modifiedFacetDisplayBuilder::setToParameterValue);
 
-		modifiedFacetDisplayBuilder.setTotalHits(
-			portletSharedSearchResponse.getTotalHits());
+		SearchResponse searchResponse =
+			portletSharedSearchResponse.getSearchResponse();
+
+		modifiedFacetDisplayBuilder.setTotalHits(searchResponse.getTotalHits());
 
 		return modifiedFacetDisplayBuilder.build();
+	}
+
+	protected ModifiedFacetDisplayBuilder createModifiedFacetDisplayBuilder(
+		CalendarFactory calendarFactory, DateFormatFactory dateFormatFactory,
+		Http http, RenderRequest renderRequest) {
+
+		try {
+			return new ModifiedFacetDisplayBuilder(
+				calendarFactory, dateFormatFactory, http, renderRequest);
+		}
+		catch (ConfigurationException configurationException) {
+			throw new RuntimeException(configurationException);
+		}
 	}
 
 	protected CalendarFactory getCalendarFactory() {

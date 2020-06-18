@@ -15,13 +15,13 @@
 package com.liferay.portal.search.elasticsearch6.internal.connection;
 
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.InputStream;
 
 import java.net.URL;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,12 +54,11 @@ public class EmbeddedElasticsearchConnectionHttpTest {
 
 		_clusterName = RandomTestUtil.randomString();
 
-		Map<String, Object> properties = new HashMap<String, Object>() {
-			{
-				put("clusterName", _clusterName);
-				put("networkHost", "_site_");
-			}
-		};
+		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+			"clusterName", _clusterName
+		).put(
+			"networkHost", "_site_"
+		).build();
 
 		_elasticsearchFixture = new ElasticsearchFixture(
 			EmbeddedElasticsearchConnectionHttpTest.class.getSimpleName(),
@@ -106,9 +105,7 @@ public class EmbeddedElasticsearchConnectionHttpTest {
 		TransportAddress transportAddress =
 			boundTransportAddress.publishAddress();
 
-		int port = transportAddress.getPort();
-
-		return port;
+		return transportAddress.getPort();
 	}
 
 	protected String toString(URL url) throws Exception {

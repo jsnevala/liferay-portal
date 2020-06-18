@@ -1,187 +1,249 @@
-<definition>
-	<command name="changeDisplayStyle">
-		<execute function="Click" locator1="Icon#CURRENT_DISPLAY_STYLE" />
+definition {
 
-		<execute macro="MenuItem#click">
-			<var method="StringUtil#upperCaseFirstLetter('${displayStyle}')" name="menuItem" />
-		</execute>
-	</command>
+	macro changeDisplayStyle {
+		var browserType = PropsUtil.get("browser.type");
 
-	<command name="changeExportDisplayStyle">
-		<execute function="Click#clickNoMouseOverNoWaitForVisible" locator1="Icon#CURRENT_DISPLAY_STYLE" />
+		if ("${browserType}" == "chrome") {
+			MetalComponent.waitForManagementBar();
+		}
 
-		<execute function="Click#clickNoMouseOverNoWaitForVisible" locator1="MenuItem#ANY_MENU_ITEM">
-			<var method="StringUtil#upperCaseFirstLetter('${displayStyle}')" name="key_menuItem" />
-		</execute>
-	</command>
+		Click(locator1 = "Icon#CURRENT_DISPLAY_STYLE");
 
-	<command name="delete">
-		<execute macro="LexiconEntry#gotoEntryMenuItemNoError">
-			<var name="menuItem" value="Delete" />
-			<var name="rowEntry" value="${rowEntry}" />
-		</execute>
+		MenuItem.click(menuItem = StringUtil.upperCaseFirstLetter("${displayStyle}"));
+	}
 
-		<if>
-			<isset var="confirmationText" />
-			<then>
-				<execute function="AssertConfirm" value1="${confirmationText}" />
-			</then>
-			<else>
-				<execute function="Confirm" />
-			</else>
-		</if>
+	macro changeExportDisplayStyle {
+		Click.clickNoMouseOverNoWaitForVisible(locator1 = "Icon#CURRENT_DISPLAY_STYLE");
 
-		<if>
-			<isset var="failure" />
-			<then>
-				<if>
-					<condition function="IsElementPresent" locator1="Message#ERROR_2" />
-					<then>
-						<execute macro="Alert#viewRequestFailedToComplete" />
+		Click.clickNoMouseOverNoWaitForVisible(
+			key_menuItem = StringUtil.upperCaseFirstLetter("${displayStyle}"),
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
 
-						<execute function="AssertTextEquals" locator1="Message#ERROR_2" value1="${failure}" />
-					</then>
-					<else>
-						<execute function="AssertTextEquals" locator1="Message#ERROR" value1="${failure}" />
-					</else>
-				</if>
-			</then>
-			<else>
-				<execute macro="Alert#viewSuccessMessage" />
-			</else>
-		</if>
-	</command>
+	macro delete {
+		LexiconEntry.gotoEntryMenuItemNoError(
+			menuItem = "Delete",
+			rowEntry = "${rowEntry}");
 
-	<command name="gotoAdd">
-		<execute function="Click" locator1="Button#PLUS" />
-	</command>
+		if (isSet(confirmationText)) {
+			AssertConfirm(value1 = "${confirmationText}");
+		}
+		else {
+			Confirm();
+		}
 
-	<command name="gotoAddDropdownMenuItem">
-		<execute macro="LexiconEntry#gotoAdd" />
+		if (isSet(failure)) {
+			if (IsElementPresent(locator1 = "Message#ERROR_2")) {
+				Alert.viewRequestFailedToComplete();
 
-		<execute macro="DropdownMenuItem#click">
-			<var name="menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+				AssertTextEquals(
+					locator1 = "Message#ERROR_2",
+					value1 = "${failure}");
+			}
+			else {
+				AssertTextEquals(
+					locator1 = "Message#ERROR",
+					value1 = "${failure}");
+			}
+		}
+		else {
+			Alert.viewSuccessMessage();
+		}
+	}
 
-	<command name="gotoAddMenuItem">
-		<execute macro="LexiconEntry#gotoAdd" />
+	macro gotoAdd {
+		var browserType = PropsUtil.get("browser.type");
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+		if ("${browserType}" == "chrome") {
+			MetalComponent.waitForManagementBar();
+		}
 
-	<command name="gotoEllipsisMenuItem">
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
+		if ("${browserType}" == "internetexplorer") {
+			Click(locator1 = "Button#PLUS_IE");
+		}
+		else {
+			Click(locator1 = "Button#PLUS");
+		}
+	}
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+	macro gotoAddDropdownMenuItem {
+		LexiconEntry.gotoAdd();
 
-	<command name="gotoEllipsisMenuItemNoError">
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
+		DropdownMenuItem.click(menuItem = "${menuItem}");
+	}
 
-		<execute macro="MenuItem#clickNoError">
-			<var name="menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+	macro gotoAddMenuItem {
+		LexiconEntry.gotoAdd();
 
-	<command name="gotoEntry">
-		<if>
-			<condition function="IsElementPresent" locator1="Icon#DISPLAY_STYLE_ACTIVE">
-				<var name="key_displayStyle" value="cards" />
-			</condition>
+		MenuItem.click(menuItem = "${menuItem}");
+	}
 
-			<then>
-				<execute function="AssertClick" locator1="Card#SPECIFIC_LARGE_TEXT" value1="${rowEntry}">
-					<var name="key_cardText" value="${rowEntry}" />
-				</execute>
-			</then>
-			<else>
-				<execute function="AssertClick" locator1="ContentRow#ENTRY_CONTENT_ENTRY_NAME_LINK" value1="${rowEntry}">
-					<var name="key_rowEntry" value="${rowEntry}" />
-				</execute>
-			</else>
-		</if>
-	</command>
+	macro gotoAddReport {
+		var browserType = PropsUtil.get("browser.type");
 
-	<command name="gotoEntryMenuItem">
-		<execute macro="LexiconEntry#openEntryMenu">
-			<var name="rowEntry" value="${rowEntry}" />
-		</execute>
+		if ("${browserType}" == "chrome") {
+			MetalComponent.waitForReportsManagementBar();
+		}
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+		Click(locator1 = "Button#PLUS");
+	}
 
-	<command name="gotoEntryMenuItemNoError">
-		<execute macro="LexiconEntry#openEntryMenu">
-			<var name="rowEntry" value="${rowEntry}" />
-		</execute>
+	macro gotoEllipsisMenuItem {
+		var browserType = PropsUtil.get("browser.type");
 
-		<execute macro="MenuItem#clickNoError">
-			<var name="menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+		if ("${browserType}" == "internetexplorer") {
+			Click.waitForMenuToggleJSClick(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS_IE");
+		}
+		else {
+			Click.waitForMenuToggleJSClick(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
+		}
 
-	<command name="gotoEntryMenuItemNoWait">
-		<execute macro="LexiconEntry#openEntryMenu">
-			<var name="rowEntry" value="${rowEntry}" />
-		</execute>
+		MenuItem.click(menuItem = "${menuItem}");
+	}
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+	macro gotoEllipsisMenuItemNoError {
+		Click.waitForMenuToggleJSClick(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
-	<command name="gotoEntryMenuItemNoWaitNoError">
-		<execute macro="LexiconEntry#openEntryMenu">
-			<var name="rowEntry" value="${rowEntry}" />
-		</execute>
+		MenuItem.clickNoError(menuItem = "${menuItem}");
+	}
 
-		<execute macro="MenuItem#clickNoError">
-			<var name="menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+	macro gotoEntry {
+		if (IsElementPresent(locator1 = "Icon#DISPLAY_STYLE_ACTIVE", key_displayStyle = "cards")) {
+			AssertClick(
+				key_cardText = "${rowEntry}",
+				locator1 = "Card#SPECIFIC_LARGE_TEXT",
+				value1 = "${rowEntry}");
+		}
+		else {
+			AssertClick(
+				key_rowEntry = "${rowEntry}",
+				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME",
+				value1 = "${rowEntry}");
+		}
+	}
 
-	<command name="gotoHeaderMenuItem">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
+	macro gotoEntryMenuItem {
+		LexiconEntry.openEntryMenu(rowEntry = "${rowEntry}");
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+		MenuItem.click(menuItem = "${menuItem}");
+	}
 
-	<command name="openEntryMenu">
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS">
-			<var name="key_rowEntry" value="${rowEntry}" />
-		</execute>
-	</command>
+	macro gotoEntryMenuItemNoError {
+		LexiconEntry.openEntryMenu(rowEntry = "${rowEntry}");
 
-	<command name="selectEntry">
-		<execute function="Check" locator1="ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX">
-			<var name="key_rowEntry" value="${rowEntry}" />
-		</execute>
-	</command>
+		MenuItem.clickNoError(menuItem = "${menuItem}");
+	}
 
-	<command name="viewActiveDisplayStyle">
-		<execute function="AssertElementPresent" locator1="Icon#CURRENT_DISPLAY_STYLE_ACTIVE">
-			<var name="key_displayStyle" value="${displayStyle}" />
-		</execute>
-	</command>
+	macro gotoEntryMenuItemNoWait {
+		LexiconEntry.openEntryMenu(rowEntry = "${rowEntry}");
 
-	<command name="viewEntryName">
-		<execute function="AssertTextEquals" locator1="ContentRow#ENTRY_CONTENT_ENTRY_NAME" value1="${rowEntry}">
-			<var name="key_rowEntry" value="${rowEntry}" />
-		</execute>
-	</command>
+		MenuItem.click(menuItem = "${menuItem}");
+	}
 
-	<command name="viewNoEntry">
-		<execute function="AssertElementNotPresent" locator1="ContentRow#ENTRY_CONTENT_ENTRY_NAME">
-			<var name="key_rowEntry" value="${rowEntry}" />
-		</execute>
-	</command>
-</definition>
+	macro gotoEntryMenuItemNoWaitNoError {
+		LexiconEntry.openEntryMenu(rowEntry = "${rowEntry}");
+
+		MenuItem.clickNoError(menuItem = "${menuItem}");
+	}
+
+	macro gotoFragmentPageContentEllipsisMenuItem {
+		Click.waitForMenuToggleJSClick(
+			key_rowEntry = "${rowEntry}",
+			locator1 = "Icon#FRAGMENT_PAGE_CONTENT_VERTICAL_ELLIPSIS");
+
+		Click(
+			key_menuItem = "${menuItem}",
+			locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
+	}
+
+	macro gotoHeaderMenuItem {
+		var browserType = PropsUtil.get("browser.type");
+
+		if ("${browserType}" == "internetexplorer") {
+			Click.clickNoMouseOver(locator1 = "Icon#HEADER_VERTICAL_ELLIPSIS_IE");
+		}
+		else {
+			Click(locator1 = "Icon#HEADER_VERTICAL_ELLIPSIS");
+		}
+
+		MenuItem.click(menuItem = "${menuItem}");
+	}
+
+	macro gotoVerticalEllipsisMenuItemNoError {
+		Click.waitForMenuToggleJSClick(locator1 = "Icon#VERTICAL_ELLIPSIS_BUTTON");
+
+		MenuItem.clickNoError(menuItem = "${menuItem}");
+	}
+
+	macro openEntryMenu {
+		var browserType = PropsUtil.get("browser.type");
+
+		if ("${browserType}" == "internetexplorer") {
+			Click.waitForMenuToggleJSClick(
+				key_rowEntry = "${rowEntry}",
+				locator1 = "Icon#ROW_VERTICAL_ELLIPSIS_IE");
+		}
+		else {
+			Click.waitForMenuToggleJSClick(
+				key_rowEntry = "${rowEntry}",
+				locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
+		}
+	}
+
+	macro selectEntry {
+		Check(
+			key_rowEntry = "${rowEntry}",
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX");
+	}
+
+	macro viewActiveDisplayStyle {
+		AssertElementPresent(
+			key_displayStyle = "${displayStyle}",
+			locator1 = "Icon#CURRENT_DISPLAY_STYLE_ACTIVE");
+	}
+
+	macro viewEntryName {
+		var browserType = PropsUtil.get("browser.type");
+
+		if ("${browserType}" == "chrome") {
+			AssertTextEquals.assertPartialText(
+				key_rowEntry = "${rowEntry}",
+				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME",
+				value1 = "${rowEntry}");
+		}
+		else {
+			AssertTextEquals(
+				key_rowEntry = "${rowEntry}",
+				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME",
+				value1 = "${rowEntry}");
+		}
+	}
+
+	macro viewEntryStatus {
+		AssertElementPresent(
+			key_rowEntry = "${rowEntry}",
+			key_rowStatus = "${rowStatus}",
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_STATUS");
+	}
+
+	macro viewNoEntry {
+		AssertElementNotPresent(
+			key_rowEntry = "${rowEntry}",
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
+	}
+
+	macro viewNoEntryMenu {
+		AssertElementNotPresent(
+			key_rowEntry = "${rowEntry}",
+			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
+	}
+
+	macro viewNoEntryMenuItem {
+		LexiconEntry.openEntryMenu(rowEntry = "${rowEntry}");
+
+		AssertElementNotPresent(
+			key_menuItem = "${menuItem}",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
+}

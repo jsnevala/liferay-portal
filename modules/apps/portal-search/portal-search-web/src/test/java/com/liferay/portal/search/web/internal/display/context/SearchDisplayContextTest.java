@@ -24,19 +24,24 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.search.facet.faceted.searcher.FacetedSearcher;
-import com.liferay.portal.kernel.search.facet.faceted.searcher.FacetedSearcherManager;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.internal.legacy.searcher.SearchRequestBuilderFactoryImpl;
+import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.legacy.searcher.SearchResponseBuilderFactory;
+import com.liferay.portal.search.searcher.SearchResponse;
+import com.liferay.portal.search.searcher.SearchResponseBuilder;
+import com.liferay.portal.search.searcher.Searcher;
 import com.liferay.portal.search.summary.SummaryBuilderFactory;
 import com.liferay.portal.search.web.constants.SearchPortletParameterNames;
 import com.liferay.portal.search.web.internal.facet.SearchFacetTracker;
 import com.liferay.portlet.portletconfiguration.util.ConfigurationRenderRequest;
+
+import java.util.Collections;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.PortletURL;
@@ -63,10 +68,11 @@ public class SearchDisplayContextTest {
 
 		themeDisplay = createThemeDisplay();
 
-		setUpFacetedSearcherManager();
 		setUpHttpServletRequest();
 		setUpPortletURLFactory();
 		setUpRenderRequest();
+		setUpSearcher();
+		setUpSearchResponseBuilderFactory();
 	}
 
 	@Test
@@ -108,9 +114,9 @@ public class SearchDisplayContextTest {
 		SearchContext searchContext = searchDisplayContext.getSearchContext();
 
 		Mockito.verify(
-			facetedSearcher
+			searcher
 		).search(
-			searchContext
+			Mockito.any()
 		);
 
 		Assert.assertEquals(
@@ -129,7 +135,7 @@ public class SearchDisplayContextTest {
 		Assert.assertNull(searchDisplayContext.getSearchContainer());
 		Assert.assertNull(searchDisplayContext.getSearchContext());
 
-		Mockito.verifyZeroInteractions(facetedSearcher);
+		Mockito.verifyZeroInteractions(searcher);
 	}
 
 	protected JSONArray createJSONArray() {
@@ -209,7 +215,7 @@ public class SearchDisplayContextTest {
 
 		setUpRequestKeywords(keywords);
 
-		PropsUtil.setProps(Mockito.mock(Props.class));
+		PropsTestUtil.setProps(Collections.emptyMap());
 
 		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
 
@@ -218,10 +224,10 @@ public class SearchDisplayContextTest {
 		return new SearchDisplayContext(
 			renderRequest, portletPreferences,
 			createPortal(themeDisplay, renderRequest), Mockito.mock(Html.class),
-			Mockito.mock(Language.class), facetedSearcherManager,
+			Mockito.mock(Language.class), searcher,
 			Mockito.mock(IndexSearchPropsValues.class), portletURLFactory,
 			Mockito.mock(SummaryBuilderFactory.class),
-			new SearchFacetTracker());
+			searchRequestBuilderFactory, new SearchFacetTracker());
 	}
 
 	protected ThemeDisplay createThemeDisplay() throws Exception {
@@ -231,22 +237,6 @@ public class SearchDisplayContextTest {
 		themeDisplay.setUser(Mockito.mock(User.class));
 
 		return themeDisplay;
-	}
-
-	protected void setUpFacetedSearcherManager() throws Exception {
-		Mockito.doReturn(
-			Mockito.mock(Hits.class)
-		).when(
-			facetedSearcher
-		).search(
-			Mockito.<SearchContext>any()
-		);
-
-		Mockito.doReturn(
-			facetedSearcher
-		).when(
-			facetedSearcherManager
-		).createFacetedSearcher();
 	}
 
 	protected void setUpHttpServletRequest() throws Exception {
@@ -295,11 +285,39 @@ public class SearchDisplayContextTest {
 		);
 	}
 
-	@Mock
-	protected FacetedSearcher facetedSearcher;
+	protected void setUpSearcher() throws Exception {
+		Mockito.doReturn(
+			Mockito.mock(Hits.class)
+		).when(
+			searchResponse
+		).withHitsGet(
+			Mockito.any()
+		);
 
-	@Mock
-	protected FacetedSearcherManager facetedSearcherManager;
+		Mockito.doReturn(
+			searchResponse
+		).when(
+			searcher
+		).search(
+			Mockito.any()
+		);
+	}
+
+	protected void setUpSearchResponseBuilderFactory() {
+		Mockito.doReturn(
+			searchResponseBuilder
+		).when(
+			searchResponseBuilderFactory
+		).builder(
+			Mockito.any()
+		);
+
+		Mockito.doReturn(
+			searchResponse
+		).when(
+			searchResponseBuilder
+		).build();
+	}
 
 	@Mock
 	protected HttpServletRequest httpServletRequest;
@@ -312,6 +330,21 @@ public class SearchDisplayContextTest {
 
 	@Mock
 	protected RenderRequest renderRequest;
+
+	@Mock
+	protected Searcher searcher;
+
+	protected SearchRequestBuilderFactory searchRequestBuilderFactory =
+		new SearchRequestBuilderFactoryImpl();
+
+	@Mock
+	protected SearchResponse searchResponse;
+
+	@Mock
+	protected SearchResponseBuilder searchResponseBuilder;
+
+	@Mock
+	protected SearchResponseBuilderFactory searchResponseBuilderFactory;
 
 	protected ThemeDisplay themeDisplay;
 

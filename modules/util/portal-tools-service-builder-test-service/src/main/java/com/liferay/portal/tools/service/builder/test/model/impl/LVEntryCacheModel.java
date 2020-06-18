@@ -14,13 +14,10 @@
 
 package com.liferay.portal.tools.service.builder.test.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.tools.service.builder.test.model.LVEntry;
 
 import java.io.Externalizable;
@@ -32,12 +29,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing LVEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see LVEntry
  * @generated
  */
-@ProviderType
-public class LVEntryCacheModel implements CacheModel<LVEntry>, Externalizable,
-	MVCCModel {
+public class LVEntryCacheModel
+	implements CacheModel<LVEntry>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -51,7 +47,8 @@ public class LVEntryCacheModel implements CacheModel<LVEntry>, Externalizable,
 		LVEntryCacheModel lvEntryCacheModel = (LVEntryCacheModel)obj;
 
 		if ((lvEntryId == lvEntryCacheModel.lvEntryId) &&
-				(mvccVersion == lvEntryCacheModel.mvccVersion)) {
+			(mvccVersion == lvEntryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -77,18 +74,24 @@ public class LVEntryCacheModel implements CacheModel<LVEntry>, Externalizable,
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(11);
+		StringBundler sb = new StringBundler(17);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", uuid=");
+		sb.append(uuid);
 		sb.append(", headId=");
 		sb.append(headId);
 		sb.append(", defaultLanguageId=");
 		sb.append(defaultLanguageId);
 		sb.append(", lvEntryId=");
 		sb.append(lvEntryId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 		sb.append(", groupId=");
 		sb.append(groupId);
+		sb.append(", uniqueGroupKey=");
+		sb.append(uniqueGroupKey);
 		sb.append("}");
 
 		return sb.toString();
@@ -99,7 +102,16 @@ public class LVEntryCacheModel implements CacheModel<LVEntry>, Externalizable,
 		LVEntryImpl lvEntryImpl = new LVEntryImpl();
 
 		lvEntryImpl.setMvccVersion(mvccVersion);
+
+		if (uuid == null) {
+			lvEntryImpl.setUuid("");
+		}
+		else {
+			lvEntryImpl.setUuid(uuid);
+		}
+
 		lvEntryImpl.setHeadId(headId);
+		lvEntryImpl.setHead(head);
 
 		if (defaultLanguageId == null) {
 			lvEntryImpl.setDefaultLanguageId("");
@@ -109,7 +121,15 @@ public class LVEntryCacheModel implements CacheModel<LVEntry>, Externalizable,
 		}
 
 		lvEntryImpl.setLvEntryId(lvEntryId);
+		lvEntryImpl.setCompanyId(companyId);
 		lvEntryImpl.setGroupId(groupId);
+
+		if (uniqueGroupKey == null) {
+			lvEntryImpl.setUniqueGroupKey("");
+		}
+		else {
+			lvEntryImpl.setUniqueGroupKey(uniqueGroupKey);
+		}
 
 		lvEntryImpl.resetOriginalValues();
 
@@ -119,21 +139,35 @@ public class LVEntryCacheModel implements CacheModel<LVEntry>, Externalizable,
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
+		uuid = objectInput.readUTF();
 
 		headId = objectInput.readLong();
+
+		head = objectInput.readBoolean();
 		defaultLanguageId = objectInput.readUTF();
 
 		lvEntryId = objectInput.readLong();
 
+		companyId = objectInput.readLong();
+
 		groupId = objectInput.readLong();
+		uniqueGroupKey = objectInput.readUTF();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
+		if (uuid == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uuid);
+		}
+
 		objectOutput.writeLong(headId);
+
+		objectOutput.writeBoolean(head);
 
 		if (defaultLanguageId == null) {
 			objectOutput.writeUTF("");
@@ -144,12 +178,26 @@ public class LVEntryCacheModel implements CacheModel<LVEntry>, Externalizable,
 
 		objectOutput.writeLong(lvEntryId);
 
+		objectOutput.writeLong(companyId);
+
 		objectOutput.writeLong(groupId);
+
+		if (uniqueGroupKey == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uniqueGroupKey);
+		}
 	}
 
 	public long mvccVersion;
+	public String uuid;
 	public long headId;
+	public boolean head;
 	public String defaultLanguageId;
 	public long lvEntryId;
+	public long companyId;
 	public long groupId;
+	public String uniqueGroupKey;
+
 }

@@ -31,16 +31,17 @@ import javax.portlet.ActionRequest;
 public class PhoneContactInfoManager extends BaseContactInfoManager<Phone> {
 
 	public PhoneContactInfoManager(
-		Class clazz, long classPK, PhoneLocalService phoneLocalService,
+		String className, long classPK, PhoneLocalService phoneLocalService,
 		PhoneService phoneService, UsersAdmin usersAdmin) {
 
-		_clazz = clazz;
+		_className = className;
 		_classPK = classPK;
 		_phoneLocalService = phoneLocalService;
 		_phoneService = phoneService;
 		_usersAdmin = usersAdmin;
 	}
 
+	@Override
 	public Phone construct(ActionRequest actionRequest) {
 		long phoneId = ParamUtil.getLong(actionRequest, "primaryKey");
 
@@ -62,7 +63,7 @@ public class PhoneContactInfoManager extends BaseContactInfoManager<Phone> {
 	@Override
 	public Phone doAdd(Phone phone) throws Exception {
 		return _phoneService.addPhone(
-			_clazz.getName(), _classPK, phone.getNumber(), phone.getExtension(),
+			_className, _classPK, phone.getNumber(), phone.getExtension(),
 			phone.getTypeId(), phone.isPrimary(), new ServiceContext());
 	}
 
@@ -85,7 +86,7 @@ public class PhoneContactInfoManager extends BaseContactInfoManager<Phone> {
 
 	@Override
 	public List<Phone> getAll() throws Exception {
-		return _phoneService.getPhones(_clazz.getName(), _classPK);
+		return _phoneService.getPhones(_className, _classPK);
 	}
 
 	@Override
@@ -103,8 +104,8 @@ public class PhoneContactInfoManager extends BaseContactInfoManager<Phone> {
 		phone.setPrimary(primary);
 	}
 
+	private final String _className;
 	private final long _classPK;
-	private final Class _clazz;
 	private final PhoneLocalService _phoneLocalService;
 	private final PhoneService _phoneService;
 	private final UsersAdmin _usersAdmin;

@@ -19,9 +19,9 @@ import com.liferay.document.library.file.rank.model.DLFileRank;
 import com.liferay.document.library.file.rank.service.DLFileRankLocalService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
-import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLTrashServiceUtil;
+import com.liferay.document.library.test.util.DLAppTestUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
@@ -36,8 +36,7 @@ import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
-import com.liferay.portlet.documentlibrary.util.test.DLAppTestUtil;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.util.List;
 
@@ -60,7 +59,7 @@ public class DLFileRankTrashHandlerTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Test
 	public void testTrashDLFileRank() throws Exception {
@@ -130,7 +129,7 @@ public class DLFileRankTrashHandlerTest {
 				WorkflowThreadLocal.setEnabled(workflowEnabled);
 			}
 
-			DLAppLocalServiceUtil.addFileRank(
+			_dlFileRankLocalService.addFileRank(
 				group.getGroupId(), TestPropsValues.getCompanyId(),
 				TestPropsValues.getUserId(), fileEntry.getFileEntryId(),
 				serviceContext);

@@ -20,21 +20,31 @@ import com.liferay.jenkins.results.parser.PortalTestClassJob;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Leslie Wong
  */
 public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 
+	@Override
+	public int getAxisCount() {
+		if (!isStableTestSuiteBatch() && testRelevantIntegrationUnitOnly) {
+			return 0;
+		}
+
+		return super.getAxisCount();
+	}
+
 	public static class ModulesBatchTestClass extends BaseTestClass {
 
-		protected ModulesBatchTestClass(File moduleBaseDir) {
+		protected ModulesBatchTestClass(TestClassFile moduleBaseDir) {
 			super(moduleBaseDir);
 		}
 
-		protected void initTestMethods(
+		protected void initTestClassMethods(
 			List<File> modulesProjectDirs, File modulesDir, String taskName) {
 
 			for (File modulesProjectDir : modulesProjectDirs) {
@@ -44,16 +54,17 @@ public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 				String moduleTaskCall = JenkinsResultsParserUtil.combine(
 					":", path.replaceAll("/", ":"), ":", taskName);
 
-				addTestMethod(moduleTaskCall);
+				addTestClassMethod(moduleTaskCall);
 			}
 		}
 
 	}
 
 	protected ModulesBatchTestClassGroup(
-		String batchName, PortalTestClassJob portalTestClassJob) {
+		String batchName, BuildProfile buildProfile,
+		PortalTestClassJob portalTestClassJob) {
 
-		super(batchName, portalTestClassJob);
+		super(batchName, buildProfile, portalTestClassJob);
 
 		try {
 			File modulesDir = new File(
@@ -74,6 +85,22 @@ public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 					getPathMatchers(
 						getFirstPropertyValue("modules.includes.private"),
 						modulesDir));
+
+				if (includeStableTestSuite && isStableTestSuiteBatch()) {
+					excludesPathMatchers.addAll(
+						getPathMatchers(
+							getFirstPropertyValue(
+								"modules.excludes.private", batchName,
+								NAME_STABLE_TEST_SUITE),
+							modulesDir));
+
+					includesPathMatchers.addAll(
+						getPathMatchers(
+							getFirstPropertyValue(
+								"modules.includes.private", batchName,
+								NAME_STABLE_TEST_SUITE),
+							modulesDir));
+				}
 			}
 			else {
 				excludesPathMatchers.addAll(
@@ -85,30 +112,47 @@ public abstract class ModulesBatchTestClassGroup extends BatchTestClassGroup {
 					getPathMatchers(
 						getFirstPropertyValue("modules.includes.public"),
 						modulesDir));
+
+				if (includeStableTestSuite && isStableTestSuiteBatch()) {
+					excludesPathMatchers.addAll(
+						getPathMatchers(
+							getFirstPropertyValue(
+								"modules.excludes.public", batchName,
+								NAME_STABLE_TEST_SUITE),
+							modulesDir));
+
+					includesPathMatchers.addAll(
+						getPathMatchers(
+							getFirstPropertyValue(
+								"modules.includes.public", batchName,
+								NAME_STABLE_TEST_SUITE),
+							modulesDir));
+				}
 			}
 
-			String includedModulesRequired = getFirstPropertyValue(
-				"modules.includes.required");
+			excludesPathMatchers.addAll(
+				getPathMatchers(
+					getFirstPropertyValue("modules.excludes." + buildProfile),
+					modulesDir));
 
-			if (includedModulesRequired != null) {
-				for (String requiredModule :
-						includedModulesRequired.split(",")) {
-
-					moduleDirsList.add(new File(modulesDir, requiredModule));
-				}
+			if (testRelevantChanges) {
+				moduleDirsList.addAll(
+					getRequiredModuleDirs(
+						portalGitWorkingDirectory.getModifiedModuleDirsList(
+							excludesPathMatchers, includesPathMatchers)));
 			}
 
 			setTestClasses();
 
 			setAxisTestClassGroups();
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 
 	protected abstract void setTestClasses() throws IOException;
 
-	protected List<File> moduleDirsList = new ArrayList<>();
+	protected Set<File> moduleDirsList = new HashSet<>();
 
 }

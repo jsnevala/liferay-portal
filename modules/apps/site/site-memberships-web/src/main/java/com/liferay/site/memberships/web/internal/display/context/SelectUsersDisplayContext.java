@@ -14,34 +14,23 @@
 
 package com.liferay.site.memberships.web.internal.display.context;
 
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.sitesadmin.search.UserSiteMembershipChecker;
 import com.liferay.portlet.usersadmin.search.UserSearch;
 import com.liferay.portlet.usersadmin.search.UserSearchTerms;
-import com.liferay.site.memberships.web.internal.constants.SiteMembershipsPortletKeys;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -54,20 +43,12 @@ import javax.servlet.http.HttpServletRequest;
 public class SelectUsersDisplayContext {
 
 	public SelectUsersDisplayContext(
-		HttpServletRequest request, RenderRequest renderRequest,
+		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
-	}
-
-	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
 	}
 
 	public String getDisplayStyle() {
@@ -75,12 +56,8 @@ public class SelectUsersDisplayContext {
 			return _displayStyle;
 		}
 
-		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(_request);
-
-		_displayStyle = portalPreferences.getValue(
-			SiteMembershipsPortletKeys.SITE_MEMBERSHIPS_ADMIN, "display-style",
-			"icon");
+		_displayStyle = ParamUtil.getString(
+			_httpServletRequest, "displayStyle", "icon");
 
 		return _displayStyle;
 	}
@@ -91,32 +68,10 @@ public class SelectUsersDisplayContext {
 		}
 
 		_eventName = ParamUtil.getString(
-			_request, "eventName",
+			_httpServletRequest, "eventName",
 			_renderResponse.getNamespace() + "selectUsers");
 
 		return _eventName;
-	}
-
-	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
-			}
-		};
 	}
 
 	public long getGroupId() {
@@ -124,11 +79,13 @@ public class SelectUsersDisplayContext {
 			return _groupId;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		_groupId = ParamUtil.getLong(
-			_request, "groupId", themeDisplay.getSiteGroupIdOrLiveGroupId());
+			_httpServletRequest, "groupId",
+			themeDisplay.getSiteGroupIdOrLiveGroupId());
 
 		return _groupId;
 	}
@@ -199,35 +156,14 @@ public class SelectUsersDisplayContext {
 		return portletURL;
 	}
 
-	public String getSearchActionURL() {
-		PortletURL searchActionURL = getPortletURL();
-
-		return searchActionURL.toString();
-	}
-
-	public String getSortingURL() {
-		PortletURL sortingURL = getPortletURL();
-
-		sortingURL.setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL.toString();
-	}
-
-	public int getTotalItems() {
-		SearchContainer userSearchContainer = getUserSearchContainer();
-
-		return userSearchContainer.getTotal();
-	}
-
 	public SearchContainer getUserSearchContainer() {
 		if (_userSearch != null) {
 			return _userSearch;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		UserSearch userSearch = new UserSearch(_renderRequest, getPortletURL());
 
@@ -245,6 +181,9 @@ public class SelectUsersDisplayContext {
 			userParams.put("inherit", Boolean.TRUE);
 			userParams.put(
 				"usersGroups", Long.valueOf(group.getParentGroupId()));
+		}
+		else {
+			userParams.put(Field.GROUP_ID, Long.valueOf(getGroupId()));
 		}
 
 		int usersCount = UserLocalServiceUtil.searchCount(
@@ -265,91 +204,15 @@ public class SelectUsersDisplayContext {
 		return _userSearch;
 	}
 
-	public List<ViewTypeItem> getViewTypeItems() {
-		PortletURL portletURL = _renderResponse.createActionURL();
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "changeDisplayStyle");
-		portletURL.setParameter("redirect", PortalUtil.getCurrentURL(_request));
-
-		return new ViewTypeItemList(portletURL, getDisplayStyle()) {
-			{
-				addCardViewTypeItem();
-				addListViewTypeItem();
-				addTableViewTypeItem();
-			}
-		};
-	}
-
-	public boolean isDisabledManagementBar() {
-		if (getTotalItems() <= 0) {
-			return true;
-		}
-
-		return false;
-	}
-
-	public boolean isShowSearch() {
-		if (getTotalItems() > 0) {
-			return true;
-		}
-
-		if (Validator.isNotNull(getKeywords())) {
-			return true;
-		}
-
-		return false;
-	}
-
-	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(getPortletURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
-			}
-		};
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "first-name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "first-name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "first-name"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "screen-name"));
-						dropdownItem.setHref(
-							getPortletURL(), "orderByCol", "screen-name");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "screen-name"));
-					});
-			}
-		};
-	}
-
 	private String _displayStyle;
 	private String _eventName;
 	private Long _groupId;
+	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 	private UserSearch _userSearch;
 
 }

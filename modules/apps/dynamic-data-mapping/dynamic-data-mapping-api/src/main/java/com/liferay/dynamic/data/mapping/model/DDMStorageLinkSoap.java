@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,11 +25,12 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class DDMStorageLinkSoap implements Serializable {
+
 	public static DDMStorageLinkSoap toSoapModel(DDMStorageLink model) {
 		DDMStorageLinkSoap soapModel = new DDMStorageLinkSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setStorageLinkId(model.getStorageLinkId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -53,11 +52,14 @@ public class DDMStorageLinkSoap implements Serializable {
 		return soapModels;
 	}
 
-	public static DDMStorageLinkSoap[][] toSoapModels(DDMStorageLink[][] models) {
+	public static DDMStorageLinkSoap[][] toSoapModels(
+		DDMStorageLink[][] models) {
+
 		DDMStorageLinkSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new DDMStorageLinkSoap[models.length][models[0].length];
+			soapModels =
+				new DDMStorageLinkSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new DDMStorageLinkSoap[0][0];
@@ -70,8 +72,11 @@ public class DDMStorageLinkSoap implements Serializable {
 		return soapModels;
 	}
 
-	public static DDMStorageLinkSoap[] toSoapModels(List<DDMStorageLink> models) {
-		List<DDMStorageLinkSoap> soapModels = new ArrayList<DDMStorageLinkSoap>(models.size());
+	public static DDMStorageLinkSoap[] toSoapModels(
+		List<DDMStorageLink> models) {
+
+		List<DDMStorageLinkSoap> soapModels = new ArrayList<DDMStorageLinkSoap>(
+			models.size());
 
 		for (DDMStorageLink model : models) {
 			soapModels.add(toSoapModel(model));
@@ -89,6 +94,14 @@ public class DDMStorageLinkSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setStorageLinkId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -147,6 +160,7 @@ public class DDMStorageLinkSoap implements Serializable {
 		_structureVersionId = structureVersionId;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _storageLinkId;
 	private long _companyId;
@@ -154,4 +168,5 @@ public class DDMStorageLinkSoap implements Serializable {
 	private long _classPK;
 	private long _structureId;
 	private long _structureVersionId;
+
 }

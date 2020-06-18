@@ -14,30 +14,32 @@
 
 package com.liferay.message.boards.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.model.TreeModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the MBMessage service. Represents a row in the &quot;MBMessage&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see MBMessageModel
- * @see com.liferay.message.boards.model.impl.MBMessageImpl
- * @see com.liferay.message.boards.model.impl.MBMessageModelImpl
  * @generated
  */
 @ImplementationClassName("com.liferay.message.boards.model.impl.MBMessageImpl")
 @ProviderType
-public interface MBMessage extends MBMessageModel, PersistedModel {
+public interface MBMessage extends MBMessageModel, PersistedModel, TreeModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.message.boards.model.impl.MBMessageImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.message.boards.model.impl.MBMessageImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<MBMessage, Long> MESSAGE_ID_ACCESSOR = new Accessor<MBMessage, Long>() {
+	public static final Accessor<MBMessage, Long> MESSAGE_ID_ACCESSOR =
+		new Accessor<MBMessage, Long>() {
+
 			@Override
 			public Long get(MBMessage mbMessage) {
 				return mbMessage.getMessageId();
@@ -52,18 +54,21 @@ public interface MBMessage extends MBMessageModel, PersistedModel {
 			public Class<MBMessage> getTypeClass() {
 				return MBMessage.class;
 			}
+
 		};
 
-	public com.liferay.portal.kernel.repository.model.Folder addAttachmentsFolder()
+	public com.liferay.portal.kernel.repository.model.Folder
+			addAttachmentsFolder()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public String[] getAssetTagNames();
 
-	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry> getAttachmentsFileEntries()
+	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry>
+			getAttachmentsFileEntries()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry> getAttachmentsFileEntries(
-		int start, int end)
+	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry>
+			getAttachmentsFileEntries(int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public int getAttachmentsFileEntriesCount()
@@ -77,11 +82,12 @@ public interface MBMessage extends MBMessageModel, PersistedModel {
 	public MBCategory getCategory()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry> getDeletedAttachmentsFileEntries()
+	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry>
+			getDeletedAttachmentsFileEntries()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry> getDeletedAttachmentsFileEntries(
-		int start, int end)
+	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry>
+			getDeletedAttachmentsFileEntries(int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public int getDeletedAttachmentsFileEntriesCount()
@@ -104,4 +110,5 @@ public interface MBMessage extends MBMessageModel, PersistedModel {
 	public boolean isRoot();
 
 	public void setAttachmentsFolderId(long attachmentsFolderId);
+
 }

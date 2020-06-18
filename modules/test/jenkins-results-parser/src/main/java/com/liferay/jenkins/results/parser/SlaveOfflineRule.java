@@ -38,9 +38,9 @@ public class SlaveOfflineRule {
 		try {
 			buildProperties = JenkinsResultsParserUtil.getBuildProperties();
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			throw new RuntimeException(
-				"Unable to load slave offline rules", ioe);
+				"Unable to load slave offline rules", ioException);
 		}
 
 		_slaveOfflineRules = new ArrayList<>();
@@ -132,15 +132,12 @@ public class SlaveOfflineRule {
 			if (value.isEmpty()) {
 				continue;
 			}
-			else if (name.equals("console")) {
-				consolePattern = Pattern.compile(value);
 
-				continue;
+			if (name.equals("console")) {
+				consolePattern = Pattern.compile(value);
 			}
 			else if (name.equals("notificationRecipients")) {
 				notificationRecipients = value;
-
-				continue;
 			}
 		}
 	}

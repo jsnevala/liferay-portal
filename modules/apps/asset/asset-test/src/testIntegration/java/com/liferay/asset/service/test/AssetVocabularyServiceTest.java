@@ -43,14 +43,15 @@ import com.liferay.portal.kernel.test.util.SearchContextTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -74,7 +75,7 @@ public class AssetVocabularyServiceTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -143,8 +144,8 @@ public class AssetVocabularyServiceTest {
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(user);
 
-		try (ContextUserReplace contextUserReplace =
-				new ContextUserReplace(user, permissionChecker)) {
+		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+				user, permissionChecker)) {
 
 			List<AssetVocabulary> vocabularies =
 				AssetVocabularyServiceUtil.getGroupVocabularies(
@@ -178,8 +179,8 @@ public class AssetVocabularyServiceTest {
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(user);
 
-		try (ContextUserReplace contextUserReplace =
-				new ContextUserReplace(user, permissionChecker)) {
+		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+				user, permissionChecker)) {
 
 			List<AssetVocabulary> vocabularies =
 				AssetVocabularyServiceUtil.getGroupVocabularies(
@@ -237,8 +238,8 @@ public class AssetVocabularyServiceTest {
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(user);
 
-		try (ContextUserReplace contextUserReplace =
-				new ContextUserReplace(user, permissionChecker)) {
+		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+				user, permissionChecker)) {
 
 			List<AssetVocabulary> vocabularies =
 				AssetVocabularyServiceUtil.getGroupVocabularies(
@@ -271,8 +272,8 @@ public class AssetVocabularyServiceTest {
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(user);
 
-		try (ContextUserReplace contextUserReplace =
-				new ContextUserReplace(user, permissionChecker)) {
+		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+				user, permissionChecker)) {
 
 			List<AssetVocabulary> vocabularies =
 				AssetVocabularyServiceUtil.getGroupVocabularies(
@@ -324,17 +325,19 @@ public class AssetVocabularyServiceTest {
 
 		String title = RandomTestUtil.randomString();
 
-		Map<Locale, String> titleMap = new HashMap<>();
-
-		titleMap.put(LocaleUtil.US, title + "_US");
-		titleMap.put(LocaleUtil.SPAIN, title + "_ES");
+		Map<Locale, String> titleMap = HashMapBuilder.put(
+			LocaleUtil.SPAIN, title + "_ES"
+		).put(
+			LocaleUtil.US, title + "_US"
+		).build();
 
 		String description = RandomTestUtil.randomString();
 
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(LocaleUtil.SPAIN, description + "_ES");
-		descriptionMap.put(LocaleUtil.US, description + "_US");
+		Map<Locale, String> descriptionMap = HashMapBuilder.put(
+			LocaleUtil.SPAIN, description + "_ES"
+		).put(
+			LocaleUtil.US, description + "_US"
+		).build();
 
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
@@ -384,6 +387,9 @@ public class AssetVocabularyServiceTest {
 		Assert.assertEquals(title, vocabulary.getTitle(LocaleUtil.US, true));
 		Assert.assertEquals(title, vocabulary.getName());
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected int searchCount() throws Exception {
 		Indexer<AssetCategory> indexer = IndexerRegistryUtil.getIndexer(

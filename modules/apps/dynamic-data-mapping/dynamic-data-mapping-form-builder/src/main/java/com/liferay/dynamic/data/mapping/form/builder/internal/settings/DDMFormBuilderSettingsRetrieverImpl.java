@@ -17,7 +17,7 @@ package com.liferay.dynamic.data.mapping.form.builder.internal.settings;
 import com.liferay.dynamic.data.mapping.form.builder.settings.DDMFormBuilderSettingsRequest;
 import com.liferay.dynamic.data.mapping.form.builder.settings.DDMFormBuilderSettingsResponse;
 import com.liferay.dynamic.data.mapping.form.builder.settings.DDMFormBuilderSettingsRetriever;
-import com.liferay.dynamic.data.mapping.model.DDMForm;
+import com.liferay.dynamic.data.mapping.spi.form.builder.settings.DDMFormBuilderSettingsRetrieverHelper;
 
 import java.util.Locale;
 
@@ -66,17 +66,16 @@ public class DDMFormBuilderSettingsRetrieverImpl
 				getSerializedDDMExpressionFunctionsMetadata(locale));
 
 		ddmFormBuilderSettings.setFieldSets(
-			_ddmFormBuilderSettingsRetrieverHelper.getFieldSetsMetadata(
-				ddmFormBuilderSettingsRequest.getCompanyId(),
-				ddmFormBuilderSettingsRequest.getScopeGroupId(),
-				ddmFormBuilderSettingsRequest.getFieldSetClassNameId(),
-				locale));
-
-		DDMForm ddmForm = ddmFormBuilderSettingsRequest.getDDMForm();
+			_ddmFormBuilderSettingsRetrieverHelper.
+				getFieldSetsMetadataJSONArray(
+					ddmFormBuilderSettingsRequest.getCompanyId(),
+					ddmFormBuilderSettingsRequest.getScopeGroupId(),
+					ddmFormBuilderSettingsRequest.getFieldSetClassNameId(),
+					locale));
 
 		ddmFormBuilderSettings.setSerializedDDMFormRules(
 			_ddmFormBuilderSettingsRetrieverHelper.getSerializedDDMFormRules(
-				ddmForm));
+				ddmFormBuilderSettingsRequest.getDDMForm()));
 
 		return ddmFormBuilderSettings;
 	}

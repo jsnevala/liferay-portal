@@ -14,30 +14,33 @@
 
 package com.liferay.portal.security.service.access.policy.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the SAPEntry service. Represents a row in the &quot;SAPEntry&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see SAPEntryModel
- * @see com.liferay.portal.security.service.access.policy.model.impl.SAPEntryImpl
- * @see com.liferay.portal.security.service.access.policy.model.impl.SAPEntryModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.portal.security.service.access.policy.model.impl.SAPEntryImpl")
+@ImplementationClassName(
+	"com.liferay.portal.security.service.access.policy.model.impl.SAPEntryImpl"
+)
 @ProviderType
-public interface SAPEntry extends SAPEntryModel, PersistedModel {
+public interface SAPEntry extends PersistedModel, SAPEntryModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.security.service.access.policy.model.impl.SAPEntryImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.portal.security.service.access.policy.model.impl.SAPEntryImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<SAPEntry, Long> SAP_ENTRY_ID_ACCESSOR = new Accessor<SAPEntry, Long>() {
+	public static final Accessor<SAPEntry, Long> SAP_ENTRY_ID_ACCESSOR =
+		new Accessor<SAPEntry, Long>() {
+
 			@Override
 			public Long get(SAPEntry sapEntry) {
 				return sapEntry.getSapEntryId();
@@ -52,10 +55,13 @@ public interface SAPEntry extends SAPEntryModel, PersistedModel {
 			public Class<SAPEntry> getTypeClass() {
 				return SAPEntry.class;
 			}
+
 		};
 
 	public java.util.List<String> getAllowedServiceSignaturesList();
 
 	public boolean isSystem()
-		throws com.liferay.portal.kernel.module.configuration.ConfigurationException;
+		throws com.liferay.portal.kernel.module.configuration.
+			ConfigurationException;
+
 }

@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.elasticsearch6.internal.connection;
 
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
@@ -33,8 +34,12 @@ import io.netty.buffer.ByteBufUtil;
 
 import java.io.IOException;
 
+import java.lang.reflect.Field;
+
 import java.net.InetAddress;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
@@ -83,14 +88,14 @@ public class EmbeddedElasticsearchConnection
 		try {
 			Class.forName(ByteBufUtil.class.getName());
 		}
-		catch (ClassNotFoundException cnfe) {
+		catch (ClassNotFoundException classNotFoundException) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					StringBundler.concat(
 						"Unable to preload ", ByteBufUtil.class,
 						" to prevent Netty shutdown concurrent class loading ",
 						"interruption issue"),
-					cnfe);
+					classNotFoundException);
 			}
 		}
 
@@ -115,9 +120,11 @@ public class EmbeddedElasticsearchConnection
 			try {
 				scheduledExecutorService.awaitTermination(1, TimeUnit.HOURS);
 			}
-			catch (InterruptedException ie) {
+			catch (InterruptedException interruptedException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Thread pool shutdown wait was interrupted", ie);
+					_log.warn(
+						"Thread pool shutdown wait was interrupted",
+						interruptedException);
 				}
 			}
 		}
@@ -125,8 +132,8 @@ public class EmbeddedElasticsearchConnection
 		try {
 			_node.close();
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 
 		_node = null;
@@ -265,6 +272,7 @@ public class EmbeddedElasticsearchConnection
 		}
 
 		settingsBuilder.put("monitor.jvm.gc.enabled", StringPool.FALSE);
+		settingsBuilder.put("processors", "1");
 	}
 
 	@Override
@@ -274,21 +282,21 @@ public class EmbeddedElasticsearchConnection
 		stopWatch.start();
 
 		if (_log.isWarnEnabled()) {
-			StringBundler sb = new StringBundler(6);
+			StringBundler sb = new StringBundler(8);
 
 			sb.append("Liferay is configured to use embedded Elasticsearch ");
 			sb.append("as its search engine. Do NOT use embedded ");
 			sb.append("Elasticsearch in production. Embedded Elasticsearch ");
 			sb.append("is useful for development and demonstration purposes. ");
-			sb.append("Remote Elasticsearch connections can be configured in ");
-			sb.append("the Control Panel.");
+			sb.append("Refer to the documentation for details on the ");
+			sb.append("limitations of embedded Elasticsearch. Remote ");
+			sb.append("Elasticsearch connections can be configured in the ");
+			sb.append("Control Panel.");
 
 			_log.warn(sb.toString());
 		}
 
 		Settings settings = settingsBuilder.build();
-
-		installPlugins(settings);
 
 		if (_log.isDebugEnabled()) {
 			_log.debug(
@@ -301,8 +309,8 @@ public class EmbeddedElasticsearchConnection
 		try {
 			_node.start();
 		}
-		catch (NodeValidationException nve) {
-			throw new RuntimeException(nve);
+		catch (NodeValidationException nodeValidationException) {
+			throw new RuntimeException(nodeValidationException);
 		}
 
 		Client client = _node.client();
@@ -343,7 +351,28 @@ public class EmbeddedElasticsearchConnection
 		System.setProperty("jna.tmpdir", _jnaTmpDirName);
 
 		try {
-			return EmbeddedElasticsearchNode.newInstance(settings);
+			installPlugins(settings);
+
+			Node node = EmbeddedElasticsearchNode.newInstance(settings);
+
+			if (PortalRunMode.isTestMode()) {
+				Injector injector = node.injector();
+
+				ThreadPool threadPool = injector.getInstance(ThreadPool.class);
+
+				try {
+					_syncThreadPools(threadPool);
+				}
+				catch (Exception exception) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to sync Elasticsearch thread pools",
+							exception);
+					}
+				}
+			}
+
+			return node;
 		}
 		finally {
 			thread.setContextClassLoader(contextClassLoader);
@@ -369,9 +398,9 @@ public class EmbeddedElasticsearchConnection
 		try {
 			embeddedElasticsearchPluginManager.install();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new RuntimeException(
-				"Unable to install " + name + " plugin", e);
+				"Unable to install " + name + " plugin", exception);
 		}
 	}
 
@@ -421,9 +450,9 @@ public class EmbeddedElasticsearchConnection
 		try {
 			embeddedElasticsearchPluginManager.removeObsoletePlugin();
 		}
-		catch (Exception ioe) {
+		catch (Exception exception) {
 			throw new RuntimeException(
-				"Unable to remove " + name + " plugin", ioe);
+				"Unable to remove " + name + " plugin", exception);
 		}
 	}
 
@@ -441,6 +470,48 @@ public class EmbeddedElasticsearchConnection
 
 	@Reference
 	protected Props props;
+
+	private void _syncThreadPools(ThreadPool threadPool) throws Exception {
+		Field executorsField = ReflectionUtil.getDeclaredField(
+			ThreadPool.class, "executors");
+
+		Map<String, Object> executors = (Map<String, Object>)executorsField.get(
+			threadPool);
+
+		Map<String, Object> newExecutors = new HashMap<>(executors);
+
+		newExecutors.put(
+			ThreadPool.Names.FETCH_SHARD_STARTED,
+			executors.get(ThreadPool.Names.SAME));
+		newExecutors.put(
+			ThreadPool.Names.FLUSH, executors.get(ThreadPool.Names.SAME));
+		newExecutors.put(
+			ThreadPool.Names.GENERIC, executors.get(ThreadPool.Names.SAME));
+		newExecutors.put(
+			ThreadPool.Names.INDEX, executors.get(ThreadPool.Names.SAME));
+		newExecutors.put(
+			ThreadPool.Names.MANAGEMENT, executors.get(ThreadPool.Names.SAME));
+		newExecutors.put(
+			ThreadPool.Names.REFRESH, executors.get(ThreadPool.Names.SAME));
+		newExecutors.put(
+			ThreadPool.Names.WRITE, executors.get(ThreadPool.Names.SAME));
+
+		Object executorHolder = newExecutors.get(ThreadPool.Names.SEARCH);
+
+		Field executorField = ReflectionUtil.getDeclaredField(
+			executorHolder.getClass(), "executor");
+
+		ThreadPoolExecutor threadPoolExecutor =
+			(ThreadPoolExecutor)executorField.get(executorHolder);
+
+		threadPoolExecutor.shutdown();
+
+		threadPoolExecutor.setRejectedExecutionHandler(
+			(runnable, executor) -> runnable.run());
+
+		executorsField.set(
+			threadPool, Collections.unmodifiableMap(newExecutors));
+	}
 
 	/**
 	 * Keep this as a static field to avoid the class loading failure during

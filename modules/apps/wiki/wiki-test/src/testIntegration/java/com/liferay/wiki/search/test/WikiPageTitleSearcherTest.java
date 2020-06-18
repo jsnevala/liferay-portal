@@ -36,11 +36,11 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.WikiPageLocalServiceUtil;
-import com.liferay.wiki.util.test.WikiTestUtil;
+import com.liferay.wiki.test.util.WikiTestUtil;
 
 import java.util.List;
 
@@ -62,7 +62,7 @@ public class WikiPageTitleSearcherTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -182,10 +182,7 @@ public class WikiPageTitleSearcherTest {
 	}
 
 	protected SearchContext getSearchContext(Group group) throws Exception {
-		SearchContext searchContext = SearchContextTestUtil.getSearchContext(
-			group.getGroupId());
-
-		return searchContext;
+		return SearchContextTestUtil.getSearchContext(group.getGroupId());
 	}
 
 	@Inject(filter = "model.class.name=com.liferay.wiki.model.WikiPage")

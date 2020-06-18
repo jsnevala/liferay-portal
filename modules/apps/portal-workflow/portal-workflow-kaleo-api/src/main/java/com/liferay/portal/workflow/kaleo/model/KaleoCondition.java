@@ -14,31 +14,33 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the KaleoCondition service. Represents a row in the &quot;KaleoCondition&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see KaleoConditionModel
- * @see com.liferay.portal.workflow.kaleo.model.impl.KaleoConditionImpl
- * @see com.liferay.portal.workflow.kaleo.model.impl.KaleoConditionModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.portal.workflow.kaleo.model.impl.KaleoConditionImpl")
+@ImplementationClassName(
+	"com.liferay.portal.workflow.kaleo.model.impl.KaleoConditionImpl"
+)
 @ProviderType
 public interface KaleoCondition extends KaleoConditionModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.workflow.kaleo.model.impl.KaleoConditionImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoConditionImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<KaleoCondition, Long> KALEO_CONDITION_ID_ACCESSOR =
-		new Accessor<KaleoCondition, Long>() {
+	public static final Accessor<KaleoCondition, Long>
+		KALEO_CONDITION_ID_ACCESSOR = new Accessor<KaleoCondition, Long>() {
+
 			@Override
 			public Long get(KaleoCondition kaleoCondition) {
 				return kaleoCondition.getKaleoConditionId();
@@ -53,5 +55,7 @@ public interface KaleoCondition extends KaleoConditionModel, PersistedModel {
 			public Class<KaleoCondition> getTypeClass() {
 				return KaleoCondition.class;
 			}
+
 		};
+
 }

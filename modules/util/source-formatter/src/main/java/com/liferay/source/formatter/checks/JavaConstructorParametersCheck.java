@@ -14,8 +14,8 @@
 
 package com.liferay.source.formatter.checks;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.source.formatter.parser.JavaParameter;
 import com.liferay.source.formatter.parser.JavaSignature;
@@ -102,8 +102,7 @@ public class JavaConstructorParametersCheck extends BaseJavaTermCheck {
 			sb.append(parameterName);
 			sb.append(";' to match order of constructor parameters");
 
-			addMessage(
-				fileName, sb.toString(), "constructor_parameters.markdown");
+			addMessage(fileName, sb.toString());
 
 			return;
 		}

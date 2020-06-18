@@ -1,294 +1,198 @@
-import Ajax from 'metal-ajax';
-import Component from 'metal-component';
-import PortletBase from 'frontend-js-web/liferay/PortletBase.es';
-import ProgressBar from 'frontend-js-web/liferay/compat/progressbar/ProgressBar.es';
-import Soy from 'metal-soy';
-import Tooltip from 'frontend-js-web/liferay/compat/tooltip/Tooltip.es';
-import core from 'metal';
-
-import templates from './AdaptiveMediaProgress.soy';
-
 /**
- * Handles the actions of the configuration entry's progressbar.
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
- * @abstract
- * @extends {PortletBase}
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  */
 
-class AdaptiveMediaProgress extends PortletBase {
-	/**
-	 * @inheritDoc
-	 */
-	created() {
-		this.id_ = this.namespace + 'AdaptRemaining' + this.uuid + 'Progress';
+import ClayButton from '@clayui/button';
+import ClayIcon from '@clayui/icon';
+import ClayProgressBar from '@clayui/progress-bar';
+import {useIsMounted, useTimeout} from 'frontend-js-react-web';
+import {fetch} from 'frontend-js-web';
+import PropTypes from 'prop-types';
+import React, {useCallback, useEffect, useState} from 'react';
 
-		this.updateProgressBar_(this.adaptedImages, this.totalImages);
-	}
+import {disableEntryIcon, enableEntryIcon} from './utils/entryIcons.es';
 
-	/**
-	 * It starts checking the percentage of adapted images by
-	 * doing ajax request continously.
-	 *
-	 * @param  {String} backgroundTaskUrl The background task
-	 * that has to be invoked.
-	 */
-	startProgress(backgroundTaskUrl) {
-		if (this.percentage_ >= 100 || this.totalImages === 0 || this.disabled) {
-			return;
-		}
+const AdaptiveMediaProgress = ({
+	adaptedImages,
+	adaptiveMediaProgressComponentId,
+	autoStartProgress = false,
+	disabled = false,
+	intervalSpeed = 1000,
+	namespace,
+	percentageUrl,
+	tooltip,
+	totalImages,
+	uuid,
+}) => {
+	const delay = useTimeout();
+	const isMounted = useIsMounted();
 
-		if (backgroundTaskUrl) {
-			Ajax.request(backgroundTaskUrl);
-		}
+	const [showLoadingIndicator, setShowLoadingIndicator] = useState(
+		autoStartProgress
+	);
+	const [percentage, setPercentage] = useState(
+		Math.ceil((adaptedImages / totalImages) * 100) || 0
+	);
+	const [progressBarTooltip, setProgressBarTooltip] = useState(
+		adaptedImages + '/' + totalImages
+	);
 
-		this.clearInterval_();
+	const [imagesFailed, setImagesFailed] = useState(0);
 
-		this.intervalId_ = setInterval(
-			this.getAdaptedImagesPercentage_.bind(this),
-			this.intervalSpeed
-		);
+	const onClickRetry = () => {
+		setImagesFailed(0);
 
-		this.showLoadingIndicator_ = true;
+		startProgress();
+	};
 
-		this.emit('start', {uuid: this.uuid});
-	}
+	const startProgress = useCallback(
+		(backgroundTaskUrl) => {
+			fetch(backgroundTaskUrl);
 
-	/**
-	 * Clears the interval to stop sending ajax requests.
-	 *
-	 * @protected
-	 */
-	clearInterval_() {
-		if (this.intervalId_) {
-			clearInterval(this.intervalId_);
-		}
-	}
-
-	/**
-	 * Sends an ajax request to obtain the percentage of
-	 * adapted images and updates the progressbar.
-	 *
-	 * @protected
-	 */
-	getAdaptedImagesPercentage_() {
-		Ajax.request(this.percentageUrl).then((xhr) => {
-			try {
-				let json = JSON.parse(xhr.response);
-
-				let adaptedImages = json.adaptedImages;
-
-				let totalImages = json.totalImages;
-
-				this.updateProgressBar_(adaptedImages, totalImages);
-
-				if (this.percentage_ >= 100) {
-					this.onProgressBarComplete_();
-				}
-			} catch(e) {
-				clearInterval(this.intervalId_);
+			if (isMounted()) {
+				setShowLoadingIndicator(true);
 			}
-		});
+
+			disableEntryIcon(
+				document.getElementById(
+					`${namespace}icon-adapt-remaining${uuid}`
+				)
+			);
+
+			disableEntryIcon(
+				document.getElementById(`${namespace}icon-disable-${uuid}`)
+			);
+
+			return delay(updateProgress, intervalSpeed);
+		},
+		[delay, intervalSpeed, isMounted, namespace, updateProgress, uuid]
+	);
+
+	const updateProgress = useCallback(() => {
+		fetch(percentageUrl)
+			.then((res) => res.json())
+			.then(({adaptedImages, errors, totalImages}) => {
+				if (isMounted()) {
+					setImagesFailed(errors);
+
+					setPercentage(
+						Math.ceil((adaptedImages / totalImages) * 100) || 0
+					);
+
+					setProgressBarTooltip(
+						tooltip ? tooltip : adaptedImages + '/' + totalImages
+					);
+				}
+
+				if (adaptedImages + errors === totalImages) {
+					if (isMounted()) {
+						setShowLoadingIndicator(false);
+					}
+
+					enableEntryIcon(
+						document.getElementById(
+							`${namespace}icon-disable-${uuid}`
+						)
+					);
+				}
+				else {
+					delay(updateProgress, intervalSpeed);
+				}
+			});
+	}, [
+		delay,
+		intervalSpeed,
+		isMounted,
+		namespace,
+		percentageUrl,
+		tooltip,
+		uuid,
+	]);
+
+	useEffect(() => {
+		if (autoStartProgress) {
+			updateProgress();
+		}
+	}, [autoStartProgress, updateProgress]);
+
+	if (!Liferay.component(adaptiveMediaProgressComponentId)) {
+		Liferay.component(
+			adaptiveMediaProgressComponentId,
+			{
+				startProgress,
+			},
+			{
+				destroyOnNavigate: true,
+			}
+		);
 	}
 
-	/**
-	 * Stops sending ajax request and hides the loading icon.
-	 *
-	 * @protected
-	 */
-	onProgressBarComplete_() {
-		this.clearInterval_();
-		this.showLoadingIndicator_ = false;
+	return imagesFailed > 0 ? (
+		<div className="progress-error-container">
+			<span className="text-danger">
+				<ClayIcon symbol="exclamation-full" />
+				<span>
+					<strong>{Liferay.Language.get('error')}: </strong>
+					{imagesFailed === 1
+						? Liferay.Language.get('1-image-failed-process')
+						: Liferay.Util.sub(
+								Liferay.Language.get('x-images-failed-process'),
+								imagesFailed
+						  )}
+				</span>
+			</span>
 
-		this.emit('finish', {uuid: this.uuid});
-	}
+			<ClayButton
+				borderless
+				className="text-danger"
+				onClick={onClickRetry}
+				small
+			>
+				{Liferay.Language.get('retry')}
+			</ClayButton>
+		</div>
+	) : (
+		<>
+			<div
+				className={`progress-container ${disabled ? 'disabled' : ''}`}
+				data-percentage={percentage}
+				data-title={progressBarTooltip}
+			>
+				<ClayProgressBar value={percentage} />
+			</div>
 
-	/**
-	 * Updates the progressbar
-	 *
-	 * @param  {Number} progress progressbar value
-	 * @protected
-	 */
-	updateProgressBar_(adaptedImages, totalImages) {
-		let percentage = Math.round(adaptedImages / totalImages * 100) || 0;
-
-		this.progressBarClass_ = (percentage >= 100) ? 'progress-bar-success' : '';
-		this.progressBarLabel_ = percentage + '%';
-		this.progressBarValue_ = percentage;
-		this.progressBarTooltip_ = this.tooltip ? this.tooltip : adaptedImages + "/" + totalImages;
-		this.percentage_ = percentage;
-	}
-}
-
-/**
- * AdaptiveMedia State definition.
- * @ignore
- * @static
- * @type {!Object}
- */
-AdaptiveMediaProgress.STATE = {
-	/**
-	 * Number of adapted images in the platform.
-	 *
-	 * @instance
-	 * @memberof AdaptiveMediaProgress
-	 * @type {Number}
-	 */
-	adaptedImages: {
-		validator: core.isNumber
-	},
-
-	/**
-	 * Indicates if the entry is disabled or not.
-	 *
-	 * @instance
-	 * @memberof AdaptiveMediaProgress
-	 * @type {Boolean}
-	 */
-	disabled: {
-		validator: core.isBoolean,
-		value: false
-	},
-
-	/**
-	 * The interval (in milliseconds) on how often
-	 * we will check the percentage of adapted images.
-	 *
-	 * @instance
-	 * @memberof AdaptiveMediaProgress
-	 * @type {Number}
-	 */
-	intervalSpeed: {
-		validator: core.isNumber,
-		value: 1000
-	},
-
-	/**
-	 * Percentage of adapted images.
-	 *
-	 * @memberof AdaptiveMediaProgress
-	 * @protected
-	 * @type {Number}
-	 */
-	percentage_: {
-		validator: core.isNumber
-	},
-
-	/**
-	 * Url to the action that returns the percentage
-	 * of adapted images.
-	 *
-	 * @instance
-	 * @memberof AdaptiveMediaProgress
-	 * @type {String}
-	 */
-	percentageUrl: {
-		validator: core.isString
-	},
-
-	/**
-	 * The progress bar class.
-	 *
-	 * @memberof AdaptiveMediaProgress
-	 * @protected
-	 * @type {String}
-	 */
-	progressBarClass_: {
-		validator: core.isString
-	},
-
-	/**
-	 * The progress bar label.
-	 *
-	 * @memberof AdaptiveMediaProgress
-	 * @protected
-	 * @type {String}
-	 */
-	progressBarLabel_: {
-		validator: core.isString
-	},
-
-	/**
-	 * The progress bar value.
-	 *
-	 * @memberof AdaptiveMediaProgress
-	 * @protected
-	 * @type {Number}
-	 */
-	progressBarValue_: {
-		validator: core.isNumber
-	},
-
-	/**
-	 * The progress bar tooltip. If AdaptiveMediaProgress.tooltip
-	 * is defined, this will be used.
-	 *
-	 * @memberof AdaptiveMediaProgress
-	 * @protected
-	 * @type {String}
-	 */
-	progressBarTooltip_: {
-		validator: core.isString
-	},
-
-	/**
-	 * If the loading indicator has to be shown
-	 * near the progress bar.
-	 *
-	 * @memberof AdaptiveMediaProgress
-	 * @protected
-	 * @type {Boolean}
-	 */
-	showLoadingIndicator_: {
-		validator: core.isBoolean,
-		value: false
-	},
-
-	/**
-	 * Number of images present in the platform.
-	 *
-	 * @instance
-	 * @memberof AdaptiveMediaProgress
-	 * @type {Number}
-	 */
-	totalImages: {
-		validator: core.isNumber
-	},
-
-	/**
-	 * The tooltip text to show in the progress bar.
-	 *
-	 * @instance
-	 * @memberof AdaptiveMediaProgress
-	 * @type {String}
-	 */
-	tooltip: {
-		validator: core.isString,
-	},
-
-	/**
-	 * The tooltip position in the progress bar.
-	 *
-	 * @instance
-	 * @memberof AdaptiveMediaProgress
-	 * @type {Object}
-	 */
-	tooltipPosition: {
-		value: Tooltip.Align.Top
-	},
-
-	/**
-	 * Configuration entry's uuid.
-	 *
-	 * @instance
-	 * @memberof AdaptiveMediaProgress
-	 * @type {String}
-	 */
-	uuid: {
-		validator: core.isString
-	}
+			<span
+				className={`${
+					showLoadingIndicator ? '' : 'hide '
+				}loading-animation loading-animation-sm`}
+			></span>
+		</>
+	);
 };
 
-// Register component
-Soy.register(AdaptiveMediaProgress, templates);
+AdaptiveMediaProgress.propTypes = {
+	adaptedImages: PropTypes.number,
+	adaptiveMediaProgressComponentId: PropTypes.string,
+	autoStartProgress: PropTypes.bool,
+	disabled: PropTypes.bool,
+	intervalSpeed: PropTypes.number,
+	namespace: PropTypes.string,
+	percentageUrl: PropTypes.string,
+	progressBarTooltip: PropTypes.string,
+	showLoadingIndicator: PropTypes.bool,
+	tooltip: PropTypes.string,
+	totalImages: PropTypes.number,
+	uuid: PropTypes.string,
+};
 
 export default AdaptiveMediaProgress;

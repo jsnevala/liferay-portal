@@ -16,7 +16,9 @@
 
 <%@ include file="/init.jsp" %>
 
-<blockquote><p>Management toolbar is an extension of Toolbar. A combination of different components as filters, orders, search, visualization select and other actions, that allow to manage dataset.</p></blockquote>
+<blockquote>
+	<p>Management toolbar is an extension of Toolbar. A combination of different components as filters, orders, search, visualization select and other actions, that allow to manage dataset.</p>
+</blockquote>
 
 <h3>DEFAULT STATE</h3>
 
@@ -35,6 +37,7 @@
 
 <clay:management-toolbar
 	actionDropdownItems="<%= managementToolbarsDisplayContext.getActionDropdownItems() %>"
+	checkboxStatus="checked"
 	itemsTotal="<%= 42 %>"
 	selectable="<%= true %>"
 	selectedItems="<%= 14 %>"
@@ -52,6 +55,7 @@
 	searchInputName="mySearchInputName"
 	searchValue="my search"
 	selectable="<%= true %>"
+	showResultsBar="<%= true %>"
 	sortingOrder="desc"
 	viewTypeItems="<%= managementToolbarsDisplayContext.getViewTypeItems() %>"
 />

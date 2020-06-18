@@ -14,94 +14,104 @@
 
 package com.liferay.document.library.preview.image.internal;
 
+import com.liferay.document.library.constants.DLFileVersionPreviewConstants;
+import com.liferay.document.library.kernel.model.DLProcessorConstants;
+import com.liferay.document.library.kernel.util.DLProcessor;
 import com.liferay.document.library.kernel.util.DLProcessorRegistryUtil;
-import com.liferay.document.library.kernel.util.ImageProcessorUtil;
+import com.liferay.document.library.kernel.util.ImageProcessor;
 import com.liferay.document.library.preview.DLPreviewRenderer;
 import com.liferay.document.library.preview.DLPreviewRendererProvider;
+import com.liferay.document.library.preview.exception.DLFileEntryPreviewGenerationException;
 import com.liferay.document.library.preview.exception.DLPreviewGenerationInProcessException;
 import com.liferay.document.library.preview.exception.DLPreviewSizeException;
+import com.liferay.document.library.service.DLFileVersionPreviewLocalService;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileVersion;
-import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Dictionary;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Alejandro Tardín
  */
-@Component(immediate = true, service = ImageDLPreviewRendererProvider.class)
+@Component(service = DLPreviewRendererProvider.class)
 public class ImageDLPreviewRendererProvider
 	implements DLPreviewRendererProvider {
 
 	@Override
-	public Optional<DLPreviewRenderer> getPreviewDLPreviewRendererOptional(
-		FileVersion fileVersion) {
-
-		if (!ImageProcessorUtil.isImageSupported(fileVersion)) {
-			return Optional.empty();
-		}
-
-		return Optional.of(
-			(request, response) -> {
-				if (!ImageProcessorUtil.hasImages(fileVersion)) {
-					if (!DLProcessorRegistryUtil.isPreviewableSize(
-							fileVersion)) {
-
-						throw new DLPreviewSizeException();
-					}
-
-					throw new DLPreviewGenerationInProcessException();
-				}
-
-				RequestDispatcher requestDispatcher =
-					_servletContext.getRequestDispatcher("/preview/view.jsp");
-
-				request.setAttribute(
-					WebKeys.DOCUMENT_LIBRARY_FILE_VERSION, fileVersion);
-
-				requestDispatcher.include(request, response);
-			});
+	public Set<String> getMimeTypes() {
+		return _imageProcessor.getImageMimeTypes();
 	}
 
 	@Override
-	public Optional<DLPreviewRenderer> getThumbnailDLPreviewRendererOptional(
+	public DLPreviewRenderer getPreviewDLPreviewRenderer(
 		FileVersion fileVersion) {
 
-		return Optional.empty();
+		if (!DLProcessorRegistryUtil.isPreviewableSize(fileVersion)) {
+			return (httpServletRequest, httpServletResponse) -> {
+				throw new DLPreviewSizeException();
+			};
+		}
+
+		if (!_imageProcessor.isImageSupported(fileVersion)) {
+			return null;
+		}
+
+		return (request, response) -> {
+			checkForPreviewGenerationExceptions(fileVersion);
+
+			RequestDispatcher requestDispatcher =
+				_servletContext.getRequestDispatcher("/preview/view.jsp");
+
+			request.setAttribute(
+				WebKeys.DOCUMENT_LIBRARY_FILE_VERSION, fileVersion);
+
+			requestDispatcher.include(request, response);
+		};
 	}
 
-	@Activate
-	protected void activate(BundleContext bundleContext) {
-		Dictionary<String, Object[]> properties = new HashMapDictionary<>();
+	@Override
+	public DLPreviewRenderer getThumbnailDLPreviewRenderer(
+		FileVersion fileVersion) {
 
-		Set<String> imageMimeTypes = ImageProcessorUtil.getImageMimeTypes();
-
-		properties.put("content.type", imageMimeTypes.toArray());
-
-		_dlPreviewRendererProviderServiceRegistration =
-			bundleContext.registerService(
-				DLPreviewRendererProvider.class, this, properties);
+		return null;
 	}
 
-	@Deactivate
-	protected void deactivate() {
-		_dlPreviewRendererProviderServiceRegistration.unregister();
+	protected void checkForPreviewGenerationExceptions(FileVersion fileVersion)
+		throws PortalException {
+
+		if (_dlFileVersionPreviewLocalService.hasDLFileVersionPreview(
+				fileVersion.getFileEntryId(), fileVersion.getFileVersionId(),
+				DLFileVersionPreviewConstants.STATUS_FAILURE)) {
+
+			throw new DLFileEntryPreviewGenerationException();
+		}
+
+		if (!_imageProcessor.hasImages(fileVersion)) {
+			throw new DLPreviewGenerationInProcessException();
+		}
 	}
 
-	private ServiceRegistration<DLPreviewRendererProvider>
-		_dlPreviewRendererProviderServiceRegistration;
+	@Reference(
+		policyOption = ReferencePolicyOption.GREEDY,
+		target = "(type=" + DLProcessorConstants.IMAGE_PROCESSOR + ")",
+		unbind = "-"
+	)
+	protected void setDLProcessor(DLProcessor dlProcessor) {
+		_imageProcessor = (ImageProcessor)dlProcessor;
+	}
+
+	@Reference
+	private DLFileVersionPreviewLocalService _dlFileVersionPreviewLocalService;
+
+	private ImageProcessor _imageProcessor;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.document.library.preview.image)"

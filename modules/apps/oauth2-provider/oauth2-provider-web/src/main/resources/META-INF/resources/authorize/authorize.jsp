@@ -23,17 +23,20 @@ OAuth2Application oAuth2Application = oAuth2AuthorizePortletDisplayContext.getOA
 
 Map<String, String> oAuth2Parameters = oAuth2AuthorizePortletDisplayContext.getOAuth2Parameters();
 
-String replyTo = PortalUtil.escapeRedirect(oAuth2Parameters.get("reply_to"));
+String replyTo = oAuth2Parameters.get("reply_to");
+
+if (Validator.isNotNull(replyTo) && !replyTo.startsWith(PortalUtil.getPortalURL(request))) {
+	replyTo = PortalUtil.escapeRedirect(replyTo);
+}
 %>
 
 <div class="closed consent container-fluid-1280">
-	<aui:form action="<%= replyTo %>" method="post" name="fm">
+	<aui:form action="<%= replyTo %>" data-senna-off="true" method="post" name="fm">
 		<aui:fieldset-group markupView="lexicon">
 			<div class="panel-body">
-				<div class="app-icon aspect-ratio-bg-cover" style="background-image:url('<%= HtmlUtil.escapeAttribute(oAuth2AuthorizePortletDisplayContext.getThumbnailURL()) %>')"></div>
+				<div class="app-icon aspect-ratio-bg-cover" style="background-image: url('<%= HtmlUtil.escapeAttribute(oAuth2AuthorizePortletDisplayContext.getThumbnailURL()) %>');"></div>
 
 				<liferay-ui:user-portrait
-					imageCssClass="user-icon-lg"
 					user="<%= user %>"
 				/>
 
@@ -65,9 +68,10 @@ String replyTo = PortalUtil.escapeRedirect(oAuth2Parameters.get("reply_to"));
 
 								messageArguments[0] = StringPool.BLANK;
 
-								for (String getApplicationScopeDescription : assignableScopes.getApplicationScopeDescription(applicationName)) {
+								for (String getApplicationScopeDescription : assignableScopes.getApplicationScopeDescription(themeDisplay.getCompanyId(), applicationName)) {
 									if (Validator.isBlank(messageArguments[0])) {
 										messageArguments[0] = getApplicationScopeDescription;
+
 										continue;
 									}
 
@@ -128,22 +132,25 @@ String replyTo = PortalUtil.escapeRedirect(oAuth2Parameters.get("reply_to"));
 
 							<aui:button id="cancel" type="submit" value="cancel" />
 
-							<aui:script>
-								$('#<portlet:namespace />allow').on(
-									'click',
-									function() {
-										document.<portlet:namespace/>fm.oauthDecision.value='allow';
-										document.<portlet:namespace/>fm.submit();
-									}
-								);
-								$('#<portlet:namespace />cancel').on(
-									'click',
-									function() {
-										document.<portlet:namespace/>fm.oauthDecision.value='deny';
-										document.<portlet:namespace/>fm.submit();
-									}
-								);
-							</aui:script>
+							<script>
+								var allowButton = document.getElementById('<portlet:namespace />allow');
+
+								if (allowButton) {
+									allowButton.addEventListener('click', function () {
+										document.getElementById('oauthDecision').value = 'allow';
+										Liferay.Util.postForm(document.<portlet:namespace/>fm);
+									});
+								}
+
+								var cancelButton = document.getElementById('<portlet:namespace />cancel');
+
+								if (cancelButton) {
+									cancelButton.addEventListener('click', function () {
+										document.getElementById('oauthDecision').value = 'deny';
+										Liferay.Util.postForm(document.<portlet:namespace/>fm);
+									});
+								}
+							</script>
 						</div>
 					</c:otherwise>
 				</c:choose>

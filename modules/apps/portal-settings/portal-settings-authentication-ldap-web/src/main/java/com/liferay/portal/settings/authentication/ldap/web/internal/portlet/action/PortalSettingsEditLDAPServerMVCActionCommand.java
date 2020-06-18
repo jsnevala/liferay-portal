@@ -14,6 +14,7 @@
 
 package com.liferay.portal.settings.authentication.ldap.web.internal.portlet.action;
 
+import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletContextFactory;
@@ -39,7 +40,6 @@ import com.liferay.portal.security.ldap.configuration.LDAPServerConfiguration;
 import com.liferay.portal.security.ldap.constants.LDAPConstants;
 import com.liferay.portal.security.ldap.validator.LDAPFilterException;
 import com.liferay.portal.security.ldap.validator.LDAPFilterValidator;
-import com.liferay.portal.settings.constants.PortalSettingsPortletKeys;
 
 import java.util.Dictionary;
 import java.util.List;
@@ -63,7 +63,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + PortalSettingsPortletKeys.PORTAL_SETTINGS,
+		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
 		"mvc.command.name=/portal_settings/edit_ldap_server"
 	},
 	service = MVCActionCommand.class
@@ -88,15 +88,16 @@ public class PortalSettingsEditLDAPServerMVCActionCommand
 
 			sendRedirect(actionRequest, actionResponse);
 		}
-		catch (Exception e) {
-			if (e instanceof DuplicateLDAPServerNameException ||
-				e instanceof LDAPFilterException ||
-				e instanceof LDAPServerNameException) {
+		catch (Exception exception) {
+			if (exception instanceof DuplicateLDAPServerNameException ||
+				exception instanceof LDAPFilterException ||
+				exception instanceof LDAPServerNameException) {
 
-				SessionErrors.add(actionRequest, e.getClass());
+				SessionErrors.add(actionRequest, exception.getClass());
 
 				PortletURL portletURL = PortletURLFactoryUtil.create(
-					actionRequest, PortalSettingsPortletKeys.PORTAL_SETTINGS,
+					actionRequest,
+					ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
 					PortletRequest.RENDER_PHASE);
 
 				portletURL.setParameter(
@@ -113,15 +114,15 @@ public class PortalSettingsEditLDAPServerMVCActionCommand
 				return;
 			}
 
-			if (e instanceof PrincipalException) {
-				SessionErrors.add(actionRequest, e.getClass());
+			if (exception instanceof PrincipalException) {
+				SessionErrors.add(actionRequest, exception.getClass());
 
 				actionResponse.setRenderParameter("mvcPath", "/error.jsp");
 
 				return;
 			}
 
-			throw e;
+			throw exception;
 		}
 	}
 
@@ -167,7 +168,7 @@ public class PortalSettingsEditLDAPServerMVCActionCommand
 	}
 
 	@Reference(
-		target = "(javax.portlet.name=" + PortalSettingsPortletKeys.PORTAL_SETTINGS + ")",
+		target = "(javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS + ")",
 		unbind = "-"
 	)
 	protected void setPortlet(Portlet portlet) {
@@ -198,11 +199,11 @@ public class PortalSettingsEditLDAPServerMVCActionCommand
 		long ldapServerId = ParamUtil.getLong(
 			actionRequest, LDAPConstants.LDAP_SERVER_ID);
 
-		UnicodeProperties properties = PropertiesParamUtil.getProperties(
+		UnicodeProperties unicodeProperties = PropertiesParamUtil.getProperties(
 			actionRequest, "ldap--");
 
 		validateLDAPServerName(
-			ldapServerId, themeDisplay.getCompanyId(), properties);
+			ldapServerId, themeDisplay.getCompanyId(), unicodeProperties);
 
 		validateSearchFilters(actionRequest);
 
@@ -219,7 +220,11 @@ public class PortalSettingsEditLDAPServerMVCActionCommand
 					themeDisplay.getCompanyId(), ldapServerId);
 		}
 
-		for (Map.Entry<String, String> entry : properties.entrySet()) {
+		for (Map.Entry<String, String> entry : unicodeProperties.entrySet()) {
+			if (Portal.TEMP_OBFUSCATION_VALUE.equals(entry.getValue())) {
+				continue;
+			}
+
 			dictionary.put(entry.getKey(), entry.getValue());
 		}
 
@@ -238,10 +243,12 @@ public class PortalSettingsEditLDAPServerMVCActionCommand
 	}
 
 	protected void validateLDAPServerName(
-			long ldapServerId, long companyId, UnicodeProperties properties)
+			long ldapServerId, long companyId,
+			UnicodeProperties unicodeProperties)
 		throws Exception {
 
-		String serverName = properties.getProperty(LDAPConstants.SERVER_NAME);
+		String serverName = unicodeProperties.getProperty(
+			LDAPConstants.SERVER_NAME);
 
 		if (Validator.isNull(serverName)) {
 			throw new LDAPServerNameException();

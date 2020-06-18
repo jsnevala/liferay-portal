@@ -20,6 +20,7 @@ import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalSer
 import com.liferay.exportimport.util.comparator.ExportImportConfigurationNameComparator;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.BaseManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -32,6 +33,7 @@ import com.liferay.staging.processes.web.internal.search.PublishConfigurationDis
 import com.liferay.staging.processes.web.internal.search.PublishConfigurationSearchTerms;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.portlet.PortletURL;
 
@@ -46,12 +48,13 @@ public class StagingProcessesWebPublishTemplatesToolbarDisplayContext
 	extends BaseManagementToolbarDisplayContext {
 
 	public StagingProcessesWebPublishTemplatesToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request, PageContext pageContext,
+		LiferayPortletResponse liferayPortletResponse, PageContext pageContext,
 		PortletURL iteratorURL) {
 
-		super(liferayPortletRequest, liferayPortletResponse, request);
+		super(
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse);
 
 		long companyId = PortalUtil.getCompanyId(liferayPortletRequest);
 		long groupId = (long)pageContext.getAttribute("groupId");
@@ -73,25 +76,22 @@ public class StagingProcessesWebPublishTemplatesToolbarDisplayContext
 		return clearResultsURL.toString();
 	}
 
+	@Override
 	public CreationMenu getCreationMenu() {
-		return new CreationMenu() {
-			{
-				addPrimaryDropdownItem(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							getRenderURL(), "mvcRenderCommandName",
-							"editPublishConfiguration", "groupId",
-							String.valueOf(_stagingGroupId),
-							"layoutSetBranchId",
-							ParamUtil.getString(request, "layoutSetBranchId"),
-							"layoutSetBranchName",
-							ParamUtil.getString(request, "layoutSetBranchName"),
-							"privateLayout", Boolean.FALSE.toString());
+		return CreationMenuBuilder.addPrimaryDropdownItem(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					getRenderURL(), "mvcRenderCommandName",
+					"editPublishConfiguration", "groupId",
+					String.valueOf(_stagingGroupId), "layoutSetBranchId",
+					ParamUtil.getString(request, "layoutSetBranchId"),
+					"layoutSetBranchName",
+					ParamUtil.getString(request, "layoutSetBranchName"),
+					"privateLayout", Boolean.FALSE.toString());
 
-						dropdownItem.setLabel(LanguageUtil.get(request, "new"));
-					});
+				dropdownItem.setLabel(LanguageUtil.get(request, "new"));
 			}
-		};
+		).build();
 	}
 
 	@Override
@@ -131,7 +131,7 @@ public class StagingProcessesWebPublishTemplatesToolbarDisplayContext
 		searchContainer.setOrderByCol("name");
 		searchContainer.setOrderByComparator(
 			new ExportImportConfigurationNameComparator(
-				"asc".equals(getOrderByType())));
+				Objects.equals(getOrderByType(), "asc")));
 		searchContainer.setOrderByType(getOrderByType());
 
 		int exportImportConfigurationType =

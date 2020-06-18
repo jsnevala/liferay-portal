@@ -56,8 +56,8 @@ public class NGramHolderBuilderImpl implements NGramHolderBuilder {
 			String input, int nGramMinLength, int nGramMaxLength)
 		throws SearchException {
 
-		try (NGramTokenizer nGramTokenizer =
-				createNGramTokenizer(nGramMinLength, nGramMaxLength)) {
+		try (NGramTokenizer nGramTokenizer = createNGramTokenizer(
+				nGramMinLength, nGramMaxLength)) {
 
 			nGramTokenizer.setReader(new StringReader(input));
 
@@ -93,8 +93,8 @@ public class NGramHolderBuilderImpl implements NGramHolderBuilder {
 
 			return nGramHolder;
 		}
-		catch (Exception e) {
-			throw new SearchException(e);
+		catch (Exception exception) {
+			throw new SearchException(exception);
 		}
 	}
 

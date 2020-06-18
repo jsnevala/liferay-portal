@@ -14,31 +14,31 @@
 
 package com.liferay.site.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the SiteFriendlyURL service. Represents a row in the &quot;SiteFriendlyURL&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see SiteFriendlyURLModel
- * @see com.liferay.site.model.impl.SiteFriendlyURLImpl
- * @see com.liferay.site.model.impl.SiteFriendlyURLModelImpl
  * @generated
  */
 @ImplementationClassName("com.liferay.site.model.impl.SiteFriendlyURLImpl")
 @ProviderType
-public interface SiteFriendlyURL extends SiteFriendlyURLModel, PersistedModel {
+public interface SiteFriendlyURL extends PersistedModel, SiteFriendlyURLModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.site.model.impl.SiteFriendlyURLImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.site.model.impl.SiteFriendlyURLImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<SiteFriendlyURL, Long> SITE_FRIENDLY_URL_ID_ACCESSOR =
-		new Accessor<SiteFriendlyURL, Long>() {
+	public static final Accessor<SiteFriendlyURL, Long>
+		SITE_FRIENDLY_URL_ID_ACCESSOR = new Accessor<SiteFriendlyURL, Long>() {
+
 			@Override
 			public Long get(SiteFriendlyURL siteFriendlyURL) {
 				return siteFriendlyURL.getSiteFriendlyURLId();
@@ -53,5 +53,7 @@ public interface SiteFriendlyURL extends SiteFriendlyURLModel, PersistedModel {
 			public Class<SiteFriendlyURL> getTypeClass() {
 				return SiteFriendlyURL.class;
 			}
+
 		};
+
 }

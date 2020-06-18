@@ -33,7 +33,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.trash.TrashHelper;
 import com.liferay.trash.exception.RestoreEntryException;
 import com.liferay.trash.exception.TrashEntryException;
@@ -74,7 +74,7 @@ public class DLFolderTrashHandlerTest
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Override
 	public AssetEntry fetchAssetEntry(ClassedModel classedModel)
@@ -152,7 +152,9 @@ public class DLFolderTrashHandlerTest
 		try {
 			super.testTrashParentAndBaseModel();
 		}
-		catch (com.liferay.trash.kernel.exception.TrashEntryException tee) {
+		catch (com.liferay.trash.kernel.exception.TrashEntryException
+					trashEntryException) {
+
 			throw new TrashEntryException();
 		}
 	}
@@ -163,7 +165,9 @@ public class DLFolderTrashHandlerTest
 		try {
 			super.testTrashParentAndRestoreParentAndBaseModel();
 		}
-		catch (com.liferay.trash.kernel.exception.RestoreEntryException ree) {
+		catch (com.liferay.trash.kernel.exception.RestoreEntryException
+					restoreEntryException) {
+
 			throw new RestoreEntryException();
 		}
 	}

@@ -21,48 +21,45 @@
 <%@ taglib uri="http://liferay.com/tld/asset" prefix="liferay-asset" %><%@
 taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
-taglib uri="http://liferay.com/tld/editor" prefix="liferay-editor" %><%@
 taglib uri="http://liferay.com/tld/expando" prefix="liferay-expando" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
-taglib uri="http://liferay.com/tld/security" prefix="liferay-security" %><%@
-taglib uri="http://liferay.com/tld/soy" prefix="soy" %><%@
+taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
+taglib uri="http://liferay.com/tld/site-navigation" prefix="liferay-site-navigation" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.document.library.kernel.exception.FileSizeException" %><%@
 page import="com.liferay.document.library.kernel.util.DLValidatorUtil" %><%@
-page import="com.liferay.exportimport.constants.ExportImportPortletKeys" %><%@
 page import="com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys" %><%@
 page import="com.liferay.exportimport.kernel.staging.LayoutStagingUtil" %><%@
 page import="com.liferay.exportimport.kernel.staging.StagingUtil" %><%@
-page import="com.liferay.frontend.taglib.servlet.taglib.util.EmptyResultMessageKeys" %><%@
+page import="com.liferay.layout.admin.constants.LayoutScreenNavigationEntryConstants" %><%@
 page import="com.liferay.layout.admin.web.internal.constants.LayoutAdminWebKeys" %><%@
-page import="com.liferay.layout.admin.web.internal.display.context.DisplayPageDisplayContext" %><%@
-page import="com.liferay.layout.admin.web.internal.display.context.FragmentsEditorDisplayContext" %><%@
-page import="com.liferay.layout.admin.web.internal.display.context.LayoutPageTemplateCollectionsDisplayContext" %><%@
-page import="com.liferay.layout.admin.web.internal.display.context.LayoutPageTemplateDisplayContext" %><%@
-page import="com.liferay.layout.admin.web.internal.display.context.LayoutPrototypeDisplayContext" %><%@
 page import="com.liferay.layout.admin.web.internal.display.context.LayoutsAdminDisplayContext" %><%@
+page import="com.liferay.layout.admin.web.internal.display.context.LayoutsAdminManagementToolbarDisplayContext" %><%@
+page import="com.liferay.layout.admin.web.internal.display.context.MillerColumnsDisplayContext" %><%@
 page import="com.liferay.layout.admin.web.internal.display.context.OrphanPortletsDisplayContext" %><%@
+page import="com.liferay.layout.admin.web.internal.display.context.OrphanPortletsManagementToolbarDisplayContext" %><%@
 page import="com.liferay.layout.admin.web.internal.display.context.SelectLayoutPageTemplateEntryDisplayContext" %><%@
 page import="com.liferay.layout.admin.web.internal.display.context.SelectThemeDisplayContext" %><%@
-page import="com.liferay.layout.admin.web.internal.security.permission.resource.LayoutPageTemplateCollectionPermission" %><%@
-page import="com.liferay.layout.admin.web.internal.security.permission.resource.LayoutPageTemplateEntryPermission" %><%@
-page import="com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys" %><%@
+page import="com.liferay.layout.admin.web.internal.display.context.SelectThemeManagementToolbarDisplayContext" %><%@
+page import="com.liferay.layout.admin.web.internal.servlet.taglib.clay.SelectBasicTemplatesHorizontalCard" %><%@
+page import="com.liferay.layout.admin.web.internal.servlet.taglib.clay.SelectBasicTemplatesVerticalCard" %><%@
+page import="com.liferay.layout.admin.web.internal.servlet.taglib.clay.SelectGlobalTemplatesVerticalCard" %><%@
+page import="com.liferay.layout.admin.web.internal.servlet.taglib.clay.SelectLayoutPageTemplateEntryVerticalCard" %><%@
+page import="com.liferay.layout.admin.web.internal.servlet.taglib.clay.SelectMasterLayoutVerticalCard" %><%@
+page import="com.liferay.layout.admin.web.internal.servlet.taglib.clay.SelectThemeVerticalCard" %><%@
 page import="com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants" %><%@
-page import="com.liferay.layout.page.template.exception.DuplicateLayoutPageTemplateCollectionException" %><%@
-page import="com.liferay.layout.page.template.exception.LayoutPageTemplateCollectionNameException" %><%@
 page import="com.liferay.layout.page.template.model.LayoutPageTemplateCollection" %><%@
 page import="com.liferay.layout.page.template.model.LayoutPageTemplateEntry" %><%@
 page import="com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalServiceUtil" %><%@
 page import="com.liferay.layout.page.template.service.LayoutPageTemplateCollectionServiceUtil" %><%@
+page import="com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil" %><%@
 page import="com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil" %><%@
-page import="com.liferay.layouts.admin.kernel.model.LayoutTypePortletConstants" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
-page import="com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker" %><%@
 page import="com.liferay.portal.kernel.dao.search.ResultRow" %><%@
 page import="com.liferay.portal.kernel.exception.GroupInheritContentException" %><%@
 page import="com.liferay.portal.kernel.exception.ImageTypeException" %><%@
@@ -73,14 +70,7 @@ page import="com.liferay.portal.kernel.exception.LayoutTypeException" %><%@
 page import="com.liferay.portal.kernel.exception.NoSuchGroupException" %><%@
 page import="com.liferay.portal.kernel.exception.NoSuchLayoutException" %><%@
 page import="com.liferay.portal.kernel.exception.NoSuchRoleException" %><%@
-page import="com.liferay.portal.kernel.exception.PortalException" %><%@
 page import="com.liferay.portal.kernel.exception.RequiredLayoutException" %><%@
-page import="com.liferay.portal.kernel.exception.RequiredLayoutPrototypeException" %><%@
-page import="com.liferay.portal.kernel.exception.SitemapChangeFrequencyException" %><%@
-page import="com.liferay.portal.kernel.exception.SitemapIncludeException" %><%@
-page import="com.liferay.portal.kernel.exception.SitemapPagePriorityException" %><%@
-page import="com.liferay.portal.kernel.json.JSONFactoryUtil" %><%@
-page import="com.liferay.portal.kernel.json.JSONSerializer" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.language.UnicodeLanguageUtil" %><%@
 page import="com.liferay.portal.kernel.layoutconfiguration.util.RuntimePageUtil" %><%@
@@ -122,13 +112,13 @@ page import="com.liferay.portal.kernel.service.ThemeLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.UserGroupLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.permission.GroupPermissionUtil" %><%@
 page import="com.liferay.portal.kernel.service.permission.LayoutPermissionUtil" %><%@
-page import="com.liferay.portal.kernel.service.permission.LayoutPrototypePermissionUtil" %><%@
 page import="com.liferay.portal.kernel.servlet.HttpHeaders" %><%@
 page import="com.liferay.portal.kernel.servlet.ServletContextPool" %><%@
 page import="com.liferay.portal.kernel.servlet.taglib.ui.FormNavigatorConstants" %><%@
 page import="com.liferay.portal.kernel.template.StringTemplateResource" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.HttpUtil" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@
@@ -139,33 +129,26 @@ page import="com.liferay.portal.kernel.util.PortletKeys" %><%@
 page import="com.liferay.portal.kernel.util.PropertiesParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.ResourceBundleUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
-page import="com.liferay.portal.kernel.util.TextFormatter" %><%@
 page import="com.liferay.portal.kernel.util.UnicodeProperties" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.kernel.webserver.WebServerServletTokenUtil" %><%@
 page import="com.liferay.portal.kernel.workflow.WorkflowConstants" %><%@
-page import="com.liferay.portal.model.impl.LayoutPrototypeImpl" %><%@
-page import="com.liferay.portal.util.LayoutDescription" %><%@
 page import="com.liferay.portal.util.LayoutTypeControllerTracker" %><%@
 page import="com.liferay.portal.util.PropsValues" %><%@
-page import="com.liferay.portal.util.RobotsUtil" %><%@
+page import="com.liferay.segments.exception.RequiredSegmentsExperienceException" %><%@
 page import="com.liferay.site.navigation.model.SiteNavigationMenu" %><%@
 page import="com.liferay.sites.kernel.util.SitesUtil" %>
 
-<%@ page import="java.util.Date" %><%@
-page import="java.util.HashMap" %><%@
-page import="java.util.HashSet" %><%@
-page import="java.util.List" %><%@
+<%@ page import="java.util.List" %><%@
 page import="java.util.Locale" %><%@
 page import="java.util.Map" %><%@
 page import="java.util.Objects" %><%@
 page import="java.util.ResourceBundle" %><%@
-page import="java.util.Set" %>
+page import="java.util.TreeMap" %>
 
 <%@ page import="javax.portlet.PortletRequest" %><%@
-page import="javax.portlet.PortletURL" %><%@
-page import="javax.portlet.WindowState" %>
+page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 
@@ -174,8 +157,9 @@ page import="javax.portlet.WindowState" %>
 <portlet:defineObjects />
 
 <%
-LayoutsAdminDisplayContext layoutsAdminDisplayContext = new LayoutsAdminDisplayContext(liferayPortletRequest, liferayPortletResponse);
-LayoutPrototypeDisplayContext layoutPrototypeDisplayContext = new LayoutPrototypeDisplayContext(renderRequest, renderResponse, request);
+LayoutsAdminDisplayContext layoutsAdminDisplayContext = (LayoutsAdminDisplayContext)request.getAttribute(LayoutAdminWebKeys.LAYOUT_PAGE_LAYOUT_ADMIN_DISPLAY_CONTEXT);
+
+portletDisplay.setShowExportImportIcon(false);
 %>
 
 <%@ include file="/init-ext.jsp" %>

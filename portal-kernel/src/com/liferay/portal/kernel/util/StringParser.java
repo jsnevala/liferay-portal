@@ -16,6 +16,7 @@ package com.liferay.portal.kernel.util;
 
 import com.liferay.petra.concurrent.ConcurrentReferenceValueHashMap;
 import com.liferay.petra.memory.FinalizeManager;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 
 import java.util.ArrayList;
@@ -280,10 +281,13 @@ public class StringParser {
 			pattern = StringUtil.replace(
 				pattern, chunk, stringParserFragment.getToken());
 
+			String stringParserFragmentPattern =
+				stringParserFragment.getPattern();
+
 			regex = StringUtil.replace(
 				regex, escapeRegex(chunk),
 				StringPool.OPEN_PARENTHESIS.concat(
-					stringParserFragment.getPattern().concat(
+					stringParserFragmentPattern.concat(
 						StringPool.CLOSE_PARENTHESIS)));
 		}
 
@@ -351,7 +355,7 @@ public class StringParser {
 				_parts = null;
 			}
 			else {
-				_parts = parts.toArray(new String[parts.size()]);
+				_parts = parts.toArray(new String[0]);
 			}
 		}
 

@@ -79,7 +79,7 @@ renderResponse.setTitle(oAuth2Application.getName());
 
 					<%
 					for (String applicationName : assignableScopes.getApplicationNames()) {
-						String applicationScopeDescription = StringUtil.merge(assignableScopes.getApplicationScopeDescription(applicationName), ", ");
+						String applicationScopeDescription = StringUtil.merge(assignableScopes.getApplicationScopeDescription(themeDisplay.getCompanyId(), applicationName), ", ");
 					%>
 
 						<li class="list-group-item list-group-item-flex">
@@ -91,6 +91,7 @@ renderResponse.setTitle(oAuth2Application.getName());
 
 							<div class="autofit-col autofit-col-expand">
 								<h4 class="list-group-title text-truncate"><%= HtmlUtil.escape(assignableScopes.getApplicationDescription(applicationName)) %></h4>
+
 								<p class="list-group-subtitle text-truncate"><%= applicationScopeDescription %></p>
 							</div>
 						</li>
@@ -117,25 +118,45 @@ renderResponse.setTitle(oAuth2Application.getName());
 
 				<p class="authorization text-truncate">
 					<span><liferay-ui:message key="remoteIPInfo" /></span>:
-					<%= HtmlUtil.escape(oAuth2Authorization.getRemoteIPInfo()) %>
+					<%= HtmlUtil.escape(oAuth2Authorization.getRemoteIPInfo()) %>, <%= HtmlUtil.escape(oAuth2Authorization.getRemoteHostInfo()) %>
+				</p>
+
+				<%
+				Date expirationDate = oAuth2Authorization.getRefreshTokenExpirationDate();
+
+				if (expirationDate == null) {
+					expirationDate = oAuth2Authorization.getAccessTokenExpirationDate();
+				}
+				%>
+
+				<p class="authorization text-truncate">
+					<span><liferay-ui:message key="expiration" /></span>:
+					<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(locale, Math.abs(System.currentTimeMillis() - expirationDate.getTime()), true) %>" key='<%= expirationDate.before(new Date()) ? "x-ago" : "within-x" %>' translateArguments="<%= false %>" />
 				</p>
 
 				<p class="buttons">
 					<aui:button cssClass="remove-access" id="removeAccess" value="remove-access" />
 					<aui:button href="<%= PortalUtil.escapeRedirect(redirect) %>" value="cancel" />
 				</p>
-
-				<aui:script>
-					$('#<portlet:namespace />removeAccess').on(
-						'click',
-						function() {
-							if (confirm('<%= UnicodeLanguageUtil.format(request, "x-will-no-longer-have-access-to-your-account-removed-access-cannot-be-recovered", new String[] {oAuth2Application.getName()}) %>')) {
-								document.<portlet:namespace/>fm.submit();
-							}
-						}
-					);
-				</aui:script>
 			</div>
 		</aui:fieldset-group>
 	</aui:form>
 </div>
+
+<script>
+	var removeAccessButton = document.getElementById(
+		'<portlet:namespace />removeAccess'
+	);
+
+	if (removeAccessButton) {
+		removeAccessButton.addEventListener('click', function () {
+			if (
+				confirm(
+					'<%= UnicodeLanguageUtil.format(request, "x-will-no-longer-have-access-to-your-account-removed-access-cannot-be-recovered", new String[] {oAuth2Application.getName()}) %>'
+				)
+			) {
+				submitForm(document.<portlet:namespace/>fm);
+			}
+		});
+	}
+</script>

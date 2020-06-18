@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import java.io.IOException;
 
 /**
- * @author     Eduardo Garcia
+ * @author     Eduardo García
  * @deprecated As of Judson (7.1.x), see {@link JournalServiceConfiguration}
  */
 @Deprecated
@@ -46,7 +46,7 @@ public class JournalServiceConfigurationUtil {
 				JournalServiceConfigurationUtil.class.getClassLoader(),
 				location);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			return null;
 		}
 	}

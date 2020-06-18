@@ -14,6 +14,8 @@
 
 package com.liferay.portal.deploy.hot;
 
+import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
 import com.liferay.portal.kernel.deploy.hot.BaseHotDeployListener;
@@ -37,12 +39,11 @@ import com.liferay.portal.kernel.servlet.FileTimestampUtil;
 import com.liferay.portal.kernel.servlet.PortletServlet;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -56,6 +57,8 @@ import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
 import com.liferay.registry.ServiceRegistration;
 
+import java.io.InputStream;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -63,6 +66,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -123,12 +128,13 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 			ResourceBundleUtil.getResourceBundleLoader(
 				portlet.getResourceBundle(), classLoader);
 
-		Map<String, Object> properties = new HashMap<>();
-
-		properties.put(
-			"resource.bundle.base.name", portlet.getResourceBundle());
-		properties.put("service.ranking", Integer.MIN_VALUE);
-		properties.put("servlet.context.name", portlet.getContextName());
+		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+			"resource.bundle.base.name", portlet.getResourceBundle()
+		).put(
+			"service.ranking", Integer.MIN_VALUE
+		).put(
+			"servlet.context.name", portlet.getContextName()
+		).build();
 
 		_resourceBundleLoaderServiceRegistrations.put(
 			portlet.getPortletId(),
@@ -136,22 +142,10 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 				ResourceBundleLoader.class, resourceBundleLoader, properties));
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	protected void destroyPortlet(Portlet portlet, Set<String> portletIds)
-		throws Exception {
-
-		_destroyPortlet(portlet, portletIds);
-	}
-
 	protected void doInvokeDeploy(HotDeployEvent hotDeployEvent)
 		throws Exception {
 
 		ServletContext servletContext = hotDeployEvent.getServletContext();
-
-		String servletContextName = servletContext.getServletContextName();
 
 		List<String> beanFilterNames =
 			(List<String>)servletContext.getAttribute(
@@ -160,39 +154,56 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 			WebKeys.BEAN_PORTLET_IDS);
 
 		if ((beanFilterNames != null) || (beanPortletIds != null)) {
-			if ((beanFilterNames != null) && _log.isInfoEnabled()) {
-				_log.info(
-					StringBundler.concat(
-						String.valueOf(beanFilterNames.size()),
-						" bean filters for ", servletContextName,
-						" are available for use"));
-			}
-
-			if ((beanPortletIds != null) && _log.isInfoEnabled()) {
-				_log.info(
-					StringBundler.concat(
-						String.valueOf(beanPortletIds.size()),
-						" bean portlets for ", servletContextName,
-						" are available for use"));
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Detected bean portlet from servlet context attributes");
 			}
 
 			return;
 		}
+
+		try (InputStream inputStream = servletContext.getResourceAsStream(
+				"/META-INF/MANIFEST.MF")) {
+
+			if (inputStream != null) {
+				Manifest manifest = new Manifest(inputStream);
+
+				Attributes mainAttributes = manifest.getMainAttributes();
+
+				String value = mainAttributes.getValue("Require-Capability");
+
+				if ((value != null) && value.contains("osgi.cdi.extension")) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(
+							"Detected bean portlet from /META-INF/MANIFEST.MF");
+					}
+
+					return;
+				}
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+		}
+
+		String servletContextName = servletContext.getServletContextName();
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Invoking deploy for " + servletContextName);
 		}
 
 		String[] xmls = {
-			HttpUtil.URLtoString(
-				servletContext.getResource(
+			StreamUtil.toString(
+				servletContext.getResourceAsStream(
 					"/WEB-INF/" + Portal.PORTLET_XML_FILE_NAME_STANDARD)),
-			HttpUtil.URLtoString(
-				servletContext.getResource(
+			StreamUtil.toString(
+				servletContext.getResourceAsStream(
 					"/WEB-INF/" + Portal.PORTLET_XML_FILE_NAME_CUSTOM)),
-			HttpUtil.URLtoString(
-				servletContext.getResource("/WEB-INF/liferay-portlet.xml")),
-			HttpUtil.URLtoString(servletContext.getResource("/WEB-INF/web.xml"))
+			StreamUtil.toString(
+				servletContext.getResourceAsStream(
+					"/WEB-INF/liferay-portlet.xml")),
+			StreamUtil.toString(
+				servletContext.getResourceAsStream("/WEB-INF/web.xml"))
 		};
 
 		if ((xmls[0] == null) && (xmls[1] == null)) {
@@ -229,8 +240,8 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 			}
 		}
 
-		String xml = HttpUtil.URLtoString(
-			servletContext.getResource("/WEB-INF/liferay-display.xml"));
+		String xml = StreamUtil.toString(
+			servletContext.getResourceAsStream("/WEB-INF/liferay-display.xml"));
 
 		PortletCategory newPortletCategory =
 			PortletLocalServiceUtil.getWARDisplay(servletContextName, xml);
@@ -277,7 +288,7 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 		JavadocManagerUtil.load(servletContextName, classLoader);
 
 		DirectServletRegistryUtil.clearServlets();
-		FileTimestampUtil.reset();
+		FileTimestampUtil.reset(servletContext);
 
 		_portlets.put(servletContextName, portlets);
 
@@ -292,8 +303,8 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 			else {
 				_log.info(
 					StringBundler.concat(
-						String.valueOf(portlets.size()), " portlets for ",
-						servletContextName, " are available for use"));
+						portlets.size(), " portlets for ", servletContextName,
+						" are available for use"));
 			}
 		}
 	}
@@ -312,44 +323,6 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 		List<Portlet> portlets = _portlets.remove(servletContextName);
 
 		if (portlets == null) {
-			List<String> beanFilterNames =
-				(List<String>)servletContext.getAttribute(
-					WebKeys.BEAN_FILTER_NAMES);
-
-			if ((beanFilterNames != null) && _log.isInfoEnabled()) {
-				if (beanFilterNames.size() == 1) {
-					_log.info(
-						"1 bean filter for " + servletContextName +
-							" was unregistered");
-				}
-				else {
-					_log.info(
-						StringBundler.concat(
-							String.valueOf(beanFilterNames.size()),
-							" bean filters for ", servletContextName,
-							" were unregistered"));
-				}
-			}
-
-			List<String> beanPortletIds =
-				(List<String>)servletContext.getAttribute(
-					WebKeys.BEAN_PORTLET_IDS);
-
-			if ((beanPortletIds != null) && _log.isInfoEnabled()) {
-				if (beanPortletIds.size() == 1) {
-					_log.info(
-						"1 bean portlet for " + servletContextName +
-							" was unregistered");
-				}
-				else {
-					_log.info(
-						StringBundler.concat(
-							String.valueOf(beanPortletIds.size()),
-							" bean portlets for ", servletContextName,
-							" were unregistered"));
-				}
-			}
-
 			return;
 		}
 
@@ -392,8 +365,8 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 			else {
 				_log.info(
 					StringBundler.concat(
-						String.valueOf(portlets.size()), " portlets for ",
-						servletContextName, " were unregistered"));
+						portlets.size(), " portlets for ", servletContextName,
+						" were unregistered"));
 			}
 		}
 	}
@@ -486,7 +459,7 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 				ConfigurationFactoryUtil.getConfiguration(
 					classLoader, "portlet");
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("Unable to read portlet.properties");
 			}
@@ -528,7 +501,7 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 
 				context.unbind(_JNDI_JDBC_LIFERAY_POOL);
 			}
-			catch (NamingException ne) {
+			catch (NamingException namingException) {
 			}
 
 			try {
@@ -536,14 +509,14 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 
 				context.destroySubcontext(_JNDI_JDBC);
 			}
-			catch (NamingException ne) {
+			catch (NamingException namingException) {
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Unable to dynamically unbind the Liferay data source: " +
-						e.getMessage());
+						exception.getMessage());
 			}
 		}
 	}

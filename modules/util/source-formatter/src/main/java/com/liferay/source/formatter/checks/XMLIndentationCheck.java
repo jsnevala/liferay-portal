@@ -15,7 +15,7 @@
 package com.liferay.source.formatter.checks;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
@@ -133,8 +133,9 @@ public class XMLIndentationCheck extends BaseFileCheck {
 		String[] lines = StringUtil.splitLines(content);
 
 		int level = 0;
-		String[] tokens =
-			{_COMMENT_TAG_OPEN, _DOCTYPE_TAG_OPEN, _HEADER_TAG_OPEN, _TAG_OPEN};
+		String[] tokens = {
+			_COMMENT_TAG_OPEN, _DOCTYPE_TAG_OPEN, _HEADER_TAG_OPEN, _TAG_OPEN
+		};
 
 		TokenOccurrence previousTokenOccurrence = null;
 

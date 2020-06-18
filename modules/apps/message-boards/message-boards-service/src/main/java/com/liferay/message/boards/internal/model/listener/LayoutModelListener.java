@@ -24,7 +24,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(immediate = true, service = ModelListener.class)
 public class LayoutModelListener extends BaseModelListener<Layout> {
@@ -40,8 +40,8 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 			commentManager.deleteDiscussion(
 				Layout.class.getName(), layout.getPlid());
 		}
-		catch (Exception e) {
-			throw new ModelListenerException(e);
+		catch (Exception exception) {
+			throw new ModelListenerException(exception);
 		}
 	}
 

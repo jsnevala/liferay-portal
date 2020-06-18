@@ -14,8 +14,6 @@
 
 package com.liferay.layout.page.template.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalServiceUtil;
 
@@ -31,22 +29,25 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLoca
  * @see LayoutPageTemplateCollection
  * @generated
  */
-@ProviderType
 public abstract class LayoutPageTemplateCollectionBaseImpl
 	extends LayoutPageTemplateCollectionModelImpl
 	implements LayoutPageTemplateCollection {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a layout page template collection model instance should use the {@link LayoutPageTemplateCollection} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a layout page template collection model instance should use the <code>LayoutPageTemplateCollection</code> interface instead.
 	 */
 	@Override
 	public void persist() {
 		if (this.isNew()) {
-			LayoutPageTemplateCollectionLocalServiceUtil.addLayoutPageTemplateCollection(this);
+			LayoutPageTemplateCollectionLocalServiceUtil.
+				addLayoutPageTemplateCollection(this);
 		}
 		else {
-			LayoutPageTemplateCollectionLocalServiceUtil.updateLayoutPageTemplateCollection(this);
+			LayoutPageTemplateCollectionLocalServiceUtil.
+				updateLayoutPageTemplateCollection(this);
 		}
 	}
+
 }

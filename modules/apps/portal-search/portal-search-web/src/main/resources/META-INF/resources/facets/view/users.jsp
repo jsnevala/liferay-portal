@@ -17,7 +17,7 @@
 <%@ include file="/facets/init.jsp" %>
 
 <%
-UserSearchFacetDisplayBuilder userSearchFacetDisplayBuilder = new UserSearchFacetDisplayBuilder();
+UserSearchFacetDisplayBuilder userSearchFacetDisplayBuilder = new UserSearchFacetDisplayBuilder(renderRequest);
 
 userSearchFacetDisplayBuilder.setFacet(facet);
 userSearchFacetDisplayBuilder.setFrequenciesVisible(dataJSONObject.getBoolean("showAssetCount", true));
@@ -51,8 +51,7 @@ UserSearchFacetDisplayContext userSearchFacetDisplayContext = userSearchFacetDis
 						</li>
 
 						<%
-						java.util.List<UserSearchFacetTermDisplayContext> userSearchFacetTermDisplayContexts =
-							userSearchFacetDisplayContext.getTermDisplayContexts();
+						java.util.List<UserSearchFacetTermDisplayContext> userSearchFacetTermDisplayContexts = userSearchFacetDisplayContext.getTermDisplayContexts();
 
 						for (UserSearchFacetTermDisplayContext userSearchFacetTermDisplayContext : userSearchFacetTermDisplayContexts) {
 						%>

@@ -18,12 +18,12 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.util.Props;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.contributor.ContributorConstants;
 import com.liferay.portal.search.contributor.sort.SortFieldNameTranslator;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -46,22 +46,18 @@ public class SortFieldBuilderImplTest {
 		_sortFieldBuilderImpl = new SortFieldBuilderImpl();
 
 		Mockito.when(
-			_props.getArray("index.sortable.text.fields")
-		).thenAnswer(
-			invocation -> new String[] {
-				"firstName", "jobTitle", "lastName", "name", "screenName",
-				"title"
-			}
-		);
-
-		Mockito.when(
 			_indexerRegistry.getIndexer(Mockito.anyString())
 		).thenAnswer(
 			invocation -> _indexer
 		);
 
 		_sortFieldBuilderImpl.indexerRegistry = _indexerRegistry;
-		_sortFieldBuilderImpl.props = _props;
+		_sortFieldBuilderImpl.props = PropsTestUtil.setProps(
+			"index.sortable.text.fields",
+			new String[] {
+				"firstName", "jobTitle", "lastName", "name", "screenName",
+				"title"
+			});
 
 		_sortFieldBuilderImpl.activate();
 	}
@@ -125,11 +121,9 @@ public class SortFieldBuilderImplTest {
 			}
 		);
 
-		Map<String, Object> properties = new HashMap<>();
-
-		properties.put(
-			ContributorConstants.ENTRY_CLASS_NAME_PROPERTY_KEY,
-			"modelClassName");
+		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+			ContributorConstants.ENTRY_CLASS_NAME_PROPERTY_KEY, "modelClassName"
+		).build();
 
 		_sortFieldBuilderImpl.addSortFieldNameTranslator(
 			sortFieldNameTranslator, properties);
@@ -180,9 +174,6 @@ public class SortFieldBuilderImplTest {
 
 	@Mock
 	private IndexerRegistry _indexerRegistry;
-
-	@Mock
-	private Props _props;
 
 	private SortFieldBuilderImpl _sortFieldBuilderImpl;
 

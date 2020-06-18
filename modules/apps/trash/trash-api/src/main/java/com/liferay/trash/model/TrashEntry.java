@@ -14,30 +14,31 @@
 
 package com.liferay.trash.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the TrashEntry service. Represents a row in the &quot;TrashEntry&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see TrashEntryModel
- * @see com.liferay.trash.model.impl.TrashEntryImpl
- * @see com.liferay.trash.model.impl.TrashEntryModelImpl
  * @generated
  */
 @ImplementationClassName("com.liferay.trash.model.impl.TrashEntryImpl")
 @ProviderType
-public interface TrashEntry extends TrashEntryModel, PersistedModel {
+public interface TrashEntry extends PersistedModel, TrashEntryModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.trash.model.impl.TrashEntryImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.trash.model.impl.TrashEntryImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<TrashEntry, Long> ENTRY_ID_ACCESSOR = new Accessor<TrashEntry, Long>() {
+	public static final Accessor<TrashEntry, Long> ENTRY_ID_ACCESSOR =
+		new Accessor<TrashEntry, Long>() {
+
 			@Override
 			public Long get(TrashEntry trashEntry) {
 				return trashEntry.getEntryId();
@@ -52,11 +53,13 @@ public interface TrashEntry extends TrashEntryModel, PersistedModel {
 			public Class<TrashEntry> getTypeClass() {
 				return TrashEntry.class;
 			}
+
 		};
 
 	public TrashEntry getRootEntry();
 
-	public com.liferay.portal.kernel.util.UnicodeProperties getTypeSettingsProperties();
+	public com.liferay.portal.kernel.util.UnicodeProperties
+		getTypeSettingsProperties();
 
 	public String getTypeSettingsProperty(String key);
 
@@ -69,5 +72,7 @@ public interface TrashEntry extends TrashEntryModel, PersistedModel {
 	public void setRootEntry(TrashEntry rootEntry);
 
 	public void setTypeSettingsProperties(
-		com.liferay.portal.kernel.util.UnicodeProperties typeSettingsProperties);
+		com.liferay.portal.kernel.util.UnicodeProperties
+			typeSettingsUnicodeProperties);
+
 }

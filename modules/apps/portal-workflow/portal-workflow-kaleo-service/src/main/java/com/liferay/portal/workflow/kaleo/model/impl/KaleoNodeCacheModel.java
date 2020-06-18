@@ -14,12 +14,10 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.workflow.kaleo.model.KaleoNode;
 
 import java.io.Externalizable;
@@ -33,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing KaleoNode in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see KaleoNode
  * @generated
  */
-@ProviderType
-public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
-	Externalizable {
+public class KaleoNodeCacheModel
+	implements CacheModel<KaleoNode>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -51,7 +48,9 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 
 		KaleoNodeCacheModel kaleoNodeCacheModel = (KaleoNodeCacheModel)obj;
 
-		if (kaleoNodeId == kaleoNodeCacheModel.kaleoNodeId) {
+		if ((kaleoNodeId == kaleoNodeCacheModel.kaleoNodeId) &&
+			(mvccVersion == kaleoNodeCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -60,14 +59,28 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, kaleoNodeId);
+		int hashCode = HashUtil.hash(0, kaleoNodeId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(29);
+		StringBundler sb = new StringBundler(33);
 
-		sb.append("{kaleoNodeId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", kaleoNodeId=");
 		sb.append(kaleoNodeId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -81,6 +94,8 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
+		sb.append(", kaleoDefinitionId=");
+		sb.append(kaleoDefinitionId);
 		sb.append(", kaleoDefinitionVersionId=");
 		sb.append(kaleoDefinitionVersionId);
 		sb.append(", name=");
@@ -104,6 +119,7 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 	public KaleoNode toEntityModel() {
 		KaleoNodeImpl kaleoNodeImpl = new KaleoNodeImpl();
 
+		kaleoNodeImpl.setMvccVersion(mvccVersion);
 		kaleoNodeImpl.setKaleoNodeId(kaleoNodeId);
 		kaleoNodeImpl.setGroupId(groupId);
 		kaleoNodeImpl.setCompanyId(companyId);
@@ -130,6 +146,7 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 			kaleoNodeImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
+		kaleoNodeImpl.setKaleoDefinitionId(kaleoDefinitionId);
 		kaleoNodeImpl.setKaleoDefinitionVersionId(kaleoDefinitionVersionId);
 
 		if (name == null) {
@@ -170,6 +187,8 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
+
 		kaleoNodeId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -180,6 +199,8 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 		userName = objectInput.readUTF();
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
+
+		kaleoDefinitionId = objectInput.readLong();
 
 		kaleoDefinitionVersionId = objectInput.readLong();
 		name = objectInput.readUTF();
@@ -193,8 +214,9 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		objectOutput.writeLong(kaleoNodeId);
 
 		objectOutput.writeLong(groupId);
@@ -212,6 +234,8 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
+
+		objectOutput.writeLong(kaleoDefinitionId);
 
 		objectOutput.writeLong(kaleoDefinitionVersionId);
 
@@ -248,6 +272,7 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 		objectOutput.writeBoolean(terminal);
 	}
 
+	public long mvccVersion;
 	public long kaleoNodeId;
 	public long groupId;
 	public long companyId;
@@ -255,6 +280,7 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 	public String userName;
 	public long createDate;
 	public long modifiedDate;
+	public long kaleoDefinitionId;
 	public long kaleoDefinitionVersionId;
 	public String name;
 	public String metadata;
@@ -262,4 +288,5 @@ public class KaleoNodeCacheModel implements CacheModel<KaleoNode>,
 	public String type;
 	public boolean initial;
 	public boolean terminal;
+
 }

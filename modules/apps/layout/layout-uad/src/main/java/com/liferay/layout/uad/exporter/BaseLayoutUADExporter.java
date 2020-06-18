@@ -15,13 +15,10 @@
 package com.liferay.layout.uad.exporter;
 
 import com.liferay.layout.uad.constants.LayoutUADConstants;
-
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-
 import com.liferay.user.associated.data.exporter.DynamicQueryUADExporter;
 
 import org.osgi.service.component.annotations.Reference;
@@ -38,7 +35,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-public abstract class BaseLayoutUADExporter extends DynamicQueryUADExporter<Layout> {
+public abstract class BaseLayoutUADExporter
+	extends DynamicQueryUADExporter<Layout> {
+
 	@Override
 	public Class<Layout> getTypeClass() {
 		return Layout.class;
@@ -56,7 +55,7 @@ public abstract class BaseLayoutUADExporter extends DynamicQueryUADExporter<Layo
 
 	@Override
 	protected String toXmlString(Layout layout) {
-		StringBundler sb = new StringBundler(13);
+		StringBundler sb = new StringBundler(19);
 
 		sb.append("<model><model-name>");
 		sb.append("com.liferay.portal.kernel.model.Layout");
@@ -65,6 +64,14 @@ public abstract class BaseLayoutUADExporter extends DynamicQueryUADExporter<Layo
 		sb.append(
 			"<column><column-name>plid</column-name><column-value><![CDATA[");
 		sb.append(layout.getPlid());
+		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>statusByUserId</column-name><column-value><![CDATA[");
+		sb.append(layout.getStatusByUserId());
+		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>statusByUserName</column-name><column-value><![CDATA[");
+		sb.append(layout.getStatusByUserName());
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>userId</column-name><column-value><![CDATA[");
@@ -82,4 +89,5 @@ public abstract class BaseLayoutUADExporter extends DynamicQueryUADExporter<Layo
 
 	@Reference
 	protected LayoutLocalService layoutLocalService;
+
 }

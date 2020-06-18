@@ -22,7 +22,6 @@ import com.liferay.dynamic.data.mapping.annotations.DDMFormLayoutPage;
 import com.liferay.dynamic.data.mapping.annotations.DDMFormLayoutRow;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidation;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
-import com.liferay.petra.string.StringPool;
 
 /**
  * @author Marcellus Tavares
@@ -38,8 +37,9 @@ import com.liferay.petra.string.StringPool;
 					{
 						@DDMFormLayoutColumn(
 							size = 12,
-							value =
-								{"label", "predefinedValue", "required", "tip"}
+							value = {
+								"label", "predefinedValue", "required", "tip"
+							}
 						)
 					}
 				)
@@ -70,13 +70,9 @@ public interface DefaultDDMFormFieldTypeSettings
 	public String fieldNamespace();
 
 	@DDMFormField(
-		label = "%indexable",
-		optionLabels = {
-			"%not-indexable", "%indexable-keyword", "%indexable-text"
-		},
-		optionValues = {StringPool.BLANK, "keyword", "text"},
-		predefinedValue = "keyword", type = "radio",
-		visibilityExpression = "FALSE"
+		label = "%searchable", optionLabels = {"%disable", "%keyword"},
+		optionValues = {"none", "keyword"}, predefinedValue = "keyword",
+		type = "radio"
 	)
 	public String indexType();
 
@@ -86,7 +82,7 @@ public interface DefaultDDMFormFieldTypeSettings
 			"autoFocus=true", "placeholder=%enter-a-field-label",
 			"tooltip=%enter-a-descriptive-field-label-that-guides-users-to-enter-the-information-you-want"
 		},
-		type = "key_value"
+		type = "text"
 	)
 	public LocalizedValue label();
 
@@ -123,10 +119,7 @@ public interface DefaultDDMFormFieldTypeSettings
 
 	@DDMFormField(
 		label = "%help-text",
-		properties = {
-			"placeholder=%enter-help-text",
-			"tooltip=%add-a-comment-to-help-users-understand-the-field-label"
-		},
+		properties = "tooltip=%add-a-comment-to-help-users-understand-the-field-label",
 		type = "text"
 	)
 	public LocalizedValue tip();
@@ -136,9 +129,6 @@ public interface DefaultDDMFormFieldTypeSettings
 	)
 	public DDMFormFieldValidation validation();
 
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
 	@DDMFormField(
 		label = "%field-visibility-expression",
 		properties = {
@@ -147,7 +137,6 @@ public interface DefaultDDMFormFieldTypeSettings
 		},
 		visibilityExpression = "FALSE"
 	)
-	@Deprecated
 	public String visibilityExpression();
 
 }

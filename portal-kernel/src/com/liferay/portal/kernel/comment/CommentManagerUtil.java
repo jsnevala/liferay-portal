@@ -17,8 +17,9 @@ package com.liferay.portal.kernel.comment;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.Function;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
+
+import java.util.function.Function;
 
 /**
  * @author Adolfo Pérez
@@ -84,15 +85,6 @@ public class CommentManagerUtil {
 
 	public static Comment fetchComment(long commentId) {
 		return _getCommentManager().fetchComment(commentId);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             #_getCommentManager()}
-	 */
-	@Deprecated
-	public static CommentManager getCommentManager() {
-		return _getCommentManager();
 	}
 
 	public static int getCommentsCount(String className, long classPK) {

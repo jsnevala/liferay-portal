@@ -50,9 +50,9 @@ if (permissionChecker.isContentReviewer(user.getCompanyId(), scopeGroupId)) {
 	status = WorkflowConstants.STATUS_ANY;
 }
 
-Map<String, Object> contextObjects = new HashMap<String, Object>();
-
-contextObjects.put("dlPortletInstanceSettings", dlPortletInstanceSettings);
+Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
+	"dlPortletInstanceSettings", dlPortletInstanceSettings
+).build();
 
 String[] mediaGalleryMimeTypes = dlPortletInstanceSettings.getMimeTypes();
 
@@ -190,7 +190,7 @@ List fileEntries = DLAppServiceUtil.getGroupFileEntries(scopeGroupId, 0, folderI
 								markupView="lexicon"
 							/>
 
-							<%= foldersCount %> <liferay-ui:message key='<%= (foldersCount == 1) ? "subfolder" : "subfolders" %>' />
+							<%= foldersCount %> <liferay-ui:message key='<%= (foldersCount == 1) ? "folder" : "folders" %>' />
 						</div>
 
 						<%
@@ -234,12 +234,12 @@ List fileEntries = DLAppServiceUtil.getGroupFileEntries(scopeGroupId, 0, folderI
 			%>
 
 		</c:when>
-		<c:when test='<%= topLink.equals("mine") || topLink.equals("recent") %>'>
+		<c:when test='<%= topLink.equals("mine") %>'>
 
 			<%
 			long groupImagesUserId = 0;
 
-			if (topLink.equals("mine") && themeDisplay.isSignedIn()) {
+			if (themeDisplay.isSignedIn()) {
 				groupImagesUserId = user.getUserId();
 			}
 
@@ -257,13 +257,13 @@ List fileEntries = DLAppServiceUtil.getGroupFileEntries(scopeGroupId, 0, folderI
 			request.setAttribute("view.jsp-mediaGalleryMimeTypes", mediaGalleryMimeTypes);
 			%>
 
-			<aui:row>
+			<clay:row>
 				<liferay-ui:header
 					title="<%= topLink %>"
 				/>
 
 				<liferay-util:include page="/image_gallery_display/view_images.jsp" servletContext="<%= application %>" />
-			</aui:row>
+			</clay:row>
 
 			<%
 			PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, topLink), currentURL);

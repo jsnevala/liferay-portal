@@ -111,15 +111,15 @@ public class LayoutStagingHandler implements InvocationHandler, Serializable {
 
 					bean = _layoutRevision;
 				}
-				catch (NoSuchMethodException nsme) {
-					_log.error(nsme, nsme);
+				catch (NoSuchMethodException noSuchMethodException) {
+					_log.error(noSuchMethodException, noSuchMethodException);
 				}
 			}
 
 			return method.invoke(bean, arguments);
 		}
-		catch (InvocationTargetException ite) {
-			throw ite.getTargetException();
+		catch (InvocationTargetException invocationTargetException) {
+			throw invocationTargetException.getTargetException();
 		}
 	}
 
@@ -133,10 +133,10 @@ public class LayoutStagingHandler implements InvocationHandler, Serializable {
 		try {
 			_layoutRevision = _getLayoutRevision(layout, layoutRevision);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new IllegalStateException(e);
+			throw new IllegalStateException(exception);
 		}
 	}
 
@@ -144,7 +144,9 @@ public class LayoutStagingHandler implements InvocationHandler, Serializable {
 		return ProxyUtil.newProxyInstance(
 			PortalClassLoaderUtil.getClassLoader(),
 			new Class<?>[] {Layout.class},
-			new LayoutStagingHandler(_layout, _layoutRevision));
+			new LayoutStagingHandler(
+				(Layout)_layout.clone(),
+				(LayoutRevision)_layoutRevision.clone()));
 	}
 
 	private LayoutRevision _getLayoutRevision(
@@ -159,9 +161,7 @@ public class LayoutStagingHandler implements InvocationHandler, Serializable {
 			ServiceContextThreadLocal.getServiceContext();
 
 		if ((serviceContext == null) || !serviceContext.isSignedIn()) {
-			LayoutRevision lastLayoutRevision = null;
-
-			lastLayoutRevision =
+			LayoutRevision lastLayoutRevision =
 				LayoutRevisionLocalServiceUtil.fetchLastLayoutRevision(
 					layout.getPlid(), true);
 
@@ -207,13 +207,11 @@ public class LayoutStagingHandler implements InvocationHandler, Serializable {
 				layoutRevisionId);
 		}
 
-		if ((layoutRevision != null) && !layoutRevision.isInactive()) {
-			return layoutRevision;
+		if ((layoutRevision == null) || layoutRevision.isInactive()) {
+			layoutRevision =
+				LayoutRevisionLocalServiceUtil.fetchLatestLayoutRevision(
+					layoutSetBranchId, layout.getPlid());
 		}
-
-		layoutRevision =
-			LayoutRevisionLocalServiceUtil.fetchLatestLayoutRevision(
-				layoutSetBranchId, layout.getPlid());
 
 		if (layoutRevision != null) {
 			StagingUtil.setRecentLayoutRevisionId(
@@ -299,16 +297,17 @@ public class LayoutStagingHandler implements InvocationHandler, Serializable {
 		Arrays.asList(
 			"getColorScheme", "getColorSchemeId", "getCss", "getCssText",
 			"getDescription", "getGroupId", "getHTMLTitle", "getIconImage",
-			"getIconImageId", "getKeywords", "getLayoutSet", "getName",
-			"getRobots", "getTheme", "getThemeId", "getThemeSetting",
-			"getTitle", "getTypeSettings", "getTypeSettingsProperties",
-			"getTypeSettingsProperty", "isContentDisplayPage", "isEscapedModel",
+			"getIconImageId", "getKeywords", "getLayoutSet", "getModifiedDate",
+			"getName", "getRobots", "getTarget", "getTheme", "getThemeId",
+			"getThemeSetting", "getTitle", "getTypeSettings",
+			"getTypeSettingsProperties", "getTypeSettingsProperty",
+			"isContentDisplayPage", "isCustomizable", "isEscapedModel",
 			"isIconImage", "isInheritLookAndFeel", "setColorSchemeId", "setCss",
 			"setDescription", "setDescriptionMap", "setEscapedModel",
 			"setGroupId", "setIconImage", "setIconImageId", "setKeywords",
-			"setKeywordsMap", "setName", "setNameMap", "setRobots",
-			"setRobotsMap", "setThemeId", "setTitle", "setTitleMap",
-			"setTypeSettings", "setTypeSettingsProperties"));
+			"setKeywordsMap", "setModifiedDate", "setName", "setNameMap",
+			"setRobots", "setRobotsMap", "setThemeId", "setTitle",
+			"setTitleMap", "setTypeSettings", "setTypeSettingsProperties"));
 
 	private final Layout _layout;
 	private LayoutRevision _layoutRevision;

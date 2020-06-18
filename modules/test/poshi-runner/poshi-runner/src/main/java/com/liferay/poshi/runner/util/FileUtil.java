@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 
@@ -64,8 +65,8 @@ public class FileUtil {
 
 		ClassLoader classLoader = FileUtil.class.getClassLoader();
 
-		try (InputStream inputStream =
-				classLoader.getResourceAsStream(resourceName)) {
+		try (InputStream inputStream = classLoader.getResourceAsStream(
+				resourceName)) {
 
 			File file = new File(targetFilePath);
 
@@ -87,6 +88,27 @@ public class FileUtil {
 		File file = new File(fileName);
 
 		return exists(file);
+	}
+
+	public static String fixFilePath(String filePath) {
+		if (OSDetector.isWindows()) {
+			return StringUtil.replace(filePath, "/", "\\");
+		}
+
+		return filePath;
+	}
+
+	public static String getCanonicalPath(String filePath) {
+		try {
+			File file = new File(filePath);
+
+			return file.getCanonicalPath();
+		}
+		catch (IOException ioException) {
+			ioException.printStackTrace();
+		}
+
+		return filePath;
 	}
 
 	public static String getFileName(String filePath) {
@@ -160,8 +182,14 @@ public class FileUtil {
 		return File.separator;
 	}
 
+	public static URL getURL(File file) throws MalformedURLException {
+		URI uri = file.toURI();
+
+		return uri.toURL();
+	}
+
 	public static String read(File file) throws IOException {
-		return FileUtils.readFileToString(file);
+		return read(getURL(file));
 	}
 
 	public static String read(String fileName) throws IOException {
@@ -181,6 +209,10 @@ public class FileUtil {
 		while ((line = bufferedReader.readLine()) != null) {
 			sb.append(line);
 			sb.append("\n");
+		}
+
+		if (sb.length() != 0) {
+			sb.setLength(sb.length() - 1);
 		}
 
 		return sb.toString();

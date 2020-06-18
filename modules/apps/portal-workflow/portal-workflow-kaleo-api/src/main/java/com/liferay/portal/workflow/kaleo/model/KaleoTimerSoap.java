@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -28,11 +26,12 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class KaleoTimerSoap implements Serializable {
+
 	public static KaleoTimerSoap toSoapModel(KaleoTimer model) {
 		KaleoTimerSoap soapModel = new KaleoTimerSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setKaleoTimerId(model.getKaleoTimerId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -42,7 +41,9 @@ public class KaleoTimerSoap implements Serializable {
 		soapModel.setModifiedDate(model.getModifiedDate());
 		soapModel.setKaleoClassName(model.getKaleoClassName());
 		soapModel.setKaleoClassPK(model.getKaleoClassPK());
-		soapModel.setKaleoDefinitionVersionId(model.getKaleoDefinitionVersionId());
+		soapModel.setKaleoDefinitionId(model.getKaleoDefinitionId());
+		soapModel.setKaleoDefinitionVersionId(
+			model.getKaleoDefinitionVersionId());
 		soapModel.setName(model.getName());
 		soapModel.setBlocking(model.isBlocking());
 		soapModel.setDescription(model.getDescription());
@@ -82,7 +83,8 @@ public class KaleoTimerSoap implements Serializable {
 	}
 
 	public static KaleoTimerSoap[] toSoapModels(List<KaleoTimer> models) {
-		List<KaleoTimerSoap> soapModels = new ArrayList<KaleoTimerSoap>(models.size());
+		List<KaleoTimerSoap> soapModels = new ArrayList<KaleoTimerSoap>(
+			models.size());
 
 		for (KaleoTimer model : models) {
 			soapModels.add(toSoapModel(model));
@@ -100,6 +102,14 @@ public class KaleoTimerSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setKaleoTimerId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getKaleoTimerId() {
@@ -174,6 +184,14 @@ public class KaleoTimerSoap implements Serializable {
 		_kaleoClassPK = kaleoClassPK;
 	}
 
+	public long getKaleoDefinitionId() {
+		return _kaleoDefinitionId;
+	}
+
+	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		_kaleoDefinitionId = kaleoDefinitionId;
+	}
+
 	public long getKaleoDefinitionVersionId() {
 		return _kaleoDefinitionVersionId;
 	}
@@ -242,6 +260,7 @@ public class KaleoTimerSoap implements Serializable {
 		_recurrenceScale = recurrenceScale;
 	}
 
+	private long _mvccVersion;
 	private long _kaleoTimerId;
 	private long _groupId;
 	private long _companyId;
@@ -251,6 +270,7 @@ public class KaleoTimerSoap implements Serializable {
 	private Date _modifiedDate;
 	private String _kaleoClassName;
 	private long _kaleoClassPK;
+	private long _kaleoDefinitionId;
 	private long _kaleoDefinitionVersionId;
 	private String _name;
 	private boolean _blocking;
@@ -259,4 +279,5 @@ public class KaleoTimerSoap implements Serializable {
 	private String _scale;
 	private double _recurrenceDuration;
 	private String _recurrenceScale;
+
 }

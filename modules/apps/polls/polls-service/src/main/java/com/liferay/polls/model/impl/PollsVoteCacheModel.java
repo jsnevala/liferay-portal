@@ -14,14 +14,11 @@
 
 package com.liferay.polls.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.polls.model.PollsVote;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing PollsVote in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see PollsVote
  * @generated
  */
-@ProviderType
-public class PollsVoteCacheModel implements CacheModel<PollsVote>,
-	Externalizable {
+public class PollsVoteCacheModel
+	implements CacheModel<PollsVote>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -52,7 +48,9 @@ public class PollsVoteCacheModel implements CacheModel<PollsVote>,
 
 		PollsVoteCacheModel pollsVoteCacheModel = (PollsVoteCacheModel)obj;
 
-		if (voteId == pollsVoteCacheModel.voteId) {
+		if ((voteId == pollsVoteCacheModel.voteId) &&
+			(mvccVersion == pollsVoteCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +59,28 @@ public class PollsVoteCacheModel implements CacheModel<PollsVote>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, voteId);
+		int hashCode = HashUtil.hash(0, voteId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(25);
+		StringBundler sb = new StringBundler(27);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", voteId=");
 		sb.append(voteId);
@@ -100,6 +112,8 @@ public class PollsVoteCacheModel implements CacheModel<PollsVote>,
 	@Override
 	public PollsVote toEntityModel() {
 		PollsVoteImpl pollsVoteImpl = new PollsVoteImpl();
+
+		pollsVoteImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			pollsVoteImpl.setUuid("");
@@ -158,6 +172,7 @@ public class PollsVoteCacheModel implements CacheModel<PollsVote>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		voteId = objectInput.readLong();
@@ -179,8 +194,9 @@ public class PollsVoteCacheModel implements CacheModel<PollsVote>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -213,6 +229,7 @@ public class PollsVoteCacheModel implements CacheModel<PollsVote>,
 		objectOutput.writeLong(voteDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long voteId;
 	public long groupId;
@@ -225,4 +242,5 @@ public class PollsVoteCacheModel implements CacheModel<PollsVote>,
 	public long choiceId;
 	public long lastPublishDate;
 	public long voteDate;
+
 }

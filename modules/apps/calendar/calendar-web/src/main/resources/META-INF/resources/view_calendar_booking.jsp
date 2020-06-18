@@ -43,6 +43,7 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 		<liferay-ui:header
 			backURL="<%= backURL %>"
 			cssClass="panel-heading"
+			localizeTitle="<%= false %>"
 			title="<%= calendarBooking.getTitle(locale) %>"
 		/>
 
@@ -148,7 +149,7 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 
 			<c:if test="<%= calendar.isEnableRatings() %>">
 				<div class="entry-ratings">
-					<liferay-ui:ratings
+					<liferay-ratings:ratings
 						className="<%= CalendarBooking.class.getName() %>"
 						classPK="<%= calendarBooking.getCalendarBookingId() %>"
 						inTrash="<%= calendarBooking.isInTrash() %>"
@@ -158,28 +159,14 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 		</aui:fieldset>
 
 		<c:if test="<%= calendar.isEnableComments() %>">
-			<liferay-ui:panel-container
-				extended="<%= false %>"
-				id="calendarBookingPanelContainer"
-				persistState="<%= true %>"
-			>
-				<liferay-ui:panel
-					collapsible="<%= true %>"
-					extended="<%= false %>"
-					id="calendarBookingCommentsPanel"
-					persistState="<%= true %>"
-					title="comments"
-				>
-					<liferay-comment:discussion
-						className="<%= CalendarBooking.class.getName() %>"
-						classPK="<%= calendarBooking.getCalendarBookingId() %>"
-						formName="fm2"
-						ratingsEnabled="<%= true %>"
-						redirect="<%= currentURL %>"
-						userId="<%= calendarBooking.getUserId() %>"
-					/>
-				</liferay-ui:panel>
-			</liferay-ui:panel-container>
+			<liferay-comment:discussion
+				className="<%= CalendarBooking.class.getName() %>"
+				classPK="<%= calendarBooking.getCalendarBookingId() %>"
+				formName="fm2"
+				ratingsEnabled="<%= true %>"
+				redirect="<%= currentURL %>"
+				userId="<%= calendarBooking.getUserId() %>"
+			/>
 		</c:if>
 
 		<portlet:actionURL name="invokeTransition" var="invokeTransitionURL" />
@@ -203,7 +190,11 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 					<c:when test="<%= untilJCalendar != null %>">
 						endValue = 'on';
 
-						untilDate = new Date(<%= untilJCalendar.get(java.util.Calendar.YEAR) %>, <%= untilJCalendar.get(java.util.Calendar.MONTH) %>, <%= untilJCalendar.get(java.util.Calendar.DATE) %>);
+						untilDate = new Date(
+							<%= untilJCalendar.get(java.util.Calendar.YEAR) %>,
+							<%= untilJCalendar.get(java.util.Calendar.MONTH) %>,
+							<%= untilJCalendar.get(java.util.Calendar.DATE) %>
+						);
 					</c:when>
 					<c:when test="<%= recurrence.getCount() > 0 %>">
 						endValue = 'after';
@@ -230,7 +221,7 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 					positionalWeekday = {
 						month: <%= startTimeJCalendar.get(java.util.Calendar.MONTH) %>,
 						position: <%= positionalWeekday.getPosition() %>,
-						weekday: '<%= positionalWeekday.getWeekday() %>'
+						weekday: '<%= positionalWeekday.getWeekday() %>',
 					};
 				</c:if>
 
@@ -241,7 +232,7 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 					interval: <%= recurrence.getInterval() %>,
 					positionalWeekday: positionalWeekday,
 					untilDate: untilDate,
-					weekdays: <%= jsonSerializer.serialize(weekdayValues) %>
+					weekdays: <%= jsonSerializer.serialize(weekdayValues) %>,
 				};
 
 				var recurrenceSummary = Liferay.RecurrenceUtil.getSummary(recurrence);
@@ -291,17 +282,21 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 			if (<%= calendarBooking.isRecurring() %>) {
 				Liferay.RecurrenceUtil.openConfirmationPanel(
 					'invokeTransition',
-					function() {
-						document.<portlet:namespace />fm.<portlet:namespace />updateInstance.value = 'true';
-						document.<portlet:namespace />fm.<portlet:namespace />allFollowing.value = 'false';
+					function () {
+						document.<portlet:namespace />fm.<portlet:namespace />updateInstance.value =
+							'true';
+						document.<portlet:namespace />fm.<portlet:namespace />allFollowing.value =
+							'false';
 						submitForm(document.<portlet:namespace />fm);
 					},
-					function() {
-						document.<portlet:namespace />fm.<portlet:namespace />updateInstance.value = 'true';
-						document.<portlet:namespace />fm.<portlet:namespace />allFollowing.value = 'true';
+					function () {
+						document.<portlet:namespace />fm.<portlet:namespace />updateInstance.value =
+							'true';
+						document.<portlet:namespace />fm.<portlet:namespace />allFollowing.value =
+							'true';
 						submitForm(document.<portlet:namespace />fm);
 					},
-					function() {
+					function () {
 						submitForm(document.<portlet:namespace />fm);
 					}
 				);

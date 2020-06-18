@@ -14,6 +14,7 @@
 
 package com.liferay.portal.scheduler.multiple.internal;
 
+import com.liferay.petra.lang.SafeClosable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cluster.BaseClusterMasterTokenTransitionListener;
@@ -29,6 +30,7 @@ import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.proxy.ProxyModeThreadLocal;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServiceUtil;
+import com.liferay.portal.kernel.scheduler.JobState;
 import com.liferay.portal.kernel.scheduler.SchedulerEngine;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
 import com.liferay.portal.kernel.scheduler.SchedulerException;
@@ -366,13 +368,13 @@ public class ClusterSchedulerEngine
 								addMemoryClusteredJob(schedulerResponse);
 							}
 						}
-						catch (Exception e) {
+						catch (Exception exception) {
 							_log.error(
 								StringBundler.concat(
 									"Unable to get a response from master for ",
 									"memory clustered job ",
 									getFullName(jobName, groupName)),
-								e);
+								exception);
 						}
 					}
 				}
@@ -552,10 +554,11 @@ public class ClusterSchedulerEngine
 		String jobName = schedulerResponse.getJobName();
 		String groupName = schedulerResponse.getGroupName();
 
-		TriggerState triggerState = SchedulerEngineHelperUtil.getJobState(
-			schedulerResponse);
-
 		Message message = schedulerResponse.getMessage();
+
+		JobState jobState = (JobState)message.get(SchedulerEngine.JOB_STATE);
+
+		TriggerState triggerState = jobState.getTriggerState();
 
 		message.remove(JOB_STATE);
 
@@ -565,7 +568,11 @@ public class ClusterSchedulerEngine
 	}
 
 	protected String getFullName(String jobName, String groupName) {
-		return groupName.concat(StringPool.PERIOD).concat(jobName);
+		return groupName.concat(
+			StringPool.PERIOD
+		).concat(
+			jobName
+		);
 	}
 
 	protected void initMemoryClusteredJobs() {
@@ -613,17 +620,17 @@ public class ClusterSchedulerEngine
 
 				return;
 			}
-			catch (InterruptedException ie) {
+			catch (InterruptedException interruptedException) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						"Give up the master response waiting due to " +
 							"interruption",
-						ie);
+						interruptedException);
 				}
 
 				return;
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				StringBundler sb = new StringBundler(5);
 
 				sb.append(
@@ -633,7 +640,7 @@ public class ClusterSchedulerEngine
 				sb.append("\"clusterable.advice.call.master.timeout\", will ");
 				sb.append("retry again");
 
-				_log.error(sb.toString(), e);
+				_log.error(sb.toString(), exception);
 			}
 		}
 	}
@@ -867,13 +874,11 @@ public class ClusterSchedulerEngine
 
 		@Override
 		protected void doMasterTokenAcquired() throws Exception {
-			boolean forceSync = ProxyModeThreadLocal.isForceSync();
+			try (SafeClosable safeClosable =
+					ProxyModeThreadLocal.setWithSafeClosable(true)) {
 
-			ProxyModeThreadLocal.setForceSync(true);
+				_writeLock.lock();
 
-			_writeLock.lock();
-
-			try {
 				for (ObjectValuePair<SchedulerResponse, TriggerState>
 						memoryClusteredJob : _memoryClusteredJobs.values()) {
 
@@ -881,6 +886,19 @@ public class ClusterSchedulerEngine
 						memoryClusteredJob.getKey();
 
 					Trigger oldTrigger = schedulerResponse.getTrigger();
+
+					if (oldTrigger == null) {
+						if (_log.isInfoEnabled()) {
+							_log.info(
+								StringBundler.concat(
+									"Skip scheduling memory clustered job ",
+									schedulerResponse,
+									" with a null trigger. It may have been ",
+									"unscheduled or already finished."));
+						}
+
+						continue;
+					}
 
 					Date startDate = oldTrigger.getFireDateAfter(new Date());
 
@@ -917,8 +935,6 @@ public class ClusterSchedulerEngine
 					getOSGiServiceIdentifier());
 			}
 			finally {
-				ProxyModeThreadLocal.setForceSync(forceSync);
-
 				_writeLock.unlock();
 			}
 		}

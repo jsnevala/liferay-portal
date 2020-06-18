@@ -84,9 +84,10 @@ public class LayoutTypeImpl implements LayoutType {
 
 	@Override
 	public String getTypeSettingsProperty(String key, String defaultValue) {
-		UnicodeProperties typeSettingsProperties = getTypeSettingsProperties();
+		UnicodeProperties typeSettingsUnicodeProperties =
+			getTypeSettingsProperties();
 
-		return typeSettingsProperties.getProperty(key, defaultValue);
+		return typeSettingsUnicodeProperties.getProperty(key, defaultValue);
 	}
 
 	@Override
@@ -119,19 +120,12 @@ public class LayoutTypeImpl implements LayoutType {
 		return _layoutTypeController.isURLFriendliable();
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void setLayout(Layout layout) {
-	}
-
 	@Override
 	public void setTypeSettingsProperty(String key, String value) {
-		UnicodeProperties typeSettingsProperties = getTypeSettingsProperties();
+		UnicodeProperties typeSettingsUnicodeProperties =
+			getTypeSettingsProperties();
 
-		typeSettingsProperties.setProperty(key, value);
+		typeSettingsUnicodeProperties.setProperty(key, value);
 	}
 
 	protected static String getDefaultURL() {

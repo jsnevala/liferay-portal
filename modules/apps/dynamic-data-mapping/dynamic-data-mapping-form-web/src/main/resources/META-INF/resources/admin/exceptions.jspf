@@ -56,13 +56,15 @@
 	<liferay-ui:message arguments="<%= HtmlUtil.escape(msvcffn.getFieldName()) %>" key="invalid-characters-were-defined-for-field-name-x" translateArguments="<%= false %>" />
 </liferay-ui:error>
 
+<liferay-ui:error exception="<%= DDMFormValidationException.MustSetValidFormRuleExpression.class %>" message="there-are-invalid-rule-expressions" />
+
 <liferay-ui:error exception="<%= DDMFormValidationException.MustSetValidValidationExpression.class %>">
 
 	<%
 	DDMFormValidationException.MustSetValidValidationExpression msvve = (DDMFormValidationException.MustSetValidValidationExpression)errorException;
 	%>
 
-	<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(msvve.getValidationExpression()), HtmlUtil.escape(msvve.getFieldName())} %>" key="the-validation-expression-x-set-for-field-x-is-invalid" translateArguments="<%= false %>" />
+	<liferay-ui:message arguments='<%= new Object[] {StringBundler.concat("<b>", HtmlUtil.escape(msvve.getValidationExpressionArgument()), "</b>"), StringBundler.concat("<b>", HtmlUtil.escape(msvve.getFieldName()), "</b>")} %>' key="the-validation-expression-x-set-for-field-x-is-invalid" translateArguments="<%= false %>" />
 </liferay-ui:error>
 
 <liferay-ui:error exception="<%= DDMFormValidationException.MustSetValidVisibilityExpression.class %>">
@@ -86,7 +88,7 @@
 	for (Entry<String, Set<String>> fieldNameProperties : fieldNamePropertiesMap.entrySet()) {
 		Set<String> value = fieldNameProperties.getValue();
 
-		sb.append(LanguageUtil.format(request, (value.size() == 1 ? "the-setting-x-set-for-field-x-is-invalid" :"the-settings-x-set-for-field-x-are-invalid"), new Object[] {HtmlUtil.escape(StringUtil.merge(value, StringPool.COMMA_AND_SPACE)), HtmlUtil.escape(fieldNameProperties.getKey())}, false));
+		sb.append(LanguageUtil.format(request, (value.size() == 1) ? "the-setting-x-set-for-field-x-is-invalid" : "the-settings-x-set-for-field-x-are-invalid", new Object[] {HtmlUtil.escape(StringUtil.merge(value, StringPool.COMMA_AND_SPACE)), HtmlUtil.escape(fieldNameProperties.getKey())}, false));
 
 		sb.append(StringPool.SPACE);
 	}

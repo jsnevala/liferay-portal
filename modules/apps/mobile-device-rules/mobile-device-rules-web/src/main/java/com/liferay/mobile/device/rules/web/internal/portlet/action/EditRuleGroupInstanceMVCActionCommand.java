@@ -37,7 +37,7 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Edward Han
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -77,16 +77,16 @@ public class EditRuleGroupInstanceMVCActionCommand
 
 			sendRedirect(actionRequest, actionResponse);
 		}
-		catch (Exception e) {
-			if (e instanceof NoSuchRuleGroupException ||
-				e instanceof PrincipalException) {
+		catch (Exception exception) {
+			if (exception instanceof NoSuchRuleGroupException ||
+				exception instanceof PrincipalException) {
 
-				SessionErrors.add(actionRequest, e.getClass());
+				SessionErrors.add(actionRequest, exception.getClass());
 
 				actionResponse.setRenderParameter("mvcPath", "/error.jsp");
 			}
 			else {
-				throw e;
+				throw exception;
 			}
 		}
 	}

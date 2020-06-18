@@ -36,8 +36,9 @@ import org.osgi.service.component.annotations.Reference;
 public class StagedGroupedWorkflowDefinitionLinkStagedModelDataHandler
 	extends BaseStagedModelDataHandler<StagedGroupedWorkflowDefinitionLink> {
 
-	public static final String[] CLASS_NAMES =
-		{StagedGroupedWorkflowDefinitionLink.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		StagedGroupedWorkflowDefinitionLink.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(
@@ -86,6 +87,9 @@ public class StagedGroupedWorkflowDefinitionLinkStagedModelDataHandler
 		element.addAttribute(
 			"referrer-class-name",
 			String.valueOf(stagedGroupedWorkflowDefinitionLink.getClassName()));
+		element.addAttribute(
+			"type-pk",
+			String.valueOf(stagedGroupedWorkflowDefinitionLink.getTypePK()));
 		element.addAttribute(
 			"version",
 			String.valueOf(

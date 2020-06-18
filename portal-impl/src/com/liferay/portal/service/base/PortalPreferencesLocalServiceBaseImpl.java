@@ -14,8 +14,7 @@
 
 package com.liferay.portal.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -37,6 +36,7 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.PortalPreferencesLocalService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.PortalPreferencesPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -57,17 +57,16 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.portal.service.impl.PortalPreferencesLocalServiceImpl
- * @see com.liferay.portal.kernel.service.PortalPreferencesLocalServiceUtil
  * @generated
  */
-@ProviderType
 public abstract class PortalPreferencesLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements PortalPreferencesLocalService,
-		IdentifiableOSGiService {
+	extends BaseLocalServiceImpl
+	implements IdentifiableOSGiService, PortalPreferencesLocalService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.portal.kernel.service.PortalPreferencesLocalServiceUtil} to access the portal preferences local service.
+	 * Never modify or reference this class directly. Use <code>PortalPreferencesLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.PortalPreferencesLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -80,6 +79,7 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	@Override
 	public PortalPreferences addPortalPreferences(
 		PortalPreferences portalPreferences) {
+
 		portalPreferences.setNew(true);
 
 		return portalPreferencesPersistence.update(portalPreferences);
@@ -108,6 +108,7 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	@Override
 	public PortalPreferences deletePortalPreferences(long portalPreferencesId)
 		throws PortalException {
+
 		return portalPreferencesPersistence.remove(portalPreferencesId);
 	}
 
@@ -121,15 +122,21 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	@Override
 	public PortalPreferences deletePortalPreferences(
 		PortalPreferences portalPreferences) {
+
 		return portalPreferencesPersistence.remove(portalPreferences);
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return portalPreferencesPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(PortalPreferences.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			PortalPreferences.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -147,7 +154,7 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.PortalPreferencesModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.PortalPreferencesModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -156,17 +163,18 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return portalPreferencesPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return portalPreferencesPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.PortalPreferencesModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.PortalPreferencesModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -176,10 +184,12 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return portalPreferencesPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return portalPreferencesPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -201,15 +211,17 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return portalPreferencesPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return portalPreferencesPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
 	public PortalPreferences fetchPortalPreferences(long portalPreferencesId) {
-		return portalPreferencesPersistence.fetchByPrimaryKey(portalPreferencesId);
+		return portalPreferencesPersistence.fetchByPrimaryKey(
+			portalPreferencesId);
 	}
 
 	/**
@@ -222,14 +234,18 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	@Override
 	public PortalPreferences getPortalPreferences(long portalPreferencesId)
 		throws PortalException {
-		return portalPreferencesPersistence.findByPrimaryKey(portalPreferencesId);
+
+		return portalPreferencesPersistence.findByPrimaryKey(
+			portalPreferencesId);
 	}
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
-		actionableDynamicQuery.setBaseLocalService(portalPreferencesLocalService);
+		actionableDynamicQuery.setBaseLocalService(
+			portalPreferencesLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(PortalPreferences.class);
 
@@ -239,10 +255,14 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(portalPreferencesLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			portalPreferencesLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(PortalPreferences.class);
 
@@ -254,7 +274,9 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
-		actionableDynamicQuery.setBaseLocalService(portalPreferencesLocalService);
+
+		actionableDynamicQuery.setBaseLocalService(
+			portalPreferencesLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(PortalPreferences.class);
 
@@ -264,15 +286,35 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return portalPreferencesPersistence.create(
+			((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
-		return portalPreferencesLocalService.deletePortalPreferences((PortalPreferences)persistedModel);
+
+		return portalPreferencesLocalService.deletePortalPreferences(
+			(PortalPreferences)persistedModel);
 	}
 
+	public BasePersistence<PortalPreferences> getBasePersistence() {
+		return portalPreferencesPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return portalPreferencesPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -280,7 +322,7 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	 * Returns a range of all the portal preferenceses.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.model.impl.PortalPreferencesModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.model.impl.PortalPreferencesModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of portal preferenceses
@@ -312,6 +354,7 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	@Override
 	public PortalPreferences updatePortalPreferences(
 		PortalPreferences portalPreferences) {
+
 		return portalPreferencesPersistence.update(portalPreferences);
 	}
 
@@ -331,6 +374,7 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	 */
 	public void setPortalPreferencesLocalService(
 		PortalPreferencesLocalService portalPreferencesLocalService) {
+
 		this.portalPreferencesLocalService = portalPreferencesLocalService;
 	}
 
@@ -350,6 +394,7 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	 */
 	public void setPortalPreferencesPersistence(
 		PortalPreferencesPersistence portalPreferencesPersistence) {
+
 		this.portalPreferencesPersistence = portalPreferencesPersistence;
 	}
 
@@ -358,7 +403,9 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	 *
 	 * @return the counter local service
 	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
+	public com.liferay.counter.kernel.service.CounterLocalService
+		getCounterLocalService() {
+
 		return counterLocalService;
 	}
 
@@ -368,12 +415,15 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	 * @param counterLocalService the counter local service
 	 */
 	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
+		com.liferay.counter.kernel.service.CounterLocalService
+			counterLocalService) {
+
 		this.counterLocalService = counterLocalService;
 	}
 
 	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.portal.kernel.model.PortalPreferences",
+		persistedModelLocalServiceRegistry.register(
+			"com.liferay.portal.kernel.model.PortalPreferences",
 			portalPreferencesLocalService);
 	}
 
@@ -407,29 +457,38 @@ public abstract class PortalPreferencesLocalServiceBaseImpl
 	 */
 	protected void runSQL(String sql) {
 		try {
-			DataSource dataSource = portalPreferencesPersistence.getDataSource();
+			DataSource dataSource =
+				portalPreferencesPersistence.getDataSource();
 
 			DB db = DBManagerUtil.getDB();
 
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
 	@BeanReference(type = PortalPreferencesLocalService.class)
 	protected PortalPreferencesLocalService portalPreferencesLocalService;
+
 	@BeanReference(type = PortalPreferencesPersistence.class)
 	protected PortalPreferencesPersistence portalPreferencesPersistence;
-	@BeanReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
+
+	@BeanReference(
+		type = com.liferay.counter.kernel.service.CounterLocalService.class
+	)
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+	protected PersistedModelLocalServiceRegistry
+		persistedModelLocalServiceRegistry;
+
 }

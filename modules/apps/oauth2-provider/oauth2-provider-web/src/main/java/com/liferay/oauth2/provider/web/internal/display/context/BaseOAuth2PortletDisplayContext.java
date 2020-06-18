@@ -15,7 +15,7 @@
 package com.liferay.oauth2.provider.web.internal.display.context;
 
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
-import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.oauth2.provider.constants.OAuth2ProviderActionKeys;
 import com.liferay.oauth2.provider.constants.OAuth2ProviderConstants;
 import com.liferay.oauth2.provider.model.OAuth2Application;
@@ -49,7 +49,7 @@ public abstract class BaseOAuth2PortletDisplayContext {
 		}
 
 		long oAuth2ApplicationId = ParamUtil.getLong(
-			portletRequest, "oAuth2ApplicationId", 0);
+			portletRequest, "oAuth2ApplicationId");
 
 		if (oAuth2ApplicationId > 0) {
 			oAuth2Application = oAuth2ApplicationService.getOAuth2Application(
@@ -73,7 +73,7 @@ public abstract class BaseOAuth2PortletDisplayContext {
 		FileEntry fileEntry = DLAppLocalServiceUtil.getFileEntry(
 			oAuth2Application.getIconFileEntryId());
 
-		return DLUtil.getThumbnailSrc(fileEntry, themeDisplay);
+		return dlURLHelper.getThumbnailSrc(fileEntry, themeDisplay);
 	}
 
 	public boolean hasAddApplicationPermission() {
@@ -136,13 +136,25 @@ public abstract class BaseOAuth2PortletDisplayContext {
 				permissionChecker, OAuth2ProviderPortletKeys.OAUTH2_ADMIN,
 				OAuth2ProviderActionKeys.ACTION_VIEW_GRANTED_AUTHORIZATIONS);
 		}
-		catch (PortalException pe) {
-			_log.error(pe, pe);
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
 
 			return false;
 		}
 	}
 
+	protected BaseOAuth2PortletDisplayContext(
+		DLURLHelper dlURLHelper,
+		OAuth2ApplicationService oAuth2ApplicationService,
+		PortletRequest portletRequest, ThemeDisplay themeDisplay) {
+
+		this.dlURLHelper = dlURLHelper;
+		this.oAuth2ApplicationService = oAuth2ApplicationService;
+		this.portletRequest = portletRequest;
+		this.themeDisplay = themeDisplay;
+	}
+
+	protected DLURLHelper dlURLHelper;
 	protected OAuth2Application oAuth2Application;
 	protected OAuth2ApplicationService oAuth2ApplicationService;
 	protected PortletRequest portletRequest;

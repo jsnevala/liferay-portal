@@ -18,12 +18,24 @@ import com.liferay.asset.auto.tagger.model.AssetAutoTaggerEntry;
 import com.liferay.asset.auto.tagger.service.base.AssetAutoTaggerEntryLocalServiceBaseImpl;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alejandro Tardín
  */
+@Component(
+	property = "model.class.name=com.liferay.asset.auto.tagger.model.AssetAutoTaggerEntry",
+	service = AopService.class
+)
 public class AssetAutoTaggerEntryLocalServiceImpl
 	extends AssetAutoTaggerEntryLocalServiceBaseImpl {
 
@@ -54,6 +66,29 @@ public class AssetAutoTaggerEntryLocalServiceImpl
 	}
 
 	@Override
+	public AssetAutoTaggerEntry addAssetAutoTaggerEntry(
+			AssetEntry assetEntry, String assetTagName)
+		throws PortalException {
+
+		AssetTag assetTag = _assetTagLocalService.fetchTag(
+			assetEntry.getGroupId(), StringUtil.toLowerCase(assetTagName));
+
+		if (assetTag == null) {
+			assetTag = _assetTagLocalService.addTag(
+				assetEntry.getUserId(), assetEntry.getGroupId(), assetTagName,
+				new ServiceContext());
+		}
+
+		_assetTagLocalService.addAssetEntryAssetTag(
+			assetEntry.getEntryId(), assetTag);
+
+		_assetTagLocalService.incrementAssetCount(
+			assetTag.getTagId(), assetEntry.getClassNameId());
+
+		return addAssetAutoTaggerEntry(assetEntry, assetTag);
+	}
+
+	@Override
 	public AssetAutoTaggerEntry fetchAssetAutoTaggerEntry(
 		long assetEntryId, long assetTagId) {
 
@@ -76,5 +111,8 @@ public class AssetAutoTaggerEntryLocalServiceImpl
 		return assetAutoTaggerEntryPersistence.findByAssetTagId(
 			assetTag.getTagId());
 	}
+
+	@Reference
+	private AssetTagLocalService _assetTagLocalService;
 
 }

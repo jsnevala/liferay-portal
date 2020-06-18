@@ -14,8 +14,6 @@
 
 package com.liferay.layout.page.template.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,24 +24,30 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.layout.page.template.service.http.LayoutPageTemplateEntryServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.layout.page.template.service.http.LayoutPageTemplateEntryServiceSoap
  * @generated
  */
-@ProviderType
 public class LayoutPageTemplateEntrySoap implements Serializable {
+
 	public static LayoutPageTemplateEntrySoap toSoapModel(
 		LayoutPageTemplateEntry model) {
-		LayoutPageTemplateEntrySoap soapModel = new LayoutPageTemplateEntrySoap();
 
+		LayoutPageTemplateEntrySoap soapModel =
+			new LayoutPageTemplateEntrySoap();
+
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
-		soapModel.setLayoutPageTemplateEntryId(model.getLayoutPageTemplateEntryId());
+		soapModel.setLayoutPageTemplateEntryId(
+			model.getLayoutPageTemplateEntryId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setUserId(model.getUserId());
 		soapModel.setUserName(model.getUserName());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
-		soapModel.setLayoutPageTemplateCollectionId(model.getLayoutPageTemplateCollectionId());
+		soapModel.setLayoutPageTemplateCollectionId(
+			model.getLayoutPageTemplateCollectionId());
+		soapModel.setLayoutPageTemplateEntryKey(
+			model.getLayoutPageTemplateEntryKey());
 		soapModel.setClassNameId(model.getClassNameId());
 		soapModel.setClassTypeId(model.getClassTypeId());
 		soapModel.setName(model.getName());
@@ -51,6 +55,7 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 		soapModel.setPreviewFileEntryId(model.getPreviewFileEntryId());
 		soapModel.setDefaultTemplate(model.isDefaultTemplate());
 		soapModel.setLayoutPrototypeId(model.getLayoutPrototypeId());
+		soapModel.setPlid(model.getPlid());
 		soapModel.setLastPublishDate(model.getLastPublishDate());
 		soapModel.setStatus(model.getStatus());
 		soapModel.setStatusByUserId(model.getStatusByUserId());
@@ -62,7 +67,9 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 
 	public static LayoutPageTemplateEntrySoap[] toSoapModels(
 		LayoutPageTemplateEntry[] models) {
-		LayoutPageTemplateEntrySoap[] soapModels = new LayoutPageTemplateEntrySoap[models.length];
+
+		LayoutPageTemplateEntrySoap[] soapModels =
+			new LayoutPageTemplateEntrySoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -73,10 +80,13 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 
 	public static LayoutPageTemplateEntrySoap[][] toSoapModels(
 		LayoutPageTemplateEntry[][] models) {
+
 		LayoutPageTemplateEntrySoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new LayoutPageTemplateEntrySoap[models.length][models[0].length];
+			soapModels =
+				new LayoutPageTemplateEntrySoap
+					[models.length][models[0].length];
 		}
 		else {
 			soapModels = new LayoutPageTemplateEntrySoap[0][0];
@@ -91,13 +101,16 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 
 	public static LayoutPageTemplateEntrySoap[] toSoapModels(
 		List<LayoutPageTemplateEntry> models) {
-		List<LayoutPageTemplateEntrySoap> soapModels = new ArrayList<LayoutPageTemplateEntrySoap>(models.size());
+
+		List<LayoutPageTemplateEntrySoap> soapModels =
+			new ArrayList<LayoutPageTemplateEntrySoap>(models.size());
 
 		for (LayoutPageTemplateEntry model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new LayoutPageTemplateEntrySoap[soapModels.size()]);
+		return soapModels.toArray(
+			new LayoutPageTemplateEntrySoap[soapModels.size()]);
 	}
 
 	public LayoutPageTemplateEntrySoap() {
@@ -109,6 +122,14 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setLayoutPageTemplateEntryId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -181,7 +202,18 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 
 	public void setLayoutPageTemplateCollectionId(
 		long layoutPageTemplateCollectionId) {
+
 		_layoutPageTemplateCollectionId = layoutPageTemplateCollectionId;
+	}
+
+	public String getLayoutPageTemplateEntryKey() {
+		return _layoutPageTemplateEntryKey;
+	}
+
+	public void setLayoutPageTemplateEntryKey(
+		String layoutPageTemplateEntryKey) {
+
+		_layoutPageTemplateEntryKey = layoutPageTemplateEntryKey;
 	}
 
 	public long getClassNameId() {
@@ -244,6 +276,14 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 		_layoutPrototypeId = layoutPrototypeId;
 	}
 
+	public long getPlid() {
+		return _plid;
+	}
+
+	public void setPlid(long plid) {
+		_plid = plid;
+	}
+
 	public Date getLastPublishDate() {
 		return _lastPublishDate;
 	}
@@ -284,6 +324,7 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 		_statusDate = statusDate;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _layoutPageTemplateEntryId;
 	private long _groupId;
@@ -293,6 +334,7 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 	private Date _createDate;
 	private Date _modifiedDate;
 	private long _layoutPageTemplateCollectionId;
+	private String _layoutPageTemplateEntryKey;
 	private long _classNameId;
 	private long _classTypeId;
 	private String _name;
@@ -300,9 +342,11 @@ public class LayoutPageTemplateEntrySoap implements Serializable {
 	private long _previewFileEntryId;
 	private boolean _defaultTemplate;
 	private long _layoutPrototypeId;
+	private long _plid;
 	private Date _lastPublishDate;
 	private int _status;
 	private long _statusByUserId;
 	private String _statusByUserName;
 	private Date _statusDate;
+
 }

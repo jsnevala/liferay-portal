@@ -23,26 +23,19 @@ import com.liferay.portal.kernel.cache.SingleVMPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.template.TemplateResource;
 import com.liferay.portal.kernel.template.URLTemplateResource;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-
-import java.io.Reader;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
+import com.liferay.portal.template.soy.SoyTemplateResource;
+import com.liferay.portal.template.soy.SoyTemplateResourceFactory;
 
 import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import org.mockito.Matchers;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import java.util.Objects;
 
 /**
  * @author Marcellus Tavares
@@ -54,26 +47,20 @@ public class SoyTestHelper {
 		return _soyManager;
 	}
 
-	public SoyTemplate getSoyTemplate(
-		List<TemplateResource> templateResources) {
-
-		return (SoyTemplate)_soyManager.getTemplate(templateResources, false);
+	public SoyTemplate getSoyTemplate(SoyTemplateResource soyTemplateResource) {
+		return (SoyTemplate)_soyManager.getTemplate(soyTemplateResource, false);
 	}
 
 	public SoyTemplate getSoyTemplate(String fileName) {
-		TemplateResource templateResource = getTemplateResource(fileName);
-
-		return (SoyTemplate)_soyManager.getTemplate(templateResource, false);
+		return (SoyTemplate)_soyManager.getTemplate(
+			getTemplateResource(fileName), false);
 	}
 
 	public SoyTemplate getSoyTemplate(String... fileNames) {
-		List<TemplateResource> templateResources = getTemplateResources(
-			Arrays.asList(fileNames));
-
-		return getSoyTemplate(templateResources);
+		return getSoyTemplate(getSoyTemplateResource(Arrays.asList(fileNames)));
 	}
 
-	public void setUp() throws Exception {
+	public void setUp() {
 		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
 
 		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
@@ -91,13 +78,25 @@ public class SoyTestHelper {
 		SoyFileSet.Builder builder = SoyFileSet.builder();
 
 		for (TemplateResource templateResource : templateResources) {
-			Reader reader = templateResource.getReader();
-
 			builder.add(
-				CharStreams.toString(reader), templateResource.getTemplateId());
+				CharStreams.toString(templateResource.getReader()),
+				templateResource.getTemplateId());
 		}
 
 		return builder.build();
+	}
+
+	protected SoyTemplateResource getSoyTemplateResource(
+		List<String> fileNames) {
+
+		List<TemplateResource> templateResources = new ArrayList<>();
+
+		for (String fileName : fileNames) {
+			templateResources.add(getTemplateResource(fileName));
+		}
+
+		return _soyTemplateResourceFactory.createSoyTemplateResource(
+			templateResources);
 	}
 
 	protected TemplateResource getTemplateResource(String name) {
@@ -118,116 +117,35 @@ public class SoyTestHelper {
 		return templateResource;
 	}
 
-	protected List<TemplateResource> getTemplateResources(
-		List<String> fileNames) {
-
-		List<TemplateResource> templateResources = new ArrayList<>();
-
-		for (String fileName : fileNames) {
-			templateResources.add(getTemplateResource(fileName));
-		}
-
-		return templateResources;
-	}
-
 	protected PortalCache mockPortalCache() {
-		PortalCache portalCache = Mockito.mock(PortalCache.class);
+		Map<String, SoyTofuCacheBag> cache = new HashMap<>();
 
-		Map<HashSet<TemplateResource>, SoyTofuCacheBag> cache = new HashMap<>();
+		return (PortalCache)ProxyUtil.newProxyInstance(
+			PortalCache.class.getClassLoader(),
+			new Class<?>[] {PortalCache.class},
+			(proxy, method, args) -> {
+				String methodName = method.getName();
 
-		Mockito.when(
-			portalCache.get(Matchers.any())
-		).then(
-			new Answer<SoyTofuCacheBag>() {
-
-				@Override
-				public SoyTofuCacheBag answer(InvocationOnMock invocationOnMock)
-					throws Throwable {
-
-					Object[] args = invocationOnMock.getArguments();
-
-					HashSet<TemplateResource> key =
-						(HashSet<TemplateResource>)args[0];
-
-					return cache.get(key);
+				if (methodName.equals("get")) {
+					return cache.get(args[0]);
+				}
+				else if (methodName.equals("getKeys")) {
+					return new ArrayList<>(cache.keySet());
+				}
+				else if (methodName.equals("put")) {
+					cache.put((String)args[0], (SoyTofuCacheBag)args[1]);
+				}
+				else if (methodName.equals("remove")) {
+					cache.remove(args[0]);
 				}
 
-			}
-		);
-
-		Mockito.when(
-			portalCache.getKeys()
-		).then(
-			new Answer<List<HashSet<TemplateResource>>>() {
-
-				@Override
-				public List<HashSet<TemplateResource>> answer(
-						InvocationOnMock invocationOnMock)
-					throws Throwable {
-
-					List<HashSet<TemplateResource>> list = new ArrayList<>(
-						cache.keySet());
-
-					return list;
-				}
-
-			}
-		);
-
-		Mockito.doAnswer(
-			new Answer<Void>() {
-
-				@Override
-				public Void answer(InvocationOnMock invocationOnMock)
-					throws Throwable {
-
-					Object[] args = invocationOnMock.getArguments();
-
-					HashSet<TemplateResource> key =
-						(HashSet<TemplateResource>)args[0];
-
-					SoyTofuCacheBag value = (SoyTofuCacheBag)args[1];
-
-					cache.put(key, value);
-
-					return null;
-				}
-
-			}
-		).when(
-			portalCache
-		).put(
-			Mockito.any(), Mockito.any()
-		);
-
-		Mockito.doAnswer(
-			new Answer<Void>() {
-
-				@Override
-				public Void answer(InvocationOnMock invocationOnMock)
-					throws Throwable {
-
-					Object[] args = invocationOnMock.getArguments();
-
-					HashSet<TemplateResource> key =
-						(HashSet<TemplateResource>)args[0];
-
-					cache.remove(key);
-
-					return null;
-				}
-
-			}
-		).when(
-			portalCache
-		).remove(
-			Mockito.any()
-		);
-
-		return portalCache;
+				return null;
+			});
 	}
 
-	protected void setUpSoyManager() throws Exception {
+	protected void setUpSoyManager() {
+		_soyTemplateResourceFactory = new SoyTemplateResourceFactoryImpl();
+
 		_soyManager = new SoyManager();
 
 		_soyManager.setTemplateContextHelper(new SoyTemplateContextHelper());
@@ -236,27 +154,23 @@ public class SoyTestHelper {
 			(SingleVMPool)ProxyUtil.newProxyInstance(
 				SingleVMPool.class.getClassLoader(),
 				new Class<?>[] {SingleVMPool.class},
-				new InvocationHandler() {
-
-					@Override
-					public Object invoke(
-							Object proxy, Method method, Object[] args)
-						throws Throwable {
-
-						if ("getPortalCache".equals(method.getName())) {
-							return mockPortalCache();
-						}
-
-						throw new UnsupportedOperationException(
-							method.toString());
+				(proxy, method, args) -> {
+					if (Objects.equals(method.getName(), "getPortalCache")) {
+						return mockPortalCache();
 					}
 
+					throw new UnsupportedOperationException(method.toString());
 				}));
+
+		ReflectionTestUtil.setFieldValue(
+			_soyManager, "_soyTemplateResourceFactory",
+			_soyTemplateResourceFactory);
 	}
 
 	private static final String _TPL_PATH =
 		"com/liferay/portal/template/soy/dependencies/";
 
 	private SoyManager _soyManager;
+	private SoyTemplateResourceFactory _soyTemplateResourceFactory;
 
 }

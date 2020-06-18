@@ -23,17 +23,19 @@ import com.liferay.blogs.web.internal.security.permission.resource.BlogsEntryPer
 import com.liferay.blogs.web.internal.util.BlogsEntryUtil;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.comment.CommentManager;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portletdisplaytemplate.BasePortletDisplayTemplateHandler;
 import com.liferay.portal.kernel.portletdisplaytemplate.PortletDisplayTemplateManager;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateVariableGroup;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.taglib.security.PermissionsURLTag;
 import com.liferay.trash.TrashHelper;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -61,21 +63,27 @@ public class BlogsPortletDisplayTemplateHandler
 
 	@Override
 	public Map<String, Object> getCustomContextObjects() {
-		Map<String, Object> contextObjects = new HashMap<>();
-
-		contextObjects.put("blogsEntryPermission", _blogsEntryPermission);
-		contextObjects.put("blogsEntryUtil", _blogsEntryUtil);
-		contextObjects.put("commentManager", _commentManager);
-		contextObjects.put("permissionsURLTag", new PermissionsURLTag());
-		contextObjects.put("trashHelper", _trashHelper);
-
-		return contextObjects;
+		return HashMapBuilder.<String, Object>put(
+			"blogsEntryPermission", _blogsEntryPermission
+		).put(
+			"blogsEntryUtil", _blogsEntryUtil
+		).put(
+			"commentManager", _commentManager
+		).put(
+			"language", _language
+		).put(
+			"permissionsURLTag", new PermissionsURLTag()
+		).put(
+			"trashHelper", _trashHelper
+		).build();
 	}
 
 	@Override
 	public String getName(Locale locale) {
 		String portletTitle = _portal.getPortletTitle(
-			BlogsPortletKeys.BLOGS, locale);
+			BlogsPortletKeys.BLOGS,
+			ResourceBundleUtil.getBundle(
+				"content.Language", locale, getClass()));
 
 		return LanguageUtil.format(locale, "x-template", portletTitle, false);
 	}
@@ -149,10 +157,13 @@ public class BlogsPortletDisplayTemplateHandler
 	private CommentManager _commentManager;
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private Portal _portal;
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.blogs.service)(&(release.schema.version>=1.1.0)(!(release.schema.version>=1.2.0))))"
+		target = "(&(release.bundle.symbolic.name=com.liferay.blogs.service)(&(release.schema.version>=2.1.0)(!(release.schema.version>=3.0.0))))"
 	)
 	private Release _release;
 

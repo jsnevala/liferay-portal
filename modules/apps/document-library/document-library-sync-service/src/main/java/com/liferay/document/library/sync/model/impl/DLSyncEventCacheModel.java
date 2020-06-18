@@ -14,14 +14,10 @@
 
 package com.liferay.document.library.sync.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.document.library.sync.model.DLSyncEvent;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -32,12 +28,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing DLSyncEvent in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see DLSyncEvent
  * @generated
  */
-@ProviderType
-public class DLSyncEventCacheModel implements CacheModel<DLSyncEvent>,
-	Externalizable {
+public class DLSyncEventCacheModel
+	implements CacheModel<DLSyncEvent>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -48,7 +43,8 @@ public class DLSyncEventCacheModel implements CacheModel<DLSyncEvent>,
 			return false;
 		}
 
-		DLSyncEventCacheModel dlSyncEventCacheModel = (DLSyncEventCacheModel)obj;
+		DLSyncEventCacheModel dlSyncEventCacheModel =
+			(DLSyncEventCacheModel)obj;
 
 		if (syncEventId == dlSyncEventCacheModel.syncEventId) {
 			return true;
@@ -126,8 +122,7 @@ public class DLSyncEventCacheModel implements CacheModel<DLSyncEvent>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(syncEventId);
 
 		objectOutput.writeLong(companyId);
@@ -157,4 +152,5 @@ public class DLSyncEventCacheModel implements CacheModel<DLSyncEvent>,
 	public String event;
 	public String type;
 	public long typePK;
+
 }

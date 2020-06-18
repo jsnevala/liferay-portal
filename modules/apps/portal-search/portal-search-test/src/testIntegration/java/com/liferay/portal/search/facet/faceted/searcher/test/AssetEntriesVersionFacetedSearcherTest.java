@@ -16,7 +16,6 @@ package com.liferay.portal.search.facet.faceted.searcher.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.search.JournalArticleBlueprint;
 import com.liferay.journal.test.util.search.JournalArticleContent;
 import com.liferay.journal.test.util.search.JournalArticleTitle;
@@ -33,6 +32,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.search.facet.type.AssetEntriesFacetFactory;
 import com.liferay.portal.search.test.util.DocumentsAssert;
+import com.liferay.portal.search.test.util.FacetsAssert;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -75,8 +75,8 @@ public class AssetEntriesVersionFacetedSearcherTest
 
 		assertVersions(Arrays.asList("1.0"), hits, keyword);
 
-		assertFrequencies(
-			facet.getFieldName(), searchContext,
+		FacetsAssert.assertFrequencies(
+			facet.getFieldName(), searchContext, hits,
 			Collections.singletonMap(JournalArticle.class.getName(), 1));
 	}
 
@@ -100,8 +100,8 @@ public class AssetEntriesVersionFacetedSearcherTest
 
 		assertVersions(Arrays.asList("1.1"), hits, keyword);
 
-		assertFrequencies(
-			facet.getFieldName(), searchContext,
+		FacetsAssert.assertFrequencies(
+			facet.getFieldName(), searchContext, hits,
 			Collections.singletonMap(JournalArticle.class.getName(), 1));
 	}
 
@@ -113,7 +113,7 @@ public class AssetEntriesVersionFacetedSearcherTest
 	}
 
 	protected Facet createFacet(SearchContext searchContext) {
-		return assetEntriesFacetFactory.newInstance(searchContext);
+		return _assetEntriesFacetFactory.newInstance(searchContext);
 	}
 
 	protected JournalArticle index(String keyword, Group group)
@@ -122,27 +122,31 @@ public class AssetEntriesVersionFacetedSearcherTest
 		JournalArticle journalArticle = journalArticleSearchFixture.addArticle(
 			new JournalArticleBlueprint() {
 				{
-					groupId = group.getGroupId();
-					journalArticleContent = new JournalArticleContent() {
-						{
-							defaultLocale = LocaleUtil.US;
-							name = "content";
+					setGroupId(group.getGroupId());
+					setJournalArticleContent(
+						new JournalArticleContent() {
+							{
+								put(
+									LocaleUtil.US,
+									RandomTestUtil.randomString());
 
-							put(LocaleUtil.US, RandomTestUtil.randomString());
-						}
-					};
-					journalArticleTitle = new JournalArticleTitle() {
-						{
-							put(LocaleUtil.US, keyword);
-						}
-					};
+								setDefaultLocale(LocaleUtil.US);
+								setName("content");
+							}
+						});
+					setJournalArticleTitle(
+						new JournalArticleTitle() {
+							{
+								put(LocaleUtil.US, keyword);
+							}
+						});
 				}
 			});
 
 		User user = UserTestUtil.getAdminUser(group.getCompanyId());
 
 		PermissionThreadLocal.setPermissionChecker(
-			permissionCheckerFactory.create(user));
+			_permissionCheckerFactory.create(user));
 
 		return journalArticle;
 	}
@@ -152,12 +156,9 @@ public class AssetEntriesVersionFacetedSearcherTest
 	}
 
 	@Inject
-	protected AssetEntriesFacetFactory assetEntriesFacetFactory;
+	private AssetEntriesFacetFactory _assetEntriesFacetFactory;
 
 	@Inject
-	protected JournalArticleLocalService journalArticleLocalService;
-
-	@Inject
-	protected PermissionCheckerFactory permissionCheckerFactory;
+	private PermissionCheckerFactory _permissionCheckerFactory;
 
 }

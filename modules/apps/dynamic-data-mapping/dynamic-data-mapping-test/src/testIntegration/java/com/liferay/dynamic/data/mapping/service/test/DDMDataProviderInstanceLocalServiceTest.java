@@ -32,12 +32,12 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -60,9 +60,7 @@ public class DDMDataProviderInstanceLocalServiceTest
 		new LiferayIntegrationTestRule();
 
 	@Test(
-		expected =
-			RequiredDataProviderInstanceException.
-				MustNotDeleteDataProviderInstanceReferencedByDataProviderInstanceLinks.class
+		expected = RequiredDataProviderInstanceException.MustNotDeleteDataProviderInstanceReferencedByDataProviderInstanceLinks.class
 	)
 	public void testDeleteReferencedDataProviderInstance1() throws Exception {
 		DDMForm ddmForm = DDMFormTestUtil.createDDMForm();
@@ -90,9 +88,7 @@ public class DDMDataProviderInstanceLocalServiceTest
 	}
 
 	@Test(
-		expected =
-			RequiredDataProviderInstanceException.
-				MustNotDeleteDataProviderInstanceReferencedByDataProviderInstanceLinks.class
+		expected = RequiredDataProviderInstanceException.MustNotDeleteDataProviderInstanceReferencedByDataProviderInstanceLinks.class
 	)
 	public void testDeleteReferencedDataProviderInstance2() throws Exception {
 		DDMForm ddmForm = DDMFormTestUtil.createDDMForm();
@@ -125,9 +121,7 @@ public class DDMDataProviderInstanceLocalServiceTest
 	}
 
 	@Test(
-		expected =
-			RequiredDataProviderInstanceException.
-				MustNotDeleteDataProviderInstanceReferencedByDataProviderInstanceLinks.class
+		expected = RequiredDataProviderInstanceException.MustNotDeleteDataProviderInstanceReferencedByDataProviderInstanceLinks.class
 	)
 	public void testDeleteReferencedDataProviderInstance3() throws Exception {
 		DDMForm ddmForm = DDMFormTestUtil.createDDMForm("Field1");
@@ -142,7 +136,7 @@ public class DDMDataProviderInstanceLocalServiceTest
 
 		actions.add(action);
 
-		DDMFormRule ddmFormRule = new DDMFormRule("TRUE", actions);
+		DDMFormRule ddmFormRule = new DDMFormRule(actions, "TRUE");
 
 		ddmForm.addDDMFormRule(ddmFormRule);
 
@@ -156,9 +150,9 @@ public class DDMDataProviderInstanceLocalServiceTest
 	protected DDMDataProviderInstance createDDMDataProviderInstance()
 		throws Exception {
 
-		Map<Locale, String> nameMap = new HashMap<>();
-
-		nameMap.put(LocaleUtil.getSiteDefault(), StringUtil.randomString());
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), StringUtil.randomString()
+		).build();
 
 		DDMForm ddmForm = DDMFormTestUtil.createDDMForm("dataProviderName");
 

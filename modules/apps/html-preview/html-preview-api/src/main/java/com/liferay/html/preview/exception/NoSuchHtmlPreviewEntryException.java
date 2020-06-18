@@ -14,14 +14,11 @@
 
 package com.liferay.html.preview.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchHtmlPreviewEntryException extends NoSuchModelException {
 
 	public NoSuchHtmlPreviewEntryException() {

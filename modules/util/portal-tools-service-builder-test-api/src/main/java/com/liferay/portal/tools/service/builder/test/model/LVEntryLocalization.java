@@ -14,43 +14,48 @@
 
 package com.liferay.portal.tools.service.builder.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the LVEntryLocalization service. Represents a row in the &quot;LVEntryLocalization&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see LVEntryLocalizationModel
- * @see com.liferay.portal.tools.service.builder.test.model.impl.LVEntryLocalizationImpl
- * @see com.liferay.portal.tools.service.builder.test.model.impl.LVEntryLocalizationModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.portal.tools.service.builder.test.model.impl.LVEntryLocalizationImpl")
+@ImplementationClassName(
+	"com.liferay.portal.tools.service.builder.test.model.impl.LVEntryLocalizationImpl"
+)
 @ProviderType
 public interface LVEntryLocalization extends LVEntryLocalizationModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.tools.service.builder.test.model.impl.LVEntryLocalizationImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.portal.tools.service.builder.test.model.impl.LVEntryLocalizationImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<LVEntryLocalization, Long> LV_ENTRY_LOCALIZATION_ID_ACCESSOR =
-		new Accessor<LVEntryLocalization, Long>() {
-			@Override
-			public Long get(LVEntryLocalization lvEntryLocalization) {
-				return lvEntryLocalization.getLvEntryLocalizationId();
-			}
+	public static final Accessor<LVEntryLocalization, Long>
+		LV_ENTRY_LOCALIZATION_ID_ACCESSOR =
+			new Accessor<LVEntryLocalization, Long>() {
 
-			@Override
-			public Class<Long> getAttributeClass() {
-				return Long.class;
-			}
+				@Override
+				public Long get(LVEntryLocalization lvEntryLocalization) {
+					return lvEntryLocalization.getLvEntryLocalizationId();
+				}
 
-			@Override
-			public Class<LVEntryLocalization> getTypeClass() {
-				return LVEntryLocalization.class;
-			}
-		};
+				@Override
+				public Class<Long> getAttributeClass() {
+					return Long.class;
+				}
+
+				@Override
+				public Class<LVEntryLocalization> getTypeClass() {
+					return LVEntryLocalization.class;
+				}
+
+			};
+
 }

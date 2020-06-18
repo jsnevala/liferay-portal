@@ -35,6 +35,7 @@ import com.liferay.calendar.test.util.RecurrenceTestUtil;
 import com.liferay.calendar.util.JCalendarUtil;
 import com.liferay.calendar.util.RecurrenceUtil;
 import com.liferay.calendar.workflow.CalendarBookingWorkflowConstants;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -47,6 +48,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -69,6 +71,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -123,21 +126,17 @@ public class CalendarBookingLocalServiceTest {
 		assertSameDay(nowJCalendar, startTimeJCalendar);
 
 		assertSameDay(nowJCalendar, endTimeJCalendar);
-
-		assertEqualsTime(0, 0, startTimeJCalendar);
-
-		assertEqualsTime(23, 59, endTimeJCalendar);
 	}
 
 	@Test
 	public void testAddCalendarBooking() throws Exception {
+		Locale siteDefault = LocaleUtil.getSiteDefault();
+
 		ServiceContext serviceContext = createServiceContext();
 
 		Calendar calendar = CalendarTestUtil.addCalendar(_user, serviceContext);
 
 		long startTime = System.currentTimeMillis();
-
-		serviceContext.setLanguageId("fr_FR");
 
 		CalendarBooking calendarBooking =
 			CalendarBookingTestUtil.addRegularCalendarBooking(
@@ -145,7 +144,7 @@ public class CalendarBookingLocalServiceTest {
 				serviceContext);
 
 		Assert.assertEquals(
-			"fr_FR",
+			LocaleUtil.toLanguageId(siteDefault),
 			LocalizationUtil.getDefaultLanguageId(calendarBooking.getTitle()));
 	}
 
@@ -189,10 +188,10 @@ public class CalendarBookingLocalServiceTest {
 
 		CalendarBookingLocalServiceUtil.checkCalendarBookings();
 
-		String mailMessageSubject =
-			"Calendar: Event Reminder for " + StringPool.QUOTE +
-				calendarBooking.getTitle(LocaleUtil.getDefault()) +
-					StringPool.QUOTE;
+		String mailMessageSubject = StringBundler.concat(
+			"Calendar: Event Reminder for ", StringPool.QUOTE,
+			calendarBooking.getTitle(LocaleUtil.getSiteDefault()),
+			StringPool.QUOTE);
 
 		assertMailSubjectCount(mailMessageSubject, 2);
 	}
@@ -289,8 +288,9 @@ public class CalendarBookingLocalServiceTest {
 			CalendarBookingTestUtil.addChildCalendarBooking(
 				invintingCalendar, resourceCalendar);
 
-		long[] childCalendarIds =
-			{invitedCalendar.getCalendarId(), resourceCalendar.getCalendarId()};
+		long[] childCalendarIds = {
+			invitedCalendar.getCalendarId(), resourceCalendar.getCalendarId()
+		};
 
 		CalendarBookingTestUtil.addMasterCalendarBooking(
 			_user, invintingCalendar, childCalendarIds,
@@ -589,10 +589,10 @@ public class CalendarBookingLocalServiceTest {
 
 		Assert.assertNotNull(calendarBooking);
 
-		String mailMessageSubject =
-			"Calendar: Event Update for " + StringPool.QUOTE +
-				calendarBooking.getTitle(LocaleUtil.getDefault()) +
-					StringPool.QUOTE;
+		String mailMessageSubject = StringBundler.concat(
+			"Calendar: Event Update for ", StringPool.QUOTE,
+			calendarBooking.getTitle(LocaleUtil.getSiteDefault()),
+			StringPool.QUOTE);
 
 		assertMailSubjectCount(mailMessageSubject, 1);
 
@@ -607,10 +607,10 @@ public class CalendarBookingLocalServiceTest {
 
 		Assert.assertNotNull(calendarBooking);
 
-		mailMessageSubject =
-			"Calendar: Event Deletion for " + StringPool.QUOTE +
-				calendarBooking.getTitle(LocaleUtil.getDefault()) +
-					StringPool.QUOTE;
+		mailMessageSubject = StringBundler.concat(
+			"Calendar: Event Deletion for ", StringPool.QUOTE,
+			calendarBooking.getTitle(LocaleUtil.getSiteDefault()),
+			StringPool.QUOTE);
 
 		assertMailSubjectCount(mailMessageSubject, 2);
 
@@ -834,6 +834,43 @@ public class CalendarBookingLocalServiceTest {
 		Assert.assertEquals(
 			secondCalendarBookingInstance.getStartTime(),
 			instance.getStartTime());
+	}
+
+	@Test
+	public void testInviteAndRemoveCalendar() throws Exception {
+		ServiceContext serviceContext = createServiceContext();
+
+		Calendar calendar = CalendarTestUtil.addCalendar(_user, serviceContext);
+
+		Calendar invitedCalendar = CalendarTestUtil.addCalendar(
+			calendar.getCalendarResource(), serviceContext);
+
+		CalendarBooking calendarBooking =
+			CalendarBookingTestUtil.addMasterCalendarBooking(
+				calendar, invitedCalendar);
+
+		List<CalendarBooking> childCalendarBookings =
+			calendarBooking.getChildCalendarBookings();
+
+		Assert.assertEquals(
+			childCalendarBookings.toString(), 2, childCalendarBookings.size());
+
+		calendarBooking = CalendarBookingTestUtil.updateCalendarBooking(
+			calendarBooking, new long[0], serviceContext);
+
+		childCalendarBookings = calendarBooking.getChildCalendarBookings();
+
+		Assert.assertEquals(
+			childCalendarBookings.toString(), 1, childCalendarBookings.size());
+
+		calendarBooking = CalendarBookingTestUtil.updateCalendarBooking(
+			calendarBooking, new long[] {invitedCalendar.getCalendarId()},
+			serviceContext);
+
+		childCalendarBookings = calendarBooking.getChildCalendarBookings();
+
+		Assert.assertEquals(
+			childCalendarBookings.toString(), 2, childCalendarBookings.size());
 	}
 
 	@Test
@@ -1118,19 +1155,19 @@ public class CalendarBookingLocalServiceTest {
 
 		_invitingUser = UserTestUtil.addUser();
 
-		Calendar invitingcalendar = CalendarTestUtil.addCalendar(_invitingUser);
+		Calendar invitingCalendar = CalendarTestUtil.addCalendar(_invitingUser);
 
 		Calendar invitedCalendar = CalendarTestUtil.addCalendar(_user);
 
 		CalendarBooking calendarBooking =
 			CalendarBookingTestUtil.addMasterCalendarBookingWithWorkflow(
-				invitingcalendar, invitedCalendar,
+				invitingCalendar, invitedCalendar,
 				WorkflowConstants.ACTION_PUBLISH);
 
-		String mailMessageSubject =
-			"Calendar: Event Notification for " + StringPool.QUOTE +
-				calendarBooking.getTitle(LocaleUtil.getDefault()) +
-					StringPool.QUOTE;
+		String mailMessageSubject = StringBundler.concat(
+			"Calendar: Event Notification for ", StringPool.QUOTE,
+			calendarBooking.getTitle(LocaleUtil.getSiteDefault()),
+			StringPool.QUOTE);
 
 		assertMailSubjectCount(mailMessageSubject, 1);
 	}
@@ -1220,6 +1257,7 @@ public class CalendarBookingLocalServiceTest {
 			calendarBooking.getTitle(), childCalendarBooking.getTitle());
 	}
 
+	@Ignore
 	@Test
 	public void testInviteUserCalendarWithWorkflowShouldInviteCalendarBookingOnlyAfterApprovedAndPublished()
 		throws Exception {
@@ -1322,6 +1360,38 @@ public class CalendarBookingLocalServiceTest {
 		assertStatus(
 			childCalendarBooking,
 			CalendarBookingWorkflowConstants.STATUS_MASTER_PENDING);
+	}
+
+	@Ignore
+	@Test
+	public void testInviteUserCalendarWithWorkflowShouldNotifieInviteCalendarBookingOnlyAfterApprovedAndPublished()
+		throws Exception {
+
+		_group = GroupTestUtil.addGroup();
+
+		CalendarWorkflowTestUtil.activateWorkflow(_group);
+
+		_invitingUser = UserTestUtil.addUser();
+
+		Calendar invitedCalendar = CalendarTestUtil.addCalendar(_invitingUser);
+
+		Calendar invitingCalendar = CalendarTestUtil.getDefaultCalendar(_group);
+
+		CalendarBooking calendarBooking =
+			CalendarBookingTestUtil.addMasterCalendarBookingWithWorkflow(
+				invitingCalendar, invitedCalendar,
+				WorkflowConstants.ACTION_PUBLISH);
+
+		String mailMessageSubject = StringBundler.concat(
+			"Calendar: Event Notification for ", StringPool.QUOTE,
+			calendarBooking.getTitle(LocaleUtil.getSiteDefault()),
+			StringPool.QUOTE);
+
+		assertMailSubjectCount(mailMessageSubject, 0);
+
+		CalendarWorkflowTestUtil.completeWorkflow(_group);
+
+		assertMailSubjectCount(mailMessageSubject, 1);
 	}
 
 	@Test
@@ -1818,10 +1888,10 @@ public class CalendarBookingLocalServiceTest {
 
 		CalendarBookingLocalServiceUtil.checkCalendarBookings();
 
-		String mailMessageSubject =
-			"Calendar: Event Reminder for " + StringPool.QUOTE +
-				calendarBooking.getTitle(LocaleUtil.getDefault()) +
-					StringPool.QUOTE;
+		String mailMessageSubject = StringBundler.concat(
+			"Calendar: Event Reminder for ", StringPool.QUOTE,
+			calendarBooking.getTitle(LocaleUtil.getSiteDefault()),
+			StringPool.QUOTE);
 
 		assertMailSubjectCount(mailMessageSubject, 1);
 	}
@@ -2420,17 +2490,16 @@ public class CalendarBookingLocalServiceTest {
 
 		int secondReminder = RandomTestUtil.randomInt(1, firstReminder);
 
-		childCalendarBooking =
-			CalendarBookingLocalServiceUtil.updateCalendarBooking(
-				_user.getUserId(), childCalendarBooking.getCalendarBookingId(),
-				childCalendarBooking.getCalendarId(), new long[0],
-				childCalendarBooking.getTitleMap(),
-				childCalendarBooking.getDescriptionMap(),
-				childCalendarBooking.getLocation(), startTime,
-				startTime + (Time.HOUR * 10), childCalendarBooking.isAllDay(),
-				childCalendarBooking.getRecurrence(), firstReminder,
-				NotificationType.EMAIL.getValue(), secondReminder,
-				NotificationType.EMAIL.getValue(), serviceContext);
+		CalendarBookingLocalServiceUtil.updateCalendarBooking(
+			_user.getUserId(), childCalendarBooking.getCalendarBookingId(),
+			childCalendarBooking.getCalendarId(), new long[0],
+			childCalendarBooking.getTitleMap(),
+			childCalendarBooking.getDescriptionMap(),
+			childCalendarBooking.getLocation(), startTime,
+			startTime + (Time.HOUR * 10), childCalendarBooking.isAllDay(),
+			childCalendarBooking.getRecurrence(), firstReminder,
+			NotificationType.EMAIL.getValue(), secondReminder,
+			NotificationType.EMAIL.getValue(), serviceContext);
 
 		calendarBooking = CalendarBookingLocalServiceUtil.updateCalendarBooking(
 			_user.getUserId(), calendarBooking.getCalendarBookingId(),
@@ -2517,13 +2586,15 @@ public class CalendarBookingLocalServiceTest {
 
 		Calendar calendar = CalendarTestUtil.addCalendar(_user, serviceContext);
 
-		Map<Locale, String> oldDescriptionMap = new HashMap<>();
-
-		oldDescriptionMap.put(LocaleUtil.BRAZIL, RandomTestUtil.randomString());
-		oldDescriptionMap.put(
-			LocaleUtil.GERMANY, RandomTestUtil.randomString());
-		oldDescriptionMap.put(LocaleUtil.SPAIN, RandomTestUtil.randomString());
-		oldDescriptionMap.put(LocaleUtil.US, RandomTestUtil.randomString());
+		Map<Locale, String> oldDescriptionMap = HashMapBuilder.put(
+			LocaleUtil.BRAZIL, RandomTestUtil.randomString()
+		).put(
+			LocaleUtil.GERMANY, RandomTestUtil.randomString()
+		).put(
+			LocaleUtil.SPAIN, RandomTestUtil.randomString()
+		).put(
+			LocaleUtil.US, RandomTestUtil.randomString()
+		).build();
 
 		long startTime = System.currentTimeMillis();
 
@@ -2534,12 +2605,13 @@ public class CalendarBookingLocalServiceTest {
 					oldDescriptionMap, startTime, startTime + (Time.HOUR * 10),
 					serviceContext);
 
-		Map<Locale, String> newDescriptionMap = new HashMap<>();
-
-		newDescriptionMap.put(LocaleUtil.GERMANY, "");
-		newDescriptionMap.put(LocaleUtil.SPAIN, RandomTestUtil.randomString());
-		newDescriptionMap.put(
-			LocaleUtil.US, oldDescriptionMap.get(LocaleUtil.US));
+		Map<Locale, String> newDescriptionMap = HashMapBuilder.put(
+			LocaleUtil.GERMANY, ""
+		).put(
+			LocaleUtil.SPAIN, RandomTestUtil.randomString()
+		).put(
+			LocaleUtil.US, oldDescriptionMap.get(LocaleUtil.US)
+		).build();
 
 		calendarBooking = CalendarBookingLocalServiceUtil.updateCalendarBooking(
 			_user.getUserId(), calendarBooking.getCalendarBookingId(),
@@ -2576,12 +2648,15 @@ public class CalendarBookingLocalServiceTest {
 
 		Calendar calendar = CalendarTestUtil.addCalendar(_user, serviceContext);
 
-		Map<Locale, String> oldTitleMap = new HashMap<>();
-
-		oldTitleMap.put(LocaleUtil.BRAZIL, RandomTestUtil.randomString());
-		oldTitleMap.put(LocaleUtil.GERMANY, RandomTestUtil.randomString());
-		oldTitleMap.put(LocaleUtil.SPAIN, RandomTestUtil.randomString());
-		oldTitleMap.put(LocaleUtil.US, RandomTestUtil.randomString());
+		Map<Locale, String> oldTitleMap = HashMapBuilder.put(
+			LocaleUtil.BRAZIL, RandomTestUtil.randomString()
+		).put(
+			LocaleUtil.GERMANY, RandomTestUtil.randomString()
+		).put(
+			LocaleUtil.SPAIN, RandomTestUtil.randomString()
+		).put(
+			LocaleUtil.US, RandomTestUtil.randomString()
+		).build();
 
 		long startTime = System.currentTimeMillis();
 
@@ -2592,11 +2667,13 @@ public class CalendarBookingLocalServiceTest {
 					RandomTestUtil.randomLocaleStringMap(), startTime,
 					startTime + (Time.HOUR * 10), serviceContext);
 
-		Map<Locale, String> newTitleMap = new HashMap<>();
-
-		newTitleMap.put(LocaleUtil.GERMANY, "");
-		newTitleMap.put(LocaleUtil.SPAIN, RandomTestUtil.randomString());
-		newTitleMap.put(LocaleUtil.US, oldTitleMap.get(LocaleUtil.US));
+		Map<Locale, String> newTitleMap = HashMapBuilder.put(
+			LocaleUtil.GERMANY, ""
+		).put(
+			LocaleUtil.SPAIN, RandomTestUtil.randomString()
+		).put(
+			LocaleUtil.US, oldTitleMap.get(LocaleUtil.US)
+		).build();
 
 		calendarBooking = CalendarBookingLocalServiceUtil.updateCalendarBooking(
 			_user.getUserId(), calendarBooking.getCalendarBookingId(),
@@ -2909,9 +2986,9 @@ public class CalendarBookingLocalServiceTest {
 			_user.getUserId(), invitedCalendarBooking,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 
-		Map<Locale, String> titleMap = new HashMap<>();
-
-		titleMap.put(LocaleUtil.US, RandomTestUtil.randomString());
+		Map<Locale, String> titleMap = HashMapBuilder.put(
+			LocaleUtil.US, RandomTestUtil.randomString()
+		).build();
 
 		CalendarBookingTestUtil.updateCalendarBooking(
 			childCalendarBooking.getParentCalendarBooking(), titleMap,

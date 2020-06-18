@@ -14,14 +14,11 @@
 
 package com.liferay.invitation.invite.members.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class MemberRequestInvalidUserException extends PortalException {
 
 	public MemberRequestInvalidUserException() {

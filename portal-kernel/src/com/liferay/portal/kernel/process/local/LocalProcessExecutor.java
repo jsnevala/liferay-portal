@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.process.local;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.concurrent.AsyncBroker;
 import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
@@ -28,7 +29,6 @@ import com.liferay.portal.kernel.process.ProcessExecutor;
 import com.liferay.portal.kernel.process.ProcessLog;
 import com.liferay.portal.kernel.process.TerminationProcessException;
 import com.liferay.portal.kernel.util.ClassLoaderObjectInputStream;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -43,10 +43,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
@@ -54,14 +52,6 @@ import java.util.function.Consumer;
  * @author Shuyang Zhou
  */
 public class LocalProcessExecutor implements ProcessExecutor {
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public Set<Process> destroy() {
-		return Collections.emptySet();
-	}
 
 	@Override
 	public <T extends Serializable> ProcessChannel<T> execute(
@@ -128,8 +118,8 @@ public class LocalProcessExecutor implements ProcessExecutor {
 			return new LocalProcessChannel<>(
 				noticeableFuture, objectOutputStream, asyncBroker);
 		}
-		catch (IOException ioe) {
-			throw new ProcessException(ioe);
+		catch (IOException ioException) {
+			throw new ProcessException(ioException);
 		}
 	}
 
@@ -223,7 +213,7 @@ public class LocalProcessExecutor implements ProcessExecutor {
 
 						break;
 					}
-					catch (StreamCorruptedException sce) {
+					catch (StreamCorruptedException streamCorruptedException) {
 
 						// Collecting bad header as log information
 
@@ -240,11 +230,12 @@ public class LocalProcessExecutor implements ProcessExecutor {
 					try {
 						obj = objectInputStream.readObject();
 					}
-					catch (WriteAbortedException wae) {
+					catch (WriteAbortedException writeAbortedException) {
 						_processLogConsumer.accept(
 							new LocalProcessLog(
 								ProcessLog.Level.WARN,
-								"Caught a write aborted exception", wae));
+								"Caught a write aborted exception",
+								writeAbortedException));
 
 						continue;
 					}
@@ -278,9 +269,8 @@ public class LocalProcessExecutor implements ProcessExecutor {
 								ProcessLog.Level.DEBUG,
 								StringBundler.concat(
 									"Invoked generic process callable ",
-									String.valueOf(processCallable),
-									" with return value ",
-									String.valueOf(returnValue)),
+									processCallable, " with return value ",
+									returnValue),
 								null));
 					}
 					catch (Throwable t) {
@@ -292,7 +282,7 @@ public class LocalProcessExecutor implements ProcessExecutor {
 					}
 				}
 			}
-			catch (StreamCorruptedException sce) {
+			catch (StreamCorruptedException streamCorruptedException) {
 				Path path = Files.createTempFile(
 					"corrupted-stream-dump-", ".log");
 
@@ -301,18 +291,18 @@ public class LocalProcessExecutor implements ProcessExecutor {
 						ProcessLog.Level.ERROR,
 						"Dumping content of corrupted object input stream to " +
 							path.toAbsolutePath(),
-						sce));
+						streamCorruptedException));
 
 				Files.copy(
 					unsyncBufferedInputStream, path,
 					StandardCopyOption.REPLACE_EXISTING);
 
 				throw new ProcessException(
-					"Corrupted object input stream", sce);
+					"Corrupted object input stream", streamCorruptedException);
 			}
-			catch (EOFException eofe) {
+			catch (EOFException eofException) {
 				throw new ProcessException(
-					"Subprocess piping back ended prematurely", eofe);
+					"Subprocess piping back ended prematurely", eofException);
 			}
 			catch (Throwable t) {
 				_processLogConsumer.accept(
@@ -329,11 +319,12 @@ public class LocalProcessExecutor implements ProcessExecutor {
 						throw new TerminationProcessException(exitCode);
 					}
 				}
-				catch (InterruptedException ie) {
+				catch (InterruptedException interruptedException) {
 					_process.destroy();
 
 					throw new ProcessException(
-						"Forcibly killed subprocess on interruption", ie);
+						"Forcibly killed subprocess on interruption",
+						interruptedException);
 				}
 
 				AsyncBrokerThreadLocal.removeAsyncBroker();

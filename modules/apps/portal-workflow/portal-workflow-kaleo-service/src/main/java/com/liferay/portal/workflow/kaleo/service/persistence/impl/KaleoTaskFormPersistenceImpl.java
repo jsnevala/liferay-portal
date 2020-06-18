@@ -14,10 +14,8 @@
 
 package com.liferay.portal.workflow.kaleo.service.persistence.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringBundler;
-
+import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -25,22 +23,24 @@ import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.service.persistence.CompanyProvider;
-import com.liferay.portal.kernel.service.persistence.CompanyProviderWrapper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.workflow.kaleo.exception.NoSuchTaskFormException;
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskForm;
+import com.liferay.portal.workflow.kaleo.model.KaleoTaskFormTable;
 import com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskFormImpl;
 import com.liferay.portal.workflow.kaleo.model.impl.KaleoTaskFormModelImpl;
 import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTaskFormPersistence;
+import com.liferay.portal.workflow.kaleo.service.persistence.impl.constants.KaleoPersistenceConstants;
 
 import java.io.Serializable;
 
@@ -48,13 +48,17 @@ import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * The persistence implementation for the kaleo task form service.
@@ -64,56 +68,33 @@ import java.util.Set;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see KaleoTaskFormPersistence
- * @see com.liferay.portal.workflow.kaleo.service.persistence.KaleoTaskFormUtil
  * @generated
  */
-@ProviderType
-public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskForm>
+@Component(service = KaleoTaskFormPersistence.class)
+public class KaleoTaskFormPersistenceImpl
+	extends BasePersistenceImpl<KaleoTaskForm>
 	implements KaleoTaskFormPersistence {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link KaleoTaskFormUtil} to access the kaleo task form persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
+	 * Never modify or reference this class directly. Always use <code>KaleoTaskFormUtil</code> to access the kaleo task form persistence. Modify <code>service.xml</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static final String FINDER_CLASS_NAME_ENTITY = KaleoTaskFormImpl.class.getName();
-	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List1";
-	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY +
-		".List2";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_ALL = new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL = new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findAll", new String[0]);
-	public static final FinderPath FINDER_PATH_COUNT_ALL = new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_COMPANYID =
-		new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByCompanyId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID =
-		new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByCompanyId", new String[] { Long.class.getName() },
-			KaleoTaskFormModelImpl.COMPANYID_COLUMN_BITMASK |
-			KaleoTaskFormModelImpl.PRIORITY_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_COMPANYID = new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] { Long.class.getName() });
+	public static final String FINDER_CLASS_NAME_ENTITY =
+		KaleoTaskFormImpl.class.getName();
+
+	public static final String FINDER_CLASS_NAME_LIST_WITH_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List1";
+
+	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION =
+		FINDER_CLASS_NAME_ENTITY + ".List2";
+
+	private FinderPath _finderPathWithPaginationFindAll;
+	private FinderPath _finderPathWithoutPaginationFindAll;
+	private FinderPath _finderPathCountAll;
+	private FinderPath _finderPathWithPaginationFindByCompanyId;
+	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
+	private FinderPath _finderPathCountByCompanyId;
 
 	/**
 	 * Returns all the kaleo task forms where companyId = &#63;.
@@ -123,15 +104,15 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public List<KaleoTaskForm> findByCompanyId(long companyId) {
-		return findByCompanyId(companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			null);
+		return findByCompanyId(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the kaleo task forms where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -140,8 +121,9 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the range of matching kaleo task forms
 	 */
 	@Override
-	public List<KaleoTaskForm> findByCompanyId(long companyId, int start,
-		int end) {
+	public List<KaleoTaskForm> findByCompanyId(
+		long companyId, int start, int end) {
+
 		return findByCompanyId(companyId, start, end, null);
 	}
 
@@ -149,7 +131,7 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * Returns an ordered range of all the kaleo task forms where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
@@ -159,8 +141,10 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the ordered range of matching kaleo task forms
 	 */
 	@Override
-	public List<KaleoTaskForm> findByCompanyId(long companyId, int start,
-		int end, OrderByComparator<KaleoTaskForm> orderByComparator) {
+	public List<KaleoTaskForm> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<KaleoTaskForm> orderByComparator) {
+
 		return findByCompanyId(companyId, start, end, orderByComparator, true);
 	}
 
@@ -168,44 +152,49 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * Returns an ordered range of all the kaleo task forms where companyId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param companyId the company ID
 	 * @param start the lower bound of the range of kaleo task forms
 	 * @param end the upper bound of the range of kaleo task forms (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching kaleo task forms
 	 */
 	@Override
-	public List<KaleoTaskForm> findByCompanyId(long companyId, int start,
-		int end, OrderByComparator<KaleoTaskForm> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<KaleoTaskForm> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<KaleoTaskForm> orderByComparator,
+		boolean useFinderCache) {
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID;
-			finderArgs = new Object[] { companyId };
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByCompanyId;
+				finderArgs = new Object[] {companyId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_COMPANYID;
-			finderArgs = new Object[] { companyId, start, end, orderByComparator };
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByCompanyId;
+			finderArgs = new Object[] {
+				companyId, start, end, orderByComparator
+			};
 		}
 
 		List<KaleoTaskForm> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<KaleoTaskForm>)finderCache.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache) {
+			list = (List<KaleoTaskForm>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KaleoTaskForm kaleoTaskForm : list) {
-					if ((companyId != kaleoTaskForm.getCompanyId())) {
+					if (companyId != kaleoTaskForm.getCompanyId()) {
 						list = null;
 
 						break;
@@ -215,63 +204,56 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
+			sb.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
 
-			query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				if (!pagination) {
-					list = (List<KaleoTaskForm>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<KaleoTaskForm>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<KaleoTaskForm>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					finderCache.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -290,26 +272,27 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @throws NoSuchTaskFormException if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm findByCompanyId_First(long companyId,
-		OrderByComparator<KaleoTaskForm> orderByComparator)
+	public KaleoTaskForm findByCompanyId_First(
+			long companyId, OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
-		KaleoTaskForm kaleoTaskForm = fetchByCompanyId_First(companyId,
-				orderByComparator);
+
+		KaleoTaskForm kaleoTaskForm = fetchByCompanyId_First(
+			companyId, orderByComparator);
 
 		if (kaleoTaskForm != null) {
 			return kaleoTaskForm;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchTaskFormException(msg.toString());
+		throw new NoSuchTaskFormException(sb.toString());
 	}
 
 	/**
@@ -320,10 +303,11 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the first matching kaleo task form, or <code>null</code> if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm fetchByCompanyId_First(long companyId,
-		OrderByComparator<KaleoTaskForm> orderByComparator) {
-		List<KaleoTaskForm> list = findByCompanyId(companyId, 0, 1,
-				orderByComparator);
+	public KaleoTaskForm fetchByCompanyId_First(
+		long companyId, OrderByComparator<KaleoTaskForm> orderByComparator) {
+
+		List<KaleoTaskForm> list = findByCompanyId(
+			companyId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -341,26 +325,27 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @throws NoSuchTaskFormException if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm findByCompanyId_Last(long companyId,
-		OrderByComparator<KaleoTaskForm> orderByComparator)
+	public KaleoTaskForm findByCompanyId_Last(
+			long companyId, OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
-		KaleoTaskForm kaleoTaskForm = fetchByCompanyId_Last(companyId,
-				orderByComparator);
+
+		KaleoTaskForm kaleoTaskForm = fetchByCompanyId_Last(
+			companyId, orderByComparator);
 
 		if (kaleoTaskForm != null) {
 			return kaleoTaskForm;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchTaskFormException(msg.toString());
+		throw new NoSuchTaskFormException(sb.toString());
 	}
 
 	/**
@@ -371,16 +356,17 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the last matching kaleo task form, or <code>null</code> if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm fetchByCompanyId_Last(long companyId,
-		OrderByComparator<KaleoTaskForm> orderByComparator) {
+	public KaleoTaskForm fetchByCompanyId_Last(
+		long companyId, OrderByComparator<KaleoTaskForm> orderByComparator) {
+
 		int count = countByCompanyId(companyId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<KaleoTaskForm> list = findByCompanyId(companyId, count - 1, count,
-				orderByComparator);
+		List<KaleoTaskForm> list = findByCompanyId(
+			companyId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -399,9 +385,11 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @throws NoSuchTaskFormException if a kaleo task form with the primary key could not be found
 	 */
 	@Override
-	public KaleoTaskForm[] findByCompanyId_PrevAndNext(long kaleoTaskFormId,
-		long companyId, OrderByComparator<KaleoTaskForm> orderByComparator)
+	public KaleoTaskForm[] findByCompanyId_PrevAndNext(
+			long kaleoTaskFormId, long companyId,
+			OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
+
 		KaleoTaskForm kaleoTaskForm = findByPrimaryKey(kaleoTaskFormId);
 
 		Session session = null;
@@ -411,121 +399,124 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 
 			KaleoTaskForm[] array = new KaleoTaskFormImpl[3];
 
-			array[0] = getByCompanyId_PrevAndNext(session, kaleoTaskForm,
-					companyId, orderByComparator, true);
+			array[0] = getByCompanyId_PrevAndNext(
+				session, kaleoTaskForm, companyId, orderByComparator, true);
 
 			array[1] = kaleoTaskForm;
 
-			array[2] = getByCompanyId_PrevAndNext(session, kaleoTaskForm,
-					companyId, orderByComparator, false);
+			array[2] = getByCompanyId_PrevAndNext(
+				session, kaleoTaskForm, companyId, orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected KaleoTaskForm getByCompanyId_PrevAndNext(Session session,
-		KaleoTaskForm kaleoTaskForm, long companyId,
+	protected KaleoTaskForm getByCompanyId_PrevAndNext(
+		Session session, KaleoTaskForm kaleoTaskForm, long companyId,
 		OrderByComparator<KaleoTaskForm> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
+		sb.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
 
-		query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
+			sb.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(kaleoTaskForm);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						kaleoTaskForm)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<KaleoTaskForm> list = q.list();
+		List<KaleoTaskForm> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -542,8 +533,10 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public void removeByCompanyId(long companyId) {
-		for (KaleoTaskForm kaleoTaskForm : findByCompanyId(companyId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (KaleoTaskForm kaleoTaskForm :
+				findByCompanyId(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(kaleoTaskForm);
 		}
 	}
@@ -556,40 +549,40 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public int countByCompanyId(long companyId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_COMPANYID;
+		FinderPath finderPath = _finderPathCountByCompanyId;
 
-		Object[] finderArgs = new Object[] { companyId };
+		Object[] finderArgs = new Object[] {companyId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_KALEOTASKFORM_WHERE);
+			sb.append(_SQL_COUNT_KALEOTASKFORM_WHERE);
 
-			query.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				finderCache.removeResult(finderPath, finderArgs);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -599,32 +592,13 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 = "kaleoTaskForm.companyId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_KALEODEFINITIONVERSIONID =
-		new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByKaleoDefinitionVersionId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEODEFINITIONVERSIONID =
-		new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByKaleoDefinitionVersionId",
-			new String[] { Long.class.getName() },
-			KaleoTaskFormModelImpl.KALEODEFINITIONVERSIONID_COLUMN_BITMASK |
-			KaleoTaskFormModelImpl.PRIORITY_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_KALEODEFINITIONVERSIONID =
-		new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"countByKaleoDefinitionVersionId",
-			new String[] { Long.class.getName() });
+	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 =
+		"kaleoTaskForm.companyId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByKaleoDefinitionVersionId;
+	private FinderPath
+		_finderPathWithoutPaginationFindByKaleoDefinitionVersionId;
+	private FinderPath _finderPathCountByKaleoDefinitionVersionId;
 
 	/**
 	 * Returns all the kaleo task forms where kaleoDefinitionVersionId = &#63;.
@@ -635,15 +609,17 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	@Override
 	public List<KaleoTaskForm> findByKaleoDefinitionVersionId(
 		long kaleoDefinitionVersionId) {
-		return findByKaleoDefinitionVersionId(kaleoDefinitionVersionId,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+		return findByKaleoDefinitionVersionId(
+			kaleoDefinitionVersionId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			null);
 	}
 
 	/**
 	 * Returns a range of all the kaleo task forms where kaleoDefinitionVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoDefinitionVersionId the kaleo definition version ID
@@ -654,15 +630,16 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	@Override
 	public List<KaleoTaskForm> findByKaleoDefinitionVersionId(
 		long kaleoDefinitionVersionId, int start, int end) {
-		return findByKaleoDefinitionVersionId(kaleoDefinitionVersionId, start,
-			end, null);
+
+		return findByKaleoDefinitionVersionId(
+			kaleoDefinitionVersionId, start, end, null);
 	}
 
 	/**
 	 * Returns an ordered range of all the kaleo task forms where kaleoDefinitionVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoDefinitionVersionId the kaleo definition version ID
@@ -675,57 +652,62 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	public List<KaleoTaskForm> findByKaleoDefinitionVersionId(
 		long kaleoDefinitionVersionId, int start, int end,
 		OrderByComparator<KaleoTaskForm> orderByComparator) {
-		return findByKaleoDefinitionVersionId(kaleoDefinitionVersionId, start,
-			end, orderByComparator, true);
+
+		return findByKaleoDefinitionVersionId(
+			kaleoDefinitionVersionId, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the kaleo task forms where kaleoDefinitionVersionId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoDefinitionVersionId the kaleo definition version ID
 	 * @param start the lower bound of the range of kaleo task forms
 	 * @param end the upper bound of the range of kaleo task forms (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching kaleo task forms
 	 */
 	@Override
 	public List<KaleoTaskForm> findByKaleoDefinitionVersionId(
 		long kaleoDefinitionVersionId, int start, int end,
 		OrderByComparator<KaleoTaskForm> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+		boolean useFinderCache) {
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEODEFINITIONVERSIONID;
-			finderArgs = new Object[] { kaleoDefinitionVersionId };
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath =
+					_finderPathWithoutPaginationFindByKaleoDefinitionVersionId;
+				finderArgs = new Object[] {kaleoDefinitionVersionId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_KALEODEFINITIONVERSIONID;
+		else if (useFinderCache) {
+			finderPath =
+				_finderPathWithPaginationFindByKaleoDefinitionVersionId;
 			finderArgs = new Object[] {
-					kaleoDefinitionVersionId,
-					
-					start, end, orderByComparator
-				};
+				kaleoDefinitionVersionId, start, end, orderByComparator
+			};
 		}
 
 		List<KaleoTaskForm> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<KaleoTaskForm>)finderCache.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache) {
+			list = (List<KaleoTaskForm>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KaleoTaskForm kaleoTaskForm : list) {
-					if ((kaleoDefinitionVersionId != kaleoTaskForm.getKaleoDefinitionVersionId())) {
+					if (kaleoDefinitionVersionId !=
+							kaleoTaskForm.getKaleoDefinitionVersionId()) {
+
 						list = null;
 
 						break;
@@ -735,63 +717,57 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
+			sb.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
 
-			query.append(_FINDER_COLUMN_KALEODEFINITIONVERSIONID_KALEODEFINITIONVERSIONID_2);
+			sb.append(
+				_FINDER_COLUMN_KALEODEFINITIONVERSIONID_KALEODEFINITIONVERSIONID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoDefinitionVersionId);
+				queryPos.add(kaleoDefinitionVersionId);
 
-				if (!pagination) {
-					list = (List<KaleoTaskForm>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<KaleoTaskForm>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<KaleoTaskForm>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					finderCache.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -811,26 +787,27 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public KaleoTaskForm findByKaleoDefinitionVersionId_First(
-		long kaleoDefinitionVersionId,
-		OrderByComparator<KaleoTaskForm> orderByComparator)
+			long kaleoDefinitionVersionId,
+			OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
-		KaleoTaskForm kaleoTaskForm = fetchByKaleoDefinitionVersionId_First(kaleoDefinitionVersionId,
-				orderByComparator);
+
+		KaleoTaskForm kaleoTaskForm = fetchByKaleoDefinitionVersionId_First(
+			kaleoDefinitionVersionId, orderByComparator);
 
 		if (kaleoTaskForm != null) {
 			return kaleoTaskForm;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("kaleoDefinitionVersionId=");
-		msg.append(kaleoDefinitionVersionId);
+		sb.append("kaleoDefinitionVersionId=");
+		sb.append(kaleoDefinitionVersionId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchTaskFormException(msg.toString());
+		throw new NoSuchTaskFormException(sb.toString());
 	}
 
 	/**
@@ -844,8 +821,9 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	public KaleoTaskForm fetchByKaleoDefinitionVersionId_First(
 		long kaleoDefinitionVersionId,
 		OrderByComparator<KaleoTaskForm> orderByComparator) {
-		List<KaleoTaskForm> list = findByKaleoDefinitionVersionId(kaleoDefinitionVersionId,
-				0, 1, orderByComparator);
+
+		List<KaleoTaskForm> list = findByKaleoDefinitionVersionId(
+			kaleoDefinitionVersionId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -864,26 +842,27 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public KaleoTaskForm findByKaleoDefinitionVersionId_Last(
-		long kaleoDefinitionVersionId,
-		OrderByComparator<KaleoTaskForm> orderByComparator)
+			long kaleoDefinitionVersionId,
+			OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
-		KaleoTaskForm kaleoTaskForm = fetchByKaleoDefinitionVersionId_Last(kaleoDefinitionVersionId,
-				orderByComparator);
+
+		KaleoTaskForm kaleoTaskForm = fetchByKaleoDefinitionVersionId_Last(
+			kaleoDefinitionVersionId, orderByComparator);
 
 		if (kaleoTaskForm != null) {
 			return kaleoTaskForm;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("kaleoDefinitionVersionId=");
-		msg.append(kaleoDefinitionVersionId);
+		sb.append("kaleoDefinitionVersionId=");
+		sb.append(kaleoDefinitionVersionId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchTaskFormException(msg.toString());
+		throw new NoSuchTaskFormException(sb.toString());
 	}
 
 	/**
@@ -897,14 +876,15 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	public KaleoTaskForm fetchByKaleoDefinitionVersionId_Last(
 		long kaleoDefinitionVersionId,
 		OrderByComparator<KaleoTaskForm> orderByComparator) {
+
 		int count = countByKaleoDefinitionVersionId(kaleoDefinitionVersionId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<KaleoTaskForm> list = findByKaleoDefinitionVersionId(kaleoDefinitionVersionId,
-				count - 1, count, orderByComparator);
+		List<KaleoTaskForm> list = findByKaleoDefinitionVersionId(
+			kaleoDefinitionVersionId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -924,9 +904,10 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public KaleoTaskForm[] findByKaleoDefinitionVersionId_PrevAndNext(
-		long kaleoTaskFormId, long kaleoDefinitionVersionId,
-		OrderByComparator<KaleoTaskForm> orderByComparator)
+			long kaleoTaskFormId, long kaleoDefinitionVersionId,
+			OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
+
 		KaleoTaskForm kaleoTaskForm = findByPrimaryKey(kaleoTaskFormId);
 
 		Session session = null;
@@ -936,20 +917,20 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 
 			KaleoTaskForm[] array = new KaleoTaskFormImpl[3];
 
-			array[0] = getByKaleoDefinitionVersionId_PrevAndNext(session,
-					kaleoTaskForm, kaleoDefinitionVersionId, orderByComparator,
-					true);
+			array[0] = getByKaleoDefinitionVersionId_PrevAndNext(
+				session, kaleoTaskForm, kaleoDefinitionVersionId,
+				orderByComparator, true);
 
 			array[1] = kaleoTaskForm;
 
-			array[2] = getByKaleoDefinitionVersionId_PrevAndNext(session,
-					kaleoTaskForm, kaleoDefinitionVersionId, orderByComparator,
-					false);
+			array[2] = getByKaleoDefinitionVersionId_PrevAndNext(
+				session, kaleoTaskForm, kaleoDefinitionVersionId,
+				orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -960,100 +941,104 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		Session session, KaleoTaskForm kaleoTaskForm,
 		long kaleoDefinitionVersionId,
 		OrderByComparator<KaleoTaskForm> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
+		sb.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
 
-		query.append(_FINDER_COLUMN_KALEODEFINITIONVERSIONID_KALEODEFINITIONVERSIONID_2);
+		sb.append(
+			_FINDER_COLUMN_KALEODEFINITIONVERSIONID_KALEODEFINITIONVERSIONID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
+			sb.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(kaleoDefinitionVersionId);
+		queryPos.add(kaleoDefinitionVersionId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(kaleoTaskForm);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						kaleoTaskForm)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<KaleoTaskForm> list = q.list();
+		List<KaleoTaskForm> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1069,10 +1054,14 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @param kaleoDefinitionVersionId the kaleo definition version ID
 	 */
 	@Override
-	public void removeByKaleoDefinitionVersionId(long kaleoDefinitionVersionId) {
-		for (KaleoTaskForm kaleoTaskForm : findByKaleoDefinitionVersionId(
-				kaleoDefinitionVersionId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				null)) {
+	public void removeByKaleoDefinitionVersionId(
+		long kaleoDefinitionVersionId) {
+
+		for (KaleoTaskForm kaleoTaskForm :
+				findByKaleoDefinitionVersionId(
+					kaleoDefinitionVersionId, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
 			remove(kaleoTaskForm);
 		}
 	}
@@ -1085,40 +1074,41 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public int countByKaleoDefinitionVersionId(long kaleoDefinitionVersionId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_KALEODEFINITIONVERSIONID;
+		FinderPath finderPath = _finderPathCountByKaleoDefinitionVersionId;
 
-		Object[] finderArgs = new Object[] { kaleoDefinitionVersionId };
+		Object[] finderArgs = new Object[] {kaleoDefinitionVersionId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_KALEOTASKFORM_WHERE);
+			sb.append(_SQL_COUNT_KALEOTASKFORM_WHERE);
 
-			query.append(_FINDER_COLUMN_KALEODEFINITIONVERSIONID_KALEODEFINITIONVERSIONID_2);
+			sb.append(
+				_FINDER_COLUMN_KALEODEFINITIONVERSIONID_KALEODEFINITIONVERSIONID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoDefinitionVersionId);
+				queryPos.add(kaleoDefinitionVersionId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				finderCache.removeResult(finderPath, finderArgs);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1128,30 +1118,13 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_KALEODEFINITIONVERSIONID_KALEODEFINITIONVERSIONID_2 =
-		"kaleoTaskForm.kaleoDefinitionVersionId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_KALEONODEID =
-		new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByKaleoNodeId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEONODEID =
-		new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByKaleoNodeId", new String[] { Long.class.getName() },
-			KaleoTaskFormModelImpl.KALEONODEID_COLUMN_BITMASK |
-			KaleoTaskFormModelImpl.PRIORITY_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_KALEONODEID = new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKaleoNodeId",
-			new String[] { Long.class.getName() });
+	private static final String
+		_FINDER_COLUMN_KALEODEFINITIONVERSIONID_KALEODEFINITIONVERSIONID_2 =
+			"kaleoTaskForm.kaleoDefinitionVersionId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByKaleoNodeId;
+	private FinderPath _finderPathWithoutPaginationFindByKaleoNodeId;
+	private FinderPath _finderPathCountByKaleoNodeId;
 
 	/**
 	 * Returns all the kaleo task forms where kaleoNodeId = &#63;.
@@ -1161,15 +1134,15 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public List<KaleoTaskForm> findByKaleoNodeId(long kaleoNodeId) {
-		return findByKaleoNodeId(kaleoNodeId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return findByKaleoNodeId(
+			kaleoNodeId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the kaleo task forms where kaleoNodeId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoNodeId the kaleo node ID
@@ -1178,8 +1151,9 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the range of matching kaleo task forms
 	 */
 	@Override
-	public List<KaleoTaskForm> findByKaleoNodeId(long kaleoNodeId, int start,
-		int end) {
+	public List<KaleoTaskForm> findByKaleoNodeId(
+		long kaleoNodeId, int start, int end) {
+
 		return findByKaleoNodeId(kaleoNodeId, start, end, null);
 	}
 
@@ -1187,7 +1161,7 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * Returns an ordered range of all the kaleo task forms where kaleoNodeId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoNodeId the kaleo node ID
@@ -1197,54 +1171,61 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the ordered range of matching kaleo task forms
 	 */
 	@Override
-	public List<KaleoTaskForm> findByKaleoNodeId(long kaleoNodeId, int start,
-		int end, OrderByComparator<KaleoTaskForm> orderByComparator) {
-		return findByKaleoNodeId(kaleoNodeId, start, end, orderByComparator,
-			true);
+	public List<KaleoTaskForm> findByKaleoNodeId(
+		long kaleoNodeId, int start, int end,
+		OrderByComparator<KaleoTaskForm> orderByComparator) {
+
+		return findByKaleoNodeId(
+			kaleoNodeId, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the kaleo task forms where kaleoNodeId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoNodeId the kaleo node ID
 	 * @param start the lower bound of the range of kaleo task forms
 	 * @param end the upper bound of the range of kaleo task forms (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching kaleo task forms
 	 */
 	@Override
-	public List<KaleoTaskForm> findByKaleoNodeId(long kaleoNodeId, int start,
-		int end, OrderByComparator<KaleoTaskForm> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<KaleoTaskForm> findByKaleoNodeId(
+		long kaleoNodeId, int start, int end,
+		OrderByComparator<KaleoTaskForm> orderByComparator,
+		boolean useFinderCache) {
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEONODEID;
-			finderArgs = new Object[] { kaleoNodeId };
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByKaleoNodeId;
+				finderArgs = new Object[] {kaleoNodeId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_KALEONODEID;
-			finderArgs = new Object[] { kaleoNodeId, start, end, orderByComparator };
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByKaleoNodeId;
+			finderArgs = new Object[] {
+				kaleoNodeId, start, end, orderByComparator
+			};
 		}
 
 		List<KaleoTaskForm> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<KaleoTaskForm>)finderCache.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache) {
+			list = (List<KaleoTaskForm>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KaleoTaskForm kaleoTaskForm : list) {
-					if ((kaleoNodeId != kaleoTaskForm.getKaleoNodeId())) {
+					if (kaleoNodeId != kaleoTaskForm.getKaleoNodeId()) {
 						list = null;
 
 						break;
@@ -1254,63 +1235,56 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
+			sb.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
 
-			query.append(_FINDER_COLUMN_KALEONODEID_KALEONODEID_2);
+			sb.append(_FINDER_COLUMN_KALEONODEID_KALEONODEID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoNodeId);
+				queryPos.add(kaleoNodeId);
 
-				if (!pagination) {
-					list = (List<KaleoTaskForm>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<KaleoTaskForm>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<KaleoTaskForm>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					finderCache.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1329,26 +1303,28 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @throws NoSuchTaskFormException if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm findByKaleoNodeId_First(long kaleoNodeId,
-		OrderByComparator<KaleoTaskForm> orderByComparator)
+	public KaleoTaskForm findByKaleoNodeId_First(
+			long kaleoNodeId,
+			OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
-		KaleoTaskForm kaleoTaskForm = fetchByKaleoNodeId_First(kaleoNodeId,
-				orderByComparator);
+
+		KaleoTaskForm kaleoTaskForm = fetchByKaleoNodeId_First(
+			kaleoNodeId, orderByComparator);
 
 		if (kaleoTaskForm != null) {
 			return kaleoTaskForm;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("kaleoNodeId=");
-		msg.append(kaleoNodeId);
+		sb.append("kaleoNodeId=");
+		sb.append(kaleoNodeId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchTaskFormException(msg.toString());
+		throw new NoSuchTaskFormException(sb.toString());
 	}
 
 	/**
@@ -1359,10 +1335,11 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the first matching kaleo task form, or <code>null</code> if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm fetchByKaleoNodeId_First(long kaleoNodeId,
-		OrderByComparator<KaleoTaskForm> orderByComparator) {
-		List<KaleoTaskForm> list = findByKaleoNodeId(kaleoNodeId, 0, 1,
-				orderByComparator);
+	public KaleoTaskForm fetchByKaleoNodeId_First(
+		long kaleoNodeId, OrderByComparator<KaleoTaskForm> orderByComparator) {
+
+		List<KaleoTaskForm> list = findByKaleoNodeId(
+			kaleoNodeId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1380,26 +1357,28 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @throws NoSuchTaskFormException if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm findByKaleoNodeId_Last(long kaleoNodeId,
-		OrderByComparator<KaleoTaskForm> orderByComparator)
+	public KaleoTaskForm findByKaleoNodeId_Last(
+			long kaleoNodeId,
+			OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
-		KaleoTaskForm kaleoTaskForm = fetchByKaleoNodeId_Last(kaleoNodeId,
-				orderByComparator);
+
+		KaleoTaskForm kaleoTaskForm = fetchByKaleoNodeId_Last(
+			kaleoNodeId, orderByComparator);
 
 		if (kaleoTaskForm != null) {
 			return kaleoTaskForm;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("kaleoNodeId=");
-		msg.append(kaleoNodeId);
+		sb.append("kaleoNodeId=");
+		sb.append(kaleoNodeId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchTaskFormException(msg.toString());
+		throw new NoSuchTaskFormException(sb.toString());
 	}
 
 	/**
@@ -1410,16 +1389,17 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the last matching kaleo task form, or <code>null</code> if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm fetchByKaleoNodeId_Last(long kaleoNodeId,
-		OrderByComparator<KaleoTaskForm> orderByComparator) {
+	public KaleoTaskForm fetchByKaleoNodeId_Last(
+		long kaleoNodeId, OrderByComparator<KaleoTaskForm> orderByComparator) {
+
 		int count = countByKaleoNodeId(kaleoNodeId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<KaleoTaskForm> list = findByKaleoNodeId(kaleoNodeId, count - 1,
-				count, orderByComparator);
+		List<KaleoTaskForm> list = findByKaleoNodeId(
+			kaleoNodeId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1438,9 +1418,11 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @throws NoSuchTaskFormException if a kaleo task form with the primary key could not be found
 	 */
 	@Override
-	public KaleoTaskForm[] findByKaleoNodeId_PrevAndNext(long kaleoTaskFormId,
-		long kaleoNodeId, OrderByComparator<KaleoTaskForm> orderByComparator)
+	public KaleoTaskForm[] findByKaleoNodeId_PrevAndNext(
+			long kaleoTaskFormId, long kaleoNodeId,
+			OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
+
 		KaleoTaskForm kaleoTaskForm = findByPrimaryKey(kaleoTaskFormId);
 
 		Session session = null;
@@ -1450,121 +1432,124 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 
 			KaleoTaskForm[] array = new KaleoTaskFormImpl[3];
 
-			array[0] = getByKaleoNodeId_PrevAndNext(session, kaleoTaskForm,
-					kaleoNodeId, orderByComparator, true);
+			array[0] = getByKaleoNodeId_PrevAndNext(
+				session, kaleoTaskForm, kaleoNodeId, orderByComparator, true);
 
 			array[1] = kaleoTaskForm;
 
-			array[2] = getByKaleoNodeId_PrevAndNext(session, kaleoTaskForm,
-					kaleoNodeId, orderByComparator, false);
+			array[2] = getByKaleoNodeId_PrevAndNext(
+				session, kaleoTaskForm, kaleoNodeId, orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected KaleoTaskForm getByKaleoNodeId_PrevAndNext(Session session,
-		KaleoTaskForm kaleoTaskForm, long kaleoNodeId,
+	protected KaleoTaskForm getByKaleoNodeId_PrevAndNext(
+		Session session, KaleoTaskForm kaleoTaskForm, long kaleoNodeId,
 		OrderByComparator<KaleoTaskForm> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
+		sb.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
 
-		query.append(_FINDER_COLUMN_KALEONODEID_KALEONODEID_2);
+		sb.append(_FINDER_COLUMN_KALEONODEID_KALEONODEID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
+			sb.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(kaleoNodeId);
+		queryPos.add(kaleoNodeId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(kaleoTaskForm);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						kaleoTaskForm)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<KaleoTaskForm> list = q.list();
+		List<KaleoTaskForm> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1581,8 +1566,10 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public void removeByKaleoNodeId(long kaleoNodeId) {
-		for (KaleoTaskForm kaleoTaskForm : findByKaleoNodeId(kaleoNodeId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (KaleoTaskForm kaleoTaskForm :
+				findByKaleoNodeId(
+					kaleoNodeId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(kaleoTaskForm);
 		}
 	}
@@ -1595,40 +1582,40 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public int countByKaleoNodeId(long kaleoNodeId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_KALEONODEID;
+		FinderPath finderPath = _finderPathCountByKaleoNodeId;
 
-		Object[] finderArgs = new Object[] { kaleoNodeId };
+		Object[] finderArgs = new Object[] {kaleoNodeId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_KALEOTASKFORM_WHERE);
+			sb.append(_SQL_COUNT_KALEOTASKFORM_WHERE);
 
-			query.append(_FINDER_COLUMN_KALEONODEID_KALEONODEID_2);
+			sb.append(_FINDER_COLUMN_KALEONODEID_KALEONODEID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoNodeId);
+				queryPos.add(kaleoNodeId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				finderCache.removeResult(finderPath, finderArgs);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1638,29 +1625,12 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_KALEONODEID_KALEONODEID_2 = "kaleoTaskForm.kaleoNodeId = ?";
-	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_KALEOTASKID =
-		new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByKaleoTaskId",
-			new String[] {
-				Long.class.getName(),
-				
-			Integer.class.getName(), Integer.class.getName(),
-				OrderByComparator.class.getName()
-			});
-	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEOTASKID =
-		new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByKaleoTaskId", new String[] { Long.class.getName() },
-			KaleoTaskFormModelImpl.KALEOTASKID_COLUMN_BITMASK |
-			KaleoTaskFormModelImpl.PRIORITY_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_KALEOTASKID = new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKaleoTaskId",
-			new String[] { Long.class.getName() });
+	private static final String _FINDER_COLUMN_KALEONODEID_KALEONODEID_2 =
+		"kaleoTaskForm.kaleoNodeId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByKaleoTaskId;
+	private FinderPath _finderPathWithoutPaginationFindByKaleoTaskId;
+	private FinderPath _finderPathCountByKaleoTaskId;
 
 	/**
 	 * Returns all the kaleo task forms where kaleoTaskId = &#63;.
@@ -1670,15 +1640,15 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public List<KaleoTaskForm> findByKaleoTaskId(long kaleoTaskId) {
-		return findByKaleoTaskId(kaleoTaskId, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		return findByKaleoTaskId(
+			kaleoTaskId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
 	 * Returns a range of all the kaleo task forms where kaleoTaskId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoTaskId the kaleo task ID
@@ -1687,8 +1657,9 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the range of matching kaleo task forms
 	 */
 	@Override
-	public List<KaleoTaskForm> findByKaleoTaskId(long kaleoTaskId, int start,
-		int end) {
+	public List<KaleoTaskForm> findByKaleoTaskId(
+		long kaleoTaskId, int start, int end) {
+
 		return findByKaleoTaskId(kaleoTaskId, start, end, null);
 	}
 
@@ -1696,7 +1667,7 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * Returns an ordered range of all the kaleo task forms where kaleoTaskId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoTaskId the kaleo task ID
@@ -1706,54 +1677,61 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the ordered range of matching kaleo task forms
 	 */
 	@Override
-	public List<KaleoTaskForm> findByKaleoTaskId(long kaleoTaskId, int start,
-		int end, OrderByComparator<KaleoTaskForm> orderByComparator) {
-		return findByKaleoTaskId(kaleoTaskId, start, end, orderByComparator,
-			true);
+	public List<KaleoTaskForm> findByKaleoTaskId(
+		long kaleoTaskId, int start, int end,
+		OrderByComparator<KaleoTaskForm> orderByComparator) {
+
+		return findByKaleoTaskId(
+			kaleoTaskId, start, end, orderByComparator, true);
 	}
 
 	/**
 	 * Returns an ordered range of all the kaleo task forms where kaleoTaskId = &#63;.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param kaleoTaskId the kaleo task ID
 	 * @param start the lower bound of the range of kaleo task forms
 	 * @param end the upper bound of the range of kaleo task forms (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching kaleo task forms
 	 */
 	@Override
-	public List<KaleoTaskForm> findByKaleoTaskId(long kaleoTaskId, int start,
-		int end, OrderByComparator<KaleoTaskForm> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<KaleoTaskForm> findByKaleoTaskId(
+		long kaleoTaskId, int start, int end,
+		OrderByComparator<KaleoTaskForm> orderByComparator,
+		boolean useFinderCache) {
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEOTASKID;
-			finderArgs = new Object[] { kaleoTaskId };
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByKaleoTaskId;
+				finderArgs = new Object[] {kaleoTaskId};
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_KALEOTASKID;
-			finderArgs = new Object[] { kaleoTaskId, start, end, orderByComparator };
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByKaleoTaskId;
+			finderArgs = new Object[] {
+				kaleoTaskId, start, end, orderByComparator
+			};
 		}
 
 		List<KaleoTaskForm> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<KaleoTaskForm>)finderCache.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache) {
+			list = (List<KaleoTaskForm>)finderCache.getResult(
+				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KaleoTaskForm kaleoTaskForm : list) {
-					if ((kaleoTaskId != kaleoTaskForm.getKaleoTaskId())) {
+					if (kaleoTaskId != kaleoTaskForm.getKaleoTaskId()) {
 						list = null;
 
 						break;
@@ -1763,63 +1741,56 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(3 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
+			sb.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
 
-			query.append(_FINDER_COLUMN_KALEOTASKID_KALEOTASKID_2);
+			sb.append(_FINDER_COLUMN_KALEOTASKID_KALEOTASKID_2);
 
 			if (orderByComparator != null) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
-			else
-			 if (pagination) {
-				query.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
+			else {
+				sb.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoTaskId);
+				queryPos.add(kaleoTaskId);
 
-				if (!pagination) {
-					list = (List<KaleoTaskForm>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<KaleoTaskForm>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<KaleoTaskForm>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					finderCache.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -1838,26 +1809,28 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @throws NoSuchTaskFormException if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm findByKaleoTaskId_First(long kaleoTaskId,
-		OrderByComparator<KaleoTaskForm> orderByComparator)
+	public KaleoTaskForm findByKaleoTaskId_First(
+			long kaleoTaskId,
+			OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
-		KaleoTaskForm kaleoTaskForm = fetchByKaleoTaskId_First(kaleoTaskId,
-				orderByComparator);
+
+		KaleoTaskForm kaleoTaskForm = fetchByKaleoTaskId_First(
+			kaleoTaskId, orderByComparator);
 
 		if (kaleoTaskForm != null) {
 			return kaleoTaskForm;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("kaleoTaskId=");
-		msg.append(kaleoTaskId);
+		sb.append("kaleoTaskId=");
+		sb.append(kaleoTaskId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchTaskFormException(msg.toString());
+		throw new NoSuchTaskFormException(sb.toString());
 	}
 
 	/**
@@ -1868,10 +1841,11 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the first matching kaleo task form, or <code>null</code> if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm fetchByKaleoTaskId_First(long kaleoTaskId,
-		OrderByComparator<KaleoTaskForm> orderByComparator) {
-		List<KaleoTaskForm> list = findByKaleoTaskId(kaleoTaskId, 0, 1,
-				orderByComparator);
+	public KaleoTaskForm fetchByKaleoTaskId_First(
+		long kaleoTaskId, OrderByComparator<KaleoTaskForm> orderByComparator) {
+
+		List<KaleoTaskForm> list = findByKaleoTaskId(
+			kaleoTaskId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1889,26 +1863,28 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @throws NoSuchTaskFormException if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm findByKaleoTaskId_Last(long kaleoTaskId,
-		OrderByComparator<KaleoTaskForm> orderByComparator)
+	public KaleoTaskForm findByKaleoTaskId_Last(
+			long kaleoTaskId,
+			OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
-		KaleoTaskForm kaleoTaskForm = fetchByKaleoTaskId_Last(kaleoTaskId,
-				orderByComparator);
+
+		KaleoTaskForm kaleoTaskForm = fetchByKaleoTaskId_Last(
+			kaleoTaskId, orderByComparator);
 
 		if (kaleoTaskForm != null) {
 			return kaleoTaskForm;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("kaleoTaskId=");
-		msg.append(kaleoTaskId);
+		sb.append("kaleoTaskId=");
+		sb.append(kaleoTaskId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchTaskFormException(msg.toString());
+		throw new NoSuchTaskFormException(sb.toString());
 	}
 
 	/**
@@ -1919,16 +1895,17 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the last matching kaleo task form, or <code>null</code> if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm fetchByKaleoTaskId_Last(long kaleoTaskId,
-		OrderByComparator<KaleoTaskForm> orderByComparator) {
+	public KaleoTaskForm fetchByKaleoTaskId_Last(
+		long kaleoTaskId, OrderByComparator<KaleoTaskForm> orderByComparator) {
+
 		int count = countByKaleoTaskId(kaleoTaskId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<KaleoTaskForm> list = findByKaleoTaskId(kaleoTaskId, count - 1,
-				count, orderByComparator);
+		List<KaleoTaskForm> list = findByKaleoTaskId(
+			kaleoTaskId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -1947,9 +1924,11 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @throws NoSuchTaskFormException if a kaleo task form with the primary key could not be found
 	 */
 	@Override
-	public KaleoTaskForm[] findByKaleoTaskId_PrevAndNext(long kaleoTaskFormId,
-		long kaleoTaskId, OrderByComparator<KaleoTaskForm> orderByComparator)
+	public KaleoTaskForm[] findByKaleoTaskId_PrevAndNext(
+			long kaleoTaskFormId, long kaleoTaskId,
+			OrderByComparator<KaleoTaskForm> orderByComparator)
 		throws NoSuchTaskFormException {
+
 		KaleoTaskForm kaleoTaskForm = findByPrimaryKey(kaleoTaskFormId);
 
 		Session session = null;
@@ -1959,121 +1938,124 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 
 			KaleoTaskForm[] array = new KaleoTaskFormImpl[3];
 
-			array[0] = getByKaleoTaskId_PrevAndNext(session, kaleoTaskForm,
-					kaleoTaskId, orderByComparator, true);
+			array[0] = getByKaleoTaskId_PrevAndNext(
+				session, kaleoTaskForm, kaleoTaskId, orderByComparator, true);
 
 			array[1] = kaleoTaskForm;
 
-			array[2] = getByKaleoTaskId_PrevAndNext(session, kaleoTaskForm,
-					kaleoTaskId, orderByComparator, false);
+			array[2] = getByKaleoTaskId_PrevAndNext(
+				session, kaleoTaskForm, kaleoTaskId, orderByComparator, false);
 
 			return array;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
 		}
 	}
 
-	protected KaleoTaskForm getByKaleoTaskId_PrevAndNext(Session session,
-		KaleoTaskForm kaleoTaskForm, long kaleoTaskId,
+	protected KaleoTaskForm getByKaleoTaskId_PrevAndNext(
+		Session session, KaleoTaskForm kaleoTaskForm, long kaleoTaskId,
 		OrderByComparator<KaleoTaskForm> orderByComparator, boolean previous) {
-		StringBundler query = null;
+
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(4 +
-					(orderByComparator.getOrderByConditionFields().length * 3) +
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
+		sb.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
 
-		query.append(_FINDER_COLUMN_KALEOTASKID_KALEOTASKID_2);
+		sb.append(_FINDER_COLUMN_KALEOTASKID_KALEOTASKID_2);
 
 		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
+			sb.append(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(kaleoTaskId);
+		queryPos.add(kaleoTaskId);
 
 		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(kaleoTaskForm);
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						kaleoTaskForm)) {
 
-			for (Object value : values) {
-				qPos.add(value);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<KaleoTaskForm> list = q.list();
+		List<KaleoTaskForm> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -2090,8 +2072,10 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public void removeByKaleoTaskId(long kaleoTaskId) {
-		for (KaleoTaskForm kaleoTaskForm : findByKaleoTaskId(kaleoTaskId,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+		for (KaleoTaskForm kaleoTaskForm :
+				findByKaleoTaskId(
+					kaleoTaskId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
 			remove(kaleoTaskForm);
 		}
 	}
@@ -2104,40 +2088,40 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public int countByKaleoTaskId(long kaleoTaskId) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_KALEOTASKID;
+		FinderPath finderPath = _finderPathCountByKaleoTaskId;
 
-		Object[] finderArgs = new Object[] { kaleoTaskId };
+		Object[] finderArgs = new Object[] {kaleoTaskId};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_KALEOTASKFORM_WHERE);
+			sb.append(_SQL_COUNT_KALEOTASKFORM_WHERE);
 
-			query.append(_FINDER_COLUMN_KALEOTASKID_KALEOTASKID_2);
+			sb.append(_FINDER_COLUMN_KALEOTASKID_KALEOTASKID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoTaskId);
+				queryPos.add(kaleoTaskId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				finderCache.removeResult(finderPath, finderArgs);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2147,21 +2131,14 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_KALEOTASKID_KALEOTASKID_2 = "kaleoTaskForm.kaleoTaskId = ?";
-	public static final FinderPath FINDER_PATH_FETCH_BY_FORMUUID_KTI = new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByFormUuid_KTI",
-			new String[] { Long.class.getName(), String.class.getName() },
-			KaleoTaskFormModelImpl.KALEOTASKID_COLUMN_BITMASK |
-			KaleoTaskFormModelImpl.FORMUUID_COLUMN_BITMASK);
-	public static final FinderPath FINDER_PATH_COUNT_BY_FORMUUID_KTI = new FinderPath(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormModelImpl.FINDER_CACHE_ENABLED, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByFormUuid_KTI",
-			new String[] { Long.class.getName(), String.class.getName() });
+	private static final String _FINDER_COLUMN_KALEOTASKID_KALEOTASKID_2 =
+		"kaleoTaskForm.kaleoTaskId = ?";
+
+	private FinderPath _finderPathFetchByFormUuid_KTI;
+	private FinderPath _finderPathCountByFormUuid_KTI;
 
 	/**
-	 * Returns the kaleo task form where kaleoTaskId = &#63; and formUuid = &#63; or throws a {@link NoSuchTaskFormException} if it could not be found.
+	 * Returns the kaleo task form where kaleoTaskId = &#63; and formUuid = &#63; or throws a <code>NoSuchTaskFormException</code> if it could not be found.
 	 *
 	 * @param kaleoTaskId the kaleo task ID
 	 * @param formUuid the form uuid
@@ -2171,26 +2148,28 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	@Override
 	public KaleoTaskForm findByFormUuid_KTI(long kaleoTaskId, String formUuid)
 		throws NoSuchTaskFormException {
-		KaleoTaskForm kaleoTaskForm = fetchByFormUuid_KTI(kaleoTaskId, formUuid);
+
+		KaleoTaskForm kaleoTaskForm = fetchByFormUuid_KTI(
+			kaleoTaskId, formUuid);
 
 		if (kaleoTaskForm == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("kaleoTaskId=");
-			msg.append(kaleoTaskId);
+			sb.append("kaleoTaskId=");
+			sb.append(kaleoTaskId);
 
-			msg.append(", formUuid=");
-			msg.append(formUuid);
+			sb.append(", formUuid=");
+			sb.append(formUuid);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchTaskFormException(msg.toString());
+			throw new NoSuchTaskFormException(sb.toString());
 		}
 
 		return kaleoTaskForm;
@@ -2204,7 +2183,9 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the matching kaleo task form, or <code>null</code> if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm fetchByFormUuid_KTI(long kaleoTaskId, String formUuid) {
+	public KaleoTaskForm fetchByFormUuid_KTI(
+		long kaleoTaskId, String formUuid) {
+
 		return fetchByFormUuid_KTI(kaleoTaskId, formUuid, true);
 	}
 
@@ -2213,83 +2194,96 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 *
 	 * @param kaleoTaskId the kaleo task ID
 	 * @param formUuid the form uuid
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching kaleo task form, or <code>null</code> if a matching kaleo task form could not be found
 	 */
 	@Override
-	public KaleoTaskForm fetchByFormUuid_KTI(long kaleoTaskId, String formUuid,
-		boolean retrieveFromCache) {
-		Object[] finderArgs = new Object[] { kaleoTaskId, formUuid };
+	public KaleoTaskForm fetchByFormUuid_KTI(
+		long kaleoTaskId, String formUuid, boolean useFinderCache) {
+
+		formUuid = Objects.toString(formUuid, "");
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {kaleoTaskId, formUuid};
+		}
 
 		Object result = null;
 
-		if (retrieveFromCache) {
-			result = finderCache.getResult(FINDER_PATH_FETCH_BY_FORMUUID_KTI,
-					finderArgs, this);
+		if (useFinderCache) {
+			result = finderCache.getResult(
+				_finderPathFetchByFormUuid_KTI, finderArgs, this);
 		}
 
 		if (result instanceof KaleoTaskForm) {
 			KaleoTaskForm kaleoTaskForm = (KaleoTaskForm)result;
 
 			if ((kaleoTaskId != kaleoTaskForm.getKaleoTaskId()) ||
-					!Objects.equals(formUuid, kaleoTaskForm.getFormUuid())) {
+				!Objects.equals(formUuid, kaleoTaskForm.getFormUuid())) {
+
 				result = null;
 			}
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
+			sb.append(_SQL_SELECT_KALEOTASKFORM_WHERE);
 
-			query.append(_FINDER_COLUMN_FORMUUID_KTI_KALEOTASKID_2);
+			sb.append(_FINDER_COLUMN_FORMUUID_KTI_KALEOTASKID_2);
 
 			boolean bindFormUuid = false;
 
-			if (formUuid == null) {
-				query.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_1);
-			}
-			else if (formUuid.equals("")) {
-				query.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_3);
+			if (formUuid.isEmpty()) {
+				sb.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_3);
 			}
 			else {
 				bindFormUuid = true;
 
-				query.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_2);
+				sb.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoTaskId);
+				queryPos.add(kaleoTaskId);
 
 				if (bindFormUuid) {
-					qPos.add(formUuid);
+					queryPos.add(formUuid);
 				}
 
-				List<KaleoTaskForm> list = q.list();
+				List<KaleoTaskForm> list = query.list();
 
 				if (list.isEmpty()) {
-					finderCache.putResult(FINDER_PATH_FETCH_BY_FORMUUID_KTI,
-						finderArgs, list);
+					if (useFinderCache) {
+						finderCache.putResult(
+							_finderPathFetchByFormUuid_KTI, finderArgs, list);
+					}
 				}
 				else {
 					if (list.size() > 1) {
 						Collections.sort(list, Collections.reverseOrder());
 
 						if (_log.isWarnEnabled()) {
+							if (!useFinderCache) {
+								finderArgs = new Object[] {
+									kaleoTaskId, formUuid
+								};
+							}
+
 							_log.warn(
 								"KaleoTaskFormPersistenceImpl.fetchByFormUuid_KTI(long, String, boolean) with parameters (" +
-								StringUtil.merge(finderArgs) +
-								") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
+									StringUtil.merge(finderArgs) +
+										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
 						}
 					}
 
@@ -2300,11 +2294,13 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 					cacheResult(kaleoTaskForm);
 				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_FETCH_BY_FORMUUID_KTI,
-					finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					finderCache.removeResult(
+						_finderPathFetchByFormUuid_KTI, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2329,6 +2325,7 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	@Override
 	public KaleoTaskForm removeByFormUuid_KTI(long kaleoTaskId, String formUuid)
 		throws NoSuchTaskFormException {
+
 		KaleoTaskForm kaleoTaskForm = findByFormUuid_KTI(kaleoTaskId, formUuid);
 
 		return remove(kaleoTaskForm);
@@ -2343,58 +2340,57 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public int countByFormUuid_KTI(long kaleoTaskId, String formUuid) {
-		FinderPath finderPath = FINDER_PATH_COUNT_BY_FORMUUID_KTI;
+		formUuid = Objects.toString(formUuid, "");
 
-		Object[] finderArgs = new Object[] { kaleoTaskId, formUuid };
+		FinderPath finderPath = _finderPathCountByFormUuid_KTI;
+
+		Object[] finderArgs = new Object[] {kaleoTaskId, formUuid};
 
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_KALEOTASKFORM_WHERE);
+			sb.append(_SQL_COUNT_KALEOTASKFORM_WHERE);
 
-			query.append(_FINDER_COLUMN_FORMUUID_KTI_KALEOTASKID_2);
+			sb.append(_FINDER_COLUMN_FORMUUID_KTI_KALEOTASKID_2);
 
 			boolean bindFormUuid = false;
 
-			if (formUuid == null) {
-				query.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_1);
-			}
-			else if (formUuid.equals("")) {
-				query.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_3);
+			if (formUuid.isEmpty()) {
+				sb.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_3);
 			}
 			else {
 				bindFormUuid = true;
 
-				query.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_2);
+				sb.append(_FINDER_COLUMN_FORMUUID_KTI_FORMUUID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoTaskId);
+				queryPos.add(kaleoTaskId);
 
 				if (bindFormUuid) {
-					qPos.add(formUuid);
+					queryPos.add(formUuid);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				finderCache.removeResult(finderPath, finderArgs);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -2404,13 +2400,22 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_FORMUUID_KTI_KALEOTASKID_2 = "kaleoTaskForm.kaleoTaskId = ? AND ";
-	private static final String _FINDER_COLUMN_FORMUUID_KTI_FORMUUID_1 = "kaleoTaskForm.formUuid IS NULL";
-	private static final String _FINDER_COLUMN_FORMUUID_KTI_FORMUUID_2 = "kaleoTaskForm.formUuid = ?";
-	private static final String _FINDER_COLUMN_FORMUUID_KTI_FORMUUID_3 = "(kaleoTaskForm.formUuid IS NULL OR kaleoTaskForm.formUuid = '')";
+	private static final String _FINDER_COLUMN_FORMUUID_KTI_KALEOTASKID_2 =
+		"kaleoTaskForm.kaleoTaskId = ? AND ";
+
+	private static final String _FINDER_COLUMN_FORMUUID_KTI_FORMUUID_2 =
+		"kaleoTaskForm.formUuid = ?";
+
+	private static final String _FINDER_COLUMN_FORMUUID_KTI_FORMUUID_3 =
+		"(kaleoTaskForm.formUuid IS NULL OR kaleoTaskForm.formUuid = '')";
 
 	public KaleoTaskFormPersistenceImpl() {
 		setModelClass(KaleoTaskForm.class);
+
+		setModelImplClass(KaleoTaskFormImpl.class);
+		setModelPKClass(long.class);
+
+		setTable(KaleoTaskFormTable.INSTANCE);
 	}
 
 	/**
@@ -2420,14 +2425,16 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public void cacheResult(KaleoTaskForm kaleoTaskForm) {
-		entityCache.putResult(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, kaleoTaskForm.getPrimaryKey(),
-			kaleoTaskForm);
+		entityCache.putResult(
+			entityCacheEnabled, KaleoTaskFormImpl.class,
+			kaleoTaskForm.getPrimaryKey(), kaleoTaskForm);
 
-		finderCache.putResult(FINDER_PATH_FETCH_BY_FORMUUID_KTI,
+		finderCache.putResult(
+			_finderPathFetchByFormUuid_KTI,
 			new Object[] {
 				kaleoTaskForm.getKaleoTaskId(), kaleoTaskForm.getFormUuid()
-			}, kaleoTaskForm);
+			},
+			kaleoTaskForm);
 
 		kaleoTaskForm.resetOriginalValues();
 	}
@@ -2441,8 +2448,9 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	public void cacheResult(List<KaleoTaskForm> kaleoTaskForms) {
 		for (KaleoTaskForm kaleoTaskForm : kaleoTaskForms) {
 			if (entityCache.getResult(
-						KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-						KaleoTaskFormImpl.class, kaleoTaskForm.getPrimaryKey()) == null) {
+					entityCacheEnabled, KaleoTaskFormImpl.class,
+					kaleoTaskForm.getPrimaryKey()) == null) {
+
 				cacheResult(kaleoTaskForm);
 			}
 			else {
@@ -2455,7 +2463,7 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * Clears the cache for all kaleo task forms.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
@@ -2471,13 +2479,14 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * Clears the cache for the kaleo task form.
 	 *
 	 * <p>
-	 * The {@link EntityCache} and {@link FinderCache} are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(KaleoTaskForm kaleoTaskForm) {
-		entityCache.removeResult(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, kaleoTaskForm.getPrimaryKey());
+		entityCache.removeResult(
+			entityCacheEnabled, KaleoTaskFormImpl.class,
+			kaleoTaskForm.getPrimaryKey());
 
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
@@ -2491,47 +2500,65 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
 		for (KaleoTaskForm kaleoTaskForm : kaleoTaskForms) {
-			entityCache.removeResult(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-				KaleoTaskFormImpl.class, kaleoTaskForm.getPrimaryKey());
+			entityCache.removeResult(
+				entityCacheEnabled, KaleoTaskFormImpl.class,
+				kaleoTaskForm.getPrimaryKey());
 
-			clearUniqueFindersCache((KaleoTaskFormModelImpl)kaleoTaskForm, true);
+			clearUniqueFindersCache(
+				(KaleoTaskFormModelImpl)kaleoTaskForm, true);
+		}
+	}
+
+	@Override
+	public void clearCache(Set<Serializable> primaryKeys) {
+		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
+		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		for (Serializable primaryKey : primaryKeys) {
+			entityCache.removeResult(
+				entityCacheEnabled, KaleoTaskFormImpl.class, primaryKey);
 		}
 	}
 
 	protected void cacheUniqueFindersCache(
 		KaleoTaskFormModelImpl kaleoTaskFormModelImpl) {
-		Object[] args = new Object[] {
-				kaleoTaskFormModelImpl.getKaleoTaskId(),
-				kaleoTaskFormModelImpl.getFormUuid()
-			};
 
-		finderCache.putResult(FINDER_PATH_COUNT_BY_FORMUUID_KTI, args,
-			Long.valueOf(1), false);
-		finderCache.putResult(FINDER_PATH_FETCH_BY_FORMUUID_KTI, args,
-			kaleoTaskFormModelImpl, false);
+		Object[] args = new Object[] {
+			kaleoTaskFormModelImpl.getKaleoTaskId(),
+			kaleoTaskFormModelImpl.getFormUuid()
+		};
+
+		finderCache.putResult(
+			_finderPathCountByFormUuid_KTI, args, Long.valueOf(1), false);
+		finderCache.putResult(
+			_finderPathFetchByFormUuid_KTI, args, kaleoTaskFormModelImpl,
+			false);
 	}
 
 	protected void clearUniqueFindersCache(
 		KaleoTaskFormModelImpl kaleoTaskFormModelImpl, boolean clearCurrent) {
+
 		if (clearCurrent) {
 			Object[] args = new Object[] {
-					kaleoTaskFormModelImpl.getKaleoTaskId(),
-					kaleoTaskFormModelImpl.getFormUuid()
-				};
+				kaleoTaskFormModelImpl.getKaleoTaskId(),
+				kaleoTaskFormModelImpl.getFormUuid()
+			};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_FORMUUID_KTI, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_FORMUUID_KTI, args);
+			finderCache.removeResult(_finderPathCountByFormUuid_KTI, args);
+			finderCache.removeResult(_finderPathFetchByFormUuid_KTI, args);
 		}
 
 		if ((kaleoTaskFormModelImpl.getColumnBitmask() &
-				FINDER_PATH_FETCH_BY_FORMUUID_KTI.getColumnBitmask()) != 0) {
-			Object[] args = new Object[] {
-					kaleoTaskFormModelImpl.getOriginalKaleoTaskId(),
-					kaleoTaskFormModelImpl.getOriginalFormUuid()
-				};
+			 _finderPathFetchByFormUuid_KTI.getColumnBitmask()) != 0) {
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_FORMUUID_KTI, args);
-			finderCache.removeResult(FINDER_PATH_FETCH_BY_FORMUUID_KTI, args);
+			Object[] args = new Object[] {
+				kaleoTaskFormModelImpl.getOriginalKaleoTaskId(),
+				kaleoTaskFormModelImpl.getOriginalFormUuid()
+			};
+
+			finderCache.removeResult(_finderPathCountByFormUuid_KTI, args);
+			finderCache.removeResult(_finderPathFetchByFormUuid_KTI, args);
 		}
 	}
 
@@ -2548,7 +2575,7 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 		kaleoTaskForm.setNew(true);
 		kaleoTaskForm.setPrimaryKey(kaleoTaskFormId);
 
-		kaleoTaskForm.setCompanyId(companyProvider.getCompanyId());
+		kaleoTaskForm.setCompanyId(CompanyThreadLocal.getCompanyId());
 
 		return kaleoTaskForm;
 	}
@@ -2563,6 +2590,7 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	@Override
 	public KaleoTaskForm remove(long kaleoTaskFormId)
 		throws NoSuchTaskFormException {
+
 		return remove((Serializable)kaleoTaskFormId);
 	}
 
@@ -2576,30 +2604,31 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	@Override
 	public KaleoTaskForm remove(Serializable primaryKey)
 		throws NoSuchTaskFormException {
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			KaleoTaskForm kaleoTaskForm = (KaleoTaskForm)session.get(KaleoTaskFormImpl.class,
-					primaryKey);
+			KaleoTaskForm kaleoTaskForm = (KaleoTaskForm)session.get(
+				KaleoTaskFormImpl.class, primaryKey);
 
 			if (kaleoTaskForm == null) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 				}
 
-				throw new NoSuchTaskFormException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-					primaryKey);
+				throw new NoSuchTaskFormException(
+					_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
 			return remove(kaleoTaskForm);
 		}
-		catch (NoSuchTaskFormException nsee) {
-			throw nsee;
+		catch (NoSuchTaskFormException noSuchEntityException) {
+			throw noSuchEntityException;
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2614,16 +2643,16 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 			session = openSession();
 
 			if (!session.contains(kaleoTaskForm)) {
-				kaleoTaskForm = (KaleoTaskForm)session.get(KaleoTaskFormImpl.class,
-						kaleoTaskForm.getPrimaryKeyObj());
+				kaleoTaskForm = (KaleoTaskForm)session.get(
+					KaleoTaskFormImpl.class, kaleoTaskForm.getPrimaryKeyObj());
 			}
 
 			if (kaleoTaskForm != null) {
 				session.delete(kaleoTaskForm);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2644,21 +2673,24 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 			InvocationHandler invocationHandler = null;
 
 			if (ProxyUtil.isProxyClass(kaleoTaskForm.getClass())) {
-				invocationHandler = ProxyUtil.getInvocationHandler(kaleoTaskForm);
+				invocationHandler = ProxyUtil.getInvocationHandler(
+					kaleoTaskForm);
 
 				throw new IllegalArgumentException(
 					"Implement ModelWrapper in kaleoTaskForm proxy " +
-					invocationHandler.getClass());
+						invocationHandler.getClass());
 			}
 
 			throw new IllegalArgumentException(
 				"Implement ModelWrapper in custom KaleoTaskForm implementation " +
-				kaleoTaskForm.getClass());
+					kaleoTaskForm.getClass());
 		}
 
-		KaleoTaskFormModelImpl kaleoTaskFormModelImpl = (KaleoTaskFormModelImpl)kaleoTaskForm;
+		KaleoTaskFormModelImpl kaleoTaskFormModelImpl =
+			(KaleoTaskFormModelImpl)kaleoTaskForm;
 
-		ServiceContext serviceContext = ServiceContextThreadLocal.getServiceContext();
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
 
 		Date now = new Date();
 
@@ -2676,8 +2708,8 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 				kaleoTaskForm.setModifiedDate(now);
 			}
 			else {
-				kaleoTaskForm.setModifiedDate(serviceContext.getModifiedDate(
-						now));
+				kaleoTaskForm.setModifiedDate(
+					serviceContext.getModifiedDate(now));
 			}
 		}
 
@@ -2695,8 +2727,8 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 				kaleoTaskForm = (KaleoTaskForm)session.merge(kaleoTaskForm);
 			}
 		}
-		catch (Exception e) {
-			throw processException(e);
+		catch (Exception exception) {
+			throw processException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -2704,120 +2736,131 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 
 		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 
-		if (!KaleoTaskFormModelImpl.COLUMN_BITMASK_ENABLED) {
+		if (!_columnBitmaskEnabled) {
 			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 		}
-		else
-		 if (isNew) {
-			Object[] args = new Object[] { kaleoTaskFormModelImpl.getCompanyId() };
+		else if (isNew) {
+			Object[] args = new Object[] {
+				kaleoTaskFormModelImpl.getCompanyId()
+			};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-				args);
+			finderCache.removeResult(_finderPathCountByCompanyId, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByCompanyId, args);
 
 			args = new Object[] {
-					kaleoTaskFormModelImpl.getKaleoDefinitionVersionId()
-				};
+				kaleoTaskFormModelImpl.getKaleoDefinitionVersionId()
+			};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_KALEODEFINITIONVERSIONID,
-				args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEODEFINITIONVERSIONID,
-				args);
-
-			args = new Object[] { kaleoTaskFormModelImpl.getKaleoNodeId() };
-
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_KALEONODEID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEONODEID,
+			finderCache.removeResult(
+				_finderPathCountByKaleoDefinitionVersionId, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByKaleoDefinitionVersionId,
 				args);
 
-			args = new Object[] { kaleoTaskFormModelImpl.getKaleoTaskId() };
+			args = new Object[] {kaleoTaskFormModelImpl.getKaleoNodeId()};
 
-			finderCache.removeResult(FINDER_PATH_COUNT_BY_KALEOTASKID, args);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEOTASKID,
-				args);
+			finderCache.removeResult(_finderPathCountByKaleoNodeId, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByKaleoNodeId, args);
 
-			finderCache.removeResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL,
-				FINDER_ARGS_EMPTY);
+			args = new Object[] {kaleoTaskFormModelImpl.getKaleoTaskId()};
+
+			finderCache.removeResult(_finderPathCountByKaleoTaskId, args);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindByKaleoTaskId, args);
+
+			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
+			finderCache.removeResult(
+				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
 		}
-
 		else {
 			if ((kaleoTaskFormModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID.getColumnBitmask()) != 0) {
+				 _finderPathWithoutPaginationFindByCompanyId.
+					 getColumnBitmask()) != 0) {
+
 				Object[] args = new Object[] {
-						kaleoTaskFormModelImpl.getOriginalCompanyId()
-					};
+					kaleoTaskFormModelImpl.getOriginalCompanyId()
+				};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-					args);
+				finderCache.removeResult(_finderPathCountByCompanyId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByCompanyId, args);
 
-				args = new Object[] { kaleoTaskFormModelImpl.getCompanyId() };
+				args = new Object[] {kaleoTaskFormModelImpl.getCompanyId()};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_COMPANYID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_COMPANYID,
-					args);
+				finderCache.removeResult(_finderPathCountByCompanyId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByCompanyId, args);
 			}
 
 			if ((kaleoTaskFormModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEODEFINITIONVERSIONID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						kaleoTaskFormModelImpl.getOriginalKaleoDefinitionVersionId()
-					};
+				 _finderPathWithoutPaginationFindByKaleoDefinitionVersionId.
+					 getColumnBitmask()) != 0) {
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_KALEODEFINITIONVERSIONID,
-					args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEODEFINITIONVERSIONID,
+				Object[] args = new Object[] {
+					kaleoTaskFormModelImpl.getOriginalKaleoDefinitionVersionId()
+				};
+
+				finderCache.removeResult(
+					_finderPathCountByKaleoDefinitionVersionId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByKaleoDefinitionVersionId,
 					args);
 
 				args = new Object[] {
-						kaleoTaskFormModelImpl.getKaleoDefinitionVersionId()
-					};
+					kaleoTaskFormModelImpl.getKaleoDefinitionVersionId()
+				};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_KALEODEFINITIONVERSIONID,
-					args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEODEFINITIONVERSIONID,
-					args);
-			}
-
-			if ((kaleoTaskFormModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEONODEID.getColumnBitmask()) != 0) {
-				Object[] args = new Object[] {
-						kaleoTaskFormModelImpl.getOriginalKaleoNodeId()
-					};
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_KALEONODEID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEONODEID,
-					args);
-
-				args = new Object[] { kaleoTaskFormModelImpl.getKaleoNodeId() };
-
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_KALEONODEID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEONODEID,
+				finderCache.removeResult(
+					_finderPathCountByKaleoDefinitionVersionId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByKaleoDefinitionVersionId,
 					args);
 			}
 
 			if ((kaleoTaskFormModelImpl.getColumnBitmask() &
-					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEOTASKID.getColumnBitmask()) != 0) {
+				 _finderPathWithoutPaginationFindByKaleoNodeId.
+					 getColumnBitmask()) != 0) {
+
 				Object[] args = new Object[] {
-						kaleoTaskFormModelImpl.getOriginalKaleoTaskId()
-					};
+					kaleoTaskFormModelImpl.getOriginalKaleoNodeId()
+				};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_KALEOTASKID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEOTASKID,
-					args);
+				finderCache.removeResult(_finderPathCountByKaleoNodeId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByKaleoNodeId, args);
 
-				args = new Object[] { kaleoTaskFormModelImpl.getKaleoTaskId() };
+				args = new Object[] {kaleoTaskFormModelImpl.getKaleoNodeId()};
 
-				finderCache.removeResult(FINDER_PATH_COUNT_BY_KALEOTASKID, args);
-				finderCache.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_KALEOTASKID,
-					args);
+				finderCache.removeResult(_finderPathCountByKaleoNodeId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByKaleoNodeId, args);
+			}
+
+			if ((kaleoTaskFormModelImpl.getColumnBitmask() &
+				 _finderPathWithoutPaginationFindByKaleoTaskId.
+					 getColumnBitmask()) != 0) {
+
+				Object[] args = new Object[] {
+					kaleoTaskFormModelImpl.getOriginalKaleoTaskId()
+				};
+
+				finderCache.removeResult(_finderPathCountByKaleoTaskId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByKaleoTaskId, args);
+
+				args = new Object[] {kaleoTaskFormModelImpl.getKaleoTaskId()};
+
+				finderCache.removeResult(_finderPathCountByKaleoTaskId, args);
+				finderCache.removeResult(
+					_finderPathWithoutPaginationFindByKaleoTaskId, args);
 			}
 		}
 
-		entityCache.putResult(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-			KaleoTaskFormImpl.class, kaleoTaskForm.getPrimaryKey(),
-			kaleoTaskForm, false);
+		entityCache.putResult(
+			entityCacheEnabled, KaleoTaskFormImpl.class,
+			kaleoTaskForm.getPrimaryKey(), kaleoTaskForm, false);
 
 		clearUniqueFindersCache(kaleoTaskFormModelImpl, false);
 		cacheUniqueFindersCache(kaleoTaskFormModelImpl);
@@ -2828,7 +2871,7 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	}
 
 	/**
-	 * Returns the kaleo task form with the primary key or throws a {@link com.liferay.portal.kernel.exception.NoSuchModelException} if it could not be found.
+	 * Returns the kaleo task form with the primary key or throws a <code>com.liferay.portal.kernel.exception.NoSuchModelException</code> if it could not be found.
 	 *
 	 * @param primaryKey the primary key of the kaleo task form
 	 * @return the kaleo task form
@@ -2837,6 +2880,7 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	@Override
 	public KaleoTaskForm findByPrimaryKey(Serializable primaryKey)
 		throws NoSuchTaskFormException {
+
 		KaleoTaskForm kaleoTaskForm = fetchByPrimaryKey(primaryKey);
 
 		if (kaleoTaskForm == null) {
@@ -2844,15 +2888,15 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 				_log.debug(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 			}
 
-			throw new NoSuchTaskFormException(_NO_SUCH_ENTITY_WITH_PRIMARY_KEY +
-				primaryKey);
+			throw new NoSuchTaskFormException(
+				_NO_SUCH_ENTITY_WITH_PRIMARY_KEY + primaryKey);
 		}
 
 		return kaleoTaskForm;
 	}
 
 	/**
-	 * Returns the kaleo task form with the primary key or throws a {@link NoSuchTaskFormException} if it could not be found.
+	 * Returns the kaleo task form with the primary key or throws a <code>NoSuchTaskFormException</code> if it could not be found.
 	 *
 	 * @param kaleoTaskFormId the primary key of the kaleo task form
 	 * @return the kaleo task form
@@ -2861,55 +2905,8 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	@Override
 	public KaleoTaskForm findByPrimaryKey(long kaleoTaskFormId)
 		throws NoSuchTaskFormException {
+
 		return findByPrimaryKey((Serializable)kaleoTaskFormId);
-	}
-
-	/**
-	 * Returns the kaleo task form with the primary key or returns <code>null</code> if it could not be found.
-	 *
-	 * @param primaryKey the primary key of the kaleo task form
-	 * @return the kaleo task form, or <code>null</code> if a kaleo task form with the primary key could not be found
-	 */
-	@Override
-	public KaleoTaskForm fetchByPrimaryKey(Serializable primaryKey) {
-		Serializable serializable = entityCache.getResult(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-				KaleoTaskFormImpl.class, primaryKey);
-
-		if (serializable == nullModel) {
-			return null;
-		}
-
-		KaleoTaskForm kaleoTaskForm = (KaleoTaskForm)serializable;
-
-		if (kaleoTaskForm == null) {
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				kaleoTaskForm = (KaleoTaskForm)session.get(KaleoTaskFormImpl.class,
-						primaryKey);
-
-				if (kaleoTaskForm != null) {
-					cacheResult(kaleoTaskForm);
-				}
-				else {
-					entityCache.putResult(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-						KaleoTaskFormImpl.class, primaryKey, nullModel);
-				}
-			}
-			catch (Exception e) {
-				entityCache.removeResult(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-					KaleoTaskFormImpl.class, primaryKey);
-
-				throw processException(e);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return kaleoTaskForm;
 	}
 
 	/**
@@ -2921,100 +2918,6 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	@Override
 	public KaleoTaskForm fetchByPrimaryKey(long kaleoTaskFormId) {
 		return fetchByPrimaryKey((Serializable)kaleoTaskFormId);
-	}
-
-	@Override
-	public Map<Serializable, KaleoTaskForm> fetchByPrimaryKeys(
-		Set<Serializable> primaryKeys) {
-		if (primaryKeys.isEmpty()) {
-			return Collections.emptyMap();
-		}
-
-		Map<Serializable, KaleoTaskForm> map = new HashMap<Serializable, KaleoTaskForm>();
-
-		if (primaryKeys.size() == 1) {
-			Iterator<Serializable> iterator = primaryKeys.iterator();
-
-			Serializable primaryKey = iterator.next();
-
-			KaleoTaskForm kaleoTaskForm = fetchByPrimaryKey(primaryKey);
-
-			if (kaleoTaskForm != null) {
-				map.put(primaryKey, kaleoTaskForm);
-			}
-
-			return map;
-		}
-
-		Set<Serializable> uncachedPrimaryKeys = null;
-
-		for (Serializable primaryKey : primaryKeys) {
-			Serializable serializable = entityCache.getResult(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-					KaleoTaskFormImpl.class, primaryKey);
-
-			if (serializable != nullModel) {
-				if (serializable == null) {
-					if (uncachedPrimaryKeys == null) {
-						uncachedPrimaryKeys = new HashSet<Serializable>();
-					}
-
-					uncachedPrimaryKeys.add(primaryKey);
-				}
-				else {
-					map.put(primaryKey, (KaleoTaskForm)serializable);
-				}
-			}
-		}
-
-		if (uncachedPrimaryKeys == null) {
-			return map;
-		}
-
-		StringBundler query = new StringBundler((uncachedPrimaryKeys.size() * 2) +
-				1);
-
-		query.append(_SQL_SELECT_KALEOTASKFORM_WHERE_PKS_IN);
-
-		for (Serializable primaryKey : uncachedPrimaryKeys) {
-			query.append((long)primaryKey);
-
-			query.append(",");
-		}
-
-		query.setIndex(query.index() - 1);
-
-		query.append(")");
-
-		String sql = query.toString();
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			Query q = session.createQuery(sql);
-
-			for (KaleoTaskForm kaleoTaskForm : (List<KaleoTaskForm>)q.list()) {
-				map.put(kaleoTaskForm.getPrimaryKeyObj(), kaleoTaskForm);
-
-				cacheResult(kaleoTaskForm);
-
-				uncachedPrimaryKeys.remove(kaleoTaskForm.getPrimaryKeyObj());
-			}
-
-			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				entityCache.putResult(KaleoTaskFormModelImpl.ENTITY_CACHE_ENABLED,
-					KaleoTaskFormImpl.class, primaryKey, nullModel);
-			}
-		}
-		catch (Exception e) {
-			throw processException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-
-		return map;
 	}
 
 	/**
@@ -3031,7 +2934,7 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * Returns a range of all the kaleo task forms.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of kaleo task forms
@@ -3047,7 +2950,7 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * Returns an ordered range of all the kaleo task forms.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of kaleo task forms
@@ -3056,8 +2959,10 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * @return the ordered range of kaleo task forms
 	 */
 	@Override
-	public List<KaleoTaskForm> findAll(int start, int end,
+	public List<KaleoTaskForm> findAll(
+		int start, int end,
 		OrderByComparator<KaleoTaskForm> orderByComparator) {
+
 		return findAll(start, end, orderByComparator, true);
 	}
 
@@ -3065,62 +2970,62 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 * Returns an ordered range of all the kaleo task forms.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link KaleoTaskFormModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KaleoTaskFormModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of kaleo task forms
 	 * @param end the upper bound of the range of kaleo task forms (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @param retrieveFromCache whether to retrieve from the finder cache
+	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of kaleo task forms
 	 */
 	@Override
-	public List<KaleoTaskForm> findAll(int start, int end,
-		OrderByComparator<KaleoTaskForm> orderByComparator,
-		boolean retrieveFromCache) {
-		boolean pagination = true;
+	public List<KaleoTaskForm> findAll(
+		int start, int end, OrderByComparator<KaleoTaskForm> orderByComparator,
+		boolean useFinderCache) {
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-				(orderByComparator == null)) {
-			pagination = false;
-			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_ALL;
-			finderArgs = FINDER_ARGS_EMPTY;
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindAll;
+				finderArgs = FINDER_ARGS_EMPTY;
+			}
 		}
-		else {
-			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_ALL;
-			finderArgs = new Object[] { start, end, orderByComparator };
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindAll;
+			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<KaleoTaskForm> list = null;
 
-		if (retrieveFromCache) {
-			list = (List<KaleoTaskForm>)finderCache.getResult(finderPath,
-					finderArgs, this);
+		if (useFinderCache) {
+			list = (List<KaleoTaskForm>)finderCache.getResult(
+				finderPath, finderArgs, this);
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(2 +
-						(orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(
+					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_KALEOTASKFORM);
+				sb.append(_SQL_SELECT_KALEOTASKFORM);
 
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_KALEOTASKFORM;
 
-				if (pagination) {
-					sql = sql.concat(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
-				}
+				sql = sql.concat(KaleoTaskFormModelImpl.ORDER_BY_JPQL);
 			}
 
 			Session session = null;
@@ -3128,29 +3033,23 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				if (!pagination) {
-					list = (List<KaleoTaskForm>)QueryUtil.list(q, getDialect(),
-							start, end, false);
-
-					Collections.sort(list);
-
-					list = Collections.unmodifiableList(list);
-				}
-				else {
-					list = (List<KaleoTaskForm>)QueryUtil.list(q, getDialect(),
-							start, end);
-				}
+				list = (List<KaleoTaskForm>)QueryUtil.list(
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
-				finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
 			}
-			catch (Exception e) {
-				finderCache.removeResult(finderPath, finderArgs);
+			catch (Exception exception) {
+				if (useFinderCache) {
+					finderCache.removeResult(finderPath, finderArgs);
+				}
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3178,8 +3077,8 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)finderCache.getResult(FINDER_PATH_COUNT_ALL,
-				FINDER_ARGS_EMPTY, this);
+		Long count = (Long)finderCache.getResult(
+			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
 			Session session = null;
@@ -3187,18 +3086,18 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_KALEOTASKFORM);
+				Query query = session.createQuery(_SQL_COUNT_KALEOTASKFORM);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(FINDER_PATH_COUNT_ALL, FINDER_ARGS_EMPTY,
-					count);
+				finderCache.putResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
-			catch (Exception e) {
-				finderCache.removeResult(FINDER_PATH_COUNT_ALL,
-					FINDER_ARGS_EMPTY);
+			catch (Exception exception) {
+				finderCache.removeResult(
+					_finderPathCountAll, FINDER_ARGS_EMPTY);
 
-				throw processException(e);
+				throw processException(exception);
 			}
 			finally {
 				closeSession(session);
@@ -3209,6 +3108,21 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	}
 
 	@Override
+	protected EntityCache getEntityCache() {
+		return entityCache;
+	}
+
+	@Override
+	protected String getPKDBName() {
+		return "kaleoTaskFormId";
+	}
+
+	@Override
+	protected String getSelectSQL() {
+		return _SQL_SELECT_KALEOTASKFORM;
+	}
+
+	@Override
 	protected Map<String, Integer> getTableColumnsMap() {
 		return KaleoTaskFormModelImpl.TABLE_COLUMNS_MAP;
 	}
@@ -3216,29 +3130,201 @@ public class KaleoTaskFormPersistenceImpl extends BasePersistenceImpl<KaleoTaskF
 	/**
 	 * Initializes the kaleo task form persistence.
 	 */
-	public void afterPropertiesSet() {
+	@Activate
+	public void activate() {
+		KaleoTaskFormModelImpl.setEntityCacheEnabled(entityCacheEnabled);
+		KaleoTaskFormModelImpl.setFinderCacheEnabled(finderCacheEnabled);
+
+		_finderPathWithPaginationFindAll = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, KaleoTaskFormImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+
+		_finderPathWithoutPaginationFindAll = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, KaleoTaskFormImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
+			new String[0]);
+
+		_finderPathCountAll = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
+			new String[0]);
+
+		_finderPathWithPaginationFindByCompanyId = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, KaleoTaskFormImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, KaleoTaskFormImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
+			new String[] {Long.class.getName()},
+			KaleoTaskFormModelImpl.COMPANYID_COLUMN_BITMASK |
+			KaleoTaskFormModelImpl.PRIORITY_COLUMN_BITMASK);
+
+		_finderPathCountByCompanyId = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
+			new String[] {Long.class.getName()});
+
+		_finderPathWithPaginationFindByKaleoDefinitionVersionId =
+			new FinderPath(
+				entityCacheEnabled, finderCacheEnabled, KaleoTaskFormImpl.class,
+				FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
+				"findByKaleoDefinitionVersionId",
+				new String[] {
+					Long.class.getName(), Integer.class.getName(),
+					Integer.class.getName(), OrderByComparator.class.getName()
+				});
+
+		_finderPathWithoutPaginationFindByKaleoDefinitionVersionId =
+			new FinderPath(
+				entityCacheEnabled, finderCacheEnabled, KaleoTaskFormImpl.class,
+				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+				"findByKaleoDefinitionVersionId",
+				new String[] {Long.class.getName()},
+				KaleoTaskFormModelImpl.KALEODEFINITIONVERSIONID_COLUMN_BITMASK |
+				KaleoTaskFormModelImpl.PRIORITY_COLUMN_BITMASK);
+
+		_finderPathCountByKaleoDefinitionVersionId = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+			"countByKaleoDefinitionVersionId",
+			new String[] {Long.class.getName()});
+
+		_finderPathWithPaginationFindByKaleoNodeId = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, KaleoTaskFormImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByKaleoNodeId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByKaleoNodeId = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, KaleoTaskFormImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByKaleoNodeId",
+			new String[] {Long.class.getName()},
+			KaleoTaskFormModelImpl.KALEONODEID_COLUMN_BITMASK |
+			KaleoTaskFormModelImpl.PRIORITY_COLUMN_BITMASK);
+
+		_finderPathCountByKaleoNodeId = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKaleoNodeId",
+			new String[] {Long.class.getName()});
+
+		_finderPathWithPaginationFindByKaleoTaskId = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, KaleoTaskFormImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByKaleoTaskId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			});
+
+		_finderPathWithoutPaginationFindByKaleoTaskId = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, KaleoTaskFormImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByKaleoTaskId",
+			new String[] {Long.class.getName()},
+			KaleoTaskFormModelImpl.KALEOTASKID_COLUMN_BITMASK |
+			KaleoTaskFormModelImpl.PRIORITY_COLUMN_BITMASK);
+
+		_finderPathCountByKaleoTaskId = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKaleoTaskId",
+			new String[] {Long.class.getName()});
+
+		_finderPathFetchByFormUuid_KTI = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, KaleoTaskFormImpl.class,
+			FINDER_CLASS_NAME_ENTITY, "fetchByFormUuid_KTI",
+			new String[] {Long.class.getName(), String.class.getName()},
+			KaleoTaskFormModelImpl.KALEOTASKID_COLUMN_BITMASK |
+			KaleoTaskFormModelImpl.FORMUUID_COLUMN_BITMASK);
+
+		_finderPathCountByFormUuid_KTI = new FinderPath(
+			entityCacheEnabled, finderCacheEnabled, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByFormUuid_KTI",
+			new String[] {Long.class.getName(), String.class.getName()});
 	}
 
-	public void destroy() {
+	@Deactivate
+	public void deactivate() {
 		entityCache.removeCache(KaleoTaskFormImpl.class.getName());
 		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
 		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 	}
 
-	@ServiceReference(type = CompanyProviderWrapper.class)
-	protected CompanyProvider companyProvider;
-	@ServiceReference(type = EntityCache.class)
+	@Override
+	@Reference(
+		target = KaleoPersistenceConstants.SERVICE_CONFIGURATION_FILTER,
+		unbind = "-"
+	)
+	public void setConfiguration(Configuration configuration) {
+		super.setConfiguration(configuration);
+
+		_columnBitmaskEnabled = GetterUtil.getBoolean(
+			configuration.get(
+				"value.object.column.bitmask.enabled.com.liferay.portal.workflow.kaleo.model.KaleoTaskForm"),
+			true);
+	}
+
+	@Override
+	@Reference(
+		target = KaleoPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
+	}
+
+	@Override
+	@Reference(
+		target = KaleoPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		super.setSessionFactory(sessionFactory);
+	}
+
+	private boolean _columnBitmaskEnabled;
+
+	@Reference
 	protected EntityCache entityCache;
-	@ServiceReference(type = FinderCache.class)
+
+	@Reference
 	protected FinderCache finderCache;
-	private static final String _SQL_SELECT_KALEOTASKFORM = "SELECT kaleoTaskForm FROM KaleoTaskForm kaleoTaskForm";
-	private static final String _SQL_SELECT_KALEOTASKFORM_WHERE_PKS_IN = "SELECT kaleoTaskForm FROM KaleoTaskForm kaleoTaskForm WHERE kaleoTaskFormId IN (";
-	private static final String _SQL_SELECT_KALEOTASKFORM_WHERE = "SELECT kaleoTaskForm FROM KaleoTaskForm kaleoTaskForm WHERE ";
-	private static final String _SQL_COUNT_KALEOTASKFORM = "SELECT COUNT(kaleoTaskForm) FROM KaleoTaskForm kaleoTaskForm";
-	private static final String _SQL_COUNT_KALEOTASKFORM_WHERE = "SELECT COUNT(kaleoTaskForm) FROM KaleoTaskForm kaleoTaskForm WHERE ";
+
+	private static final String _SQL_SELECT_KALEOTASKFORM =
+		"SELECT kaleoTaskForm FROM KaleoTaskForm kaleoTaskForm";
+
+	private static final String _SQL_SELECT_KALEOTASKFORM_WHERE =
+		"SELECT kaleoTaskForm FROM KaleoTaskForm kaleoTaskForm WHERE ";
+
+	private static final String _SQL_COUNT_KALEOTASKFORM =
+		"SELECT COUNT(kaleoTaskForm) FROM KaleoTaskForm kaleoTaskForm";
+
+	private static final String _SQL_COUNT_KALEOTASKFORM_WHERE =
+		"SELECT COUNT(kaleoTaskForm) FROM KaleoTaskForm kaleoTaskForm WHERE ";
+
 	private static final String _ORDER_BY_ENTITY_ALIAS = "kaleoTaskForm.";
-	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY = "No KaleoTaskForm exists with the primary key ";
-	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No KaleoTaskForm exists with the key {";
-	private static final Log _log = LogFactoryUtil.getLog(KaleoTaskFormPersistenceImpl.class);
+
+	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY =
+		"No KaleoTaskForm exists with the primary key ";
+
+	private static final String _NO_SUCH_ENTITY_WITH_KEY =
+		"No KaleoTaskForm exists with the key {";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		KaleoTaskFormPersistenceImpl.class);
+
+	static {
+		try {
+			Class.forName(KaleoPersistenceConstants.class.getName());
+		}
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new ExceptionInInitializerError(classNotFoundException);
+		}
+	}
+
 }

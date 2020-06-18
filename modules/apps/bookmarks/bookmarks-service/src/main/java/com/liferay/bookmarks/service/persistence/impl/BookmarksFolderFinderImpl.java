@@ -31,19 +31,22 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Eudaldo Alonso
  * @author Alexander Chow
  */
+@Component(service = BookmarksFolderFinder.class)
 public class BookmarksFolderFinderImpl
 	extends BookmarksFolderFinderBaseImpl implements BookmarksFolderFinder {
 
@@ -104,18 +107,18 @@ public class BookmarksFolderFinderImpl
 
 			String sql = _customSQL.get(getClass(), FIND_BY_NO_ASSETS);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("BookmarksFolder", BookmarksFolderImpl.class);
+			sqlQuery.addEntity("BookmarksFolder", BookmarksFolderImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(PortalUtil.getClassNameId(BookmarksFolder.class));
+			queryPos.add(_portal.getClassNameId(BookmarksFolder.class));
 
-			return q.list(true);
+			return sqlQuery.list(true);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -182,29 +185,29 @@ public class BookmarksFolderFinderImpl
 
 			sql = sb.toString();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(folderId);
+			queryPos.add(groupId);
+			queryPos.add(folderId);
 
 			if (queryDefinition.getStatus() != WorkflowConstants.STATUS_ANY) {
-				qPos.add(queryDefinition.getStatus());
+				queryPos.add(queryDefinition.getStatus());
 			}
 
-			qPos.add(groupId);
-			qPos.add(folderId);
+			queryPos.add(groupId);
+			queryPos.add(folderId);
 
 			if (queryDefinition.getStatus() != WorkflowConstants.STATUS_ANY) {
-				qPos.add(queryDefinition.getStatus());
+				queryPos.add(queryDefinition.getStatus());
 			}
 
 			int count = 0;
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			while (itr.hasNext()) {
 				Long l = itr.next();
@@ -216,8 +219,8 @@ public class BookmarksFolderFinderImpl
 
 			return count;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -277,32 +280,32 @@ public class BookmarksFolderFinderImpl
 
 			sql = sb.toString();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar("modelId", Type.LONG);
-			q.addScalar("modelName", Type.STRING);
-			q.addScalar("modelFolder", Type.LONG);
+			sqlQuery.addScalar("modelId", Type.LONG);
+			sqlQuery.addScalar("modelName", Type.STRING);
+			sqlQuery.addScalar("modelFolder", Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(folderId);
+			queryPos.add(groupId);
+			queryPos.add(folderId);
 
 			if (queryDefinition.getStatus() != WorkflowConstants.STATUS_ANY) {
-				qPos.add(queryDefinition.getStatus());
+				queryPos.add(queryDefinition.getStatus());
 			}
 
-			qPos.add(groupId);
-			qPos.add(folderId);
+			queryPos.add(groupId);
+			queryPos.add(folderId);
 
 			if (queryDefinition.getStatus() != WorkflowConstants.STATUS_ANY) {
-				qPos.add(queryDefinition.getStatus());
+				queryPos.add(queryDefinition.getStatus());
 			}
 
 			List<Object> models = new ArrayList<>();
 
 			Iterator<Object[]> itr = (Iterator<Object[]>)QueryUtil.iterate(
-				q, getDialect(), queryDefinition.getStart(),
+				sqlQuery, getDialect(), queryDefinition.getStart(),
 				queryDefinition.getEnd());
 
 			while (itr.hasNext()) {
@@ -326,8 +329,8 @@ public class BookmarksFolderFinderImpl
 
 			return models;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -344,7 +347,10 @@ public class BookmarksFolderFinderImpl
 		return sql;
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
+
+	@Reference
+	private Portal _portal;
 
 }

@@ -10,7 +10,7 @@
 <tbody>
 <tr>
 	<td>ADD_NEW_DROPDOWN</td>
-	<td>//a[contains(.,'Add New')]/span</td>
+	<td>//a[contains(.,'Add New')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -31,12 +31,7 @@
 </tr>
 <tr>
 	<td>CONTENT_TITLE</td>
-	<td>//div[contains(@class,'list-group-item-content')]//*[contains(.,'${key_assetTitle}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>POPOVER_CONTENT_TITLE</td>
-	<td>//div[contains(@class,'popover-content')]/div/div/div[contains(.,'${key_assetTitle}')]</td>
+	<td>//div[contains(@class,'drag-content-item')]//*[contains(.,'${key_assetTitle}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -48,11 +43,6 @@
 <tr>
 	<td>APPLICATIONS_ACCORDION_PANEL_TITLE</td>
 	<td>//div[contains(@id,'Accordion')]//div[@class='panel-title' and contains(.,'Widgets')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>COLLAPSED_CATEGORY</td>
-	<td>//div[contains(@class,'toggler-header-collapsed')]/div</td>
 	<td></td>
 </tr>
 <tr>
@@ -83,6 +73,11 @@
 <tr>
 	<td>SIDEBAR_CONTENT_PANEL_EXPANDED</td>
 	<td>//*[@data-qa-id='addMenuAddContentCategory'][@aria-expanded='true' and contains(.,'Content')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ASSET_ITEM</td>
+	<td>//div[contains(@class,'open') or contains(@class,'show')]//*[normalize-space(text())='${key_assetItem}']/..</td>
 	<td></td>
 </tr>
 </tbody>

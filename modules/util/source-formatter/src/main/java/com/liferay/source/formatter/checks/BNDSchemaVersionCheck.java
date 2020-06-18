@@ -29,14 +29,22 @@ public class BNDSchemaVersionCheck extends BaseFileCheck {
 
 		_checkMissingSchemaVersion(fileName, absolutePath, content);
 
+		if (content.contains("Liferay-Require-SchemaVersion:") &&
+			!content.contains("Liferay-Service: true")) {
+
+			addMessage(
+				fileName,
+				"The header 'Liferay-Require-SchemaVersion' can only be used " +
+					"when the header 'Liferay-Service' has value 'true'");
+		}
+
 		if (fileName.endsWith("-web/bnd.bnd") &&
 			content.contains("Liferay-Require-SchemaVersion: 1.0.0")) {
 
 			addMessage(
 				fileName,
 				"Do not include the header Liferay-Require-SchemaVersion in " +
-					"web modules",
-				"bnd_schema_version.markdown");
+					"web modules");
 		}
 
 		return content;
@@ -57,9 +65,7 @@ public class BNDSchemaVersionCheck extends BaseFileCheck {
 			absolutePath.substring(0, pos + 1) + "service.xml");
 
 		if (serviceXMLfile.exists()) {
-			addMessage(
-				fileName, "Missing 'Liferay-Require-SchemaVersion'",
-				"bnd_schema_version.markdown");
+			addMessage(fileName, "Missing 'Liferay-Require-SchemaVersion'");
 		}
 	}
 

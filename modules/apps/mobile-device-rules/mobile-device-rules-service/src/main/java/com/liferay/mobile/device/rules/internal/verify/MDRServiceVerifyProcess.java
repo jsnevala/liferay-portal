@@ -24,13 +24,15 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Tomas Polesovsky
+ * @author     Tomas Polesovsky
+ * @deprecated As of Mueller (7.2.x), with no direct replacement
  */
 @Component(
 	immediate = true,
 	property = "verify.process.name=com.liferay.mobile.device.rules.service",
 	service = VerifyProcess.class
 )
+@Deprecated
 public class MDRServiceVerifyProcess extends VerifyProcess {
 
 	@Override

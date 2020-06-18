@@ -37,7 +37,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Bruno Farache
  * @author Raymond Augé
  * @author Juan Fernández
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @author Daniel Kocsis
  * @author Gergely Mathe
  */
@@ -47,20 +47,6 @@ import org.osgi.service.component.annotations.Reference;
 	service = PortletDataHandler.class
 )
 public class BookmarksPortletDataHandler extends BasePortletDataHandler {
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             BookmarksAdminPortletDataHandler#NAMESPACE}
-	 */
-	@Deprecated
-	public static final String NAMESPACE = "bookmarks";
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 *             BookmarksAdminPortletDataHandler#SCHEMA_VERSION}
-	 */
-	@Deprecated
-	public static final String SCHEMA_VERSION = "1.0.0";
 
 	@Override
 	public PortletPreferences deleteData(
@@ -140,14 +126,12 @@ public class BookmarksPortletDataHandler extends BasePortletDataHandler {
 		setStagingControls(getExportControls());
 	}
 
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
-	}
-
 	@Reference(
 		target = "(javax.portlet.name=" + BookmarksPortletKeys.BOOKMARKS_ADMIN + ")"
 	)
 	private PortletDataHandler _bookmarksAdminPortletDataHandler;
+
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 }

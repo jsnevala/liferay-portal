@@ -15,8 +15,9 @@
 package com.liferay.dynamic.data.mapping.internal.template;
 
 import com.liferay.dynamic.data.mapping.internal.util.ResourceBundleLoaderProvider;
-import com.liferay.dynamic.data.mapping.kernel.DDMTemplate;
 import com.liferay.dynamic.data.mapping.kernel.DDMTemplateManager;
+import com.liferay.dynamic.data.mapping.model.DDMTemplate;
+import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -187,13 +188,6 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 	}
 
 	@Reference(unbind = "-")
-	protected void setDDMTemplateManager(
-		DDMTemplateManager ddmTemplateManager) {
-
-		_ddmTemplateManager = ddmTemplateManager;
-	}
-
-	@Reference(unbind = "-")
 	protected void setGroupLocalService(GroupLocalService groupLocalService) {
 		_groupLocalService = groupLocalService;
 	}
@@ -224,7 +218,10 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 		new ConcurrentHashMap<>();
 	private final Map<String, TemplateHandler> _classNameTemplateHandlers =
 		new ConcurrentHashMap<>();
-	private DDMTemplateManager _ddmTemplateManager;
+
+	@Reference
+	private DDMTemplateLocalService _ddmTemplateLocalService;
+
 	private GroupLocalService _groupLocalService;
 	private Portal _portal;
 	private final Map<String, ServiceRegistration<?>> _serviceRegistrations =
@@ -240,6 +237,8 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 				_templateHandler.getClassName());
 
 			ServiceContext serviceContext = new ServiceContext();
+
+			serviceContext.setAddGuestPermissions(true);
 
 			Group group = _groupLocalService.getCompanyGroup(
 				company.getCompanyId());
@@ -258,8 +257,9 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 				String templateKey = templateElement.elementText(
 					"template-key");
 
-				DDMTemplate ddmTemplate = _ddmTemplateManager.fetchTemplate(
-					group.getGroupId(), classNameId, templateKey);
+				DDMTemplate ddmTemplate =
+					_ddmTemplateLocalService.fetchTemplate(
+						group.getGroupId(), classNameId, templateKey);
 
 				if ((ddmTemplate != null) &&
 					((ddmTemplate.getUserId() != userId) ||
@@ -268,9 +268,21 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 					continue;
 				}
 
-				ResourceBundleLoader resourceBundleLoader = null;
-
 				Class<?> clazz = _templateHandler.getClass();
+
+				String scriptFileName = templateElement.elementText(
+					"script-file");
+
+				String script = StringUtil.read(
+					clazz.getClassLoader(), scriptFileName);
+
+				if ((ddmTemplate != null) &&
+					StringUtil.equals(script, ddmTemplate.getScript())) {
+
+					continue;
+				}
+
+				ResourceBundleLoader resourceBundleLoader = null;
 
 				Bundle bundle = FrameworkUtil.getBundle(clazz);
 
@@ -301,17 +313,11 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 
 				String language = templateElement.elementText("language");
 
-				String scriptFileName = templateElement.elementText(
-					"script-file");
-
-				String script = StringUtil.read(
-					clazz.getClassLoader(), scriptFileName);
-
 				boolean cacheable = GetterUtil.getBoolean(
 					templateElement.elementText("cacheable"));
 
 				if (ddmTemplate == null) {
-					_ddmTemplateManager.addTemplate(
+					_ddmTemplateLocalService.addTemplate(
 						userId, group.getGroupId(), classNameId, 0,
 						_portal.getClassNameId(
 							_PORTLET_DISPLAY_TEMPLATE_CLASS_NAME),
@@ -319,8 +325,8 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 						language, script, cacheable, false, null, null,
 						serviceContext);
 				}
-				else if (!StringUtil.equals(script, ddmTemplate.getScript())) {
-					_ddmTemplateManager.updateTemplate(
+				else {
+					_ddmTemplateLocalService.updateTemplate(
 						userId, ddmTemplate.getTemplateId(), 0, nameMap,
 						descriptionMap, type, null, language, script, cacheable,
 						false, null, null, serviceContext);

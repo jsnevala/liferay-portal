@@ -1,27 +1,31 @@
-<definition default="open" summary="Open browser to '${locator1}'">
-	<command name="open">
-		<execute function="WaitForSPARefresh" />
+@default = "open"
+@summary = "Open browser to '${locator1}'"
+definition {
 
-		<execute argument1="null" selenium="selectWindow" />
+	function open {
+		WaitForSPARefresh();
 
-		<execute argument1="relative=top" selenium="selectFrame" />
+		selenium.selectWindow("null");
 
-		<execute selenium="open" />
+		selenium.selectFrame("relative=top");
 
-		<execute selenium="assertJavaScriptErrors" />
+		selenium.open();
 
-		<execute selenium="assertLiferayErrors" />
+		selenium.assertJavaScriptErrors();
 
-		<execute function="WaitForSPARefresh" />
-	</command>
+		selenium.assertLiferayErrors();
 
-	<command name="openNoError">
-		<execute function="WaitForSPARefresh" />
+		WaitForSPARefresh();
+	}
 
-		<execute argument1="null" selenium="selectWindow" />
+	function openNoError {
+		WaitForSPARefresh();
 
-		<execute argument1="relative=top" selenium="selectFrame" />
+		selenium.selectWindow("null");
 
-		<execute selenium="open" />
-	</command>
-</definition>
+		selenium.selectFrame("relative=top");
+
+		selenium.open();
+	}
+
+}

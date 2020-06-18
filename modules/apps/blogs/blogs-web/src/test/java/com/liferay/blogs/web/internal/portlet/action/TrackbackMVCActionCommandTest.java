@@ -17,19 +17,21 @@ package com.liferay.blogs.web.internal.portlet.action;
 import com.liferay.blogs.exception.NoSuchEntryException;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.web.internal.trackback.Trackback;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.Function;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import java.util.Collections;
+import java.util.function.Function;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -189,8 +191,9 @@ public class TrackbackMVCActionCommandTest extends PowerMockito {
 
 	protected void assertError(String msg) throws Exception {
 		assertResponseContent(
-			"<?xml version=\"1.0\" encoding=\"utf-8\"?><response><error>1" +
-				"</error><message>" + msg + "</message></response>");
+			StringBundler.concat(
+				"<?xml version=\"1.0\" encoding=\"utf-8\"?><response><error>1",
+				"</error><message>", msg, "</message></response>"));
 	}
 
 	protected void assertResponseContent(String expected) throws Exception {
@@ -297,7 +300,7 @@ public class TrackbackMVCActionCommandTest extends PowerMockito {
 	}
 
 	protected void setUpPropsUtil() throws Exception {
-		PropsUtil.setProps(mock(Props.class));
+		PropsTestUtil.setProps(Collections.emptyMap());
 	}
 
 	protected void whenGetEntryThenReturn(BlogsEntry blogsEntry) {

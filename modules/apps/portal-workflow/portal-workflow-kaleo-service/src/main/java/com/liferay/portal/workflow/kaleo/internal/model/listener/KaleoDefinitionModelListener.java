@@ -16,7 +16,7 @@ package com.liferay.portal.workflow.kaleo.internal.model.listener;
 
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.messaging.MessageBusUtil;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -24,9 +24,8 @@ import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
 
-import java.util.concurrent.Callable;
-
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Kenneth Chang
@@ -40,24 +39,18 @@ public class KaleoDefinitionModelListener
 		throws ModelListenerException {
 
 		TransactionCommitCallbackUtil.registerCallback(
-			new Callable<Void>() {
+			() -> {
+				Message message = new Message();
 
-				@Override
-				public Void call() throws Exception {
-					Message message = new Message();
+				message.put("command", "create");
+				message.put("name", kaleoDefinition.getName());
+				message.put(
+					"serviceContext", getServiceContext(kaleoDefinition));
+				message.put("version", kaleoDefinition.getVersion());
 
-					message.put("command", "create");
-					message.put("name", kaleoDefinition.getName());
-					message.put(
-						"serviceContext", getServiceContext(kaleoDefinition));
-					message.put("version", kaleoDefinition.getVersion());
+				_messageBus.sendMessage("liferay/kaleo_definition", message);
 
-					MessageBusUtil.sendMessage(
-						"liferay/kaleo_definition", message);
-
-					return null;
-				}
-
+				return null;
 			});
 	}
 
@@ -70,30 +63,24 @@ public class KaleoDefinitionModelListener
 		}
 
 		TransactionCommitCallbackUtil.registerCallback(
-			new Callable<Void>() {
+			() -> {
+				try {
+					Message message = new Message();
 
-				@Override
-				public Void call() throws Exception {
-					try {
-						Message message = new Message();
+					message.put("command", "delete");
+					message.put("name", kaleoDefinition.getName());
+					message.put(
+						"serviceContext", getServiceContext(kaleoDefinition));
+					message.put("version", kaleoDefinition.getVersion());
 
-						message.put("command", "delete");
-						message.put("name", kaleoDefinition.getName());
-						message.put(
-							"serviceContext",
-							getServiceContext(kaleoDefinition));
-						message.put("version", kaleoDefinition.getVersion());
-
-						MessageBusUtil.sendMessage(
-							"liferay/kaleo_definition", message);
-					}
-					catch (Exception e) {
-						throw new ModelListenerException(e);
-					}
-
-					return null;
+					_messageBus.sendMessage(
+						"liferay/kaleo_definition", message);
+				}
+				catch (Exception exception) {
+					throw new ModelListenerException(exception);
 				}
 
+				return null;
 			});
 	}
 
@@ -115,5 +102,8 @@ public class KaleoDefinitionModelListener
 
 		return serviceContext;
 	}
+
+	@Reference
+	private MessageBus _messageBus;
 
 }

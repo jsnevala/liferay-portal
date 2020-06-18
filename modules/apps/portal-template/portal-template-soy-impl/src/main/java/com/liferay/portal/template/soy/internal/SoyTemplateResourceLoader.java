@@ -14,93 +14,69 @@
 
 package com.liferay.portal.template.soy.internal;
 
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.cache.MultiVMPool;
-import com.liferay.portal.kernel.cache.SingleVMPool;
 import com.liferay.portal.kernel.template.TemplateConstants;
-import com.liferay.portal.kernel.template.TemplateResource;
 import com.liferay.portal.kernel.template.TemplateResourceLoader;
-import com.liferay.portal.template.DefaultTemplateResourceLoader;
-import com.liferay.portal.template.soy.internal.configuration.SoyTemplateEngineConfiguration;
+import com.liferay.portal.template.BaseTemplateResourceLoader;
+import com.liferay.portal.template.TemplateResourceParser;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Miroslav Ligas
  */
 @Component(
-	configurationPid = "com.liferay.portal.template.soy.configuration.SoyTemplateEngineConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
+	immediate = true,
 	service = {SoyTemplateResourceLoader.class, TemplateResourceLoader.class}
 )
-public class SoyTemplateResourceLoader implements TemplateResourceLoader {
-
-	@Override
-	public void clearCache() {
-		_defaultTemplateResourceLoader.clearCache();
-	}
-
-	@Override
-	public void clearCache(String templateId) {
-		_defaultTemplateResourceLoader.clearCache(templateId);
-	}
-
-	@Deactivate
-	@Override
-	public void destroy() {
-		_defaultTemplateResourceLoader.destroy();
-	}
-
-	@Override
-	public String getName() {
-		return _defaultTemplateResourceLoader.getName();
-	}
-
-	@Override
-	public TemplateResource getTemplateResource(String templateId) {
-		return _defaultTemplateResourceLoader.getTemplateResource(templateId);
-	}
-
-	@Override
-	public boolean hasTemplateResource(String templateId) {
-		return _defaultTemplateResourceLoader.hasTemplateResource(templateId);
-	}
+public class SoyTemplateResourceLoader extends BaseTemplateResourceLoader {
 
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
-		_soyTemplateEngineConfiguration = ConfigurableUtil.createConfigurable(
-			SoyTemplateEngineConfiguration.class, properties);
-
-		_defaultTemplateResourceLoader = new DefaultTemplateResourceLoader(
-			TemplateConstants.LANG_TYPE_SOY,
-			_soyTemplateEngineConfiguration.resourceModificationCheck(),
-			_multiVMPool, _singleVMPool);
+		init(
+			TemplateConstants.LANG_TYPE_SOY, _templateResourceParsers,
+			_soyTemplateResourceCache);
 	}
 
-	@Reference(unbind = "-")
-	protected void setMultiVMPool(MultiVMPool multiVMPool) {
-		_multiVMPool = multiVMPool;
+	@Deactivate
+	protected void deactivate() {
+		destroy();
 	}
 
-	@Reference(unbind = "-")
-	protected void setSingleVMPool(SingleVMPool singleVMPool) {
-		_singleVMPool = singleVMPool;
+	@Reference(
+		cardinality = ReferenceCardinality.MULTIPLE,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY,
+		target = "(lang.type=" + TemplateConstants.LANG_TYPE_SOY + ")"
+	)
+	protected void setTemplateResourceParser(
+		TemplateResourceParser templateResourceParser) {
+
+		_templateResourceParsers.add(templateResourceParser);
 	}
 
-	private static volatile DefaultTemplateResourceLoader
-		_defaultTemplateResourceLoader;
-	private static volatile SoyTemplateEngineConfiguration
-		_soyTemplateEngineConfiguration;
+	protected void unsetTemplateResourceParser(
+		TemplateResourceParser templateResourceParser) {
 
-	private MultiVMPool _multiVMPool;
-	private SingleVMPool _singleVMPool;
+		_templateResourceParsers.remove(templateResourceParser);
+	}
+
+	@Reference
+	private SoyTemplateResourceCache _soyTemplateResourceCache;
+
+	private final Set<TemplateResourceParser> _templateResourceParsers =
+		Collections.newSetFromMap(new ConcurrentHashMap<>());
 
 }

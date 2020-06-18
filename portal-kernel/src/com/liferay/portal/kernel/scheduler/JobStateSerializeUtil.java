@@ -39,11 +39,10 @@ public class JobStateSerializeUtil {
 		if (version == 1) {
 			return _deserialize_1(jobStateMap);
 		}
-		else {
-			throw new IllegalStateException(
-				"Unable to deserialize field for job state with version " +
-					version);
-		}
+
+		throw new IllegalStateException(
+			"Unable to deserialize field for job state with version " +
+				version);
 	}
 
 	public static Map<String, Object> serialize(JobState jobState) {
@@ -65,9 +64,10 @@ public class JobStateSerializeUtil {
 		try {
 			triggerState = TriggerState.valueOf(triggerStateString);
 		}
-		catch (IllegalArgumentException iae) {
+		catch (IllegalArgumentException illegalArgumentException) {
 			throw new IllegalStateException(
-				"Invalid value " + triggerStateString, iae);
+				"Invalid value " + triggerStateString,
+				illegalArgumentException);
 		}
 
 		int exceptionsMaxSize = (Integer)jobStateMap.get(

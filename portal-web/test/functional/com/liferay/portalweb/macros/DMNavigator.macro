@@ -1,140 +1,223 @@
-<definition>
-	<var name="dmDocumentTypeName" value="Basic Document" />
+definition {
 
-	<command name="gotoAddDocumentType">
-		<execute macro="LexiconEntry#gotoAdd" />
+	var dmDocumentTypeName = "File Upload";
 
-		<var name="key_dmDocumentTypeName" value="${dmDocumentTypeName}" />
+	macro gotoAddCategoriesPG {
+		for (var key_dmDocumentTitle : list "${dmDocumentTitleList}") {
+			Check(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_CHECKBOX");
+		}
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="${dmDocumentTypeName}" />
-		</execute>
-	</command>
+		AssertElementPresent.assertVisible(locator1 = "Icon#EDIT_CATEGORIES");
 
-	<command name="gotoAddRepositoryCP">
-		<execute function="AssertVisible" locator1="Button#PLUS" />
+		Click(locator1 = "Icon#EDIT_CATEGORIES");
+	}
 
-		<execute macro="LexiconEntry#gotoAdd" />
+	macro gotoAddDocumentTypeCP {
+		LexiconEntry.gotoAdd();
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="Repository" />
-		</execute>
-	</command>
+		var key_dmDocumentTypeName = "${dmDocumentTypeName}";
 
-	<command name="gotoAddRepositoryPG">
-		<execute macro="Portlet#clickPortletPlusIconPG">
-			<var name="portletName" value="Documents and Media" />
-		</execute>
+		MenuItem.click(menuItem = "${dmDocumentTypeName}");
+	}
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="Repository" />
-		</execute>
-	</command>
+	macro gotoAddDocumentTypePG {
+		Portlet.clickPortletPlusIconPG(portletName = "Documents and Media");
 
-	<command name="gotoCheckedOutDocument">
-		<var name="key_dmDocumentTitle" value="${dmDocumentTitle}" />
+		var key_dmDocumentTypeName = "${dmDocumentTypeName}";
 
-		<execute function="AssertClick" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE" value1="${dmCheckedOutDocumentTitle}" />
-	</command>
+		MenuItem.click(menuItem = "${dmDocumentTypeName}");
+	}
 
-	<command name="gotoDocumentCP">
-		<execute macro="LexiconEntry#gotoEntry">
-			<var name="rowEntry" value="${dmDocumentTitle}" />
-		</execute>
-	</command>
+	macro gotoAddRepositoryCP {
+		AssertVisible(locator1 = "Button#PLUS");
 
-	<command name="gotoDocumentDetails">
-		<execute function="Click" locator1="Button#INFO" />
+		LexiconEntry.gotoAdd();
 
-		<execute function="AssertClick" locator1="NavBar#DETAILS" value1="Details" />
-	</command>
+		MenuItem.click(menuItem = "Repository");
+	}
 
-	<command name="gotoDocumentPermissionsCP">
-		<execute macro="LexiconEntry#gotoEntryMenuItem">
-			<var name="menuItem" value="Permissions" />
-			<var name="rowEntry" value="${dmDocumentTitle}" />
-		</execute>
+	macro gotoAddRepositoryPG {
+		Portlet.clickPortletPlusIconPG(portletName = "Documents and Media");
 
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-	</command>
+		MenuItem.click(menuItem = "Repository");
+	}
 
-	<command name="gotoDocumentPG">
-		<var name="key_dmDocumentTitle" value="${dmDocumentTitle}" />
+	macro gotoCheckedOutDocument {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
 
-		<execute function="AssertClick" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE" value1="${dmDocumentTitle}" />
-	</command>
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
+			value1 = "${dmCheckedOutDocumentTitle}");
+	}
 
-	<command name="gotoDocumentType">
-		<execute function="AssertClick" locator1="NavBar#DOCUMENT_TYPES" value1="Document Types" />
-	</command>
+	macro gotoDocumentCP {
+		LexiconEntry.gotoEntry(rowEntry = "${dmDocumentTitle}");
+	}
 
-	<command name="gotoDocumentVersion">
-		<execute macro="DMNavigator#gotoDocumentDetails" />
+	macro gotoDocumentDetails {
+		DMDocument.expandInfo();
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="Versions" />
-		</execute>
-	</command>
+		AssertClick(
+			locator1 = "NavBar#DETAILS",
+			value1 = "Details");
+	}
 
-	<command name="gotoFolder">
-		<var name="key_dmFolderName" value="${dmFolderName}" />
+	macro gotoDocumentPermissionsCP {
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Permissions",
+			rowEntry = "${dmDocumentTitle}");
 
-		<execute function="AssertClick" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE" value1="${dmFolderName}" />
+		SelectFrame(locator1 = "IFrame#DIALOG");
+	}
 
-		<execute function="AssertVisible" locator1="DocumentsAndMedia#BREADCRUMB_FOLDER_NAME" />
-	</command>
+	macro gotoDocumentPG {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
 
-	<command name="gotoFolderPermissions">
-		<var name="key_dmFolderName" value="${dmFolderName}" />
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
+			value1 = "${dmDocumentTitle}");
+	}
 
-		<execute function="Click" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_VERTICAL_ELLIPSIS" />
+	macro gotoDocumentType {
+		Navigator.gotoNavItem(navItem = "Document Types");
+	}
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="Permissions" />
-		</execute>
+	macro gotoDocumentVersion {
+		DMDocument.expandInfo();
 
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-	</command>
+		var key_tab = "Versions";
 
-	<command name="gotoFolderViaBreadcrumb">
-		<var name="key_dmFolderName" value="${dmFolderName}" />
+		AssertClick(
+			locator1 = "NavTab#TAB_LINK",
+			value1 = "Versions");
+	}
 
-		<execute function="AssertClick#assertTextClickAt" locator1="DocumentsAndMedia#BREADCRUMB_FOLDER_NAME" />
-	</command>
+	macro gotoFolder {
+		var key_dmFolderName = "${dmFolderName}";
 
-	<command name="gotoHomeCP">
-		<execute function="AssertClick#assertTextClickAt" locator1="DocumentsAndMedia#BREADCRUMB_HOME" value1="Home" />
-	</command>
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE",
+			value1 = "${dmFolderName}");
 
-	<command name="gotoMetadataSets">
-		<execute function="AssertClick" locator1="NavBar#METADATA_SETS" value1="Metadata Sets" />
-	</command>
+		AssertVisible(locator1 = "DocumentsAndMedia#BREADCRUMB_FOLDER_NAME");
+	}
 
-	<command name="gotoRelatedAssetPG">
-		<var name="key_dmDocumentTitle" value="${dmDocumentTitle}" />
+	macro gotoFolderPermissions {
+		var key_dmFolderName = "${dmFolderName}";
 
-		<execute function="AssertClick" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE" value1="${dmDocumentTitle}" />
+		Click(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_VERTICAL_ELLIPSIS");
 
-		<var name="key_assetTitle" value="${key_assetTitle}" />
+		MenuItem.click(menuItem = "Permissions");
 
-		<execute function="AssertTextEquals" locator1="DocumentsAndMediaDocument#DOCUMENT_INFO_TITLE" value1="${dmDocumentTitle}" />
-		<execute function="AssertTextEquals" locator1="DocumentsAndMediaDocument#DOCUMENT_INFO_RELATED_ASSETS_HEADER" value1="Related Assets:" />
-		<execute function="AssertTextEquals" locator1="DocumentsAndMediaDocument#DOCUMENT_INFO_RELATED_ASSETS_TITLE" value1="${assetTitle}" />
+		SelectFrame(locator1 = "IFrame#DIALOG");
+	}
 
-		<execute function="AssertClick" locator1="DocumentsAndMediaDocument#DOCUMENT_INFO_RELATED_ASSETS_TITLE" value1="${assetTitle}" />
-	</command>
+	macro gotoFolderViaBreadcrumb {
+		var key_dmFolderName = "${dmFolderName}";
 
-	<command name="gotoRepository">
-		<var name="key_dmFolderName" value="${dmRepositoryName}" />
+		AssertClick.assertTextClickAt(locator1 = "DocumentsAndMedia#BREADCRUMB_FOLDER_NAME");
+	}
 
-		<execute function="AssertClick" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE" value1="${dmRepositoryName}" />
+	macro gotoHomeCP {
+		AssertClick.assertTextClickAt(
+			locator1 = "DocumentsAndMedia#BREADCRUMB_HOME",
+			value1 = "Home");
+	}
 
-		<execute function="AssertVisible" locator1="DocumentsAndMedia#BREADCRUMB_FOLDER_NAME" />
-	</command>
+	macro gotoMetadataSets {
+		Navigator.gotoNavItem(navItem = "Metadata Sets");
+	}
 
-	<command name="gotoURLDetail">
-		<execute function="Click" locator1="Icon#INFO" />
+	macro gotoRelatedAssetPG {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
 
-		<execute function="Click" locator1="DocumentsAndMediaDocument#DETAILS_URL" />
-	</command>
-</definition>
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
+			value1 = "${dmDocumentTitle}");
+
+		var key_assetTitle = "${key_assetTitle}";
+
+		AssertTextEquals(
+			locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_TITLE",
+			value1 = "${dmDocumentTitle}");
+
+		DMDocument.expandInfo();
+
+		AssertTextEquals(
+			locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_RELATED_ASSETS_HEADER",
+			value1 = "Related Assets");
+
+		AssertTextEquals(
+			locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_RELATED_ASSETS_TITLE",
+			value1 = "${assetTitle}");
+
+		AssertClick(
+			locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_RELATED_ASSETS_TITLE",
+			value1 = "${assetTitle}");
+	}
+
+	macro gotoRepository {
+		var key_dmFolderName = "${dmRepositoryName}";
+
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE",
+			value1 = "${dmRepositoryName}");
+
+		AssertVisible(locator1 = "DocumentsAndMedia#BREADCRUMB_FOLDER_NAME");
+	}
+
+	macro gotoShare {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
+
+		AssertElementPresent(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE");
+
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
+			value1 = "${dmDocumentTitle}");
+
+		DMDocument.viewDocumentTitleCmdPG(dmDocumentTitle = "${dmDocumentTitle}");
+
+		var key_text = "Share";
+
+		AssertClick(
+			locator1 = "Button#SHARE_SIDENAV",
+			value1 = "Share");
+	}
+
+	macro gotoShareInfoPanel {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
+
+		AssertClick(
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE",
+			value1 = "${dmDocumentTitle}");
+
+		DMDocument.viewDocumentTitleCmdPG(dmDocumentTitle = "${dmDocumentTitle}");
+
+		Click.clickAt(locator1 = "Icon#INFO");
+
+		AssertElementPresent(locator1 = "Button#SHARE_SIDEBAR");
+
+		Click(locator1 = "Button#SHARE_SIDEBAR");
+	}
+
+	macro gotoShareViaSharedContent {
+		var key_contentTitle = "${dmDocumentTitle}";
+
+		Click(
+			locator1 = "Sharing#SHARED_CONTENT_CONTENT_OPTIONS",
+			value1 = "${contentTitle}");
+
+		MenuItem.click(menuItem = "Share");
+	}
+
+	macro gotoURLDetail {
+		DMDocument.expandInfo();
+
+		Click(locator1 = "DocumentsAndMediaDocument#DETAILS_URL");
+	}
+
+	macro openDocumentsAndMediaAdmin {
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_document_library_web_portlet_DLAdminPortlet");
+	}
+
+}

@@ -14,8 +14,6 @@
 
 package com.liferay.portal.relationship;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.model.ClassedModel;
 
 import java.util.Collection;
@@ -26,9 +24,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
-@ProviderType
 public class Relationship<T extends ClassedModel> {
 
 	public Stream<? extends ClassedModel> getInboundRelatedModelStream(

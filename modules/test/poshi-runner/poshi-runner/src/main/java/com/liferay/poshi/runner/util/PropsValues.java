@@ -25,6 +25,9 @@ public class PropsValues {
 	public static final String BROWSER_CHROME_BIN_ARGS = PropsUtil.get(
 		"browser.chrome.bin.args");
 
+	public static final String BROWSER_CHROME_BIN_FILE = PropsUtil.get(
+		"browser.chrome.bin.file");
+
 	public static final String BROWSER_FIREFOX_BIN_FILE = PropsUtil.get(
 		"browser.firefox.bin.file");
 
@@ -32,6 +35,9 @@ public class PropsValues {
 
 	public static final String BROWSER_VERSION = PropsUtil.get(
 		"browser.version");
+
+	public static final Boolean DEBUG_STACKTRACE = GetterUtil.getBoolean(
+		PropsUtil.get("debug.stacktrace"));
 
 	public static final int GET_LOCATION_MAX_RETRIES = GetterUtil.getInteger(
 		PropsUtil.get("get.location.max.retries"));
@@ -69,6 +75,9 @@ public class PropsValues {
 		"output.dir.name");
 
 	public static final String PORTAL_URL = PropsUtil.get("portal.url");
+
+	public static final int POSHI_FILE_READ_THREAD_POOL = GetterUtil.getInteger(
+		PropsUtil.get("poshi.file.read.thread.pool"));
 
 	public static final String PRINT_JAVA_PROCESS_ON_FAIL = PropsUtil.get(
 		"print.java.process.on.fail");
@@ -129,14 +138,8 @@ public class PropsValues {
 	public static final int TEST_BATCH_MAX_SUBGROUP_SIZE =
 		GetterUtil.getInteger(PropsUtil.get("test.batch.max.subgroup.size"));
 
-	public static final String[] TEST_BATCH_PROPERTY_NAMES = StringUtil.split(
-		PropsUtil.get("test.batch.property.names"));
-
 	public static final String TEST_BATCH_PROPERTY_QUERY = PropsUtil.get(
 		"test.batch.property.query");
-
-	public static final String[] TEST_BATCH_PROPERTY_VALUES = StringUtil.split(
-		PropsUtil.get("test.batch.property.values"));
 
 	public static final String TEST_BATCH_RUN_TYPE = PropsUtil.get(
 		"test.batch.run.type");
@@ -162,7 +165,13 @@ public class PropsValues {
 	public static final String[] TEST_INCLUDE_DIR_NAMES = StringUtil.split(
 		PropsUtil.get("test.include.dir.names"));
 
+	public static final int TEST_JVM_MAX_RETRIES = GetterUtil.getInteger(
+		PropsUtil.get("test.jvm.max.retries"));
+
 	public static final String TEST_NAME = PropsUtil.get("test.name");
+
+	public static final boolean TEST_POSHI_SCRIPT_VALIDATION =
+		GetterUtil.getBoolean(PropsUtil.get("test.poshi.script.validation"));
 
 	public static final String TEST_POSHI_WARNINGS_FILE_NAME = PropsUtil.get(
 		"test.poshi.warnings.file.name");
@@ -181,6 +190,9 @@ public class PropsValues {
 
 	public static final String[] TEST_SUBREPO_DIRS = StringUtil.split(
 		PropsUtil.get("test.subrepo.dirs"));
+
+	public static final int TEST_TESTCASE_MAX_RETRIES = GetterUtil.getInteger(
+		PropsUtil.get("test.testcase.max.retries"));
 
 	public static final int TIMEOUT_EXPLICIT_WAIT = GetterUtil.getInteger(
 		PropsUtil.get("timeout.explicit.wait"));

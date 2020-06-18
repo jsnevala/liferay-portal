@@ -66,8 +66,8 @@ public class JavadocFormatterUtil {
 
 		String[] excludes = {
 			"**/.git/**", "**/.gradle/**", "**/bin/**", "**/build/**",
-			"**/classes/**", "**/node_modules/**", "**/portal-client/**",
-			"**/tmp/**"
+			"**/classes/**", "**/node_modules/**", "**/node_modules_cache/**",
+			"**/portal-client/**", "**/tmp/**"
 		};
 
 		List<String> fileNames = scanForFiles(
@@ -86,7 +86,7 @@ public class JavadocFormatterUtil {
 			try {
 				javaProjectBuilder.addSource(new UnsyncStringReader(content));
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				continue;
 			}
 
@@ -256,8 +256,8 @@ public class JavadocFormatterUtil {
 
 			return canonicalFile.toPath();
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 

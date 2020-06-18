@@ -28,21 +28,27 @@ import com.liferay.dynamic.data.mapping.model.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.impl.DDMTemplateImpl;
 import com.liferay.dynamic.data.mapping.service.impl.DDMTemplateLocalServiceImpl;
-import com.liferay.dynamic.data.mapping.service.util.ServiceProps;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.ResourceBundle;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.mockito.Matchers;
 
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
@@ -51,7 +57,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 /**
  * @author Marcellus Tavares
  */
-@PrepareForTest({LocaleUtil.class, PropsValues.class, ServiceProps.class})
+@PrepareForTest({LocaleUtil.class, PropsValues.class})
 @RunWith(PowerMockRunner.class)
 @SuppressStaticInitializationFor(
 	{
@@ -74,9 +80,9 @@ public class DDMFormTemplateSynchonizerTest extends BaseDDMTestCase {
 		setUpLanguageUtil();
 		setUpLocaleUtil();
 		setUpHtmlUtil();
+		setUpPortalUtil();
 		setUpPropsValues();
 		setUpSAXReaderUtil();
-		setUpServiceProps();
 	}
 
 	@Test
@@ -300,8 +306,7 @@ public class DDMFormTemplateSynchonizerTest extends BaseDDMTestCase {
 
 		DDMFormDeserializerDeserializeRequest.Builder builder =
 			DDMFormDeserializerDeserializeRequest.Builder.newBuilder(
-				ddmTemplate.getScript()
-			);
+				ddmTemplate.getScript());
 
 		DDMFormDeserializerDeserializeResponse
 			ddmFormDeserializerDeserializeResponse =
@@ -326,8 +331,20 @@ public class DDMFormTemplateSynchonizerTest extends BaseDDMTestCase {
 		}
 	}
 
-	protected void setUpServiceProps() {
-		mockStatic(ServiceProps.class);
+	protected void setUpPortalUtil() {
+		PortalUtil portalUtil = new PortalUtil();
+
+		Portal portal = mock(Portal.class);
+
+		ResourceBundle resourceBundle = mock(ResourceBundle.class);
+
+		when(
+			portal.getResourceBundle(Matchers.any(Locale.class))
+		).thenReturn(
+			resourceBundle
+		);
+
+		portalUtil.setPortal(portal);
 	}
 
 	protected void testFormTemplatesAfterAddRequiredFields() throws Exception {
@@ -489,7 +506,8 @@ public class DDMFormTemplateSynchonizerTest extends BaseDDMTestCase {
 
 			ddmTemplate.setScript(script);
 
-			if (ddmTemplate.getMode().equals(
+			if (Objects.equals(
+					ddmTemplate.getMode(),
 					DDMTemplateConstants.TEMPLATE_MODE_CREATE)) {
 
 				_createDDMTemplate = ddmTemplate;

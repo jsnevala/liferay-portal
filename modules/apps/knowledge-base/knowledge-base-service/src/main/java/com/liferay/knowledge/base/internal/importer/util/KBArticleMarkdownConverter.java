@@ -14,7 +14,7 @@
 
 package com.liferay.knowledge.base.internal.importer.util;
 
-import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.knowledge.base.exception.KBArticleImportException;
 import com.liferay.knowledge.base.markdown.converter.MarkdownConverter;
 import com.liferay.knowledge.base.model.KBArticle;
@@ -44,8 +44,11 @@ import java.util.TreeSet;
 public class KBArticleMarkdownConverter {
 
 	public KBArticleMarkdownConverter(
-			String markdown, String fileEntryName, Map<String, String> metadata)
+			String markdown, String fileEntryName, Map<String, String> metadata,
+			DLURLHelper dlURLHelper)
 		throws KBArticleImportException {
+
+		_dlURLHelper = dlURLHelper;
 
 		MarkdownConverter markdownConverter =
 			MarkdownConverterFactoryUtil.create();
@@ -55,11 +58,11 @@ public class KBArticleMarkdownConverter {
 		try {
 			html = markdownConverter.convert(markdown);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			throw new KBArticleImportException(
 				"Unable to convert Markdown to HTML: " +
-					ioe.getLocalizedMessage(),
-				ioe);
+					ioException.getLocalizedMessage(),
+				ioException);
 		}
 
 		String heading = getHeading(html);
@@ -179,16 +182,16 @@ public class KBArticleMarkdownConverter {
 				String imageSrc = StringPool.BLANK;
 
 				try {
-					imageSrc = DLUtil.getPreviewURL(
+					imageSrc = _dlURLHelper.getPreviewURL(
 						imageFileEntry, imageFileEntry.getFileVersion(), null,
 						StringPool.BLANK);
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to obtain image URL from file entry " +
 								imageFileEntry.getFileEntryId(),
-							pe);
+							portalException);
 					}
 				}
 
@@ -372,6 +375,7 @@ public class KBArticleMarkdownConverter {
 	private static final Log _log = LogFactoryUtil.getLog(
 		KBArticleMarkdownConverter.class);
 
+	private final DLURLHelper _dlURLHelper;
 	private final String _html;
 	private final String _sourceURL;
 	private final String _title;

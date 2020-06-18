@@ -36,10 +36,6 @@ public class MediaWikiToCreoleTranslator extends BaseTranslator {
 		initNowikiRegexps();
 	}
 
-	public boolean isStrictImportMode() {
-		return _strictImportMode;
-	}
-
 	public void setStrictImportMode(boolean strictImportMode) {
 		_strictImportMode = strictImportMode;
 	}
@@ -174,7 +170,7 @@ public class MediaWikiToCreoleTranslator extends BaseTranslator {
 		}
 
 		for (String htmlTag : _HTML_TAGS) {
-			content = StringUtil.replace(content, htmlTag, StringPool.BLANK);
+			content = StringUtil.removeSubstring(content, htmlTag);
 		}
 
 		// Images
@@ -192,7 +188,9 @@ public class MediaWikiToCreoleTranslator extends BaseTranslator {
 			level = 0;
 			prefixLength = matcher.end(2) - matcher.start(2);
 
-			for (int i = matcher.start(0) + offset; i < sb.length() - 1; i++) {
+			for (int i = matcher.start(0) + offset; i < (sb.length() - 1);
+				 i++) {
+
 				if ((sb.charAt(i) == '[') && (sb.charAt(i + 1) == '[')) {
 					level++;
 				}
@@ -218,8 +216,8 @@ public class MediaWikiToCreoleTranslator extends BaseTranslator {
 
 			int imageLength = image.length();
 
-			image = StringUtil.replace(image, "[[", StringPool.BLANK);
-			image = StringUtil.replace(image, "]]", StringPool.BLANK);
+			image = StringUtil.removeSubstring(image, "[[");
+			image = StringUtil.removeSubstring(image, "]]");
 
 			sb.replace(
 				matcher.start(0) + offset,
@@ -271,8 +269,7 @@ public class MediaWikiToCreoleTranslator extends BaseTranslator {
 				mediaWikiTable, CharPool.RETURN, StringPool.BLANK);
 			mediaWikiTable = StringUtil.replace(mediaWikiTable, "|-", "\n\r");
 			mediaWikiTable = StringUtil.replace(mediaWikiTable, "||", "|");
-			mediaWikiTable = StringUtil.replace(
-				mediaWikiTable, "////", StringPool.BLANK);
+			mediaWikiTable = StringUtil.removeSubstring(mediaWikiTable, "////");
 
 			sb.replace(
 				matcher.start(0) + offset,
@@ -295,7 +292,7 @@ public class MediaWikiToCreoleTranslator extends BaseTranslator {
 		while (matcher.find()) {
 			String link = matcher.group(1);
 
-			link = link.replace(StringPool.UNDERLINE, StringPool.SPACE);
+			link = StringUtil.replace(link, CharPool.UNDERLINE, CharPool.SPACE);
 
 			sb.replace(matcher.start(1), matcher.end(1), link);
 		}
@@ -310,12 +307,13 @@ public class MediaWikiToCreoleTranslator extends BaseTranslator {
 		"<var>", "</var>"
 	};
 
-	private static final Pattern[] _htmlTagPatterns =
-		{Pattern.compile("<div[^>]*>"), Pattern.compile("<font[^>]*>")};
+	private static final Pattern[] _htmlTagPatterns = {
+		Pattern.compile("<div[^>]*>"), Pattern.compile("<font[^>]*>")
+	};
 	private static final Pattern _imagePattern = Pattern.compile(
 		"(\\[{2})(Image|File)(:)", Pattern.DOTALL);
 	private static final Pattern _linkPattern = Pattern.compile(
-		"\\[{2}([^\\]]*)\\]{2}", Pattern.DOTALL);
+		"\\[{2}(?!Image|File|Media:)([^\\]]*)\\]{2}", Pattern.DOTALL);
 	private static final Pattern _mediaWikiTablePattern1 = Pattern.compile(
 		"class=(.*?)[|\n\r]");
 	private static final Pattern _mediaWikiTablePattern2 = Pattern.compile(

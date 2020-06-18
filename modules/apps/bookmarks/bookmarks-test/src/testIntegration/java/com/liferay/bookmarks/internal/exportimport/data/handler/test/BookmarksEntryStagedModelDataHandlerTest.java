@@ -19,8 +19,9 @@ import com.liferay.bookmarks.model.BookmarksEntry;
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.service.BookmarksEntryLocalServiceUtil;
 import com.liferay.bookmarks.service.BookmarksFolderLocalServiceUtil;
-import com.liferay.bookmarks.util.test.BookmarksTestUtil;
+import com.liferay.bookmarks.test.util.BookmarksTestUtil;
 import com.liferay.exportimport.test.util.lar.BaseWorkflowedStagedModelDataHandlerTestCase;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -40,7 +41,7 @@ import org.junit.Rule;
 import org.junit.runner.RunWith;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @RunWith(Arquillian.class)
 public class BookmarksEntryStagedModelDataHandlerTest
@@ -99,14 +100,11 @@ public class BookmarksEntryStagedModelDataHandlerTest
 	}
 
 	@Override
-	protected StagedModel getStagedModel(String uuid, Group group) {
-		try {
-			return BookmarksEntryLocalServiceUtil.
-				getBookmarksEntryByUuidAndGroupId(uuid, group.getGroupId());
-		}
-		catch (Exception e) {
-			return null;
-		}
+	protected StagedModel getStagedModel(String uuid, Group group)
+		throws PortalException {
+
+		return BookmarksEntryLocalServiceUtil.getBookmarksEntryByUuidAndGroupId(
+			uuid, group.getGroupId());
 	}
 
 	@Override

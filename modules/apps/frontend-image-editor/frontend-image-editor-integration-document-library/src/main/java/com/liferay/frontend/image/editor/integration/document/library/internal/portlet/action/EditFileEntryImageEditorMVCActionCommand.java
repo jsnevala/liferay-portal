@@ -23,8 +23,8 @@ import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -59,7 +59,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Ambrin Chaudhary
+ * @author Ambrín Chaudhary
  */
 @Component(
 	property = {
@@ -103,15 +103,15 @@ public class EditFileEntryImageEditorMVCActionCommand
 
 			updateFileEntry(actionRequest, actionResponse);
 		}
-		catch (IOException ioe) {
-			throw new SystemException(ioe);
+		catch (IOException ioException) {
+			throw new SystemException(ioException);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			handleUploadException(actionRequest, actionResponse);
@@ -122,16 +122,14 @@ public class EditFileEntryImageEditorMVCActionCommand
 			PortletRequest portletRequest, PortletResponse portletResponse)
 		throws PortalException {
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("success", Boolean.FALSE);
+		JSONObject jsonObject = JSONUtil.put("success", Boolean.FALSE);
 
 		try {
 			JSONPortletResponseUtil.writeJSON(
 				portletRequest, portletResponse, jsonObject);
 		}
-		catch (IOException ioe) {
-			throw new SystemException(ioe);
+		catch (IOException ioException) {
+			throw new SystemException(ioException);
 		}
 	}
 
@@ -167,9 +165,7 @@ public class EditFileEntryImageEditorMVCActionCommand
 			fileEntry.getDescription(), StringPool.BLANK,
 			DLVersionNumberIncrease.MINOR, inputStream, size, serviceContext);
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("success", Boolean.TRUE);
+		JSONObject jsonObject = JSONUtil.put("success", Boolean.TRUE);
 
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			themeDisplay.getLocale(),

@@ -15,12 +15,12 @@
 package com.liferay.journal.internal.transformer;
 
 import com.liferay.journal.internal.util.JournalHelperUtil;
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.xsl.XSLURIResolver;
 
@@ -122,7 +122,7 @@ public class JournalXSLURIResolver implements Externalizable, XSLURIResolver {
 
 			return new StreamSource(new UnsyncStringReader(content));
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(href + " does not reference a valid template");
 
 			return null;

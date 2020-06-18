@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.configuration.kernel.util.PortletConfigurationApplicationType;
 
@@ -68,14 +69,22 @@ public class ConfigurationTemplatesPortletConfigurationIcon
 
 			PortletURL portletURL = PortletProviderUtil.getPortletURL(
 				portletRequest,
-				PortletConfigurationApplicationType.
-					PortletConfiguration.CLASS_NAME,
+				PortletConfigurationApplicationType.PortletConfiguration.
+					CLASS_NAME,
 				PortletProvider.Action.VIEW);
 
 			portletURL.setParameter(
 				"mvcPath", "/edit_configuration_templates.jsp");
-			portletURL.setParameter("redirect", redirect);
-			portletURL.setParameter("returnToFullPageURL", returnToFullPageURL);
+
+			if (Validator.isNotNull(redirect)) {
+				portletURL.setParameter("redirect", redirect);
+			}
+
+			if (Validator.isNotNull(returnToFullPageURL)) {
+				portletURL.setParameter(
+					"returnToFullPageURL", returnToFullPageURL);
+			}
+
 			portletURL.setParameter(
 				"portletConfiguration", Boolean.TRUE.toString());
 
@@ -91,7 +100,7 @@ public class ConfigurationTemplatesPortletConfigurationIcon
 
 			return portletURL.toString();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return StringPool.BLANK;
@@ -118,12 +127,12 @@ public class ConfigurationTemplatesPortletConfigurationIcon
 				return false;
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			return false;
@@ -138,6 +147,10 @@ public class ConfigurationTemplatesPortletConfigurationIcon
 		Layout layout = themeDisplay.getLayout();
 
 		if (layout.isTypeControlPanel()) {
+			return false;
+		}
+
+		if (isEmbeddedPersonalApplicationLayout(layout)) {
 			return false;
 		}
 

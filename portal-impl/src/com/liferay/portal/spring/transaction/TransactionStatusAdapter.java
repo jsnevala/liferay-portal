@@ -14,7 +14,8 @@
 
 package com.liferay.portal.spring.transaction;
 
-import org.springframework.transaction.PlatformTransactionManager;
+import com.liferay.petra.reflect.ReflectionUtil;
+
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionStatus;
@@ -25,17 +26,6 @@ import org.springframework.transaction.support.DefaultTransactionStatus;
 public class TransactionStatusAdapter
 	extends DefaultTransactionStatus
 	implements com.liferay.portal.kernel.transaction.TransactionStatus {
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public TransactionStatusAdapter(
-		PlatformTransactionManager platformTransactionManager,
-		TransactionStatus transactionStatus) {
-
-		this(transactionStatus);
-	}
 
 	public TransactionStatusAdapter(TransactionStatus transactionStatus) {
 		super(null, false, false, false, false, null);
@@ -51,15 +41,6 @@ public class TransactionStatusAdapter
 	@Override
 	public void flush() {
 		_transactionStatus.flush();
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public PlatformTransactionManager getPlatformTransactionManager() {
-		return null;
 	}
 
 	public TransactionStatus getTransactionStatus() {
@@ -91,6 +72,17 @@ public class TransactionStatusAdapter
 		_transactionStatus.releaseSavepoint(savepoint);
 	}
 
+	void reportLifecycleListenerThrowables(Throwable throwable) {
+		if (_lifecycleListenerThrowable != null) {
+			if (throwable == null) {
+				ReflectionUtil.throwException(_lifecycleListenerThrowable);
+			}
+			else {
+				throwable.addSuppressed(_lifecycleListenerThrowable);
+			}
+		}
+	}
+
 	@Override
 	public void rollbackToSavepoint(Object savepoint)
 		throws TransactionException {
@@ -103,6 +95,20 @@ public class TransactionStatusAdapter
 		_transactionStatus.setRollbackOnly();
 	}
 
+	@Override
+	public void suppressLifecycleListenerThrowable(
+		Throwable lifecycleListenerThrowable) {
+
+		if (_lifecycleListenerThrowable == null) {
+			_lifecycleListenerThrowable = lifecycleListenerThrowable;
+		}
+		else {
+			_lifecycleListenerThrowable.addSuppressed(
+				lifecycleListenerThrowable);
+		}
+	}
+
+	private Throwable _lifecycleListenerThrowable;
 	private final TransactionStatus _transactionStatus;
 
 }

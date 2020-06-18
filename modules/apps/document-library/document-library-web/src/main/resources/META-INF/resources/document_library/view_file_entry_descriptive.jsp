@@ -29,8 +29,6 @@ if (result instanceof AssetEntry) {
 
 	if (assetEntry.getClassName().equals(DLFileEntryConstants.getClassName())) {
 		fileEntry = DLAppLocalServiceUtil.getFileEntry(assetEntry.getClassPK());
-
-		fileEntry = fileEntry.toEscapedModel();
 	}
 	else {
 		fileShortcut = DLAppLocalServiceUtil.getFileShortcut(assetEntry.getClassPK());
@@ -57,9 +55,20 @@ if ((user.getUserId() == fileEntry.getUserId()) || permissionChecker.isContentRe
 	latestFileVersion = fileEntry.getLatestFileVersion();
 }
 
+latestFileVersion = latestFileVersion.toEscapedModel();
+
 Date modifiedDate = latestFileVersion.getModifiedDate();
 
 String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true);
+
+DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext = null;
+
+if (fileShortcut == null) {
+	dlViewFileVersionDisplayContext = dlDisplayContextProvider.getDLViewFileVersionDisplayContext(request, response, latestFileVersion);
+}
+else {
+	dlViewFileVersionDisplayContext = dlDisplayContextProvider.getDLViewFileVersionDisplayContext(request, response, fileShortcut);
+}
 
 PortletURL rowURL = liferayPortletResponse.createRenderURL();
 
@@ -68,24 +77,17 @@ rowURL.setParameter("redirect", HttpUtil.removeParameter(currentURL, liferayPort
 rowURL.setParameter("fileEntryId", String.valueOf(fileEntry.getFileEntryId()));
 %>
 
-<h5 class="text-default">
-	<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(latestFileVersion.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
-</h5>
-
-<h4>
+<h2 class="h5">
 	<aui:a href="<%= rowURL.toString() %>">
 		<%= latestFileVersion.getTitle() %>
 	</aui:a>
+</h2>
 
-	<c:if test="<%= fileEntry.hasLock() || fileEntry.isCheckedOut() %>">
-		<span>
-			<aui:icon cssClass="icon-monospaced" image="lock" markupView="lexicon" message="locked" />
-		</span>
-	</c:if>
-</h4>
-
-<span class="h5 text-default">
-	<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= latestFileVersion.getStatus() %>" />
+<span>
+	<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(latestFileVersion.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
+</span>
+<span>
+	<%= DLUtil.getAbsolutePath(liferayPortletRequest, fileEntry.getFolderId()).replace(StringPool.RAQUO_CHAR, StringPool.GREATER_THAN) %>
 </span>
 
 <c:if test="<%= latestFileVersion.getModel() instanceof DLFileVersion %>">
@@ -96,7 +98,30 @@ rowURL.setParameter("fileEntryId", String.valueOf(fileEntry.getFileEntryId()));
 	DLFileEntryType dlFileEntryType = latestDLFileVersion.getDLFileEntryType();
 	%>
 
-	<span class="h5 text-default">
+	<span>
 		<%= HtmlUtil.escape(dlFileEntryType.getName(locale)) %>
 	</span>
 </c:if>
+
+<span class="file-entry-status">
+	<aui:workflow-status showIcon="<%= false %>" showLabel="<%= false %>" status="<%= latestFileVersion.getStatus() %>" />
+
+	<c:choose>
+		<c:when test="<%= fileShortcut != null %>">
+			<span class="inline-item inline-item-after state-icon">
+				<aui:icon image="shortcut" markupView="lexicon" message="shortcut" />
+			</span>
+		</c:when>
+		<c:when test="<%= fileEntry.hasLock() || fileEntry.isCheckedOut() %>">
+			<span class="inline-item inline-item-after state-icon">
+				<aui:icon image="lock" markupView="lexicon" message="locked" />
+			</span>
+		</c:when>
+	</c:choose>
+
+	<c:if test="<%= dlViewFileVersionDisplayContext.isShared() %>">
+		<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title="<%= LanguageUtil.get(request, "shared") %>">
+			<aui:icon image="users" markupView="lexicon" message="shared" />
+		</span>
+	</c:if>
+</span>

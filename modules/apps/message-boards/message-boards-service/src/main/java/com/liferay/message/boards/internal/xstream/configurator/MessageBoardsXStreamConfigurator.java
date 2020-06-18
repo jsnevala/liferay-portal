@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = XStreamConfigurator.class)
 public class MessageBoardsXStreamConfigurator implements XStreamConfigurator {
@@ -43,7 +43,7 @@ public class MessageBoardsXStreamConfigurator implements XStreamConfigurator {
 
 	@Override
 	public List<XStreamAlias> getXStreamAliases() {
-		return ListUtil.toList(_xStreamAliases);
+		return ListUtil.fromArray(_xStreamAliases);
 	}
 
 	@Override

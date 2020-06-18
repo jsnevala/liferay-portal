@@ -1,144 +1,345 @@
-<definition component-name="portal-user-management-and-portal-configuration">
-	<property name="portal.release" value="true" />
-	<property name="portal.upstream" value="true" />
-	<property name="testray.main.component.name" value="Roles" />
+@component-name = "portal-user-management-and-portal-configuration"
+definition {
 
-	<set-up>
-		<execute macro="TestCase#setUpPortalInstance" />
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Roles";
 
-		<execute macro="User#firstLoginPG" />
-	</set-up>
+	setUp {
+		TestCase.setUpPortalInstance();
 
-	<tear-down>
-		<var method="PropsUtil#get('test.portal.instance')" name="testPortalInstance" />
+		User.firstLoginPG();
+	}
 
-		<if>
-			<equals arg1="${testPortalInstance}" arg2="true" />
-			<then>
-				<execute macro="PortalInstances#tearDownCP" />
-			</then>
-			<else>
-				<execute macro="User#firstLoginPG" />
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-				<execute macro="Role#tearDownCP" />
-			</else>
-		</if>
-	</tear-down>
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			User.firstLoginPG();
 
-	<command name="AddOrganizationRole" priority="5">
-		<property name="portal.acceptance" value="true" />
-		<property name="testray.component.names" value="Training" />
+			Role.tearDownCP();
+		}
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+	@priority = "5"
+	test AddOrganizationRole {
+		property portal.acceptance = "quarantine";
+		property testray.component.names = "Training";
 
-		<execute macro="RoleNavigator#gotoRoleType">
-			<var name="roleType" value="Organization" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-		<execute macro="Role#add">
-			<var name="roleTitle" value="Roles Orgrole Name" />
-		</execute>
+		RoleNavigator.gotoRoleType(roleType = "Organization");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		Role.add(roleTitle = "Roles Orgrole Name");
 
-		<execute macro="Role#viewCP">
-			<var name="roleTitle" value="Roles Orgrole Name" />
-			<var name="roleType" value="Organization" />
-		</execute>
-	</command>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-	<command name="AddRegularRole" priority="4">
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		Role.viewCP(
+			roleTitle = "Roles Orgrole Name",
+			roleType = "Organization");
+	}
 
-		<execute macro="Role#add">
-			<var name="roleTitle" value="Roles Regrole Name" />
-		</execute>
+	@priority = "4"
+	test AddRegularRole {
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		Role.add(roleTitle = "Roles Regrole Name");
 
-		<execute macro="Role#viewCP">
-			<var name="roleTitle" value="Roles Regrole Name" />
-			<var name="roleType" value="Regular" />
-		</execute>
-	</command>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-	<command name="AddSiteRole" priority="5">
-		<property name="portal.acceptance" value="true" />
+		Role.viewCP(
+			roleTitle = "Roles Regrole Name",
+			roleType = "Regular");
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+	@priority = "5"
+	test AddSiteRole {
+		property portal.acceptance = "true";
 
-		<execute macro="RoleNavigator#gotoRoleType">
-			<var name="roleType" value="Site" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-		<execute macro="Role#add">
-			<var name="roleTitle" value="Roles Siterole Name" />
-		</execute>
+		RoleNavigator.gotoRoleType(roleType = "Site");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		Role.add(roleTitle = "Roles Siterole Name");
 
-		<execute macro="Role#viewCP">
-			<var name="roleTitle" value="Roles Siterole Name" />
-			<var name="roleType" value="Site" />
-		</execute>
-	</command>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-	<command name="DeleteRegularRole" priority="5">
-		<property name="environment.acceptance" value="true" />
-		<property name="portal.acceptance" value="true" />
+		Role.viewCP(
+			roleTitle = "Roles Siterole Name",
+			roleType = "Site");
+	}
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+	@description = "This is a use case for LPS-105001 and LPS-104999."
+	@priority = "3"
+	test AssertRoleTitleNotRequired {
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-		<execute macro="Role#add">
-			<var name="roleTitle" value="Roles Regrole Name" />
-		</execute>
+		Role.viewCP(
+			roleKey = "Administrator",
+			toolTip = "A title is a localizable human-readable name for a role. If not provided, the key will be displayed by default.");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-		<execute macro="Role#deleteCP">
-			<var name="roleTitle" value="Roles Regrole Name" />
-		</execute>
+		Role.add(roleKey = "Role Key Value");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Users" />
-			<var name="panel" value="Control Panel" />
-			<var name="portlet" value="Roles" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
 
-		<execute macro="Role#viewDefaultCP">
-			<var name="roleTitle" value="Roles Regrole Name" />
-		</execute>
-	</command>
-</definition>
+		Role.viewCP(roleKey = "Role Key Value");
+	}
+
+	@priority = "4"
+	test AssignExistingSegmentToRegularRole {
+		ProductMenu.gotoSite(site = "Global");
+
+		ProductMenu.gotoPortlet(
+			category = "People",
+			panel = "Site Administration",
+			portlet = "Segments");
+
+		LexiconEntry.gotoAdd();
+
+		Segmentation.addProperties(propertyOption = "Email Address");
+
+		Segmentation.fillTitle(titleField = "RoleSegment Test");
+
+		Segmentation.changeCriterionInputEmailAddress(criterionInputOption = "Contains");
+
+		Segmentation.fillProperty(PropertyField = "liferay");
+
+		Button.clickSave();
+
+		Alert.viewSuccessMessage();
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.add(roleTitle = "Roles Regrole Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		RoleNavigator.gotoAssignees(roleTitle = "Roles Regrole Name");
+
+		RoleNavigator.gotoAssigneeType(assigneeType = "Segments");
+
+		Role.addAssignees(assigneeName = "RoleSegment Test");
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.viewAssignee(
+			assigneeName = "RoleSegment Test",
+			assigneeType = "Segments",
+			roleTitle = "Roles Regrole Name");
+	}
+
+	@priority = "4"
+	test AssignNewSegmentToRegularRole {
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.add(roleTitle = "Roles Regrole Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		RoleNavigator.gotoAssignees(roleTitle = "Roles Regrole Name");
+
+		RoleNavigator.gotoAssigneeType(assigneeType = "Segments");
+
+		LexiconEntry.gotoAdd();
+
+		SelectFrame(locator1 = "IFrame#SELECT_ASSIGNEES");
+
+		LexiconEntry.gotoAdd();
+
+		Segmentation.addProperties(propertyOption = "Email Address");
+
+		Segmentation.fillTitle(titleField = "New RoleSegment Test");
+
+		Segmentation.changeCriterionInputEmailAddress(criterionInputOption = "Contains");
+
+		Segmentation.fillProperty(PropertyField = "liferay");
+
+		Button.clickSave();
+
+		SelectFrame(locator1 = "IFrame#SELECT_ASSIGNEES");
+
+		Search.searchCP(searchTerm = "New RoleSegment Test");
+
+		var key_assigneeName = "New RoleSegment Test";
+
+		Check(locator1 = "RolesAssignMembers#ADD_ASSIGNEE_TABLE_CHECKBOX");
+
+		SelectFrameTop(value1 = "relative=top");
+
+		Button.clickAdd();
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.viewAssignee(
+			assigneeName = "New RoleSegment Test",
+			assigneeType = "Segments",
+			roleTitle = "Roles Regrole Name");
+	}
+
+	@description = "This is a use case for LPS-109572."
+	@priority = "5"
+	test AssignNewUserToRegularRole {
+		property portal.acceptance = "true";
+
+		JSONRole.addRegularRole(
+			roleKey = "Regular Role",
+			roleTitle = "Regular Role");
+
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		JSONRole.assignRoleToUser(
+			roleTitle = "Regular Role",
+			userEmailAddress = "userea@liferay.com");
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.viewAssignee(
+			assigneeName = "userfn userln",
+			assigneeType = "Users",
+			roleTitle = "Regular Role");
+	}
+
+	@priority = "5"
+	test DeleteRegularRole {
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property environment.acceptance = "true";
+		property portal.acceptance = "true";
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.add(roleTitle = "Roles Regrole Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.deleteCP(roleTitle = "Roles Regrole Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.viewDefaultCP(roleTitle = "Roles Regrole Name");
+	}
+
+	@priority = "4"
+	test RemoveSegmentFromRegularRole {
+		ProductMenu.gotoSite(site = "Global");
+
+		ProductMenu.gotoPortlet(
+			category = "People",
+			panel = "Site Administration",
+			portlet = "Segments");
+
+		LexiconEntry.gotoAdd();
+
+		Segmentation.addProperties(propertyOption = "Email Address");
+
+		Segmentation.fillTitle(titleField = "Role Assignee Test");
+
+		Segmentation.changeCriterionInputEmailAddress(criterionInputOption = "Contains");
+
+		Segmentation.fillProperty(PropertyField = "liferay");
+
+		Button.clickSave();
+
+		Alert.viewSuccessMessage();
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.add(roleTitle = "Remove Regrole Assignee");
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		RoleNavigator.gotoAssignees(roleTitle = "Remove Regrole Assignee");
+
+		RoleNavigator.gotoAssigneeType(assigneeType = "Segments");
+
+		Role.addAssignees(assigneeName = "Role Assignee Test");
+
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.removeAssignee(
+			assigneeName = "Role Assignee Test",
+			assigneeType = "Segments",
+			roleTitle = "Remove Regrole Assignee");
+	}
+
+}

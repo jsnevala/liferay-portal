@@ -47,11 +47,12 @@ public class ViewModuleManagementToolbarDisplayContext
 	extends BaseAppManagerManagementToolbarDisplayContext {
 
 	public ViewModuleManagementToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request) {
+		LiferayPortletResponse liferayPortletResponse) {
 
-		super(liferayPortletRequest, liferayPortletResponse, request);
+		super(
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse);
 	}
 
 	public String getApp() {
@@ -71,7 +72,8 @@ public class ViewModuleManagementToolbarDisplayContext
 		}
 
 		if (appDisplay == null) {
-			appDisplay = AppDisplayFactoryUtil.getAppDisplay(allBundles, app);
+			appDisplay = AppDisplayFactoryUtil.getAppDisplay(
+				allBundles, app, request.getLocale());
 		}
 
 		return appDisplay;
@@ -162,7 +164,7 @@ public class ViewModuleManagementToolbarDisplayContext
 					"(&(component.id=*)(service.bundleid=" +
 						bundle.getBundleId() + "))");
 
-			serviceReferences = ListUtil.toList(serviceReferenceArray);
+			serviceReferences = ListUtil.fromArray(serviceReferenceArray);
 
 			serviceReferences = ListUtil.sort(
 				serviceReferences,

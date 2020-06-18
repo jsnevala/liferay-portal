@@ -19,28 +19,10 @@
 <%
 int cur = ParamUtil.getInteger(request, SearchContainer.DEFAULT_CUR_PARAM);
 
-String displayStyle = ParamUtil.getString(request, "displayStyle", "list");
-
 PortletURL portletURL = renderResponse.createRenderURL();
 
 portletURL.setParameter("mvcRenderCommandName", "/portal_instances/view");
 %>
-
-<clay:navigation-bar
-	inverted="<%= true %>"
-	navigationItems='<%=
-		new JSPNavigationItemList(pageContext) {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(true);
-						navigationItem.setHref(StringPool.BLANK);
-						navigationItem.setLabel(LanguageUtil.get(request, "instances"));
-					});
-			}
-		}
-	%>'
-/>
 
 <clay:management-toolbar
 	creationMenu='<%=

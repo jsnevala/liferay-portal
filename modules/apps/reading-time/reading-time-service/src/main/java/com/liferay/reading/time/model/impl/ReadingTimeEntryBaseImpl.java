@@ -14,8 +14,6 @@
 
 package com.liferay.reading.time.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.reading.time.model.ReadingTimeEntry;
 import com.liferay.reading.time.service.ReadingTimeEntryLocalServiceUtil;
 
@@ -31,13 +29,13 @@ import com.liferay.reading.time.service.ReadingTimeEntryLocalServiceUtil;
  * @see ReadingTimeEntry
  * @generated
  */
-@ProviderType
-public abstract class ReadingTimeEntryBaseImpl extends ReadingTimeEntryModelImpl
-	implements ReadingTimeEntry {
+public abstract class ReadingTimeEntryBaseImpl
+	extends ReadingTimeEntryModelImpl implements ReadingTimeEntry {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a reading time entry model instance should use the {@link ReadingTimeEntry} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a reading time entry model instance should use the <code>ReadingTimeEntry</code> interface instead.
 	 */
 	@Override
 	public void persist() {
@@ -48,4 +46,5 @@ public abstract class ReadingTimeEntryBaseImpl extends ReadingTimeEntryModelImpl
 			ReadingTimeEntryLocalServiceUtil.updateReadingTimeEntry(this);
 		}
 	}
+
 }

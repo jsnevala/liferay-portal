@@ -70,7 +70,7 @@ import org.junit.runner.RunWith;
 
 /**
  * @author Daniel Kocsis
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @RunWith(Arquillian.class)
 @Sync(cleanTransaction = true)
@@ -101,7 +101,7 @@ public class StagingLocalizationTest {
 		LanguageUtil.init();
 
 		CompanyTestUtil.resetCompanyLocales(
-			TestPropsValues.getCompanyId(), _locales, Locale.US);
+			TestPropsValues.getCompanyId(), _locales, LocaleUtil.US);
 
 		_sourceGroup = GroupTestUtil.addGroup();
 		_targetGroup = GroupTestUtil.addGroup();
@@ -280,13 +280,13 @@ public class StagingLocalizationTest {
 			try {
 				StagingLocalServiceUtil.disableStaging(group, serviceContext);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 
 			try {
 				GroupLocalServiceUtil.deleteGroup(group);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 	}

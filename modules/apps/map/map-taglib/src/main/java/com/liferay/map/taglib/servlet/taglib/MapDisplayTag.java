@@ -33,6 +33,30 @@ import javax.servlet.jsp.PageContext;
  */
 public class MapDisplayTag extends IncludeTag {
 
+	public double getLatitude() {
+		return _latitude;
+	}
+
+	public double getLongitude() {
+		return _longitude;
+	}
+
+	public String getMapProviderKey() {
+		return _mapProviderKey;
+	}
+
+	public String getName() {
+		return _name;
+	}
+
+	public String getPoints() {
+		return _points;
+	}
+
+	public boolean isGeolocation() {
+		return _geolocation;
+	}
+
 	public void setGeolocation(boolean geolocation) {
 		_geolocation = geolocation;
 	}
@@ -82,13 +106,16 @@ public class MapDisplayTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute("liferay-map:map:geolocation", _geolocation);
-		request.setAttribute("liferay-map:map:latitude", _latitude);
-		request.setAttribute("liferay-map:map:longitude", _longitude);
-		request.setAttribute("liferay-map:map:mapProvider", _getMapProvider());
-		request.setAttribute("liferay-map:map:name", _name);
-		request.setAttribute("liferay-map:map:points", _points);
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
+			"liferay-map:map:geolocation", _geolocation);
+		httpServletRequest.setAttribute("liferay-map:map:latitude", _latitude);
+		httpServletRequest.setAttribute(
+			"liferay-map:map:longitude", _longitude);
+		httpServletRequest.setAttribute(
+			"liferay-map:map:mapProvider", _getMapProvider());
+		httpServletRequest.setAttribute("liferay-map:map:name", _name);
+		httpServletRequest.setAttribute("liferay-map:map:points", _points);
 	}
 
 	private MapProvider _getMapProvider() {
@@ -115,18 +142,18 @@ public class MapDisplayTag extends IncludeTag {
 	}
 
 	private String _getMapProviderKey() {
-		String mapProdiverKey = _mapProviderKey;
+		String mapProviderKey = _mapProviderKey;
 
-		if (Validator.isNull(mapProdiverKey)) {
+		if (Validator.isNull(mapProviderKey)) {
 			ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-			mapProdiverKey = MapProviderHelperUtil.getMapProviderKey(
+			mapProviderKey = MapProviderHelperUtil.getMapProviderKey(
 				ServletContextUtil.getGroupLocalService(),
 				themeDisplay.getCompanyId(), themeDisplay.getSiteGroupId());
 		}
 
-		return mapProdiverKey;
+		return mapProviderKey;
 	}
 
 	private static final String _PAGE = "/map_display/page.jsp";

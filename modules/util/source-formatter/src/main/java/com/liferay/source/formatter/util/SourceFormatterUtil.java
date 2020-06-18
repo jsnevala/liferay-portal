@@ -15,11 +15,12 @@
 package com.liferay.source.formatter.util;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.TextFormatter;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.ExcludeSyntax;
 import com.liferay.source.formatter.ExcludeSyntaxPattern;
@@ -28,6 +29,9 @@ import com.liferay.source.formatter.checks.util.SourceUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+
+import java.net.URL;
 
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -41,10 +45,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -55,8 +57,17 @@ import java.util.regex.Pattern;
  */
 public class SourceFormatterUtil {
 
+	public static final String CHECKSTYLE_DOCUMENTATION_URL_BASE =
+		"https://checkstyle.sourceforge.io/";
+
 	public static final String GIT_LIFERAY_PORTAL_BRANCH =
 		"git.liferay.portal.branch";
+
+	public static final String GIT_LIFERAY_PORTAL_URL =
+		"https://raw.githubusercontent.com/liferay/liferay-portal/";
+
+	public static final String SOURCE_FORMATTER_TEST_PATH =
+		"/source/formatter/dependencies/";
 
 	public static List<String> filterFileNames(
 		List<String> allFileNames, String[] excludes, String[] includes,
@@ -118,33 +129,33 @@ public class SourceFormatterUtil {
 			String encodedFileName = SourceUtil.getAbsolutePath(fileName);
 
 			for (String includeRegex : includeRegexList) {
-				if (encodedFileName.matches(includeRegex)) {
-					for (String excludeRegex : excludeRegexList) {
-						if (encodedFileName.matches(excludeRegex)) {
-							continue outerLoop;
-						}
+				if (!encodedFileName.matches(includeRegex)) {
+					continue;
+				}
+
+				for (String excludeRegex : excludeRegexList) {
+					if (encodedFileName.matches(excludeRegex)) {
+						continue outerLoop;
 					}
+				}
 
-					for (Map.Entry<String, List<String>> entry :
-							excludeRegexMap.entrySet()) {
+				for (Map.Entry<String, List<String>> entry :
+						excludeRegexMap.entrySet()) {
 
-						String propertiesFileLocation = entry.getKey();
+					String propertiesFileLocation = entry.getKey();
 
-						if (encodedFileName.startsWith(
-								propertiesFileLocation)) {
-
-							for (String excludeRegex : entry.getValue()) {
-								if (encodedFileName.matches(excludeRegex)) {
-									continue outerLoop;
-								}
+					if (encodedFileName.startsWith(propertiesFileLocation)) {
+						for (String excludeRegex : entry.getValue()) {
+							if (encodedFileName.matches(excludeRegex)) {
+								continue outerLoop;
 							}
 						}
 					}
-
-					fileNames.add(fileName);
-
-					continue outerLoop;
 				}
+
+				fileNames.add(fileName);
+
+				continue outerLoop;
 			}
 		}
 
@@ -152,10 +163,8 @@ public class SourceFormatterUtil {
 	}
 
 	public static List<String> filterRecentChangesFileNames(
-			String baseDirName, List<String> recentChangesFileNames,
-			String[] excludes, String[] includes,
-			SourceFormatterExcludes sourceFormatterExcludes,
-			boolean includeSubrepositories)
+			Set<String> recentChangesFileNames, String[] excludes,
+			String[] includes, SourceFormatterExcludes sourceFormatterExcludes)
 		throws IOException {
 
 		if (ArrayUtil.isEmpty(includes)) {
@@ -166,54 +175,28 @@ public class SourceFormatterUtil {
 			excludes, includes, sourceFormatterExcludes);
 
 		return _filterRecentChangesFileNames(
-			baseDirName, recentChangesFileNames, pathMatchers);
+			recentChangesFileNames, pathMatchers);
 	}
 
-	public static List<String> getAttributeNames(
-		CheckType checkType, String checkName,
-		Map<String, Properties> propertiesMap) {
+	public static String getDocumentationURLString(Class<?> checkClass) {
+		String documentationURLString = _getDocumentationURLString(
+			checkClass.getSimpleName());
 
-		checkName = checkName.replaceAll("([a-z])([A-Z])", "$1.$2");
-
-		checkName = checkName.replaceAll("([A-Z])([A-Z][a-z])", "$1.$2");
-
-		String keyPrefix = StringUtil.toLowerCase(checkName) + ".";
-
-		if (checkType != null) {
-			String checkTypeName = checkType.getValue();
-
-			checkTypeName = checkTypeName.replaceAll("([a-z])([A-Z])", "$1.$2");
-
-			checkTypeName = checkTypeName.replaceAll(
-				"([A-Z])([A-Z][a-z])", "$1.$2");
-
-			keyPrefix = StringUtil.toLowerCase(checkTypeName) + "." + keyPrefix;
+		if (documentationURLString != null) {
+			return documentationURLString;
 		}
 
-		Set<String> attributeNames = new HashSet<>();
+		Class<?> superclass = checkClass.getSuperclass();
 
-		for (Map.Entry<String, Properties> entry : propertiesMap.entrySet()) {
-			Properties properties = entry.getValue();
+		String className = superclass.getSimpleName();
 
-			for (Object key : properties.keySet()) {
-				String s = (String)key;
+		documentationURLString = _getDocumentationURLString(className);
 
-				if (s.startsWith(keyPrefix)) {
-					String attributeName = StringUtil.replaceFirst(
-						s, keyPrefix, StringPool.BLANK);
-
-					attributeNames.add(attributeName);
-				}
-			}
+		if ((documentationURLString != null) || !className.startsWith("Base")) {
+			return documentationURLString;
 		}
 
-		return ListUtil.fromCollection(attributeNames);
-	}
-
-	public static List<String> getAttributeNames(
-		String checkName, Map<String, Properties> propertiesMap) {
-
-		return getAttributeNames(null, checkName, propertiesMap);
+		return _getDocumentationURLString(className.substring(4));
 	}
 
 	public static File getFile(String baseDirName, String fileName, int level) {
@@ -230,59 +213,60 @@ public class SourceFormatterUtil {
 		return null;
 	}
 
-	public static String getPropertyValue(
-		String attributeName, CheckType checkType, String checkName,
-		Map<String, Properties> propertiesMap) {
+	public static String getGitContent(String fileName, String branchName) {
+		URL url = getPortalGitURL(fileName, branchName);
 
-		checkName = checkName.replaceAll("([a-z])([A-Z])", "$1.$2");
-
-		checkName = checkName.replaceAll("([A-Z])([A-Z][a-z])", "$1.$2");
-
-		String key = StringBundler.concat(
-			StringUtil.toLowerCase(checkName), ".", attributeName);
-
-		if (checkType != null) {
-			String checkTypeName = checkType.getValue();
-
-			checkTypeName = checkTypeName.replaceAll("([a-z])([A-Z])", "$1.$2");
-
-			checkTypeName = checkTypeName.replaceAll(
-				"([A-Z])([A-Z][a-z])", "$1.$2");
-
-			key = StringUtil.toLowerCase(checkTypeName) + "." + key;
+		if (url == null) {
+			return null;
 		}
 
-		return getPropertyValue(key, propertiesMap);
+		try {
+			return StringUtil.read(url.openStream());
+		}
+		catch (IOException ioException) {
+			return null;
+		}
 	}
 
-	public static String getPropertyValue(
-		String propertyName, Map<String, Properties> propertiesMap) {
+	public static String getMarkdownFileName(String camelCaseName) {
+		camelCaseName = camelCaseName.replaceAll("([A-Z])s([A-Z])", "$1S$2");
 
-		StringBundler sb = new StringBundler(propertiesMap.size() * 2);
+		String markdownFileName = TextFormatter.format(
+			camelCaseName, TextFormatter.K);
 
-		for (Map.Entry<String, Properties> entry : propertiesMap.entrySet()) {
-			Properties properties = entry.getValue();
+		markdownFileName = TextFormatter.format(
+			markdownFileName, TextFormatter.N);
 
-			String value = properties.getProperty(propertyName);
-
-			if (value != null) {
-				sb.append(value);
-				sb.append(CharPool.COMMA);
-			}
-		}
-
-		if (sb.index() > 0) {
-			sb.setIndex(sb.index() - 1);
-		}
-
-		return sb.toString();
+		return markdownFileName + ".markdown";
 	}
 
-	public static String getPropertyValue(
-		String attributeName, String checkName,
-		Map<String, Properties> propertiesMap) {
+	public static File getPortalDir(String baseDirName) {
+		File portalImplDir = getFile(
+			baseDirName, "portal-impl", ToolsUtil.PORTAL_MAX_DIR_LEVEL);
 
-		return getPropertyValue(attributeName, null, checkName, propertiesMap);
+		if (portalImplDir == null) {
+			return null;
+		}
+
+		return portalImplDir.getParentFile();
+	}
+
+	public static URL getPortalGitURL(
+		String fileName, String portalBranchName) {
+
+		if (Validator.isNull(portalBranchName)) {
+			return null;
+		}
+
+		try {
+			return new URL(
+				StringBundler.concat(
+					SourceFormatterUtil.GIT_LIFERAY_PORTAL_URL,
+					portalBranchName, StringPool.SLASH, fileName));
+		}
+		catch (Exception exception) {
+			return null;
+		}
 	}
 
 	public static String getSimpleName(String name) {
@@ -297,37 +281,31 @@ public class SourceFormatterUtil {
 
 	public static List<File> getSuppressionsFiles(
 		String baseDirName, List<String> allFileNames,
-		SourceFormatterExcludes sourceFormatterExcludes, String... fileNames) {
+		SourceFormatterExcludes sourceFormatterExcludes) {
 
 		List<File> suppressionsFiles = new ArrayList<>();
 
-		String[] includes = new String[fileNames.length];
+		// Find suppressions files in any parent directory
 
-		for (int i = 0; i < fileNames.length; i++) {
-			String fileName = fileNames[i];
+		String parentDirName = baseDirName;
 
-			includes[i] = "**/" + fileName;
+		for (int j = 0; j < ToolsUtil.PORTAL_MAX_DIR_LEVEL; j++) {
+			File suppressionsFile = new File(
+				parentDirName + _SUPPRESSIONS_FILE_NAME);
 
-			// Find suppressions files in any parent directory
-
-			String parentDirName = baseDirName;
-
-			for (int j = 0; j < ToolsUtil.PORTAL_MAX_DIR_LEVEL; j++) {
-				File suppressionsFile = new File(parentDirName + fileName);
-
-				if (suppressionsFile.exists()) {
-					suppressionsFiles.add(suppressionsFile);
-				}
-
-				parentDirName += "../";
+			if (suppressionsFile.exists()) {
+				suppressionsFiles.add(suppressionsFile);
 			}
+
+			parentDirName += "../";
 		}
 
 		// Find suppressions files in any child directory
 
 		List<String> moduleSuppressionsFileNames = filterFileNames(
-			allFileNames, new String[0], includes, sourceFormatterExcludes,
-			true);
+			allFileNames, new String[0],
+			new String[] {"**/" + _SUPPRESSIONS_FILE_NAME},
+			sourceFormatterExcludes, true);
 
 		for (String moduleSuppressionsFileName : moduleSuppressionsFileNames) {
 			moduleSuppressionsFileName = StringUtil.replace(
@@ -405,16 +383,13 @@ public class SourceFormatterUtil {
 	}
 
 	private static List<String> _filterRecentChangesFileNames(
-			String baseDirName, List<String> recentChangesFileNames,
-			PathMatchers pathMatchers)
+			Set<String> recentChangesFileNames, PathMatchers pathMatchers)
 		throws IOException {
 
 		List<String> fileNames = new ArrayList<>();
 
 		recentChangesFileNamesLoop:
 		for (String fileName : recentChangesFileNames) {
-			fileName = baseDirName.concat(fileName);
-
 			File file = new File(fileName);
 
 			File canonicalFile = file.getCanonicalFile();
@@ -517,9 +492,24 @@ public class SourceFormatterUtil {
 
 			return canonicalFile.toPath();
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
+	}
+
+	private static String _getDocumentationURLString(String checkName) {
+		String markdownFileName = getMarkdownFileName(checkName);
+
+		ClassLoader classLoader = SourceFormatterUtil.class.getClassLoader();
+
+		InputStream inputStream = classLoader.getResourceAsStream(
+			"documentation/checks/" + markdownFileName);
+
+		if (inputStream != null) {
+			return _DOCUMENTATION_URL + markdownFileName;
+		}
+
+		return null;
 	}
 
 	private static PathMatchers _getPathMatchers(
@@ -595,7 +585,7 @@ public class SourceFormatterUtil {
 										return FileVisitResult.SKIP_SUBTREE;
 									}
 								}
-								catch (Exception e) {
+								catch (Exception exception) {
 								}
 							}
 						}
@@ -686,6 +676,13 @@ public class SourceFormatterUtil {
 
 		return fileNames;
 	}
+
+	private static final String _DOCUMENTATION_URL =
+		"https://github.com/liferay/liferay-portal/blob/master/modules/util" +
+			"/source-formatter/src/main/resources/documentation/checks/";
+
+	private static final String _SUPPRESSIONS_FILE_NAME =
+		"source-formatter-suppressions.xml";
 
 	private static class PathMatchers {
 

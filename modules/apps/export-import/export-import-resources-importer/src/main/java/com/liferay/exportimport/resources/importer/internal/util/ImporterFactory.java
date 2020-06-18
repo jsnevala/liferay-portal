@@ -18,8 +18,8 @@ import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
-import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerTracker;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.dynamic.data.mapping.util.DDMXML;
@@ -196,11 +196,11 @@ public class ImporterFactory {
 	}
 
 	protected DDMFormDeserializer getDDMFormJSONDeserializer() {
-		return _ddmFormDeserializerTracker.getDDMFormDeserializer("json");
+		return _jsonDDMFormDeserializer;
 	}
 
 	protected DDMFormDeserializer getDDMFormXSDDeserializer() {
-		return _ddmFormDeserializerTracker.getDDMFormDeserializer("xsd");
+		return _xsdDDMFormDeserializer;
 	}
 
 	protected FileSystemImporter getFileSystemImporter() {
@@ -215,7 +215,8 @@ public class ImporterFactory {
 			_layoutSetPrototypeLocalService, _mimeTypes, _portal,
 			_portletPreferencesFactory, _portletPreferencesLocalService,
 			_portletPreferencesTranslator, _portletPreferencesTranslators,
-			_repositoryLocalService, _saxReader, _themeLocalService);
+			_repositoryLocalService, _saxReader, _themeLocalService,
+			_dlURLHelper);
 	}
 
 	protected LARImporter getLARImporter() {
@@ -234,7 +235,8 @@ public class ImporterFactory {
 			_layoutSetPrototypeLocalService, _mimeTypes, _portal,
 			_portletPreferencesFactory, _portletPreferencesLocalService,
 			_portletPreferencesTranslator, _portletPreferencesTranslators,
-			_repositoryLocalService, _saxReader, _themeLocalService);
+			_repositoryLocalService, _saxReader, _themeLocalService,
+			_dlURLHelper);
 	}
 
 	@Reference(
@@ -289,9 +291,6 @@ public class ImporterFactory {
 	private AssetTagLocalService _assetTagLocalService;
 
 	@Reference
-	private DDMFormDeserializerTracker _ddmFormDeserializerTracker;
-
-	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
 
 	@Reference
@@ -310,6 +309,9 @@ public class ImporterFactory {
 	private DLFolderLocalService _dlFolderLocalService;
 
 	@Reference
+	private DLURLHelper _dlURLHelper;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
@@ -326,6 +328,9 @@ public class ImporterFactory {
 
 	@Reference
 	private JournalFolderLocalService _journalFolderLocalService;
+
+	@Reference(target = "(ddm.form.deserializer.type=json)")
+	private DDMFormDeserializer _jsonDDMFormDeserializer;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
@@ -367,5 +372,8 @@ public class ImporterFactory {
 
 	@Reference
 	private ThemeLocalService _themeLocalService;
+
+	@Reference(target = "(ddm.form.deserializer.type=xsd)")
+	private DDMFormDeserializer _xsdDDMFormDeserializer;
 
 }

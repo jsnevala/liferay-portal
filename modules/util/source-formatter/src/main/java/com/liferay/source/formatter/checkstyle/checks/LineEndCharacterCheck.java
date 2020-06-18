@@ -14,8 +14,6 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
-import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
-
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
@@ -34,25 +32,23 @@ public class LineEndCharacterCheck extends BaseCheck {
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
 		if (detailAST.getType() == TokenTypes.LPAREN) {
-			DetailAST parentAST = detailAST.getParent();
+			DetailAST parentDetailAST = detailAST.getParent();
 
-			if ((parentAST.getType() == TokenTypes.ANNOTATION) ||
-				(parentAST.getType() == TokenTypes.CTOR_CALL) ||
-				(parentAST.getType() == TokenTypes.CTOR_DEF) ||
-				(parentAST.getType() == TokenTypes.ENUM_CONSTANT_DEF) ||
-				(parentAST.getType() == TokenTypes.LAMBDA) ||
-				(parentAST.getType() == TokenTypes.LITERAL_CATCH) ||
-				(parentAST.getType() == TokenTypes.LITERAL_NEW) ||
-				(parentAST.getType() == TokenTypes.METHOD_DEF) ||
-				(parentAST.getType() == TokenTypes.SUPER_CTOR_CALL)) {
+			if ((parentDetailAST.getType() == TokenTypes.ANNOTATION) ||
+				(parentDetailAST.getType() == TokenTypes.CTOR_CALL) ||
+				(parentDetailAST.getType() == TokenTypes.CTOR_DEF) ||
+				(parentDetailAST.getType() == TokenTypes.ENUM_CONSTANT_DEF) ||
+				(parentDetailAST.getType() == TokenTypes.LAMBDA) ||
+				(parentDetailAST.getType() == TokenTypes.LITERAL_CATCH) ||
+				(parentDetailAST.getType() == TokenTypes.LITERAL_NEW) ||
+				(parentDetailAST.getType() == TokenTypes.METHOD_DEF) ||
+				(parentDetailAST.getType() == TokenTypes.SUPER_CTOR_CALL)) {
 
 				return;
 			}
 		}
 
-		if (DetailASTUtil.isAtLineEnd(
-				detailAST, getLine(detailAST.getLineNo() - 1))) {
-
+		if (isAtLineEnd(detailAST, getLine(detailAST.getLineNo() - 1))) {
 			log(
 				detailAST, _MSG_INCORRECT_END_LINE_CHARACTER,
 				detailAST.getText());

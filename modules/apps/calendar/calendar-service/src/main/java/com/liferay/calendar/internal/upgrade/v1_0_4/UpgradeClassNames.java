@@ -17,6 +17,7 @@ package com.liferay.calendar.internal.upgrade.v1_0_4;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.util.LoggingTimer;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.upgrade.v7_0_0.UpgradeKernelPackage;
 
@@ -43,6 +44,10 @@ public class UpgradeClassNames extends UpgradeKernelPackage {
 	protected void deleteCalEventClassName() throws UpgradeException {
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
 			runSQL(
+				"delete from AssetEntry where classNameId = " +
+					PortalUtil.getClassNameId(_CLASS_NAME_CAL_EVENT));
+
+			runSQL(
 				"delete from Counter where name like '" +
 					_CLASS_NAME_CAL_EVENT + "%'");
 
@@ -62,8 +67,8 @@ public class UpgradeClassNames extends UpgradeKernelPackage {
 				"delete from ResourcePermission where name like '" +
 					_CLASS_NAME_CAL_EVENT + "%'");
 		}
-		catch (Exception e) {
-			throw new UpgradeException(e);
+		catch (Exception exception) {
+			throw new UpgradeException(exception);
 		}
 	}
 
@@ -96,8 +101,8 @@ public class UpgradeClassNames extends UpgradeKernelPackage {
 					runSQL(deleteSQL);
 				}
 			}
-			catch (Exception e) {
-				throw new UpgradeException(e);
+			catch (Exception exception) {
+				throw new UpgradeException(exception);
 			}
 		}
 	}
@@ -122,8 +127,8 @@ public class UpgradeClassNames extends UpgradeKernelPackage {
 							rs.getString(1), "' and name= '", oldName, "'"));
 				}
 			}
-			catch (Exception e) {
-				throw new UpgradeException(e);
+			catch (Exception exception) {
+				throw new UpgradeException(exception);
 			}
 		}
 	}
@@ -193,10 +198,9 @@ public class UpgradeClassNames extends UpgradeKernelPackage {
 
 				ps3.execute();
 			}
-
 		}
-		catch (SQLException sqle) {
-			throw new UpgradeException(sqle);
+		catch (SQLException sqlException) {
+			throw new UpgradeException(sqlException);
 		}
 	}
 

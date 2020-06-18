@@ -16,6 +16,7 @@ package com.liferay.util.resiliency.spi.provider;
 
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -27,7 +28,6 @@ import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.File;
 
@@ -44,7 +44,9 @@ import javax.servlet.ServletContextListener;
 
 /**
  * @author Shuyang Zhou
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
+@Deprecated
 public class SPIClassPathContextListener implements ServletContextListener {
 
 	public static volatile String SPI_CLASS_PATH = StringPool.BLANK;
@@ -134,7 +136,7 @@ public class SPIClassPathContextListener implements ServletContextListener {
 			if (!result) {
 				_log.error(
 					StringBundler.concat(
-						"Duplicate SPI provider ", String.valueOf(spiProvider),
+						"Duplicate SPI provider ", spiProvider,
 						" is already registered in servlet context ",
 						servletContext.getContextPath()));
 			}
@@ -142,11 +144,11 @@ public class SPIClassPathContextListener implements ServletContextListener {
 				MPIHelperUtil.registerSPIProvider(spiProvider);
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(
 				"Unable to create SPI provider with name " +
 					spiProviderClassName,
-				e);
+				exception);
 		}
 	}
 

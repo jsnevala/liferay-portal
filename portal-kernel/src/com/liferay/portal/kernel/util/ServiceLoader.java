@@ -15,6 +15,7 @@
 package com.liferay.portal.kernel.util;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -39,37 +40,22 @@ import java.util.List;
 public class ServiceLoader {
 
 	public static <S> List<S> load(Class<S> clazz) throws Exception {
-		return load(clazz, null);
-	}
-
-	public static <S> List<S> load(
-			Class<S> clazz, ServiceLoaderCondition serviceLoaderCondition)
-		throws Exception {
-
 		Thread currentThread = Thread.currentThread();
 
 		ClassLoader classLoader = currentThread.getContextClassLoader();
 
-		return load(classLoader, clazz, serviceLoaderCondition);
+		return load(classLoader, clazz);
 	}
 
 	public static <S> List<S> load(ClassLoader classLoader, Class<S> clazz)
 		throws Exception {
 
-		return load(classLoader, clazz, null);
-	}
-
-	public static <S> List<S> load(
-			ClassLoader classLoader, Class<S> clazz,
-			ServiceLoaderCondition serviceLoaderCondition)
-		throws Exception {
-
-		return load(classLoader, classLoader, clazz, serviceLoaderCondition);
+		return load(classLoader, classLoader, clazz);
 	}
 
 	public static <S> List<S> load(
 			ClassLoader lookupClassLoader, ClassLoader defineClassLoader,
-			Class<S> clazz, ServiceLoaderCondition serviceLoaderCondition)
+			Class<S> clazz)
 		throws Exception {
 
 		Enumeration<URL> enu = lookupClassLoader.getResources(
@@ -80,21 +66,14 @@ public class ServiceLoader {
 		while (enu.hasMoreElements()) {
 			URL url = enu.nextElement();
 
-			if ((serviceLoaderCondition != null) &&
-				!serviceLoaderCondition.isLoad(url)) {
-
-				continue;
-			}
-
 			try {
 				_load(services, defineClassLoader, clazz, url);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				_log.error(
 					StringBundler.concat(
-						"Unable to load ", String.valueOf(clazz), " with ",
-						String.valueOf(defineClassLoader)),
-					e);
+						"Unable to load ", clazz, " with ", defineClassLoader),
+					exception);
 			}
 		}
 

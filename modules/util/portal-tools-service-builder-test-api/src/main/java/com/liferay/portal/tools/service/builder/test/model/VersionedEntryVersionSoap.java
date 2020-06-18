@@ -14,8 +14,6 @@
 
 package com.liferay.portal.tools.service.builder.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,13 +25,15 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class VersionedEntryVersionSoap implements Serializable {
+
 	public static VersionedEntryVersionSoap toSoapModel(
 		VersionedEntryVersion model) {
+
 		VersionedEntryVersionSoap soapModel = new VersionedEntryVersionSoap();
 
-		soapModel.setVersionedEntryVersionId(model.getVersionedEntryVersionId());
+		soapModel.setVersionedEntryVersionId(
+			model.getVersionedEntryVersionId());
 		soapModel.setVersion(model.getVersion());
 		soapModel.setVersionedEntryId(model.getVersionedEntryId());
 		soapModel.setGroupId(model.getGroupId());
@@ -43,7 +43,9 @@ public class VersionedEntryVersionSoap implements Serializable {
 
 	public static VersionedEntryVersionSoap[] toSoapModels(
 		VersionedEntryVersion[] models) {
-		VersionedEntryVersionSoap[] soapModels = new VersionedEntryVersionSoap[models.length];
+
+		VersionedEntryVersionSoap[] soapModels =
+			new VersionedEntryVersionSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -54,10 +56,12 @@ public class VersionedEntryVersionSoap implements Serializable {
 
 	public static VersionedEntryVersionSoap[][] toSoapModels(
 		VersionedEntryVersion[][] models) {
+
 		VersionedEntryVersionSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new VersionedEntryVersionSoap[models.length][models[0].length];
+			soapModels =
+				new VersionedEntryVersionSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new VersionedEntryVersionSoap[0][0];
@@ -72,13 +76,16 @@ public class VersionedEntryVersionSoap implements Serializable {
 
 	public static VersionedEntryVersionSoap[] toSoapModels(
 		List<VersionedEntryVersion> models) {
-		List<VersionedEntryVersionSoap> soapModels = new ArrayList<VersionedEntryVersionSoap>(models.size());
+
+		List<VersionedEntryVersionSoap> soapModels =
+			new ArrayList<VersionedEntryVersionSoap>(models.size());
 
 		for (VersionedEntryVersion model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new VersionedEntryVersionSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new VersionedEntryVersionSoap[soapModels.size()]);
 	}
 
 	public VersionedEntryVersionSoap() {
@@ -128,4 +135,5 @@ public class VersionedEntryVersionSoap implements Serializable {
 	private int _version;
 	private long _versionedEntryId;
 	private long _groupId;
+
 }

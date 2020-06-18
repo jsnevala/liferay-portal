@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.servlet.filters.invoker;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -26,7 +27,6 @@ import com.liferay.portal.kernel.util.InstanceFactory;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
@@ -44,8 +44,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -74,8 +76,8 @@ public class InvokerFilterHelper {
 			try {
 				filter.destroy();
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 
@@ -114,10 +116,10 @@ public class InvokerFilterHelper {
 
 			_serviceTracker.open();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new ServletException(e);
+			throw new ServletException(exception);
 		}
 	}
 
@@ -143,9 +145,10 @@ public class InvokerFilterHelper {
 			}
 
 			if (newFilterMappings.length == 1) {
-				if (_filterMappingsMap.putIfAbsent(
-						filterName, newFilterMappings) == null) {
+				FilterMapping[] filterMappings = _filterMappingsMap.putIfAbsent(
+					filterName, newFilterMappings);
 
+				if (filterMappings == null) {
 					int index = _filterNames.indexOf(positionFilterName);
 
 					if (index == -1) {
@@ -209,8 +212,8 @@ public class InvokerFilterHelper {
 			try {
 				filter.destroy();
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 
@@ -260,8 +263,8 @@ public class InvokerFilterHelper {
 	}
 
 	protected InvokerFilterChain createInvokerFilterChain(
-		HttpServletRequest request, Dispatcher dispatcher, String uri,
-		FilterChain filterChain) {
+		HttpServletRequest httpServletRequest, Dispatcher dispatcher,
+		String uri, FilterChain filterChain) {
 
 		InvokerFilterChain invokerFilterChain = new InvokerFilterChain(
 			filterChain);
@@ -274,7 +277,9 @@ public class InvokerFilterHelper {
 			}
 
 			for (FilterMapping filterMapping : filterMappings) {
-				if (filterMapping.isMatch(request, dispatcher, uri)) {
+				if (filterMapping.isMatch(
+						httpServletRequest, dispatcher, uri)) {
+
 					invokerFilterChain.addFilter(filterMapping.getFilter());
 				}
 			}
@@ -318,8 +323,9 @@ public class InvokerFilterHelper {
 
 			return filter;
 		}
-		catch (Exception e) {
-			_log.error("Unable to initialize filter " + filterClassName, e);
+		catch (Exception exception) {
+			_log.error(
+				"Unable to initialize filter " + filterClassName, exception);
 
 			return null;
 		}
@@ -328,18 +334,6 @@ public class InvokerFilterHelper {
 				currentThread.setContextClassLoader(contextClassLoader);
 			}
 		}
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #initFilter(ServletContext, String, FilterConfig)}
-	 */
-	@Deprecated
-	protected Filter initFilter(
-		ServletContext servletContext, String filterClassName,
-		String filterName, FilterConfig filterConfig) {
-
-		return initFilter(servletContext, filterClassName, filterConfig);
 	}
 
 	protected void readLiferayFilterWebXML(
@@ -402,7 +396,7 @@ public class InvokerFilterHelper {
 				urlPatterns.add(urlPatternElement.getTextTrim());
 			}
 
-			List<String> dispatchers = new ArrayList<>(4);
+			Set<Dispatcher> dispatchers = new HashSet<>();
 
 			List<Element> dispatcherElements = filterMappingElement.elements(
 				"dispatcher");
@@ -411,7 +405,7 @@ public class InvokerFilterHelper {
 				String dispatcher = StringUtil.toUpperCase(
 					dispatcherElement.getTextTrim());
 
-				dispatchers.add(dispatcher);
+				dispatchers.add(Dispatcher.valueOf(dispatcher));
 			}
 
 			ObjectValuePair<Filter, FilterConfig> filterObjectValuePair =
@@ -455,20 +449,26 @@ public class InvokerFilterHelper {
 
 			Filter filter = registry.getService(serviceReference);
 
-			String afterFilter = GetterUtil.getString(
-				serviceReference.getProperty("after-filter"));
-			String beforeFilter = GetterUtil.getString(
-				serviceReference.getProperty("before-filter"));
 			String servletContextName = GetterUtil.getString(
 				serviceReference.getProperty("servlet-context-name"));
-			String servletFilterName = GetterUtil.getString(
-				serviceReference.getProperty("servlet-filter-name"));
+
+			if (Validator.isBlank(servletContextName)) {
+				servletContextName = PortalUtil.getServletContextName();
+			}
+
+			String beforeFilter = GetterUtil.getString(
+				serviceReference.getProperty("before-filter"));
 
 			String positionFilterName = beforeFilter;
+
 			boolean after = false;
+
+			String afterFilter = GetterUtil.getString(
+				serviceReference.getProperty("after-filter"));
 
 			if (Validator.isNotNull(afterFilter)) {
 				positionFilterName = afterFilter;
+
 				after = true;
 			}
 
@@ -485,11 +485,13 @@ public class InvokerFilterHelper {
 					serviceReference.getProperty(key));
 
 				initParameterMap.put(
-					StringUtil.replace(key, "init.param.", ""), value);
+					StringUtil.removeSubstring(key, "init.param."), value);
 			}
 
 			ServletContext servletContext = ServletContextPool.get(
 				servletContextName);
+			String servletFilterName = GetterUtil.getString(
+				serviceReference.getProperty("servlet-filter-name"));
 
 			FilterConfig filterConfig = new InvokerFilterConfig(
 				servletContext, servletFilterName, initParameterMap);
@@ -497,8 +499,8 @@ public class InvokerFilterHelper {
 			try {
 				filter.init(filterConfig);
 			}
-			catch (ServletException se) {
-				_log.error(se, se);
+			catch (ServletException servletException) {
+				_log.error(servletException, servletException);
 
 				registry.ungetService(serviceReference);
 
@@ -507,10 +509,19 @@ public class InvokerFilterHelper {
 
 			updateFilterMappings(servletFilterName, filter);
 
+			Set<Dispatcher> dispatchers = new HashSet<>();
+
+			for (String dispatcherString :
+					StringPlus.asList(
+						serviceReference.getProperty("dispatcher"))) {
+
+				dispatchers.add(Dispatcher.valueOf(dispatcherString));
+			}
+
 			FilterMapping filterMapping = new FilterMapping(
 				servletFilterName, filter, filterConfig,
 				StringPlus.asList(serviceReference.getProperty("url-pattern")),
-				StringPlus.asList(serviceReference.getProperty("dispatcher")));
+				dispatchers);
 
 			registerFilterMapping(filterMapping, positionFilterName, after);
 

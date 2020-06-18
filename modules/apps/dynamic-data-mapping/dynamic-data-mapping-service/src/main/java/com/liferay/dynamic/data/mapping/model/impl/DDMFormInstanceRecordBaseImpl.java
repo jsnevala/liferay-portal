@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalServiceUtil;
 
@@ -31,21 +29,24 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalServic
  * @see DDMFormInstanceRecord
  * @generated
  */
-@ProviderType
 public abstract class DDMFormInstanceRecordBaseImpl
 	extends DDMFormInstanceRecordModelImpl implements DDMFormInstanceRecord {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a ddm form instance record model instance should use the {@link DDMFormInstanceRecord} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a ddm form instance record model instance should use the <code>DDMFormInstanceRecord</code> interface instead.
 	 */
 	@Override
 	public void persist() {
 		if (this.isNew()) {
-			DDMFormInstanceRecordLocalServiceUtil.addDDMFormInstanceRecord(this);
+			DDMFormInstanceRecordLocalServiceUtil.addDDMFormInstanceRecord(
+				this);
 		}
 		else {
-			DDMFormInstanceRecordLocalServiceUtil.updateDDMFormInstanceRecord(this);
+			DDMFormInstanceRecordLocalServiceUtil.updateDDMFormInstanceRecord(
+				this);
 		}
 	}
+
 }

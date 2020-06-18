@@ -14,8 +14,6 @@
 
 package com.liferay.trash.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,14 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.trash.service.http.TrashEntryServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.trash.service.http.TrashEntryServiceSoap
  * @generated
  */
-@ProviderType
 public class TrashEntrySoap implements Serializable {
+
 	public static TrashEntrySoap toSoapModel(TrashEntry model) {
 		TrashEntrySoap soapModel = new TrashEntrySoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setEntryId(model.getEntryId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
@@ -77,7 +75,8 @@ public class TrashEntrySoap implements Serializable {
 	}
 
 	public static TrashEntrySoap[] toSoapModels(List<TrashEntry> models) {
-		List<TrashEntrySoap> soapModels = new ArrayList<TrashEntrySoap>(models.size());
+		List<TrashEntrySoap> soapModels = new ArrayList<TrashEntrySoap>(
+			models.size());
 
 		for (TrashEntry model : models) {
 			soapModels.add(toSoapModel(model));
@@ -95,6 +94,14 @@ public class TrashEntrySoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setEntryId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public long getEntryId() {
@@ -185,6 +192,7 @@ public class TrashEntrySoap implements Serializable {
 		_status = status;
 	}
 
+	private long _mvccVersion;
 	private long _entryId;
 	private long _groupId;
 	private long _companyId;
@@ -196,4 +204,5 @@ public class TrashEntrySoap implements Serializable {
 	private long _systemEventSetKey;
 	private String _typeSettings;
 	private int _status;
+
 }

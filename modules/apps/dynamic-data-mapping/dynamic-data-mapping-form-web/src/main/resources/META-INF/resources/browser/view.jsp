@@ -48,10 +48,11 @@
 			>
 
 				<%
-				Map<String, Object> data = new HashMap<>();
-
-				data.put("forminstanceid", formInstance.getFormInstanceId());
-				data.put("forminstancename", formInstance.getName(locale));
+				Map<String, Object> data = HashMapBuilder.<String, Object>put(
+					"forminstanceid", formInstance.getFormInstanceId()
+				).put(
+					"forminstancename", formInstance.getName(locale)
+				).build();
 				%>
 
 				<liferay-ui:search-container-column-text
@@ -87,5 +88,8 @@
 </div>
 
 <aui:script>
-	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectDDMFormFm', '<%= HtmlUtil.escapeJS(ddmFormBrowserDisplayContext.getEventName()) %>');
+	Liferay.Util.selectEntityHandler(
+		'#<portlet:namespace />selectDDMFormFm',
+		'<%= HtmlUtil.escapeJS(ddmFormBrowserDisplayContext.getEventName()) %>'
+	);
 </aui:script>

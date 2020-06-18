@@ -1,11 +1,25 @@
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
 Liferay = window.Liferay || {};
 
-(function($, _, Liferay) {
-	var isFunction = function(val) {
+(function (Liferay) {
+	var isFunction = function (val) {
 		return typeof val === 'function';
 	};
 
-	var isNode = function(node) {
+	var isNode = function (node) {
 		return node && (node._node || node.jquery || node.nodeType);
 	};
 
@@ -13,62 +27,26 @@ Liferay = window.Liferay || {};
 
 	var STR_MULTIPART = 'multipart/form-data';
 
-	Liferay.namespace = _.namespace;
+	Liferay.namespace = function namespace(obj, path) {
+		if (path === undefined) {
+			path = obj;
 
-	$.ajaxSetup(
-		{
-			data: {},
-			type: 'POST'
+			obj = this;
 		}
-	);
 
-	$.ajaxPrefilter(
-		function(options) {
-			if (options.crossDomain) {
-				options.contents.script = false;
+		var parts = path.split('.');
+
+		for (var part; parts.length && (part = parts.shift()); ) {
+			if (obj[part] && obj[part] !== Object.prototype[part]) {
+				obj = obj[part];
 			}
-
-			if (options.url) {
-				options.url = Liferay.Util.getURLWithSessionId(options.url);
+			else {
+				obj = obj[part] = {};
 			}
 		}
-	);
 
-	var jqueryInit = $.prototype.init;
-
-	$.prototype.init = function(selector, context, root) {
-		if (selector === '#') {
-			selector = '';
-		}
-
-		return new jqueryInit(selector, context, root);
+		return obj;
 	};
-
-	$(document).on(
-		'show.bs.collapse',
-		function(event) {
-			var target = $(event.target);
-
-			var ancestor = target.parents('.panel-group');
-
-			if (target.hasClass('panel-collapse') && ancestor.length) {
-				var openChildren = ancestor.find('.panel-collapse.in').not(target);
-
-				if (openChildren.length && ancestor.find('[data-parent="#' + ancestor.attr('id') + '"]').length) {
-					openChildren.removeClass('in');
-				}
-			}
-
-			if (target.hasClass('in')) {
-				target.addClass('show');
-				target.removeClass('in');
-
-				target.collapse('hide');
-
-				return false;
-			}
-		}
-	);
 
 	/**
 	 * OPTIONS
@@ -82,390 +60,173 @@ Liferay = window.Liferay || {};
 	 * exceptionCallback {function}: A function to execute when the response from the server contains a service exception. It receives a the exception message as it's first parameter.
 	 */
 
-	var Service = function() {
-		var instance = this;
-
-		var args = Service.parseInvokeArgs(arguments);
+	var Service = function () {
+		var args = Service.parseInvokeArgs(
+			Array.prototype.slice.call(arguments, 0)
+		);
 
 		return Service.invoke.apply(Service, args);
 	};
 
-	_.assign(
-		Service,
-		{
-			URL_INVOKE: themeDisplay.getPathContext() + '/api/jsonws/invoke',
+	Service.URL_INVOKE = themeDisplay.getPathContext() + '/api/jsonws/invoke';
 
-			bind: function() {
-				var instance = this;
+	Service.bind = function () {
+		var args = Array.prototype.slice.call(arguments, 0);
 
-				var args = _.toArray(arguments);
+		return function () {
+			var newArgs = Array.prototype.slice.call(arguments, 0);
 
-				args.unshift(Liferay.Service, Liferay);
+			return Service.apply(Service, args.concat(newArgs));
+		};
+	};
 
-				return _.bind.apply(_, args);
-			},
+	Service.parseInvokeArgs = function (args) {
+		var instance = this;
 
-			parseInvokeArgs: function(args) {
-				var instance = this;
+		var payload = args[0];
 
-				var payload = args[0];
+		var ioConfig = instance.parseIOConfig(args);
 
-				var ioConfig = instance.parseIOConfig(args);
+		if (typeof payload === 'string') {
+			payload = instance.parseStringPayload(args);
 
-				if (_.isString(payload)) {
-					payload = instance.parseStringPayload(args);
+			instance.parseIOFormConfig(ioConfig, args);
 
-					instance.parseIOFormConfig(ioConfig, args);
+			var lastArg = args[args.length - 1];
 
-					var lastArg = args[args.length - 1];
-
-					if (_.isObject(lastArg) && lastArg.method) {
-						ioConfig.method = lastArg.method;
-					}
-				}
-
-				return [payload, ioConfig];
-			},
-
-			parseIOConfig: function(args) {
-				var instance = this;
-
-				var payload = args[0];
-
-				var ioConfig = payload.io || {};
-
-				delete payload.io;
-
-				if (!ioConfig.success) {
-					var callbacks = _.filter(args, isFunction);
-
-					var callbackException = callbacks[1];
-					var callbackSuccess = callbacks[0];
-
-					if (!callbackException) {
-						callbackException = callbackSuccess;
-					}
-
-					ioConfig.complete = function(xhr) {
-						var response = xhr.responseJSON;
-
-						if ((response !== null) && !_.has(response, 'exception')) {
-							if (callbackSuccess) {
-								callbackSuccess.call(this, response);
-							}
-						}
-						else if (callbackException) {
-							var exception = response ? response.exception : 'The server returned an empty response';
-
-							callbackException.call(this, exception, response);
-						}
-					};
-				}
-
-				if (!_.has(ioConfig, 'cache') && REGEX_METHOD_GET.test(ioConfig.type)) {
-					ioConfig.cache = false;
-				}
-
-				if (Liferay.PropsValues.NTLM_AUTH_ENABLED && Liferay.Browser.isIe()) {
-					ioConfig.type = 'GET';
-				}
-
-				return ioConfig;
-			},
-
-			parseIOFormConfig: function(ioConfig, args) {
-				var instance = this;
-
-				var form = args[1];
-
-				if (isNode(form)) {
-					ioConfig.form = form;
-
-					if (ioConfig.form.enctype == STR_MULTIPART) {
-						ioConfig.contentType = false;
-						ioConfig.processData = false;
-					}
-				}
-			},
-
-			parseStringPayload: function(args) {
-				var instance = this;
-
-				var params = {};
-				var payload = {};
-
-				var config = args[1];
-
-				if (!isFunction(config) && !isNode(config)) {
-					params = config;
-				}
-
-				payload[args[0]] = params;
-
-				return payload;
+			if (typeof lastArg === 'object' && lastArg.method) {
+				ioConfig.method = lastArg.method;
 			}
-		},
-		true
-	);
+		}
 
-	Service.invoke = function(payload, ioConfig) {
+		return [payload, ioConfig];
+	};
+
+	Service.parseIOConfig = function (args) {
+		var payload = args[0];
+
+		var ioConfig = payload.io || {};
+
+		delete payload.io;
+
+		if (!ioConfig.success) {
+			var callbacks = args.filter(isFunction);
+
+			var callbackException = callbacks[1];
+			var callbackSuccess = callbacks[0];
+
+			if (!callbackException) {
+				callbackException = callbackSuccess;
+			}
+
+			ioConfig.error = callbackException;
+
+			ioConfig.complete = function (response) {
+				if (
+					response !== null &&
+					!Object.prototype.hasOwnProperty.call(response, 'exception')
+				) {
+					if (callbackSuccess) {
+						callbackSuccess.call(this, response);
+					}
+				}
+				else if (callbackException) {
+					var exception = response
+						? response.exception
+						: 'The server returned an empty response';
+
+					callbackException.call(this, exception, response);
+				}
+			};
+		}
+
+		if (
+			!Object.prototype.hasOwnProperty.call(ioConfig, 'cache') &&
+			REGEX_METHOD_GET.test(ioConfig.type)
+		) {
+			ioConfig.cache = false;
+		}
+
+		if (Liferay.PropsValues.NTLM_AUTH_ENABLED && Liferay.Browser.isIe()) {
+			ioConfig.type = 'GET';
+		}
+
+		return ioConfig;
+	};
+
+	Service.parseIOFormConfig = function (ioConfig, args) {
+		var form = args[1];
+
+		if (isNode(form)) {
+			if (form.enctype == STR_MULTIPART) {
+				ioConfig.contentType = 'multipart/form-data';
+			}
+
+			ioConfig.formData = new FormData(form);
+		}
+	};
+
+	Service.parseStringPayload = function (args) {
+		var params = {};
+		var payload = {};
+
+		var config = args[1];
+
+		if (!isFunction(config) && !isNode(config)) {
+			params = config;
+		}
+
+		payload[args[0]] = params;
+
+		return payload;
+	};
+
+	Service.invoke = function (payload, ioConfig) {
 		var instance = this;
 
 		var cmd = JSON.stringify(payload);
-		var p_auth = Liferay.authToken;
 
-		_.defaults(
-			ioConfig,
-			{
-				data: {
-					cmd: cmd,
-					p_auth: p_auth
-				},
-				dataType: 'JSON'
-			}
-		);
+		var data = cmd;
 
-		if (ioConfig.form) {
-			if (ioConfig.form.enctype == STR_MULTIPART && isFunction(window.FormData)) {
-				ioConfig.data = new FormData(ioConfig.form);
-
-				ioConfig.data.append('cmd', cmd);
-				ioConfig.data.append('p_auth', p_auth);
-			}
-			else {
-				_.forEach(
-					$(ioConfig.form).serializeArray(),
-					function(item, index) {
-						ioConfig.data[item.name] = item.value;
-					}
-				);
-			}
-
-			delete ioConfig.form;
+		if (ioConfig.formData) {
+			ioConfig.formData.append('cmd', cmd);
+			data = ioConfig.formData;
 		}
 
-		return $.ajax(
-			instance.URL_INVOKE,
-			ioConfig
-		);
+		return Liferay.Util.fetch(instance.URL_INVOKE, {
+			body: data,
+			headers: {
+				contentType: ioConfig.contentType,
+			},
+			method: 'POST',
+		})
+			.then((response) => response.json())
+			.then(ioConfig.complete)
+			.catch(ioConfig.error);
 	};
 
-	_.forEach(
-		['get', 'delete', 'post', 'put', 'update'],
-		function(item, index) {
-			var methodName = item;
+	function getHttpMethodFunction(httpMethodName) {
+		return function () {
+			var args = Array.prototype.slice.call(arguments, 0);
 
-			if (item === 'delete') {
-				methodName = 'del';
-			}
+			var method = {method: httpMethodName};
 
-			Service[methodName] = _.bindKeyRight(
-				Liferay,
-				'Service',
-				{
-					method: item
-				}
-			);
-		}
-	);
+			args.push(method);
+
+			return Service.apply(Service, args);
+		};
+	}
+
+	Service.get = getHttpMethodFunction('get');
+	Service.del = getHttpMethodFunction('delete');
+	Service.post = getHttpMethodFunction('post');
+	Service.put = getHttpMethodFunction('put');
+	Service.update = getHttpMethodFunction('update');
 
 	Liferay.Service = Service;
 
-	var componentDestroyConfigs = {};
-	var componentPromiseWrappers = {};
-	var components = {};
-	var componentsFn = {};
-
-	var _createPromiseWrapper = function(value) {
-		var promiseWrapper;
-
-		if (value) {
-			promiseWrapper = {
-				promise: Promise.resolve(value),
-				resolve: function() {}
-			};
-		}
-		else {
-			var promiseResolve;
-			var promise = new Promise(
-				function(resolve) {
-					promiseResolve = resolve;
-				}
-			);
-
-			promiseWrapper = {
-				promise: promise,
-				resolve: promiseResolve
-			};
-		}
-
-		return promiseWrapper;
-	};
-
-	Liferay.component = function(id, value, destroyConfig) {
-		var retVal;
-
-		if (arguments.length === 1) {
-			var component = components[id];
-
-			if (component && isFunction(component)) {
-				componentsFn[id] = component;
-
-				component = component();
-
-				components[id] = component;
-			}
-
-			retVal = component;
-		}
-		else {
-			if (components[id] && value !== null) {
-				delete componentDestroyConfigs[id];
-				delete componentPromiseWrappers[id];
-
-				console.warn('Component with id "' + id + '" is being registered twice. This can lead to unexpected behaviour in the "Liferay.component" and "Liferay.componentReady" APIs, as well as in the "*:registered" events.');
-			}
-
-			retVal = (components[id] = value);
-
-			if (value === null) {
-				delete componentDestroyConfigs[id];
-				delete componentPromiseWrappers[id];
-			}
-			else {
-				componentDestroyConfigs[id] = destroyConfig;
-
-				Liferay.fire(id + ':registered');
-
-				var componentPromiseWrapper = componentPromiseWrappers[id];
-
-				if (componentPromiseWrapper) {
-					componentPromiseWrapper.resolve(value);
-				}
-				else {
-					componentPromiseWrappers[id] = _createPromiseWrapper(value);
-				}
-			}
-		}
-
-		return retVal;
-	};
-
-	/**
-	 * Retrieves a list of component instances after they've been registered.
-	 *
-	 * @param {...string} componentId The ids of the components to be received
-	 * @return {Promise} A promise to be resolved with all the requested component
-	 * instances after they've been successfully registered
-	 * @review
-	 */
-
-	Liferay.componentReady = function() {
-		var component;
-		var componentPromise;
-
-		if (arguments.length === 1) {
-			component = arguments[0];
-		}
-		else {
-			component = [];
-
-			for (var i = 0; i < arguments.length; i++) {
-				component[i] = arguments[i];
-			}
-		}
-
-		if (Array.isArray(component)) {
-			componentPromise = Promise.all(
-				component.map(
-					function(id) {
-						return Liferay.componentReady(id);
-					}
-				)
-			);
-		}
-		else {
-			var componentPromiseWrapper = componentPromiseWrappers[component];
-
-			if (!componentPromiseWrapper) {
-				componentPromiseWrappers[component] = componentPromiseWrapper = _createPromiseWrapper();
-			}
-
-			componentPromise = componentPromiseWrapper.promise;
-		}
-
-		return componentPromise;
-	};
-
-	/**
-	 * Destroys the component registered by the provided component id. Invokes the
-	 * component's own destroy lifecycle methods (destroy or dispose) and deletes
-	 * the internal references to the component in the component registry.
-	 *
-	 * @param {string} componentId The id of the component to destroy
-	 * @review
-	 */
-
-	Liferay.destroyComponent = function(componentId) {
-		var component = components[componentId];
-
-		if (component) {
-			var destroyFn = component.destroy || component.dispose;
-
-			if (destroyFn) {
-				destroyFn.call(component);
-			}
-
-			delete componentDestroyConfigs[componentId];
-			delete componentPromiseWrappers[componentId];
-			delete componentsFn[componentId];
-			delete components[componentId];
-		}
-	};
-
-	/**
-	 * Destroys registered components matching the provided filter function. If
-	 * no filter function is provided, it will destroy all registered components.
-	 *
-	 * @param {Function} filterFn A method that receives a component destroy options
-	 * and the component itself and returns true if the component should be destroyed
-	 * @review
-	 */
-
-	Liferay.destroyComponents = function(filterFn) {
-		var componentIds = Object.keys(components);
-
-		if (filterFn) {
-			componentIds = componentIds.filter(
-				function(componentId) {
-					return filterFn(
-						components[componentId],
-						componentDestroyConfigs[componentId] || {}
-					);
-				}
-			);
-		}
-
-		componentIds.forEach(Liferay.destroyComponent);
-	};
-
-	Liferay._components = components;
-	Liferay._componentsFn = components;
-
 	Liferay.Template = {
-		PORTLET: '<div class="portlet"><div class="portlet-topper"><div class="portlet-title"></div></div><div class="portlet-content"></div><div class="forbidden-action"></div></div>'
+		PORTLET:
+			'<div class="portlet"><div class="portlet-topper"><div class="portlet-title"></div></div><div class="portlet-content"></div><div class="forbidden-action"></div></div>',
 	};
-})(AUI.$, AUI._, Liferay);
-
-(function(A, Liferay) {
-	A.mix(
-		A.namespace('config.io'),
-		{
-			method: 'POST',
-			uriFormatter: function(value) {
-				return Liferay.Util.getURLWithSessionId(value);
-			}
-		},
-		true
-	);
-})(AUI(), Liferay);
+})(Liferay);

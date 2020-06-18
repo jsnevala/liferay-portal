@@ -14,6 +14,7 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 
@@ -54,15 +55,16 @@ public class JavadocCheck extends BaseCheck {
 		javadoc = fileContents.getJavadocBefore(javadoc.getStartLineNo());
 
 		if (javadoc != null) {
-			DetailAST nameAST = detailAST.findFirstToken(TokenTypes.IDENT);
+			DetailAST nameDetailAST = detailAST.findFirstToken(
+				TokenTypes.IDENT);
 
 			Object[] arguments = null;
 
-			if (nameAST == null) {
+			if (nameDetailAST == null) {
 				arguments = new Object[] {_getClassName()};
 			}
 			else {
-				arguments = new Object[] {nameAST.getText()};
+				arguments = new Object[] {nameDetailAST.getText()};
 			}
 
 			log(detailAST, _MSG_MULTIPLE_JAVADOC, arguments);
@@ -115,14 +117,11 @@ public class JavadocCheck extends BaseCheck {
 	}
 
 	private String _getClassName() {
-		FileContents fileContents = getFileContents();
+		String absolutePath = getAbsolutePath();
 
-		String fileName = StringUtil.replace(
-			fileContents.getFileName(), '\\', '/');
+		int pos = absolutePath.lastIndexOf(CharPool.SLASH);
 
-		int pos = fileName.lastIndexOf('/');
-
-		return fileName.substring(pos + 1, fileName.length() - 5);
+		return absolutePath.substring(pos + 1, absolutePath.length() - 5);
 	}
 
 	private static final String _MSG_EMPTY_LINE = "javadoc.empty.line";

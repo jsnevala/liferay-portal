@@ -1,50 +1,64 @@
-<definition>
-	<command name="addPageContent">
-		<execute macro="AlloyEditor#addContent">
-			<var name="content" value="${wikiPageContent}" />
-		</execute>
-	</command>
+definition {
 
-	<command name="addPageTitle">
-		<execute macro="AlloyEditor#addTitle">
-			<var name="title" value="${wikiPageTitle}" />
-		</execute>
-	</command>
+	macro addPageContent {
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
-	<command name="cancel">
-		<execute function="AssertClick" locator1="Button#CANCEL" value1="Cancel" />
-	</command>
+		Type(
+			locator1 = "CKEditor#BODY",
+			value1 = "${wikiPageContent}");
+	}
 
-	<command name="confirmHTML">
-		<execute function="AssertConfirm" value1="You may lose some formatting when switching from Creole to HTML. Do you want to continue?" />
-	</command>
+	macro addPageTitle {
+		if (isSet(wikiPageTitle)) {
+			var title = "${wikiPageTitle}";
+		}
 
-	<command name="saveAsDraft">
-		<execute function="AssertClick" locator1="Button#SAVE" value1="Save as Draft" />
+		else if (isSet(wikiChildPageTitle)) {
+			var title = "${wikiChildPageTitle}";
+		}
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		Type(
+			locator1 = "Wiki#ENTRY_TITLE",
+			value1 = "${title}");
+	}
 
-	<command name="selectPageFormat">
-		<if>
-			<condition function="IsNotVisible" locator1="Wiki#ADD_PAGE_FORMAT_DROPDOWN" />
-			<then>
-				<execute macro="Panel#expandPanel">
-					<var name="panel" value="Configuration" />
-				</execute>
+	macro cancel {
+		AssertClick(
+			locator1 = "Button#CANCEL",
+			value1 = "Cancel");
+	}
 
-				<execute function="SelectNoError#pauseSelect" locator1="Wiki#ADD_PAGE_FORMAT_DROPDOWN" value1="${pageFormat}" />
-			</then>
-			<elseif>
-				<condition function="IsVisible" locator1="Wiki#ADD_PAGE_FORMAT_DROPDOWN" />
-				<then>
-					<execute function="SelectNoError#pauseSelect" locator1="Wiki#ADD_PAGE_FORMAT_DROPDOWN" value1="${pageFormat}" />
-				</then>
-			</elseif>
-		</if>
-	</command>
+	macro confirmHTML {
+		AssertConfirm(value1 = "You may lose some formatting when switching from Creole to HTML. Do you want to continue?");
+	}
 
-	<command name="viewPageContentBody">
-		<execute function="AssertTextEquals" locator1="WikiEntry#BODY" value1="${wikiPageContent}" />
-	</command>
-</definition>
+	macro saveAsDraft {
+		AssertClick(
+			locator1 = "Button#SAVE",
+			value1 = "Save as Draft");
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro selectPageFormat {
+		if (IsNotVisible(locator1 = "Wiki#ADD_PAGE_FORMAT_DROPDOWN")) {
+			Panel.expandPanel(panel = "Configuration");
+
+			SelectNoError(
+				locator1 = "Wiki#ADD_PAGE_FORMAT_DROPDOWN",
+				value1 = "${pageFormat}");
+		}
+		else if (IsVisible(locator1 = "Wiki#ADD_PAGE_FORMAT_DROPDOWN")) {
+			SelectNoError(
+				locator1 = "Wiki#ADD_PAGE_FORMAT_DROPDOWN",
+				value1 = "${pageFormat}");
+		}
+	}
+
+	macro viewPageContentBody {
+		AssertTextEquals(
+			locator1 = "WikiEntry#BODY",
+			value1 = "${wikiPageContent}");
+	}
+
+}

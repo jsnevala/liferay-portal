@@ -26,7 +26,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -74,13 +74,13 @@ public class UserPersonalSitePermissions {
 					companyId, powerUserRole.getRoleId(), rootPortletId,
 					userPersonalSiteGroup.getGroupId());
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 				_log.error(
 					StringBundler.concat(
 						"Unable to initialize user personal site permissions ",
 						"for portlet ", portlet.getPortletId(), " in company ",
 						companyId),
-					pe);
+					portalException);
 			}
 		}
 	}
@@ -105,13 +105,13 @@ public class UserPersonalSitePermissions {
 					portlet.getRootPortletId(),
 					userPersonalSiteGroup.getGroupId());
 			}
-			catch (PortalException pe) {
+			catch (PortalException portalException) {
 				_log.error(
 					StringBundler.concat(
 						"Unable to initialize user personal site permissions ",
 						"for portlet ", portlet.getPortletId(), " in company ",
 						companyId),
-					pe);
+					portalException);
 			}
 		}
 	}
@@ -138,9 +138,10 @@ public class UserPersonalSitePermissions {
 			return _roleLocalService.getRole(
 				companyId, RoleConstants.POWER_USER);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			_log.error(
-				"Unable to get power user role in company " + companyId, pe);
+				"Unable to get power user role in company " + companyId,
+				portalException);
 		}
 
 		return null;
@@ -150,11 +151,11 @@ public class UserPersonalSitePermissions {
 		try {
 			return _groupLocalService.getUserPersonalSiteGroup(companyId);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			_log.error(
 				"Unable to get user personal site group in company " +
 					companyId,
-				pe);
+				portalException);
 		}
 
 		return null;
@@ -167,10 +168,11 @@ public class UserPersonalSitePermissions {
 
 		String primaryKey = String.valueOf(userPersonalSiteGroupId);
 
-		if (_resourcePermissionLocalService.getResourcePermissionsCount(
-				companyId, rootPortletId, ResourceConstants.SCOPE_GROUP,
-				primaryKey) == 0) {
+		int count = _resourcePermissionLocalService.getResourcePermissionsCount(
+			companyId, rootPortletId, ResourceConstants.SCOPE_GROUP,
+			primaryKey);
 
+		if (count == 0) {
 			List<String> portletActionIds =
 				ResourceActionsUtil.getPortletResourceActions(rootPortletId);
 
@@ -187,10 +189,10 @@ public class UserPersonalSitePermissions {
 			return;
 		}
 
-		if (_resourcePermissionLocalService.getResourcePermissionsCount(
-				companyId, modelName, ResourceConstants.SCOPE_GROUP,
-				primaryKey) == 0) {
+		count = _resourcePermissionLocalService.getResourcePermissionsCount(
+			companyId, modelName, ResourceConstants.SCOPE_GROUP, primaryKey);
 
+		if (count == 0) {
 			List<String> modelActionIds =
 				ResourceActionsUtil.getModelResourceActions(modelName);
 
@@ -201,46 +203,26 @@ public class UserPersonalSitePermissions {
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setCompanyLocalService(
-		CompanyLocalService companyLocalService) {
-
-		_companyLocalService = companyLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortletLocalService(
-		PortletLocalService portletLocalService) {
-
-		_portletLocalService = portletLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setResourcePermissionLocalService(
-		ResourcePermissionLocalService resourcePermissionLocalService) {
-
-		_resourcePermissionLocalService = resourcePermissionLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setRoleLocalService(RoleLocalService roleLocalService) {
-		_roleLocalService = roleLocalService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		UserPersonalSitePermissions.class);
 
 	private BundleContext _bundleContext;
+
+	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
 	private PortletLocalService _portletLocalService;
+
+	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
 	private RoleLocalService _roleLocalService;
+
 	private ServiceTracker<PanelApp, PanelApp> _serviceTracker;
 
 	private class PanelAppServiceTrackerCustomizer

@@ -14,14 +14,14 @@
 
 package com.liferay.message.boards.uad.anonymizer;
 
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.service.MBThreadLocalService;
 import com.liferay.message.boards.uad.constants.MBUADConstants;
-
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
-
 import com.liferay.user.associated.data.anonymizer.DynamicQueryUADAnonymizer;
 
 import org.osgi.service.component.annotations.Reference;
@@ -40,12 +40,17 @@ import org.osgi.service.component.annotations.Reference;
  */
 public abstract class BaseMBThreadUADAnonymizer
 	extends DynamicQueryUADAnonymizer<MBThread> {
+
 	@Override
-	public void autoAnonymize(MBThread mbThread, long userId, User anonymousUser)
+	public void autoAnonymize(
+			MBThread mbThread, long userId, User anonymousUser)
 		throws PortalException {
+
 		if (mbThread.getUserId() == userId) {
 			mbThread.setUserId(anonymousUser.getUserId());
 			mbThread.setUserName(anonymousUser.getFullName());
+
+			autoAnonymizeAssetEntry(mbThread, anonymousUser);
 		}
 
 		if (mbThread.getRootMessageUserId() == userId) {
@@ -74,6 +79,19 @@ public abstract class BaseMBThreadUADAnonymizer
 		return MBThread.class;
 	}
 
+	protected void autoAnonymizeAssetEntry(
+		MBThread mbThread, User anonymousUser) {
+
+		AssetEntry assetEntry = fetchAssetEntry(mbThread);
+
+		if (assetEntry != null) {
+			assetEntry.setUserId(anonymousUser.getUserId());
+			assetEntry.setUserName(anonymousUser.getFullName());
+
+			assetEntryLocalService.updateAssetEntry(assetEntry);
+		}
+	}
+
 	@Override
 	protected ActionableDynamicQuery doGetActionableDynamicQuery() {
 		return mbThreadLocalService.getActionableDynamicQuery();
@@ -84,6 +102,15 @@ public abstract class BaseMBThreadUADAnonymizer
 		return MBUADConstants.USER_ID_FIELD_NAMES_MB_THREAD;
 	}
 
+	protected AssetEntry fetchAssetEntry(MBThread mbThread) {
+		return assetEntryLocalService.fetchEntry(
+			MBThread.class.getName(), mbThread.getThreadId());
+	}
+
+	@Reference
+	protected AssetEntryLocalService assetEntryLocalService;
+
 	@Reference
 	protected MBThreadLocalService mbThreadLocalService;
+
 }

@@ -14,13 +14,9 @@
 
 package com.liferay.portlet.ratings.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-
 import com.liferay.ratings.kernel.model.RatingsStats;
 
 import java.io.Externalizable;
@@ -28,16 +24,17 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import java.util.Date;
+
 /**
  * The cache model class for representing RatingsStats in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see RatingsStats
  * @generated
  */
-@ProviderType
-public class RatingsStatsCacheModel implements CacheModel<RatingsStats>,
-	Externalizable {
+public class RatingsStatsCacheModel
+	implements CacheModel<RatingsStats>, Externalizable {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -48,7 +45,8 @@ public class RatingsStatsCacheModel implements CacheModel<RatingsStats>,
 			return false;
 		}
 
-		RatingsStatsCacheModel ratingsStatsCacheModel = (RatingsStatsCacheModel)obj;
+		RatingsStatsCacheModel ratingsStatsCacheModel =
+			(RatingsStatsCacheModel)obj;
 
 		if (statsId == ratingsStatsCacheModel.statsId) {
 			return true;
@@ -64,12 +62,16 @@ public class RatingsStatsCacheModel implements CacheModel<RatingsStats>,
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(15);
+		StringBundler sb = new StringBundler(19);
 
 		sb.append("{statsId=");
 		sb.append(statsId);
 		sb.append(", companyId=");
 		sb.append(companyId);
+		sb.append(", createDate=");
+		sb.append(createDate);
+		sb.append(", modifiedDate=");
+		sb.append(modifiedDate);
 		sb.append(", classNameId=");
 		sb.append(classNameId);
 		sb.append(", classPK=");
@@ -91,6 +93,21 @@ public class RatingsStatsCacheModel implements CacheModel<RatingsStats>,
 
 		ratingsStatsImpl.setStatsId(statsId);
 		ratingsStatsImpl.setCompanyId(companyId);
+
+		if (createDate == Long.MIN_VALUE) {
+			ratingsStatsImpl.setCreateDate(null);
+		}
+		else {
+			ratingsStatsImpl.setCreateDate(new Date(createDate));
+		}
+
+		if (modifiedDate == Long.MIN_VALUE) {
+			ratingsStatsImpl.setModifiedDate(null);
+		}
+		else {
+			ratingsStatsImpl.setModifiedDate(new Date(modifiedDate));
+		}
+
 		ratingsStatsImpl.setClassNameId(classNameId);
 		ratingsStatsImpl.setClassPK(classPK);
 		ratingsStatsImpl.setTotalEntries(totalEntries);
@@ -107,6 +124,8 @@ public class RatingsStatsCacheModel implements CacheModel<RatingsStats>,
 		statsId = objectInput.readLong();
 
 		companyId = objectInput.readLong();
+		createDate = objectInput.readLong();
+		modifiedDate = objectInput.readLong();
 
 		classNameId = objectInput.readLong();
 
@@ -120,11 +139,12 @@ public class RatingsStatsCacheModel implements CacheModel<RatingsStats>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(statsId);
 
 		objectOutput.writeLong(companyId);
+		objectOutput.writeLong(createDate);
+		objectOutput.writeLong(modifiedDate);
 
 		objectOutput.writeLong(classNameId);
 
@@ -139,9 +159,12 @@ public class RatingsStatsCacheModel implements CacheModel<RatingsStats>,
 
 	public long statsId;
 	public long companyId;
+	public long createDate;
+	public long modifiedDate;
 	public long classNameId;
 	public long classPK;
 	public int totalEntries;
 	public double totalScore;
 	public double averageScore;
+
 }

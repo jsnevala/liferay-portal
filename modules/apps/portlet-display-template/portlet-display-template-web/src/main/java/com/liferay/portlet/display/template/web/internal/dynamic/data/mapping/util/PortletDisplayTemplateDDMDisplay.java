@@ -19,6 +19,7 @@ import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.model.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.util.BaseDDMDisplay;
 import com.liferay.dynamic.data.mapping.util.DDMDisplay;
+import com.liferay.dynamic.data.mapping.util.DDMDisplayTabItem;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -32,6 +33,8 @@ import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portlet.display.template.PortletDisplayTemplate;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -42,7 +45,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	property = "javax.portlet.name=" + PortletKeys.PORTLET_DISPLAY_TEMPLATE,
@@ -65,6 +68,11 @@ public class PortletDisplayTemplateDDMDisplay extends BaseDDMDisplay {
 	@Override
 	public String getPortletId() {
 		return PortletKeys.PORTLET_DISPLAY_TEMPLATE;
+	}
+
+	@Override
+	public List<DDMDisplayTabItem> getTabItems() {
+		return Arrays.asList();
 	}
 
 	@Override
@@ -149,12 +157,12 @@ public class PortletDisplayTemplateDDMDisplay extends BaseDDMDisplay {
 
 	@Override
 	protected String getDefaultEditTemplateTitle(Locale locale) {
-		return LanguageUtil.get(locale, "new-application-display-template");
+		return LanguageUtil.get(locale, "new-widget-template");
 	}
 
 	@Override
 	protected String getDefaultViewTemplateTitle(Locale locale) {
-		return LanguageUtil.get(locale, "application-display-templates");
+		return LanguageUtil.get(locale, "widget-templates");
 	}
 
 	@Override

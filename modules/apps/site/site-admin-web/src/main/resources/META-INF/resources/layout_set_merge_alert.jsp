@@ -38,10 +38,11 @@ int mergeFailCount = SitesUtil.getMergeFailCount(layoutSetPrototype);
 		<aui:button id='<%= randomNamespace + "resetButton" %>' useNamespace="<%= false %>" value="reset-and-propagate" />
 	</div>
 
-	<aui:script>
-		AUI.$('#<%= randomNamespace %>resetButton').on(
-			'click',
-			function(event) {
+	<script>
+		var resetButton = document.getElementById('<%= randomNamespace %>resetButton');
+
+		if (resetButton) {
+			resetButton.addEventListener('click', function (event) {
 				<portlet:actionURL name="resetMergeFailCountAndMerge" var="portletURL">
 					<portlet:param name="redirect" value="<%= redirect %>" />
 					<portlet:param name="layoutSetPrototypeId" value="<%= String.valueOf(layoutSetPrototype.getLayoutSetPrototypeId()) %>" />
@@ -50,9 +51,9 @@ int mergeFailCount = SitesUtil.getMergeFailCount(layoutSetPrototype);
 				</portlet:actionURL>
 
 				submitForm(document.hrefFm, '<%= portletURL.toString() %>');
-			}
-		);
-	</aui:script>
+			});
+		}
+	</script>
 </c:if>
 
 <%

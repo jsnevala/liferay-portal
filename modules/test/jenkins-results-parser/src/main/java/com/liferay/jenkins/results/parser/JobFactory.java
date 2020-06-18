@@ -39,21 +39,25 @@ public class JobFactory {
 	}
 
 	public static Job newJob(String jobName) {
-		return newJob(jobName, null, null);
+		return newJob(jobName, null, null, null);
 	}
 
 	public static Job newJob(String jobName, String testSuiteName) {
-		return newJob(jobName, testSuiteName, null);
+		return newJob(jobName, testSuiteName, null, null);
 	}
 
 	public static Job newJob(
 		String jobName, String testSuiteName, String portalBranchName) {
 
-		Job job = _newJob(jobName, testSuiteName, portalBranchName);
+		return newJob(jobName, testSuiteName, portalBranchName, null);
+	}
 
-		job.readJobProperties();
+	public static Job newJob(
+		String jobName, String testSuiteName, String portalBranchName,
+		String repositoryName) {
 
-		return job;
+		return _newJob(
+			jobName, testSuiteName, portalBranchName, repositoryName);
 	}
 
 	private static boolean _isCentralMergePullRequest(
@@ -76,25 +80,20 @@ public class JobFactory {
 	}
 
 	private static Job _newJob(
-		String jobName, String testSuiteName, String portalBranchName) {
+		String jobName, String testSuiteName, String portalBranchName,
+		String repositoryName) {
 
-		Job job = _jobs.get(jobName);
+		String jobKey = jobName;
+
+		if ((testSuiteName != null) && !testSuiteName.isEmpty()) {
+			jobKey = JenkinsResultsParserUtil.combine(
+				jobName, "-", testSuiteName);
+		}
+
+		Job job = _jobs.get(jobKey);
 
 		if (job != null) {
 			return job;
-		}
-
-		if (jobName.equals("git-bisect-tool")) {
-			_jobs.put(jobName, new GitBisectToolJob(jobName, portalBranchName));
-
-			return _jobs.get(jobName);
-		}
-
-		if (jobName.equals("git-bisect-tool-batch")) {
-			_jobs.put(
-				jobName, new GitBisectToolBatchJob(jobName, portalBranchName));
-
-			return _jobs.get(jobName);
 		}
 
 		if (jobName.equals("js-test-csv-report") ||
@@ -113,78 +112,111 @@ public class JobFactory {
 
 				};
 
-			_jobs.put(jobName, portalGitRepositoryJob);
+			_jobs.put(jobKey, portalGitRepositoryJob);
 
-			return _jobs.get(jobName);
+			return _jobs.get(jobKey);
 		}
 
-		if (jobName.contains("test-plugins-acceptance-pullrequest(")) {
+		if (jobName.equals("root-cause-analysis-tool")) {
+			_jobs.put(
+				jobKey,
+				new RootCauseAnalysisToolJob(jobName, portalBranchName));
+
+			return _jobs.get(jobKey);
+		}
+
+		if (jobName.equals("root-cause-analysis-tool-batch")) {
+			_jobs.put(
+				jobKey,
+				new RootCauseAnalysisToolBatchJob(jobName, portalBranchName));
+
+			return _jobs.get(jobKey);
+		}
+
+		if (jobName.startsWith("test-plugins-acceptance-pullrequest(")) {
 			PluginsGitRepositoryJob pluginsGitRepositoryJob =
 				new PluginsGitRepositoryJob(jobName);
 
-			_jobs.put(jobName, pluginsGitRepositoryJob);
+			_jobs.put(jobKey, pluginsGitRepositoryJob);
 
 			return pluginsGitRepositoryJob;
 		}
 
-		if (jobName.contains("test-portal-acceptance-pullrequest(")) {
+		if (jobName.startsWith("test-portal-acceptance-pullrequest(")) {
 			PortalAcceptancePullRequestJob portalAcceptancePullRequestJob =
 				new PortalAcceptancePullRequestJob(jobName, testSuiteName);
 
-			GitWorkingDirectory gitWorkingDirectory =
-				portalAcceptancePullRequestJob.getGitWorkingDirectory();
+			if (_isCentralMergePullRequest(
+					portalAcceptancePullRequestJob.getGitWorkingDirectory())) {
 
-			if (_isCentralMergePullRequest(gitWorkingDirectory)) {
 				portalAcceptancePullRequestJob = new CentralMergePullRequestJob(
 					jobName);
 			}
 
-			_jobs.put(jobName, portalAcceptancePullRequestJob);
+			_jobs.put(jobKey, portalAcceptancePullRequestJob);
 
 			return portalAcceptancePullRequestJob;
 		}
 
-		if (jobName.contains("test-portal-acceptance-upstream(")) {
-			_jobs.put(jobName, new PortalAcceptanceUpstreamJob(jobName));
+		if (jobName.startsWith("test-portal-acceptance-upstream")) {
+			_jobs.put(
+				jobKey,
+				new PortalAcceptanceUpstreamJob(jobName, testSuiteName));
 
-			return _jobs.get(jobName);
+			return _jobs.get(jobKey);
 		}
 
 		if (jobName.equals("test-portal-fixpack-release")) {
 			_jobs.put(
-				jobName,
-				new PortalFixpackReleaseJob(jobName, portalBranchName));
+				jobKey, new PortalFixpackReleaseJob(jobName, portalBranchName));
 
-			return _jobs.get(jobName);
+			return _jobs.get(jobKey);
 		}
 
 		if (jobName.equals("test-portal-hotfix-release")) {
 			_jobs.put(
-				jobName, new PortalHotfixReleaseJob(jobName, portalBranchName));
+				jobKey, new PortalHotfixReleaseJob(jobName, portalBranchName));
 
-			return _jobs.get(jobName);
+			return _jobs.get(jobKey);
 		}
 
 		if (jobName.equals("test-portal-release")) {
-			_jobs.put(jobName, new PortalReleaseJob(jobName, portalBranchName));
+			_jobs.put(jobKey, new PortalReleaseJob(jobName, portalBranchName));
 
-			return _jobs.get(jobName);
+			return _jobs.get(jobKey);
 		}
 
-		if (jobName.contains("test-portal-upstream(")) {
-			_jobs.put(jobName, new PortalUpstreamJob(jobName));
-
-			return _jobs.get(jobName);
-		}
-
-		if (jobName.contains("test-subrepository-acceptance-pullrequest(")) {
+		if (jobName.startsWith("test-portal-testsuite-upstream(")) {
 			_jobs.put(
-				jobName, new GitSubrepositoryAcceptancePullRequestJob(jobName));
+				jobKey, new PortalTestSuiteUpstreamJob(jobName, testSuiteName));
 
-			return _jobs.get(jobName);
+			return _jobs.get(jobKey);
 		}
 
-		throw new IllegalArgumentException("Invalid job name " + jobName);
+		if (jobName.startsWith("test-portal-testsuite-upstream-controller(")) {
+			_jobs.put(jobKey, new SimpleJob(jobName));
+
+			return _jobs.get(jobKey);
+		}
+
+		if (jobName.startsWith("test-portal-upstream(")) {
+			_jobs.put(jobKey, new PortalUpstreamJob(jobName));
+
+			return _jobs.get(jobKey);
+		}
+
+		if (jobName.startsWith("test-subrepository-acceptance-pullrequest(")) {
+			_jobs.put(
+				jobKey,
+				new SubrepositoryAcceptancePullRequestJob(
+					jobName, testSuiteName, repositoryName));
+
+			return _jobs.get(jobKey);
+		}
+
+		_jobs.put(jobKey, new DefaultPortalJob(jobName, testSuiteName));
+
+		return _jobs.get(jobKey);
 	}
 
 	private static final Map<String, Job> _jobs = new HashMap<>();

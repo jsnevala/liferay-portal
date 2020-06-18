@@ -14,30 +14,28 @@
 
 package com.liferay.segments.service.http;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-
 import com.liferay.segments.service.SegmentsEntryRelServiceUtil;
 
 import java.rmi.RemoteException;
 
 /**
  * Provides the SOAP utility for the
- * {@link SegmentsEntryRelServiceUtil} service utility. The
- * static methods of this class calls the same methods of the service utility.
- * However, the signatures are different because it is difficult for SOAP to
- * support certain types.
+ * <code>SegmentsEntryRelServiceUtil</code> service
+ * utility. The static methods of this class call the same methods of the
+ * service utility. However, the signatures are different because it is
+ * difficult for SOAP to support certain types.
  *
  * <p>
  * ServiceBuilder follows certain rules in translating the methods. For example,
- * if the method in the service utility returns a {@link java.util.List}, that
- * is translated to an array of {@link com.liferay.segments.model.SegmentsEntryRelSoap}.
- * If the method in the service utility returns a
- * {@link com.liferay.segments.model.SegmentsEntryRel}, that is translated to a
- * {@link com.liferay.segments.model.SegmentsEntryRelSoap}. Methods that SOAP cannot
- * safely wire are skipped.
+ * if the method in the service utility returns a <code>java.util.List</code>,
+ * that is translated to an array of
+ * <code>com.liferay.segments.model.SegmentsEntryRelSoap</code>. If the method in the
+ * service utility returns a
+ * <code>com.liferay.segments.model.SegmentsEntryRel</code>, that is translated to a
+ * <code>com.liferay.segments.model.SegmentsEntryRelSoap</code>. Methods that SOAP
+ * cannot safely wire are skipped.
  * </p>
  *
  * <p>
@@ -59,146 +57,193 @@ import java.rmi.RemoteException;
  *
  * @author Eduardo Garcia
  * @see SegmentsEntryRelServiceHttp
- * @see com.liferay.segments.model.SegmentsEntryRelSoap
- * @see SegmentsEntryRelServiceUtil
  * @generated
  */
-@ProviderType
 public class SegmentsEntryRelServiceSoap {
-	public static com.liferay.segments.model.SegmentsEntryRelSoap addSegmentsEntryRel(
-		long segmentsEntryId, long classNameId, long classPK,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 com.liferay.segments.service.SegmentsEntryService#addSegmentsEntryClassPKs(
+	 long, long[], ServiceContext)}
+	 */
+	@Deprecated
+	public static com.liferay.segments.model.SegmentsEntryRelSoap
+			addSegmentsEntryRel(
+				long segmentsEntryId, long classNameId, long classPK,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws RemoteException {
+
 		try {
-			com.liferay.segments.model.SegmentsEntryRel returnValue = SegmentsEntryRelServiceUtil.addSegmentsEntryRel(segmentsEntryId,
-					classNameId, classPK, serviceContext);
+			com.liferay.segments.model.SegmentsEntryRel returnValue =
+				SegmentsEntryRelServiceUtil.addSegmentsEntryRel(
+					segmentsEntryId, classNameId, classPK, serviceContext);
 
-			return com.liferay.segments.model.SegmentsEntryRelSoap.toSoapModel(returnValue);
+			return com.liferay.segments.model.SegmentsEntryRelSoap.toSoapModel(
+				returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 com.liferay.segments.service.SegmentsEntryService#deleteSegmentsEntryClassPKs(
+	 long, long[])}
+	 */
+	@Deprecated
 	public static void deleteSegmentsEntryRel(long segmentsEntryRelId)
 		throws RemoteException {
-		try {
-			SegmentsEntryRelServiceUtil.deleteSegmentsEntryRel(segmentsEntryRelId);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
 
-			throw new RemoteException(e.getMessage());
+		try {
+			SegmentsEntryRelServiceUtil.deleteSegmentsEntryRel(
+				segmentsEntryRelId);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
-	public static void deleteSegmentsEntryRel(long segmentsEntryId,
-		long classNameId, long classPK) throws RemoteException {
-		try {
-			SegmentsEntryRelServiceUtil.deleteSegmentsEntryRel(segmentsEntryId,
-				classNameId, classPK);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-
-			throw new RemoteException(e.getMessage());
-		}
-	}
-
-	public static com.liferay.segments.model.SegmentsEntryRelSoap[] getSegmentsEntryRels(
-		long segmentsEntryId) throws RemoteException {
-		try {
-			java.util.List<com.liferay.segments.model.SegmentsEntryRel> returnValue =
-				SegmentsEntryRelServiceUtil.getSegmentsEntryRels(segmentsEntryId);
-
-			return com.liferay.segments.model.SegmentsEntryRelSoap.toSoapModels(returnValue);
-		}
-		catch (Exception e) {
-			_log.error(e, e);
-
-			throw new RemoteException(e.getMessage());
-		}
-	}
-
-	public static com.liferay.segments.model.SegmentsEntryRelSoap[] getSegmentsEntryRels(
-		long segmentsEntryId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.segments.model.SegmentsEntryRel> orderByComparator)
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 com.liferay.segments.service.SegmentsEntryService#deleteSegmentsEntryClassPKs(
+	 long, long[])}
+	 */
+	@Deprecated
+	public static void deleteSegmentsEntryRel(
+			long segmentsEntryId, long classNameId, long classPK)
 		throws RemoteException {
+
 		try {
-			java.util.List<com.liferay.segments.model.SegmentsEntryRel> returnValue =
-				SegmentsEntryRelServiceUtil.getSegmentsEntryRels(segmentsEntryId,
-					start, end, orderByComparator);
-
-			return com.liferay.segments.model.SegmentsEntryRelSoap.toSoapModels(returnValue);
+			SegmentsEntryRelServiceUtil.deleteSegmentsEntryRel(
+				segmentsEntryId, classNameId, classPK);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
-	public static com.liferay.segments.model.SegmentsEntryRelSoap[] getSegmentsEntryRels(
-		long groupId, long classNameId, long classPK) throws RemoteException {
+	public static com.liferay.segments.model.SegmentsEntryRelSoap[]
+			getSegmentsEntryRels(long segmentsEntryId)
+		throws RemoteException {
+
 		try {
-			java.util.List<com.liferay.segments.model.SegmentsEntryRel> returnValue =
-				SegmentsEntryRelServiceUtil.getSegmentsEntryRels(groupId,
-					classNameId, classPK);
+			java.util.List<com.liferay.segments.model.SegmentsEntryRel>
+				returnValue = SegmentsEntryRelServiceUtil.getSegmentsEntryRels(
+					segmentsEntryId);
 
-			return com.liferay.segments.model.SegmentsEntryRelSoap.toSoapModels(returnValue);
+			return com.liferay.segments.model.SegmentsEntryRelSoap.toSoapModels(
+				returnValue);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	public static com.liferay.segments.model.SegmentsEntryRelSoap[]
+			getSegmentsEntryRels(
+				long segmentsEntryId, int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.segments.model.SegmentsEntryRel>
+						orderByComparator)
+		throws RemoteException {
+
+		try {
+			java.util.List<com.liferay.segments.model.SegmentsEntryRel>
+				returnValue = SegmentsEntryRelServiceUtil.getSegmentsEntryRels(
+					segmentsEntryId, start, end, orderByComparator);
+
+			return com.liferay.segments.model.SegmentsEntryRelSoap.toSoapModels(
+				returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	public static com.liferay.segments.model.SegmentsEntryRelSoap[]
+			getSegmentsEntryRels(long groupId, long classNameId, long classPK)
+		throws RemoteException {
+
+		try {
+			java.util.List<com.liferay.segments.model.SegmentsEntryRel>
+				returnValue = SegmentsEntryRelServiceUtil.getSegmentsEntryRels(
+					groupId, classNameId, classPK);
+
+			return com.liferay.segments.model.SegmentsEntryRelSoap.toSoapModels(
+				returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
 	public static int getSegmentsEntryRelsCount(long segmentsEntryId)
 		throws RemoteException {
+
 		try {
-			int returnValue = SegmentsEntryRelServiceUtil.getSegmentsEntryRelsCount(segmentsEntryId);
+			int returnValue =
+				SegmentsEntryRelServiceUtil.getSegmentsEntryRelsCount(
+					segmentsEntryId);
 
 			return returnValue;
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
-	public static int getSegmentsEntryRelsCount(long groupId, long classNameId,
-		long classPK) throws RemoteException {
+	public static int getSegmentsEntryRelsCount(
+			long groupId, long classNameId, long classPK)
+		throws RemoteException {
+
 		try {
-			int returnValue = SegmentsEntryRelServiceUtil.getSegmentsEntryRelsCount(groupId,
-					classNameId, classPK);
+			int returnValue =
+				SegmentsEntryRelServiceUtil.getSegmentsEntryRelsCount(
+					groupId, classNameId, classPK);
 
 			return returnValue;
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
-	public static boolean hasSegmentsEntryRel(long segmentsEntryId,
-		long classNameId, long classPK) throws RemoteException {
+	public static boolean hasSegmentsEntryRel(
+			long segmentsEntryId, long classNameId, long classPK)
+		throws RemoteException {
+
 		try {
-			boolean returnValue = SegmentsEntryRelServiceUtil.hasSegmentsEntryRel(segmentsEntryId,
-					classNameId, classPK);
+			boolean returnValue =
+				SegmentsEntryRelServiceUtil.hasSegmentsEntryRel(
+					segmentsEntryId, classNameId, classPK);
 
 			return returnValue;
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 
-			throw new RemoteException(e.getMessage());
+			throw new RemoteException(exception.getMessage());
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(SegmentsEntryRelServiceSoap.class);
+	private static Log _log = LogFactoryUtil.getLog(
+		SegmentsEntryRelServiceSoap.class);
+
 }

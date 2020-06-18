@@ -55,19 +55,22 @@ DLVisualizationHelper dlVisualizationHelper = new DLVisualizationHelper(dlReques
 					<portlet:param name="ignoreRootFolder" value="<%= Boolean.TRUE.toString() %>" />
 				</portlet:renderURL>
 
-				<aui:button href="<%= editFolderURL %>" value='<%= (folder == null) ? "add-folder" : "add-subfolder" %>' />
+				<aui:button href="<%= editFolderURL %>" value="add-folder" />
 			</c:if>
 
 			<%
-			Map<String, Object> data = new HashMap<String, Object>();
-
-			data.put("folderid", folderId);
-			data.put("folderissupportsmetadata", ((folder != null) ? folder.isSupportsMetadata() : Boolean.TRUE.toString()));
-			data.put("folderissupportssocial", ((folder != null) ? folder.isSupportsSocial() : Boolean.TRUE.toString()));
-			data.put("foldername", folderName);
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"folderid", folderId
+			).put(
+				"folderissupportsmetadata", (folder != null) ? folder.isSupportsMetadata() : Boolean.TRUE.toString()
+			).put(
+				"folderissupportssocial", (folder != null) ? folder.isSupportsSocial() : Boolean.TRUE.toString()
+			).put(
+				"foldername", folderName
+			).build();
 			%>
 
-			<aui:button cssClass="selector-button" data="<%= data %>" value="choose-this-folder" />
+			<aui:button cssClass="selector-button" data="<%= data %>" value="select-this-folder" />
 		</aui:button-row>
 
 		<%
@@ -121,6 +124,7 @@ DLVisualizationHelper dlVisualizationHelper = new DLVisualizationHelper(dlReques
 				%>
 
 				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand table-cell-minw-200 table-title"
 					name="folder"
 				>
 					<liferay-ui:icon
@@ -134,14 +138,16 @@ DLVisualizationHelper dlVisualizationHelper = new DLVisualizationHelper(dlReques
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand-smallest table-column-text-end"
 					href="<%= rowURL %>"
-					name="num-of-folders"
+					name="folders"
 					value="<%= String.valueOf(foldersCount) %>"
 				/>
 
 				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand-smallest table-column-text-end"
 					href="<%= rowURL %>"
-					name="num-of-documents"
+					name="documents"
 					value="<%= String.valueOf(fileEntriesCount) %>"
 				/>
 
@@ -149,15 +155,18 @@ DLVisualizationHelper dlVisualizationHelper = new DLVisualizationHelper(dlReques
 					<c:if test="<%= rowURL != null %>">
 
 						<%
-						Map<String, Object> data = new HashMap<String, Object>();
-
-						data.put("folderid", curFolder.getFolderId());
-						data.put("folderissupportsmetadata", curFolder.isSupportsMetadata());
-						data.put("folderissupportssocial", curFolder.isSupportsSocial());
-						data.put("foldername", curFolder.getName());
+						Map<String, Object> data = HashMapBuilder.<String, Object>put(
+							"folderid", curFolder.getFolderId()
+						).put(
+							"folderissupportsmetadata", curFolder.isSupportsMetadata()
+						).put(
+							"folderissupportssocial", curFolder.isSupportsSocial()
+						).put(
+							"foldername", curFolder.getName()
+						).build();
 						%>
 
-						<aui:button cssClass="selector-button" data="<%= data %>" value="choose" />
+						<aui:button cssClass="selector-button" data="<%= data %>" value="select" />
 					</c:if>
 				</liferay-ui:search-container-column-text>
 			</liferay-ui:search-container-row>
@@ -170,5 +179,8 @@ DLVisualizationHelper dlVisualizationHelper = new DLVisualizationHelper(dlReques
 </div>
 
 <aui:script>
-	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectFolderFm', '<%= HtmlUtil.escapeJS(eventName) %>');
+	Liferay.Util.selectEntityHandler(
+		'#<portlet:namespace />selectFolderFm',
+		'<%= HtmlUtil.escapeJS(eventName) %>'
+	);
 </aui:script>

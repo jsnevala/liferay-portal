@@ -3,8 +3,6 @@
 }
 
 .sheet-footer {
-	display: inline-flex;
-
 	.btn {
 		margin-right: $btn-group-item-margin-right;
 
@@ -14,7 +12,7 @@
 	}
 }
 
-@include sm {
+@include media-breakpoint-up(sm) {
 	.sheet .display-style-icon .lfr-asset-item {
 		width: 25%;
 	}

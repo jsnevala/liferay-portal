@@ -33,20 +33,23 @@ import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Juan Fernández
  * @author Zsolt Berentey
  */
+@Component(service = JournalFolderFinder.class)
 public class JournalFolderFinderImpl
 	extends JournalFolderFinderBaseImpl implements JournalFolderFinder {
 
@@ -117,18 +120,19 @@ public class JournalFolderFinderImpl
 
 			String sql = _customSQL.get(getClass(), FIND_F_BY_NO_ASSETS);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity(JournalFolderImpl.TABLE_NAME, JournalFolderImpl.class);
+			sqlQuery.addEntity(
+				JournalFolderImpl.TABLE_NAME, JournalFolderImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(PortalUtil.getClassNameId(JournalFolder.class));
+			queryPos.add(_portal.getClassNameId(JournalFolder.class));
 
-			return q.list(true);
+			return sqlQuery.list(true);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -159,35 +163,35 @@ public class JournalFolderFinderImpl
 
 			String sql = updateSQL(sb.toString(), folderId);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(queryDefinition.getStatus());
+			queryPos.add(groupId);
+			queryPos.add(queryDefinition.getStatus());
 
 			if (folderId >= 0) {
-				qPos.add(folderId);
+				queryPos.add(folderId);
 			}
 
-			qPos.add(groupId);
+			queryPos.add(groupId);
 
 			if (queryDefinition.getOwnerUserId() > 0) {
-				qPos.add(queryDefinition.getOwnerUserId());
-				qPos.add(WorkflowConstants.STATUS_IN_TRASH);
+				queryPos.add(queryDefinition.getOwnerUserId());
+				queryPos.add(WorkflowConstants.STATUS_IN_TRASH);
 			}
 
-			qPos.add(queryDefinition.getStatus());
+			queryPos.add(queryDefinition.getStatus());
 
 			if (folderId >= 0) {
-				qPos.add(folderId);
+				queryPos.add(folderId);
 			}
 
 			int count = 0;
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			while (itr.hasNext()) {
 				Long l = itr.next();
@@ -199,8 +203,8 @@ public class JournalFolderFinderImpl
 
 			return count;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -234,39 +238,39 @@ public class JournalFolderFinderImpl
 			sql = _customSQL.replaceOrderBy(
 				sql, queryDefinition.getOrderByComparator());
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar("modelFolderId", Type.LONG);
-			q.addScalar("modelFolder", Type.LONG);
-			q.addScalar("articleId", Type.STRING);
-			q.addScalar("version", Type.DOUBLE);
+			sqlQuery.addScalar("modelFolderId", Type.LONG);
+			sqlQuery.addScalar("modelFolder", Type.LONG);
+			sqlQuery.addScalar("articleId", Type.STRING);
+			sqlQuery.addScalar("version", Type.DOUBLE);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(queryDefinition.getStatus());
+			queryPos.add(groupId);
+			queryPos.add(queryDefinition.getStatus());
 
 			if (folderId >= 0) {
-				qPos.add(folderId);
+				queryPos.add(folderId);
 			}
 
-			qPos.add(groupId);
+			queryPos.add(groupId);
 
 			if (queryDefinition.getOwnerUserId() > 0) {
-				qPos.add(queryDefinition.getOwnerUserId());
-				qPos.add(WorkflowConstants.STATUS_IN_TRASH);
+				queryPos.add(queryDefinition.getOwnerUserId());
+				queryPos.add(WorkflowConstants.STATUS_IN_TRASH);
 			}
 
-			qPos.add(queryDefinition.getStatus());
+			queryPos.add(queryDefinition.getStatus());
 
 			if (folderId >= 0) {
-				qPos.add(folderId);
+				queryPos.add(folderId);
 			}
 
 			List<Object> models = new ArrayList<>();
 
 			Iterator<Object[]> itr = (Iterator<Object[]>)QueryUtil.iterate(
-				q, getDialect(), queryDefinition.getStart(),
+				sqlQuery, getDialect(), queryDefinition.getStart(),
 				queryDefinition.getEnd());
 
 			while (itr.hasNext()) {
@@ -293,8 +297,8 @@ public class JournalFolderFinderImpl
 
 			return models;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -329,41 +333,41 @@ public class JournalFolderFinderImpl
 			sql = _customSQL.replaceOrderBy(
 				sql, queryDefinition.getOrderByComparator());
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar("modelFolderId", Type.LONG);
-			q.addScalar("modelFolder", Type.LONG);
-			q.addScalar("articleId", Type.STRING);
-			q.addScalar("version", Type.DOUBLE);
+			sqlQuery.addScalar("modelFolderId", Type.LONG);
+			sqlQuery.addScalar("modelFolder", Type.LONG);
+			sqlQuery.addScalar("articleId", Type.STRING);
+			sqlQuery.addScalar("version", Type.DOUBLE);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
-			qPos.add(queryDefinition.getStatus());
+			queryPos.add(groupId);
+			queryPos.add(queryDefinition.getStatus());
 
 			if (folderId >= 0) {
-				qPos.add(folderId);
+				queryPos.add(folderId);
 			}
 
-			qPos.add(groupId);
+			queryPos.add(groupId);
 
 			if (queryDefinition.getOwnerUserId() > 0) {
-				qPos.add(queryDefinition.getOwnerUserId());
-				qPos.add(WorkflowConstants.STATUS_IN_TRASH);
+				queryPos.add(queryDefinition.getOwnerUserId());
+				queryPos.add(WorkflowConstants.STATUS_IN_TRASH);
 			}
 
-			qPos.add(queryDefinition.getStatus());
+			queryPos.add(queryDefinition.getStatus());
 
 			if (folderId >= 0) {
-				qPos.add(folderId);
+				queryPos.add(folderId);
 			}
 
-			qPos.add(LocaleUtil.toLanguageId(locale));
+			queryPos.add(LocaleUtil.toLanguageId(locale));
 
 			List<Object> models = new ArrayList<>();
 
 			Iterator<Object[]> itr = (Iterator<Object[]>)QueryUtil.iterate(
-				q, getDialect(), queryDefinition.getStart(),
+				sqlQuery, getDialect(), queryDefinition.getStart(),
 				queryDefinition.getEnd());
 
 			while (itr.hasNext()) {
@@ -390,8 +394,8 @@ public class JournalFolderFinderImpl
 
 			return models;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -454,7 +458,7 @@ public class JournalFolderFinderImpl
 	}
 
 	protected String updateSQL(String sql, long folderId) {
-		sql = StringUtil.replace(
+		return StringUtil.replace(
 			sql,
 			new String[] {
 				"[$ARTICLE_FOLDER_ID$]", "[$FOLDER_PARENT_FOLDER_ID$]"
@@ -463,11 +467,12 @@ public class JournalFolderFinderImpl
 				getFolderId(folderId, JournalArticleImpl.TABLE_NAME),
 				getFolderId(folderId, JournalFolderImpl.TABLE_NAME)
 			});
-
-		return sql;
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
+
+	@Reference
+	private Portal _portal;
 
 }

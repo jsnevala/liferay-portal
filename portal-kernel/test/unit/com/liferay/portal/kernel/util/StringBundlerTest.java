@@ -29,7 +29,6 @@ import java.io.ObjectOutputStream;
 import java.io.StringWriter;
 
 import java.lang.ref.Reference;
-import java.lang.reflect.Field;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -424,8 +423,8 @@ public class StringBundlerTest {
 			StringPool.NULL, StringBundler.concat(new String[] {null}));
 		Assert.assertEquals(
 			"test1test2", StringBundler.concat("test1", "test2"));
-		Assert.assertEquals(
-			"test1test2test3", StringBundler.concat("test1", "test2", "test3"));
+		Assert.assertEquals("abcdef", StringBundler.concat("a", "bc", "def"));
+		Assert.assertEquals("abcdef", StringBundler.concat("abc", "de", "f"));
 		Assert.assertEquals(
 			"test1test2test3test4",
 			StringBundler.concat("test1", "test2", "test3", "test4"));
@@ -576,7 +575,7 @@ public class StringBundlerTest {
 
 			Assert.fail();
 		}
-		catch (ArrayIndexOutOfBoundsException aioobe) {
+		catch (ArrayIndexOutOfBoundsException arrayIndexOutOfBoundsException) {
 		}
 
 		// New index equals current index
@@ -636,7 +635,7 @@ public class StringBundlerTest {
 
 			Assert.fail();
 		}
-		catch (ArrayIndexOutOfBoundsException aioobe) {
+		catch (ArrayIndexOutOfBoundsException arrayIndexOutOfBoundsException) {
 		}
 	}
 
@@ -649,9 +648,10 @@ public class StringBundlerTest {
 
 			Assert.fail();
 		}
-		catch (ArrayIndexOutOfBoundsException aioobe) {
+		catch (ArrayIndexOutOfBoundsException arrayIndexOutOfBoundsException) {
 			Assert.assertEquals(
-				"Array index out of range: -1", aioobe.getMessage());
+				"Array index out of range: -1",
+				arrayIndexOutOfBoundsException.getMessage());
 		}
 
 		try {
@@ -659,9 +659,10 @@ public class StringBundlerTest {
 
 			Assert.fail();
 		}
-		catch (ArrayIndexOutOfBoundsException aioobe) {
+		catch (ArrayIndexOutOfBoundsException arrayIndexOutOfBoundsException) {
 			Assert.assertEquals(
-				"Array index out of range: 0", aioobe.getMessage());
+				"Array index out of range: 0",
+				arrayIndexOutOfBoundsException.getMessage());
 		}
 
 		try {
@@ -669,9 +670,10 @@ public class StringBundlerTest {
 
 			Assert.fail();
 		}
-		catch (ArrayIndexOutOfBoundsException aioobe) {
+		catch (ArrayIndexOutOfBoundsException arrayIndexOutOfBoundsException) {
 			Assert.assertEquals(
-				"Array index out of range: -1", aioobe.getMessage());
+				"Array index out of range: -1",
+				arrayIndexOutOfBoundsException.getMessage());
 		}
 
 		try {
@@ -679,9 +681,10 @@ public class StringBundlerTest {
 
 			Assert.fail();
 		}
-		catch (ArrayIndexOutOfBoundsException aioobe) {
+		catch (ArrayIndexOutOfBoundsException arrayIndexOutOfBoundsException) {
 			Assert.assertEquals(
-				"Array index out of range: 0", aioobe.getMessage());
+				"Array index out of range: 0",
+				arrayIndexOutOfBoundsException.getMessage());
 		}
 
 		sb.append("test1");
@@ -691,6 +694,56 @@ public class StringBundlerTest {
 		sb.setStringAt("test2", 0);
 
 		Assert.assertEquals("test2", sb.stringAt(0));
+	}
+
+	@NewEnv(type = NewEnv.Type.CLASSLOADER)
+	@Test
+	public void testStringBuilderEnsureCapacity() {
+		int threadLocalBufferLimit = 10;
+
+		String propertyKey =
+			StringBundler.class.getName() + ".threadlocal.buffer.limit";
+
+		String propertyValue = System.getProperty(propertyKey);
+
+		System.setProperty(propertyKey, String.valueOf(threadLocalBufferLimit));
+
+		try {
+			Assert.assertEquals(
+				Integer.valueOf(threadLocalBufferLimit),
+				ReflectionTestUtil.getFieldValue(
+					StringBundler.class, "_THREAD_LOCAL_BUFFER_LIMIT"));
+
+			StringBundler sb = new StringBundler(4);
+
+			sb.append("test1");
+			sb.append("test2");
+			sb.append("test3");
+
+			Assert.assertEquals("test1test2test3", sb.toString());
+
+			sb.append("test4");
+
+			Assert.assertEquals("test1test2test3test4", sb.toString());
+
+			sb.setIndex(sb.index() - 1);
+
+			Assert.assertEquals("test1test2test3", sb.toString());
+
+			sb.append("test4test5test6test7test8test9test10");
+
+			Assert.assertEquals(
+				"test1test2test3test4test5test6test7test8test9test10",
+				sb.toString());
+		}
+		finally {
+			if (propertyValue == null) {
+				System.clearProperty(propertyKey);
+			}
+			else {
+				System.setProperty(propertyKey, propertyValue);
+			}
+		}
 	}
 
 	@Test
@@ -774,9 +827,9 @@ public class StringBundlerTest {
 				ReflectionTestUtil.getFieldValue(
 					StringBundler.class, "_THREAD_LOCAL_BUFFER_LIMIT"));
 
-			ThreadLocal<Reference<Object>> threadLocal =
+			ThreadLocal<Reference<StringBuilder>> threadLocal =
 				ReflectionTestUtil.getFieldValue(
-					StringBundler.class, "_unsafeStringBuilderThreadLocal");
+					StringBundler.class, "_stringBuilderThreadLocal");
 
 			Assert.assertNotNull(threadLocal);
 
@@ -791,15 +844,12 @@ public class StringBundlerTest {
 
 			Assert.assertEquals("1234", sb.toString());
 
-			Reference<Object> reference = threadLocal.get();
+			Reference<StringBuilder> reference = threadLocal.get();
 
-			Object unsafeStringBuilder = reference.get();
+			StringBuilder stringBuilder = reference.get();
 
-			Field countField = ReflectionTestUtil.getField(
-				unsafeStringBuilder.getClass(), "_count");
-
-			Assert.assertNotNull(unsafeStringBuilder);
-			Assert.assertEquals(4, countField.get(unsafeStringBuilder));
+			Assert.assertNotNull(stringBuilder);
+			Assert.assertEquals(4, stringBuilder.length());
 
 			sb.append("5");
 
@@ -807,9 +857,9 @@ public class StringBundlerTest {
 
 			reference = threadLocal.get();
 
-			Assert.assertSame(unsafeStringBuilder, reference.get());
+			Assert.assertSame(stringBuilder, reference.get());
 
-			Assert.assertEquals(5, countField.get(unsafeStringBuilder));
+			Assert.assertEquals(5, stringBuilder.length());
 
 			sb.append("6");
 
@@ -817,59 +867,9 @@ public class StringBundlerTest {
 
 			reference = threadLocal.get();
 
-			Assert.assertSame(unsafeStringBuilder, reference.get());
+			Assert.assertSame(stringBuilder, reference.get());
 
-			Assert.assertEquals(6, countField.get(unsafeStringBuilder));
-		}
-		finally {
-			if (propertyValue == null) {
-				System.clearProperty(propertyKey);
-			}
-			else {
-				System.setProperty(propertyKey, propertyValue);
-			}
-		}
-	}
-
-	@NewEnv(type = NewEnv.Type.CLASSLOADER)
-	@Test
-	public void testUnsafeStringBuilderEnsureCapacity() {
-		int threadLocalBufferLimit = 10;
-
-		String propertyKey =
-			StringBundler.class.getName() + ".threadlocal.buffer.limit";
-
-		String propertyValue = System.getProperty(propertyKey);
-
-		System.setProperty(propertyKey, String.valueOf(threadLocalBufferLimit));
-
-		try {
-			Assert.assertEquals(
-				Integer.valueOf(threadLocalBufferLimit),
-				ReflectionTestUtil.getFieldValue(
-					StringBundler.class, "_THREAD_LOCAL_BUFFER_LIMIT"));
-
-			StringBundler sb = new StringBundler(4);
-
-			sb.append("test1");
-			sb.append("test2");
-			sb.append("test3");
-
-			Assert.assertEquals("test1test2test3", sb.toString());
-
-			sb.append("test4");
-
-			Assert.assertEquals("test1test2test3test4", sb.toString());
-
-			sb.setIndex(sb.index() - 1);
-
-			Assert.assertEquals("test1test2test3", sb.toString());
-
-			sb.append("test4test5test6test7test8test9test10");
-
-			Assert.assertEquals(
-				"test1test2test3test4test5test6test7test8test9test10",
-				sb.toString());
+			Assert.assertEquals(6, stringBuilder.length());
 		}
 		finally {
 			if (propertyValue == null) {
@@ -921,7 +921,7 @@ public class StringBundlerTest {
 					StringBundler.class, "_THREAD_LOCAL_BUFFER_LIMIT"));
 			Assert.assertNull(
 				ReflectionTestUtil.getFieldValue(
-					StringBundler.class, "_unsafeStringBuilderThreadLocal"));
+					StringBundler.class, "_stringBuilderThreadLocal"));
 
 			StringBundler sb = new StringBundler();
 
@@ -934,7 +934,7 @@ public class StringBundlerTest {
 
 			Assert.assertNull(
 				ReflectionTestUtil.getFieldValue(
-					StringBundler.class, "_unsafeStringBuilderThreadLocal"));
+					StringBundler.class, "_stringBuilderThreadLocal"));
 		}
 		finally {
 			if (propertyValue != null) {

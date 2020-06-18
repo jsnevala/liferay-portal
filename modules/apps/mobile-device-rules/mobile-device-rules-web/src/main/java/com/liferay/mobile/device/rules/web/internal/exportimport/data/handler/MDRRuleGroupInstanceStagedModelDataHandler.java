@@ -44,14 +44,15 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = StagedModelDataHandler.class)
 public class MDRRuleGroupInstanceStagedModelDataHandler
 	extends BaseStagedModelDataHandler<MDRRuleGroupInstance> {
 
-	public static final String[] CLASS_NAMES =
-		{MDRRuleGroupInstance.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		MDRRuleGroupInstance.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(MDRRuleGroupInstance ruleGroupInstance) {
@@ -168,7 +169,7 @@ public class MDRRuleGroupInstanceStagedModelDataHandler
 				classPK = layoutSet.getLayoutSetId();
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				StringBundler sb = new StringBundler(5);
 

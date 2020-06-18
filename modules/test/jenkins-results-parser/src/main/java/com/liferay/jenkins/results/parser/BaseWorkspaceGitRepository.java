@@ -14,13 +14,21 @@
 
 package com.liferay.jenkins.results.parser;
 
+import com.google.common.collect.Lists;
+
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.Stack;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -38,8 +46,8 @@ public abstract class BaseWorkspaceGitRepository
 
 			return fileContent.trim();
 		}
-		catch (IOException ioe) {
-			throw new RuntimeException(ioe);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 
@@ -49,12 +57,144 @@ public abstract class BaseWorkspaceGitRepository
 	}
 
 	@Override
+	public String getGitHubURL() {
+		return getString("git_hub_url");
+	}
+
+	@Override
+	public List<LocalGitCommit> getHistoricalLocalGitCommits() {
+		if (_historicalLocalGitCommits != null) {
+			return _historicalLocalGitCommits;
+		}
+
+		if (!has("commits")) {
+			return new ArrayList<>();
+		}
+
+		_historicalLocalGitCommits = new ArrayList<>();
+
+		JSONArray commitsJSONArray = getJSONArray("commits");
+
+		GitWorkingDirectory gitWorkingDirectory = getGitWorkingDirectory();
+
+		for (int i = 0; i < commitsJSONArray.length(); i++) {
+			JSONObject commitJSONObject = commitsJSONArray.getJSONObject(i);
+
+			_historicalLocalGitCommits.add(
+				GitCommitFactory.newLocalGitCommit(
+					gitWorkingDirectory, commitJSONObject.getString("message"),
+					commitJSONObject.getString("sha"),
+					commitJSONObject.getLong("commitTime")));
+		}
+
+		return _historicalLocalGitCommits;
+	}
+
+	@Override
+	public Properties getWorkspaceJobProperties(String propertyType, Job job) {
+		Properties jobProperties = job.getJobProperties();
+
+		Set<String> workspaceJobPropertyNames = new HashSet<>();
+
+		for (String jobPropertyName : jobProperties.stringPropertyNames()) {
+			if (!jobPropertyName.startsWith(propertyType)) {
+				continue;
+			}
+
+			String workspaceJobPropertyName = _getWorkspaceJobPropertyName(
+				jobPropertyName);
+
+			if (workspaceJobPropertyName == null) {
+				continue;
+			}
+
+			workspaceJobPropertyNames.add(workspaceJobPropertyName);
+		}
+
+		Properties workspaceJobProperties = new Properties();
+
+		for (String workspaceJobPropertyName : workspaceJobPropertyNames) {
+			String workspaceJobPropertyValue =
+				JenkinsResultsParserUtil.getProperty(
+					jobProperties, propertyType, workspaceJobPropertyName,
+					getUpstreamBranchName());
+
+			if ((workspaceJobPropertyValue == null) &&
+				(job instanceof TestSuiteJob)) {
+
+				TestSuiteJob testSuiteJob = (TestSuiteJob)job;
+
+				workspaceJobPropertyValue =
+					JenkinsResultsParserUtil.getProperty(
+						jobProperties, propertyType, workspaceJobPropertyName,
+						testSuiteJob.getTestSuiteName());
+			}
+
+			if ((workspaceJobPropertyValue == null) &&
+				JenkinsResultsParserUtil.isWindows()) {
+
+				workspaceJobPropertyValue =
+					JenkinsResultsParserUtil.getProperty(
+						jobProperties, propertyType, workspaceJobPropertyName,
+						"windows");
+			}
+
+			if (workspaceJobPropertyValue != null) {
+				workspaceJobProperties.put(
+					workspaceJobPropertyName, workspaceJobPropertyValue);
+			}
+		}
+
+		return workspaceJobProperties;
+	}
+
+	@Override
+	public List<List<LocalGitCommit>> partitionLocalGitCommits(
+		List<LocalGitCommit> localGitCommits, int count) {
+
+		if (count <= 0) {
+			throw new IllegalArgumentException("Invalid count " + count);
+		}
+
+		int localGitCommitsSize = 0;
+
+		if ((localGitCommits != null) && !localGitCommits.isEmpty()) {
+			localGitCommitsSize = localGitCommits.size();
+		}
+
+		if (count > localGitCommitsSize) {
+			throw new IllegalArgumentException(
+				JenkinsResultsParserUtil.combine(
+					String.valueOf(localGitCommitsSize),
+					" commits cannot be split into ", String.valueOf(count),
+					" lists"));
+		}
+
+		List<LocalGitCommit> lastLocalGitCommitsPartition = Lists.newArrayList(
+			localGitCommits.get(localGitCommitsSize - 1));
+
+		List<List<LocalGitCommit>> localGitCommitsPartitions = new ArrayList<>(
+			count);
+
+		if (localGitCommits.size() > 1) {
+			localGitCommitsPartitions.addAll(
+				JenkinsResultsParserUtil.partitionByCount(
+					localGitCommits.subList(0, localGitCommitsSize - 2),
+					count - 1));
+		}
+
+		localGitCommitsPartitions.add(lastLocalGitCommitsPartition);
+
+		return localGitCommitsPartitions;
+	}
+
+	@Override
 	public void setBranchSHA(String branchSHA) {
 		if (branchSHA == null) {
 			throw new RuntimeException("Branch SHA is null");
 		}
 
-		if (!branchSHA.matches(_SHA_REGEX)) {
+		if (!branchSHA.matches(_REGEX_SHA)) {
 			throw new RuntimeException("Branch SHA is invalid");
 		}
 
@@ -73,13 +213,13 @@ public abstract class BaseWorkspaceGitRepository
 		GitWorkingDirectory gitWorkingDirectory = getGitWorkingDirectory();
 
 		if (!gitWorkingDirectory.localSHAExists(_getBranchHeadSHA())) {
-			GitHubDevSyncUtil.fetchCachedBranchFromGitHubDev(
+			GitHubDevSyncUtil.fetchCacheBranchFromGitHubDev(
 				gitWorkingDirectory, getGitHubDevBranchName());
 		}
 
 		LocalGitBranch localGitBranch =
 			gitWorkingDirectory.createLocalGitBranch(
-				_getBranchName(), true, _getBranchSHA());
+				_getBranchName(), true, getBranchSHA());
 
 		gitWorkingDirectory.createLocalGitBranch(localGitBranch, true);
 
@@ -93,12 +233,70 @@ public abstract class BaseWorkspaceGitRepository
 	}
 
 	@Override
+	public void storeCommitHistory(List<String> commitSHAs) {
+		List<LocalGitCommit> historicalLocalGitCommits =
+			getHistoricalLocalGitCommits();
+
+		List<String> requiredCommitSHAs = new ArrayList<>();
+
+		requiredCommitSHAs.addAll(commitSHAs);
+
+		JSONArray commitsJSONArray = new JSONArray();
+
+		GitWorkingDirectory gitWorkingDirectory = getGitWorkingDirectory();
+
+		int index = 0;
+
+		while (index < COMMITS_HISTORY_SIZE_MAX) {
+			int currentGroupSize = COMMITS_HISTORY_GROUP_SIZE;
+
+			if (index >
+					(COMMITS_HISTORY_SIZE_MAX - COMMITS_HISTORY_GROUP_SIZE)) {
+
+				currentGroupSize =
+					COMMITS_HISTORY_SIZE_MAX % COMMITS_HISTORY_GROUP_SIZE;
+			}
+
+			List<LocalGitCommit> localGitCommits = gitWorkingDirectory.log(
+				index, currentGroupSize);
+
+			for (LocalGitCommit localGitCommit : localGitCommits) {
+				historicalLocalGitCommits.add(localGitCommit);
+
+				commitsJSONArray.put(localGitCommit.toJSONObject());
+
+				String sha = localGitCommit.getSHA();
+
+				if (requiredCommitSHAs.contains(sha)) {
+					requiredCommitSHAs.remove(sha);
+				}
+
+				if (requiredCommitSHAs.isEmpty()) {
+					break;
+				}
+			}
+
+			if (requiredCommitSHAs.isEmpty()) {
+				break;
+			}
+
+			index += COMMITS_HISTORY_GROUP_SIZE;
+		}
+
+		if (!requiredCommitSHAs.isEmpty()) {
+			throw new RuntimeException(
+				"Unable to find the following SHAs: " + requiredCommitSHAs);
+		}
+
+		put("commits", commitsJSONArray);
+	}
+
+	@Override
 	public void tearDown() {
 		GitWorkingDirectory gitWorkingDirectory = getGitWorkingDirectory();
 
 		LocalGitBranch upstreamLocalGitBranch =
-			gitWorkingDirectory.getLocalGitBranch(
-				gitWorkingDirectory.getUpstreamBranchName());
+			gitWorkingDirectory.getUpstreamLocalGitBranch();
 
 		System.out.println();
 		System.out.println("##");
@@ -112,13 +310,15 @@ public abstract class BaseWorkspaceGitRepository
 
 		gitWorkingDirectory.clean();
 
+		gitWorkingDirectory.cleanTempBranches();
+
 		gitWorkingDirectory.displayLog();
 	}
 
 	@Override
 	public String toString() {
 		return JenkinsResultsParserUtil.combine(
-			_getGitHubURL(), " - ", _getBranchSHA());
+			getGitHubURL(), " - ", getBranchSHA());
 	}
 
 	@Override
@@ -138,7 +338,7 @@ public abstract class BaseWorkspaceGitRepository
 		validateKeys(_REQUIRED_KEYS);
 
 		if (JenkinsResultsParserUtil.isCINode()) {
-			validateKeys(_REQUIRED_CI_KEYS);
+			validateKeys(_CI_KEYS_REQUIRED);
 		}
 	}
 
@@ -151,7 +351,7 @@ public abstract class BaseWorkspaceGitRepository
 		_setGitHubURL(pullRequest.getHtmlURL());
 
 		LocalGitBranch localGitBranch =
-			GitHubDevSyncUtil.createCachedLocalGitBranch(
+			GitHubDevSyncUtil.createCacheLocalGitBranch(
 				this, pullRequest, JenkinsResultsParserUtil.isCINode());
 
 		_setBranchHeadSHA(localGitBranch.getSHA());
@@ -165,9 +365,9 @@ public abstract class BaseWorkspaceGitRepository
 
 		if (JenkinsResultsParserUtil.isCINode()) {
 			_setGitHubDevBranchName(
-				GitHubDevSyncUtil.getCachedBranchName(pullRequest));
+				GitHubDevSyncUtil.getCacheBranchName(pullRequest));
 
-			validateKeys(_REQUIRED_CI_KEYS);
+			validateKeys(_CI_KEYS_REQUIRED);
 		}
 	}
 
@@ -183,7 +383,7 @@ public abstract class BaseWorkspaceGitRepository
 				remoteGitRef.getName()));
 
 		LocalGitBranch localGitBranch =
-			GitHubDevSyncUtil.createCachedLocalGitBranch(
+			GitHubDevSyncUtil.createCacheLocalGitBranch(
 				this, remoteGitRef, JenkinsResultsParserUtil.isCINode());
 
 		_setBranchHeadSHA(localGitBranch.getSHA());
@@ -197,10 +397,14 @@ public abstract class BaseWorkspaceGitRepository
 
 		if (JenkinsResultsParserUtil.isCINode()) {
 			_setGitHubDevBranchName(
-				GitHubDevSyncUtil.getCachedBranchName(remoteGitRef));
+				GitHubDevSyncUtil.getCacheBranchName(remoteGitRef));
 
-			validateKeys(_REQUIRED_CI_KEYS);
+			validateKeys(_CI_KEYS_REQUIRED);
 		}
+	}
+
+	protected String getBranchSHA() {
+		return optString("branch_sha");
 	}
 
 	@Override
@@ -232,12 +436,43 @@ public abstract class BaseWorkspaceGitRepository
 		return getString("branch_name");
 	}
 
-	private String _getBranchSHA() {
-		return optString("branch_sha");
-	}
+	private String _getWorkspaceJobPropertyName(String jobPropertyName) {
+		Stack<Integer> stack = new Stack<>();
 
-	private String _getGitHubURL() {
-		return getString("git_hub_url");
+		Integer start = null;
+		Integer end = null;
+
+		for (int i = 0; i < jobPropertyName.length(); i++) {
+			char c = jobPropertyName.charAt(i);
+
+			if (c == '[') {
+				stack.push(i);
+
+				if (start == null) {
+					start = i;
+				}
+			}
+
+			if (c == ']') {
+				if (start == null) {
+					continue;
+				}
+
+				stack.pop();
+
+				if (stack.isEmpty()) {
+					end = i;
+
+					break;
+				}
+			}
+		}
+
+		if ((start != null) && (end != null)) {
+			return jobPropertyName.substring(start + 1, end);
+		}
+
+		return null;
 	}
 
 	private void _setBranchHeadSHA(String branchHeadSHA) {
@@ -245,7 +480,7 @@ public abstract class BaseWorkspaceGitRepository
 			throw new RuntimeException("Branch head SHA is null");
 		}
 
-		if (!branchHeadSHA.matches(_SHA_REGEX)) {
+		if (!branchHeadSHA.matches(_REGEX_SHA)) {
 			throw new RuntimeException("Branch head SHA is invalid");
 		}
 
@@ -280,14 +515,17 @@ public abstract class BaseWorkspaceGitRepository
 		put("type", getType());
 	}
 
-	private static final String[] _REQUIRED_CI_KEYS =
-		{"git_hub_dev_branch_name"};
+	private static final String[] _CI_KEYS_REQUIRED = {
+		"git_hub_dev_branch_name"
+	};
 
-	private static final String[] _REQUIRED_KEYS =
-		{"branch_head_sha", "branch_name", "branch_sha", "git_hub_url", "type"};
+	private static final String _REGEX_SHA = "[0-9a-f]{7,40}";
 
-	private static final String _SHA_REGEX = "[0-9a-f]{7,40}";
+	private static final String[] _REQUIRED_KEYS = {
+		"branch_head_sha", "branch_name", "branch_sha", "git_hub_url", "type"
+	};
 
+	private List<LocalGitCommit> _historicalLocalGitCommits;
 	private final Map<String, Properties> _propertiesFilesMap = new HashMap<>();
 
 }

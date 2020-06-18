@@ -21,11 +21,12 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetStagingHandler;
 import com.liferay.portal.kernel.model.ModelWrapper;
+import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
+import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
-import com.liferay.portal.kernel.spring.aop.AdvisedSupport;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.spring.aop.ServiceBeanAopProxy;
+import com.liferay.portal.spring.aop.AopInvocationHandler;
 import com.liferay.portlet.exportimport.staging.StagingAdvicesThreadLocal;
 
 import java.lang.reflect.InvocationHandler;
@@ -46,16 +47,21 @@ import org.springframework.beans.factory.BeanFactoryAware;
  */
 public class LayoutSetLocalServiceStagingAdvice implements BeanFactoryAware {
 
-	public void afterPropertiesSet() throws Exception {
-		AdvisedSupport advisedSupport = ServiceBeanAopProxy.getAdvisedSupport(
-			_beanFactory.getBean(LayoutSetLocalService.class.getName()));
+	public void afterPropertiesSet() {
+		AopInvocationHandler aopInvocationHandler =
+			ProxyUtil.fetchInvocationHandler(
+				_beanFactory.getBean(LayoutSetLocalService.class.getName()),
+				AopInvocationHandler.class);
 
-		advisedSupport.setTarget(
+		aopInvocationHandler.setTarget(
 			ProxyUtil.newProxyInstance(
 				LayoutSetLocalServiceStagingAdvice.class.getClassLoader(),
-				new Class<?>[] {LayoutSetLocalService.class},
+				new Class<?>[] {
+					IdentifiableOSGiService.class, LayoutSetLocalService.class,
+					BaseLocalService.class
+				},
 				new LayoutSetLocalServiceStagingInvocationHandler(
-					advisedSupport.getTarget())));
+					aopInvocationHandler.getTarget())));
 	}
 
 	@Override
@@ -71,19 +77,19 @@ public class LayoutSetLocalServiceStagingAdvice implements BeanFactoryAware {
 				return layoutSet;
 			}
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			return layoutSet;
 		}
 
 		return (LayoutSet)ProxyUtil.newProxyInstance(
-			ClassLoaderUtil.getPortalClassLoader(),
+			PortalClassLoaderUtil.getClassLoader(),
 			new Class<?>[] {LayoutSet.class, ModelWrapper.class},
 			new LayoutSetStagingHandler(layoutSet));
 	}
@@ -136,8 +142,8 @@ public class LayoutSetLocalServiceStagingAdvice implements BeanFactoryAware {
 
 				return returnValue;
 			}
-			catch (InvocationTargetException ite) {
-				throw ite.getCause();
+			catch (InvocationTargetException invocationTargetException) {
+				throw invocationTargetException.getCause();
 			}
 		}
 

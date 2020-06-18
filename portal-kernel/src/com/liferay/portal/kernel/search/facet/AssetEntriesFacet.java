@@ -132,8 +132,8 @@ public class AssetEntriesFacet extends MultiValueFacet {
 						entityBooleanFilter, BooleanClauseOccur.SHOULD);
 				}
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 
@@ -209,13 +209,6 @@ public class AssetEntriesFacet extends MultiValueFacet {
 		BooleanQuery entityBooleanQuery = new BooleanQueryImpl();
 
 		indexer.postProcessContextQuery(entityBooleanQuery, searchContext);
-
-		for (IndexerPostProcessor indexerPostProcessor :
-				indexer.getIndexerPostProcessors()) {
-
-			indexerPostProcessor.postProcessContextQuery(
-				entityBooleanQuery, searchContext);
-		}
 
 		if (entityBooleanQuery.hasClauses()) {
 			QueryFilter queryFilter = new QueryFilter(entityBooleanQuery);

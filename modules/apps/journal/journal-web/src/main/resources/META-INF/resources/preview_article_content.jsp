@@ -20,7 +20,7 @@
 JournalArticleDisplay articleDisplay = journalDisplayContext.getArticleDisplay();
 %>
 
-<div class="journal-article-preview">
+<div class="container-fluid-1280 mt-2">
 	<%= articleDisplay.getContent() %>
 </div>
 
@@ -39,7 +39,7 @@ JournalArticleDisplay articleDisplay = journalDisplayContext.getArticleDisplay()
 
 	<liferay-ui:page-iterator
 		cur="<%= articleDisplay.getCurrentPage() %>"
-		curParam='<%= "page" %>'
+		curParam="page"
 		delta="<%= 1 %>"
 		id="articleDisplayPages"
 		maxPages="<%= 25 %>"

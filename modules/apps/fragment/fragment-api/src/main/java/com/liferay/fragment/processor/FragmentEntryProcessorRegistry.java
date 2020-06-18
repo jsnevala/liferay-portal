@@ -16,6 +16,7 @@ package com.liferay.fragment.processor;
 
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 
 /**
@@ -23,16 +24,37 @@ import com.liferay.portal.kernel.json.JSONObject;
  */
 public interface FragmentEntryProcessorRegistry {
 
-	public JSONObject getDefaultEditableValuesJSONObject(String html);
+	public void deleteFragmentEntryLinkData(
+		FragmentEntryLink fragmentEntryLink);
 
-	public String processFragmentEntryLinkHTML(
-			FragmentEntryLink fragmentEntryLink)
+	public default JSONArray getAvailableTagsJSONArray() {
+		return null;
+	}
+
+	public default JSONArray getDataAttributesJSONArray() {
+		return null;
+	}
+
+	public JSONObject getDefaultEditableValuesJSONObject(
+		String html, String configuration);
+
+	public default String processFragmentEntryLinkCSS(
+			FragmentEntryLink fragmentEntryLink,
+			FragmentEntryProcessorContext fragmentEntryProcessorContext)
+		throws PortalException {
+
+		return fragmentEntryLink.getCss();
+	}
+
+	public default String processFragmentEntryLinkHTML(
+			FragmentEntryLink fragmentEntryLink,
+			FragmentEntryProcessorContext fragmentEntryProcessorContext)
+		throws PortalException {
+
+		return fragmentEntryLink.getHtml();
+	}
+
+	public void validateFragmentEntryHTML(String html, String configuration)
 		throws PortalException;
-
-	public String processFragmentEntryLinkHTML(
-			FragmentEntryLink fragmentEntryLink, String mode)
-		throws PortalException;
-
-	public void validateFragmentEntryHTML(String html) throws PortalException;
 
 }

@@ -14,14 +14,14 @@
 
 package com.liferay.portal.kernel.portlet;
 
-import aQute.bnd.annotation.ProviderType;
-
 import javax.portlet.HeaderRequest;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Neil Griffin
  */
 @ProviderType
 public interface LiferayHeaderRequest
-	extends LiferayRenderRequest, HeaderRequest {
+	extends HeaderRequest, LiferayRenderRequest {
 }

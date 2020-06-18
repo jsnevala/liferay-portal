@@ -40,7 +40,7 @@ public class SuggestionsPortletSharedSearchContributor
 
 		SuggestionsPortletPreferences suggestionsPortletPreferences =
 			new SuggestionsPortletPreferencesImpl(
-				portletSharedSearchSettings.getPortletPreferences());
+				portletSharedSearchSettings.getPortletPreferencesOptional());
 
 		setUpQueryIndexing(
 			suggestionsPortletPreferences, portletSharedSearchSettings);
@@ -73,7 +73,7 @@ public class SuggestionsPortletSharedSearchContributor
 		queryConfig.setQuerySuggestionScoresThreshold(
 			suggestionsPortletPreferences.
 				getRelatedQueriesSuggestionsDisplayThreshold());
-		queryConfig.setQuerySuggestionsMax(
+		queryConfig.setQuerySuggestionMax(
 			suggestionsPortletPreferences.getRelatedQueriesSuggestionsMax());
 	}
 

@@ -15,10 +15,10 @@
 package com.liferay.portal.xuggler;
 
 import com.liferay.petra.log4j.Log4JUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.xuggler.Xuggler;
 import com.liferay.portal.kernel.xuggler.XugglerInstallException;
 import com.liferay.portal.util.JarUtil;
@@ -44,8 +44,8 @@ public class XugglerImpl implements Xuggler {
 
 			_nativeLibraryCopied = true;
 		}
-		catch (Exception e) {
-			throw new XugglerInstallException.MustInstallJar(name, e);
+		catch (Exception exception) {
+			throw new XugglerInstallException.MustInstallJar(name, exception);
 		}
 	}
 
@@ -62,9 +62,9 @@ public class XugglerImpl implements Xuggler {
 			enabled = PrefsPropsUtil.getBoolean(
 				PropsKeys.XUGGLER_ENABLED, PropsValues.XUGGLER_ENABLED);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 

@@ -21,14 +21,21 @@ import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
 import com.liferay.document.library.repository.authorization.capability.AuthorizationCapability;
 import com.liferay.document.library.web.internal.constants.DLWebKeys;
+import com.liferay.document.library.web.internal.display.context.DLViewFileEntryMetadataSetsDisplayContext;
+import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.document.library.web.internal.portlet.toolbar.contributor.DLPortletToolbarContributorRegistry;
-import com.liferay.document.library.web.internal.util.DLTrashUtil;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLinkLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMStructureService;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderConstants;
 import com.liferay.portal.kernel.repository.Repository;
 import com.liferay.portal.kernel.repository.RepositoryProviderUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
+
+import java.io.IOException;
 
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
@@ -56,28 +63,40 @@ public class DLViewMVCRenderCommand extends GetFolderMVCRenderCommand {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		renderRequest.setAttribute(
-			DLWebKeys.DOCUMENT_LIBRARY_PORTLET_TOOLBAR_CONTRIBUTOR,
-			_dlPortletToolbarContributorRegistry.
-				getDLPortletToolbarContributor());
-
 		try {
-			if (pingFolderRepository(renderRequest, renderResponse)) {
+			renderRequest.setAttribute(
+				DLWebKeys.DOCUMENT_LIBRARY_PORTLET_TOOLBAR_CONTRIBUTOR,
+				_dlPortletToolbarContributorRegistry.
+					getDLPortletToolbarContributor());
+			renderRequest.setAttribute(
+				DLWebKeys.
+					DOCUMENT_LIBRARY_VIEW_FILE_ENTRY_METADATA_SETS_DISPLAY_CONTEXT,
+				new DLViewFileEntryMetadataSetsDisplayContext(
+					_portal.getLiferayPortletRequest(renderRequest),
+					_portal.getLiferayPortletResponse(renderResponse),
+					_ddmStructureLinkLocalService, _ddmStructureService,
+					_portal));
+
+			if (_pingFolderRepository(renderRequest, renderResponse)) {
 				return MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH;
 			}
+
+			return super.render(renderRequest, renderResponse);
 		}
-		catch (Exception e) {
-			SessionErrors.add(renderRequest, "repositoryPingFailed", e);
+		catch (PortalException portalException) {
+			SessionErrors.add(
+				renderRequest, "repositoryPingFailed", portalException);
 
 			return "/document_library/error.jsp";
 		}
-
-		return super.render(renderRequest, renderResponse);
+		catch (IOException ioException) {
+			throw new PortletException(ioException);
+		}
 	}
 
 	@Override
-	protected DLTrashUtil getDLTrashUtil() {
-		return _dlTrashUtil;
+	protected DLTrashHelper getDLTrashHelper() {
+		return _dlTrashHelper;
 	}
 
 	@Override
@@ -85,9 +104,9 @@ public class DLViewMVCRenderCommand extends GetFolderMVCRenderCommand {
 		return "/document_library/view.jsp";
 	}
 
-	protected boolean pingFolderRepository(
+	private boolean _pingFolderRepository(
 			RenderRequest renderRequest, RenderResponse renderResponse)
-		throws Exception {
+		throws IOException, PortalException {
 
 		String mvcRenderCommandName = ParamUtil.getString(
 			renderRequest, "mvcRenderCommandName");
@@ -120,13 +139,18 @@ public class DLViewMVCRenderCommand extends GetFolderMVCRenderCommand {
 			return authorizationCapability.hasCustomRedirectFlow(
 				renderRequest, renderResponse);
 		}
-		else {
-			_dlAppService.getFileEntriesCount(
-				dlFolder.getRepositoryId(), dlFolder.getFolderId());
 
-			return false;
-		}
+		_dlAppService.getFileEntriesCount(
+			dlFolder.getRepositoryId(), dlFolder.getFolderId());
+
+		return false;
 	}
+
+	@Reference
+	private DDMStructureLinkLocalService _ddmStructureLinkLocalService;
+
+	@Reference
+	private DDMStructureService _ddmStructureService;
 
 	@Reference
 	private DLAppService _dlAppService;
@@ -139,6 +163,9 @@ public class DLViewMVCRenderCommand extends GetFolderMVCRenderCommand {
 		_dlPortletToolbarContributorRegistry;
 
 	@Reference
-	private DLTrashUtil _dlTrashUtil;
+	private DLTrashHelper _dlTrashHelper;
+
+	@Reference
+	private Portal _portal;
 
 }

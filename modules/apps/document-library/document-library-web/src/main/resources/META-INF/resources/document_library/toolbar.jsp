@@ -18,9 +18,10 @@
 
 <clay:management-toolbar
 	actionDropdownItems="<%= dlAdminManagementToolbarDisplayContext.getActionDropdownItems() %>"
-	actionHandler='<%= renderResponse.getNamespace() + "DocumentLibrary" %>'
 	clearResultsURL="<%= dlAdminManagementToolbarDisplayContext.getClearResultsURL() %>"
+	componentId="<%= dlAdminManagementToolbarDisplayContext.getComponentId() %>"
 	creationMenu="<%= dlAdminManagementToolbarDisplayContext.getCreationMenu() %>"
+	defaultEventHandler='<%= renderResponse.getNamespace() + "DocumentLibrary" %>'
 	disabled="<%= dlAdminManagementToolbarDisplayContext.isDisabled() %>"
 	filterDropdownItems="<%= dlAdminManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	filterLabelItems="<%= dlAdminManagementToolbarDisplayContext.getFilterLabelItems() %>"
@@ -33,5 +34,6 @@
 	showSearch="<%= dlAdminManagementToolbarDisplayContext.isShowSearch() %>"
 	sortingOrder="<%= dlAdminManagementToolbarDisplayContext.getSortingOrder() %>"
 	sortingURL="<%= String.valueOf(dlAdminManagementToolbarDisplayContext.getSortingURL()) %>"
+	supportsBulkActions="<%= true %>"
 	viewTypeItems="<%= dlAdminManagementToolbarDisplayContext.getViewTypes() %>"
 />

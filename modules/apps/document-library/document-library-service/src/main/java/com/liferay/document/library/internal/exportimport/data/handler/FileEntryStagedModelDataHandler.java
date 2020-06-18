@@ -14,6 +14,8 @@
 
 package com.liferay.document.library.internal.exportimport.data.handler;
 
+import com.liferay.asset.display.page.model.AssetDisplayPageEntry;
+import com.liferay.asset.display.page.service.AssetDisplayPageEntryLocalService;
 import com.liferay.changeset.service.ChangesetCollectionLocalService;
 import com.liferay.changeset.service.ChangesetEntryLocalService;
 import com.liferay.document.library.exportimport.data.handler.DLPluggableContentDataHandler;
@@ -36,11 +38,9 @@ import com.liferay.document.library.kernel.util.DLProcessorThreadLocal;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeResponse;
-import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerTracker;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializerSerializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializerSerializeResponse;
-import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializerTracker;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
@@ -72,6 +72,7 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.RepositoryLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
@@ -105,9 +106,9 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
-@Component(immediate = true, service = StagedModelDataHandler.class)
+@Component(service = StagedModelDataHandler.class)
 public class FileEntryStagedModelDataHandler
 	extends BaseStagedModelDataHandler<FileEntry> {
 
@@ -141,9 +142,9 @@ public class FileEntryStagedModelDataHandler
 			return _dlAppLocalService.getFileEntryByUuidAndGroupId(
 				uuid, groupId);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			return null;
@@ -207,11 +208,11 @@ public class FileEntryStagedModelDataHandler
 		try {
 			doRestoreStagedModel(portletDataContext, stagedModel);
 		}
-		catch (PortletDataException pde) {
-			throw pde;
+		catch (PortletDataException portletDataException) {
+			throw portletDataException;
 		}
-		catch (Exception e) {
-			throw new PortletDataException(e);
+		catch (Exception exception) {
+			throw new PortletDataException(exception);
 		}
 	}
 
@@ -230,17 +231,13 @@ public class FileEntryStagedModelDataHandler
 	protected com.liferay.dynamic.data.mapping.storage.DDMFormValues
 		deserialize(String content, DDMForm ddmForm) {
 
-		DDMFormValuesDeserializer ddmFormValuesDeserializer =
-			_ddmFormValuesDeserializerTracker.getDDMFormValuesDeserializer(
-				"json");
-
 		DDMFormValuesDeserializerDeserializeRequest.Builder builder =
 			DDMFormValuesDeserializerDeserializeRequest.Builder.newBuilder(
 				content, ddmForm);
 
 		DDMFormValuesDeserializerDeserializeResponse
 			ddmFormValuesDeserializerDeserializeResponse =
-				ddmFormValuesDeserializer.deserialize(builder.build());
+				_jsonDDMFormValuesDeserializer.deserialize(builder.build());
 
 		return ddmFormValuesDeserializerDeserializeResponse.getDDMFormValues();
 	}
@@ -295,12 +292,12 @@ public class FileEntryStagedModelDataHandler
 			try {
 				is = FileEntryUtil.getContentStream(fileEntry);
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						"Unable to retrieve content for file entry " +
 							fileEntry.getFileEntryId(),
-						e);
+						exception);
 				}
 			}
 
@@ -322,8 +319,8 @@ public class FileEntryStagedModelDataHandler
 				try {
 					is.close();
 				}
-				catch (IOException ioe) {
-					_log.error(ioe, ioe);
+				catch (IOException ioException) {
+					_log.error(ioException, ioException);
 				}
 			}
 		}
@@ -337,6 +334,8 @@ public class FileEntryStagedModelDataHandler
 
 		exportMetaData(portletDataContext, fileEntryElement, fileEntry);
 
+		_exportAssetDisplayPage(portletDataContext, fileEntry);
+
 		portletDataContext.addClassedModel(
 			fileEntryElement, fileEntryPath, liferayFileEntry,
 			DLFileEntry.class);
@@ -348,6 +347,10 @@ public class FileEntryStagedModelDataHandler
 		long fileEntryId) {
 
 		FileEntry existingFileEntry = fetchMissingReference(uuid, groupId);
+
+		if (existingFileEntry == null) {
+			return;
+		}
 
 		Map<Long, Long> dlFileEntryIds =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
@@ -426,12 +429,12 @@ public class FileEntryStagedModelDataHandler
 				try {
 					is = FileEntryUtil.getContentStream(fileEntry);
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to retrieve content for file entry " +
 								fileEntry.getFileEntryId(),
-							e);
+							exception);
 					}
 
 					return;
@@ -520,26 +523,18 @@ public class FileEntryStagedModelDataHandler
 						updateFileEntry = true;
 					}
 					else {
-						InputStream existingFileVersionInputStream = null;
-
-						try {
-							existingFileVersionInputStream =
+						try (InputStream existingFileVersionInputStream =
 								latestExistingFileVersion.getContentStream(
-									false);
-						}
-						catch (Exception e) {
-							if (_log.isDebugEnabled()) {
-								_log.debug(e, e);
-							}
-						}
-						finally {
-							if (existingFileVersionInputStream != null) {
-								existingFileVersionInputStream.close();
-							}
-						}
+									false)) {
 
-						if (existingFileVersionInputStream == null) {
-							updateFileEntry = true;
+							if (existingFileVersionInputStream == null) {
+								updateFileEntry = true;
+							}
+						}
+						catch (Exception exception) {
+							if (_log.isDebugEnabled()) {
+								_log.debug(exception, exception);
+							}
 						}
 					}
 
@@ -631,7 +626,8 @@ public class FileEntryStagedModelDataHandler
 				}
 
 				if (ExportImportThreadLocal.isStagingInProcess()) {
-					_overrideFileVersion(importedFileEntry, version);
+					importedFileEntry = _overrideFileVersion(
+						importedFileEntry, version, serviceContext);
 				}
 			}
 			else {
@@ -663,6 +659,9 @@ public class FileEntryStagedModelDataHandler
 
 			fileEntryIds.put(
 				fileEntry.getFileEntryId(), importedFileEntry.getFileEntryId());
+
+			_importAssetDisplayPage(
+				portletDataContext, fileEntry, importedFileEntry);
 		}
 		finally {
 			serviceContext.setAttribute(
@@ -673,8 +672,8 @@ public class FileEntryStagedModelDataHandler
 					is.close();
 				}
 			}
-			catch (IOException ioe) {
-				_log.error(ioe, ioe);
+			catch (IOException ioException) {
+				_log.error(ioException, ioException);
 			}
 		}
 	}
@@ -735,7 +734,7 @@ public class FileEntryStagedModelDataHandler
 		ddmFormValues =
 			_ddmFormValuesExportImportContentProcessor.
 				replaceExportContentReferences(
-					portletDataContext, fileEntry, ddmFormValues, false, false);
+					portletDataContext, fileEntry, ddmFormValues, true, false);
 
 		portletDataContext.addZipEntry(
 			ddmFormValuesPath, serialize(ddmFormValues));
@@ -750,10 +749,9 @@ public class FileEntryStagedModelDataHandler
 
 		DLFileEntry dlFileEntry = liferayFileEntry.getDLFileEntry();
 
-		long fileEntryTypeId = dlFileEntry.getFileEntryTypeId();
-
 		DLFileEntryType dlFileEntryType =
-			_dlFileEntryTypeLocalService.fetchFileEntryType(fileEntryTypeId);
+			_dlFileEntryTypeLocalService.fetchFileEntryType(
+				dlFileEntry.getFileEntryTypeId());
 
 		if ((dlFileEntryType == null) || !dlFileEntryType.isExportable()) {
 			return;
@@ -795,6 +793,11 @@ public class FileEntryStagedModelDataHandler
 		return DDMBeanTranslatorUtil.translate(ddmFormValues);
 	}
 
+	@Override
+	protected String[] getSkipImportReferenceStagedModelNames() {
+		return new String[] {AssetDisplayPageEntry.class.getName()};
+	}
+
 	protected void importMetaData(
 			PortletDataContext portletDataContext, Element fileEntryElement,
 			FileEntry fileEntry, ServiceContext serviceContext)
@@ -832,7 +835,10 @@ public class FileEntryStagedModelDataHandler
 			Element structureFieldsElement =
 				(Element)fileEntryElement.selectSingleNode(
 					"structure-fields[@structureUuid='".concat(
-						ddmStructure.getUuid()).concat("']"));
+						ddmStructure.getUuid()
+					).concat(
+						"']"
+					));
 
 			if (structureFieldsElement == null) {
 				continue;
@@ -856,16 +862,13 @@ public class FileEntryStagedModelDataHandler
 	protected String serialize(
 		com.liferay.dynamic.data.mapping.storage.DDMFormValues ddmFormValues) {
 
-		DDMFormValuesSerializer ddmFormValuesSerializer =
-			_ddmFormValuesSerializerTracker.getDDMFormValuesSerializer("json");
-
 		DDMFormValuesSerializerSerializeRequest.Builder builder =
 			DDMFormValuesSerializerSerializeRequest.Builder.newBuilder(
 				ddmFormValues);
 
 		DDMFormValuesSerializerSerializeResponse
 			ddmFormValuesSerializerSerializeResponse =
-				ddmFormValuesSerializer.serialize(builder.build());
+				_jsonDDMFormValuesSerializer.serialize(builder.build());
 
 		return ddmFormValuesSerializerSerializeResponse.getContent();
 	}
@@ -885,15 +888,17 @@ public class FileEntryStagedModelDataHandler
 		if ((fileEntry.getGroupId() != portletDataContext.getGroupId()) &&
 			(fileEntry.getGroupId() != portletDataContext.getScopeGroupId())) {
 
-			PortletDataException pde = new PortletDataException(
-				PortletDataException.INVALID_GROUP);
+			PortletDataException portletDataException =
+				new PortletDataException(PortletDataException.INVALID_GROUP);
 
-			pde.setStagedModelDisplayName(getDisplayName(fileEntry));
-			pde.setStagedModelClassName(fileEntry.getModelClassName());
-			pde.setStagedModelClassPK(
+			portletDataException.setStagedModelDisplayName(
+				getDisplayName(fileEntry));
+			portletDataException.setStagedModelClassName(
+				fileEntry.getModelClassName());
+			portletDataException.setStagedModelClassPK(
 				GetterUtil.getString(fileEntry.getFileEntryId()));
 
-			throw pde;
+			throw portletDataException;
 		}
 
 		try {
@@ -903,23 +908,26 @@ public class FileEntryStagedModelDataHandler
 				!ArrayUtil.contains(
 					getExportableStatuses(), fileVersion.getStatus())) {
 
-				PortletDataException pde = new PortletDataException(
-					PortletDataException.STATUS_UNAVAILABLE);
+				PortletDataException portletDataException =
+					new PortletDataException(
+						PortletDataException.STATUS_UNAVAILABLE);
 
-				pde.setStagedModelDisplayName(getDisplayName(fileEntry));
-				pde.setStagedModelClassName(fileVersion.getModelClassName());
-				pde.setStagedModelClassPK(
+				portletDataException.setStagedModelDisplayName(
+					getDisplayName(fileEntry));
+				portletDataException.setStagedModelClassName(
+					fileVersion.getModelClassName());
+				portletDataException.setStagedModelClassPK(
 					GetterUtil.getString(fileVersion.getFileVersionId()));
 
-				throw pde;
+				throw portletDataException;
 			}
 		}
-		catch (PortletDataException pde) {
-			throw pde;
+		catch (PortletDataException portletDataException) {
+			throw portletDataException;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
+				_log.debug(exception, exception);
 			}
 			else if (_log.isWarnEnabled()) {
 				_log.warn(
@@ -929,28 +937,100 @@ public class FileEntryStagedModelDataHandler
 		}
 
 		if (fileEntry.isInTrash() || fileEntry.isInTrashContainer()) {
-			PortletDataException pde = new PortletDataException(
-				PortletDataException.STATUS_IN_TRASH);
+			PortletDataException portletDataException =
+				new PortletDataException(PortletDataException.STATUS_IN_TRASH);
 
-			pde.setStagedModel(fileEntry);
+			portletDataException.setStagedModel(fileEntry);
 
-			throw pde;
+			throw portletDataException;
 		}
 	}
 
-	private void _overrideFileVersion(
-			final FileEntry importedFileEntry, final String version)
+	private void _exportAssetDisplayPage(
+			PortletDataContext portletDataContext, FileEntry fileEntry)
+		throws PortletDataException {
+
+		AssetDisplayPageEntry assetDisplayPageEntry =
+			_assetDisplayPageEntryLocalService.fetchAssetDisplayPageEntry(
+				fileEntry.getGroupId(),
+				_portal.getClassNameId(DLFileEntry.class),
+				fileEntry.getFileEntryId());
+
+		if (assetDisplayPageEntry != null) {
+			StagedModelDataHandlerUtil.exportReferenceStagedModel(
+				portletDataContext, fileEntry, assetDisplayPageEntry,
+				PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
+		}
+	}
+
+	private void _importAssetDisplayPage(
+			PortletDataContext portletDataContext, FileEntry fileEntry,
+			FileEntry importedFileEntry)
 		throws PortalException {
 
+		List<Element> assetDisplayPageEntryElements =
+			portletDataContext.getReferenceDataElements(
+				fileEntry, AssetDisplayPageEntry.class);
+
+		Map<Long, Long> articleNewPrimaryKeys =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				DLFileEntry.class);
+
+		articleNewPrimaryKeys.put(
+			fileEntry.getFileEntryId(), importedFileEntry.getFileEntryId());
+
+		for (Element assetDisplayPageEntryElement :
+				assetDisplayPageEntryElements) {
+
+			String path = assetDisplayPageEntryElement.attributeValue("path");
+
+			AssetDisplayPageEntry assetDisplayPageEntry =
+				(AssetDisplayPageEntry)portletDataContext.getZipEntryAsObject(
+					path);
+
+			StagedModelDataHandlerUtil.importStagedModel(
+				portletDataContext, assetDisplayPageEntryElement);
+
+			Map<Long, Long> assetDisplayPageEntries =
+				(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+					AssetDisplayPageEntry.class);
+
+			long assetDisplayPageEntryId = MapUtil.getLong(
+				assetDisplayPageEntries,
+				assetDisplayPageEntry.getAssetDisplayPageEntryId(),
+				assetDisplayPageEntry.getAssetDisplayPageEntryId());
+
+			AssetDisplayPageEntry existingAssetDisplayPageEntry =
+				_assetDisplayPageEntryLocalService.fetchAssetDisplayPageEntry(
+					assetDisplayPageEntryId);
+
+			if (existingAssetDisplayPageEntry != null) {
+				existingAssetDisplayPageEntry.setClassPK(
+					importedFileEntry.getFileEntryId());
+
+				_assetDisplayPageEntryLocalService.updateAssetDisplayPageEntry(
+					existingAssetDisplayPageEntry);
+			}
+		}
+	}
+
+	private FileEntry _overrideFileVersion(
+			final FileEntry importedFileEntry, final String version,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
 		try {
-			TransactionInvokerUtil.invoke(
+			return TransactionInvokerUtil.invoke(
 				_transactionConfig,
 				() -> {
 					DLFileEntry dlFileEntry =
-						(DLFileEntry)importedFileEntry.getModel();
+						_dlFileEntryLocalService.getDLFileEntry(
+							importedFileEntry.getFileEntryId());
 
 					if (version.equals(dlFileEntry.getVersion())) {
-						return null;
+						return importedFileEntry;
 					}
 
 					DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
@@ -964,7 +1044,8 @@ public class FileEntryStagedModelDataHandler
 
 					dlFileEntry.setVersion(version);
 
-					_dlFileEntryLocalService.updateDLFileEntry(dlFileEntry);
+					dlFileEntry = _dlFileEntryLocalService.updateDLFileEntry(
+						dlFileEntry);
 
 					if (DLStoreUtil.hasFile(
 							dlFileEntry.getCompanyId(),
@@ -977,14 +1058,18 @@ public class FileEntryStagedModelDataHandler
 							dlFileEntry.getName(), oldVersion, version);
 					}
 
-					return null;
+					return _dlAppLocalService.getFileEntry(
+						dlFileEntry.getFileEntryId());
 				});
 		}
-		catch (PortalException | SystemException e) {
-			throw e;
+		catch (PortalException | SystemException exception) {
+			throw exception;
 		}
 		catch (Throwable t) {
 			throw new PortalException(t);
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
 		}
 	}
 
@@ -996,6 +1081,10 @@ public class FileEntryStagedModelDataHandler
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
 
 	@Reference
+	private AssetDisplayPageEntryLocalService
+		_assetDisplayPageEntryLocalService;
+
+	@Reference
 	private ChangesetCollectionLocalService _changesetCollectionLocalService;
 
 	@Reference
@@ -1004,18 +1093,12 @@ public class FileEntryStagedModelDataHandler
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
-	@Reference
-	private DDMFormValuesDeserializerTracker _ddmFormValuesDeserializerTracker;
-
 	@Reference(
 		target = "(model.class.name=com.liferay.dynamic.data.mapping.storage.DDMFormValues)"
 	)
 	private ExportImportContentProcessor
 		<com.liferay.dynamic.data.mapping.storage.DDMFormValues>
 			_ddmFormValuesExportImportContentProcessor;
-
-	@Reference
-	private DDMFormValuesSerializerTracker _ddmFormValuesSerializerTracker;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
@@ -1037,6 +1120,12 @@ public class FileEntryStagedModelDataHandler
 
 	@Reference
 	private DLTrashService _dlTrashService;
+
+	@Reference(target = "(ddm.form.values.deserializer.type=json)")
+	private DDMFormValuesDeserializer _jsonDDMFormValuesDeserializer;
+
+	@Reference(target = "(ddm.form.values.serializer.type=json)")
+	private DDMFormValuesSerializer _jsonDDMFormValuesSerializer;
 
 	@Reference
 	private Portal _portal;

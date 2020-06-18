@@ -80,6 +80,7 @@ if (organization != null) {
 			componentId="viewTreeManagementToolbar"
 			creationMenu="<%= viewTreeManagementToolbarDisplayContext.getCreationMenu() %>"
 			filterDropdownItems="<%= viewTreeManagementToolbarDisplayContext.getFilterDropdownItems() %>"
+			filterLabelItems="<%= viewTreeManagementToolbarDisplayContext.getFilterLabelItems() %>"
 			itemsTotal="<%= searchContainer.getTotal() %>"
 			searchActionURL="<%= viewTreeManagementToolbarDisplayContext.getSearchActionURL() %>"
 			searchContainerId="organizationUsers"
@@ -99,6 +100,8 @@ if (organization != null) {
 			<aui:input name="onErrorRedirect" type="hidden" value="<%= currentURL %>" />
 			<aui:input name="deleteOrganizationIds" type="hidden" />
 			<aui:input name="deleteUserIds" type="hidden" />
+			<aui:input name="removeOrganizationIds" type="hidden" />
+			<aui:input name="removeUserIds" type="hidden" />
 
 			<liferay-ui:error exception="<%= RequiredOrganizationException.class %>" message="you-cannot-delete-organizations-that-have-suborganizations-or-users" />
 			<liferay-ui:error exception="<%= RequiredUserException.class %>" message="you-cannot-delete-or-deactivate-yourself" />
@@ -107,7 +110,7 @@ if (organization != null) {
 
 				<%
 				portletDisplay.setShowBackIcon(true);
-				portletDisplay.setURLBack(Validator.isNotNull(backURL) ? backURL : UsersAdminPortletURLUtil.createParentOrganizationViewTreeURL(organizationId, PortalUtil.getLiferayPortletRequest(renderRequest), PortalUtil.getLiferayPortletResponse(renderResponse)));
+				portletDisplay.setURLBack(Validator.isNotNull(backURL) ? backURL : UsersAdminPortletURLUtil.createParentOrganizationViewTreeURL(organizationId, renderResponse));
 
 				renderResponse.setTitle(organization.getName());
 				%>
@@ -137,14 +140,21 @@ if (organization != null) {
 
 					<%
 					Organization curOrganization = null;
+					Map<String, Object> rowData = new HashMap<String, Object>();
 					User user2 = null;
 
 					if (result instanceof Organization) {
 						curOrganization = (Organization)result;
+
+						rowData.put("actions", StringUtil.merge(viewTreeManagementToolbarDisplayContext.getAvailableActions(curOrganization)));
 					}
 					else {
 						user2 = (User)result;
+
+						rowData.put("actions", StringUtil.merge(viewTreeManagementToolbarDisplayContext.getAvailableActions(user2)));
 					}
+
+					row.setData(rowData);
 					%>
 
 					<%@ include file="/organization/organization_user_search_columns.jspf" %>
@@ -159,9 +169,11 @@ if (organization != null) {
 		</aui:form>
 	</c:when>
 	<c:otherwise>
-		<div class="alert alert-info">
-			<liferay-ui:message key="you-do-not-belong-to-an-organization-and-are-not-allowed-to-view-other-organizations" />
-		</div>
+		<clay:alert
+			message='<%= LanguageUtil.get(request, "you-do-not-belong-to-an-organization-and-are-not-allowed-to-view-other-organizations") %>'
+			style="info"
+			title='<%= LanguageUtil.get(request, "info") + ":" %>'
+		/>
 	</c:otherwise>
 </c:choose>
 
@@ -170,40 +182,74 @@ if (organization != null) {
 		<portlet:namespace />deleteOrganizations(organizationsRedirect);
 	}
 
-	<portlet:namespace />doDeleteOrganizations = function(organizationIds, organizationsRedirect) {
-		var form = AUI.$(document.<portlet:namespace />fm);
-
-		form.attr('method', 'post');
-		form.fm('deleteOrganizationIds').val(organizationIds);
-		form.fm('deleteUserIds').val(Liferay.Util.listCheckedExcept(form, '<portlet:namespace />allRowIds', '<portlet:namespace />rowIdsUser'));
+	<portlet:namespace />doDeleteOrganizations = function (
+		organizationIds,
+		organizationsRedirect
+	) {
+		var form = document.<portlet:namespace />fm;
 
 		if (organizationsRedirect) {
-			form.fm('redirect').val(organizationsRedirect);
+			Liferay.Util.setFormValues(form, {
+				redirect: organizationsRedirect,
+			});
 		}
 
-		submitForm(form, '<portlet:actionURL name="/users_admin/delete_organizations_and_users" />');
+		Liferay.Util.postForm(form, {
+			data: {
+				deleteOrganizationIds: organizationIds,
+				deleteUserIds: Liferay.Util.listCheckedExcept(
+					form,
+					'<portlet:namespace />allRowIds',
+					'<portlet:namespace />rowIdsUser'
+				),
+			},
+			url:
+				'<portlet:actionURL name="/users_admin/delete_organizations_and_users" />',
+		});
 	};
 
-	var selectUsers = function(organizationId) {
-		<portlet:namespace />openSelectUsersDialog(organizationId);
+	<portlet:actionURL name="/users_admin/edit_organization_assignments" var="removeOrganizationsAndUsersURL">
+		<portlet:param name="assignmentsRedirect" value="<%= currentURL %>" />
+		<portlet:param name="organizationId" value="<%= String.valueOf(organizationId) %>" />
+	</portlet:actionURL>
+
+	function <portlet:namespace />removeOrganizationsAndUsers() {
+		var form = document.<portlet:namespace />fm;
+
+		Liferay.Util.postForm(form, {
+			data: {
+				removeOrganizationIds: Liferay.Util.listCheckedExcept(
+					form,
+					'<portlet:namespace />allRowIds',
+					'<portlet:namespace />rowIdsOrganization'
+				),
+				removeUserIds: Liferay.Util.listCheckedExcept(
+					form,
+					'<portlet:namespace />allRowIds',
+					'<portlet:namespace />rowIdsUser'
+				),
+			},
+			url: '<%= removeOrganizationsAndUsersURL.toString() %>',
+		});
 	}
 
-	var ACTIONS = {
-		'selectUsers': selectUsers
+	var selectUsers = function (organizationId) {
+		<portlet:namespace />openSelectUsersDialog(organizationId);
 	};
 
-	Liferay.componentReady('viewTreeManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				'creationMenuItemClicked',
-				function(event) {
-					var itemData = event.data.item.data;
+	var ACTIONS = {
+		selectUsers: selectUsers,
+	};
 
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action](itemData.organizationId);
-					}
-				}
-			);
-		}
-	);
+	Liferay.componentReady('viewTreeManagementToolbar').then(function (
+		managementToolbar
+	) {
+		managementToolbar.on('creationMenuItemClicked', function (event) {
+			var itemData = event.data.item.data;
+
+			if (itemData && itemData.action && ACTIONS[itemData.action]) {
+				ACTIONS[itemData.action](itemData.organizationId);
+			}
+		});
+	});
 </aui:script>

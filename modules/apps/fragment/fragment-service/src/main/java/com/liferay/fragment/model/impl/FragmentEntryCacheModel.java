@@ -14,14 +14,11 @@
 
 package com.liferay.fragment.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.fragment.model.FragmentEntry;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing FragmentEntry in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see FragmentEntry
  * @generated
  */
-@ProviderType
-public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
-	Externalizable {
+public class FragmentEntryCacheModel
+	implements CacheModel<FragmentEntry>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,12 @@ public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
 			return false;
 		}
 
-		FragmentEntryCacheModel fragmentEntryCacheModel = (FragmentEntryCacheModel)obj;
+		FragmentEntryCacheModel fragmentEntryCacheModel =
+			(FragmentEntryCacheModel)obj;
 
-		if (fragmentEntryId == fragmentEntryCacheModel.fragmentEntryId) {
+		if ((fragmentEntryId == fragmentEntryCacheModel.fragmentEntryId) &&
+			(mvccVersion == fragmentEntryCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +60,28 @@ public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, fragmentEntryId);
+		int hashCode = HashUtil.hash(0, fragmentEntryId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(41);
+		StringBundler sb = new StringBundler(51);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", fragmentEntryId=");
 		sb.append(fragmentEntryId);
@@ -96,8 +109,16 @@ public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
 		sb.append(html);
 		sb.append(", js=");
 		sb.append(js);
+		sb.append(", cacheable=");
+		sb.append(cacheable);
+		sb.append(", configuration=");
+		sb.append(configuration);
 		sb.append(", previewFileEntryId=");
 		sb.append(previewFileEntryId);
+		sb.append(", readOnly=");
+		sb.append(readOnly);
+		sb.append(", type=");
+		sb.append(type);
 		sb.append(", lastPublishDate=");
 		sb.append(lastPublishDate);
 		sb.append(", status=");
@@ -116,6 +137,8 @@ public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
 	@Override
 	public FragmentEntry toEntityModel() {
 		FragmentEntryImpl fragmentEntryImpl = new FragmentEntryImpl();
+
+		fragmentEntryImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			fragmentEntryImpl.setUuid("");
@@ -187,7 +210,18 @@ public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
 			fragmentEntryImpl.setJs(js);
 		}
 
+		fragmentEntryImpl.setCacheable(cacheable);
+
+		if (configuration == null) {
+			fragmentEntryImpl.setConfiguration("");
+		}
+		else {
+			fragmentEntryImpl.setConfiguration(configuration);
+		}
+
 		fragmentEntryImpl.setPreviewFileEntryId(previewFileEntryId);
+		fragmentEntryImpl.setReadOnly(readOnly);
+		fragmentEntryImpl.setType(type);
 
 		if (lastPublishDate == Long.MIN_VALUE) {
 			fragmentEntryImpl.setLastPublishDate(null);
@@ -219,7 +253,10 @@ public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		fragmentEntryId = objectInput.readLong();
@@ -236,11 +273,18 @@ public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
 		fragmentCollectionId = objectInput.readLong();
 		fragmentEntryKey = objectInput.readUTF();
 		name = objectInput.readUTF();
-		css = objectInput.readUTF();
-		html = objectInput.readUTF();
-		js = objectInput.readUTF();
+		css = (String)objectInput.readObject();
+		html = (String)objectInput.readObject();
+		js = (String)objectInput.readObject();
+
+		cacheable = objectInput.readBoolean();
+		configuration = (String)objectInput.readObject();
 
 		previewFileEntryId = objectInput.readLong();
+
+		readOnly = objectInput.readBoolean();
+
+		type = objectInput.readInt();
 		lastPublishDate = objectInput.readLong();
 
 		status = objectInput.readInt();
@@ -251,8 +295,9 @@ public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -295,27 +340,40 @@ public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
 		}
 
 		if (css == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(css);
+			objectOutput.writeObject(css);
 		}
 
 		if (html == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(html);
+			objectOutput.writeObject(html);
 		}
 
 		if (js == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(js);
+			objectOutput.writeObject(js);
+		}
+
+		objectOutput.writeBoolean(cacheable);
+
+		if (configuration == null) {
+			objectOutput.writeObject("");
+		}
+		else {
+			objectOutput.writeObject(configuration);
 		}
 
 		objectOutput.writeLong(previewFileEntryId);
+
+		objectOutput.writeBoolean(readOnly);
+
+		objectOutput.writeInt(type);
 		objectOutput.writeLong(lastPublishDate);
 
 		objectOutput.writeInt(status);
@@ -332,6 +390,7 @@ public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
 		objectOutput.writeLong(statusDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long fragmentEntryId;
 	public long groupId;
@@ -346,10 +405,15 @@ public class FragmentEntryCacheModel implements CacheModel<FragmentEntry>,
 	public String css;
 	public String html;
 	public String js;
+	public boolean cacheable;
+	public String configuration;
 	public long previewFileEntryId;
+	public boolean readOnly;
+	public int type;
 	public long lastPublishDate;
 	public int status;
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

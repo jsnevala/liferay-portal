@@ -17,22 +17,11 @@
 <%@ include file="/init.jsp" %>
 
 <%
-SelectTeamDisplayContext selectTeamDisplayContext = new SelectTeamDisplayContext(renderRequest, renderResponse, request);
+SelectTeamDisplayContext selectTeamDisplayContext = new SelectTeamDisplayContext(request, renderRequest, renderResponse);
 %>
 
 <clay:management-toolbar
-	clearResultsURL="<%= selectTeamDisplayContext.getClearResultsURL() %>"
-	componentId="selectTeamWebManagementToolbar"
-	disabled="<%= selectTeamDisplayContext.isDisabledManagementBar() %>"
-	filterDropdownItems="<%= selectTeamDisplayContext.getFilterDropdownItems() %>"
-	itemsTotal="<%= selectTeamDisplayContext.getTotalItems() %>"
-	searchActionURL="<%= selectTeamDisplayContext.getSearchActionURL() %>"
-	searchFormName="searchFm"
-	selectable="<%= false %>"
-	showSearch="<%= selectTeamDisplayContext.isShowSearch() %>"
-	sortingOrder="<%= selectTeamDisplayContext.getOrderByType() %>"
-	sortingURL="<%= selectTeamDisplayContext.getSortingURL() %>"
-	viewTypeItems="<%= selectTeamDisplayContext.getViewTypeItems() %>"
+	displayContext="<%= new SelectTeamManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectTeamDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid-1280" name="selectTeamFm">
@@ -47,11 +36,13 @@ SelectTeamDisplayContext selectTeamDisplayContext = new SelectTeamDisplayContext
 		>
 
 			<%
-			Map<String, Object> data = new HashMap<String, Object>();
-
-			data.put("entityid", curTeam.getTeamId());
-			data.put("entityname", curTeam.getName());
-			data.put("teamdescription", curTeam.getDescription());
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"entityid", curTeam.getTeamId()
+			).put(
+				"entityname", curTeam.getName()
+			).put(
+				"teamdescription", curTeam.getDescription()
+			).build();
 
 			Group group = themeDisplay.getScopeGroup();
 
@@ -90,23 +81,6 @@ SelectTeamDisplayContext selectTeamDisplayContext = new SelectTeamDisplayContext
 						</h6>
 					</liferay-ui:search-container-column-text>
 				</c:when>
-				<c:when test='<%= Objects.equals(selectTeamDisplayContext.getDisplayStyle(), "icon") %>'>
-
-					<%
-					row.setCssClass("entry-card lfr-asset-item");
-					%>
-
-					<liferay-ui:search-container-column-text>
-						<liferay-frontend:icon-vertical-card
-							cssClass='<%= disabled ? StringPool.BLANK : "selector-button" %>'
-							data="<%= data %>"
-							icon="users"
-							resultRow="<%= row %>"
-							subtitle="<%= curTeam.getDescription() %>"
-							title="<%= curTeam.getName() %>"
-						/>
-					</liferay-ui:search-container-column-text>
-				</c:when>
 				<c:when test='<%= Objects.equals(selectTeamDisplayContext.getDisplayStyle(), "list") %>'>
 					<liferay-ui:search-container-column-text
 						cssClass="table-cell-content"
@@ -141,5 +115,8 @@ SelectTeamDisplayContext selectTeamDisplayContext = new SelectTeamDisplayContext
 </aui:form>
 
 <aui:script>
-	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectTeamFm', '<%= HtmlUtil.escapeJS(selectTeamDisplayContext.getEventName()) %>');
+	Liferay.Util.selectEntityHandler(
+		'#<portlet:namespace />selectTeamFm',
+		'<%= HtmlUtil.escapeJS(selectTeamDisplayContext.getEventName()) %>'
+	);
 </aui:script>

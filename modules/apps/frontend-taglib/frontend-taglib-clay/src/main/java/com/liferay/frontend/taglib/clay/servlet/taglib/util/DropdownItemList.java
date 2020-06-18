@@ -14,51 +14,121 @@
 
 package com.liferay.frontend.taglib.clay.servlet.taglib.util;
 
+import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.function.UnsafeSupplier;
+
 import java.util.ArrayList;
-import java.util.function.Consumer;
 
 /**
  * @author Brian Wing Shun Chan
  */
 public class DropdownItemList extends ArrayList<DropdownItem> {
 
-	public void add(Consumer<DropdownItem> consumer) {
+	public static DropdownItemList of(DropdownItem... dropdownItems) {
+		DropdownItemList dropdownItemList = new DropdownItemList();
+
+		for (DropdownItem dropdownItem : dropdownItems) {
+			if (dropdownItem != null) {
+				dropdownItemList.add(dropdownItem);
+			}
+		}
+
+		return dropdownItemList;
+	}
+
+	public static DropdownItemList of(
+		UnsafeSupplier<DropdownItem, Exception>... unsafeSuppliers) {
+
+		DropdownItemList dropdownItemList = new DropdownItemList();
+
+		for (UnsafeSupplier<DropdownItem, Exception> unsafeSupplier :
+				unsafeSuppliers) {
+
+			try {
+				DropdownItem dropdownItem = unsafeSupplier.get();
+
+				if (dropdownItem != null) {
+					dropdownItemList.add(dropdownItem);
+				}
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		}
+
+		return dropdownItemList;
+	}
+
+	public void add(UnsafeConsumer<DropdownItem, Exception> unsafeConsumer) {
 		DropdownItem dropdownItem = new DropdownItem();
 
-		consumer.accept(dropdownItem);
+		try {
+			unsafeConsumer.accept(dropdownItem);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
 
 		add(dropdownItem);
 	}
 
-	public void addCheckbox(Consumer<DropdownCheckboxItem> consumer) {
+	public void addCheckbox(
+		UnsafeConsumer<DropdownCheckboxItem, Exception> unsafeConsumer) {
+
 		DropdownCheckboxItem dropdownCheckboxItem = new DropdownCheckboxItem();
 
-		consumer.accept(dropdownCheckboxItem);
+		try {
+			unsafeConsumer.accept(dropdownCheckboxItem);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
 
 		add(dropdownCheckboxItem);
 	}
 
-	public void addGroup(Consumer<DropdownGroupItem> consumer) {
+	public void addGroup(
+		UnsafeConsumer<DropdownGroupItem, Exception> unsafeConsumer) {
+
 		DropdownGroupItem dropdownGroupItem = new DropdownGroupItem();
 
-		consumer.accept(dropdownGroupItem);
+		try {
+			unsafeConsumer.accept(dropdownGroupItem);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
 
 		add(dropdownGroupItem);
 	}
 
-	public void addRadio(Consumer<DropdownRadioItem> consumer) {
+	public void addRadio(
+		UnsafeConsumer<DropdownRadioItem, Exception> unsafeConsumer) {
+
 		DropdownRadioItem dropdownRadioItem = new DropdownRadioItem();
 
-		consumer.accept(dropdownRadioItem);
+		try {
+			unsafeConsumer.accept(dropdownRadioItem);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
 
 		add(dropdownRadioItem);
 	}
 
-	public void addRadioGroup(Consumer<DropdownRadioGroupItem> consumer) {
+	public void addRadioGroup(
+		UnsafeConsumer<DropdownRadioGroupItem, Exception> unsafeConsumer) {
+
 		DropdownRadioGroupItem dropdownRadioGroupItem =
 			new DropdownRadioGroupItem();
 
-		consumer.accept(dropdownRadioGroupItem);
+		try {
+			unsafeConsumer.accept(dropdownRadioGroupItem);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
 
 		add(dropdownRadioGroupItem);
 	}

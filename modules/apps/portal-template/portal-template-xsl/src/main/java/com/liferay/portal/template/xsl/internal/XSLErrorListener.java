@@ -40,21 +40,21 @@ public class XSLErrorListener implements ErrorListener {
 	}
 
 	@Override
-	public void error(TransformerException exception)
+	public void error(TransformerException transformerException)
 		throws TransformerException {
 
-		setLocation(exception);
+		setLocation(transformerException);
 
-		throw exception;
+		throw transformerException;
 	}
 
 	@Override
-	public void fatalError(TransformerException exception)
+	public void fatalError(TransformerException transformerException)
 		throws TransformerException {
 
-		setLocation(exception);
+		setLocation(transformerException);
 
-		throw exception;
+		throw transformerException;
 	}
 
 	public int getColumnNumber() {
@@ -88,8 +88,10 @@ public class XSLErrorListener implements ErrorListener {
 				rootCause = cause;
 			}
 			else if (cause instanceof TransformerException) {
-				SourceLocator causeLocator =
-					((TransformerException)cause).getLocator();
+				TransformerException transformerException =
+					(TransformerException)cause;
+
+				SourceLocator causeLocator = transformerException.getLocator();
 
 				if (causeLocator != null) {
 					locator = causeLocator;
@@ -98,13 +100,21 @@ public class XSLErrorListener implements ErrorListener {
 			}
 
 			if (cause instanceof TransformerException) {
-				cause = ((TransformerException)cause).getCause();
+				TransformerException transformerException =
+					(TransformerException)cause;
+
+				cause = transformerException.getCause();
 			}
 			else if (cause instanceof WrappedRuntimeException) {
-				cause = ((WrappedRuntimeException)cause).getException();
+				WrappedRuntimeException wrappedRuntimeException =
+					(WrappedRuntimeException)cause;
+
+				cause = wrappedRuntimeException.getException();
 			}
 			else if (cause instanceof SAXException) {
-				cause = ((SAXException)cause).getException();
+				SAXException saxException = (SAXException)cause;
+
+				cause = saxException.getException();
 			}
 			else {
 				cause = null;
@@ -136,12 +146,12 @@ public class XSLErrorListener implements ErrorListener {
 	}
 
 	@Override
-	public void warning(TransformerException exception)
+	public void warning(TransformerException transformerException)
 		throws TransformerException {
 
-		setLocation(exception);
+		setLocation(transformerException);
 
-		throw exception;
+		throw transformerException;
 	}
 
 	private int _columnNumber;

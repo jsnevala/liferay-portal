@@ -14,6 +14,8 @@
 
 package com.liferay.analytics.model;
 
+import com.liferay.portal.kernel.util.HashMapBuilder;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,11 +38,13 @@ public class AnalyticsEventsMessageBuilderTest {
 		String expectedApplicationId = randomString();
 		String expectedEventId = randomString();
 
-		Map<String, String> expectedProperties = new HashMap<>();
-
-		expectedProperties.put(randomString(), randomString());
-		expectedProperties.put(randomString(), randomString());
-		expectedProperties.put(randomString(), randomString());
+		Map<String, String> expectedProperties = HashMapBuilder.put(
+			randomString(), randomString()
+		).put(
+			randomString(), randomString()
+		).put(
+			randomString(), randomString()
+		).build();
 
 		AnalyticsEventsMessage.Event actualEvent = createEvent(
 			expectedApplicationId, expectedEventId, expectedProperties);
@@ -65,9 +69,9 @@ public class AnalyticsEventsMessageBuilderTest {
 		String expectedApplicationId = randomString();
 		String expectedEventId = randomString();
 
-		Map<String, String> expectedProperties = new HashMap<>();
-
-		expectedProperties.put(randomString(), randomString());
+		Map<String, String> expectedProperties = HashMapBuilder.put(
+			randomString(), randomString()
+		).build();
 
 		expectedEvents.add(
 			createEvent(
@@ -75,18 +79,18 @@ public class AnalyticsEventsMessageBuilderTest {
 
 		// Message
 
-		String expectedAnalyticsKey = randomString();
+		String expectedDataSourceId = randomString();
 		String expectedUserId = randomString();
 		String expectedProtocolVersion = randomString();
 
 		AnalyticsEventsMessage actualAnalyticsEventsMessage =
 			createAnalyticsEventsMessage(
-				expectedAnalyticsKey, expectedUserId, expectedContext,
+				expectedDataSourceId, expectedUserId, expectedContext,
 				expectedEvents, expectedProtocolVersion);
 
 		Assert.assertEquals(
-			expectedAnalyticsKey,
-			actualAnalyticsEventsMessage.getAnalyticsKey());
+			expectedDataSourceId,
+			actualAnalyticsEventsMessage.getDataSourceId());
 		Assert.assertEquals(
 			expectedUserId, actualAnalyticsEventsMessage.getUserId());
 		Assert.assertEquals(
@@ -131,11 +135,11 @@ public class AnalyticsEventsMessageBuilderTest {
 	}
 
 	protected AnalyticsEventsMessage createAnalyticsEventsMessage(
-		String analyticsKey, String userId, Map<String, String> context,
+		String dataSourceId, String userId, Map<String, String> context,
 		List<AnalyticsEventsMessage.Event> events, String protocolVersion) {
 
 		AnalyticsEventsMessage.Builder messageBuilder =
-			AnalyticsEventsMessage.builder(analyticsKey, userId);
+			AnalyticsEventsMessage.builder(dataSourceId, userId);
 
 		messageBuilder.context(context);
 
@@ -151,14 +155,15 @@ public class AnalyticsEventsMessageBuilderTest {
 	protected Map<String, String> createContext(
 		long instanceId, String languageId, String url, long userId) {
 
-		Map<String, String> context = new HashMap<>();
-
-		context.put("instanceId", String.valueOf(instanceId));
-		context.put("languageId", languageId);
-		context.put("url", url);
-		context.put("userId", String.valueOf(userId));
-
-		return context;
+		return HashMapBuilder.put(
+			"instanceId", String.valueOf(instanceId)
+		).put(
+			"languageId", languageId
+		).put(
+			"url", url
+		).put(
+			"userId", String.valueOf(userId)
+		).build();
 	}
 
 	protected AnalyticsEventsMessage.Event createEvent(

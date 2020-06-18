@@ -14,14 +14,11 @@
 
 package com.liferay.layout.page.template.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,12 @@ import java.util.Date;
  * The cache model class for representing LayoutPageTemplateStructure in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see LayoutPageTemplateStructure
  * @generated
  */
-@ProviderType
-public class LayoutPageTemplateStructureCacheModel implements CacheModel<LayoutPageTemplateStructure>,
-	Externalizable {
+public class LayoutPageTemplateStructureCacheModel
+	implements CacheModel<LayoutPageTemplateStructure>, Externalizable,
+			   MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,10 +47,16 @@ public class LayoutPageTemplateStructureCacheModel implements CacheModel<LayoutP
 			return false;
 		}
 
-		LayoutPageTemplateStructureCacheModel layoutPageTemplateStructureCacheModel =
-			(LayoutPageTemplateStructureCacheModel)obj;
+		LayoutPageTemplateStructureCacheModel
+			layoutPageTemplateStructureCacheModel =
+				(LayoutPageTemplateStructureCacheModel)obj;
 
-		if (layoutPageTemplateStructureId == layoutPageTemplateStructureCacheModel.layoutPageTemplateStructureId) {
+		if ((layoutPageTemplateStructureId ==
+				layoutPageTemplateStructureCacheModel.
+					layoutPageTemplateStructureId) &&
+			(mvccVersion ==
+				layoutPageTemplateStructureCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -62,14 +65,28 @@ public class LayoutPageTemplateStructureCacheModel implements CacheModel<LayoutP
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, layoutPageTemplateStructureId);
+		int hashCode = HashUtil.hash(0, layoutPageTemplateStructureId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
 		StringBundler sb = new StringBundler(23);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", layoutPageTemplateStructureId=");
 		sb.append(layoutPageTemplateStructureId);
@@ -89,8 +106,6 @@ public class LayoutPageTemplateStructureCacheModel implements CacheModel<LayoutP
 		sb.append(classNameId);
 		sb.append(", classPK=");
 		sb.append(classPK);
-		sb.append(", data=");
-		sb.append(data);
 		sb.append("}");
 
 		return sb.toString();
@@ -98,7 +113,10 @@ public class LayoutPageTemplateStructureCacheModel implements CacheModel<LayoutP
 
 	@Override
 	public LayoutPageTemplateStructure toEntityModel() {
-		LayoutPageTemplateStructureImpl layoutPageTemplateStructureImpl = new LayoutPageTemplateStructureImpl();
+		LayoutPageTemplateStructureImpl layoutPageTemplateStructureImpl =
+			new LayoutPageTemplateStructureImpl();
+
+		layoutPageTemplateStructureImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			layoutPageTemplateStructureImpl.setUuid("");
@@ -107,7 +125,8 @@ public class LayoutPageTemplateStructureCacheModel implements CacheModel<LayoutP
 			layoutPageTemplateStructureImpl.setUuid(uuid);
 		}
 
-		layoutPageTemplateStructureImpl.setLayoutPageTemplateStructureId(layoutPageTemplateStructureId);
+		layoutPageTemplateStructureImpl.setLayoutPageTemplateStructureId(
+			layoutPageTemplateStructureId);
 		layoutPageTemplateStructureImpl.setGroupId(groupId);
 		layoutPageTemplateStructureImpl.setCompanyId(companyId);
 		layoutPageTemplateStructureImpl.setUserId(userId);
@@ -130,19 +149,12 @@ public class LayoutPageTemplateStructureCacheModel implements CacheModel<LayoutP
 			layoutPageTemplateStructureImpl.setModifiedDate(null);
 		}
 		else {
-			layoutPageTemplateStructureImpl.setModifiedDate(new Date(
-					modifiedDate));
+			layoutPageTemplateStructureImpl.setModifiedDate(
+				new Date(modifiedDate));
 		}
 
 		layoutPageTemplateStructureImpl.setClassNameId(classNameId);
 		layoutPageTemplateStructureImpl.setClassPK(classPK);
-
-		if (data == null) {
-			layoutPageTemplateStructureImpl.setData("");
-		}
-		else {
-			layoutPageTemplateStructureImpl.setData(data);
-		}
 
 		layoutPageTemplateStructureImpl.resetOriginalValues();
 
@@ -151,6 +163,7 @@ public class LayoutPageTemplateStructureCacheModel implements CacheModel<LayoutP
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		layoutPageTemplateStructureId = objectInput.readLong();
@@ -167,12 +180,12 @@ public class LayoutPageTemplateStructureCacheModel implements CacheModel<LayoutP
 		classNameId = objectInput.readLong();
 
 		classPK = objectInput.readLong();
-		data = objectInput.readUTF();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -201,15 +214,9 @@ public class LayoutPageTemplateStructureCacheModel implements CacheModel<LayoutP
 		objectOutput.writeLong(classNameId);
 
 		objectOutput.writeLong(classPK);
-
-		if (data == null) {
-			objectOutput.writeUTF("");
-		}
-		else {
-			objectOutput.writeUTF(data);
-		}
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long layoutPageTemplateStructureId;
 	public long groupId;
@@ -220,5 +227,5 @@ public class LayoutPageTemplateStructureCacheModel implements CacheModel<LayoutP
 	public long modifiedDate;
 	public long classNameId;
 	public long classPK;
-	public String data;
+
 }

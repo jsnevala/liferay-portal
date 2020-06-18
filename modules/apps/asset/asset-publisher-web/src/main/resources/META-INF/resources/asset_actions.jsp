@@ -17,96 +17,69 @@
 <%@ include file="/init.jsp" %>
 
 <%
-boolean showIconLabel = ((Boolean)request.getAttribute("view.jsp-showIconLabel")).booleanValue();
-
 AssetEntry assetEntry = (AssetEntry)request.getAttribute("view.jsp-assetEntry");
 AssetRenderer<?> assetRenderer = (AssetRenderer<?>)request.getAttribute("view.jsp-assetRenderer");
+String fullContentRedirect = (String)request.getAttribute("view.jsp-fullContentRedirect");
 
-boolean showEditURL = ParamUtil.getBoolean(request, "showEditURL", true);
+AssetEntryActionDropdownItemsProvider assetEntryActionDropdownItemsProvider = new AssetEntryActionDropdownItemsProvider(assetRenderer, assetPublisherDisplayContext.getAssetEntryActions(assetEntry.getClassName()), fullContentRedirect, liferayPortletRequest, liferayPortletResponse);
 
-PortletURL editPortletURL = null;
-
-if (showEditURL && assetRenderer.hasEditPermission(permissionChecker)) {
-	PortletURL redirectURL = liferayPortletResponse.createLiferayPortletURL(plid, portletDisplay.getId(), PortletRequest.RENDER_PHASE, false);
-
-	redirectURL.setParameter("mvcPath", "/add_asset_redirect.jsp");
-
-	String fullContentRedirect = (String)request.getAttribute("view.jsp-fullContentRedirect");
-
-	if (fullContentRedirect != null) {
-		redirectURL.setParameter("redirect", fullContentRedirect);
-	}
-	else {
-		redirectURL.setParameter("redirect", currentURL);
-	}
-
-	redirectURL.setWindowState(LiferayWindowState.POP_UP);
-
-	editPortletURL = assetRenderer.getURLEdit(liferayPortletRequest, liferayPortletResponse, LiferayWindowState.POP_UP, redirectURL);
-}
-
-List<AssetEntryAction> assetEntryActions = assetPublisherDisplayContext.getAssetEntryActions(assetEntry.getClassName());
+List<DropdownItem> dropdownItems = assetEntryActionDropdownItemsProvider.getActionDropdownItems();
 %>
 
-<c:if test="<%= (editPortletURL != null) || ListUtil.isNotEmpty(assetEntryActions) %>">
-	<div class="pull-right">
-		<liferay-ui:icon-menu
-			cssClass="visible-interaction"
-			direction="left-side"
-			icon="<%= StringPool.BLANK %>"
-			markupView="lexicon"
-			message="<%= StringPool.BLANK %>"
-			showWhenSingleIcon="<%= true %>"
-		>
-			<c:if test="<%= editPortletURL != null %>">
+<c:if test="<%= ListUtil.isNotEmpty(dropdownItems) %>">
+	<c:choose>
+		<c:when test="<%= dropdownItems.size() > 1 %>">
+			<liferay-ui:icon-menu
+				cssClass="visible-interaction"
+				direction="left-side"
+				icon="<%= StringPool.BLANK %>"
+				markupView="lexicon"
+				message="<%= StringPool.BLANK %>"
+				showWhenSingleIcon="<%= true %>"
+				triggerCssClass="text-primary"
+			>
 
 				<%
-				editPortletURL.setParameter("hideDefaultSuccessMessage", Boolean.TRUE.toString());
-				editPortletURL.setParameter("showHeader", Boolean.FALSE.toString());
+				for (DropdownItem dropdownItem : dropdownItems) {
+					Map data = (HashMap)dropdownItem.get("data");
 
-				Map<String, Object> data = new HashMap<String, Object>();
-
-				data.put("destroyOnHide", true);
-				data.put("id", HtmlUtil.escape(portletDisplay.getNamespace()) + "editAsset");
-				data.put("title", LanguageUtil.format(request, "edit-x", HtmlUtil.escape(assetRenderer.getTitle(locale)), false));
-				%>
-
-				<liferay-ui:icon
-					data="<%= data %>"
-					message='<%= showIconLabel ? LanguageUtil.format(request, "edit-x-x", new Object[] {"hide-accessible", HtmlUtil.escape(assetRenderer.getTitle(locale))}, false) : LanguageUtil.format(request, "edit-x", HtmlUtil.escape(assetRenderer.getTitle(locale)), false) %>'
-					method="get"
-					url="<%= editPortletURL.toString() %>"
-					useDialog="<%= true %>"
-				/>
-			</c:if>
-
-			<c:if test="<%= ListUtil.isNotEmpty(assetEntryActions) %>">
-
-				<%
-				for (AssetEntryAction assetEntryAction : assetEntryActions) {
-					if (!assetEntryAction.hasPermission(permissionChecker, assetRenderer)) {
-						continue;
-					}
-
-					Map<String, Object> data = new HashMap<String, Object>();
-
-					data.put("destroyOnHide", true);
-					data.put("title", assetEntryAction.getDialogTitle(locale));
+					boolean useDialog = GetterUtil.getBoolean(data.get("useDialog"));
 				%>
 
 					<liferay-ui:icon
 						data="<%= data %>"
-						message="<%= assetEntryAction.getMessage(locale) %>"
+						message='<%= String.valueOf(dropdownItem.get("label")) %>'
 						method="get"
-						url="<%= assetEntryAction.getDialogURL(request, assetRenderer) %>"
-						useDialog="<%= true %>"
+						url='<%= String.valueOf(dropdownItem.get("href")) %>'
+						useDialog="<%= useDialog %>"
 					/>
 
 				<%
 				}
 				%>
 
-			</c:if>
-		</liferay-ui:icon-menu>
-	</div>
+			</liferay-ui:icon-menu>
+		</c:when>
+		<c:otherwise>
+
+			<%
+			DropdownItem dropdownItem = dropdownItems.get(0);
+
+			Map data = (HashMap)dropdownItem.get("data");
+
+			boolean useDialog = GetterUtil.getBoolean(data.get("useDialog"));
+			%>
+
+			<liferay-ui:icon
+				cssClass="visible-interaction"
+				data='<%= (HashMap)dropdownItem.get("data") %>'
+				icon='<%= String.valueOf(dropdownItem.get("icon")) %>'
+				linkCssClass="text-primary"
+				markupView="lexicon"
+				method="get"
+				url='<%= String.valueOf(dropdownItem.get("href")) %>'
+				useDialog="<%= useDialog %>"
+			/>
+		</c:otherwise>
+	</c:choose>
 </c:if>

@@ -14,13 +14,14 @@
 
 package com.liferay.portal.search.elasticsearch6.internal.search.engine.adapter.index;
 
-import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.engine.adapter.index.PutMappingIndexRequest;
 import com.liferay.portal.search.engine.adapter.index.PutMappingIndexResponse;
 
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.AdminClient;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.common.xcontent.XContentType;
 
@@ -41,16 +42,19 @@ public class PutMappingIndexRequestExecutorImpl
 		PutMappingRequestBuilder putMappingRequestBuilder =
 			createPutMappingRequestBuilder(putMappingIndexRequest);
 
-		PutMappingResponse putMappingResponse = putMappingRequestBuilder.get();
+		AcknowledgedResponse acknowledgedResponse =
+			putMappingRequestBuilder.get();
 
-		return new PutMappingIndexResponse(putMappingResponse.isAcknowledged());
+		return new PutMappingIndexResponse(
+			acknowledgedResponse.isAcknowledged());
 	}
 
 	protected PutMappingRequestBuilder createPutMappingRequestBuilder(
 		PutMappingIndexRequest putMappingIndexRequest) {
 
-		AdminClient adminClient =
-			elasticsearchConnectionManager.getAdminClient();
+		Client client = _elasticsearchClientResolver.getClient();
+
+		AdminClient adminClient = client.admin();
 
 		IndicesAdminClient indicesAdminClient = adminClient.indices();
 
@@ -66,7 +70,13 @@ public class PutMappingIndexRequestExecutorImpl
 		return putMappingRequestBuilder;
 	}
 
-	@Reference
-	protected ElasticsearchConnectionManager elasticsearchConnectionManager;
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private ElasticsearchClientResolver _elasticsearchClientResolver;
 
 }

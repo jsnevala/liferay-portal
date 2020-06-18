@@ -23,14 +23,14 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = UpgradeStepRegistrator.class)
 public class MDRWebUpgrade implements UpgradeStepRegistrator {
 
 	@Override
 	public void register(Registry registry) {
-		registry.register("0.0.0", "1.0.0", new DummyUpgradeStep());
+		registry.register("0.0.0", "1.0.2", new DummyUpgradeStep());
 
 		registry.register("0.0.1", "1.0.0", new UpgradePortletId());
 

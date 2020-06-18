@@ -21,10 +21,8 @@ import java.io.File;
 import java.lang.reflect.Method;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.gradle.StartParameter;
@@ -35,6 +33,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactRepositoryContainer;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.artifacts.DependencySubstitutions;
 import org.gradle.api.artifacts.ModuleDependency;
@@ -72,17 +71,6 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 			});
 	}
 
-	public static <T extends Task> T addTask(
-		Project project, String name, Class<T> clazz, boolean overwrite) {
-
-		Map<String, Object> args = new HashMap<>();
-
-		args.put(Task.TASK_OVERWRITE, overwrite);
-		args.put(Task.TASK_TYPE, clazz);
-
-		return (T)project.task(args, name);
-	}
-
 	public static void excludeTasksWithProperty(
 		Project project, String propertyName, boolean defaultValue,
 		String... taskNames) {
@@ -100,6 +88,15 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 			task.setEnabled(false);
 			task.setFinalizedBy(Collections.emptySet());
 		}
+	}
+
+	public static Configuration fetchConfiguration(
+		Project project, String name) {
+
+		ConfigurationContainer configurationContainer =
+			project.getConfigurations();
+
+		return configurationContainer.findByName(name);
 	}
 
 	public static String getArchivesBaseName(Project project) {
@@ -172,6 +169,19 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 		return null;
 	}
 
+	public static String getProjectGroup(Project project, String defaultValue) {
+		String projectPath = project.getPath();
+
+		if (projectPath.startsWith(":apps:commerce:") ||
+			projectPath.startsWith(":dxp:apps:commerce:") ||
+			projectPath.startsWith(":private:apps:commerce:")) {
+
+			return "com.liferay.commerce";
+		}
+
+		return getGradlePropertiesValue(project, "project.group", defaultValue);
+	}
+
 	public static Object getProperty(Object object, String name) {
 		try {
 			Class<?> clazz = object.getClass();
@@ -197,8 +207,9 @@ public class GradleUtil extends com.liferay.gradle.util.GradleUtil {
 
 			return value;
 		}
-		catch (ReflectiveOperationException roe) {
-			throw new GradleException("Unable to get property", roe);
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new GradleException(
+				"Unable to get property", reflectiveOperationException);
 		}
 	}
 

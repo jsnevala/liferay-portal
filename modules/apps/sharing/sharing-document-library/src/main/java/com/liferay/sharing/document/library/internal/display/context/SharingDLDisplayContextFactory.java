@@ -18,13 +18,19 @@ import com.liferay.document.library.display.context.DLDisplayContextFactory;
 import com.liferay.document.library.display.context.DLEditFileEntryDisplayContext;
 import com.liferay.document.library.display.context.DLViewFileVersionDisplayContext;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
-import com.liferay.document.library.kernel.service.DLAppService;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.sharing.configuration.SharingConfiguration;
+import com.liferay.sharing.configuration.SharingConfigurationFactory;
+import com.liferay.sharing.display.context.util.SharingMenuItemFactory;
+import com.liferay.sharing.display.context.util.SharingToolbarItemFactory;
+import com.liferay.sharing.security.permission.SharingPermission;
+import com.liferay.sharing.service.SharingEntryLocalService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,7 +47,8 @@ public class SharingDLDisplayContextFactory implements DLDisplayContextFactory {
 	@Override
 	public DLEditFileEntryDisplayContext getDLEditFileEntryDisplayContext(
 		DLEditFileEntryDisplayContext parentDLEditFileEntryDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse,
 		DLFileEntryType dlFileEntryType) {
 
 		return parentDLEditFileEntryDisplayContext;
@@ -50,8 +57,8 @@ public class SharingDLDisplayContextFactory implements DLDisplayContextFactory {
 	@Override
 	public DLEditFileEntryDisplayContext getDLEditFileEntryDisplayContext(
 		DLEditFileEntryDisplayContext parentDLEditFileEntryDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileEntry fileEntry) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileEntry fileEntry) {
 
 		return parentDLEditFileEntryDisplayContext;
 	}
@@ -59,8 +66,8 @@ public class SharingDLDisplayContextFactory implements DLDisplayContextFactory {
 	@Override
 	public DLViewFileVersionDisplayContext getDLViewFileVersionDisplayContext(
 		DLViewFileVersionDisplayContext parentDLViewFileVersionDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileShortcut fileShortcut) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileShortcut fileShortcut) {
 
 		return parentDLViewFileVersionDisplayContext;
 	}
@@ -68,25 +75,56 @@ public class SharingDLDisplayContextFactory implements DLDisplayContextFactory {
 	@Override
 	public DLViewFileVersionDisplayContext getDLViewFileVersionDisplayContext(
 		DLViewFileVersionDisplayContext parentDLViewFileVersionDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileVersion fileVersion) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileVersion fileVersion) {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		try {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
-		return new SharingDLViewFileVersionDisplayContext(
-			parentDLViewFileVersionDisplayContext, request, response,
-			fileVersion,
-			ResourceBundleUtil.getBundle(
-				themeDisplay.getLocale(),
-				SharingDLDisplayContextFactory.class));
+			SharingConfiguration sharingConfiguration =
+				_sharingConfigurationFactory.getGroupSharingConfiguration(
+					themeDisplay.getSiteGroup());
+
+			if (!sharingConfiguration.isEnabled()) {
+				return parentDLViewFileVersionDisplayContext;
+			}
+
+			FileEntry fileEntry = null;
+
+			if (fileVersion != null) {
+				fileEntry = fileVersion.getFileEntry();
+			}
+
+			return new SharingDLViewFileVersionDisplayContext(
+				parentDLViewFileVersionDisplayContext, httpServletRequest,
+				httpServletResponse, fileEntry, fileVersion,
+				_sharingEntryLocalService, _sharingMenuItemFactory,
+				_sharingToolbarItemFactory, _sharingPermission,
+				sharingConfiguration);
+		}
+		catch (PortalException portalException) {
+			throw new SystemException(
+				"Unable to create sharing document library view file version " +
+					"display context for file version " + fileVersion,
+				portalException);
+		}
 	}
 
-	@Reference(unbind = "-")
-	public void setDLAppService(DLAppService dlAppService) {
-		_dlAppService = dlAppService;
-	}
+	@Reference
+	private SharingConfigurationFactory _sharingConfigurationFactory;
 
-	private DLAppService _dlAppService;
+	@Reference
+	private SharingEntryLocalService _sharingEntryLocalService;
+
+	@Reference
+	private SharingMenuItemFactory _sharingMenuItemFactory;
+
+	@Reference
+	private SharingPermission _sharingPermission;
+
+	@Reference
+	private SharingToolbarItemFactory _sharingToolbarItemFactory;
 
 }

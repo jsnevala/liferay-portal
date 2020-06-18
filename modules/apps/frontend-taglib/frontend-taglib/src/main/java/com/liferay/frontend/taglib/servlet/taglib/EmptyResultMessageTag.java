@@ -31,6 +31,34 @@ import javax.servlet.jsp.PageContext;
  */
 public class EmptyResultMessageTag extends IncludeTag {
 
+	public List<DropdownItem> getActionDropdownItems() {
+		return _actionDropdownItems;
+	}
+
+	public EmptyResultMessageKeys.AnimationType getAnimationType() {
+		return _animationType;
+	}
+
+	public String getComponentId() {
+		return _componentId;
+	}
+
+	public String getDefaultEventHandler() {
+		return _defaultEventHandler;
+	}
+
+	public String getDescription() {
+		return _description;
+	}
+
+	public String getElementType() {
+		return _elementType;
+	}
+
+	public String getTitle() {
+		return _title;
+	}
+
 	public void setActionDropdownItems(List<DropdownItem> actionDropdownItems) {
 		_actionDropdownItems = actionDropdownItems;
 	}
@@ -43,6 +71,10 @@ public class EmptyResultMessageTag extends IncludeTag {
 
 	public void setComponentId(String componentId) {
 		_componentId = componentId;
+	}
+
+	public void setDefaultEventHandler(String defaultEventHandler) {
+		_defaultEventHandler = defaultEventHandler;
 	}
 
 	public void setDescription(String description) {
@@ -60,6 +92,10 @@ public class EmptyResultMessageTag extends IncludeTag {
 		servletContext = ServletContextUtil.getServletContext();
 	}
 
+	public void setTitle(String title) {
+		_title = title;
+	}
+
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
@@ -67,8 +103,10 @@ public class EmptyResultMessageTag extends IncludeTag {
 		_actionDropdownItems = null;
 		_animationType = EmptyResultMessageKeys.AnimationType.EMPTY;
 		_componentId = null;
+		_defaultEventHandler = null;
 		_description = null;
 		_elementType = null;
+		_title = null;
 	}
 
 	@Override
@@ -77,24 +115,30 @@ public class EmptyResultMessageTag extends IncludeTag {
 	}
 
 	@Override
-	protected void setAttributes(HttpServletRequest request) {
-		request.setAttribute(
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+		httpServletRequest.setAttribute(
 			"liferay-frontend:empty-result-message:actionDropdownItems",
 			_actionDropdownItems);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:empty-result-message:animationTypeCssClass",
 			EmptyResultMessageKeys.getAnimationTypeCssClass(_animationType));
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:empty-result-message:componentId", _componentId);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			"liferay-frontend:empty-result-message:defaultEventHandler",
+			_defaultEventHandler);
+		httpServletRequest.setAttribute(
 			"liferay-frontend:empty-result-message:description", _description);
 
 		if (Validator.isNull(_elementType)) {
-			_elementType = LanguageUtil.get(request, "element");
+			_elementType = LanguageUtil.get(httpServletRequest, "element");
 		}
 
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-frontend:empty-result-message:elementType", _elementType);
+
+		httpServletRequest.setAttribute(
+			"liferay-frontend:empty-result-message:title", _title);
 	}
 
 	private static final String _PAGE = "/empty_result_message/page.jsp";
@@ -103,7 +147,9 @@ public class EmptyResultMessageTag extends IncludeTag {
 	private EmptyResultMessageKeys.AnimationType _animationType =
 		EmptyResultMessageKeys.AnimationType.EMPTY;
 	private String _componentId;
+	private String _defaultEventHandler;
 	private String _description;
 	private String _elementType;
+	private String _title;
 
 }

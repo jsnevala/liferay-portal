@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -54,12 +54,12 @@ public class BlogsAggregatorExportImportPortletPreferencesProcessor
 
 	@Override
 	public List<Capability> getExportCapabilities() {
-		return ListUtil.toList(new Capability[] {_exportCapability});
+		return ListUtil.fromArray(_exportCapability);
 	}
 
 	@Override
 	public List<Capability> getImportCapabilities() {
-		return ListUtil.toList(new Capability[] {_importCapability});
+		return ListUtil.fromArray(_importCapability);
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class BlogsAggregatorExportImportPortletPreferencesProcessor
 				portletDataContext, portletDataContext.getRootPortletId(),
 				portletPreferences);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return portletPreferences;
 		}
 	}
@@ -88,30 +88,9 @@ public class BlogsAggregatorExportImportPortletPreferencesProcessor
 			return updateImportPortletPreferences(
 				portletDataContext, portletPreferences);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return portletPreferences;
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setCompanyLocalService(
-		CompanyLocalService companyLocalService) {
-
-		_companyLocalService = companyLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setOrganizationLocalService(
-		OrganizationLocalService organizationLocalService) {
-
-		_organizationLocalService = organizationLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortletLocalService(
-		PortletLocalService portletLocalService) {
-
-		_portletLocalService = portletLocalService;
 	}
 
 	protected PortletPreferences updateExportPortletPreferences(
@@ -203,6 +182,7 @@ public class BlogsAggregatorExportImportPortletPreferencesProcessor
 		return portletPreferences;
 	}
 
+	@Reference
 	private CompanyLocalService _companyLocalService;
 
 	@Reference(target = "(name=PortletDisplayTemplateExporter)")
@@ -215,7 +195,10 @@ public class BlogsAggregatorExportImportPortletPreferencesProcessor
 	@Reference(target = "(name=PortletDisplayTemplateImporter)")
 	private Capability _importCapability;
 
+	@Reference
 	private OrganizationLocalService _organizationLocalService;
+
+	@Reference
 	private PortletLocalService _portletLocalService;
 
 }

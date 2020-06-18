@@ -121,14 +121,14 @@ public class WebSocketEndpointTracker {
 								endpointInstance.getClass();
 
 							if (endpointInstanceClass.equals(
-									ServerEndpointConfigWrapper.
-										NullEndpoint.class)) {
+									ServerEndpointConfigWrapper.NullEndpoint.
+										class)) {
 
 								serverEndpointConfigWrapper.override(
 									decoders, encoders, subprotocol);
 							}
 						}
-						catch (InstantiationException ie) {
+						catch (InstantiationException instantiationException) {
 							Endpoint endpoint = serviceObjects.getService();
 
 							_logService.log(
@@ -136,7 +136,7 @@ public class WebSocketEndpointTracker {
 								StringBundler.concat(
 									"Unable to register WebSocket endpoint ",
 									endpoint.getClass(), " for path ", path),
-								ie);
+								instantiationException);
 						}
 					}
 
@@ -154,7 +154,7 @@ public class WebSocketEndpointTracker {
 							serverContainer.addEndpoint(
 								serverEndpointConfigWrapper);
 						}
-						catch (DeploymentException de) {
+						catch (DeploymentException deploymentException) {
 							Endpoint endpoint = serviceObjects.getService();
 
 							_logService.log(
@@ -162,7 +162,7 @@ public class WebSocketEndpointTracker {
 								StringBundler.concat(
 									"Unable to register WebSocket endpoint ",
 									endpoint.getClass(), " for path ", path),
-								de);
+								deploymentException);
 
 							return null;
 						}

@@ -14,37 +14,15 @@
 
 package com.liferay.portal.dao.orm.hibernate;
 
-import org.hibernate.PropertyNotFoundException;
-import org.hibernate.property.Getter;
-import org.hibernate.property.Setter;
-
 /**
  * @author Brian Wing Shun Chan
  */
-@SuppressWarnings("rawtypes")
 public class CamelCasePropertyAccessor extends LiferayPropertyAccessor {
 
 	@Override
-	public Getter getGetter(Class clazz, String propertyName)
-		throws PropertyNotFoundException {
-
-		propertyName = fixPropertyName(propertyName);
-
-		return super.getGetter(clazz, propertyName);
-	}
-
-	@Override
-	public Setter getSetter(Class clazz, String propertyName)
-		throws PropertyNotFoundException {
-
-		propertyName = fixPropertyName(propertyName);
-
-		return super.getSetter(clazz, propertyName);
-	}
-
-	protected String fixPropertyName(String propertyName) {
+	protected String formatPropertyName(String propertyName) {
 		if (propertyName.length() < 3) {
-			return propertyName;
+			return super.formatPropertyName(propertyName);
 		}
 
 		char c0 = propertyName.charAt(0);
@@ -54,10 +32,11 @@ public class CamelCasePropertyAccessor extends LiferayPropertyAccessor {
 		if (Character.isLowerCase(c0) && Character.isUpperCase(c1) &&
 			Character.isLowerCase(c2)) {
 
-			return Character.toUpperCase(c0) + propertyName.substring(1);
+			propertyName =
+				Character.toUpperCase(c0) + propertyName.substring(1);
 		}
 
-		return propertyName;
+		return super.formatPropertyName(propertyName);
 	}
 
 }

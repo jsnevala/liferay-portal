@@ -20,10 +20,15 @@ import com.liferay.dynamic.data.mapping.form.builder.context.DDMFormBuilderConte
 import com.liferay.dynamic.data.mapping.form.builder.settings.DDMFormBuilderSettingsRequest;
 import com.liferay.dynamic.data.mapping.form.builder.settings.DDMFormBuilderSettingsResponse;
 import com.liferay.dynamic.data.mapping.form.builder.settings.DDMFormBuilderSettingsRetriever;
+import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldType;
+import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderer;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingException;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
+import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializer;
+import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializerSerializeRequest;
+import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializerSerializeResponse;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
@@ -40,7 +45,9 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureVersionLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesMerger;
+import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONSerializer;
 import com.liferay.portal.kernel.model.Group;
@@ -51,6 +58,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -66,9 +74,9 @@ import org.osgi.service.component.annotations.Reference;
 public class DDMFormTaglibUtil {
 
 	public static DDMFormValues createDDMFormValues(
-		HttpServletRequest request, DDMForm ddmForm) {
+		HttpServletRequest httpServletRequest, DDMForm ddmForm) {
 
-		return _ddmFormValuesFactory.create(request, ddmForm);
+		return _ddmFormValuesFactory.create(httpServletRequest, ddmForm);
 	}
 
 	public static DDMForm getDDMForm(
@@ -106,6 +114,26 @@ public class DDMFormTaglibUtil {
 			ddmFormBuilderSettingsRequest);
 	}
 
+	public static JSONArray getDDMFormFieldTypesJSONArray()
+		throws PortalException {
+
+		List<DDMFormFieldType> formFieldTypes =
+			_ddmFormFieldTypeServicesTracker.getDDMFormFieldTypes();
+
+		DDMFormFieldTypesSerializerSerializeRequest.Builder builder =
+			DDMFormFieldTypesSerializerSerializeRequest.Builder.newBuilder(
+				formFieldTypes);
+
+		DDMFormFieldTypesSerializerSerializeResponse
+			ddmFormFieldTypesSerializerSerializeResponse =
+				_ddmFormFieldTypesSerializer.serialize(builder.build());
+
+		String serializedFormFieldTypes =
+			ddmFormFieldTypesSerializerSerializeResponse.getContent();
+
+		return _jsonFactory.createJSONArray(serializedFormFieldTypes);
+	}
+
 	public static DDMFormInstance getDDMFormInstance(long ddmFormInstanceId) {
 		return _ddmFormInstanceLocalService.fetchFormInstance(
 			ddmFormInstanceId);
@@ -134,13 +162,14 @@ public class DDMFormTaglibUtil {
 
 	public static String getFormBuilderContext(
 		long ddmStructureId, long ddmStructureVersionId,
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest) {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		String serializedFormBuilderContext = ParamUtil.getString(
-			request, "serializedFormBuilderContext");
+			httpServletRequest, "serializedFormBuilderContext");
 
 		if (Validator.isNotNull(serializedFormBuilderContext)) {
 			return serializedFormBuilderContext;
@@ -190,6 +219,11 @@ public class DDMFormTaglibUtil {
 			ddmFormInstanceId, status);
 	}
 
+	public static String getNPMResolvedPackageName() {
+		return _npmResolver.resolveModuleName(
+			"dynamic-data-mapping-form-builder");
+	}
+
 	public static boolean hasWorkflowDefinitionLink(
 		long companyId, long groupId, String name, long ddmFormInstanceId) {
 
@@ -235,6 +269,22 @@ public class DDMFormTaglibUtil {
 		DDMFormBuilderSettingsRetriever ddmFormBuilderSettingsRetriever) {
 
 		_ddmFormBuilderSettingsRetriever = ddmFormBuilderSettingsRetriever;
+	}
+
+	@Reference(unbind = "-")
+	protected void setDDMFormFieldTypeServicesTracker(
+		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker) {
+
+		_ddmFormFieldTypeServicesTracker = ddmFormFieldTypeServicesTracker;
+	}
+
+	@Reference(
+		target = "(ddm.form.field.types.serializer.type=json)", unbind = "-"
+	)
+	protected void setDDMFormFieldTypesSerializer(
+		DDMFormFieldTypesSerializer ddmFormFieldTypesSerializer) {
+
+		_ddmFormFieldTypesSerializer = ddmFormFieldTypesSerializer;
 	}
 
 	@Reference(unbind = "-")
@@ -312,6 +362,11 @@ public class DDMFormTaglibUtil {
 	}
 
 	@Reference(unbind = "-")
+	protected void setNPMResolver(NPMResolver npmResolver) {
+		_npmResolver = npmResolver;
+	}
+
+	@Reference(unbind = "-")
 	protected void setWorkflowDefinitionLinkLocalService(
 		WorkflowDefinitionLinkLocalService workflowDefinitionLinkLocalService) {
 
@@ -322,6 +377,9 @@ public class DDMFormTaglibUtil {
 	private static DDMFormBuilderContextFactory _ddmFormBuilderContextFactory;
 	private static DDMFormBuilderSettingsRetriever
 		_ddmFormBuilderSettingsRetriever;
+	private static DDMFormFieldTypeServicesTracker
+		_ddmFormFieldTypeServicesTracker;
+	private static DDMFormFieldTypesSerializer _ddmFormFieldTypesSerializer;
 	private static DDMFormInstanceLocalService _ddmFormInstanceLocalService;
 	private static DDMFormInstanceRecordLocalService
 		_ddmFormInstanceRecordLocalService;
@@ -337,6 +395,7 @@ public class DDMFormTaglibUtil {
 		_ddmStructureVersionLocalService;
 	private static GroupLocalService _groupLocalService;
 	private static JSONFactory _jsonFactory;
+	private static NPMResolver _npmResolver;
 	private static WorkflowDefinitionLinkLocalService
 		_workflowDefinitionLinkLocalService;
 

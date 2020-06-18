@@ -14,30 +14,33 @@
 
 package com.liferay.portal.tools.service.builder.test.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the LVEntry service. Represents a row in the &quot;LVEntry&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see LVEntryModel
- * @see com.liferay.portal.tools.service.builder.test.model.impl.LVEntryImpl
- * @see com.liferay.portal.tools.service.builder.test.model.impl.LVEntryModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.portal.tools.service.builder.test.model.impl.LVEntryImpl")
+@ImplementationClassName(
+	"com.liferay.portal.tools.service.builder.test.model.impl.LVEntryImpl"
+)
 @ProviderType
 public interface LVEntry extends LVEntryModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.tools.service.builder.test.model.impl.LVEntryImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.portal.tools.service.builder.test.model.impl.LVEntryImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<LVEntry, Long> LV_ENTRY_ID_ACCESSOR = new Accessor<LVEntry, Long>() {
+	public static final Accessor<LVEntry, Long> LV_ENTRY_ID_ACCESSOR =
+		new Accessor<LVEntry, Long>() {
+
 			@Override
 			public Long get(LVEntry lvEntry) {
 				return lvEntry.getLvEntryId();
@@ -52,5 +55,7 @@ public interface LVEntry extends LVEntryModel, PersistedModel {
 			public Class<LVEntry> getTypeClass() {
 				return LVEntry.class;
 			}
+
 		};
+
 }

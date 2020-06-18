@@ -17,16 +17,19 @@ package com.liferay.source.formatter.checks;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.checks.util.SourceUtil;
 import com.liferay.source.formatter.parser.JavaClass;
+import com.liferay.source.formatter.parser.JavaMethod;
+import com.liferay.source.formatter.parser.JavaParameter;
+import com.liferay.source.formatter.parser.JavaSignature;
 import com.liferay.source.formatter.parser.JavaTerm;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,15 +39,9 @@ import java.util.regex.Pattern;
  */
 public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 
-	public void setCheckMismatchedServiceAttribute(
-		String checkMismatchedServiceAttribute) {
-
-		_checkMismatchedServiceAttribute = GetterUtil.getBoolean(
-			checkMismatchedServiceAttribute);
-	}
-
-	public void setCheckSelfRegistration(String checkSelfRegistration) {
-		_checkSelfRegistration = GetterUtil.getBoolean(checkSelfRegistration);
+	@Override
+	public boolean isLiferaySourceCheck() {
+		return true;
 	}
 
 	@Override
@@ -53,47 +50,71 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			String fileContent)
 		throws IOException {
 
-		return formatAnnotations(fileName, (JavaClass)javaTerm, false);
+		return formatAnnotations(fileName, absolutePath, (JavaClass)javaTerm);
 	}
 
 	@Override
 	protected String formatAnnotation(
-		String fileName, JavaClass javaClass, String annotation,
-		String indent) {
+		String fileName, String absolutePath, JavaClass javaClass,
+		String annotation, String indent) {
 
-		if (!annotation.contains("@Component")) {
+		String trimmedAnnotation = StringUtil.trim(annotation);
+
+		if (!trimmedAnnotation.equals("@Component") &&
+			!trimmedAnnotation.startsWith("@Component(")) {
+
+			return annotation;
+		}
+
+		List<String> importNames = javaClass.getImports();
+
+		if (!importNames.contains(
+				"org.osgi.service.component.annotations.Component")) {
+
 			return annotation;
 		}
 
 		annotation = _formatAnnotationParameterProperties(annotation);
+		annotation = _formatConfigurationAttributes(
+			fileName, absolutePath, javaClass, annotation);
 		annotation = _formatServiceAttribute(
-			fileName, javaClass.getName(), annotation,
+			fileName, absolutePath, javaClass.getName(), annotation,
 			javaClass.getImplementedClassNames());
+
+		List<String> extendedClassNames = javaClass.getExtendedClassNames(
+			false);
+
+		if (extendedClassNames.contains("MVCPortlet")) {
+			annotation = _formatMVCPortletProperties(annotation);
+		}
 
 		return annotation;
 	}
 
-	private String _addServiceAttribute(
-		String annotation, String serviceAttribute) {
+	private String _addAttribute(
+		String annotation, String attributeName, String attributeValue) {
 
 		if (!annotation.contains("(")) {
 			return StringBundler.concat(
 				annotation.substring(0, annotation.length() - 1), "(",
-				serviceAttribute, ")\n");
+				attributeName, " = ", attributeValue, ")\n");
 		}
 
 		Matcher matcher = _attributePattern.matcher(annotation);
 
 		while (matcher.find()) {
-			if (!ToolsUtil.isInsideQuotes(annotation, matcher.end()) &&
+			if (!ToolsUtil.isInsideQuotes(annotation, matcher.end(1)) &&
 				(getLevel(annotation.substring(0, matcher.end()), "{", "}") ==
 					0)) {
 
-				String attributeName = matcher.group(1);
+				String curAttributeName = matcher.group(1);
 
-				if (attributeName.compareTo("service") > 0) {
+				if (curAttributeName.compareTo(attributeName) > 0) {
 					return StringUtil.insert(
-						annotation, serviceAttribute + ", ", matcher.start(1));
+						annotation,
+						StringBundler.concat(
+							attributeName, " = ", attributeValue, ", "),
+						matcher.start(1));
 				}
 			}
 		}
@@ -104,11 +125,16 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			int pos = annotation.lastIndexOf("\n", annotation.length() - 2);
 
 			return StringUtil.insert(
-				annotation, ",\n\t" + indent + serviceAttribute, pos);
+				annotation,
+				StringBundler.concat(
+					",\n\t", indent, attributeName, " = ", attributeValue),
+				pos);
 		}
 
 		return StringUtil.replaceLast(
-			annotation, ')', ", " + serviceAttribute + ")");
+			annotation, ')',
+			StringBundler.concat(
+				", ", attributeName, " = ", attributeValue, ")"));
 	}
 
 	private String _formatAnnotationParameterProperties(String annotation) {
@@ -116,10 +142,10 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			annotation);
 
 		while (matcher.find()) {
-			int x = matcher.end();
+			int x = matcher.end() - 1;
 
 			while (true) {
-				x = annotation.indexOf(CharPool.CLOSE_CURLY_BRACE, x);
+				x = annotation.indexOf(CharPool.CLOSE_CURLY_BRACE, x + 1);
 
 				if (!ToolsUtil.isInsideQuotes(annotation, x)) {
 					break;
@@ -163,9 +189,10 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 				String previousParameterProperty =
 					parameterPropertiesArray[i - 1];
 
-				if (comparator.compare(
-						previousParameterProperty, parameterProperty) > 0) {
+				int compare = comparator.compare(
+					previousParameterProperty, parameterProperty);
 
+				if (compare > 0) {
 					annotation = StringUtil.replaceFirst(
 						annotation, previousParameterProperty,
 						parameterProperty);
@@ -181,34 +208,139 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 		return annotation;
 	}
 
-	private String _formatServiceAttribute(
-		String fileName, String className, String annotation,
-		List<String> implementedClassNames) {
+	private String _formatConfigurationAttributes(
+		String fileName, String absolutePath, JavaClass javaClass,
+		String annotation) {
 
-		String expectedServiceAttribute = _getExpectedServiceAttribute(
-			implementedClassNames);
-
-		Matcher matcher = _serviceAttributePattern.matcher(annotation);
-
-		if (!matcher.find()) {
-			return _addServiceAttribute(annotation, expectedServiceAttribute);
-		}
-
-		if (!_checkMismatchedServiceAttribute && !_checkSelfRegistration) {
+		if (_getAttributeValue(annotation, "configurationPid") != null) {
 			return annotation;
 		}
 
-		String serviceAttribute = _getServiceAttribute(
-			annotation, matcher.start() + 1);
+		for (JavaMethod javaMethod :
+				_getJavaMethods(javaClass, "Activate", "Modified")) {
 
-		if (_checkMismatchedServiceAttribute &&
-			!serviceAttribute.equals(expectedServiceAttribute)) {
+			String javaMethodContent = javaMethod.getContent();
+
+			if (javaMethodContent.contains(
+					"ConfigurableUtil.createConfigurable")) {
+
+				addMessage(
+					fileName,
+					"Missing @Component 'configurationPid' attribute, see " +
+						"LPS-88783");
+
+				break;
+			}
+		}
+
+		if (!isAttributeValue(
+				_CHECK_CONFIGURATION_POLICY_ATTRIBUTE_KEY, absolutePath)) {
+
+			return annotation;
+		}
+
+		List<String> imports = javaClass.getImports();
+
+		if (imports.contains(
+				"org.osgi.service.component.annotations.Modified") ||
+			(_getAttributeValue(annotation, "configurationPolicy ") != null)) {
+
+			return annotation;
+		}
+
+		for (JavaMethod javaMethod : _getJavaMethods(javaClass, "Activate")) {
+			JavaSignature signature = javaMethod.getSignature();
+
+			for (JavaParameter parameter : signature.getParameters()) {
+				String parameterType = parameter.getParameterType();
+
+				if (parameterType.equals("ComponentContext") ||
+					parameterType.startsWith("Map<")) {
+
+					return annotation;
+				}
+			}
+		}
+
+		return _addAttribute(
+			annotation, "configurationPolicy", "ConfigurationPolicy.IGNORE");
+	}
+
+	private String _formatMVCPortletProperties(String annotation) {
+		int x = annotation.indexOf("property = {");
+
+		if (x == -1) {
+			return annotation;
+		}
+
+		int y = x;
+
+		while (true) {
+			y = annotation.indexOf(CharPool.CLOSE_CURLY_BRACE, y + 1);
+
+			if (!ToolsUtil.isInsideQuotes(annotation, y)) {
+				break;
+			}
+		}
+
+		String properties = annotation.substring(x, y);
+
+		String newProperties = StringUtil.replace(
+			properties,
+			new String[] {
+				"\"javax.portlet.supports.mime-type=text/html\",",
+				"\"javax.portlet.supports.mime-type=text/html\""
+			},
+			new String[] {StringPool.BLANK, StringPool.BLANK});
+
+		if (newProperties.contains(
+				"\"javax.portlet.init-param.config-template=") &&
+			!newProperties.contains("javax.portlet.portlet-mode=")) {
+
+			newProperties = StringUtil.trimTrailing(newProperties);
+
+			if (!newProperties.endsWith(StringPool.COMMA)) {
+				newProperties += StringPool.COMMA;
+			}
+
+			newProperties += "\"javax.portlet.portlet-mode=text/html;config\"";
+		}
+
+		return StringUtil.replace(annotation, properties, newProperties);
+	}
+
+	private String _formatServiceAttribute(
+		String fileName, String absolutePath, String className,
+		String annotation, List<String> implementedClassNames) {
+
+		String expectedServiceAttributeValue =
+			_getExpectedServiceAttributeValue(implementedClassNames);
+
+		String serviceAttributeValue = _getAttributeValue(
+			annotation, "service");
+
+		if (serviceAttributeValue == null) {
+			return _addAttribute(
+				annotation, "service", expectedServiceAttributeValue);
+		}
+
+		boolean checkMismatchedServiceAttribute = isAttributeValue(
+			_CHECK_MISMATCHED_SERVICE_ATTRIBUTE_KEY, absolutePath);
+		boolean checkSelfRegistration = isAttributeValue(
+			_CHECK_SELF_REGISTRATION_KEY, absolutePath);
+
+		if (!checkMismatchedServiceAttribute && !checkSelfRegistration) {
+			return annotation;
+		}
+
+		if (checkMismatchedServiceAttribute &&
+			!serviceAttributeValue.equals(expectedServiceAttributeValue)) {
 
 			addMessage(fileName, "Mismatched @Component 'service' attribute");
 		}
 
-		if (_checkSelfRegistration &&
-			serviceAttribute.matches(".*\\W" + className + "\\.class.*")) {
+		if (checkSelfRegistration &&
+			serviceAttributeValue.matches(".*\\b" + className + "\\.class.*")) {
 
 			addMessage(
 				fileName,
@@ -219,37 +351,17 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 		return annotation;
 	}
 
-	private String _getExpectedServiceAttribute(
-		List<String> implementedClassNames) {
+	private String _getAttributeValue(String annotation, String attributeName) {
+		Pattern pattern = Pattern.compile("\\W" + attributeName + "\\s*=");
 
-		if (implementedClassNames.isEmpty()) {
-			return "service = {}";
+		Matcher matcher = pattern.matcher(annotation);
+
+		if (!matcher.find()) {
+			return null;
 		}
 
-		if (implementedClassNames.size() == 1) {
-			return StringBundler.concat(
-				"service = ", implementedClassNames.get(0), ".class");
-		}
+		int start = matcher.end() + 1;
 
-		StringBundler sb = new StringBundler(
-			implementedClassNames.size() * 3 + 1);
-
-		sb.append("service = {");
-
-		for (String implementedClassName : implementedClassNames) {
-			sb.append(implementedClassName);
-			sb.append(".class");
-			sb.append(", ");
-		}
-
-		sb.setIndex(sb.index() - 1);
-
-		sb.append("}");
-
-		return sb.toString();
-	}
-
-	private String _getServiceAttribute(String annotation, int start) {
 		int end = start;
 
 		while (true) {
@@ -268,27 +380,82 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			}
 		}
 
-		String serviceAttribute = StringUtil.trim(
+		String attributeValue = StringUtil.trim(
 			annotation.substring(start, end));
 
-		if (!serviceAttribute.contains("\n")) {
-			return serviceAttribute;
+		if (!attributeValue.contains("\n")) {
+			return attributeValue;
 		}
 
 		return StringUtil.replace(
-			serviceAttribute, new String[] {"\t", "=\n", ",\n", "\n"},
-			new String[] {"", "= ", ", ", ""});
+			attributeValue, new String[] {"\t", ",\n", "\n"},
+			new String[] {"", ", ", ""});
 	}
 
+	private String _getExpectedServiceAttributeValue(
+		List<String> implementedClassNames) {
+
+		if (implementedClassNames.isEmpty()) {
+			return "{}";
+		}
+
+		if (implementedClassNames.size() == 1) {
+			return implementedClassNames.get(0) + ".class";
+		}
+
+		StringBundler sb = new StringBundler(
+			implementedClassNames.size() * 3 + 1);
+
+		sb.append("{");
+
+		for (String implementedClassName : implementedClassNames) {
+			sb.append(implementedClassName);
+			sb.append(".class");
+			sb.append(", ");
+		}
+
+		sb.setIndex(sb.index() - 1);
+
+		sb.append("}");
+
+		return sb.toString();
+	}
+
+	private List<JavaMethod> _getJavaMethods(
+		JavaClass javaClass, String... annotations) {
+
+		List<JavaMethod> javaMethods = new ArrayList<>();
+
+		for (JavaTerm javaTerm : javaClass.getChildJavaTerms()) {
+			if (!(javaTerm instanceof JavaMethod)) {
+				continue;
+			}
+
+			for (String annotation : annotations) {
+				if (javaTerm.hasAnnotation(annotation)) {
+					javaMethods.add((JavaMethod)javaTerm);
+
+					break;
+				}
+			}
+		}
+
+		return javaMethods;
+	}
+
+	private static final String _CHECK_CONFIGURATION_POLICY_ATTRIBUTE_KEY =
+		"checkConfigurationPolicyAttribute";
+
+	private static final String _CHECK_MISMATCHED_SERVICE_ATTRIBUTE_KEY =
+		"checkMismatchedServiceAttribute";
+
+	private static final String _CHECK_SELF_REGISTRATION_KEY =
+		"checkSelfRegistration";
+
 	private static final Pattern _annotationParameterPropertyPattern =
-		Pattern.compile("\t(\\w+) = \\{");
+		Pattern.compile("\\s(\\w+) = \\{");
 	private static final Pattern _attributePattern = Pattern.compile(
 		"\\W(\\w+)\\s*=");
-	private static final Pattern _serviceAttributePattern = Pattern.compile(
-		"\\Wservice\\s*=");
-
-	private boolean _checkMismatchedServiceAttribute;
-	private boolean _checkSelfRegistration;
 
 	private class AnnotationParameterPropertyComparator
 		extends NaturalOrderStringComparator {

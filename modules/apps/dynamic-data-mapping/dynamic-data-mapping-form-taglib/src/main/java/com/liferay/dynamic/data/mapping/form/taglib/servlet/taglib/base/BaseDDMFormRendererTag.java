@@ -106,18 +106,13 @@ public abstract class BaseDDMFormRendererTag extends com.liferay.taglib.util.Inc
 		_ddmFormInstanceRecordVersionId = null;
 		_ddmFormInstanceVersionId = null;
 		_namespace = null;
-		_showFormBasicInfo = false;
-		_showSubmitButton = false;
+		_showFormBasicInfo = true;
+		_showSubmitButton = true;
 	}
 
 	@Override
-	protected String getEndPage() {
-		return _END_PAGE;
-	}
-
-	@Override
-	protected String getStartPage() {
-		return _START_PAGE;
+	protected String getPage() {
+		return _PAGE;
 	}
 
 	@Override
@@ -133,18 +128,15 @@ public abstract class BaseDDMFormRendererTag extends com.liferay.taglib.util.Inc
 
 	protected static final String _ATTRIBUTE_NAMESPACE = "liferay-form:ddm-form-renderer:";
 
-	private static final String _END_PAGE =
-		"/ddm_form_renderer/end.jsp";
-
-	private static final String _START_PAGE =
-		"/ddm_form_renderer/start.jsp";
+	private static final String _PAGE =
+		"/ddm_form_renderer/page.jsp";
 
 	private java.lang.Long _ddmFormInstanceId = null;
 	private java.lang.Long _ddmFormInstanceRecordId = null;
 	private java.lang.Long _ddmFormInstanceRecordVersionId = null;
 	private java.lang.Long _ddmFormInstanceVersionId = null;
 	private java.lang.String _namespace = null;
-	private boolean _showFormBasicInfo = false;
-	private boolean _showSubmitButton = false;
+	private boolean _showFormBasicInfo = true;
+	private boolean _showSubmitButton = true;
 
 }

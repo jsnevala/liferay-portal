@@ -19,6 +19,8 @@
 <%
 String redirect = ParamUtil.getString(request, "redirect");
 
+String portletResource = ParamUtil.getString(request, "portletResource");
+
 DDLRecord record = (DDLRecord)request.getAttribute(DDLWebKeys.DYNAMIC_DATA_LISTS_RECORD);
 
 long recordId = BeanParamUtil.getLong(record, request, "recordId");
@@ -99,7 +101,7 @@ else {
 		<div class="sidenav-menu-slider">
 			<div class="sidebar sidebar-default sidenav-menu">
 				<div class="sidebar-header">
-					<aui:icon cssClass="icon-monospaced sidenav-close text-default visible-xs-inline-block" image="times" markupView="lexicon" url="javascript:;" />
+					<aui:icon cssClass="d-inline-block d-sm-none icon-monospaced sidenav-close text-default" image="times" markupView="lexicon" url="javascript:;" />
 				</div>
 
 				<liferay-ui:tabs
@@ -121,7 +123,9 @@ else {
 							</div>
 
 							<div>
-								<h5><strong><liferay-ui:message key="created" /></strong></h5>
+								<h5>
+									<strong><liferay-ui:message key="created" /></strong>
+								</h5>
 
 								<p>
 
@@ -150,6 +154,7 @@ else {
 	<div class="sidenav-content">
 		<aui:form action="<%= (record == null) ? addRecordURL : updateRecordURL %>" cssClass="container-fluid-1280" enctype="multipart/form-data" method="post" name="fm">
 			<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+			<aui:input name="portletResource" type="hidden" value="<%= portletResource %>" />
 			<aui:input name="recordId" type="hidden" value="<%= recordId %>" />
 			<aui:input name="groupId" type="hidden" value="<%= recordSet.getGroupId() %>" />
 			<aui:input name="recordSetId" type="hidden" value="<%= recordSetId %>" />
@@ -162,7 +167,7 @@ else {
 				<liferay-ui:error exception="<%= DuplicateFileEntryException.class %>" message="a-file-with-that-name-already-exists" />
 
 				<liferay-ui:error exception="<%= FileSizeException.class %>">
-					<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(DLValidatorUtil.getMaxAllowableSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
+					<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(DLValidatorUtil.getMaxAllowableSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
 				</liferay-ui:error>
 
 				<liferay-ui:error exception="<%= StorageFieldRequiredException.class %>" message="please-fill-out-all-required-fields" />
@@ -185,6 +190,9 @@ else {
 							classNameId="<%= classNameId %>"
 							classPK="<%= classPK %>"
 							ddmFormValues="<%= ddmFormValues %>"
+							defaultEditLocale="<%= LocaleUtil.fromLanguageId(themeDisplay.getLanguageId()) %>"
+							defaultLocale="<%= LocaleUtil.fromLanguageId(defaultLanguageId) %>"
+							groupId="<%= recordSet.getGroupId() %>"
 							repeatable="<%= translating ? false : true %>"
 							requestedLocale="<%= locale %>"
 						/>
@@ -196,6 +204,9 @@ else {
 									classNameId="<%= classNameId %>"
 									classPK="<%= classPK %>"
 									ddmFormValues="<%= ddmFormValues %>"
+									defaultEditLocale="<%= LocaleUtil.fromLanguageId(defaultLanguageId) %>"
+									defaultLocale="<%= LocaleUtil.fromLanguageId(defaultLanguageId) %>"
+									groupId="<%= recordSet.getGroupId() %>"
 									repeatable="<%= translating ? false : true %>"
 									requestedLocale="<%= locale %>"
 								/>

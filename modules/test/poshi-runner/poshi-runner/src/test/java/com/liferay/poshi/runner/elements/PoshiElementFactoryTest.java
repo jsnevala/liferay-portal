@@ -18,6 +18,8 @@ import com.liferay.poshi.runner.PoshiRunnerContext;
 import com.liferay.poshi.runner.util.Dom4JUtil;
 import com.liferay.poshi.runner.util.FileUtil;
 
+import java.io.File;
+
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.Node;
@@ -90,7 +92,9 @@ public class PoshiElementFactoryTest {
 	public void testPoshiScriptLineNumbers() throws Exception {
 		PoshiElement rootPoshiElement = _getPoshiElement("PoshiScript.macro");
 
-		int[] expectedLineNumbers = {3, 8, 9, 11, 16, 20, 25, 27, 34, 36};
+		int[] expectedLineNumbers = {
+			3, 8, 9, 10, 11, 13, 18, 22, 26, 30, 34, 38, 43, 45, 52, 54
+		};
 
 		int i = 0;
 
@@ -136,7 +140,7 @@ public class PoshiElementFactoryTest {
 
 	@Test
 	public void testPoshiXMLFunctionToPoshiScript() throws Exception {
-		String expected = FileUtil.read(_BASE_DIR + "PoshiScript.function");
+		String expected = FileUtil.read(_getFile("PoshiScript.function"));
 
 		PoshiElement poshiElement = _getPoshiElement("PoshiSyntax.function");
 
@@ -145,6 +149,17 @@ public class PoshiElementFactoryTest {
 		_assertEqualStrings(
 			actual, expected,
 			"Poshi XML syntax does not translate to Poshi script syntax");
+	}
+
+	@Test
+	public void testPoshiXMLMacroAlternate() throws Exception {
+		PoshiElement actualElement = _getPoshiElement(
+			"AlternatePoshiScript.macro");
+		Element expectedElement = _getDom4JElement("PoshiSyntax.macro");
+
+		_assertEqualElements(
+			actualElement, expectedElement,
+			"Poshi script syntax does not translate to Poshi XML");
 	}
 
 	@Test
@@ -160,7 +175,7 @@ public class PoshiElementFactoryTest {
 
 	@Test
 	public void testPoshiXMLMacroToPoshiScript() throws Exception {
-		String expected = FileUtil.read(_BASE_DIR + "PoshiScript.macro");
+		String expected = FileUtil.read(_getFile("PoshiScript.macro"));
 
 		PoshiElement poshiElement = _getPoshiElement("PoshiSyntax.macro");
 
@@ -173,7 +188,7 @@ public class PoshiElementFactoryTest {
 
 	@Test
 	public void testPoshiXMLTestToPoshiScript() throws Exception {
-		String expected = FileUtil.read(_BASE_DIR + "PoshiScript.testcase");
+		String expected = FileUtil.read(_getFile("PoshiScript.testcase"));
 
 		PoshiElement poshiElement = _getPoshiElement("PoshiSyntax.testcase");
 
@@ -186,13 +201,15 @@ public class PoshiElementFactoryTest {
 
 	@Test
 	public void testPoshiXMLTestToPoshiScriptToPoshiXML() throws Exception {
-		PoshiElement poshiElement = _getPoshiElement("PoshiSyntax.testcase");
+		String fileName = "PoshiSyntax.testcase";
+
+		PoshiElement poshiElement = _getPoshiElement(fileName);
 
 		String poshiScript = poshiElement.toPoshiScript();
 
 		PoshiElement actualElement =
 			(PoshiElement)PoshiNodeFactory.newPoshiNode(
-				poshiScript, "testcase");
+				poshiScript, FileUtil.getURL(_getFile(fileName)));
 
 		Element expectedElement = _getDom4JElement("PoshiSyntax.testcase");
 
@@ -267,9 +284,17 @@ public class PoshiElementFactoryTest {
 		return sb.toString();
 	}
 
-	private static PoshiElement _getPoshiElement(String fileName) {
+	private static File _getFile(String fileName) {
+		return new File(_BASE_DIR + fileName);
+	}
+
+	private static PoshiElement _getPoshiElement(String fileName)
+		throws Exception {
+
+		File file = _getFile(fileName);
+
 		return (PoshiElement)PoshiNodeFactory.newPoshiNodeFromFile(
-			_BASE_DIR + fileName);
+			FileUtil.getURL(file));
 	}
 
 	private static final String _BASE_DIR =

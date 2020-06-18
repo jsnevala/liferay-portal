@@ -15,12 +15,12 @@
 package com.liferay.application.list;
 
 import com.liferay.application.list.display.context.logic.PanelCategoryHelper;
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -86,7 +86,8 @@ public abstract class BasePanelCategory implements PanelCategory {
 
 	@Override
 	public boolean include(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
 		return false;
@@ -94,7 +95,8 @@ public abstract class BasePanelCategory implements PanelCategory {
 
 	@Override
 	public boolean includeHeader(
-			HttpServletRequest request, HttpServletResponse response)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
 		return false;
@@ -102,14 +104,15 @@ public abstract class BasePanelCategory implements PanelCategory {
 
 	@Override
 	public boolean isActive(
-		HttpServletRequest request, PanelCategoryHelper panelCategoryHelper,
-		Group group) {
+		HttpServletRequest httpServletRequest,
+		PanelCategoryHelper panelCategoryHelper, Group group) {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		String ppid = ParamUtil.getString(
-			request, "selPpid", themeDisplay.getPpid());
+			httpServletRequest, "selPpid", themeDisplay.getPpid());
 
 		return panelCategoryHelper.containsPortlet(
 			ppid, getKey(), themeDisplay.getPermissionChecker(), group);

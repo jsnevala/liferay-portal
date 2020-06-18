@@ -15,15 +15,13 @@
 package com.liferay.portal.search.elasticsearch6.internal.search.engine.adapter.document;
 
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.search.Query;
-import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.portal.kernel.search.query.QueryTranslator;
+import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.engine.adapter.document.UpdateByQueryDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateByQueryDocumentResponse;
 
-import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.UpdateByQueryAction;
 import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
@@ -53,25 +51,19 @@ public class UpdateByQueryDocumentRequestExecutorImpl
 
 		TimeValue timeValue = bulkByScrollResponse.getTook();
 
-		UpdateByQueryDocumentResponse updateByQueryDocumentResponse =
-			new UpdateByQueryDocumentResponse(
-				bulkByScrollResponse.getUpdated(), timeValue.getMillis());
-
-		return updateByQueryDocumentResponse;
+		return new UpdateByQueryDocumentResponse(
+			bulkByScrollResponse.getUpdated(), timeValue.getMillis());
 	}
 
 	protected UpdateByQueryRequestBuilder createUpdateByQueryRequestBuilder(
 		UpdateByQueryDocumentRequest updateByQueryDocumentRequest) {
 
-		Client client = elasticsearchConnectionManager.getClient();
-
 		UpdateByQueryRequestBuilder updateByQueryRequestBuilder =
-			UpdateByQueryAction.INSTANCE.newRequestBuilder(client);
+			UpdateByQueryAction.INSTANCE.newRequestBuilder(
+				_elasticsearchClientResolver.getClient());
 
-		Query query = updateByQueryDocumentRequest.getQuery();
-
-		QueryBuilder queryBuilder = new QueryStringQueryBuilder(
-			query.toString());
+		QueryBuilder queryBuilder = _queryTranslator.translate(
+			updateByQueryDocumentRequest.getQuery(), null);
 
 		updateByQueryRequestBuilder.filter(queryBuilder);
 
@@ -93,7 +85,21 @@ public class UpdateByQueryDocumentRequestExecutorImpl
 		return updateByQueryRequestBuilder;
 	}
 
-	@Reference
-	protected ElasticsearchConnectionManager elasticsearchConnectionManager;
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
+	protected void setQueryTranslator(
+		QueryTranslator<QueryBuilder> queryTranslator) {
+
+		_queryTranslator = queryTranslator;
+	}
+
+	private ElasticsearchClientResolver _elasticsearchClientResolver;
+	private QueryTranslator<QueryBuilder> _queryTranslator;
 
 }

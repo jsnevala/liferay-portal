@@ -17,9 +17,7 @@ package com.liferay.portal.service.impl;
 import com.liferay.portal.kernel.cache.CacheRegistryItem;
 import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
-import com.liferay.portal.kernel.spring.aop.Skip;
 import com.liferay.portal.kernel.transaction.Propagation;
-import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.ClassNameImpl;
@@ -36,6 +34,7 @@ public class ClassNameLocalServiceImpl
 	extends ClassNameLocalServiceBaseImpl implements CacheRegistryItem {
 
 	@Override
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public ClassName addClassName(String value) {
 		ClassName className = classNamePersistence.fetchByValue(value);
 
@@ -46,7 +45,7 @@ public class ClassNameLocalServiceImpl
 
 			className.setValue(value);
 
-			classNamePersistence.update(className);
+			className = classNamePersistence.update(className);
 		}
 
 		return className;
@@ -69,6 +68,13 @@ public class ClassNameLocalServiceImpl
 	}
 
 	@Override
+	public ClassName deleteClassName(ClassName className) {
+		_classNames.remove(className.getValue());
+
+		return classNamePersistence.remove(className);
+	}
+
+	@Override
 	public ClassName fetchByClassNameId(long classNameId) {
 		return classNamePersistence.fetchByPrimaryKey(classNameId);
 	}
@@ -79,26 +85,18 @@ public class ClassNameLocalServiceImpl
 			return _nullClassName;
 		}
 
-		ClassName className = _classNames.get(value);
+		ClassName className = _classNames.computeIfAbsent(
+			value, key -> classNamePersistence.fetchByValue(value));
 
 		if (className == null) {
-			className = classNamePersistence.fetchByValue(value);
-
-			if (className == null) {
-				return _nullClassName;
-			}
-
-			final ClassName callbackClassName = className;
-
-			TransactionCommitCallbackUtil.registerCallback(
-				() -> _classNames.put(value, callbackClassName));
+			return _nullClassName;
 		}
 
 		return className;
 	}
 
 	@Override
-	@Skip
+	@Transactional(enabled = false)
 	public ClassName getClassName(String value) {
 		if (Validator.isNull(value)) {
 			return _nullClassName;
@@ -107,37 +105,32 @@ public class ClassNameLocalServiceImpl
 		// Always cache the class name. This table exists to improve
 		// performance. Create the class name if one does not exist.
 
-		ClassName className = _classNames.get(value);
+		ClassName className = _classNames.computeIfAbsent(
+			value,
+			key -> {
+				try {
+					return classNameLocalService.addClassName(value);
+				}
+				catch (Throwable throwable) {
+					return null;
+				}
+			});
 
 		if (className == null) {
-			try {
-				className = classNameLocalService.addClassName(value);
-
-				final ClassName callbackClassName = className;
-
-				TransactionCommitCallbackUtil.registerCallback(
-					() -> _classNames.put(value, callbackClassName));
-			}
-			catch (Throwable t) {
-				className = classNameLocalService.fetchClassName(value);
-
-				if (className == _nullClassName) {
-					throw t;
-				}
-			}
+			return classNameLocalService.fetchClassName(value);
 		}
 
 		return className;
 	}
 
 	@Override
-	@Skip
+	@Transactional(enabled = false)
 	public long getClassNameId(Class<?> clazz) {
 		return getClassNameId(clazz.getName());
 	}
 
 	@Override
-	@Skip
+	@Transactional(enabled = false)
 	public long getClassNameId(String value) {
 		ClassName className = getClassName(value);
 

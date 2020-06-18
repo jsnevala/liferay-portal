@@ -15,16 +15,13 @@
 package com.liferay.site.memberships.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
-import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
-import com.liferay.portal.kernel.service.UserGroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -44,22 +41,11 @@ import javax.servlet.http.HttpServletRequest;
 public class SiteMembershipsDisplayContext {
 
 	public SiteMembershipsDisplayContext(
-		HttpServletRequest request,
+		HttpServletRequest httpServletRequest,
 		LiferayPortletResponse liferayPortletResponse) {
 
-		_request = request;
+		_httpServletRequest = httpServletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
-	}
-
-	public int getCur() {
-		if (_cur != null) {
-			return _cur;
-		}
-
-		_cur = ParamUtil.getInteger(
-			_request, SearchContainer.DEFAULT_CUR_PARAM);
-
-		return _cur;
 	}
 
 	public Group getGroup() {
@@ -67,11 +53,13 @@ public class SiteMembershipsDisplayContext {
 			return _group;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		long groupId = ParamUtil.getLong(
-			_request, "groupId", themeDisplay.getSiteGroupIdOrLiveGroupId());
+			_httpServletRequest, "groupId",
+			themeDisplay.getSiteGroupIdOrLiveGroupId());
 
 		_group = GroupLocalServiceUtil.fetchGroup(groupId);
 
@@ -89,20 +77,20 @@ public class SiteMembershipsDisplayContext {
 	}
 
 	public List<NavigationItem> getInfoPanelNavigationItems() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(true);
 
-		return new NavigationItemList() {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(true);
-						navigationItem.setHref(themeDisplay.getURLCurrent());
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "details"));
-					});
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)_httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				navigationItem.setHref(themeDisplay.getURLCurrent());
+
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "details"));
 			}
-		};
+		).build();
 	}
 
 	public PortletURL getPortletURL() {
@@ -120,7 +108,7 @@ public class SiteMembershipsDisplayContext {
 			return _redirect;
 		}
 
-		_redirect = ParamUtil.getString(_request, "redirect");
+		_redirect = ParamUtil.getString(_httpServletRequest, "redirect");
 
 		if (Validator.isNull(_redirect)) {
 			PortletURL portletURL = _liferayPortletResponse.createRenderURL();
@@ -136,7 +124,7 @@ public class SiteMembershipsDisplayContext {
 			return _selUser;
 		}
 
-		_selUser = PortalUtil.getSelectedUser(_request, false);
+		_selUser = PortalUtil.getSelectedUser(_httpServletRequest, false);
 
 		return _selUser;
 	}
@@ -146,19 +134,9 @@ public class SiteMembershipsDisplayContext {
 			return _tabs1;
 		}
 
-		_tabs1 = ParamUtil.getString(_request, "tabs1", "users");
+		_tabs1 = ParamUtil.getString(_httpServletRequest, "tabs1", "users");
 
 		return _tabs1;
-	}
-
-	public UserGroup getUserGroup() throws PortalException {
-		if (_userGroup != null) {
-			return _userGroup;
-		}
-
-		_userGroup = UserGroupLocalServiceUtil.getUserGroup(getUserGroupId());
-
-		return _userGroup;
 	}
 
 	public long getUserGroupId() {
@@ -166,7 +144,7 @@ public class SiteMembershipsDisplayContext {
 			return _userGroupId;
 		}
 
-		_userGroupId = ParamUtil.getLong(_request, "userGroupId");
+		_userGroupId = ParamUtil.getLong(_httpServletRequest, "userGroupId");
 
 		return _userGroupId;
 	}
@@ -182,49 +160,39 @@ public class SiteMembershipsDisplayContext {
 	}
 
 	public List<NavigationItem> getViewNavigationItems() {
-		return new NavigationItemList() {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(
-							Objects.equals(getTabs1(), "users"));
-						navigationItem.setHref(
-							getPortletURL(), "tabs1", "users");
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "users"));
-					});
-
-				add(
-					navigationItem -> {
-						navigationItem.setActive(
-							Objects.equals(getTabs1(), "organizations"));
-						navigationItem.setHref(
-							getPortletURL(), "tabs1", "organizations");
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "organizations"));
-					});
-
-				add(
-					navigationItem -> {
-						navigationItem.setActive(
-							Objects.equals(getTabs1(), "user-groups"));
-						navigationItem.setHref(
-							getPortletURL(), "tabs1", "user-groups");
-						navigationItem.setLabel(
-							LanguageUtil.get(_request, "user-groups"));
-					});
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(Objects.equals(getTabs1(), "users"));
+				navigationItem.setHref(getPortletURL(), "tabs1", "users");
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "users"));
 			}
-		};
+		).add(
+			navigationItem -> {
+				navigationItem.setActive(
+					Objects.equals(getTabs1(), "organizations"));
+				navigationItem.setHref(
+					getPortletURL(), "tabs1", "organizations");
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "organizations"));
+			}
+		).add(
+			navigationItem -> {
+				navigationItem.setActive(
+					Objects.equals(getTabs1(), "user-groups"));
+				navigationItem.setHref(getPortletURL(), "tabs1", "user-groups");
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "user-groups"));
+			}
+		).build();
 	}
 
-	private Integer _cur;
 	private Group _group;
+	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private String _redirect;
-	private final HttpServletRequest _request;
 	private User _selUser;
 	private String _tabs1;
-	private UserGroup _userGroup;
 	private Long _userGroupId;
 
 }

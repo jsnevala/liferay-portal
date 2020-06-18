@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.search.facet.tag.AssetTagNamesFacetFactory;
 import com.liferay.portal.search.test.util.DocumentsAssert;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.users.admin.test.util.search.GroupBlueprint;
@@ -95,24 +96,24 @@ public class AssetTagNamesMultiLanguageSearchTest {
 	@Test
 	public void testChineseTags() throws Exception {
 		Locale locale = LocaleUtil.CHINA;
-		String title1 = "title should not match";
+		String title = "title should not match";
 		String tag = "你好";
 
 		Group group = _userSearchFixture.addGroup(
 			new GroupBlueprint() {
 				{
-					defaultLocale = locale;
+					setDefaultLocale(locale);
 				}
 			});
 
 		_fileEntrySearchFixture.addFileEntry(
 			new FileEntryBlueprint() {
 				{
-					assetTagNames = new String[] {tag};
-					fileName = title1;
-					groupId = group.getGroupId();
-					title = title1;
-					userId = getAdminUserId(group);
+					setAssetTagNames(new String[] {tag});
+					setFileName(title);
+					setGroupId(group.getGroupId());
+					setTitle(title);
+					setUserId(getAdminUserId(group));
 				}
 			});
 
@@ -121,25 +122,25 @@ public class AssetTagNamesMultiLanguageSearchTest {
 
 	@Test
 	public void testEnglishTags() throws Exception {
-		Locale locale = Locale.US;
-		String title1 = "title should not match";
+		Locale locale = LocaleUtil.US;
+		String title = "title should not match";
 		String tag = "searchtag";
 
 		Group group = _userSearchFixture.addGroup(
 			new GroupBlueprint() {
 				{
-					defaultLocale = locale;
+					setDefaultLocale(locale);
 				}
 			});
 
 		_fileEntrySearchFixture.addFileEntry(
 			new FileEntryBlueprint() {
 				{
-					assetTagNames = new String[] {tag};
-					fileName = title1;
-					groupId = group.getGroupId();
-					title = title1;
-					userId = getAdminUserId(group);
+					setAssetTagNames(new String[] {tag});
+					setFileName(title);
+					setGroupId(group.getGroupId());
+					setTitle(title);
+					setUserId(getAdminUserId(group));
 				}
 			});
 
@@ -157,35 +158,38 @@ public class AssetTagNamesMultiLanguageSearchTest {
 		Group group = _userSearchFixture.addGroup(
 			new GroupBlueprint() {
 				{
-					defaultLocale = locale;
+					setDefaultLocale(locale);
 				}
 			});
 
 		_fileEntrySearchFixture.addFileEntry(
 			new FileEntryBlueprint() {
 				{
-					assetTagNames = new String[] {tag1};
-					fileName = title1;
-					groupId = group.getGroupId();
-					title = title1;
-					userId = getAdminUserId(group);
+					setAssetTagNames(new String[] {tag1});
+					setFileName(title1);
+					setGroupId(group.getGroupId());
+					setTitle(title1);
+					setUserId(getAdminUserId(group));
 				}
 			});
 
 		_fileEntrySearchFixture.addFileEntry(
 			new FileEntryBlueprint() {
 				{
-					assetTagNames = new String[] {tag2};
-					fileName = title2;
-					groupId = group.getGroupId();
-					title = title2;
-					userId = getAdminUserId(group);
+					setAssetTagNames(new String[] {tag2});
+					setFileName(title2);
+					setGroupId(group.getGroupId());
+					setTitle(title2);
+					setUserId(getAdminUserId(group));
 				}
 			});
 
 		assertSearch(tag1, locale);
 		assertSearch(tag2, locale);
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected void assertDLFileEntryIndexer(String tagName, Locale locale)
 		throws Exception {
@@ -207,6 +211,9 @@ public class AssetTagNamesMultiLanguageSearchTest {
 			facetedSearcherManager.createFacetedSearcher();
 
 		SearchContext searchContext = getSearchContext(tagName, locale);
+
+		searchContext.setEntryClassNames(
+			new String[] {DLFileEntry.class.getName()});
 
 		Hits hits = facetedSearcher.search(searchContext);
 
@@ -234,8 +241,8 @@ public class AssetTagNamesMultiLanguageSearchTest {
 
 			return user.getUserId();
 		}
-		catch (PortalException pe) {
-			throw new RuntimeException(pe);
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
 		}
 	}
 

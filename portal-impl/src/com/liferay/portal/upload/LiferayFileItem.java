@@ -70,7 +70,7 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 			return MimeTypesUtil.getContentType(
 				getInputStream(), getFileName());
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			return ContentTypes.APPLICATION_OCTET_STREAM;
 		}
 	}
@@ -148,6 +148,10 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 		return headers;
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public long getItemSize() {
 		long size = getSize();
 
@@ -195,8 +199,8 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 
 			return dfos.getFile();
 		}
-		catch (IOException ioe) {
-			_log.error(ioe, ioe);
+		catch (IOException ioException) {
+			_log.error(ioException, ioException);
 
 			return null;
 		}
@@ -223,8 +227,9 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 		try {
 			_encodedString = getString(encode);
 		}
-		catch (UnsupportedEncodingException uee) {
-			_log.error(uee, uee);
+		catch (UnsupportedEncodingException unsupportedEncodingException) {
+			_log.error(
+				unsupportedEncodingException, unsupportedEncodingException);
 		}
 	}
 

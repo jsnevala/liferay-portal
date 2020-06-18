@@ -14,17 +14,11 @@
 
 package com.liferay.portal.dao.orm.hibernate;
 
-import com.liferay.petra.concurrent.ConcurrentReferenceKeyHashMap;
-import com.liferay.petra.memory.FinalizeManager;
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.criterion.DetachedCriteria;
 
@@ -33,6 +27,11 @@ import org.hibernate.criterion.DetachedCriteria;
  */
 public class DynamicQueryFactoryImpl implements DynamicQueryFactory {
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link #forClass(Class,
+	 *             ClassLoader)}
+	 */
+	@Deprecated
 	@Override
 	public DynamicQuery forClass(Class<?> clazz) {
 		clazz = getImplClass(clazz, null);
@@ -47,6 +46,11 @@ public class DynamicQueryFactoryImpl implements DynamicQueryFactory {
 		return new DynamicQueryImpl(DetachedCriteria.forClass(clazz));
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link #forClass(Class,
+	 *             String, ClassLoader)}
+	 */
+	@Deprecated
 	@Override
 	public DynamicQuery forClass(Class<?> clazz, String alias) {
 		clazz = getImplClass(clazz, null);
@@ -94,17 +98,18 @@ public class DynamicQueryFactoryImpl implements DynamicQueryFactory {
 		try {
 			implClass = getImplClass(implClassName, classLoader);
 		}
-		catch (Exception e1) {
+		catch (Exception exception1) {
 			if (classLoader != _portalClassLoader) {
 				try {
 					implClass = getImplClass(implClassName, _portalClassLoader);
 				}
-				catch (Exception e2) {
-					_log.error("Unable find model " + implClassName, e2);
+				catch (Exception exception2) {
+					_log.error(
+						"Unable find model " + implClassName, exception2);
 				}
 			}
 			else {
-				_log.error("Unable find model " + implClassName, e1);
+				_log.error("Unable find model " + implClassName, exception1);
 			}
 		}
 
@@ -115,32 +120,11 @@ public class DynamicQueryFactoryImpl implements DynamicQueryFactory {
 			String implClassName, ClassLoader classLoader)
 		throws ClassNotFoundException {
 
-		Map<String, Class<?>> classes = _classes.get(classLoader);
-
-		if (classes == null) {
-			classes = new HashMap<>();
-
-			_classes.put(classLoader, classes);
-		}
-
-		Class<?> clazz = classes.get(implClassName);
-
-		if (clazz == null) {
-			clazz = classLoader.loadClass(implClassName);
-
-			classes.put(implClassName, clazz);
-		}
-
-		return clazz;
+		return classLoader.loadClass(implClassName);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DynamicQueryFactoryImpl.class);
-
-	private static final
-		ConcurrentMap<ClassLoader, Map<String, Class<?>>> _classes =
-			new ConcurrentReferenceKeyHashMap<>(
-				FinalizeManager.WEAK_REFERENCE_FACTORY);
 
 	private final ClassLoader _portalClassLoader =
 		DynamicQueryFactoryImpl.class.getClassLoader();

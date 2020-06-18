@@ -17,15 +17,19 @@ package com.liferay.portal.search.web.internal.result.display.builder;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.asset.util.AssetRendererFactoryLookup;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.search.web.internal.result.display.context.SearchResultContentDisplayContext;
+import com.liferay.portlet.internal.MutableRenderParametersImpl;
 
-import java.util.Locale;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -192,7 +196,7 @@ public class SearchResultContentDisplayBuilderTest {
 			RandomTestUtil.randomLong());
 		searchResultContentDisplayBuilder.setAssetRendererFactoryLookup(
 			_assetRendererFactoryLookup);
-		searchResultContentDisplayBuilder.setLocale(Locale.US);
+		searchResultContentDisplayBuilder.setLocale(LocaleUtil.US);
 		searchResultContentDisplayBuilder.setPermissionChecker(
 			_permissionChecker);
 		searchResultContentDisplayBuilder.setPortal(_portal);
@@ -225,7 +229,7 @@ public class SearchResultContentDisplayBuilderTest {
 			_assetRenderer
 		).getURLEdit(
 			Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(),
-			Mockito.anyObject()
+			Mockito.any(PortletURL.class)
 		);
 
 		Mockito.doReturn(
@@ -287,6 +291,12 @@ public class SearchResultContentDisplayBuilderTest {
 		).when(
 			_renderResponse
 		).createRenderURL();
+
+		Mockito.doReturn(
+			new MutableRenderParametersImpl(new HashMap<>(), new HashSet<>())
+		).when(
+			_renderPortletURL
+		).getRenderParameters();
 	}
 
 	@Mock

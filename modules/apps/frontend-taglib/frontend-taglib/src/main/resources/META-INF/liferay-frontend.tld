@@ -80,76 +80,38 @@
 		</attribute>
 	</tag>
 	<tag>
-		<name>cards-treeview</name>
-		<tag-class>com.liferay.frontend.taglib.servlet.taglib.soy.CardsTreeviewTag</tag-class>
+		<name>component</name>
+		<tag-class>com.liferay.frontend.taglib.servlet.taglib.ComponentTag</tag-class>
 		<body-content>empty</body-content>
 		<attribute>
-			<name>nodes</name>
-			<required>true</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>viewType</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
-		<description>Creates a contextual sidebar component.</description>
-		<name>contextual-sidebar</name>
-		<tag-class>com.liferay.frontend.taglib.servlet.taglib.soy.ContextualSidebarTag</tag-class>
-		<body-content>empty</body-content>
-		<attribute>
-			<description>The sidebar's body content.</description>
-			<name>body</name>
-			<required>true</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>The CSS classes to add to the sidebar's body wrapper.</description>
-			<name>bodyClasses</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>An ID for the component instance.</description>
 			<name>componentId</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>The CSS classes to add to the sidebar's wrapper.</description>
-			<name>elementClasses</name>
+			<name>containerId</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>The sidebar's header content.</description>
-			<name>header</name>
+			<name>context</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>destroyOnNavigate</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
+		</attribute>
+		<attribute>
+			<name>module</name>
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>The CSS classes to add to the sidebar's header wrapper.</description>
-			<name>headerClasses</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>An ID for the component instance.</description>
-			<name>id</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>A namespace for the component.</description>
-			<name>namespace</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>Whether the sidebar is open or closed.</description>
-			<name>visible</name>
+			<description>The servlet context used to resolve JS packages. The default value is the current portlet's servlet context.</description>
+			<name>servletContext</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -187,7 +149,7 @@
 	</tag>
 	<tag>
 		<name>diff-version-comparator</name>
-		<tag-class>com.liferay.frontend.taglib.servlet.taglib.soy.DiffVersionComparatorTag</tag-class>
+		<tag-class>com.liferay.frontend.taglib.servlet.taglib.DiffVersionComparatorTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
 			<name>availableLocales</name>
@@ -409,12 +371,22 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>defaultEventHandler</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>description</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<name>elementType</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>title</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -462,7 +434,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>Text for the field set's label. The label renders as a legend, with a horizontal rule, above the fieldset.</description>
+			<description>Text for the field set's label. The label renders as a legend, with a horizontal rule, above the field set.</description>
 			<name>label</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -491,6 +463,12 @@
 		<attribute>
 			<description>A URL for the form's cancel button.</description>
 			<name>backURL</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>A CSS class for styling the field set.</description>
+			<name>fieldSetCssClass</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -528,6 +506,12 @@
 		<attribute>
 			<description>The service context of the action JSP.</description>
 			<name>actionJspServletContext</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>A CSS class for styling the card's secondary container.</description>
+			<name>cardCssClass</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -653,6 +637,12 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>A CSS class for styling the card's secondary container.</description>
+			<name>cardCssClass</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<description>Whether to select the card checkbox. The default value is <![CDATA[<code>false</code>]]>.</description>
 			<name>checkboxChecked</name>
 			<required>false</required>
@@ -767,6 +757,12 @@
 		<attribute>
 			<description>The service context of the action JSP.</description>
 			<name>actionJspServletContext</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>A CSS class for styling the card's secondary container.</description>
+			<name>cardCssClass</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -1006,12 +1002,6 @@
 		</attribute>
 		<attribute>
 			<name>position</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>Deprecated as of 7.0.0, with no direct replacement.</description>
-			<name>sidenavId</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -1271,12 +1261,6 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>Deprecated as of 7.0.0, with no direct replacement.</description>
-			<name>sidenavId</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
 			<name>type</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1332,6 +1316,11 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>containerWrapperCssClass</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>context</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1342,13 +1331,28 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>headerContainerCssClass</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>id</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>inverted</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<name>key</name>
 			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>menubarCssClass</name>
+			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
@@ -1386,7 +1390,7 @@
 	<tag>
 		<description>Creates a UI component for managing translations of associated content.</description>
 		<name>translation-manager</name>
-		<tag-class>com.liferay.frontend.taglib.servlet.taglib.soy.TranslationManagerTag</tag-class>
+		<tag-class>com.liferay.frontend.taglib.servlet.taglib.TranslationManagerTag</tag-class>
 		<body-content>empty</body-content>
 		<attribute>
 			<description>Available locales of translation languages from which to choose.</description>
@@ -1466,6 +1470,12 @@
 		<attribute>
 			<description>Whether to display the image as a background image.</description>
 			<name>backgroundImage</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>A CSS class for styling the card's secondary container.</description>
+			<name>cardCssClass</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -1584,6 +1594,12 @@
 		<attribute>
 			<description>Whether to display the image as a background image.</description>
 			<name>backgroundImage</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>A CSS class for styling the card's secondary container.</description>
+			<name>cardCssClass</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>

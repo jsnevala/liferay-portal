@@ -20,8 +20,11 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 
 /**
- * @author Adolfo Pérez
+ * @author     Adolfo Pérez
+ * @deprecated As of Mueller (7.2.x), replaced by {@link MBObjectsComparator}
+ * @review
  */
+@Deprecated
 public class MBObjectsTitleComparator<T> extends OrderByComparator<T> {
 
 	public static final String ORDER_BY_ASC =
@@ -32,8 +35,9 @@ public class MBObjectsTitleComparator<T> extends OrderByComparator<T> {
 		"modelCategory ASC, priority DESC, name DESC, modifiedDate DESC, " +
 			"modelId ASC";
 
-	public static final String[] ORDER_BY_FIELDS =
-		{"modelCategory", "priority", "name", "modifiedDate", "modelId"};
+	public static final String[] ORDER_BY_FIELDS = {
+		"modelCategory", "priority", "name", "modifiedDate", "modelId"
+	};
 
 	public MBObjectsTitleComparator() {
 		this(false);

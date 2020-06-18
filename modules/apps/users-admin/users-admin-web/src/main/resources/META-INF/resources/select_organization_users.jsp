@@ -43,10 +43,6 @@ SearchContainer userSearchContainer = selectOrganizationUsersManagementToolbarDi
 
 <liferay-ui:membership-policy-error />
 
-<clay:navigation-bar
-	navigationItems='<%= userDisplayContext.getNavigationItems("users") %>'
-/>
-
 <clay:management-toolbar
 	clearResultsURL="<%= selectOrganizationUsersManagementToolbarDisplayContext.getClearResultsURL() %>"
 	filterDropdownItems="<%= selectOrganizationUsersManagementToolbarDisplayContext.getFilterDropdownItems() %>"
@@ -135,22 +131,22 @@ SearchContainer userSearchContainer = selectOrganizationUsersManagementToolbarDi
 <aui:script use="liferay-search-container">
 	var searchContainer = Liferay.SearchContainer.get('<portlet:namespace />users');
 
-	searchContainer.on(
-		'rowToggled',
-		function(event) {
-			var selectedItems = event.elements.allSelectedElements;
+	searchContainer.on('rowToggled', function (event) {
+		var selectedItems = event.elements.allSelectedElements;
 
-			var result = {};
+		var result = {};
 
-			if (!selectedItems.isEmpty()) {
-				result = {
-					data: {
-						value: selectedItems.get('value').join(',')
-					}
-				};
-			}
-
-			Liferay.Util.getOpener().Liferay.fire('<%= HtmlUtil.escapeJS(eventName) %>', result);
+		if (!selectedItems.isEmpty()) {
+			result = {
+				data: {
+					value: selectedItems.get('value').join(','),
+				},
+			};
 		}
-	);
+
+		Liferay.Util.getOpener().Liferay.fire(
+			'<%= HtmlUtil.escapeJS(eventName) %>',
+			result
+		);
+	});
 </aui:script>

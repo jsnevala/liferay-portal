@@ -14,14 +14,11 @@
 
 package com.liferay.fragment.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.fragment.model.FragmentEntryLink;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing FragmentEntryLink in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see FragmentEntryLink
  * @generated
  */
-@ProviderType
-public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink>,
-	Externalizable {
+public class FragmentEntryLinkCacheModel
+	implements CacheModel<FragmentEntryLink>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,13 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 			return false;
 		}
 
-		FragmentEntryLinkCacheModel fragmentEntryLinkCacheModel = (FragmentEntryLinkCacheModel)obj;
+		FragmentEntryLinkCacheModel fragmentEntryLinkCacheModel =
+			(FragmentEntryLinkCacheModel)obj;
 
-		if (fragmentEntryLinkId == fragmentEntryLinkCacheModel.fragmentEntryLinkId) {
+		if ((fragmentEntryLinkId ==
+				fragmentEntryLinkCacheModel.fragmentEntryLinkId) &&
+			(mvccVersion == fragmentEntryLinkCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +61,28 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, fragmentEntryLinkId);
+		int hashCode = HashUtil.hash(0, fragmentEntryLinkId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(41);
+		StringBundler sb = new StringBundler(49);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", fragmentEntryLinkId=");
 		sb.append(fragmentEntryLinkId);
@@ -88,6 +102,8 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 		sb.append(originalFragmentEntryLinkId);
 		sb.append(", fragmentEntryId=");
 		sb.append(fragmentEntryId);
+		sb.append(", segmentsExperienceId=");
+		sb.append(segmentsExperienceId);
 		sb.append(", classNameId=");
 		sb.append(classNameId);
 		sb.append(", classPK=");
@@ -98,14 +114,18 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 		sb.append(html);
 		sb.append(", js=");
 		sb.append(js);
+		sb.append(", configuration=");
+		sb.append(configuration);
 		sb.append(", editableValues=");
 		sb.append(editableValues);
-		sb.append(", position=");
-		sb.append(position);
-		sb.append(", lastPropagationDate=");
-		sb.append(lastPropagationDate);
 		sb.append(", namespace=");
 		sb.append(namespace);
+		sb.append(", position=");
+		sb.append(position);
+		sb.append(", rendererKey=");
+		sb.append(rendererKey);
+		sb.append(", lastPropagationDate=");
+		sb.append(lastPropagationDate);
 		sb.append(", lastPublishDate=");
 		sb.append(lastPublishDate);
 		sb.append("}");
@@ -115,7 +135,10 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 
 	@Override
 	public FragmentEntryLink toEntityModel() {
-		FragmentEntryLinkImpl fragmentEntryLinkImpl = new FragmentEntryLinkImpl();
+		FragmentEntryLinkImpl fragmentEntryLinkImpl =
+			new FragmentEntryLinkImpl();
+
+		fragmentEntryLinkImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			fragmentEntryLinkImpl.setUuid("");
@@ -150,8 +173,10 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 			fragmentEntryLinkImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
-		fragmentEntryLinkImpl.setOriginalFragmentEntryLinkId(originalFragmentEntryLinkId);
+		fragmentEntryLinkImpl.setOriginalFragmentEntryLinkId(
+			originalFragmentEntryLinkId);
 		fragmentEntryLinkImpl.setFragmentEntryId(fragmentEntryId);
+		fragmentEntryLinkImpl.setSegmentsExperienceId(segmentsExperienceId);
 		fragmentEntryLinkImpl.setClassNameId(classNameId);
 		fragmentEntryLinkImpl.setClassPK(classPK);
 
@@ -176,6 +201,13 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 			fragmentEntryLinkImpl.setJs(js);
 		}
 
+		if (configuration == null) {
+			fragmentEntryLinkImpl.setConfiguration("");
+		}
+		else {
+			fragmentEntryLinkImpl.setConfiguration(configuration);
+		}
+
 		if (editableValues == null) {
 			fragmentEntryLinkImpl.setEditableValues("");
 		}
@@ -183,21 +215,28 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 			fragmentEntryLinkImpl.setEditableValues(editableValues);
 		}
 
-		fragmentEntryLinkImpl.setPosition(position);
-
-		if (lastPropagationDate == Long.MIN_VALUE) {
-			fragmentEntryLinkImpl.setLastPropagationDate(null);
-		}
-		else {
-			fragmentEntryLinkImpl.setLastPropagationDate(new Date(
-					lastPropagationDate));
-		}
-
 		if (namespace == null) {
 			fragmentEntryLinkImpl.setNamespace("");
 		}
 		else {
 			fragmentEntryLinkImpl.setNamespace(namespace);
+		}
+
+		fragmentEntryLinkImpl.setPosition(position);
+
+		if (rendererKey == null) {
+			fragmentEntryLinkImpl.setRendererKey("");
+		}
+		else {
+			fragmentEntryLinkImpl.setRendererKey(rendererKey);
+		}
+
+		if (lastPropagationDate == Long.MIN_VALUE) {
+			fragmentEntryLinkImpl.setLastPropagationDate(null);
+		}
+		else {
+			fragmentEntryLinkImpl.setLastPropagationDate(
+				new Date(lastPropagationDate));
 		}
 
 		if (lastPublishDate == Long.MIN_VALUE) {
@@ -213,7 +252,10 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		fragmentEntryLinkId = objectInput.readLong();
@@ -231,23 +273,28 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 
 		fragmentEntryId = objectInput.readLong();
 
+		segmentsExperienceId = objectInput.readLong();
+
 		classNameId = objectInput.readLong();
 
 		classPK = objectInput.readLong();
-		css = objectInput.readUTF();
-		html = objectInput.readUTF();
-		js = objectInput.readUTF();
-		editableValues = objectInput.readUTF();
+		css = (String)objectInput.readObject();
+		html = (String)objectInput.readObject();
+		js = (String)objectInput.readObject();
+		configuration = (String)objectInput.readObject();
+		editableValues = (String)objectInput.readObject();
+		namespace = objectInput.readUTF();
 
 		position = objectInput.readInt();
+		rendererKey = objectInput.readUTF();
 		lastPropagationDate = objectInput.readLong();
-		namespace = objectInput.readUTF();
 		lastPublishDate = objectInput.readLong();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -277,40 +324,46 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 
 		objectOutput.writeLong(fragmentEntryId);
 
+		objectOutput.writeLong(segmentsExperienceId);
+
 		objectOutput.writeLong(classNameId);
 
 		objectOutput.writeLong(classPK);
 
 		if (css == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(css);
+			objectOutput.writeObject(css);
 		}
 
 		if (html == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(html);
+			objectOutput.writeObject(html);
 		}
 
 		if (js == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(js);
+			objectOutput.writeObject(js);
+		}
+
+		if (configuration == null) {
+			objectOutput.writeObject("");
+		}
+		else {
+			objectOutput.writeObject(configuration);
 		}
 
 		if (editableValues == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(editableValues);
+			objectOutput.writeObject(editableValues);
 		}
-
-		objectOutput.writeInt(position);
-		objectOutput.writeLong(lastPropagationDate);
 
 		if (namespace == null) {
 			objectOutput.writeUTF("");
@@ -319,9 +372,20 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 			objectOutput.writeUTF(namespace);
 		}
 
+		objectOutput.writeInt(position);
+
+		if (rendererKey == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(rendererKey);
+		}
+
+		objectOutput.writeLong(lastPropagationDate);
 		objectOutput.writeLong(lastPublishDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long fragmentEntryLinkId;
 	public long groupId;
@@ -332,14 +396,18 @@ public class FragmentEntryLinkCacheModel implements CacheModel<FragmentEntryLink
 	public long modifiedDate;
 	public long originalFragmentEntryLinkId;
 	public long fragmentEntryId;
+	public long segmentsExperienceId;
 	public long classNameId;
 	public long classPK;
 	public String css;
 	public String html;
 	public String js;
+	public String configuration;
 	public String editableValues;
-	public int position;
-	public long lastPropagationDate;
 	public String namespace;
+	public int position;
+	public String rendererKey;
+	public long lastPropagationDate;
 	public long lastPublishDate;
+
 }

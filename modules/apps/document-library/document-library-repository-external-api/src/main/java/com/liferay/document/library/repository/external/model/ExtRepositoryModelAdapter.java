@@ -37,7 +37,7 @@ import java.util.Map;
  * @author Sergio González
  */
 public abstract class ExtRepositoryModelAdapter<T>
-	implements RepositoryModel<T>, Cloneable {
+	implements Cloneable, RepositoryModel<T> {
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -45,8 +45,8 @@ public abstract class ExtRepositoryModelAdapter<T>
 		try {
 			return (T)super.clone();
 		}
-		catch (CloneNotSupportedException cnse) {
-			throw new RuntimeException(cnse);
+		catch (CloneNotSupportedException cloneNotSupportedException) {
+			throw new RuntimeException(cloneNotSupportedException);
 		}
 	}
 
@@ -140,7 +140,7 @@ public abstract class ExtRepositoryModelAdapter<T>
 		try {
 			return user.getUserUuid();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return StringPool.BLANK;
@@ -258,7 +258,7 @@ public abstract class ExtRepositoryModelAdapter<T>
 						getCompanyId(), liferayLogin);
 				}
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 
@@ -266,7 +266,7 @@ public abstract class ExtRepositoryModelAdapter<T>
 			try {
 				user = UserLocalServiceUtil.getDefaultUser(getCompanyId());
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 			}
 		}
 

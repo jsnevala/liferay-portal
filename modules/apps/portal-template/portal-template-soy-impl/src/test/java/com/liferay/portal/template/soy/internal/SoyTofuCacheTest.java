@@ -14,20 +14,17 @@
 
 package com.liferay.portal.template.soy.internal;
 
-import com.google.template.soy.SoyFileSet;
 import com.google.template.soy.tofu.SoyTofu;
 
-import com.liferay.portal.kernel.template.TemplateResource;
+import com.liferay.portal.kernel.util.ProxyFactory;
+import com.liferay.portal.template.soy.SoyTemplateResource;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.mockito.Mockito;
 
 /**
  * @author Bruno Basto
@@ -49,95 +46,99 @@ public class SoyTofuCacheTest {
 
 	@Test
 	public void testCacheHit() throws Exception {
-		List<TemplateResource> templateResources =
-			_soyTestHelper.getTemplateResources(
+		SoyTemplateResource soyTemplateResource =
+			_soyTestHelper.getSoyTemplateResource(
 				Arrays.asList("simple.soy", "context.soy"));
 
-		SoyFileSet soyFileSet = _soyTestHelper.getSoyFileSet(templateResources);
+		_soyTofuCacheHandler.add(
+			soyTemplateResource.getTemplateId(),
+			_soyTestHelper.getSoyFileSet(
+				soyTemplateResource.getTemplateResources()),
+			ProxyFactory.newDummyInstance(SoyTofu.class));
 
-		SoyTofu soyTofu = Mockito.mock(SoyTofu.class);
-
-		_soyTofuCacheHandler.add(templateResources, soyFileSet, soyTofu);
-
-		Assert.assertNotNull(_soyTofuCacheHandler.get(templateResources));
+		Assert.assertNotNull(
+			_soyTofuCacheHandler.get(soyTemplateResource.getTemplateId()));
 	}
 
 	@Test
 	public void testCacheMiss() throws Exception {
-		List<TemplateResource> templateResources =
-			_soyTestHelper.getTemplateResources(
+		SoyTemplateResource soyTemplateResource =
+			_soyTestHelper.getSoyTemplateResource(
 				Arrays.asList("simple.soy", "context.soy"));
 
-		SoyFileSet soyFileSet = _soyTestHelper.getSoyFileSet(templateResources);
+		_soyTofuCacheHandler.add(
+			soyTemplateResource.getTemplateId(),
+			_soyTestHelper.getSoyFileSet(
+				soyTemplateResource.getTemplateResources()),
+			ProxyFactory.newDummyInstance(SoyTofu.class));
 
-		SoyTofu soyTofu = Mockito.mock(SoyTofu.class);
+		soyTemplateResource = _soyTestHelper.getSoyTemplateResource(
+			Arrays.asList("context.soy"));
 
-		_soyTofuCacheHandler.add(templateResources, soyFileSet, soyTofu);
-
-		List<TemplateResource> templateResourcesA =
-			_soyTestHelper.getTemplateResources(Arrays.asList("context.soy"));
-
-		Assert.assertNull(_soyTofuCacheHandler.get(templateResourcesA));
+		Assert.assertNull(
+			_soyTofuCacheHandler.get(soyTemplateResource.getTemplateId()));
 	}
 
 	@Test
 	public void testRemoveAny() throws Exception {
-		List<TemplateResource> cachedTemplateResources =
-			_soyTestHelper.getTemplateResources(
+		SoyTemplateResource cachedSoyTemplateResource =
+			_soyTestHelper.getSoyTemplateResource(
 				Arrays.asList(
 					"simple.soy", "context.soy", "multi-context.soy"));
 
-		SoyFileSet soyFileSet = _soyTestHelper.getSoyFileSet(
-			cachedTemplateResources);
+		_soyTofuCacheHandler.add(
+			cachedSoyTemplateResource.getTemplateId(),
+			_soyTestHelper.getSoyFileSet(
+				cachedSoyTemplateResource.getTemplateResources()),
+			ProxyFactory.newDummyInstance(SoyTofu.class));
 
-		SoyTofu soyTofu = Mockito.mock(SoyTofu.class);
+		SoyTemplateResource soyTemplateResource =
+			_soyTestHelper.getSoyTemplateResource(Arrays.asList("context.soy"));
 
-		_soyTofuCacheHandler.add(cachedTemplateResources, soyFileSet, soyTofu);
+		_soyTofuCacheHandler.removeIfAny(
+			soyTemplateResource.getTemplateResources());
 
-		List<TemplateResource> templateResources =
-			_soyTestHelper.getTemplateResources(Arrays.asList("context.soy"));
-
-		_soyTofuCacheHandler.removeIfAny(templateResources);
-
-		Assert.assertNull(_soyTofuCacheHandler.get(templateResources));
+		Assert.assertNull(
+			_soyTofuCacheHandler.get(soyTemplateResource.getTemplateId()));
 	}
 
 	@Test
 	public void testRemoveAnyWithMultipleEntries() throws Exception {
-		List<TemplateResource> cachedTemplateResourcesA =
-			_soyTestHelper.getTemplateResources(Arrays.asList("simple.soy"));
-
-		SoyFileSet soyFileSetA = _soyTestHelper.getSoyFileSet(
-			cachedTemplateResourcesA);
-
-		SoyTofu soyTofuA = Mockito.mock(SoyTofu.class);
+		SoyTemplateResource cachedSoyTemplateResourceA =
+			_soyTestHelper.getSoyTemplateResource(Arrays.asList("simple.soy"));
 
 		_soyTofuCacheHandler.add(
-			cachedTemplateResourcesA, soyFileSetA, soyTofuA);
+			cachedSoyTemplateResourceA.getTemplateId(),
+			_soyTestHelper.getSoyFileSet(
+				cachedSoyTemplateResourceA.getTemplateResources()),
+			ProxyFactory.newDummyInstance(SoyTofu.class));
 
 		Assert.assertNotNull(
-			_soyTofuCacheHandler.get(cachedTemplateResourcesA));
+			_soyTofuCacheHandler.get(
+				cachedSoyTemplateResourceA.getTemplateId()));
 
-		List<TemplateResource> cachedTemplateResourcesB =
-			_soyTestHelper.getTemplateResources(
+		SoyTemplateResource cachedSoyTemplateResourceB =
+			_soyTestHelper.getSoyTemplateResource(
 				Arrays.asList("context.soy", "multi-context.soy"));
 
-		SoyFileSet soyFileSetB = _soyTestHelper.getSoyFileSet(
-			cachedTemplateResourcesA);
-
-		SoyTofu soyTofuB = Mockito.mock(SoyTofu.class);
-
 		_soyTofuCacheHandler.add(
-			cachedTemplateResourcesB, soyFileSetB, soyTofuB);
+			cachedSoyTemplateResourceB.getTemplateId(),
+			_soyTestHelper.getSoyFileSet(
+				cachedSoyTemplateResourceA.getTemplateResources()),
+			ProxyFactory.newDummyInstance(SoyTofu.class));
 
-		List<TemplateResource> templateResources =
-			_soyTestHelper.getTemplateResources(Arrays.asList("context.soy"));
+		SoyTemplateResource soyTemplateResource =
+			_soyTestHelper.getSoyTemplateResource(Arrays.asList("context.soy"));
 
-		_soyTofuCacheHandler.removeIfAny(templateResources);
+		_soyTofuCacheHandler.removeIfAny(
+			soyTemplateResource.getTemplateResources());
 
-		Assert.assertNull(_soyTofuCacheHandler.get(cachedTemplateResourcesB));
+		Assert.assertNull(
+			_soyTofuCacheHandler.get(
+				cachedSoyTemplateResourceB.getTemplateId()));
 		Assert.assertNotNull(
-			_soyTofuCacheHandler.get(cachedTemplateResourcesA));
+			_soyTofuCacheHandler.get(
+				cachedSoyTemplateResourceA.getTemplateId()));
 	}
 
 	private final SoyTestHelper _soyTestHelper = new SoyTestHelper();

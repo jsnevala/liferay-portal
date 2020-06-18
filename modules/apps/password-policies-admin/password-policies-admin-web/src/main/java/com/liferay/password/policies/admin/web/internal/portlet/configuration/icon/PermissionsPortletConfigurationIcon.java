@@ -34,8 +34,6 @@ import com.liferay.taglib.security.PermissionsURLTag;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -64,26 +62,22 @@ public class PermissionsPortletConfigurationIcon
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		String url = StringPool.BLANK;
-
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		try {
-			url = PermissionsURLTag.doTag(
+			return PermissionsURLTag.doTag(
 				StringPool.BLANK, PasswordPolicy.class.getName(),
 				themeDisplay.getScopeGroupName(), null,
 				String.valueOf(_getPasswordPolicyId(portletRequest)),
 				LiferayWindowState.POP_UP.toString(), null,
 				themeDisplay.getRequest());
 		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
-		return url;
+		return StringPool.BLANK;
 	}
 
 	@Override
@@ -93,23 +87,18 @@ public class PermissionsPortletConfigurationIcon
 
 	@Override
 	public boolean isShow(PortletRequest portletRequest) {
-		try {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)portletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
-
-			if (PasswordPolicyPermissionUtil.contains(
-					themeDisplay.getPermissionChecker(),
-					_getPasswordPolicyId(portletRequest),
-					ActionKeys.PERMISSIONS)) {
-
-				return true;
-			}
+		if (_getPasswordPolicyId(portletRequest) == 0) {
+			return false;
 		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		if (PasswordPolicyPermissionUtil.contains(
+				themeDisplay.getPermissionChecker(),
+				_getPasswordPolicyId(portletRequest), ActionKeys.PERMISSIONS)) {
+
+			return true;
 		}
 
 		return false;
@@ -121,10 +110,8 @@ public class PermissionsPortletConfigurationIcon
 	}
 
 	private long _getPasswordPolicyId(PortletRequest portletRequest) {
-		HttpServletRequest request = _portal.getHttpServletRequest(
-			portletRequest);
-
-		return ParamUtil.getLong(request, "passwordPolicyId");
+		return ParamUtil.getLong(
+			_portal.getHttpServletRequest(portletRequest), "passwordPolicyId");
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

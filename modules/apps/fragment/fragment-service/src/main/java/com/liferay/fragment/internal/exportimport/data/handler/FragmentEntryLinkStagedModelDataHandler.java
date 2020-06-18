@@ -14,6 +14,7 @@
 
 package com.liferay.fragment.internal.exportimport.data.handler;
 
+import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -21,8 +22,10 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepositoryRegistryUtil;
+import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
+import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -32,6 +35,8 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Pavel Savinov
@@ -40,8 +45,9 @@ import org.osgi.service.component.annotations.Reference;
 public class FragmentEntryLinkStagedModelDataHandler
 	extends BaseStagedModelDataHandler<FragmentEntryLink> {
 
-	public static final String[] CLASS_NAMES =
-		{FragmentEntryLink.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		FragmentEntryLink.class.getName()
+	};
 
 	@Override
 	public String[] getClassNames() {
@@ -79,6 +85,22 @@ public class FragmentEntryLinkStagedModelDataHandler
 
 		Element fragmentEntryLinkElement =
 			portletDataContext.getExportDataElement(fragmentEntryLink);
+
+		String html =
+			_dlReferencesExportImportContentProcessor.
+				replaceExportContentReferences(
+					portletDataContext, fragmentEntryLink,
+					fragmentEntryLink.getHtml(), true, false);
+
+		fragmentEntryLink.setHtml(html);
+
+		String editableValues =
+			_fragmentEntryLinkExportImportContentProcessor.
+				replaceExportContentReferences(
+					portletDataContext, fragmentEntryLink,
+					fragmentEntryLink.getEditableValues(), true, false);
+
+		fragmentEntryLink.setEditableValues(editableValues);
 
 		portletDataContext.addClassedModel(
 			fragmentEntryLinkElement,
@@ -122,6 +144,34 @@ public class FragmentEntryLinkStagedModelDataHandler
 			fragmentEntryLink.getOriginalFragmentEntryLinkId(),
 			fragmentEntryLink.getOriginalFragmentEntryLinkId());
 
+		Map<Long, Long> fragmentEntryIds =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				FragmentEntry.class);
+
+		long fragmentEntryId = MapUtil.getLong(
+			fragmentEntryIds, fragmentEntryLink.getFragmentEntryId());
+
+		if (fragmentEntryId == 0) {
+			FragmentEntry fragmentEntry =
+				_fragmentEntryLocalService.fetchFragmentEntry(
+					fragmentEntryLink.getFragmentEntryId());
+
+			if (fragmentEntry != null) {
+				FragmentEntry targetFragmentEntry =
+					_fragmentEntryLocalService.
+						fetchFragmentEntryByUuidAndGroupId(
+							fragmentEntry.getUuid(),
+							portletDataContext.getGroupId());
+
+				if (targetFragmentEntry != null) {
+					fragmentEntryId = targetFragmentEntry.getFragmentEntryId();
+				}
+				else {
+					fragmentEntryId = fragmentEntryLink.getFragmentEntryId();
+				}
+			}
+		}
+
 		Map<Long, Long> referenceClassPKs =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
 				fragmentEntryLink.getClassName());
@@ -137,7 +187,24 @@ public class FragmentEntryLinkStagedModelDataHandler
 			portletDataContext.getScopeGroupId());
 		importedFragmentEntryLink.setOriginalFragmentEntryLinkId(
 			originalFragmentEntryLinkId);
+		importedFragmentEntryLink.setFragmentEntryId(fragmentEntryId);
 		importedFragmentEntryLink.setClassPK(referenceClassPK);
+
+		String html =
+			_dlReferencesExportImportContentProcessor.
+				replaceImportContentReferences(
+					portletDataContext, fragmentEntryLink,
+					fragmentEntryLink.getHtml());
+
+		importedFragmentEntryLink.setHtml(html);
+
+		String editableValues =
+			_fragmentEntryLinkExportImportContentProcessor.
+				replaceImportContentReferences(
+					portletDataContext, fragmentEntryLink,
+					fragmentEntryLink.getEditableValues());
+
+		importedFragmentEntryLink.setEditableValues(editableValues);
 
 		FragmentEntryLink existingFragmentEntryLink =
 			_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
@@ -151,6 +218,8 @@ public class FragmentEntryLinkStagedModelDataHandler
 				portletDataContext, importedFragmentEntryLink);
 		}
 		else {
+			importedFragmentEntryLink.setMvccVersion(
+				existingFragmentEntryLink.getMvccVersion());
 			importedFragmentEntryLink.setFragmentEntryLinkId(
 				existingFragmentEntryLink.getFragmentEntryLinkId());
 
@@ -170,8 +239,23 @@ public class FragmentEntryLinkStagedModelDataHandler
 		return _stagedModelRepository;
 	}
 
+	@Reference(target = "(content.processor.type=DLReferences)")
+	private ExportImportContentProcessor<String>
+		_dlReferencesExportImportContentProcessor;
+
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY,
+		target = "(model.class.name=com.liferay.fragment.model.FragmentEntryLink)"
+	)
+	private volatile ExportImportContentProcessor<String>
+		_fragmentEntryLinkExportImportContentProcessor;
+
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Reference
+	private FragmentEntryLocalService _fragmentEntryLocalService;
 
 	@Reference
 	private Portal _portal;

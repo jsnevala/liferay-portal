@@ -20,12 +20,12 @@ import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.model.adapter.StagedExpandoColumn;
 import com.liferay.expando.kernel.service.ExpandoTableLocalServiceUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 
 import java.io.Serializable;
@@ -51,11 +51,11 @@ public class StagedExpandoColumnImpl implements StagedExpandoColumn {
 			expandoTable = ExpandoTableLocalServiceUtil.getExpandoTable(
 				expandoColumn.getTableId());
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new RuntimeException(
 				"Could not find expando table for tableId=" +
 					expandoColumn.getTableId(),
-				pe);
+				portalException);
 		}
 
 		_expandoTableClassName = expandoTable.getClassName();
@@ -64,7 +64,15 @@ public class StagedExpandoColumnImpl implements StagedExpandoColumn {
 
 	@Override
 	public Object clone() {
-		return new StagedExpandoColumnImpl(_expandoColumn);
+		StagedExpandoColumnImpl stagedExpandoColumnImpl =
+			new StagedExpandoColumnImpl();
+
+		stagedExpandoColumnImpl._expandoColumn =
+			(ExpandoColumn)_expandoColumn.clone();
+		stagedExpandoColumnImpl._expandoTableClassName = _expandoTableClassName;
+		stagedExpandoColumnImpl._expandoTableName = _expandoTableName;
+
+		return stagedExpandoColumnImpl;
 	}
 
 	@Override
@@ -296,9 +304,9 @@ public class StagedExpandoColumnImpl implements StagedExpandoColumn {
 
 	@Override
 	public void setTypeSettingsProperties(
-		UnicodeProperties typeSettingsProperties) {
+		UnicodeProperties typeSettingsUnicodeProperties) {
 
-		_expandoColumn.setTypeSettingsProperties(typeSettingsProperties);
+		_expandoColumn.setTypeSettingsProperties(typeSettingsUnicodeProperties);
 	}
 
 	@Override

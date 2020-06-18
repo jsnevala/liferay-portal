@@ -14,18 +14,18 @@
 
 package com.liferay.petra.concurrent;
 
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
-import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
-import com.liferay.portal.kernel.util.SetUtil;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import java.util.AbstractMap;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -75,8 +75,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail("Should throw NullPointerException");
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Key is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Key is null", nullPointerException.getMessage());
 		}
 
 		try {
@@ -84,8 +85,10 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail("Should throw NullPointerException");
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Remapping function is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Remapping function is null",
+				nullPointerException.getMessage());
 		}
 
 		Assert.assertNull(
@@ -118,8 +121,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail("Should throw NullPointerException");
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Key is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Key is null", nullPointerException.getMessage());
 		}
 
 		try {
@@ -127,8 +131,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail("Should throw NullPointerException");
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Mapping function is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Mapping function is null", nullPointerException.getMessage());
 		}
 
 		Assert.assertNull(
@@ -185,8 +190,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail("Should throw NullPointerException");
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Key is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Key is null", nullPointerException.getMessage());
 		}
 
 		try {
@@ -194,8 +200,10 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail("Should throw NullPointerException");
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Remapping function is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Remapping function is null",
+				nullPointerException.getMessage());
 		}
 
 		Assert.assertNull(
@@ -238,8 +246,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Key is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Key is null", nullPointerException.getMessage());
 		}
 
 		Assert.assertFalse(_concurrentMap.containsKey(_testKey));
@@ -262,8 +271,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Value is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Value is null", nullPointerException.getMessage());
 		}
 
 		Assert.assertFalse(_concurrentMap.containsValue(_testValue1));
@@ -412,8 +422,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Key is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Key is null", nullPointerException.getMessage());
 		}
 
 		Assert.assertNull(_concurrentMap.get(_testKey));
@@ -469,7 +480,7 @@ public class ConcurrentMapperHashMapTest {
 		_assertEventQueue(Event.UNMAP_KEY_FOR_QUERY);
 
 		Assert.assertEquals(keySetString, 1, keySet.size());
-		Assert.assertEquals(SetUtil.fromArray(new Key[] {_testKey}), keySet);
+		Assert.assertEquals(Collections.singleton(_testKey), keySet);
 
 		_assertEventQueue(Event.UNMAP_KEY_FOR_QUERY);
 
@@ -516,8 +527,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Key is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Key is null", nullPointerException.getMessage());
 		}
 
 		try {
@@ -525,8 +537,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Value is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Value is null", nullPointerException.getMessage());
 		}
 
 		Assert.assertNull(_concurrentMap.put(_testKey, _testValue1));
@@ -572,8 +585,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Key is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Key is null", nullPointerException.getMessage());
 		}
 
 		try {
@@ -581,8 +595,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Value is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Value is null", nullPointerException.getMessage());
 		}
 
 		Assert.assertNull(_concurrentMap.putIfAbsent(_testKey, _testValue1));
@@ -622,8 +637,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Key is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Key is null", nullPointerException.getMessage());
 		}
 
 		Assert.assertNull(_concurrentMap.remove(_testKey));
@@ -654,8 +670,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Key is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Key is null", nullPointerException.getMessage());
 		}
 
 		try {
@@ -663,8 +680,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Value is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Value is null", nullPointerException.getMessage());
 		}
 
 		Assert.assertFalse(_concurrentMap.remove(_testKey, _testValue1));
@@ -733,8 +751,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Key is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Key is null", nullPointerException.getMessage());
 		}
 
 		try {
@@ -742,8 +761,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Value is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Value is null", nullPointerException.getMessage());
 		}
 
 		Assert.assertNull(_concurrentMap.replace(_testKey, _testValue1));
@@ -773,8 +793,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Key is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Key is null", nullPointerException.getMessage());
 		}
 
 		try {
@@ -782,8 +803,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("Old value is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"Old value is null", nullPointerException.getMessage());
 		}
 
 		try {
@@ -791,8 +813,9 @@ public class ConcurrentMapperHashMapTest {
 
 			Assert.fail();
 		}
-		catch (NullPointerException npe) {
-			Assert.assertEquals("New value is null", npe.getMessage());
+		catch (NullPointerException nullPointerException) {
+			Assert.assertEquals(
+				"New value is null", nullPointerException.getMessage());
 		}
 
 		Assert.assertFalse(
@@ -865,19 +888,17 @@ public class ConcurrentMapperHashMapTest {
 
 		_concurrentMap.putAll(map);
 
-		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
-			new UnsyncByteArrayOutputStream();
+		ByteArrayOutputStream byteArrayOutputStream =
+			new ByteArrayOutputStream();
 
 		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(
-				unsyncByteArrayOutputStream)) {
+				byteArrayOutputStream)) {
 
 			objectOutputStream.writeObject(_concurrentMap);
 		}
 
 		ObjectInputStream objectInputStream = new ObjectInputStream(
-			new UnsyncByteArrayInputStream(
-				unsyncByteArrayOutputStream.unsafeGetByteArray(), 0,
-				unsyncByteArrayOutputStream.size()));
+			new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
 
 		Assert.assertEquals(_concurrentMap, objectInputStream.readObject());
 	}
@@ -1099,7 +1120,7 @@ public class ConcurrentMapperHashMapTest {
 	private void _assertEventQueue(Event... expectedEvents) {
 		Assert.assertArrayEquals(
 			_eventQueue.toString(), expectedEvents,
-			_eventQueue.toArray(new Event[_eventQueue.size()]));
+			_eventQueue.toArray(new Event[0]));
 
 		_eventQueue.clear();
 	}
@@ -1113,8 +1134,8 @@ public class ConcurrentMapperHashMapTest {
 	private final Value _testValue2 = new Value("testValue2");
 
 	private static class ConcurrentTypeReferenceHashMap
-		extends
-			ConcurrentMapperHashMap<Key, KeyReference, Value, ValueReference> {
+		extends ConcurrentMapperHashMap
+			<Key, KeyReference, Value, ValueReference> {
 
 		public ConcurrentTypeReferenceHashMap() {
 			super(new ConcurrentHashMap<KeyReference, ValueReference>());

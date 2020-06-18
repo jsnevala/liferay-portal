@@ -36,14 +36,13 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	immediate = true,
 	property = {
 		"panel.app.order:Integer=100",
-		"panel.category.key=" +
-			ProductNavigationSimulationConstants.SIMULATION_PANEL_CATEGORY_KEY
+		"panel.category.key=" + ProductNavigationSimulationConstants.SIMULATION_PANEL_CATEGORY_KEY
 	},
 	service = PanelApp.class
 )

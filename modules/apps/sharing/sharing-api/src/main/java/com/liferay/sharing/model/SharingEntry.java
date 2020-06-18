@@ -14,30 +14,31 @@
 
 package com.liferay.sharing.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the SharingEntry service. Represents a row in the &quot;SharingEntry&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see SharingEntryModel
- * @see com.liferay.sharing.model.impl.SharingEntryImpl
- * @see com.liferay.sharing.model.impl.SharingEntryModelImpl
  * @generated
  */
 @ImplementationClassName("com.liferay.sharing.model.impl.SharingEntryImpl")
 @ProviderType
-public interface SharingEntry extends SharingEntryModel, PersistedModel {
+public interface SharingEntry extends PersistedModel, SharingEntryModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.sharing.model.impl.SharingEntryImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.sharing.model.impl.SharingEntryImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<SharingEntry, Long> SHARING_ENTRY_ID_ACCESSOR = new Accessor<SharingEntry, Long>() {
+	public static final Accessor<SharingEntry, Long> SHARING_ENTRY_ID_ACCESSOR =
+		new Accessor<SharingEntry, Long>() {
+
 			@Override
 			public Long get(SharingEntry sharingEntry) {
 				return sharingEntry.getSharingEntryId();
@@ -52,5 +53,19 @@ public interface SharingEntry extends SharingEntryModel, PersistedModel {
 			public Class<SharingEntry> getTypeClass() {
 				return SharingEntry.class;
 			}
+
 		};
+
+	/**
+	 * Returns {@code true} if the sharing entry has the sharing entry action.
+	 *
+	 * @param sharingEntryAction the sharing entry action
+	 * @return {@code true} if the sharing entry has the sharing entry action;
+	 {@code false} otherwise
+	 * @review
+	 */
+	public boolean hasSharingPermission(
+		com.liferay.sharing.security.permission.SharingEntryAction
+			sharingEntryAction);
+
 }

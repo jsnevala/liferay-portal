@@ -14,6 +14,7 @@
 
 package com.liferay.frontend.image.editor.integration.document.library.internal.display.context;
 
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.frontend.image.editor.integration.document.library.internal.display.context.logic.ImageEditorDLDisplayContextHelper;
 import com.liferay.image.gallery.display.kernel.display.context.BaseIGViewFileVersionDisplayContext;
 import com.liferay.image.gallery.display.kernel.display.context.IGViewFileVersionDisplayContext;
@@ -32,19 +33,23 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * @author Ambrin Chaudhary
+ * @author Ambrín Chaudhary
  */
 public class ImageEditorIGViewFileVersionDisplayContext
 	extends BaseIGViewFileVersionDisplayContext {
 
 	public ImageEditorIGViewFileVersionDisplayContext(
 		IGViewFileVersionDisplayContext parentIGDisplayContext,
-		HttpServletRequest request, HttpServletResponse response,
-		FileVersion fileVersion, ResourceBundle resourceBundle) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, FileVersion fileVersion,
+		ResourceBundle resourceBundle, DLURLHelper dlURLHelper) {
 
-		super(_UUID, parentIGDisplayContext, request, response, fileVersion);
+		super(
+			_UUID, parentIGDisplayContext, httpServletRequest,
+			httpServletResponse, fileVersion);
 
 		_resourceBundle = resourceBundle;
+		_dlURLHelper = dlURLHelper;
 
 		try {
 			FileEntry fileEntry = null;
@@ -56,13 +61,14 @@ public class ImageEditorIGViewFileVersionDisplayContext
 			_fileEntry = fileEntry;
 
 			_imageEditorDLDisplayContextHelper =
-				new ImageEditorDLDisplayContextHelper(fileVersion, request);
+				new ImageEditorDLDisplayContextHelper(
+					fileVersion, httpServletRequest, dlURLHelper);
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new SystemException(
 				"Unable to create image editor image gallery view file " +
 					"version display context for file version " + fileVersion,
-				pe);
+				portalException);
 		}
 	}
 
@@ -77,7 +83,8 @@ public class ImageEditorIGViewFileVersionDisplayContext
 		List<MenuItem> menuItems = menu.getMenuItems();
 
 		ImageEditorDLDisplayContextHelper imageEditorDLDisplayContextHelper =
-			new ImageEditorDLDisplayContextHelper(fileVersion, request);
+			new ImageEditorDLDisplayContextHelper(
+				fileVersion, request, _dlURLHelper);
 
 		menuItems.add(
 			imageEditorDLDisplayContextHelper.
@@ -89,6 +96,7 @@ public class ImageEditorIGViewFileVersionDisplayContext
 	private static final UUID _UUID = UUID.fromString(
 		"1cc61284-8baf-4904-8a65-b7b3845e64d7");
 
+	private final DLURLHelper _dlURLHelper;
 	private final FileEntry _fileEntry;
 	private final ImageEditorDLDisplayContextHelper
 		_imageEditorDLDisplayContextHelper;

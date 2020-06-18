@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Zsolt Berentey
  * @author Gergely Mathe
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(immediate = true, service = StagedModelDataHandler.class)
 public class AssetCategoryStagedModelDataHandler
@@ -230,8 +230,10 @@ public class AssetCategoryStagedModelDataHandler
 			String value = propertyElement.attributeValue("value");
 
 			properties[i] = key.concat(
-				AssetCategoryConstants.PROPERTY_KEY_VALUE_SEPARATOR).concat(
-					value);
+				AssetCategoryConstants.PROPERTY_KEY_VALUE_SEPARATOR
+			).concat(
+				value
+			);
 		}
 
 		ServiceContext serviceContext = createServiceContext(
@@ -320,30 +322,14 @@ public class AssetCategoryStagedModelDataHandler
 		return titleMap;
 	}
 
-	@Reference(unbind = "-")
-	protected void setAssetCategoryLocalService(
-		AssetCategoryLocalService assetCategoryLocalService) {
-
-		_assetCategoryLocalService = assetCategoryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setAssetCategoryPropertyLocalService(
-		AssetCategoryPropertyLocalService assetCategoryPropertyLocalService) {
-
-		_assetCategoryPropertyLocalService = assetCategoryPropertyLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setAssetVocabularyLocalService(
-		AssetVocabularyLocalService assetVocabularyLocalService) {
-
-		_assetVocabularyLocalService = assetVocabularyLocalService;
-	}
-
+	@Reference
 	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Reference
 	private AssetCategoryPropertyLocalService
 		_assetCategoryPropertyLocalService;
+
+	@Reference
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
 
 	@Reference

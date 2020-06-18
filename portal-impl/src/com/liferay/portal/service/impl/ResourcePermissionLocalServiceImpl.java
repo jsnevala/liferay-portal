@@ -16,6 +16,7 @@ package com.liferay.portal.service.impl;
 
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
@@ -37,7 +38,7 @@ import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.ResourcePermissionConstants;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.search.IndexWriterHelperUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -45,7 +46,7 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionUpdateHandler;
 import com.liferay.portal.kernel.security.permission.PermissionUpdateHandlerRegistryUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
-import com.liferay.portal.kernel.service.ExceptionRetryAcceptor;
+import com.liferay.portal.kernel.service.SQLStateAcceptor;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.service.permission.ModelPermissionsFactory;
@@ -54,7 +55,6 @@ import com.liferay.portal.kernel.spring.aop.Retry;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.ResourceImpl;
@@ -90,11 +90,6 @@ import java.util.Set;
 public class ResourcePermissionLocalServiceImpl
 	extends ResourcePermissionLocalServiceBaseImpl {
 
-	/**
-	 * @see com.liferay.portal.verify.VerifyPermission#fixOrganizationRolePermissions
-	 */
-	public static final String[] EMPTY_ACTION_IDS = {null};
-
 	@Override
 	public void addModelResourcePermissions(
 			AuditedModel auditedModel, ServiceContext serviceContext)
@@ -103,7 +98,7 @@ public class ResourcePermissionLocalServiceImpl
 		ModelPermissions modelPermissions =
 			serviceContext.getModelPermissions();
 
-		if (modelPermissions != null) {
+		if (_matches(modelPermissions, auditedModel.getModelClassName())) {
 			addModelResourcePermissions(
 				auditedModel.getCompanyId(), getGroupId(auditedModel),
 				auditedModel.getUserId(), auditedModel.getModelClassName(),
@@ -171,14 +166,13 @@ public class ResourcePermissionLocalServiceImpl
 
 			filterOwnerActions(name, ownerActionIds);
 
-			String[] ownerPermissions = ownerActionIds.toArray(
-				new String[ownerActionIds.size()]);
+			String[] ownerPermissions = ownerActionIds.toArray(new String[0]);
 
 			setOwnerResourcePermissions(
 				companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, primKey,
 				ownerRole.getRoleId(), userId, ownerPermissions);
 
-			if (modelPermissions != null) {
+			if (_matches(modelPermissions, name)) {
 				for (String roleName : modelPermissions.getRoleNames()) {
 					Role role = getRole(companyId, groupId, roleName);
 
@@ -223,7 +217,7 @@ public class ResourcePermissionLocalServiceImpl
 		throws PortalException {
 
 		ModelPermissions modelPermissions = ModelPermissionsFactory.create(
-			groupPermissions, guestPermissions);
+			groupPermissions, guestPermissions, name);
 
 		addModelResourcePermissions(
 			companyId, groupId, userId, name, primKey, modelPermissions);
@@ -266,11 +260,11 @@ public class ResourcePermissionLocalServiceImpl
 	 */
 	@Override
 	@Retry(
-		acceptor = ExceptionRetryAcceptor.class,
+		acceptor = SQLStateAcceptor.class,
 		properties = {
 			@Property(
-				name = ExceptionRetryAcceptor.EXCEPTION_NAME,
-				value = "org.springframework.dao.DataIntegrityViolationException"
+				name = SQLStateAcceptor.SQLSTATE,
+				value = SQLStateAcceptor.SQLSTATE_INTEGRITY_CONSTRAINT_VIOLATION
 			)
 		}
 	)
@@ -375,7 +369,7 @@ public class ResourcePermissionLocalServiceImpl
 			if (_updateResourcePermission(
 					companyId, name, ResourceConstants.SCOPE_INDIVIDUAL,
 					primKey, userId, role.getRoleId(),
-					actionIds.toArray(new String[actionIds.size()]),
+					actionIds.toArray(new String[0]),
 					ResourcePermissionConstants.OPERATOR_SET, true,
 					resourcePermissionsMap)) {
 
@@ -403,7 +397,7 @@ public class ResourcePermissionLocalServiceImpl
 				if (_updateResourcePermission(
 						companyId, name, ResourceConstants.SCOPE_INDIVIDUAL,
 						primKey, 0, groupRole.getRoleId(),
-						actions.toArray(new String[actions.size()]),
+						actions.toArray(new String[0]),
 						ResourcePermissionConstants.OPERATOR_SET, true,
 						resourcePermissionsMap)) {
 
@@ -437,7 +431,7 @@ public class ResourcePermissionLocalServiceImpl
 				if (_updateResourcePermission(
 						companyId, name, ResourceConstants.SCOPE_INDIVIDUAL,
 						primKey, 0, guestRole.getRoleId(),
-						actions.toArray(new String[actions.size()]),
+						actions.toArray(new String[0]),
 						ResourcePermissionConstants.OPERATOR_SET, true,
 						resourcePermissionsMap)) {
 
@@ -500,12 +494,12 @@ public class ResourcePermissionLocalServiceImpl
 
 			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			QueryPos qPos = QueryPos.getInstance(sqlQuery);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(resourceActionBitwiseValue);
-			qPos.add(resourceActionBitwiseValue);
-			qPos.add(resourceName);
-			qPos.add(scope);
+			queryPos.add(resourceActionBitwiseValue);
+			queryPos.add(resourceActionBitwiseValue);
+			queryPos.add(resourceName);
+			queryPos.add(scope);
 
 			sqlQuery.executeUpdate();
 
@@ -521,11 +515,11 @@ public class ResourcePermissionLocalServiceImpl
 			sqlQuery.addScalar("primKey", Type.STRING);
 			sqlQuery.addScalar("roleId", Type.LONG);
 
-			qPos = QueryPos.getInstance(sqlQuery);
+			queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(resourceName);
-			qPos.add(scope);
-			qPos.add(roleName);
+			queryPos.add(resourceName);
+			queryPos.add(scope);
+			queryPos.add(roleName);
 
 			List<Object[]> resourcePermissionArrays = sqlQuery.list(true);
 
@@ -554,7 +548,7 @@ public class ResourcePermissionLocalServiceImpl
 				resourcePermission.setRoleId((Long)resourcePermissionArray[4]);
 				resourcePermission.setActionIds(resourceActionBitwiseValue);
 				resourcePermission.setViewActionId(
-					resourceActionBitwiseValue % 2 == 1);
+					(resourceActionBitwiseValue % 2) == 1);
 
 				session.save(resourcePermission);
 
@@ -563,8 +557,8 @@ public class ResourcePermissionLocalServiceImpl
 					resourcePermission.getPrimKey());
 			}
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			resourcePermissionPersistence.closeSession(session);
@@ -700,8 +694,7 @@ public class ResourcePermissionLocalServiceImpl
 		List<ResourcePermission> resourcePermissions = getResourcePermissions(
 			companyId, name, scope, primKey);
 
-		Map<Long, Set<String>> roleIdsToActionIds = new HashMap<>(
-			resourcePermissions.size());
+		Map<Long, Set<String>> roleIdsToActionIds = new HashMap<>();
 
 		for (ResourcePermission resourcePermission : resourcePermissions) {
 			if (resourcePermission.getActionIds() == 0) {
@@ -712,7 +705,7 @@ public class ResourcePermissionLocalServiceImpl
 				continue;
 			}
 
-			Set<String> availableActionIds = new HashSet<>(actionIds.size());
+			Set<String> availableActionIds = new HashSet<>();
 
 			for (String actionId : actionIds) {
 				if (resourcePermission.hasActionId(actionId)) {
@@ -769,21 +762,6 @@ public class ResourcePermissionLocalServiceImpl
 		}
 
 		return availableActionIds;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #getAvailableResourcePermissionActionIds(long, String, int,
-	 *             String, Collection)}
-	 */
-	@Deprecated
-	@Override
-	public Map<Long, Set<String>> getAvailableResourcePermissionActionIds(
-		long companyId, String name, int scope, String primKey, long[] roleIds,
-		Collection<String> actionIds) {
-
-		return getAvailableResourcePermissionActionIds(
-			companyId, name, scope, primKey, new ArrayList<String>(actionIds));
 	}
 
 	/**
@@ -1024,11 +1002,11 @@ public class ResourcePermissionLocalServiceImpl
 
 		// See LPS-47464
 
-		if (resourcePermissionPersistence.countByC_N_S_P(
-				individualResource.getCompanyId(), individualResource.getName(),
-				individualResource.getScope(),
-				individualResource.getPrimKey()) < 1) {
+		int count = resourcePermissionPersistence.countByC_N_S_P(
+			individualResource.getCompanyId(), individualResource.getName(),
+			individualResource.getScope(), individualResource.getPrimKey());
 
+		if (count < 1) {
 			StringBundler sb = new StringBundler(9);
 
 			sb.append("{companyId=");
@@ -1174,51 +1152,6 @@ public class ResourcePermissionLocalServiceImpl
 	}
 
 	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #getRoles(long,
-	 *             String, int, String, String}
-	 */
-	@Deprecated
-	@Override
-	public boolean[] hasResourcePermissions(
-			long companyId, String name, int scope, String primKey,
-			long[] roleIds, String actionId)
-		throws PortalException {
-
-		boolean[] hasResourcePermissions = new boolean[roleIds.length];
-
-		if (roleIds.length == 0) {
-			return hasResourcePermissions;
-		}
-
-		ResourceAction resourceAction =
-			resourceActionLocalService.getResourceAction(name, actionId);
-
-		List<ResourcePermission> resourcePermissions =
-			resourcePermissionPersistence.findByC_N_S_P_R(
-				companyId, name, scope, primKey, roleIds);
-
-		if (resourcePermissions.isEmpty()) {
-			return hasResourcePermissions;
-		}
-
-		for (ResourcePermission resourcePermission : resourcePermissions) {
-			if (resourcePermission.hasAction(resourceAction)) {
-				long roleId = resourcePermission.getRoleId();
-
-				for (int i = 0; i < roleIds.length; i++) {
-					if (roleIds[i] == roleId) {
-						hasResourcePermissions[i] = true;
-
-						break;
-					}
-				}
-			}
-		}
-
-		return hasResourcePermissions;
-	}
-
-	/**
 	 * Returns <code>true</code> if the role has permission at the scope to
 	 * perform the action on the resource.
 	 *
@@ -1247,7 +1180,8 @@ public class ResourcePermissionLocalServiceImpl
 			resourceActionLocalService.getResourceAction(name, actionId);
 
 		List<ResourcePermission> resourcePermissions =
-			resourcePermissionPersistence.findByC_N_S(companyId, name, scope);
+			resourcePermissionPersistence.findByC_N_S_R(
+				companyId, name, scope, roleId);
 
 		for (ResourcePermission resourcePermission : resourcePermissions) {
 			if (resourcePermission.hasAction(resourceAction)) {
@@ -1398,7 +1332,7 @@ public class ResourcePermissionLocalServiceImpl
 
 		setResourcePermissions(
 			companyId, name, scope, primKey, toRoleId,
-			actionIds.toArray(new String[actionIds.size()]));
+			actionIds.toArray(new String[0]));
 
 		resourcePermissionPersistence.remove(resourcePermissionId);
 
@@ -1460,13 +1394,16 @@ public class ResourcePermissionLocalServiceImpl
 		throws PortalException {
 
 		List<ResourcePermission> resourcePermissions =
-			resourcePermissionPersistence.findByC_N_S(companyId, name, scope);
+			resourcePermissionPersistence.findByC_N_S_R(
+				companyId, name, scope, roleId);
+
+		String[] actionIds = {actionId};
 
 		for (ResourcePermission resourcePermission : resourcePermissions) {
-			updateResourcePermission(
-				companyId, name, scope, resourcePermission.getPrimKey(), roleId,
-				0, new String[] {actionId},
-				ResourcePermissionConstants.OPERATOR_REMOVE);
+			_updateResourcePermission(
+				companyId, name, scope, resourcePermission.getPrimKey(), 0,
+				roleId, actionIds, ResourcePermissionConstants.OPERATOR_REMOVE,
+				true, Collections.singletonMap(roleId, resourcePermission));
 		}
 	}
 
@@ -1499,11 +1436,11 @@ public class ResourcePermissionLocalServiceImpl
 	 */
 	@Override
 	@Retry(
-		acceptor = ExceptionRetryAcceptor.class,
+		acceptor = SQLStateAcceptor.class,
 		properties = {
 			@Property(
-				name = ExceptionRetryAcceptor.EXCEPTION_NAME,
-				value = "org.springframework.dao.DataIntegrityViolationException"
+				name = SQLStateAcceptor.SQLSTATE,
+				value = SQLStateAcceptor.SQLSTATE_INTEGRITY_CONSTRAINT_VIOLATION
 			)
 		}
 	)
@@ -1543,11 +1480,11 @@ public class ResourcePermissionLocalServiceImpl
 	 */
 	@Override
 	@Retry(
-		acceptor = ExceptionRetryAcceptor.class,
+		acceptor = SQLStateAcceptor.class,
 		properties = {
 			@Property(
-				name = ExceptionRetryAcceptor.EXCEPTION_NAME,
-				value = "org.springframework.dao.DataIntegrityViolationException"
+				name = SQLStateAcceptor.SQLSTATE,
+				value = SQLStateAcceptor.SQLSTATE_INTEGRITY_CONSTRAINT_VIOLATION
 			)
 		}
 	)
@@ -1586,11 +1523,11 @@ public class ResourcePermissionLocalServiceImpl
 	 */
 	@Override
 	@Retry(
-		acceptor = ExceptionRetryAcceptor.class,
+		acceptor = SQLStateAcceptor.class,
 		properties = {
 			@Property(
-				name = ExceptionRetryAcceptor.EXCEPTION_NAME,
-				value = "org.springframework.dao.DataIntegrityViolationException"
+				name = SQLStateAcceptor.SQLSTATE,
+				value = SQLStateAcceptor.SQLSTATE_INTEGRITY_CONSTRAINT_VIOLATION
 			)
 		}
 	)
@@ -1667,6 +1604,10 @@ public class ResourcePermissionLocalServiceImpl
 			ModelPermissions modelPermissions)
 		throws PortalException {
 
+		if (!_matches(modelPermissions, name)) {
+			return;
+		}
+
 		for (String roleName : modelPermissions.getRoleNames()) {
 			Role role = getRole(companyId, groupId, roleName);
 
@@ -1675,8 +1616,7 @@ public class ResourcePermissionLocalServiceImpl
 
 			setResourcePermissions(
 				companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, primKey,
-				role.getRoleId(),
-				actionIds.toArray(new String[actionIds.size()]));
+				role.getRoleId(), actionIds.toArray(new String[0]));
 		}
 	}
 
@@ -1687,7 +1627,7 @@ public class ResourcePermissionLocalServiceImpl
 		throws PortalException {
 
 		ModelPermissions modelPermissions = ModelPermissionsFactory.create(
-			groupPermissions, guestPermissions);
+			groupPermissions, guestPermissions, name);
 
 		updateResourcePermissions(
 			companyId, groupId, name, primKey, modelPermissions);
@@ -1769,13 +1709,11 @@ public class ResourcePermissionLocalServiceImpl
 		return roleLocalService.getRole(companyId, roleName);
 	}
 
-	protected boolean isGuestRoleId(long companyId, long roleId)
-		throws PortalException {
-
-		Role guestRole = roleLocalService.getRole(
+	protected boolean isGuestRoleId(long companyId, long roleId) {
+		Role guestRole = roleLocalService.fetchRole(
 			companyId, RoleConstants.GUEST);
 
-		if (roleId == guestRole.getRoleId()) {
+		if ((guestRole != null) && (roleId == guestRole.getRoleId())) {
 			return true;
 		}
 
@@ -1989,7 +1927,7 @@ public class ResourcePermissionLocalServiceImpl
 			if (_updateResourcePermission(
 					companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, name,
 					0, guestRole.getRoleId(),
-					guestActionIds.toArray(new String[guestActionIds.size()]),
+					guestActionIds.toArray(new String[0]),
 					ResourcePermissionConstants.OPERATOR_SET, true,
 					resourcePermissionsMap)) {
 
@@ -1999,7 +1937,7 @@ public class ResourcePermissionLocalServiceImpl
 			if (_updateResourcePermission(
 					companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, name,
 					0, ownerRole.getRoleId(),
-					ownerActionIds.toArray(new String[ownerActionIds.size()]),
+					ownerActionIds.toArray(new String[0]),
 					ResourcePermissionConstants.OPERATOR_SET, true,
 					resourcePermissionsMap)) {
 
@@ -2010,7 +1948,7 @@ public class ResourcePermissionLocalServiceImpl
 				_updateResourcePermission(
 					companyId, name, ResourceConstants.SCOPE_INDIVIDUAL, name,
 					0, siteMemberRole.getRoleId(),
-					groupActionIds.toArray(new String[groupActionIds.size()]),
+					groupActionIds.toArray(new String[0]),
 					ResourcePermissionConstants.OPERATOR_SET, true,
 					resourcePermissionsMap)) {
 
@@ -2028,6 +1966,32 @@ public class ResourcePermissionLocalServiceImpl
 				IndexWriterHelperUtil.updatePermissionFields(name, name);
 			}
 		}
+	}
+
+	private boolean _matches(
+		ModelPermissions modelPermissions, String resourcePermissionName) {
+
+		if (modelPermissions == null) {
+			return false;
+		}
+
+		String resourceName = modelPermissions.getResourceName();
+
+		if (resourceName.equals(_RESOURCE_NAME_ALL_RESOURCES) ||
+			resourceName.equals(resourcePermissionName)) {
+
+			return true;
+		}
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				StringBundler.concat(
+					"Model permissions resource name ", resourceName,
+					" does not match resource permission name ",
+					resourcePermissionName));
+		}
+
+		return false;
 	}
 
 	private boolean _updateResourcePermission(
@@ -2114,7 +2078,7 @@ public class ResourcePermissionLocalServiceImpl
 			}
 			else {
 				actionIdsLong =
-					actionIdsLong & (~resourceAction.getBitwiseValue());
+					actionIdsLong & ~resourceAction.getBitwiseValue();
 			}
 		}
 
@@ -2122,7 +2086,7 @@ public class ResourcePermissionLocalServiceImpl
 			resourcePermission.isNew()) {
 
 			resourcePermission.setActionIds(actionIdsLong);
-			resourcePermission.setViewActionId(actionIdsLong % 2 == 1);
+			resourcePermission.setViewActionId((actionIdsLong % 2) == 1);
 
 			resourcePermissionPersistence.update(resourcePermission);
 
@@ -2141,6 +2105,9 @@ public class ResourcePermissionLocalServiceImpl
 	private static final String _FIND_MISSING_RESOURCE_PERMISSIONS =
 		ResourcePermissionLocalServiceImpl.class.getName() +
 			".findMissingResourcePermissions";
+
+	private static final String _RESOURCE_NAME_ALL_RESOURCES =
+		ModelPermissions.class.getName() + "#ALL_RESOURCES";
 
 	private static final String _UPDATE_ACTION_IDS =
 		ResourcePermissionLocalServiceImpl.class.getName() + ".updateActionIds";

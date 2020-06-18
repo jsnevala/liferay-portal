@@ -14,25 +14,13 @@
 
 package com.liferay.asset.display.page.item.selector.web.internal.display.context;
 
-import com.liferay.asset.display.contributor.AssetDisplayContributor;
-import com.liferay.asset.display.contributor.AssetDisplayContributorTracker;
 import com.liferay.asset.display.page.item.selector.criterion.AssetDisplayPageSelectorCriterion;
-import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
-import com.liferay.asset.kernel.model.AssetRendererFactory;
-import com.liferay.asset.kernel.model.ClassType;
-import com.liferay.asset.kernel.model.ClassTypeReader;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.SafeConsumer;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateEntryCreateDateComparator;
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateEntryNameComparator;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -44,7 +32,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.List;
-import java.util.Objects;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
@@ -59,22 +46,20 @@ import javax.servlet.http.HttpServletRequest;
 public class AssetDisplayPagesItemSelectorViewDisplayContext {
 
 	public AssetDisplayPagesItemSelectorViewDisplayContext(
-		HttpServletRequest request,
-		AssetDisplayContributorTracker assetDisplayContributorTracker,
+		HttpServletRequest httpServletRequest,
 		AssetDisplayPageSelectorCriterion assetDisplayPageSelectorCriterion,
 		String itemSelectedEventName, PortletURL portletURL) {
 
-		_request = request;
-		_assetDisplayContributorTracker = assetDisplayContributorTracker;
+		_httpServletRequest = httpServletRequest;
 		_assetDisplayPageSelectorCriterion = assetDisplayPageSelectorCriterion;
 		_itemSelectedEventName = itemSelectedEventName;
 		_portletURL = portletURL;
 
-		_portletRequest = (PortletRequest)request.getAttribute(
+		_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_REQUEST);
-		_portletResponse = (PortletResponse)request.getAttribute(
+		_portletResponse = (PortletResponse)httpServletRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_RESPONSE);
-		_themeDisplay = (ThemeDisplay)_request.getAttribute(
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
@@ -88,7 +73,7 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 		SearchContainer<LayoutPageTemplateEntry>
 			assetDisplayPageSearchContainer = new SearchContainer<>(
 				_portletRequest, _getPortletURL(), null,
-				"there-are-no-display-pages");
+				"there-are-no-display-page-templates");
 
 		assetDisplayPageSearchContainer.setOrderByCol(_getOrderByCol());
 
@@ -157,36 +142,6 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 		return _assetDisplayPageSearchContainer;
 	}
 
-	public String getClearResultsURL() throws PortletException {
-		PortletURL clearResultsURL = _getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
-	}
-
-	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
-			}
-		};
-	}
-
 	public String getItemSelectedEventName() {
 		return _itemSelectedEventName;
 	}
@@ -196,97 +151,10 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_request, "orderByType", "asc");
+		_orderByType = ParamUtil.getString(
+			_httpServletRequest, "orderByType", "asc");
 
 		return _orderByType;
-	}
-
-	public String getSearchActionURL() throws PortletException {
-		PortletURL searchActionURL = _getPortletURL();
-
-		return searchActionURL.toString();
-	}
-
-	public String getSortingURL() throws PortletException {
-		PortletURL sortingURL = _getPortletURL();
-
-		sortingURL.setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL.toString();
-	}
-
-	public String getSubtypeLabel(
-			LayoutPageTemplateEntry layoutPageTemplateEntry)
-		throws PortalException {
-
-		AssetRendererFactory assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				layoutPageTemplateEntry.getClassName());
-
-		if ((assetRendererFactory == null) ||
-			(layoutPageTemplateEntry.getClassTypeId() <= 0)) {
-
-			return StringPool.BLANK;
-		}
-
-		ClassTypeReader classTypeReader =
-			assetRendererFactory.getClassTypeReader();
-
-		ClassType classType = classTypeReader.getClassType(
-			layoutPageTemplateEntry.getClassTypeId(),
-			_themeDisplay.getLocale());
-
-		return classType.getName();
-	}
-
-	public int getTotalItems() throws Exception {
-		SearchContainer assetDisplayPageSearchContainer =
-			getAssetDisplayPageSearchContainer();
-
-		return assetDisplayPageSearchContainer.getTotal();
-	}
-
-	public String getTypeLabel(
-		LayoutPageTemplateEntry layoutPageTemplateEntry) {
-
-		AssetDisplayContributor assetDisplayContributor =
-			_assetDisplayContributorTracker.getAssetDisplayContributor(
-				layoutPageTemplateEntry.getClassName());
-
-		if (assetDisplayContributor == null) {
-			return StringPool.BLANK;
-		}
-
-		return assetDisplayContributor.getLabel(_themeDisplay.getLocale());
-	}
-
-	public boolean isDisabledManagementBar() throws Exception {
-		if (getTotalItems() > 0) {
-			return false;
-		}
-
-		if (Validator.isNotNull(_getKeywords())) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					SafeConsumer.ignore(
-						dropdownItem -> {
-							dropdownItem.setActive(true);
-							dropdownItem.setHref(_getPortletURL());
-							dropdownItem.setLabel(
-								LanguageUtil.get(_request, "all"));
-						}));
-			}
-		};
 	}
 
 	private String _getKeywords() {
@@ -294,7 +162,7 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 			return _keywords;
 		}
 
-		_keywords = ParamUtil.getString(_request, "keywords");
+		_keywords = ParamUtil.getString(_httpServletRequest, "keywords");
 
 		return _keywords;
 	}
@@ -329,38 +197,9 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 		}
 
 		_orderByCol = ParamUtil.getString(
-			_request, "orderByCol", "create-date");
+			_httpServletRequest, "orderByCol", "create-date");
 
 		return _orderByCol;
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					SafeConsumer.ignore(
-						dropdownItem -> {
-							dropdownItem.setActive(
-								Objects.equals(
-									_getOrderByCol(), "create-date"));
-							dropdownItem.setHref(
-								_getPortletURL(), "orderByCol", "create-date");
-							dropdownItem.setLabel(
-								LanguageUtil.get(_request, "create-date"));
-						}));
-
-				add(
-					SafeConsumer.ignore(
-						dropdownItem -> {
-							dropdownItem.setActive(
-								Objects.equals(_getOrderByCol(), "name"));
-							dropdownItem.setHref(
-								_getPortletURL(), "orderByCol", "name");
-							dropdownItem.setLabel(
-								LanguageUtil.get(_request, "name"));
-						}));
-			}
-		};
 	}
 
 	private PortletURL _getPortletURL() throws PortletException {
@@ -374,11 +213,10 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 		return portletURL;
 	}
 
-	private final AssetDisplayContributorTracker
-		_assetDisplayContributorTracker;
 	private SearchContainer _assetDisplayPageSearchContainer;
 	private final AssetDisplayPageSelectorCriterion
 		_assetDisplayPageSelectorCriterion;
+	private final HttpServletRequest _httpServletRequest;
 	private final String _itemSelectedEventName;
 	private String _keywords;
 	private String _orderByCol;
@@ -386,7 +224,6 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 	private final PortletRequest _portletRequest;
 	private final PortletResponse _portletResponse;
 	private final PortletURL _portletURL;
-	private final HttpServletRequest _request;
 	private final ThemeDisplay _themeDisplay;
 
 }

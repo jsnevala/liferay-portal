@@ -1,126 +1,140 @@
-<definition>
-	<var name="userFirstName" value="Test" />
-	<var name="userLastName" value="Test" />
+definition {
 
-	<command name="runSmoke" summary-ignore="true">
-		<task summary="Ensure that the super admin can add a Blank Site">
-			<execute macro="ProductMenu#gotoPortlet">
-				<var name="category" value="Sites" />
-				<var name="panel" value="Control Panel" />
-				<var name="portlet" value="Sites" />
-			</execute>
+	var userFirstName = "Test";
+	var userLastName = "Test";
 
-			<execute macro="Site#addBlankCP">
-				<var name="siteName" value="Site Name" />
-			</execute>
+	@summary-ignore = "true"
+	macro runSmoke {
+		task ("Ensure that the super admin can add a Blank Site") {
+			ProductMenu.gotoPortlet(
+				category = "Sites",
+				panel = "Control Panel",
+				portlet = "Sites");
 
-			<execute macro="ProductMenu#gotoPortlet">
-				<var name="category" value="Sites" />
-				<var name="panel" value="Control Panel" />
-				<var name="portlet" value="Sites" />
-			</execute>
+			Site.addBlankCP(siteName = "Site Name");
 
-			<execute macro="Site#viewCP">
-				<var name="siteName" value="Site Name" />
-			</execute>
-		</task>
+			ProductMenu.gotoPortlet(
+				category = "Sites",
+				panel = "Control Panel",
+				portlet = "Sites");
 
-		<execute macro="ProductMenu#gotoPortlet">
-			<var name="category" value="Build" />
-			<var name="panel" value="Site Administration" />
-			<var name="portlet" value="Pages" />
-		</execute>
+			Site.viewCP(siteName = "Site Name");
+		}
 
-		<execute macro="SitePages#addPublicPage">
-			<var name="pageName" value="Test Page1" />
-		</execute>
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			panel = "Site Administration",
+			portlet = "Pages");
 
-		<execute macro="SitePages#addPublicPage">
-			<var name="pageName" value="Test Page2" />
-		</execute>
+		SitePages.addPublicPage(pageName = "Test Page1");
 
-		<execute macro="SitePages#addPublicPage">
-			<var name="pageName" value="Test Page3" />
-		</execute>
+		SitePages.addPublicPage(pageName = "Test Page2");
 
-		<var name="pageName" value="Test Page1" />
-		<var name="portletBody" value="Welcome to Liferay" />
-		<var name="portletName" value="Hello World" />
+		SitePages.addPublicPage(pageName = "Test Page3");
 
-		<task summary="Add a '${portletName}' portlet to the page named '${pageName}'">
-			<execute macro="Navigator#gotoSitePage">
-				<var name="pageName" value="${pageName}" />
-				<var name="siteName" value="Site Name" />
-			</execute>
+		var pageName = "Test Page1";
+		var portletBody = "Welcome to Liferay";
+		var portletName = "Hello World";
+		var siteName = "Site Name";
 
-			<execute macro="Portlet#addPG">
-				<var name="i" value="${i}" />
-				<var name="portletName" value="${portletName}" />
-			</execute>
+		task ("Add a '${portletName}' portlet to the page named '${pageName}'") {
+			Navigator.gotoSitePage(
+				pageName = "${pageName}",
+				siteName = "${siteName}");
 
-			<execute macro="Portlet#viewTitle">
-				<var name="portletName" value="${portletName}" />
-			</execute>
+			Portlet.addPG(
+				i = "${i}",
+				portletName = "${portletName}");
 
-			<execute macro="Portlet#viewBody">
-				<var name="portletBody" value="${portletBody}" />
-				<var name="portletName" value="${portletName}" />
-			</execute>
+			Portlet.viewTitle(portletName = "${portletName}");
 
-			<execute macro="Navigator#gotoSitePage">
-				<var name="pageName" value="${pageName}" />
-				<var name="siteName" value="Site Name" />
-			</execute>
+			Portlet.viewBody(
+				portletBody = "${portletBody}",
+				portletName = "${portletName}");
 
-			<execute macro="Portlet#viewTitle">
-				<var name="portletName" value="${portletName}" />
-			</execute>
+			Navigator.gotoSitePage(
+				pageName = "${pageName}",
+				siteName = "${siteName}");
 
-			<execute macro="Portlet#viewBody">
-				<var name="portletBody" value="${portletBody}" />
-				<var name="portletName" value="${portletName}" />
-			</execute>
-		</task>
+			Portlet.viewTitle(portletName = "${portletName}");
 
-		<var name="portlet" value="Web Content" />
+			Portlet.viewBody(
+				portletBody = "${portletBody}",
+				portletName = "${portletName}");
+		}
 
-		<task summary="Navigate to Product Menu > Sites > Content > ${portlet}">
-			<execute macro="Navigator#openSiteURL">
-				<var name="siteName" value="Site Name" />
-			</execute>
+		var collectionName = "Basic Components";
+		var contentPageName = "Test Content Page";
+		var fragmentId = "Heading";
+		var fragmentName = "Heading";
 
-			<execute macro="ProductMenu#gotoPortlet">
-				<var name="category" value="Content" />
-				<var name="panel" value="Site Administration" />
-				<var name="portlet" value="${portlet}" />
-			</execute>
+		task ("Add a '${fragmentName}' fragment to the content page named '${contentPageName}'") {
+			task ("Create a Content Page") {
+				SitePages.openPagesAdmin(siteURLKey = "${siteName}");
 
-			<execute macro="SiteAdmin#viewPortletTitle">
-				<var name="portletTitle" value="${portlet}" />
-			</execute>
-		</task>
+				ContentPages.addPage(pageName = "${contentPageName}");
+			}
 
-		<var name="webContentContent" value="Web Content Content" />
-		<var name="webContentTitle" value="Web Content Title" />
+			task ("Add a basic '${fragmentName}' component") {
+				PageEditor.addFragment(
+					collectionName = "${collectionName}",
+					fragmentName = "${fragmentName}");
+			}
 
-		<task summary="Add a web content article with '${webContentTitle}' as the title and '${webContentContent}' as the content">
-			<execute macro="WebContentNavigator#gotoAddCP" />
+			task ("Publish Content Page") {
+				PageEditor.clickPublish();
+			}
 
-			<execute macro="WebContent#addCP">
-				<var name="webContentContent" value="${webContentContent}" />
-				<var name="webContentTitle" value="${webContentTitle}" />
-			</execute>
+			task ("Navigate to the content page") {
+				Navigator.gotoSitePage(
+					pageName = "${contentPageName}",
+					siteName = "${siteName}");
+			}
 
-			<execute macro="PortletEntry#publish" />
+			task ("Assert the '${fragmentName}' fragment is present") {
+				AssertElementPresent(locator1 = "//h1[contains(.,'Heading Example')]");
+			}
 
-			<execute macro="WebContent#viewTitle">
-				<var name="webContentTitle" value="${webContentTitle}" />
-			</execute>
-		</task>
-	</command>
+		}
 
-	<command name="viewWelcomePage" summary="View default welcome page while signed in as '${userFirstName} ${userLastName}'">
-		<execute function="AssertTextEquals#assertTextCaseInsensitive" locator1="HelloWorld#PORTLET_TITLE" value1="Hello World" />
-		<execute function="AssertTextEquals#assertPartialText" locator1="HelloWorld#PORTLET_CONTENT" value1="Welcome to Liferay" />
-	</command>
-</definition>
+		var portlet = "Web Content";
+
+		task ("Navigate to Product Menu > Sites > Content > ${portlet}") {
+			Navigator.openSiteURL(siteName = "Site Name");
+
+			ProductMenu.gotoPortlet(
+				category = "Content &amp; Data",
+				panel = "Site Administration",
+				portlet = "${portlet}");
+
+			SiteAdmin.viewPortletTitle(portletTitle = "${portlet}");
+		}
+
+		var webContentContent = "Web Content Content";
+		var webContentTitle = "Web Content Title";
+
+		task ("Add a web content article with '${webContentTitle}' as the title and '${webContentContent}' as the content") {
+			WebContentNavigator.gotoAddCP();
+
+			WebContent.addCP(
+				webContentContent = "${webContentContent}",
+				webContentTitle = "${webContentTitle}");
+
+			PortletEntry.publish();
+
+			WebContent.viewTitle(webContentTitle = "${webContentTitle}");
+		}
+	}
+
+	@summary = "View default welcome page while signed in as '${userFirstName} ${userLastName}'"
+	macro viewWelcomePage {
+		AssertTextPresent(
+			locator1 = "HelloWorld#PORTLET_TITLE",
+			value1 = "Hello World");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "HelloWorld#PORTLET_CONTENT",
+			value1 = "Welcome to Liferay");
+	}
+
+}

@@ -14,13 +14,10 @@
 
 package com.liferay.wiki.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
-
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.wiki.model.WikiNode;
 
 import java.io.Externalizable;
@@ -34,11 +31,11 @@ import java.util.Date;
  * The cache model class for representing WikiNode in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see WikiNode
  * @generated
  */
-@ProviderType
-public class WikiNodeCacheModel implements CacheModel<WikiNode>, Externalizable {
+public class WikiNodeCacheModel
+	implements CacheModel<WikiNode>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -51,7 +48,9 @@ public class WikiNodeCacheModel implements CacheModel<WikiNode>, Externalizable 
 
 		WikiNodeCacheModel wikiNodeCacheModel = (WikiNodeCacheModel)obj;
 
-		if (nodeId == wikiNodeCacheModel.nodeId) {
+		if ((nodeId == wikiNodeCacheModel.nodeId) &&
+			(mvccVersion == wikiNodeCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -60,14 +59,28 @@ public class WikiNodeCacheModel implements CacheModel<WikiNode>, Externalizable 
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, nodeId);
+		int hashCode = HashUtil.hash(0, nodeId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(33);
+		StringBundler sb = new StringBundler(35);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", nodeId=");
 		sb.append(nodeId);
@@ -107,6 +120,8 @@ public class WikiNodeCacheModel implements CacheModel<WikiNode>, Externalizable 
 	@Override
 	public WikiNode toEntityModel() {
 		WikiNodeImpl wikiNodeImpl = new WikiNodeImpl();
+
+		wikiNodeImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			wikiNodeImpl.setUuid("");
@@ -193,6 +208,7 @@ public class WikiNodeCacheModel implements CacheModel<WikiNode>, Externalizable 
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		nodeId = objectInput.readLong();
@@ -218,8 +234,9 @@ public class WikiNodeCacheModel implements CacheModel<WikiNode>, Externalizable 
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -276,6 +293,7 @@ public class WikiNodeCacheModel implements CacheModel<WikiNode>, Externalizable 
 		objectOutput.writeLong(statusDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long nodeId;
 	public long groupId;
@@ -292,4 +310,5 @@ public class WikiNodeCacheModel implements CacheModel<WikiNode>, Externalizable 
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

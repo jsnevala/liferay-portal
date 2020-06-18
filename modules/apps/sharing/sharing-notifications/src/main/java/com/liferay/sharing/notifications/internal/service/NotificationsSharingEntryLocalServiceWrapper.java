@@ -14,7 +14,6 @@
 
 package com.liferay.sharing.notifications.internal.service;
 
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -27,18 +26,16 @@ import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.SubscriptionSender;
 import com.liferay.sharing.constants.SharingPortletKeys;
 import com.liferay.sharing.model.SharingEntry;
-import com.liferay.sharing.notifications.internal.util.SharingNotificationUtil;
+import com.liferay.sharing.notifications.internal.helper.SharingNotificationHelper;
+import com.liferay.sharing.notifications.internal.util.SharingNotificationSubcriptionSender;
 import com.liferay.sharing.security.permission.SharingEntryAction;
 import com.liferay.sharing.service.SharingEntryLocalService;
 import com.liferay.sharing.service.SharingEntryLocalServiceWrapper;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -100,19 +97,24 @@ public class NotificationsSharingEntryLocalServiceWrapper
 		return sharingEntry;
 	}
 
-	private String _getMessageBody(
-		SharingEntry sharingEntry, User user, String entryURL) {
+	@Override
+	public SharingEntry updateSharingEntry(
+			long userId, long sharingEntryId,
+			Collection<SharingEntryAction> sharingEntryActions,
+			boolean shareable, Date expirationDate,
+			ServiceContext serviceContext)
+		throws PortalException {
 
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(user.getLocale());
+		SharingEntry sharingEntry = super.updateSharingEntry(
+			userId, sharingEntryId, sharingEntryActions, shareable,
+			expirationDate, serviceContext);
 
-		String linkText = ResourceBundleUtil.getString(
-			resourceBundle, "view-x",
-			_sharingNotificationUtil.getSharingEntryObjectTitle(
-				sharingEntry, user.getLocale()));
+		_sendNotificationEvent(
+			sharingEntry,
+			UserNotificationDefinition.NOTIFICATION_TYPE_UPDATE_ENTRY,
+			serviceContext);
 
-		return StringBundler.concat(
-			"<a href=\"", entryURL, "\">", linkText, "</a>");
+		return sharingEntry;
 	}
 
 	private void _sendNotificationEvent(
@@ -122,49 +124,59 @@ public class NotificationsSharingEntryLocalServiceWrapper
 		try {
 			User user = _userLocalService.getUser(sharingEntry.getToUserId());
 
-			SubscriptionSender subscriptionSender = new SubscriptionSender();
+			SharingNotificationSubcriptionSender
+				sharingNotificationSubcriptionSender =
+					new SharingNotificationSubcriptionSender();
 
-			String message = _sharingNotificationUtil.getNotificationMessage(
-				sharingEntry, user.getLocale());
+			sharingNotificationSubcriptionSender.setSubject(
+				_sharingNotificationHelper.getNotificationMessage(
+					sharingEntry, user.getLocale()));
 
-			subscriptionSender.setSubject(message);
-
-			String entryURL = _sharingNotificationUtil.getNotificationURL(
+			String entryURL = _sharingNotificationHelper.getNotificationURL(
 				sharingEntry, serviceContext.getLiferayPortletRequest());
 
-			subscriptionSender.setBody(
-				_getMessageBody(sharingEntry, user, entryURL));
+			sharingNotificationSubcriptionSender.setBody(
+				_sharingNotificationHelper.getNotificationEmailBody(
+					sharingEntry, serviceContext.getLiferayPortletRequest()));
 
-			subscriptionSender.setClassName(sharingEntry.getModelClassName());
-			subscriptionSender.setClassPK(sharingEntry.getSharingEntryId());
-			subscriptionSender.setCompanyId(user.getCompanyId());
-			subscriptionSender.setCurrentUserId(serviceContext.getUserId());
-			subscriptionSender.setEntryURL(entryURL);
+			sharingNotificationSubcriptionSender.setClassName(
+				sharingEntry.getModelClassName());
+			sharingNotificationSubcriptionSender.setClassPK(
+				sharingEntry.getSharingEntryId());
+			sharingNotificationSubcriptionSender.setCompanyId(
+				user.getCompanyId());
+			sharingNotificationSubcriptionSender.setCurrentUserId(
+				serviceContext.getUserId());
+			sharingNotificationSubcriptionSender.setEntryURL(entryURL);
 			String fromName = PrefsPropsUtil.getString(
 				user.getCompanyId(), PropsKeys.ADMIN_EMAIL_FROM_NAME);
 			String fromAddress = PrefsPropsUtil.getString(
 				user.getCompanyId(), PropsKeys.ADMIN_EMAIL_FROM_ADDRESS);
 
-			subscriptionSender.setFrom(fromAddress, fromName);
+			sharingNotificationSubcriptionSender.setFrom(fromAddress, fromName);
 
-			subscriptionSender.setHtmlFormat(true);
-			subscriptionSender.setMailId(
+			sharingNotificationSubcriptionSender.setHtmlFormat(true);
+			sharingNotificationSubcriptionSender.setMailId(
 				"sharing_entry", sharingEntry.getSharingEntryId());
-			subscriptionSender.setNotificationType(notificationType);
-			subscriptionSender.setPortletId(SharingPortletKeys.SHARING);
-			subscriptionSender.setScopeGroupId(sharingEntry.getGroupId());
-			subscriptionSender.setServiceContext(serviceContext);
+			sharingNotificationSubcriptionSender.setNotificationType(
+				notificationType);
+			sharingNotificationSubcriptionSender.setPortletId(
+				SharingPortletKeys.SHARING);
+			sharingNotificationSubcriptionSender.setScopeGroupId(
+				sharingEntry.getGroupId());
+			sharingNotificationSubcriptionSender.setServiceContext(
+				serviceContext);
 
-			subscriptionSender.addRuntimeSubscribers(
+			sharingNotificationSubcriptionSender.addRuntimeSubscribers(
 				user.getEmailAddress(), user.getFullName());
 
-			subscriptionSender.flushNotificationsAsync();
+			sharingNotificationSubcriptionSender.flushNotificationsAsync();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(
 				"Unable to send notification for sharing entry: " +
 					sharingEntry.getSharingEntryId(),
-				e);
+				exception);
 		}
 	}
 
@@ -177,7 +189,7 @@ public class NotificationsSharingEntryLocalServiceWrapper
 	private ResourceBundleLoader _resourceBundleLoader;
 
 	@Reference
-	private SharingNotificationUtil _sharingNotificationUtil;
+	private SharingNotificationHelper _sharingNotificationHelper;
 
 	@Reference
 	private UserLocalService _userLocalService;

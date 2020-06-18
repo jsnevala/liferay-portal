@@ -14,6 +14,7 @@
 
 package com.liferay.portal.dao.orm.hibernate;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.Dialect;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.dao.orm.Session;
@@ -21,7 +22,6 @@ import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.spring.hibernate.PortletTransactionManager;
 import com.liferay.portal.spring.transaction.TransactionExecutor;
 import com.liferay.portal.spring.transaction.TransactionExecutorThreadLocal;
@@ -156,13 +156,12 @@ public class VerifySessionFactoryWrapper implements SessionFactory {
 
 				return true;
 			}
-			else {
-				_logFailure(
-					currentSessionFactoryImplementor,
-					targetSessionFactoryImplementor);
 
-				return false;
-			}
+			_logFailure(
+				currentSessionFactoryImplementor,
+				targetSessionFactoryImplementor);
+
+			return false;
 		}
 
 		if (platformTransactionManager instanceof PortletTransactionManager) {
@@ -178,13 +177,12 @@ public class VerifySessionFactoryWrapper implements SessionFactory {
 
 				return true;
 			}
-			else {
-				_logFailure(
-					currentSessionFactoryImplementor,
-					targetSessionFactoryImplementor);
 
-				return false;
-			}
+			_logFailure(
+				currentSessionFactoryImplementor,
+				targetSessionFactoryImplementor);
+
+			return false;
 		}
 
 		throw new IllegalStateException(

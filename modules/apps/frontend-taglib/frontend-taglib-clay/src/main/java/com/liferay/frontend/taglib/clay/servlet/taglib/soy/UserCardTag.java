@@ -16,6 +16,8 @@ package com.liferay.frontend.taglib.clay.servlet.taglib.soy;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.base.BaseClayCardTag;
 
+import java.util.Map;
+
 /**
  * @author Julien Castelain
  */
@@ -24,6 +26,10 @@ public class UserCardTag extends BaseClayCardTag {
 	@Override
 	public int doStartTag() {
 		setComponentBaseName("ClayUserCard");
+
+		if (_userCard != null) {
+			_populateContext();
+		}
 
 		return super.doStartTag();
 	}
@@ -36,10 +42,6 @@ public class UserCardTag extends BaseClayCardTag {
 		putValue("imageSrc", imageSrc);
 	}
 
-	public void setInitials(String initials) {
-		putValue("initials", initials);
-	}
-
 	public void setName(String name) {
 		putValue("name", name);
 	}
@@ -48,8 +50,49 @@ public class UserCardTag extends BaseClayCardTag {
 		putValue("subtitle", subtitle);
 	}
 
-	public void setUserColor(String userColor) {
-		putValue("userColor", userColor);
+	public void setUserCard(UserCard userCard) {
+		_userCard = userCard;
+
+		super.setBaseClayCard(userCard);
 	}
+
+	public void setUserColorClass(String userColorClass) {
+		putValue("userColorClass", userColorClass);
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #setUserColorClass(String)}
+	 */
+	@Deprecated
+	public void setUserColorCssClass(String userColorCssClass) {
+		setUserColorClass(userColorCssClass);
+	}
+
+	private void _populateContext() {
+		Map<String, Object> context = getContext();
+
+		if (context.get("imageAlt") == null) {
+			setImageAlt(_userCard.getImageAlt());
+		}
+
+		if (context.get("imageSrc") == null) {
+			setImageSrc(_userCard.getImageSrc());
+		}
+
+		if (context.get("name") == null) {
+			setName(_userCard.getName());
+		}
+
+		if (context.get("subtitle") == null) {
+			setSubtitle(_userCard.getSubtitle());
+		}
+
+		if (context.get("userColorClass") == null) {
+			setUserColorClass(_userCard.getUserColorClass());
+		}
+	}
+
+	private UserCard _userCard;
 
 }

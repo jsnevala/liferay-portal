@@ -54,6 +54,10 @@ public interface ManagementToolbarDisplayContext {
 		return null;
 	}
 
+	public default String getDefaultEventHandler() {
+		return null;
+	}
+
 	public default String getElementClasses() {
 		return null;
 	}
@@ -120,6 +124,10 @@ public interface ManagementToolbarDisplayContext {
 
 	public default String getSpritemap() {
 		return null;
+	}
+
+	public default Boolean getSupportsBulkActions() {
+		return false;
 	}
 
 	public default List<ViewTypeItem> getViewTypeItems() {

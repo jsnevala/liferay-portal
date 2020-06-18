@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing DDMTemplate in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see DDMTemplate
  * @generated
  */
-@ProviderType
-public class DDMTemplateCacheModel implements CacheModel<DDMTemplate>,
-	Externalizable {
+public class DDMTemplateCacheModel
+	implements CacheModel<DDMTemplate>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,12 @@ public class DDMTemplateCacheModel implements CacheModel<DDMTemplate>,
 			return false;
 		}
 
-		DDMTemplateCacheModel ddmTemplateCacheModel = (DDMTemplateCacheModel)obj;
+		DDMTemplateCacheModel ddmTemplateCacheModel =
+			(DDMTemplateCacheModel)obj;
 
-		if (templateId == ddmTemplateCacheModel.templateId) {
+		if ((templateId == ddmTemplateCacheModel.templateId) &&
+			(mvccVersion == ddmTemplateCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +60,30 @@ public class DDMTemplateCacheModel implements CacheModel<DDMTemplate>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, templateId);
+		int hashCode = HashUtil.hash(0, templateId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(53);
+		StringBundler sb = new StringBundler(57);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", templateId=");
 		sb.append(templateId);
@@ -128,6 +143,9 @@ public class DDMTemplateCacheModel implements CacheModel<DDMTemplate>,
 	@Override
 	public DDMTemplate toEntityModel() {
 		DDMTemplateImpl ddmTemplateImpl = new DDMTemplateImpl();
+
+		ddmTemplateImpl.setMvccVersion(mvccVersion);
+		ddmTemplateImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			ddmTemplateImpl.setUuid("");
@@ -259,6 +277,10 @@ public class DDMTemplateCacheModel implements CacheModel<DDMTemplate>,
 	@Override
 	public void readExternal(ObjectInput objectInput)
 		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		templateId = objectInput.readLong();
@@ -282,12 +304,12 @@ public class DDMTemplateCacheModel implements CacheModel<DDMTemplate>,
 		resourceClassNameId = objectInput.readLong();
 		templateKey = objectInput.readUTF();
 		version = objectInput.readUTF();
-		name = objectInput.readUTF();
-		description = objectInput.readUTF();
+		name = (String)objectInput.readObject();
+		description = (String)objectInput.readObject();
 		type = objectInput.readUTF();
 		mode = objectInput.readUTF();
 		language = objectInput.readUTF();
-		script = objectInput.readUTF();
+		script = (String)objectInput.readObject();
 
 		cacheable = objectInput.readBoolean();
 
@@ -301,8 +323,11 @@ public class DDMTemplateCacheModel implements CacheModel<DDMTemplate>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -358,17 +383,17 @@ public class DDMTemplateCacheModel implements CacheModel<DDMTemplate>,
 		}
 
 		if (name == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(name);
+			objectOutput.writeObject(name);
 		}
 
 		if (description == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(description);
+			objectOutput.writeObject(description);
 		}
 
 		if (type == null) {
@@ -393,10 +418,10 @@ public class DDMTemplateCacheModel implements CacheModel<DDMTemplate>,
 		}
 
 		if (script == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(script);
+			objectOutput.writeObject(script);
 		}
 
 		objectOutput.writeBoolean(cacheable);
@@ -417,6 +442,8 @@ public class DDMTemplateCacheModel implements CacheModel<DDMTemplate>,
 		objectOutput.writeObject(_resourceClassName);
 	}
 
+	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long templateId;
 	public long groupId;
@@ -444,4 +471,5 @@ public class DDMTemplateCacheModel implements CacheModel<DDMTemplate>,
 	public String smallImageURL;
 	public long lastPublishDate;
 	public String _resourceClassName;
+
 }

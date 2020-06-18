@@ -15,6 +15,7 @@
 package com.liferay.project.templates.util;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +41,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Andrea Di Giorgi
  */
 public class FileTestUtil {
+
+	public static final String PROJECT_TEMPLATE_BUNDLE_NAME_PREFIX =
+		"Liferay Project Templates";
 
 	public static final String PROJECT_TEMPLATE_DIR_PREFIX =
 		"project-templates-";
@@ -122,7 +126,9 @@ public class FileTestUtil {
 
 					String fileName = fileNamePath.toString();
 
-					if (fileName.startsWith(PROJECT_TEMPLATE_DIR_PREFIX)) {
+					if (fileName.startsWith(PROJECT_TEMPLATE_DIR_PREFIX) &&
+						!fileName.endsWith("-extensions")) {
+
 						return true;
 					}
 
@@ -152,6 +158,25 @@ public class FileTestUtil {
 		}
 
 		return sb.toString();
+	}
+
+	public static byte[] readAllBytes(String resource) throws IOException {
+		ClassLoader classLoader = FileTestUtil.class.getClassLoader();
+
+		InputStream inputStream = classLoader.getResourceAsStream(resource);
+
+		byte[] buffer = new byte[0xFFFF];
+
+		ByteArrayOutputStream byteArrayOutputStream =
+			new ByteArrayOutputStream();
+
+		for (int length = inputStream.read(buffer); length != -1;
+			 length = inputStream.read(buffer)) {
+
+			byteArrayOutputStream.write(buffer, 0, length);
+		}
+
+		return byteArrayOutputStream.toByteArray();
 	}
 
 	public static Properties readProperties(File file) throws IOException {

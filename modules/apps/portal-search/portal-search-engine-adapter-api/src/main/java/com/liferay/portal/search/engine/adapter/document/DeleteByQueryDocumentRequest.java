@@ -14,18 +14,17 @@
 
 package com.liferay.portal.search.engine.adapter.document;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.search.Query;
+import com.liferay.portal.search.engine.adapter.ccr.CrossClusterRequest;
 
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public class DeleteByQueryDocumentRequest
+	extends CrossClusterRequest
 	implements DocumentRequest<DeleteByQueryDocumentResponse> {
 
-	public DeleteByQueryDocumentRequest(Query query, String[] indexNames) {
+	public DeleteByQueryDocumentRequest(Query query, String... indexNames) {
 		_query = query;
 		_indexNames = indexNames;
 	}

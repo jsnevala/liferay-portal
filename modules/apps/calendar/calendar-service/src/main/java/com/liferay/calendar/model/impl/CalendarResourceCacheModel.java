@@ -14,14 +14,11 @@
 
 package com.liferay.calendar.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.calendar.model.CalendarResource;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing CalendarResource in entity cache.
  *
  * @author Eduardo Lundgren
- * @see CalendarResource
  * @generated
  */
-@ProviderType
-public class CalendarResourceCacheModel implements CacheModel<CalendarResource>,
-	Externalizable {
+public class CalendarResourceCacheModel
+	implements CacheModel<CalendarResource>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,13 @@ public class CalendarResourceCacheModel implements CacheModel<CalendarResource>,
 			return false;
 		}
 
-		CalendarResourceCacheModel calendarResourceCacheModel = (CalendarResourceCacheModel)obj;
+		CalendarResourceCacheModel calendarResourceCacheModel =
+			(CalendarResourceCacheModel)obj;
 
-		if (calendarResourceId == calendarResourceCacheModel.calendarResourceId) {
+		if ((calendarResourceId ==
+				calendarResourceCacheModel.calendarResourceId) &&
+			(mvccVersion == calendarResourceCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +61,28 @@ public class CalendarResourceCacheModel implements CacheModel<CalendarResource>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, calendarResourceId);
+		int hashCode = HashUtil.hash(0, calendarResourceId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(33);
+		StringBundler sb = new StringBundler(35);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", calendarResourceId=");
 		sb.append(calendarResourceId);
@@ -108,6 +122,8 @@ public class CalendarResourceCacheModel implements CacheModel<CalendarResource>,
 	@Override
 	public CalendarResource toEntityModel() {
 		CalendarResourceImpl calendarResourceImpl = new CalendarResourceImpl();
+
+		calendarResourceImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			calendarResourceImpl.setUuid("");
@@ -189,6 +205,7 @@ public class CalendarResourceCacheModel implements CacheModel<CalendarResource>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		calendarResourceId = objectInput.readLong();
@@ -215,8 +232,9 @@ public class CalendarResourceCacheModel implements CacheModel<CalendarResource>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -278,6 +296,7 @@ public class CalendarResourceCacheModel implements CacheModel<CalendarResource>,
 		objectOutput.writeLong(lastPublishDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long calendarResourceId;
 	public long groupId;
@@ -294,4 +313,5 @@ public class CalendarResourceCacheModel implements CacheModel<CalendarResource>,
 	public String description;
 	public boolean active;
 	public long lastPublishDate;
+
 }

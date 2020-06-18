@@ -16,8 +16,8 @@ package com.liferay.portal.util;
 
 import com.liferay.petra.process.ConsumerOutputProcessor;
 import com.liferay.petra.process.ProcessUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.OSDetector;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -44,11 +44,11 @@ public class BrowserLauncher implements Runnable {
 				try {
 					launchBrowser();
 				}
-				catch (Exception e2) {
+				catch (Exception exception) {
 				}
 			}
 		}
-		catch (Exception e1) {
+		catch (Exception exception) {
 		}
 	}
 
@@ -97,7 +97,8 @@ public class BrowserLauncher implements Runnable {
 	/**
 	 * Order matters. See LPS-48525.
 	 */
-	private static final String[] _BROWSERS =
-		{"xdg-open", "firefox", "mozilla", "konqueror", "opera"};
+	private static final String[] _BROWSERS = {
+		"xdg-open", "firefox", "mozilla", "konqueror", "opera"
+	};
 
 }

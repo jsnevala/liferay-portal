@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.PortletPreferencesException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -82,8 +83,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 		"javax.portlet.init-param.view-template=/view_selected_record_set.jsp",
 		"javax.portlet.name=" + DDLPortletKeys.DYNAMIC_DATA_LISTS_DISPLAY,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=guest,power-user,user"
 	},
 	service = Portlet.class
 )
@@ -108,18 +108,18 @@ public class DDLDisplayPortlet extends MVCPortlet {
 			renderRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT, ddlDisplayContext);
 		}
-		catch (Exception e) {
-			if (isSessionErrorException(e)) {
+		catch (Exception exception) {
+			if (isSessionErrorException(exception)) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(e, e);
+					_log.warn(exception, exception);
 				}
 
 				hideDefaultErrorMessage(renderRequest);
 
-				SessionErrors.add(renderRequest, e.getClass());
+				SessionErrors.add(renderRequest, exception.getClass());
 			}
 			else {
-				throw new PortletException(e);
+				throw new PortletException(exception);
 			}
 		}
 
@@ -235,6 +235,13 @@ public class DDLDisplayPortlet extends MVCPortlet {
 		DDLRecordSetService ddlRecordSetService) {
 
 		_ddlRecordSetService = ddlRecordSetService;
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.dynamic.data.lists.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
 	}
 
 	protected void unsetDDLWebConfigurationActivator(

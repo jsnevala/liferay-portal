@@ -14,14 +14,11 @@
 
 package com.liferay.journal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.journal.model.JournalArticle;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing JournalArticle in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see JournalArticle
  * @generated
  */
-@ProviderType
-public class JournalArticleCacheModel implements CacheModel<JournalArticle>,
-	Externalizable {
+public class JournalArticleCacheModel
+	implements CacheModel<JournalArticle>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,12 @@ public class JournalArticleCacheModel implements CacheModel<JournalArticle>,
 			return false;
 		}
 
-		JournalArticleCacheModel journalArticleCacheModel = (JournalArticleCacheModel)obj;
+		JournalArticleCacheModel journalArticleCacheModel =
+			(JournalArticleCacheModel)obj;
 
-		if (id == journalArticleCacheModel.id) {
+		if ((id == journalArticleCacheModel.id) &&
+			(mvccVersion == journalArticleCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +60,30 @@ public class JournalArticleCacheModel implements CacheModel<JournalArticle>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, id);
+		int hashCode = HashUtil.hash(0, id);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(67);
+		StringBundler sb = new StringBundler(71);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", id=");
 		sb.append(id);
@@ -142,6 +157,9 @@ public class JournalArticleCacheModel implements CacheModel<JournalArticle>,
 	@Override
 	public JournalArticle toEntityModel() {
 		JournalArticleImpl journalArticleImpl = new JournalArticleImpl();
+
+		journalArticleImpl.setMvccVersion(mvccVersion);
+		journalArticleImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			journalArticleImpl.setUuid("");
@@ -305,6 +323,10 @@ public class JournalArticleCacheModel implements CacheModel<JournalArticle>,
 	@Override
 	public void readExternal(ObjectInput objectInput)
 		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		id = objectInput.readLong();
@@ -330,7 +352,7 @@ public class JournalArticleCacheModel implements CacheModel<JournalArticle>,
 
 		version = objectInput.readDouble();
 		urlTitle = objectInput.readUTF();
-		content = objectInput.readUTF();
+		content = (String)objectInput.readObject();
 		DDMStructureKey = objectInput.readUTF();
 		DDMTemplateKey = objectInput.readUTF();
 		defaultLanguageId = objectInput.readUTF();
@@ -353,12 +375,16 @@ public class JournalArticleCacheModel implements CacheModel<JournalArticle>,
 		statusByUserName = objectInput.readUTF();
 		statusDate = objectInput.readLong();
 
-		_document = (com.liferay.portal.kernel.xml.Document)objectInput.readObject();
+		_document =
+			(com.liferay.portal.kernel.xml.Document)objectInput.readObject();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -416,10 +442,10 @@ public class JournalArticleCacheModel implements CacheModel<JournalArticle>,
 		}
 
 		if (content == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(content);
+			objectOutput.writeObject(content);
 		}
 
 		if (DDMStructureKey == null) {
@@ -485,6 +511,8 @@ public class JournalArticleCacheModel implements CacheModel<JournalArticle>,
 		objectOutput.writeObject(_document);
 	}
 
+	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long id;
 	public long resourcePrimKey;
@@ -519,4 +547,5 @@ public class JournalArticleCacheModel implements CacheModel<JournalArticle>,
 	public String statusByUserName;
 	public long statusDate;
 	public com.liferay.portal.kernel.xml.Document _document;
+
 }

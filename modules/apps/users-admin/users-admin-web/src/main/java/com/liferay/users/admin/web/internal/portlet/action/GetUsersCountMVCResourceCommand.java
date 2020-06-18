@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -62,8 +63,8 @@ public class GetUsersCountMVCResourceCommand implements MVCResourceCommand {
 
 			return false;
 		}
-		catch (Exception e) {
-			throw new PortletException(e);
+		catch (Exception exception) {
+			throw new PortletException(exception);
 		}
 	}
 
@@ -74,9 +75,10 @@ public class GetUsersCountMVCResourceCommand implements MVCResourceCommand {
 		int count = 0;
 
 		for (long organizationId : organizationIds) {
-			LinkedHashMap<String, Object> params = new LinkedHashMap<>();
-
-			params.put("usersOrgs", organizationId);
+			LinkedHashMap<String, Object> params =
+				LinkedHashMapBuilder.<String, Object>put(
+					"usersOrgs", organizationId
+				).build();
 
 			count += _userLocalService.searchCount(
 				companyId, null, status, params);
@@ -89,14 +91,16 @@ public class GetUsersCountMVCResourceCommand implements MVCResourceCommand {
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
 
-		HttpServletRequest request = _portal.getOriginalServletRequest(
-			_portal.getHttpServletRequest(resourceRequest));
+		HttpServletRequest httpServletRequest =
+			_portal.getOriginalServletRequest(
+				_portal.getHttpServletRequest(resourceRequest));
 
-		long companyId = _portal.getCompanyId(request);
+		long companyId = _portal.getCompanyId(httpServletRequest);
 
-		String className = ParamUtil.getString(request, "className");
-		long[] ids = StringUtil.split(ParamUtil.getString(request, "ids"), 0L);
-		int status = ParamUtil.getInteger(request, "status");
+		String className = ParamUtil.getString(httpServletRequest, "className");
+		long[] ids = StringUtil.split(
+			ParamUtil.getString(httpServletRequest, "ids"), 0L);
+		int status = ParamUtil.getInteger(httpServletRequest, "status");
 
 		int count = 0;
 
@@ -117,9 +121,10 @@ public class GetUsersCountMVCResourceCommand implements MVCResourceCommand {
 		int count = 0;
 
 		for (long userGroupId : userGroupIds) {
-			LinkedHashMap<String, Object> params = new LinkedHashMap<>();
-
-			params.put("usersUserGroups", userGroupId);
+			LinkedHashMap<String, Object> params =
+				LinkedHashMapBuilder.<String, Object>put(
+					"usersUserGroups", userGroupId
+				).build();
 
 			count += _userLocalService.searchCount(
 				companyId, null, status, params);

@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
@@ -40,7 +41,6 @@ import com.liferay.portal.upgrade.v7_0_0.util.DLFolderTable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -82,12 +82,12 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 
 			ps.executeUpdate();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error(
 				"Unable to add dynamic data mapping structure link for file " +
 					"entry type " + classPK);
 
-			throw e;
+			throw exception;
 		}
 	}
 
@@ -95,6 +95,8 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 	protected void doUpgrade() throws Exception {
 
 		// DLFileEntry
+
+		_populateEmptyTitles("DLFileEntry");
 
 		updateFileEntryFileNames();
 
@@ -105,6 +107,8 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 		updateFileEntryTypeDDMStructureLinks();
 
 		// DLFileVersion
+
+		_populateEmptyTitles("DLFileVersion");
 
 		updateFileVersionFileNames();
 
@@ -145,17 +149,6 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 				return false;
 			}
 		}
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #hasFileEntry(long, long, long, String, String)}
-	 */
-	@Deprecated
-	protected boolean hasFileEntry(long groupId, long folderId, String fileName)
-		throws Exception {
-
-		throw new UnsupportedOperationException();
 	}
 
 	protected void updateFileEntryFileNames() throws Exception {
@@ -202,13 +195,6 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 		}
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	protected void updateFileEntryTypeFileEntryTypeKeys() throws Exception {
-	}
-
 	protected void updateFileEntryTypeNamesAndDescriptions() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
 			PreparedStatement ps = connection.prepareStatement(
@@ -234,20 +220,19 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 			long companyId, long groupId)
 		throws Exception {
 
-		Map<String, String> nameLanguageKeys = new HashMap<>();
-
-		nameLanguageKeys.put(
+		Map<String, String> nameLanguageKeys = HashMapBuilder.put(
 			DLFileEntryTypeConstants.NAME_CONTRACT,
-			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_KEY_CONTRACT);
-		nameLanguageKeys.put(
+			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_KEY_CONTRACT
+		).put(
 			DLFileEntryTypeConstants.NAME_MARKETING_BANNER,
-			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_KEY_MARKETING_BANNER);
-		nameLanguageKeys.put(
+			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_KEY_MARKETING_BANNER
+		).put(
 			DLFileEntryTypeConstants.NAME_ONLINE_TRAINING,
-			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_KEY_ONLINE_TRAINING);
-		nameLanguageKeys.put(
+			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_KEY_ONLINE_TRAINING
+		).put(
 			DLFileEntryTypeConstants.NAME_SALES_PRESENTATION,
-			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_KEY_SALES_PRESENTATION);
+			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_KEY_SALES_PRESENTATION
+		).build();
 
 		for (Map.Entry<String, String> nameAndKey :
 				nameLanguageKeys.entrySet()) {
@@ -552,6 +537,16 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 		}
 	}
 
+	private void _populateEmptyTitles(String tableName) throws Exception {
+		try (LoggingTimer loggingTimer = new LoggingTimer()) {
+			runSQL(
+				StringBundler.concat(
+					"update ", tableName, " set title = ",
+					"CONCAT('unknown-title-', CAST_TEXT(fileEntryId)) where ",
+					"title = '' or title is null"));
+		}
+	}
+
 	private void _updateLongFileNames(String tableName) throws Exception {
 		try (PreparedStatement ps1 = connection.prepareStatement(
 				"select fileEntryId, title, extension from " + tableName +
@@ -564,8 +559,9 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 
 			while (rs.next()) {
 				long fileEntryId = rs.getLong("fileEntryId");
-				String extension = rs.getString("extension");
-				String title = rs.getString("title");
+				String extension = GetterUtil.getString(
+					rs.getString("extension"));
+				String title = GetterUtil.getString(rs.getString("title"));
 
 				int availableLength = 254 - extension.length();
 

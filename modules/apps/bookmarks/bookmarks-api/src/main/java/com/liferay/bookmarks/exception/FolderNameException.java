@@ -14,14 +14,11 @@
 
 package com.liferay.bookmarks.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class FolderNameException extends PortalException {
 
 	public FolderNameException() {

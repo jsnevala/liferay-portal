@@ -14,7 +14,10 @@
 
 package com.liferay.portal.search.elasticsearch6.internal.search.engine.adapter.search;
 
-import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.engine.adapter.search.MultisearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.MultisearchSearchResponse;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
@@ -38,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Michael C. Han
  */
-@Component(immediate = true, service = MultisearchSearchRequestExecutor.class)
+@Component(service = MultisearchSearchRequestExecutor.class)
 public class MultisearchSearchRequestExecutorImpl
 	implements MultisearchSearchRequestExecutor {
 
@@ -46,7 +49,7 @@ public class MultisearchSearchRequestExecutorImpl
 	public MultisearchSearchResponse execute(
 		MultisearchSearchRequest multisearchSearchRequest) {
 
-		Client client = elasticsearchConnectionManager.getClient();
+		Client client = _elasticsearchClientResolver.getClient();
 
 		MultiSearchRequestBuilder multiSearchRequestBuilder =
 			MultiSearchAction.INSTANCE.newRequestBuilder(client);
@@ -62,12 +65,12 @@ public class MultisearchSearchRequestExecutorImpl
 				SearchRequestBuilder searchRequestBuilder =
 					SearchAction.INSTANCE.newRequestBuilder(client);
 
-				searchSearchRequestAssembler.assemble(
+				_searchSearchRequestAssembler.assemble(
 					searchRequestBuilder, searchSearchRequest);
 
 				SearchRequestHolder searchRequestHolder =
 					new SearchRequestHolder(
-						searchSearchRequest, searchRequestBuilder.toString());
+						searchSearchRequest, searchRequestBuilder);
 
 				searchRequestHolders.add(searchRequestHolder);
 
@@ -98,10 +101,25 @@ public class MultisearchSearchRequestExecutorImpl
 			SearchRequestHolder searchRequestHolder = searchRequestHolders.get(
 				counter);
 
-			searchSearchResponseAssembler.assemble(
-				searchResponse, searchSearchResponse,
-				searchRequestHolder.getSearchSearchRequest(),
-				searchRequestHolder.getSearchRequestBuilderString());
+			SearchSearchRequest searchSearchRequest =
+				searchRequestHolder.getSearchSearchRequest();
+
+			_searchSearchResponseAssembler.assemble(
+				searchRequestHolder.getSearchRequestBuilder(), searchResponse,
+				searchSearchRequest, searchSearchResponse);
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					StringBundler.concat(
+						"The search engine processed ",
+						searchSearchResponse.getSearchRequestString(), " in ",
+						searchSearchResponse.getExecutionTime(), " ms"));
+			}
+
+			if (searchSearchRequest.isIncludeResponseString()) {
+				searchSearchResponse.setSearchResponseString(
+					searchResponse.toString());
+			}
 
 			counter++;
 		}
@@ -109,34 +127,53 @@ public class MultisearchSearchRequestExecutorImpl
 		return multisearchSearchResponse;
 	}
 
-	@Reference
-	protected ElasticsearchConnectionManager elasticsearchConnectionManager;
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
 
-	@Reference
-	protected SearchSearchRequestAssembler searchSearchRequestAssembler;
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
 
-	@Reference
-	protected SearchSearchResponseAssembler searchSearchResponseAssembler;
+	@Reference(unbind = "-")
+	protected void setSearchSearchRequestAssembler(
+		SearchSearchRequestAssembler searchSearchRequestAssembler) {
+
+		_searchSearchRequestAssembler = searchSearchRequestAssembler;
+	}
+
+	@Reference(unbind = "-")
+	protected void setSearchSearchResponseAssembler(
+		SearchSearchResponseAssembler searchSearchResponseAssembler) {
+
+		_searchSearchResponseAssembler = searchSearchResponseAssembler;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		MultisearchSearchRequestExecutorImpl.class);
+
+	private ElasticsearchClientResolver _elasticsearchClientResolver;
+	private SearchSearchRequestAssembler _searchSearchRequestAssembler;
+	private SearchSearchResponseAssembler _searchSearchResponseAssembler;
 
 	private class SearchRequestHolder {
 
 		public SearchRequestHolder(
 			SearchSearchRequest searchSearchRequest,
-			String searchRequestBuilderString) {
+			SearchRequestBuilder searchRequestBuilder) {
 
 			_searchSearchRequest = searchSearchRequest;
-			_searchRequestBuilderString = searchRequestBuilderString;
+			_searchRequestBuilder = searchRequestBuilder;
 		}
 
-		public String getSearchRequestBuilderString() {
-			return _searchRequestBuilderString;
+		public SearchRequestBuilder getSearchRequestBuilder() {
+			return _searchRequestBuilder;
 		}
 
 		public SearchSearchRequest getSearchSearchRequest() {
 			return _searchSearchRequest;
 		}
 
-		private final String _searchRequestBuilderString;
+		private final SearchRequestBuilder _searchRequestBuilder;
 		private final SearchSearchRequest _searchSearchRequest;
 
 	}

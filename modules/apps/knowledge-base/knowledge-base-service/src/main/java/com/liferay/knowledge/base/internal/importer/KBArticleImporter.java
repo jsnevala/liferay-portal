@@ -15,6 +15,7 @@
 package com.liferay.knowledge.base.internal.importer;
 
 import com.liferay.asset.kernel.exception.AssetCategoryException;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
 import com.liferay.knowledge.base.exception.KBArticleImportException;
@@ -51,11 +52,13 @@ public class KBArticleImporter {
 
 	public KBArticleImporter(
 		KBArchiveFactory kbArchiveFactory,
-		KBArticleLocalService kbArticleLocalService, Portal portal) {
+		KBArticleLocalService kbArticleLocalService, Portal portal,
+		DLURLHelper dlURLHelper) {
 
 		_kbArchiveFactory = kbArchiveFactory;
 		_kbArticleLocalService = kbArticleLocalService;
 		_portal = portal;
+		_dlURLHelper = dlURLHelper;
 	}
 
 	public int processZipFile(
@@ -72,14 +75,12 @@ public class KBArticleImporter {
 			ZipReader zipReader = ZipReaderFactoryUtil.getZipReader(
 				inputStream);
 
-			Map<String, String> metadata = getMetadata(zipReader);
-
 			return processKBArticleFiles(
 				userId, groupId, parentKBFolderId, prioritizeByNumericalPrefix,
-				zipReader, metadata, serviceContext);
+				zipReader, getMetadata(zipReader), serviceContext);
 		}
-		catch (IOException ioe) {
-			throw new KBArticleImportException(ioe);
+		catch (IOException ioException) {
+			throw new KBArticleImportException(ioException);
 		}
 	}
 
@@ -96,7 +97,8 @@ public class KBArticleImporter {
 		}
 
 		KBArticleMarkdownConverter kbArticleMarkdownConverter =
-			new KBArticleMarkdownConverter(markdown, fileEntryName, metadata);
+			new KBArticleMarkdownConverter(
+				markdown, fileEntryName, metadata, _dlURLHelper);
 
 		String urlTitle = kbArticleMarkdownConverter.getUrlTitle();
 
@@ -119,18 +121,19 @@ public class KBArticleImporter {
 				serviceContext.setWorkflowAction(workflowAction);
 			}
 		}
-		catch (AssetCategoryException ace) {
-			throw new KBArticleImportException.MustHaveACategory(ace);
+		catch (AssetCategoryException assetCategoryException) {
+			throw new KBArticleImportException.MustHaveACategory(
+				assetCategoryException);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			StringBundler sb = new StringBundler(4);
 
 			sb.append("Unable to add basic KB article for file entry ");
 			sb.append(fileEntryName);
 			sb.append(": ");
-			sb.append(e.getLocalizedMessage());
+			sb.append(exception.getLocalizedMessage());
 
-			throw new KBArticleImportException(sb.toString(), e);
+			throw new KBArticleImportException(sb.toString(), exception);
 		}
 
 		try {
@@ -138,24 +141,22 @@ public class KBArticleImporter {
 				kbArticleMarkdownConverter.processAttachmentsReferences(
 					userId, kbArticle, zipReader, new HashMap<>());
 
-			kbArticle = _kbArticleLocalService.updateKBArticle(
+			return _kbArticleLocalService.updateKBArticle(
 				userId, kbArticle.getResourcePrimKey(),
 				kbArticleMarkdownConverter.getTitle(), html,
 				kbArticle.getDescription(),
 				kbArticleMarkdownConverter.getSourceURL(), null, null, null,
 				serviceContext);
-
-			return kbArticle;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			StringBundler sb = new StringBundler(4);
 
 			sb.append("Unable to update KB article for file entry ");
 			sb.append(fileEntryName);
 			sb.append(": ");
-			sb.append(e.getLocalizedMessage());
+			sb.append(exception.getLocalizedMessage());
 
-			throw new KBArticleImportException(sb.toString(), e);
+			throw new KBArticleImportException(sb.toString(), exception);
 		}
 	}
 
@@ -186,10 +187,11 @@ public class KBArticleImporter {
 				KBArticleConstants.DEFAULT_PRIORITY,
 				Double.parseDouble(leadingDigits));
 		}
-		catch (NumberFormatException nfe) {
+		catch (NumberFormatException numberFormatException) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
-					"Invalid numerical prefix: " + kbArchiveResourceName, nfe);
+					"Invalid numerical prefix: " + kbArchiveResourceName,
+					numberFormatException);
 			}
 		}
 
@@ -199,8 +201,8 @@ public class KBArticleImporter {
 	protected Map<String, String> getMetadata(ZipReader zipReader)
 		throws KBArticleImportException {
 
-		try (InputStream inputStream =
-				zipReader.getEntryAsInputStream(".METADATA")) {
+		try (InputStream inputStream = zipReader.getEntryAsInputStream(
+				".METADATA")) {
 
 			if (inputStream == null) {
 				return Collections.emptyMap();
@@ -210,7 +212,7 @@ public class KBArticleImporter {
 
 			properties.load(inputStream);
 
-			Map<String, String> metadata = new HashMap<>(properties.size());
+			Map<String, String> metadata = new HashMap<>();
 
 			for (Map.Entry<Object, Object> entry : properties.entrySet()) {
 				Object value = entry.getValue();
@@ -224,8 +226,8 @@ public class KBArticleImporter {
 
 			return metadata;
 		}
-		catch (IOException ioe) {
-			throw new KBArticleImportException(ioe);
+		catch (IOException ioException) {
+			throw new KBArticleImportException(ioException);
 		}
 	}
 
@@ -335,6 +337,7 @@ public class KBArticleImporter {
 	private static final Log _log = LogFactoryUtil.getLog(
 		KBArticleImporter.class);
 
+	private final DLURLHelper _dlURLHelper;
 	private final KBArchiveFactory _kbArchiveFactory;
 	private final KBArticleLocalService _kbArticleLocalService;
 	private final Portal _portal;

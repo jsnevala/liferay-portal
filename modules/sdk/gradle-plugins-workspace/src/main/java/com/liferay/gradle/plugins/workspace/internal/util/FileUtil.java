@@ -25,18 +25,26 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
 import org.gradle.api.UncheckedIOException;
+import org.gradle.api.file.SourceDirectorySet;
+import org.gradle.api.tasks.SourceSet;
 
 /**
  * @author Andrea Di Giorgi
  */
 public class FileUtil extends com.liferay.gradle.util.FileUtil {
 
+	public static File getJavaClassesDir(SourceSet sourceSet) {
+		SourceDirectorySet sourceDirectorySet = sourceSet.getJava();
+
+		return sourceDirectorySet.getOutputDir();
+	}
+
 	public static void moveTree(File sourceRootDir, File destinationRootDir) {
 		try {
 			_moveTree(sourceRootDir.toPath(), destinationRootDir.toPath());
 		}
-		catch (IOException ioe) {
-			throw new UncheckedIOException(ioe);
+		catch (IOException ioException) {
+			throw new UncheckedIOException(ioException);
 		}
 	}
 
@@ -45,8 +53,8 @@ public class FileUtil extends com.liferay.gradle.util.FileUtil {
 			return new String(
 				Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
 		}
-		catch (IOException ioe) {
-			throw new UncheckedIOException(ioe);
+		catch (IOException ioException) {
+			throw new UncheckedIOException(ioException);
 		}
 	}
 
@@ -60,7 +68,7 @@ public class FileUtil extends com.liferay.gradle.util.FileUtil {
 
 				@Override
 				public FileVisitResult postVisitDirectory(
-						Path dirPath, IOException ioe)
+						Path dirPath, IOException ioException)
 					throws IOException {
 
 					Files.delete(dirPath);

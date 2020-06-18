@@ -14,14 +14,11 @@
 
 package com.liferay.bookmarks.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.bookmarks.model.BookmarksFolder;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing BookmarksFolder in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see BookmarksFolder
  * @generated
  */
-@ProviderType
-public class BookmarksFolderCacheModel implements CacheModel<BookmarksFolder>,
-	Externalizable {
+public class BookmarksFolderCacheModel
+	implements CacheModel<BookmarksFolder>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,12 @@ public class BookmarksFolderCacheModel implements CacheModel<BookmarksFolder>,
 			return false;
 		}
 
-		BookmarksFolderCacheModel bookmarksFolderCacheModel = (BookmarksFolderCacheModel)obj;
+		BookmarksFolderCacheModel bookmarksFolderCacheModel =
+			(BookmarksFolderCacheModel)obj;
 
-		if (folderId == bookmarksFolderCacheModel.folderId) {
+		if ((folderId == bookmarksFolderCacheModel.folderId) &&
+			(mvccVersion == bookmarksFolderCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +60,28 @@ public class BookmarksFolderCacheModel implements CacheModel<BookmarksFolder>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, folderId);
+		int hashCode = HashUtil.hash(0, folderId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(35);
+		StringBundler sb = new StringBundler(37);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", folderId=");
 		sb.append(folderId);
@@ -110,6 +123,8 @@ public class BookmarksFolderCacheModel implements CacheModel<BookmarksFolder>,
 	@Override
 	public BookmarksFolder toEntityModel() {
 		BookmarksFolderImpl bookmarksFolderImpl = new BookmarksFolderImpl();
+
+		bookmarksFolderImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			bookmarksFolderImpl.setUuid("");
@@ -198,6 +213,7 @@ public class BookmarksFolderCacheModel implements CacheModel<BookmarksFolder>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		folderId = objectInput.readLong();
@@ -225,8 +241,9 @@ public class BookmarksFolderCacheModel implements CacheModel<BookmarksFolder>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -291,6 +308,7 @@ public class BookmarksFolderCacheModel implements CacheModel<BookmarksFolder>,
 		objectOutput.writeLong(statusDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long folderId;
 	public long groupId;
@@ -308,4 +326,5 @@ public class BookmarksFolderCacheModel implements CacheModel<BookmarksFolder>,
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
+
 }

@@ -21,7 +21,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.messaging.MessageBusUtil;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.capabilities.SyncCapability;
 import com.liferay.portal.kernel.repository.event.RepositoryEventAware;
@@ -34,11 +34,11 @@ import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.repository.registry.RepositoryEventRegistry;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.repository.capabilities.util.GroupServiceAdapter;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFolder;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -50,10 +50,12 @@ public class LiferaySyncCapability
 
 	public LiferaySyncCapability(
 		GroupServiceAdapter groupServiceAdapter,
-		DLSyncEventLocalService dlSyncEventLocalService) {
+		DLSyncEventLocalService dlSyncEventLocalService,
+		MessageBus messageBus) {
 
 		_groupServiceAdapter = groupServiceAdapter;
 		_dlSyncEventLocalService = dlSyncEventLocalService;
+		_messageBus = messageBus;
 	}
 
 	@Override
@@ -107,7 +109,7 @@ public class LiferaySyncCapability
 
 			return group.isStagingGroup();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return false;
 		}
 	}
@@ -128,8 +130,8 @@ public class LiferaySyncCapability
 				return;
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		registerDLSyncEventCallback(
@@ -162,16 +164,20 @@ public class LiferaySyncCapability
 				public Void call() throws Exception {
 					Message message = new Message();
 
-					Map<String, Object> values = new HashMap<>(4);
-
-					values.put("event", event);
-					values.put("modifiedTime", modifiedTime);
-					values.put("type", type);
-					values.put("typePK", typePK);
+					Map<String, Object> values =
+						HashMapBuilder.<String, Object>put(
+							"event", event
+						).put(
+							"modifiedTime", modifiedTime
+						).put(
+							"type", type
+						).put(
+							"typePK", typePK
+						).build();
 
 					message.setValues(values);
 
-					MessageBusUtil.sendMessage(
+					_messageBus.sendMessage(
 						DestinationNames.DOCUMENT_LIBRARY_SYNC_EVENT_PROCESSOR,
 						message);
 
@@ -184,26 +190,26 @@ public class LiferaySyncCapability
 	private static final Log _log = LogFactoryUtil.getLog(
 		LiferaySyncCapability.class);
 
-	private final RepositoryEventListener
-		<RepositoryEventType.Add, Folder> _addFolderEventListener =
-			new SyncFolderRepositoryEventListener<>(DLSyncConstants.EVENT_ADD);
+	private final RepositoryEventListener<RepositoryEventType.Add, Folder>
+		_addFolderEventListener = new SyncFolderRepositoryEventListener<>(
+			DLSyncConstants.EVENT_ADD);
 	private final RepositoryEventListener<RepositoryEventType.Delete, FileEntry>
 		_deleteFileEntryEventListener =
 			new SyncFileEntryRepositoryEventListener<>(
 				DLSyncConstants.EVENT_DELETE);
-	private final RepositoryEventListener
-		<RepositoryEventType.Delete, Folder> _deleteFolderEventListener =
-			new SyncFolderRepositoryEventListener<>(
-				DLSyncConstants.EVENT_DELETE);
+	private final RepositoryEventListener<RepositoryEventType.Delete, Folder>
+		_deleteFolderEventListener = new SyncFolderRepositoryEventListener<>(
+			DLSyncConstants.EVENT_DELETE);
 	private final DLSyncEventLocalService _dlSyncEventLocalService;
 	private final GroupServiceAdapter _groupServiceAdapter;
-	private final RepositoryEventListener
-		<RepositoryEventType.Move, FileEntry> _moveFileEntryEventListener =
+	private final MessageBus _messageBus;
+	private final RepositoryEventListener<RepositoryEventType.Move, FileEntry>
+		_moveFileEntryEventListener =
 			new SyncFileEntryRepositoryEventListener<>(
 				DLSyncConstants.EVENT_MOVE);
-	private final RepositoryEventListener
-		<RepositoryEventType.Move, Folder> _moveFolderEventListener =
-			new SyncFolderRepositoryEventListener<>(DLSyncConstants.EVENT_MOVE);
+	private final RepositoryEventListener<RepositoryEventType.Move, Folder>
+		_moveFolderEventListener = new SyncFolderRepositoryEventListener<>(
+			DLSyncConstants.EVENT_MOVE);
 	private final RepositoryEventListener
 		<TrashRepositoryEventType.EntryRestored, FileEntry>
 			_restoreFileEntryEventListener =
@@ -227,10 +233,9 @@ public class LiferaySyncCapability
 		_updateFileEntryEventListener =
 			new SyncFileEntryRepositoryEventListener<>(
 				DLSyncConstants.EVENT_UPDATE);
-	private final RepositoryEventListener
-		<RepositoryEventType.Update, Folder> _updateFolderEventListener =
-			new SyncFolderRepositoryEventListener<>(
-				DLSyncConstants.EVENT_UPDATE);
+	private final RepositoryEventListener<RepositoryEventType.Update, Folder>
+		_updateFolderEventListener = new SyncFolderRepositoryEventListener<>(
+			DLSyncConstants.EVENT_UPDATE);
 	private final RepositoryEventListener
 		<WorkflowRepositoryEventType.Add, FileEntry>
 			_workflowAddFileEntryEventListener =

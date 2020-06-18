@@ -102,10 +102,10 @@ public class AssetListEntryUsagesDisplayContext {
 
 		long classNameId = assetListEntryUsage.getClassNameId();
 
-		if (classNameId ==
-				PortalUtil.getClassNameId(AssetDisplayPageEntry.class)) {
+		if (classNameId == PortalUtil.getClassNameId(
+				AssetDisplayPageEntry.class)) {
 
-			return "display-page";
+			return "display-page-template";
 		}
 
 		if (classNameId == PortalUtil.getClassNameId(Layout.class)) {
@@ -171,7 +171,7 @@ public class AssetListEntryUsagesDisplayContext {
 		SearchContainer assetListEntryUsagesSearchContainer =
 			new SearchContainer(
 				_renderRequest, _renderResponse.createRenderURL(), null,
-				"there-are-no-asset-list-usages");
+				"there-are-no-collection-usages");
 
 		boolean orderByAsc = false;
 
@@ -215,7 +215,7 @@ public class AssetListEntryUsagesDisplayContext {
 
 			assetListEntryUsagesCount = getDisplayPagesUsageCount();
 		}
-		else if (Objects.equals(getNavigation(), "display-pages")) {
+		else if (Objects.equals(getNavigation(), "display-page-templates")) {
 			assetListEntryUsages =
 				AssetListEntryUsageLocalServiceUtil.getAssetListEntryUsages(
 					getAssetListEntryId(),

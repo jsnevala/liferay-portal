@@ -16,10 +16,10 @@ package com.frontend.js.minifier;
 
 import com.frontend.js.minifier.configuration.YahooJavaScriptMinifierConfiguration;
 
+import com.liferay.petra.io.unsync.UnsyncStringReader;
+import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.minifier.JavaScriptMinifier;
@@ -33,12 +33,17 @@ import org.mozilla.javascript.EvaluatorException;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Modified;
 
 /**
  * @author Carlos Sierra Andrés
  */
-@Component(immediate = true, service = JavaScriptMinifier.class)
+@Component(
+	configurationPid = "com.frontend.js.minifier.configuration.YahooJavaScriptMinifierConfiguration",
+	configurationPolicy = ConfigurationPolicy.OPTIONAL,
+	service = JavaScriptMinifier.class
+)
 public class YahooJavaScriptMinifier implements JavaScriptMinifier {
 
 	@Override
@@ -59,7 +64,7 @@ public class YahooJavaScriptMinifier implements JavaScriptMinifier {
 				_yahooJavaScriptMinifierConfiguration.jsPreserveAllSemicolons(),
 				_yahooJavaScriptMinifierConfiguration.jsDisableOptimizations());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			_log.error("Unable to minify JavaScript:\n" + content);
 
 			unsyncStringWriter.append(content);

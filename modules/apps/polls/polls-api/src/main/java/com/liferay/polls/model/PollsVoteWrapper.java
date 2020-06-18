@@ -14,21 +14,13 @@
 
 package com.liferay.polls.model;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
-import com.liferay.portal.kernel.service.ServiceContext;
-
-import java.io.Serializable;
+import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * <p>
@@ -39,26 +31,19 @@ import java.util.Objects;
  * @see PollsVote
  * @generated
  */
-@ProviderType
-public class PollsVoteWrapper implements PollsVote, ModelWrapper<PollsVote> {
+public class PollsVoteWrapper
+	extends BaseModelWrapper<PollsVote>
+	implements ModelWrapper<PollsVote>, PollsVote {
+
 	public PollsVoteWrapper(PollsVote pollsVote) {
-		_pollsVote = pollsVote;
-	}
-
-	@Override
-	public Class<?> getModelClass() {
-		return PollsVote.class;
-	}
-
-	@Override
-	public String getModelClassName() {
-		return PollsVote.class.getName();
+		super(pollsVote);
 	}
 
 	@Override
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("uuid", getUuid());
 		attributes.put("voteId", getVoteId());
 		attributes.put("groupId", getGroupId());
@@ -77,6 +62,12 @@ public class PollsVoteWrapper implements PollsVote, ModelWrapper<PollsVote> {
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
 		String uuid = (String)attributes.get("uuid");
 
 		if (uuid != null) {
@@ -151,435 +142,325 @@ public class PollsVoteWrapper implements PollsVote, ModelWrapper<PollsVote> {
 	}
 
 	@Override
-	public Object clone() {
-		return new PollsVoteWrapper((PollsVote)_pollsVote.clone());
-	}
-
-	@Override
-	public int compareTo(PollsVote pollsVote) {
-		return _pollsVote.compareTo(pollsVote);
-	}
-
-	@Override
 	public PollsChoice getChoice()
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _pollsVote.getChoice();
+
+		return model.getChoice();
 	}
 
 	/**
-	* Returns the choice ID of this polls vote.
-	*
-	* @return the choice ID of this polls vote
-	*/
+	 * Returns the choice ID of this polls vote.
+	 *
+	 * @return the choice ID of this polls vote
+	 */
 	@Override
 	public long getChoiceId() {
-		return _pollsVote.getChoiceId();
+		return model.getChoiceId();
 	}
 
 	/**
-	* Returns the company ID of this polls vote.
-	*
-	* @return the company ID of this polls vote
-	*/
+	 * Returns the company ID of this polls vote.
+	 *
+	 * @return the company ID of this polls vote
+	 */
 	@Override
 	public long getCompanyId() {
-		return _pollsVote.getCompanyId();
+		return model.getCompanyId();
 	}
 
 	/**
-	* Returns the create date of this polls vote.
-	*
-	* @return the create date of this polls vote
-	*/
+	 * Returns the create date of this polls vote.
+	 *
+	 * @return the create date of this polls vote
+	 */
 	@Override
 	public Date getCreateDate() {
-		return _pollsVote.getCreateDate();
-	}
-
-	@Override
-	public ExpandoBridge getExpandoBridge() {
-		return _pollsVote.getExpandoBridge();
+		return model.getCreateDate();
 	}
 
 	/**
-	* Returns the group ID of this polls vote.
-	*
-	* @return the group ID of this polls vote
-	*/
+	 * Returns the group ID of this polls vote.
+	 *
+	 * @return the group ID of this polls vote
+	 */
 	@Override
 	public long getGroupId() {
-		return _pollsVote.getGroupId();
+		return model.getGroupId();
 	}
 
 	/**
-	* Returns the last publish date of this polls vote.
-	*
-	* @return the last publish date of this polls vote
-	*/
+	 * Returns the last publish date of this polls vote.
+	 *
+	 * @return the last publish date of this polls vote
+	 */
 	@Override
 	public Date getLastPublishDate() {
-		return _pollsVote.getLastPublishDate();
+		return model.getLastPublishDate();
 	}
 
 	/**
-	* Returns the modified date of this polls vote.
-	*
-	* @return the modified date of this polls vote
-	*/
+	 * Returns the modified date of this polls vote.
+	 *
+	 * @return the modified date of this polls vote
+	 */
 	@Override
 	public Date getModifiedDate() {
-		return _pollsVote.getModifiedDate();
+		return model.getModifiedDate();
 	}
 
 	/**
-	* Returns the primary key of this polls vote.
-	*
-	* @return the primary key of this polls vote
-	*/
+	 * Returns the mvcc version of this polls vote.
+	 *
+	 * @return the mvcc version of this polls vote
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
+	}
+
+	/**
+	 * Returns the primary key of this polls vote.
+	 *
+	 * @return the primary key of this polls vote
+	 */
 	@Override
 	public long getPrimaryKey() {
-		return _pollsVote.getPrimaryKey();
-	}
-
-	@Override
-	public Serializable getPrimaryKeyObj() {
-		return _pollsVote.getPrimaryKeyObj();
+		return model.getPrimaryKey();
 	}
 
 	/**
-	* Returns the question ID of this polls vote.
-	*
-	* @return the question ID of this polls vote
-	*/
+	 * Returns the question ID of this polls vote.
+	 *
+	 * @return the question ID of this polls vote
+	 */
 	@Override
 	public long getQuestionId() {
-		return _pollsVote.getQuestionId();
+		return model.getQuestionId();
 	}
 
 	/**
-	* Returns the user ID of this polls vote.
-	*
-	* @return the user ID of this polls vote
-	*/
+	 * Returns the user ID of this polls vote.
+	 *
+	 * @return the user ID of this polls vote
+	 */
 	@Override
 	public long getUserId() {
-		return _pollsVote.getUserId();
+		return model.getUserId();
 	}
 
 	/**
-	* Returns the user name of this polls vote.
-	*
-	* @return the user name of this polls vote
-	*/
+	 * Returns the user name of this polls vote.
+	 *
+	 * @return the user name of this polls vote
+	 */
 	@Override
 	public String getUserName() {
-		return _pollsVote.getUserName();
+		return model.getUserName();
 	}
 
 	/**
-	* Returns the user uuid of this polls vote.
-	*
-	* @return the user uuid of this polls vote
-	*/
+	 * Returns the user uuid of this polls vote.
+	 *
+	 * @return the user uuid of this polls vote
+	 */
 	@Override
 	public String getUserUuid() {
-		return _pollsVote.getUserUuid();
+		return model.getUserUuid();
 	}
 
 	/**
-	* Returns the uuid of this polls vote.
-	*
-	* @return the uuid of this polls vote
-	*/
+	 * Returns the uuid of this polls vote.
+	 *
+	 * @return the uuid of this polls vote
+	 */
 	@Override
 	public String getUuid() {
-		return _pollsVote.getUuid();
+		return model.getUuid();
 	}
 
 	/**
-	* Returns the vote date of this polls vote.
-	*
-	* @return the vote date of this polls vote
-	*/
+	 * Returns the vote date of this polls vote.
+	 *
+	 * @return the vote date of this polls vote
+	 */
 	@Override
 	public Date getVoteDate() {
-		return _pollsVote.getVoteDate();
+		return model.getVoteDate();
 	}
 
 	/**
-	* Returns the vote ID of this polls vote.
-	*
-	* @return the vote ID of this polls vote
-	*/
+	 * Returns the vote ID of this polls vote.
+	 *
+	 * @return the vote ID of this polls vote
+	 */
 	@Override
 	public long getVoteId() {
-		return _pollsVote.getVoteId();
-	}
-
-	@Override
-	public int hashCode() {
-		return _pollsVote.hashCode();
-	}
-
-	@Override
-	public boolean isCachedModel() {
-		return _pollsVote.isCachedModel();
-	}
-
-	@Override
-	public boolean isEscapedModel() {
-		return _pollsVote.isEscapedModel();
-	}
-
-	@Override
-	public boolean isNew() {
-		return _pollsVote.isNew();
+		return model.getVoteId();
 	}
 
 	@Override
 	public void persist() {
-		_pollsVote.persist();
-	}
-
-	@Override
-	public void setCachedModel(boolean cachedModel) {
-		_pollsVote.setCachedModel(cachedModel);
+		model.persist();
 	}
 
 	/**
-	* Sets the choice ID of this polls vote.
-	*
-	* @param choiceId the choice ID of this polls vote
-	*/
+	 * Sets the choice ID of this polls vote.
+	 *
+	 * @param choiceId the choice ID of this polls vote
+	 */
 	@Override
 	public void setChoiceId(long choiceId) {
-		_pollsVote.setChoiceId(choiceId);
+		model.setChoiceId(choiceId);
 	}
 
 	/**
-	* Sets the company ID of this polls vote.
-	*
-	* @param companyId the company ID of this polls vote
-	*/
+	 * Sets the company ID of this polls vote.
+	 *
+	 * @param companyId the company ID of this polls vote
+	 */
 	@Override
 	public void setCompanyId(long companyId) {
-		_pollsVote.setCompanyId(companyId);
+		model.setCompanyId(companyId);
 	}
 
 	/**
-	* Sets the create date of this polls vote.
-	*
-	* @param createDate the create date of this polls vote
-	*/
+	 * Sets the create date of this polls vote.
+	 *
+	 * @param createDate the create date of this polls vote
+	 */
 	@Override
 	public void setCreateDate(Date createDate) {
-		_pollsVote.setCreateDate(createDate);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(
-		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
-		_pollsVote.setExpandoBridgeAttributes(baseModel);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ExpandoBridge expandoBridge) {
-		_pollsVote.setExpandoBridgeAttributes(expandoBridge);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ServiceContext serviceContext) {
-		_pollsVote.setExpandoBridgeAttributes(serviceContext);
+		model.setCreateDate(createDate);
 	}
 
 	/**
-	* Sets the group ID of this polls vote.
-	*
-	* @param groupId the group ID of this polls vote
-	*/
+	 * Sets the group ID of this polls vote.
+	 *
+	 * @param groupId the group ID of this polls vote
+	 */
 	@Override
 	public void setGroupId(long groupId) {
-		_pollsVote.setGroupId(groupId);
+		model.setGroupId(groupId);
 	}
 
 	/**
-	* Sets the last publish date of this polls vote.
-	*
-	* @param lastPublishDate the last publish date of this polls vote
-	*/
+	 * Sets the last publish date of this polls vote.
+	 *
+	 * @param lastPublishDate the last publish date of this polls vote
+	 */
 	@Override
 	public void setLastPublishDate(Date lastPublishDate) {
-		_pollsVote.setLastPublishDate(lastPublishDate);
+		model.setLastPublishDate(lastPublishDate);
 	}
 
 	/**
-	* Sets the modified date of this polls vote.
-	*
-	* @param modifiedDate the modified date of this polls vote
-	*/
+	 * Sets the modified date of this polls vote.
+	 *
+	 * @param modifiedDate the modified date of this polls vote
+	 */
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
-		_pollsVote.setModifiedDate(modifiedDate);
-	}
-
-	@Override
-	public void setNew(boolean n) {
-		_pollsVote.setNew(n);
+		model.setModifiedDate(modifiedDate);
 	}
 
 	/**
-	* Sets the primary key of this polls vote.
-	*
-	* @param primaryKey the primary key of this polls vote
-	*/
+	 * Sets the mvcc version of this polls vote.
+	 *
+	 * @param mvccVersion the mvcc version of this polls vote
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
+	}
+
+	/**
+	 * Sets the primary key of this polls vote.
+	 *
+	 * @param primaryKey the primary key of this polls vote
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
-		_pollsVote.setPrimaryKey(primaryKey);
-	}
-
-	@Override
-	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
-		_pollsVote.setPrimaryKeyObj(primaryKeyObj);
+		model.setPrimaryKey(primaryKey);
 	}
 
 	/**
-	* Sets the question ID of this polls vote.
-	*
-	* @param questionId the question ID of this polls vote
-	*/
+	 * Sets the question ID of this polls vote.
+	 *
+	 * @param questionId the question ID of this polls vote
+	 */
 	@Override
 	public void setQuestionId(long questionId) {
-		_pollsVote.setQuestionId(questionId);
+		model.setQuestionId(questionId);
 	}
 
 	/**
-	* Sets the user ID of this polls vote.
-	*
-	* @param userId the user ID of this polls vote
-	*/
+	 * Sets the user ID of this polls vote.
+	 *
+	 * @param userId the user ID of this polls vote
+	 */
 	@Override
 	public void setUserId(long userId) {
-		_pollsVote.setUserId(userId);
+		model.setUserId(userId);
 	}
 
 	/**
-	* Sets the user name of this polls vote.
-	*
-	* @param userName the user name of this polls vote
-	*/
+	 * Sets the user name of this polls vote.
+	 *
+	 * @param userName the user name of this polls vote
+	 */
 	@Override
 	public void setUserName(String userName) {
-		_pollsVote.setUserName(userName);
+		model.setUserName(userName);
 	}
 
 	/**
-	* Sets the user uuid of this polls vote.
-	*
-	* @param userUuid the user uuid of this polls vote
-	*/
+	 * Sets the user uuid of this polls vote.
+	 *
+	 * @param userUuid the user uuid of this polls vote
+	 */
 	@Override
 	public void setUserUuid(String userUuid) {
-		_pollsVote.setUserUuid(userUuid);
+		model.setUserUuid(userUuid);
 	}
 
 	/**
-	* Sets the uuid of this polls vote.
-	*
-	* @param uuid the uuid of this polls vote
-	*/
+	 * Sets the uuid of this polls vote.
+	 *
+	 * @param uuid the uuid of this polls vote
+	 */
 	@Override
 	public void setUuid(String uuid) {
-		_pollsVote.setUuid(uuid);
+		model.setUuid(uuid);
 	}
 
 	/**
-	* Sets the vote date of this polls vote.
-	*
-	* @param voteDate the vote date of this polls vote
-	*/
+	 * Sets the vote date of this polls vote.
+	 *
+	 * @param voteDate the vote date of this polls vote
+	 */
 	@Override
 	public void setVoteDate(Date voteDate) {
-		_pollsVote.setVoteDate(voteDate);
+		model.setVoteDate(voteDate);
 	}
 
 	/**
-	* Sets the vote ID of this polls vote.
-	*
-	* @param voteId the vote ID of this polls vote
-	*/
+	 * Sets the vote ID of this polls vote.
+	 *
+	 * @param voteId the vote ID of this polls vote
+	 */
 	@Override
 	public void setVoteId(long voteId) {
-		_pollsVote.setVoteId(voteId);
-	}
-
-	@Override
-	public com.liferay.portal.kernel.model.CacheModel<PollsVote> toCacheModel() {
-		return _pollsVote.toCacheModel();
-	}
-
-	@Override
-	public PollsVote toEscapedModel() {
-		return new PollsVoteWrapper(_pollsVote.toEscapedModel());
-	}
-
-	@Override
-	public String toString() {
-		return _pollsVote.toString();
-	}
-
-	@Override
-	public PollsVote toUnescapedModel() {
-		return new PollsVoteWrapper(_pollsVote.toUnescapedModel());
-	}
-
-	@Override
-	public String toXmlString() {
-		return _pollsVote.toXmlString();
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-
-		if (!(obj instanceof PollsVoteWrapper)) {
-			return false;
-		}
-
-		PollsVoteWrapper pollsVoteWrapper = (PollsVoteWrapper)obj;
-
-		if (Objects.equals(_pollsVote, pollsVoteWrapper._pollsVote)) {
-			return true;
-		}
-
-		return false;
+		model.setVoteId(voteId);
 	}
 
 	@Override
 	public StagedModelType getStagedModelType() {
-		return _pollsVote.getStagedModelType();
+		return model.getStagedModelType();
 	}
 
 	@Override
-	public PollsVote getWrappedModel() {
-		return _pollsVote;
+	protected PollsVoteWrapper wrap(PollsVote pollsVote) {
+		return new PollsVoteWrapper(pollsVote);
 	}
 
-	@Override
-	public boolean isEntityCacheEnabled() {
-		return _pollsVote.isEntityCacheEnabled();
-	}
-
-	@Override
-	public boolean isFinderCacheEnabled() {
-		return _pollsVote.isFinderCacheEnabled();
-	}
-
-	@Override
-	public void resetOriginalValues() {
-		_pollsVote.resetOriginalValues();
-	}
-
-	private final PollsVote _pollsVote;
 }

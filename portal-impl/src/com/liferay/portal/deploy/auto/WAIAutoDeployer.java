@@ -17,12 +17,12 @@ package com.liferay.portal.deploy.auto;
 import com.liferay.portal.kernel.plugin.PluginPackage;
 import com.liferay.portal.kernel.portlet.DefaultFriendlyURLMapper;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.util.bridges.wai.WAIPortlet;
 
 import java.io.File;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -52,10 +52,11 @@ public class WAIAutoDeployer extends PortletAutoDeployer {
 			portletName = pluginPackage.getName();
 		}
 
-		Map<String, String> filterMap = new HashMap<>();
-
-		filterMap.put("portlet_name", displayName);
-		filterMap.put("portlet_title", portletName);
+		Map<String, String> filterMap = HashMapBuilder.put(
+			"portlet_name", displayName
+		).put(
+			"portlet_title", portletName
+		).build();
 
 		if (pluginPackage != null) {
 			Properties deploymentSettings =
@@ -134,7 +135,8 @@ public class WAIAutoDeployer extends PortletAutoDeployer {
 
 	private static final String[] _INIT_PARAM_DEFAULT_VALUES = {"500"};
 
-	private static final String[] _INIT_PARAM_NAMES =
-		{"wai.connector.iframe.height.default"};
+	private static final String[] _INIT_PARAM_NAMES = {
+		"wai.connector.iframe.height.default"
+	};
 
 }

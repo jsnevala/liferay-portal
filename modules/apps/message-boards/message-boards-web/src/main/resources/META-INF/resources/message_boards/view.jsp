@@ -42,6 +42,19 @@ boolean useAssetEntryQuery = Validator.isNotNull(assetTagName);
 PortletURL portletURL = renderResponse.createRenderURL();
 
 portletURL.setParameter("mvcRenderCommandName", mvcRenderCommandName);
+
+int cur1 = ParamUtil.getInteger(request, "cur1");
+
+if (cur1 > 0) {
+	portletURL.setParameter("cur1", String.valueOf(cur1));
+}
+
+int cur2 = ParamUtil.getInteger(request, "cur2");
+
+if (cur2 > 0) {
+	portletURL.setParameter("cur2", String.valueOf(cur2));
+}
+
 portletURL.setParameter("mbCategoryId", String.valueOf(categoryId));
 
 String keywords = ParamUtil.getString(request, "keywords");
@@ -60,18 +73,17 @@ if (orderByType.equals("asc")) {
 	orderByAsc = true;
 }
 
-OrderByComparator orderByComparator = null;
+OrderByComparator threadOrderByComparator = null;
 
 if (orderByCol.equals("modified-date")) {
-	orderByComparator = new ThreadModifiedDateComparator(orderByAsc);
+	threadOrderByComparator = new ThreadModifiedDateComparator(orderByAsc);
 }
 
-MBListDisplayContext mbListDisplayContext = mbDisplayContextProvider.getMbListDisplayContext(request, response, categoryId);
+MBListDisplayContext mbListDisplayContext = mbDisplayContextProvider.getMbListDisplayContext(request, response, categoryId, mvcRenderCommandName);
 
 request.setAttribute("view.jsp-categorySubscriptionClassPKs", categorySubscriptionClassPKs);
 request.setAttribute("view.jsp-threadSubscriptionClassPKs", threadSubscriptionClassPKs);
 
-request.setAttribute("view.jsp-categoryId", categoryId);
 request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 %>
 
@@ -83,7 +95,7 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 	portletURL="<%= restoreTrashEntriesURL %>"
 />
 
-<liferay-util:include page="/message_boards/nav.jsp" servletContext="<%= application %>" />
+<%@ include file="/message_boards/nav.jspf" %>
 
 <c:choose>
 	<c:when test='<%= mvcRenderCommandName.equals("/message_boards/view_my_subscriptions") %>'>
@@ -168,10 +180,8 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 					boolean showAddMessageButton = MBCategoryPermission.contains(permissionChecker, scopeGroupId, categoryId, ActionKeys.ADD_MESSAGE);
 					boolean showPermissionsButton = MBResourcePermission.contains(permissionChecker, scopeGroupId, ActionKeys.PERMISSIONS);
 
-					if (showAddMessageButton && !themeDisplay.isSignedIn()) {
-						if (!allowAnonymousPosting) {
-							showAddMessageButton = false;
-						}
+					if (showAddMessageButton && !themeDisplay.isSignedIn() && !allowAnonymousPosting) {
+						showAddMessageButton = false;
 					}
 					%>
 
@@ -251,7 +261,7 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 									direction="left-side"
 									icon="<%= StringPool.BLANK %>"
 									markupView="lexicon"
-									message="<%= StringPool.BLANK %>"
+									message="actions"
 									showWhenSingleIcon="<%= true %>"
 								>
 									<c:if test="<%= showPermissionsButton %>">
@@ -375,12 +385,12 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 					</div>
 
 					<%
-					SearchContainer categoryEntriesSearchContainer = new SearchContainer(renderRequest, null, null, "cur1", 0, mbListDisplayContext.getCategoryEntriesDelta(), portletURL, null, "there-are-no-threads-or-categories");
+					SearchContainer categoryEntriesSearchContainer = new SearchContainer(renderRequest, null, null, "cur1", 0, mbListDisplayContext.getCategoryEntriesDelta(), PortletURLUtil.clone(portletURL, renderResponse), null, "there-are-no-threads-or-categories");
 
 					mbListDisplayContext.setCategoryEntriesDelta(categoryEntriesSearchContainer);
 
 					categoryEntriesSearchContainer.setOrderByCol(orderByCol);
-					categoryEntriesSearchContainer.setOrderByComparator(orderByComparator);
+					categoryEntriesSearchContainer.setOrderByComparator(new CategoryTitleComparator(true));
 					categoryEntriesSearchContainer.setOrderByType(orderByType);
 
 					mbListDisplayContext.populateCategoriesResultsAndTotal(categoryEntriesSearchContainer);
@@ -389,25 +399,23 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 					%>
 
 					<c:if test="<%= categoryEntriesSearchContainer.getTotal() > 0 %>">
-						<liferay-util:include page='<%= "/message_boards/view_category_entries.jsp" %>' servletContext="<%= application %>" />
+						<%@ include file="/message_boards/view_category_entries.jspf" %>
 					</c:if>
 
 					<%
-					SearchContainer threadEntriesSearchContainer = new SearchContainer(renderRequest, null, null, "cur2", 0, mbListDisplayContext.getThreadEntriesDelta(), portletURL, null, "there-are-no-threads-or-categories");
+					SearchContainer threadEntriesSearchContainer = new SearchContainer(renderRequest, null, null, "cur2", 0, mbListDisplayContext.getThreadEntriesDelta(), PortletURLUtil.clone(portletURL, renderResponse), null, "there-are-no-threads-or-categories");
 
-					mbListDisplayContext.setThreadEntriesDelta(categoryEntriesSearchContainer);
+					mbListDisplayContext.setThreadEntriesDelta(threadEntriesSearchContainer);
 
 					threadEntriesSearchContainer.setOrderByCol(orderByCol);
-					threadEntriesSearchContainer.setOrderByComparator(orderByComparator);
+					threadEntriesSearchContainer.setOrderByComparator(threadOrderByComparator);
 					threadEntriesSearchContainer.setOrderByType(orderByType);
 
 					mbListDisplayContext.populateThreadsResultsAndTotal(threadEntriesSearchContainer);
-
-					request.setAttribute("view.jsp-threadEntriesSearchContainer", threadEntriesSearchContainer);
 					%>
 
 					<c:if test="<%= threadEntriesSearchContainer.getTotal() > 0 %>">
-						<liferay-util:include page='<%= "/message_boards/view_thread_entries.jsp" %>' servletContext="<%= application %>" />
+						<%@ include file="/message_boards/view_thread_entries.jspf" %>
 					</c:if>
 
 					<c:if test="<%= (categoryEntriesSearchContainer.getTotal() <= 0) && (threadEntriesSearchContainer.getTotal() <= 0) %>">
@@ -441,7 +449,7 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 												direction="left-side"
 												icon="<%= StringPool.BLANK %>"
 												markupView="lexicon"
-												message="<%= StringPool.BLANK %>"
+												message="actions"
 												showWhenSingleIcon="<%= true %>"
 											>
 												<liferay-rss:rss
@@ -483,7 +491,7 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 												direction="left-side"
 												icon="<%= StringPool.BLANK %>"
 												markupView="lexicon"
-												message="<%= StringPool.BLANK %>"
+												message="actions"
 												showWhenSingleIcon="<%= true %>"
 											>
 												<liferay-rss:rss
@@ -513,15 +521,13 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 					mbListDisplayContext.setThreadEntriesDelta(threadEntriesSearchContainer);
 
 					threadEntriesSearchContainer.setOrderByCol(orderByCol);
-					threadEntriesSearchContainer.setOrderByComparator(orderByComparator);
+					threadEntriesSearchContainer.setOrderByComparator(threadOrderByComparator);
 					threadEntriesSearchContainer.setOrderByType(orderByType);
 
 					mbListDisplayContext.populateThreadsResultsAndTotal(threadEntriesSearchContainer);
-
-					request.setAttribute("view.jsp-threadEntriesSearchContainer", threadEntriesSearchContainer);
 					%>
 
-					<liferay-util:include page='<%= "/message_boards/view_thread_entries.jsp" %>' servletContext="<%= application %>" />
+					<%@ include file="/message_boards/view_thread_entries.jspf" %>
 
 					<%
 					String pageSubtitle = null;

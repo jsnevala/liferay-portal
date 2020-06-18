@@ -15,17 +15,22 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.DuplicateTeamException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.TeamNameException;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
-import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.service.base.TeamLocalServiceBaseImpl;
 
@@ -36,20 +41,6 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  */
 public class TeamLocalServiceImpl extends TeamLocalServiceBaseImpl {
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link #addTeam(long,
-	 *             long, String, String, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public Team addTeam(
-			long userId, long groupId, String name, String description)
-		throws PortalException {
-
-		return addTeam(
-			userId, groupId, name, description, new ServiceContext());
-	}
 
 	@Override
 	public Team addTeam(
@@ -75,7 +66,7 @@ public class TeamLocalServiceImpl extends TeamLocalServiceBaseImpl {
 		team.setName(name);
 		team.setDescription(description);
 
-		teamPersistence.update(team);
+		team = teamPersistence.update(team);
 
 		// Resources
 
@@ -112,11 +103,37 @@ public class TeamLocalServiceImpl extends TeamLocalServiceBaseImpl {
 			team.getCompanyId(), Team.class.getName(),
 			ResourceConstants.SCOPE_INDIVIDUAL, team.getTeamId());
 
+		// Group
+
+		List<Group> groups = groupPersistence.findByC_S(
+			team.getCompanyId(), true);
+
+		for (Group group : groups) {
+			UnicodeProperties typeSettingsUnicodeUnicodeProperties =
+				group.getTypeSettingsProperties();
+
+			List<Long> defaultTeamIds = ListUtil.fromArray(
+				StringUtil.split(
+					typeSettingsUnicodeUnicodeProperties.getProperty(
+						"defaultTeamIds"),
+					0L));
+
+			if (defaultTeamIds.contains(team.getTeamId())) {
+				defaultTeamIds.remove(team.getTeamId());
+
+				typeSettingsUnicodeUnicodeProperties.setProperty(
+					"defaultTeamIds",
+					ListUtil.toString(defaultTeamIds, StringPool.BLANK));
+
+				groupLocalService.updateGroup(
+					group.getGroupId(),
+					typeSettingsUnicodeUnicodeProperties.toString());
+			}
+		}
+
 		// Role
 
-		Role role = team.getRole();
-
-		roleLocalService.deleteRole(role);
+		roleLocalService.deleteRole(team.getRole());
 
 		return team;
 	}
@@ -158,9 +175,10 @@ public class TeamLocalServiceImpl extends TeamLocalServiceBaseImpl {
 
 	@Override
 	public List<Team> getUserTeams(long userId, long groupId) {
-		LinkedHashMap<String, Object> params = new LinkedHashMap<>();
-
-		params.put("usersTeams", userId);
+		LinkedHashMap<String, Object> params =
+			LinkedHashMapBuilder.<String, Object>put(
+				"usersTeams", userId
+			).build();
 
 		return search(
 			groupId, null, null, params, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
@@ -196,9 +214,7 @@ public class TeamLocalServiceImpl extends TeamLocalServiceBaseImpl {
 		team.setName(name);
 		team.setDescription(description);
 
-		teamPersistence.update(team);
-
-		return team;
+		return teamPersistence.update(team);
 	}
 
 	protected void validate(long teamId, long groupId, String name)

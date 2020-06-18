@@ -28,12 +28,14 @@ public class PortalUpstreamJob
 		super(jobName);
 
 		GitWorkingDirectory jenkinsGitWorkingDirectory =
-			JenkinsResultsParserUtil.getJenkinsGitWorkingDirectory();
+			GitWorkingDirectoryFactory.newJenkinsGitWorkingDirectory();
 
 		jobPropertiesFiles.add(
 			new File(
 				jenkinsGitWorkingDirectory.getWorkingDirectory(),
 				"commands/dependencies/test-upstream-batch.properties"));
+
+		readJobProperties();
 	}
 
 	@Override

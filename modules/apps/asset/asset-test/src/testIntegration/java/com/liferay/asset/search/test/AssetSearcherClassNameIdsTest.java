@@ -35,7 +35,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.service.test.ServiceTestUtil;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portlet.asset.util.AssetSearcher;
@@ -77,7 +77,7 @@ public class AssetSearcherClassNameIdsTest {
 	public void testAll() throws Exception {
 		User user = addUser();
 
-		ServiceTestUtil.setUser(user);
+		UserTestUtil.setUser(user);
 
 		addBlogsEntry();
 		addBookmarksEntry();
@@ -94,7 +94,7 @@ public class AssetSearcherClassNameIdsTest {
 	public void testMultiple() throws Exception {
 		User user = addUser();
 
-		ServiceTestUtil.setUser(user);
+		UserTestUtil.setUser(user);
 
 		addBlogsEntry();
 		addBookmarksEntry();
@@ -113,7 +113,7 @@ public class AssetSearcherClassNameIdsTest {
 	public void testSingle() throws Exception {
 		User user = addUser();
 
-		ServiceTestUtil.setUser(user);
+		UserTestUtil.setUser(user);
 
 		addBlogsEntry();
 		addBookmarksEntry();
@@ -126,6 +126,9 @@ public class AssetSearcherClassNameIdsTest {
 
 		Assert.assertEquals(hits.toString(), 1, hits.getLength());
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected BlogsEntry addBlogsEntry() throws Exception {
 		return _blogsEntryLocalService.addEntry(

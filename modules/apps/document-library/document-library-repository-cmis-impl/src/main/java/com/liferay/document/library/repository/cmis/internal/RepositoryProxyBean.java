@@ -86,50 +86,6 @@ public class RepositoryProxyBean
 		}
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public FileEntry addFileEntry(
-			long folderId, String sourceFileName, String mimeType, String title,
-			String description, String changeLog, File file,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(_classLoader)) {
-
-			FileEntry fileEntry = _repository.addFileEntry(
-				folderId, sourceFileName, mimeType, title, description,
-				changeLog, file, serviceContext);
-
-			return newFileEntryProxyBean(fileEntry);
-		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public FileEntry addFileEntry(
-			long folderId, String sourceFileName, String mimeType, String title,
-			String description, String changeLog, InputStream is, long size,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(_classLoader)) {
-
-			FileEntry fileEntry = _repository.addFileEntry(
-				folderId, sourceFileName, mimeType, title, description,
-				changeLog, is, size, serviceContext);
-
-			return newFileEntryProxyBean(fileEntry);
-		}
-	}
-
 	@Override
 	public FileShortcut addFileShortcut(
 			long userId, long folderId, long toFileEntryId,
@@ -162,26 +118,6 @@ public class RepositoryProxyBean
 		}
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public Folder addFolder(
-			long parentFolderId, String name, String description,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(_classLoader)) {
-
-			Folder folder = _repository.addFolder(
-				parentFolderId, name, description, serviceContext);
-
-			return newFolderProxyBean(folder);
-		}
-	}
-
 	@Override
 	public FileVersion cancelCheckOut(long fileEntryId) throws PortalException {
 		try (ContextClassLoaderSetter contextClassLoaderSetter =
@@ -191,40 +127,6 @@ public class RepositoryProxyBean
 
 			return newFileVersionProxyBean(fileVersion);
 		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public void checkInFileEntry(
-			long fileEntryId, boolean major, String changeLog,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(_classLoader)) {
-
-			_repository.checkInFileEntry(
-				fileEntryId, major, changeLog, serviceContext);
-		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #checkInFileEntry(long, long, DLVersionNumberIncrease, String, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public void checkInFileEntry(
-			long userId, long fileEntryId, boolean majorVersion,
-			String changeLog, ServiceContext serviceContext)
-		throws PortalException {
-
-		checkInFileEntry(
-			userId, fileEntryId,
-			DLVersionNumberIncrease.fromMajorVersion(majorVersion), changeLog,
-			serviceContext);
 	}
 
 	@Override
@@ -254,22 +156,6 @@ public class RepositoryProxyBean
 
 			_repository.checkInFileEntry(
 				userId, fileEntryId, lockUuid, serviceContext);
-		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public void checkInFileEntry(
-			long fileEntryId, String lockUuid, ServiceContext serviceContext)
-		throws PortalException {
-
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(_classLoader)) {
-
-			_repository.checkInFileEntry(fileEntryId, lockUuid, serviceContext);
 		}
 	}
 
@@ -320,26 +206,6 @@ public class RepositoryProxyBean
 		}
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public FileEntry copyFileEntry(
-			long groupId, long fileEntryId, long destFolderId,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(_classLoader)) {
-
-			FileEntry fileEntry = _repository.copyFileEntry(
-				groupId, fileEntryId, destFolderId, serviceContext);
-
-			return newFileEntryProxyBean(fileEntry);
-		}
-	}
-
 	@Override
 	public void deleteAll() throws PortalException {
 		try (ContextClassLoaderSetter contextClassLoaderSetter =
@@ -384,6 +250,15 @@ public class RepositoryProxyBean
 				new ContextClassLoaderSetter(_classLoader)) {
 
 			_repository.deleteFileShortcuts(toFileEntryId);
+		}
+	}
+
+	@Override
+	public void deleteFileVersion(long fileVersionId) throws PortalException {
+		try (ContextClassLoaderSetter contextClassLoaderSetter =
+				new ContextClassLoaderSetter(_classLoader)) {
+
+			_repository.deleteFileVersion(fileVersionId);
 		}
 	}
 
@@ -606,9 +481,7 @@ public class RepositoryProxyBean
 		try (ContextClassLoaderSetter contextClassLoaderSetter =
 				new ContextClassLoaderSetter(_classLoader)) {
 
-			FileEntry fileEntry = _repository.getFileEntry(fileEntryId);
-
-			return newFileEntryProxyBean(fileEntry);
+			return newFileEntryProxyBean(_repository.getFileEntry(fileEntryId));
 		}
 	}
 
@@ -630,9 +503,7 @@ public class RepositoryProxyBean
 		try (ContextClassLoaderSetter contextClassLoaderSetter =
 				new ContextClassLoaderSetter(_classLoader)) {
 
-			FileEntry fileEntryByUuid = _repository.getFileEntryByUuid(uuid);
-
-			return newFileEntryProxyBean(fileEntryByUuid);
+			return newFileEntryProxyBean(_repository.getFileEntryByUuid(uuid));
 		}
 	}
 
@@ -643,10 +514,8 @@ public class RepositoryProxyBean
 		try (ContextClassLoaderSetter contextClassLoaderSetter =
 				new ContextClassLoaderSetter(_classLoader)) {
 
-			FileShortcut fileShortcut = _repository.getFileShortcut(
-				fileShortcutId);
-
-			return newFileShortcutProxyBean(fileShortcut);
+			return newFileShortcutProxyBean(
+				_repository.getFileShortcut(fileShortcutId));
 		}
 	}
 
@@ -657,9 +526,8 @@ public class RepositoryProxyBean
 		try (ContextClassLoaderSetter contextClassLoaderSetter =
 				new ContextClassLoaderSetter(_classLoader)) {
 
-			FileVersion fileVersion = _repository.getFileVersion(fileVersionId);
-
-			return newFileVersionProxyBean(fileVersion);
+			return newFileVersionProxyBean(
+				_repository.getFileVersion(fileVersionId));
 		}
 	}
 
@@ -668,9 +536,7 @@ public class RepositoryProxyBean
 		try (ContextClassLoaderSetter contextClassLoaderSetter =
 				new ContextClassLoaderSetter(_classLoader)) {
 
-			Folder folder = _repository.getFolder(folderId);
-
-			return newFolderProxyBean(folder);
+			return newFolderProxyBean(_repository.getFolder(folderId));
 		}
 	}
 
@@ -985,24 +851,6 @@ public class RepositoryProxyBean
 		}
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public FileEntry moveFileEntry(
-			long fileEntryId, long newFolderId, ServiceContext serviceContext)
-		throws PortalException {
-
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(_classLoader)) {
-
-			return newFileEntryProxyBean(
-				_repository.moveFileEntry(
-					fileEntryId, newFolderId, serviceContext));
-		}
-	}
-
 	@Override
 	public Folder moveFolder(
 			long userId, long folderId, long parentFolderId,
@@ -1014,26 +862,6 @@ public class RepositoryProxyBean
 
 			Folder folder = _repository.moveFolder(
 				userId, folderId, parentFolderId, serviceContext);
-
-			return newFolderProxyBean(folder);
-		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public Folder moveFolder(
-			long folderId, long newParentFolderId,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(_classLoader)) {
-
-			Folder folder = _repository.moveFolder(
-				folderId, newParentFolderId, serviceContext);
 
 			return newFolderProxyBean(folder);
 		}
@@ -1076,22 +904,6 @@ public class RepositoryProxyBean
 
 			_repository.revertFileEntry(
 				userId, fileEntryId, version, serviceContext);
-		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public void revertFileEntry(
-			long fileEntryId, String version, ServiceContext serviceContext)
-		throws PortalException {
-
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(_classLoader)) {
-
-			_repository.revertFileEntry(fileEntryId, version, serviceContext);
 		}
 	}
 
@@ -1162,41 +974,6 @@ public class RepositoryProxyBean
 		}
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #updateFileEntry(long, long, String, String, String, String, String, DLVersionNumberIncrease, File, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public FileEntry updateFileEntry(
-			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			boolean majorVersion, File file, ServiceContext serviceContext)
-		throws PortalException {
-
-		return updateFileEntry(
-			userId, fileEntryId, sourceFileName, mimeType, title, description,
-			changeLog, DLVersionNumberIncrease.fromMajorVersion(majorVersion),
-			file, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x), replaced by {@link #updateFileEntry(long, long, String, String, String, String, String, DLVersionNumberIncrease, InputStream, long, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public FileEntry updateFileEntry(
-			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			boolean majorVersion, InputStream is, long size,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		return updateFileEntry(
-			userId, fileEntryId, sourceFileName, mimeType, title, description,
-			changeLog, DLVersionNumberIncrease.fromMajorVersion(majorVersion),
-			is, size, serviceContext);
-	}
-
 	@Override
 	public FileEntry updateFileEntry(
 			long userId, long fileEntryId, String sourceFileName,
@@ -1232,51 +1009,6 @@ public class RepositoryProxyBean
 				userId, fileEntryId, sourceFileName, mimeType, title,
 				description, changeLog, dlVersionNumberIncrease, is, size,
 				serviceContext);
-
-			return newFileEntryProxyBean(fileEntry);
-		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public FileEntry updateFileEntry(
-			long fileEntryId, String sourceFileName, String mimeType,
-			String title, String description, String changeLog,
-			boolean majorVersion, File file, ServiceContext serviceContext)
-		throws PortalException {
-
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(_classLoader)) {
-
-			FileEntry fileEntry = _repository.updateFileEntry(
-				fileEntryId, sourceFileName, mimeType, title, description,
-				changeLog, majorVersion, file, serviceContext);
-
-			return newFileEntryProxyBean(fileEntry);
-		}
-	}
-
-	/**
-	 * @deprecated As of Judson (7.1.x)
-	 */
-	@Deprecated
-	@Override
-	public FileEntry updateFileEntry(
-			long fileEntryId, String sourceFileName, String mimeType,
-			String title, String description, String changeLog,
-			boolean majorVersion, InputStream is, long size,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(_classLoader)) {
-
-			FileEntry fileEntry = _repository.updateFileEntry(
-				fileEntryId, sourceFileName, mimeType, title, description,
-				changeLog, majorVersion, is, size, serviceContext);
 
 			return newFileEntryProxyBean(fileEntry);
 		}

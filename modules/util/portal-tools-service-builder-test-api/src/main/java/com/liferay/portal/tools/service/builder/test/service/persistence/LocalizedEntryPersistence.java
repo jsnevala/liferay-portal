@@ -14,11 +14,11 @@
 
 package com.liferay.portal.tools.service.builder.test.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.tools.service.builder.test.exception.NoSuchLocalizedEntryException;
 import com.liferay.portal.tools.service.builder.test.model.LocalizedEntry;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The persistence interface for the localized entry service.
@@ -28,12 +28,13 @@ import com.liferay.portal.tools.service.builder.test.model.LocalizedEntry;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.portal.tools.service.builder.test.service.persistence.impl.LocalizedEntryPersistenceImpl
  * @see LocalizedEntryUtil
  * @generated
  */
 @ProviderType
-public interface LocalizedEntryPersistence extends BasePersistence<LocalizedEntry> {
+public interface LocalizedEntryPersistence
+	extends BasePersistence<LocalizedEntry> {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
@@ -41,122 +42,123 @@ public interface LocalizedEntryPersistence extends BasePersistence<LocalizedEntr
 	 */
 
 	/**
-	* Caches the localized entry in the entity cache if it is enabled.
-	*
-	* @param localizedEntry the localized entry
-	*/
+	 * Caches the localized entry in the entity cache if it is enabled.
+	 *
+	 * @param localizedEntry the localized entry
+	 */
 	public void cacheResult(LocalizedEntry localizedEntry);
 
 	/**
-	* Caches the localized entries in the entity cache if it is enabled.
-	*
-	* @param localizedEntries the localized entries
-	*/
+	 * Caches the localized entries in the entity cache if it is enabled.
+	 *
+	 * @param localizedEntries the localized entries
+	 */
 	public void cacheResult(java.util.List<LocalizedEntry> localizedEntries);
 
 	/**
-	* Creates a new localized entry with the primary key. Does not add the localized entry to the database.
-	*
-	* @param localizedEntryId the primary key for the new localized entry
-	* @return the new localized entry
-	*/
+	 * Creates a new localized entry with the primary key. Does not add the localized entry to the database.
+	 *
+	 * @param localizedEntryId the primary key for the new localized entry
+	 * @return the new localized entry
+	 */
 	public LocalizedEntry create(long localizedEntryId);
 
 	/**
-	* Removes the localized entry with the primary key from the database. Also notifies the appropriate model listeners.
-	*
-	* @param localizedEntryId the primary key of the localized entry
-	* @return the localized entry that was removed
-	* @throws NoSuchLocalizedEntryException if a localized entry with the primary key could not be found
-	*/
+	 * Removes the localized entry with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * @param localizedEntryId the primary key of the localized entry
+	 * @return the localized entry that was removed
+	 * @throws NoSuchLocalizedEntryException if a localized entry with the primary key could not be found
+	 */
 	public LocalizedEntry remove(long localizedEntryId)
 		throws NoSuchLocalizedEntryException;
 
 	public LocalizedEntry updateImpl(LocalizedEntry localizedEntry);
 
 	/**
-	* Returns the localized entry with the primary key or throws a {@link NoSuchLocalizedEntryException} if it could not be found.
-	*
-	* @param localizedEntryId the primary key of the localized entry
-	* @return the localized entry
-	* @throws NoSuchLocalizedEntryException if a localized entry with the primary key could not be found
-	*/
+	 * Returns the localized entry with the primary key or throws a <code>NoSuchLocalizedEntryException</code> if it could not be found.
+	 *
+	 * @param localizedEntryId the primary key of the localized entry
+	 * @return the localized entry
+	 * @throws NoSuchLocalizedEntryException if a localized entry with the primary key could not be found
+	 */
 	public LocalizedEntry findByPrimaryKey(long localizedEntryId)
 		throws NoSuchLocalizedEntryException;
 
 	/**
-	* Returns the localized entry with the primary key or returns <code>null</code> if it could not be found.
-	*
-	* @param localizedEntryId the primary key of the localized entry
-	* @return the localized entry, or <code>null</code> if a localized entry with the primary key could not be found
-	*/
+	 * Returns the localized entry with the primary key or returns <code>null</code> if it could not be found.
+	 *
+	 * @param localizedEntryId the primary key of the localized entry
+	 * @return the localized entry, or <code>null</code> if a localized entry with the primary key could not be found
+	 */
 	public LocalizedEntry fetchByPrimaryKey(long localizedEntryId);
 
-	@Override
-	public java.util.Map<java.io.Serializable, LocalizedEntry> fetchByPrimaryKeys(
-		java.util.Set<java.io.Serializable> primaryKeys);
-
 	/**
-	* Returns all the localized entries.
-	*
-	* @return the localized entries
-	*/
+	 * Returns all the localized entries.
+	 *
+	 * @return the localized entries
+	 */
 	public java.util.List<LocalizedEntry> findAll();
 
 	/**
-	* Returns a range of all the localized entries.
-	*
-	* <p>
-	* Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link LocalizedEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
-	* </p>
-	*
-	* @param start the lower bound of the range of localized entries
-	* @param end the upper bound of the range of localized entries (not inclusive)
-	* @return the range of localized entries
-	*/
+	 * Returns a range of all the localized entries.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LocalizedEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param start the lower bound of the range of localized entries
+	 * @param end the upper bound of the range of localized entries (not inclusive)
+	 * @return the range of localized entries
+	 */
 	public java.util.List<LocalizedEntry> findAll(int start, int end);
 
 	/**
-	* Returns an ordered range of all the localized entries.
-	*
-	* <p>
-	* Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link LocalizedEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
-	* </p>
-	*
-	* @param start the lower bound of the range of localized entries
-	* @param end the upper bound of the range of localized entries (not inclusive)
-	* @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	* @return the ordered range of localized entries
-	*/
-	public java.util.List<LocalizedEntry> findAll(int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<LocalizedEntry> orderByComparator);
+	 * Returns an ordered range of all the localized entries.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LocalizedEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param start the lower bound of the range of localized entries
+	 * @param end the upper bound of the range of localized entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of localized entries
+	 */
+	public java.util.List<LocalizedEntry> findAll(
+		int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<LocalizedEntry>
+			orderByComparator);
 
 	/**
-	* Returns an ordered range of all the localized entries.
-	*
-	* <p>
-	* Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link LocalizedEntryModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
-	* </p>
-	*
-	* @param start the lower bound of the range of localized entries
-	* @param end the upper bound of the range of localized entries (not inclusive)
-	* @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	* @param retrieveFromCache whether to retrieve from the finder cache
-	* @return the ordered range of localized entries
-	*/
-	public java.util.List<LocalizedEntry> findAll(int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<LocalizedEntry> orderByComparator,
-		boolean retrieveFromCache);
+	 * Returns an ordered range of all the localized entries.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LocalizedEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param start the lower bound of the range of localized entries
+	 * @param end the upper bound of the range of localized entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of localized entries
+	 */
+	public java.util.List<LocalizedEntry> findAll(
+		int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<LocalizedEntry>
+			orderByComparator,
+		boolean useFinderCache);
 
 	/**
-	* Removes all the localized entries from the database.
-	*/
+	 * Removes all the localized entries from the database.
+	 */
 	public void removeAll();
 
 	/**
-	* Returns the number of localized entries.
-	*
-	* @return the number of localized entries
-	*/
+	 * Returns the number of localized entries.
+	 *
+	 * @return the number of localized entries
+	 */
 	public int countAll();
+
 }

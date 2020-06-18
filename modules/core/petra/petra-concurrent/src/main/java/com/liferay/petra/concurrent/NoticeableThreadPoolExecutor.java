@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Shuyang Zhou
  */
 public class NoticeableThreadPoolExecutor
-	extends AbstractNoticeableExecutorService {
+	extends BaseNoticeableExecutorService {
 
 	public NoticeableThreadPoolExecutor(
 		int corePoolSize, int maximumPoolSize, long keepAliveTime,
@@ -74,7 +74,7 @@ public class NoticeableThreadPoolExecutor
 				try {
 					taskQueue.put(runnable);
 				}
-				catch (InterruptedException ie) {
+				catch (InterruptedException interruptedException) {
 					rejectedExecutionHandler.rejectedExecution(
 						runnable, threadPoolExecutor);
 				}

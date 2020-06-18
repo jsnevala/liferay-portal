@@ -87,9 +87,7 @@ public class AssetTagServiceImpl extends AssetTagServiceBaseImpl {
 		Set<AssetTag> groupsTags = new TreeSet<>(new AssetTagNameComparator());
 
 		for (long groupId : groupIds) {
-			List<AssetTag> groupTags = getGroupTags(groupId);
-
-			groupsTags.addAll(groupTags);
+			groupsTags.addAll(getGroupTags(groupId));
 		}
 
 		return new ArrayList<>(groupsTags);
@@ -121,7 +119,7 @@ public class AssetTagServiceImpl extends AssetTagServiceBaseImpl {
 		int total = 0;
 
 		if (Validator.isNotNull(name)) {
-			name = (CustomSQLUtil.keywords(name))[0];
+			name = CustomSQLUtil.keywords(name)[0];
 
 			tags = getTags(groupId, name, start, end);
 			total = getTagsCount(groupId, name);
@@ -209,6 +207,15 @@ public class AssetTagServiceImpl extends AssetTagServiceBaseImpl {
 	}
 
 	@Override
+	public int getTagsCount(long[] groupIds, String name) {
+		if (Validator.isNull(name)) {
+			return assetTagPersistence.countByGroupId(groupIds);
+		}
+
+		return assetTagPersistence.countByG_LikeN(groupIds, name);
+	}
+
+	@Override
 	public int getVisibleAssetsTagsCount(
 		long groupId, long classNameId, String name) {
 
@@ -279,8 +286,8 @@ public class AssetTagServiceImpl extends AssetTagServiceBaseImpl {
 				return tag;
 			}
 		}
-		catch (PrincipalException pe) {
-			_log.error(pe, pe);
+		catch (PrincipalException principalException) {
+			_log.error(principalException, principalException);
 		}
 
 		tag.setUserId(0);

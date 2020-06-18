@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCCommandCache;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.template.Template;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -94,19 +95,15 @@ public class SoyPortletHelper {
 			String portletWrapperId, Template template)
 		throws Exception {
 
-		Set<String> mvcRenderCommandNames = getMVCRenderCommandNames();
-
 		String mvcRenderCommandNamesString = _jsonSerializer.serialize(
-			mvcRenderCommandNames);
+			getMVCRenderCommandNames());
 
 		template.remove("element");
 
 		String contextString = _jsonSerializer.serializeDeep(template);
 
-		List<Map<String, Object>> friendlyURLRoutes = getFriendlyURLRoutes();
-
 		String friendlyURLRoutesString = _jsonSerializer.serializeDeep(
-			friendlyURLRoutes);
+			getFriendlyURLRoutes());
 
 		return StringUtil.replace(
 			_routerJavaScriptTPL,
@@ -145,13 +142,14 @@ public class SoyPortletHelper {
 			List<Route> routes = router.getRoutes();
 
 			for (Route route : routes) {
-				Map<String, Object> mapping = new HashMap<>();
-
-				mapping.put(
-					"implicitParameters", route.getImplicitParameters());
-				mapping.put(
-					"overriddenParameters", route.getOverriddenParameters());
-				mapping.put("pattern", route.getPattern());
+				Map<String, Object> mapping =
+					HashMapBuilder.<String, Object>put(
+						"implicitParameters", route.getImplicitParameters()
+					).put(
+						"overriddenParameters", route.getOverriddenParameters()
+					).put(
+						"pattern", route.getPattern()
+					).build();
 
 				routesMapping.add(mapping);
 			}
@@ -174,11 +172,10 @@ public class SoyPortletHelper {
 		String filePath = getJavaScriptFilePath(bundle, mvcCommandName);
 
 		if (filePath.endsWith(".js")) {
-			filePath = StringUtil.replace(filePath, ".js", StringPool.BLANK);
+			filePath = StringUtil.removeSubstring(filePath, ".js");
 		}
 
-		controllerName = StringUtil.replace(
-			filePath, _RESOURCES_PATH, StringPool.BLANK);
+		controllerName = StringUtil.removeSubstring(filePath, _RESOURCES_PATH);
 
 		_javaScriptLoaderModulesMap.put(mvcCommandName, controllerName);
 
@@ -194,19 +191,31 @@ public class SoyPortletHelper {
 			resourcesPath = resourcesPath.concat(StringPool.SLASH);
 		}
 
-		String filePath = resourcesPath.concat(mvcCommandName).concat(".js");
+		String filePath = resourcesPath.concat(
+			mvcCommandName
+		).concat(
+			".js"
+		);
 
 		if (bundle.getEntry(filePath) != null) {
 			return filePath;
 		}
 
-		filePath = resourcesPath.concat(mvcCommandName).concat(".es.js");
+		filePath = resourcesPath.concat(
+			mvcCommandName
+		).concat(
+			".es.js"
+		);
 
 		if (bundle.getEntry(filePath) != null) {
 			return filePath;
 		}
 
-		filePath = resourcesPath.concat(mvcCommandName).concat(".soy");
+		filePath = resourcesPath.concat(
+			mvcCommandName
+		).concat(
+			".soy"
+		);
 
 		if (bundle.getEntry(filePath) != null) {
 			return filePath;
@@ -235,7 +244,11 @@ public class SoyPortletHelper {
 			return moduleName;
 		}
 
-		return moduleName.concat(StringPool.AT).concat(moduleVersion);
+		return moduleName.concat(
+			StringPool.AT
+		).concat(
+			moduleVersion
+		);
 	}
 
 	protected Bundle getMVCCommandBundle(String mvcCommandName)

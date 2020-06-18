@@ -14,13 +14,13 @@
 
 package com.liferay.exportimport.portlet.data.handler.provider;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.portal.kernel.model.Portlet;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @ProviderType
 public interface PortletDataHandlerProvider {

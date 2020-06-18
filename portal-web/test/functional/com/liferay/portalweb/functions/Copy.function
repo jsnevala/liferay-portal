@@ -1,43 +1,43 @@
-<definition default="copy">
-	<command name="copy">
-		<execute function="WaitForSPARefresh" />
+@default = "copy"
+definition {
 
-		<if>
-			<contains string="${locator1}" substring="/input" />
-			<then>
-				<execute function="Copy#valueCopy" />
-			</then>
-			<else>
-				<execute function="Copy#textCopy" />
-			</else>
-		</if>
-	</command>
+	function copy {
+		WaitForSPARefresh();
 
-	<command name="textCopy">
-		<execute function="WaitForSPARefresh" />
+		if (contains("${locator1}", "/input")) {
+			Copy.valueCopy();
+		}
+		else {
+			Copy.textCopy();
+		}
+	}
 
-		<execute selenium="waitForVisible" />
+	function textCopy {
+		WaitForSPARefresh();
 
-		<execute selenium="mouseOver" />
+		selenium.waitForVisible();
 
-		<execute selenium="copyText" />
+		selenium.mouseOver();
 
-		<execute selenium="assertJavaScriptErrors" />
+		selenium.copyText();
 
-		<execute selenium="assertLiferayErrors" />
-	</command>
+		selenium.assertJavaScriptErrors();
 
-	<command name="valueCopy">
-		<execute function="WaitForSPARefresh" />
+		selenium.assertLiferayErrors();
+	}
 
-		<execute selenium="waitForVisible" />
+	function valueCopy {
+		WaitForSPARefresh();
 
-		<execute selenium="mouseOver" />
+		selenium.waitForVisible();
 
-		<execute selenium="copyValue" />
+		selenium.mouseOver();
 
-		<execute selenium="assertJavaScriptErrors" />
+		selenium.copyValue();
 
-		<execute selenium="assertLiferayErrors" />
-	</command>
-</definition>
+		selenium.assertJavaScriptErrors();
+
+		selenium.assertLiferayErrors();
+	}
+
+}

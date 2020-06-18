@@ -14,21 +14,13 @@
 
 package com.liferay.fragment.model;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.expando.kernel.model.ExpandoBridge;
-
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-
 import com.liferay.portal.kernel.model.ModelWrapper;
-import com.liferay.portal.kernel.service.ServiceContext;
-
-import java.io.Serializable;
+import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * <p>
@@ -39,27 +31,19 @@ import java.util.Objects;
  * @see FragmentEntry
  * @generated
  */
-@ProviderType
-public class FragmentEntryWrapper implements FragmentEntry,
-	ModelWrapper<FragmentEntry> {
+public class FragmentEntryWrapper
+	extends BaseModelWrapper<FragmentEntry>
+	implements FragmentEntry, ModelWrapper<FragmentEntry> {
+
 	public FragmentEntryWrapper(FragmentEntry fragmentEntry) {
-		_fragmentEntry = fragmentEntry;
-	}
-
-	@Override
-	public Class<?> getModelClass() {
-		return FragmentEntry.class;
-	}
-
-	@Override
-	public String getModelClassName() {
-		return FragmentEntry.class.getName();
+		super(fragmentEntry);
 	}
 
 	@Override
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("uuid", getUuid());
 		attributes.put("fragmentEntryId", getFragmentEntryId());
 		attributes.put("groupId", getGroupId());
@@ -74,7 +58,11 @@ public class FragmentEntryWrapper implements FragmentEntry,
 		attributes.put("css", getCss());
 		attributes.put("html", getHtml());
 		attributes.put("js", getJs());
+		attributes.put("cacheable", isCacheable());
+		attributes.put("configuration", getConfiguration());
 		attributes.put("previewFileEntryId", getPreviewFileEntryId());
+		attributes.put("readOnly", isReadOnly());
+		attributes.put("type", getType());
 		attributes.put("lastPublishDate", getLastPublishDate());
 		attributes.put("status", getStatus());
 		attributes.put("statusByUserId", getStatusByUserId());
@@ -86,6 +74,12 @@ public class FragmentEntryWrapper implements FragmentEntry,
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
 		String uuid = (String)attributes.get("uuid");
 
 		if (uuid != null) {
@@ -134,7 +128,8 @@ public class FragmentEntryWrapper implements FragmentEntry,
 			setModifiedDate(modifiedDate);
 		}
 
-		Long fragmentCollectionId = (Long)attributes.get("fragmentCollectionId");
+		Long fragmentCollectionId = (Long)attributes.get(
+			"fragmentCollectionId");
 
 		if (fragmentCollectionId != null) {
 			setFragmentCollectionId(fragmentCollectionId);
@@ -170,10 +165,34 @@ public class FragmentEntryWrapper implements FragmentEntry,
 			setJs(js);
 		}
 
+		Boolean cacheable = (Boolean)attributes.get("cacheable");
+
+		if (cacheable != null) {
+			setCacheable(cacheable);
+		}
+
+		String configuration = (String)attributes.get("configuration");
+
+		if (configuration != null) {
+			setConfiguration(configuration);
+		}
+
 		Long previewFileEntryId = (Long)attributes.get("previewFileEntryId");
 
 		if (previewFileEntryId != null) {
 			setPreviewFileEntryId(previewFileEntryId);
+		}
+
+		Boolean readOnly = (Boolean)attributes.get("readOnly");
+
+		if (readOnly != null) {
+			setReadOnly(readOnly);
+		}
+
+		Integer type = (Integer)attributes.get("type");
+
+		if (type != null) {
+			setType(type);
 		}
 
 		Date lastPublishDate = (Date)attributes.get("lastPublishDate");
@@ -207,713 +226,719 @@ public class FragmentEntryWrapper implements FragmentEntry,
 		}
 	}
 
+	/**
+	 * Returns the cacheable of this fragment entry.
+	 *
+	 * @return the cacheable of this fragment entry
+	 */
 	@Override
-	public Object clone() {
-		return new FragmentEntryWrapper((FragmentEntry)_fragmentEntry.clone());
-	}
-
-	@Override
-	public int compareTo(FragmentEntry fragmentEntry) {
-		return _fragmentEntry.compareTo(fragmentEntry);
+	public boolean getCacheable() {
+		return model.getCacheable();
 	}
 
 	/**
-	* Returns the company ID of this fragment entry.
-	*
-	* @return the company ID of this fragment entry
-	*/
+	 * Returns the company ID of this fragment entry.
+	 *
+	 * @return the company ID of this fragment entry
+	 */
 	@Override
 	public long getCompanyId() {
-		return _fragmentEntry.getCompanyId();
+		return model.getCompanyId();
+	}
+
+	/**
+	 * Returns the configuration of this fragment entry.
+	 *
+	 * @return the configuration of this fragment entry
+	 */
+	@Override
+	public String getConfiguration() {
+		return model.getConfiguration();
 	}
 
 	@Override
 	public String getContent() {
-		return _fragmentEntry.getContent();
+		return model.getContent();
 	}
 
 	/**
-	* Returns the create date of this fragment entry.
-	*
-	* @return the create date of this fragment entry
-	*/
+	 * Returns the create date of this fragment entry.
+	 *
+	 * @return the create date of this fragment entry
+	 */
 	@Override
 	public Date getCreateDate() {
-		return _fragmentEntry.getCreateDate();
+		return model.getCreateDate();
 	}
 
 	/**
-	* Returns the css of this fragment entry.
-	*
-	* @return the css of this fragment entry
-	*/
+	 * Returns the css of this fragment entry.
+	 *
+	 * @return the css of this fragment entry
+	 */
 	@Override
 	public String getCss() {
-		return _fragmentEntry.getCss();
-	}
-
-	@Override
-	public ExpandoBridge getExpandoBridge() {
-		return _fragmentEntry.getExpandoBridge();
+		return model.getCss();
 	}
 
 	/**
-	* Returns the fragment collection ID of this fragment entry.
-	*
-	* @return the fragment collection ID of this fragment entry
-	*/
+	 * Returns the fragment collection ID of this fragment entry.
+	 *
+	 * @return the fragment collection ID of this fragment entry
+	 */
 	@Override
 	public long getFragmentCollectionId() {
-		return _fragmentEntry.getFragmentCollectionId();
+		return model.getFragmentCollectionId();
 	}
 
 	/**
-	* Returns the fragment entry ID of this fragment entry.
-	*
-	* @return the fragment entry ID of this fragment entry
-	*/
+	 * Returns the fragment entry ID of this fragment entry.
+	 *
+	 * @return the fragment entry ID of this fragment entry
+	 */
 	@Override
 	public long getFragmentEntryId() {
-		return _fragmentEntry.getFragmentEntryId();
+		return model.getFragmentEntryId();
 	}
 
 	/**
-	* Returns the fragment entry key of this fragment entry.
-	*
-	* @return the fragment entry key of this fragment entry
-	*/
+	 * Returns the fragment entry key of this fragment entry.
+	 *
+	 * @return the fragment entry key of this fragment entry
+	 */
 	@Override
 	public String getFragmentEntryKey() {
-		return _fragmentEntry.getFragmentEntryKey();
+		return model.getFragmentEntryKey();
+	}
+
+	@Override
+	public int getGlobalUsageCount() {
+		return model.getGlobalUsageCount();
 	}
 
 	/**
-	* Returns the group ID of this fragment entry.
-	*
-	* @return the group ID of this fragment entry
-	*/
+	 * Returns the group ID of this fragment entry.
+	 *
+	 * @return the group ID of this fragment entry
+	 */
 	@Override
 	public long getGroupId() {
-		return _fragmentEntry.getGroupId();
+		return model.getGroupId();
 	}
 
 	/**
-	* Returns the html of this fragment entry.
-	*
-	* @return the html of this fragment entry
-	*/
+	 * Returns the html of this fragment entry.
+	 *
+	 * @return the html of this fragment entry
+	 */
 	@Override
 	public String getHtml() {
-		return _fragmentEntry.getHtml();
+		return model.getHtml();
 	}
 
 	@Override
 	public String getImagePreviewURL(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay) {
-		return _fragmentEntry.getImagePreviewURL(themeDisplay);
+
+		return model.getImagePreviewURL(themeDisplay);
 	}
 
 	/**
-	* Returns the js of this fragment entry.
-	*
-	* @return the js of this fragment entry
-	*/
+	 * Returns the js of this fragment entry.
+	 *
+	 * @return the js of this fragment entry
+	 */
 	@Override
 	public String getJs() {
-		return _fragmentEntry.getJs();
+		return model.getJs();
 	}
 
 	/**
-	* Returns the last publish date of this fragment entry.
-	*
-	* @return the last publish date of this fragment entry
-	*/
+	 * Returns the last publish date of this fragment entry.
+	 *
+	 * @return the last publish date of this fragment entry
+	 */
 	@Override
 	public Date getLastPublishDate() {
-		return _fragmentEntry.getLastPublishDate();
+		return model.getLastPublishDate();
 	}
 
 	/**
-	* Returns the modified date of this fragment entry.
-	*
-	* @return the modified date of this fragment entry
-	*/
+	 * Returns the modified date of this fragment entry.
+	 *
+	 * @return the modified date of this fragment entry
+	 */
 	@Override
 	public Date getModifiedDate() {
-		return _fragmentEntry.getModifiedDate();
+		return model.getModifiedDate();
 	}
 
 	/**
-	* Returns the name of this fragment entry.
-	*
-	* @return the name of this fragment entry
-	*/
+	 * Returns the mvcc version of this fragment entry.
+	 *
+	 * @return the mvcc version of this fragment entry
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
+	}
+
+	/**
+	 * Returns the name of this fragment entry.
+	 *
+	 * @return the name of this fragment entry
+	 */
 	@Override
 	public String getName() {
-		return _fragmentEntry.getName();
+		return model.getName();
 	}
 
 	/**
-	* Returns the preview file entry ID of this fragment entry.
-	*
-	* @return the preview file entry ID of this fragment entry
-	*/
+	 * Returns the preview file entry ID of this fragment entry.
+	 *
+	 * @return the preview file entry ID of this fragment entry
+	 */
 	@Override
 	public long getPreviewFileEntryId() {
-		return _fragmentEntry.getPreviewFileEntryId();
+		return model.getPreviewFileEntryId();
 	}
 
 	/**
-	* Returns the primary key of this fragment entry.
-	*
-	* @return the primary key of this fragment entry
-	*/
+	 * Returns the primary key of this fragment entry.
+	 *
+	 * @return the primary key of this fragment entry
+	 */
 	@Override
 	public long getPrimaryKey() {
-		return _fragmentEntry.getPrimaryKey();
-	}
-
-	@Override
-	public Serializable getPrimaryKeyObj() {
-		return _fragmentEntry.getPrimaryKeyObj();
+		return model.getPrimaryKey();
 	}
 
 	/**
-	* Returns the status of this fragment entry.
-	*
-	* @return the status of this fragment entry
-	*/
+	 * Returns the read only of this fragment entry.
+	 *
+	 * @return the read only of this fragment entry
+	 */
+	@Override
+	public boolean getReadOnly() {
+		return model.getReadOnly();
+	}
+
+	/**
+	 * Returns the status of this fragment entry.
+	 *
+	 * @return the status of this fragment entry
+	 */
 	@Override
 	public int getStatus() {
-		return _fragmentEntry.getStatus();
+		return model.getStatus();
 	}
 
 	/**
-	* Returns the status by user ID of this fragment entry.
-	*
-	* @return the status by user ID of this fragment entry
-	*/
+	 * Returns the status by user ID of this fragment entry.
+	 *
+	 * @return the status by user ID of this fragment entry
+	 */
 	@Override
 	public long getStatusByUserId() {
-		return _fragmentEntry.getStatusByUserId();
+		return model.getStatusByUserId();
 	}
 
 	/**
-	* Returns the status by user name of this fragment entry.
-	*
-	* @return the status by user name of this fragment entry
-	*/
+	 * Returns the status by user name of this fragment entry.
+	 *
+	 * @return the status by user name of this fragment entry
+	 */
 	@Override
 	public String getStatusByUserName() {
-		return _fragmentEntry.getStatusByUserName();
+		return model.getStatusByUserName();
 	}
 
 	/**
-	* Returns the status by user uuid of this fragment entry.
-	*
-	* @return the status by user uuid of this fragment entry
-	*/
+	 * Returns the status by user uuid of this fragment entry.
+	 *
+	 * @return the status by user uuid of this fragment entry
+	 */
 	@Override
 	public String getStatusByUserUuid() {
-		return _fragmentEntry.getStatusByUserUuid();
+		return model.getStatusByUserUuid();
 	}
 
 	/**
-	* Returns the status date of this fragment entry.
-	*
-	* @return the status date of this fragment entry
-	*/
+	 * Returns the status date of this fragment entry.
+	 *
+	 * @return the status date of this fragment entry
+	 */
 	@Override
 	public Date getStatusDate() {
-		return _fragmentEntry.getStatusDate();
+		return model.getStatusDate();
+	}
+
+	/**
+	 * Returns the type of this fragment entry.
+	 *
+	 * @return the type of this fragment entry
+	 */
+	@Override
+	public int getType() {
+		return model.getType();
+	}
+
+	@Override
+	public String getTypeLabel() {
+		return model.getTypeLabel();
 	}
 
 	@Override
 	public int getUsageCount() {
-		return _fragmentEntry.getUsageCount();
+		return model.getUsageCount();
 	}
 
 	/**
-	* Returns the user ID of this fragment entry.
-	*
-	* @return the user ID of this fragment entry
-	*/
+	 * Returns the user ID of this fragment entry.
+	 *
+	 * @return the user ID of this fragment entry
+	 */
 	@Override
 	public long getUserId() {
-		return _fragmentEntry.getUserId();
+		return model.getUserId();
 	}
 
 	/**
-	* Returns the user name of this fragment entry.
-	*
-	* @return the user name of this fragment entry
-	*/
+	 * Returns the user name of this fragment entry.
+	 *
+	 * @return the user name of this fragment entry
+	 */
 	@Override
 	public String getUserName() {
-		return _fragmentEntry.getUserName();
+		return model.getUserName();
 	}
 
 	/**
-	* Returns the user uuid of this fragment entry.
-	*
-	* @return the user uuid of this fragment entry
-	*/
+	 * Returns the user uuid of this fragment entry.
+	 *
+	 * @return the user uuid of this fragment entry
+	 */
 	@Override
 	public String getUserUuid() {
-		return _fragmentEntry.getUserUuid();
+		return model.getUserUuid();
 	}
 
 	/**
-	* Returns the uuid of this fragment entry.
-	*
-	* @return the uuid of this fragment entry
-	*/
+	 * Returns the uuid of this fragment entry.
+	 *
+	 * @return the uuid of this fragment entry
+	 */
 	@Override
 	public String getUuid() {
-		return _fragmentEntry.getUuid();
-	}
-
-	@Override
-	public int hashCode() {
-		return _fragmentEntry.hashCode();
+		return model.getUuid();
 	}
 
 	/**
-	* Returns <code>true</code> if this fragment entry is approved.
-	*
-	* @return <code>true</code> if this fragment entry is approved; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this fragment entry is approved.
+	 *
+	 * @return <code>true</code> if this fragment entry is approved; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isApproved() {
-		return _fragmentEntry.isApproved();
-	}
-
-	@Override
-	public boolean isCachedModel() {
-		return _fragmentEntry.isCachedModel();
+		return model.isApproved();
 	}
 
 	/**
-	* Returns <code>true</code> if this fragment entry is denied.
-	*
-	* @return <code>true</code> if this fragment entry is denied; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this fragment entry is cacheable.
+	 *
+	 * @return <code>true</code> if this fragment entry is cacheable; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isCacheable() {
+		return model.isCacheable();
+	}
+
+	/**
+	 * Returns <code>true</code> if this fragment entry is denied.
+	 *
+	 * @return <code>true</code> if this fragment entry is denied; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isDenied() {
-		return _fragmentEntry.isDenied();
+		return model.isDenied();
 	}
 
 	/**
-	* Returns <code>true</code> if this fragment entry is a draft.
-	*
-	* @return <code>true</code> if this fragment entry is a draft; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this fragment entry is a draft.
+	 *
+	 * @return <code>true</code> if this fragment entry is a draft; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isDraft() {
-		return _fragmentEntry.isDraft();
-	}
-
-	@Override
-	public boolean isEscapedModel() {
-		return _fragmentEntry.isEscapedModel();
+		return model.isDraft();
 	}
 
 	/**
-	* Returns <code>true</code> if this fragment entry is expired.
-	*
-	* @return <code>true</code> if this fragment entry is expired; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this fragment entry is expired.
+	 *
+	 * @return <code>true</code> if this fragment entry is expired; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isExpired() {
-		return _fragmentEntry.isExpired();
+		return model.isExpired();
 	}
 
 	/**
-	* Returns <code>true</code> if this fragment entry is inactive.
-	*
-	* @return <code>true</code> if this fragment entry is inactive; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this fragment entry is inactive.
+	 *
+	 * @return <code>true</code> if this fragment entry is inactive; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isInactive() {
-		return _fragmentEntry.isInactive();
+		return model.isInactive();
 	}
 
 	/**
-	* Returns <code>true</code> if this fragment entry is incomplete.
-	*
-	* @return <code>true</code> if this fragment entry is incomplete; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this fragment entry is incomplete.
+	 *
+	 * @return <code>true</code> if this fragment entry is incomplete; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isIncomplete() {
-		return _fragmentEntry.isIncomplete();
-	}
-
-	@Override
-	public boolean isNew() {
-		return _fragmentEntry.isNew();
+		return model.isIncomplete();
 	}
 
 	/**
-	* Returns <code>true</code> if this fragment entry is pending.
-	*
-	* @return <code>true</code> if this fragment entry is pending; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this fragment entry is pending.
+	 *
+	 * @return <code>true</code> if this fragment entry is pending; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isPending() {
-		return _fragmentEntry.isPending();
+		return model.isPending();
 	}
 
 	/**
-	* Returns <code>true</code> if this fragment entry is scheduled.
-	*
-	* @return <code>true</code> if this fragment entry is scheduled; <code>false</code> otherwise
-	*/
+	 * Returns <code>true</code> if this fragment entry is read only.
+	 *
+	 * @return <code>true</code> if this fragment entry is read only; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isReadOnly() {
+		return model.isReadOnly();
+	}
+
+	/**
+	 * Returns <code>true</code> if this fragment entry is scheduled.
+	 *
+	 * @return <code>true</code> if this fragment entry is scheduled; <code>false</code> otherwise
+	 */
 	@Override
 	public boolean isScheduled() {
-		return _fragmentEntry.isScheduled();
+		return model.isScheduled();
 	}
 
 	@Override
 	public void persist() {
-		_fragmentEntry.persist();
+		model.persist();
 	}
 
 	@Override
 	public void populateZipWriter(
-		com.liferay.portal.kernel.zip.ZipWriter zipWriter, String path)
+			com.liferay.portal.kernel.zip.ZipWriter zipWriter, String path)
 		throws Exception {
-		_fragmentEntry.populateZipWriter(zipWriter, path);
-	}
 
-	@Override
-	public void setCachedModel(boolean cachedModel) {
-		_fragmentEntry.setCachedModel(cachedModel);
+		model.populateZipWriter(zipWriter, path);
 	}
 
 	/**
-	* Sets the company ID of this fragment entry.
-	*
-	* @param companyId the company ID of this fragment entry
-	*/
+	 * Sets whether this fragment entry is cacheable.
+	 *
+	 * @param cacheable the cacheable of this fragment entry
+	 */
+	@Override
+	public void setCacheable(boolean cacheable) {
+		model.setCacheable(cacheable);
+	}
+
+	/**
+	 * Sets the company ID of this fragment entry.
+	 *
+	 * @param companyId the company ID of this fragment entry
+	 */
 	@Override
 	public void setCompanyId(long companyId) {
-		_fragmentEntry.setCompanyId(companyId);
+		model.setCompanyId(companyId);
 	}
 
 	/**
-	* Sets the create date of this fragment entry.
-	*
-	* @param createDate the create date of this fragment entry
-	*/
+	 * Sets the configuration of this fragment entry.
+	 *
+	 * @param configuration the configuration of this fragment entry
+	 */
+	@Override
+	public void setConfiguration(String configuration) {
+		model.setConfiguration(configuration);
+	}
+
+	/**
+	 * Sets the create date of this fragment entry.
+	 *
+	 * @param createDate the create date of this fragment entry
+	 */
 	@Override
 	public void setCreateDate(Date createDate) {
-		_fragmentEntry.setCreateDate(createDate);
+		model.setCreateDate(createDate);
 	}
 
 	/**
-	* Sets the css of this fragment entry.
-	*
-	* @param css the css of this fragment entry
-	*/
+	 * Sets the css of this fragment entry.
+	 *
+	 * @param css the css of this fragment entry
+	 */
 	@Override
 	public void setCss(String css) {
-		_fragmentEntry.setCss(css);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(
-		com.liferay.portal.kernel.model.BaseModel<?> baseModel) {
-		_fragmentEntry.setExpandoBridgeAttributes(baseModel);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ExpandoBridge expandoBridge) {
-		_fragmentEntry.setExpandoBridgeAttributes(expandoBridge);
-	}
-
-	@Override
-	public void setExpandoBridgeAttributes(ServiceContext serviceContext) {
-		_fragmentEntry.setExpandoBridgeAttributes(serviceContext);
+		model.setCss(css);
 	}
 
 	/**
-	* Sets the fragment collection ID of this fragment entry.
-	*
-	* @param fragmentCollectionId the fragment collection ID of this fragment entry
-	*/
+	 * Sets the fragment collection ID of this fragment entry.
+	 *
+	 * @param fragmentCollectionId the fragment collection ID of this fragment entry
+	 */
 	@Override
 	public void setFragmentCollectionId(long fragmentCollectionId) {
-		_fragmentEntry.setFragmentCollectionId(fragmentCollectionId);
+		model.setFragmentCollectionId(fragmentCollectionId);
 	}
 
 	/**
-	* Sets the fragment entry ID of this fragment entry.
-	*
-	* @param fragmentEntryId the fragment entry ID of this fragment entry
-	*/
+	 * Sets the fragment entry ID of this fragment entry.
+	 *
+	 * @param fragmentEntryId the fragment entry ID of this fragment entry
+	 */
 	@Override
 	public void setFragmentEntryId(long fragmentEntryId) {
-		_fragmentEntry.setFragmentEntryId(fragmentEntryId);
+		model.setFragmentEntryId(fragmentEntryId);
 	}
 
 	/**
-	* Sets the fragment entry key of this fragment entry.
-	*
-	* @param fragmentEntryKey the fragment entry key of this fragment entry
-	*/
+	 * Sets the fragment entry key of this fragment entry.
+	 *
+	 * @param fragmentEntryKey the fragment entry key of this fragment entry
+	 */
 	@Override
 	public void setFragmentEntryKey(String fragmentEntryKey) {
-		_fragmentEntry.setFragmentEntryKey(fragmentEntryKey);
+		model.setFragmentEntryKey(fragmentEntryKey);
 	}
 
 	/**
-	* Sets the group ID of this fragment entry.
-	*
-	* @param groupId the group ID of this fragment entry
-	*/
+	 * Sets the group ID of this fragment entry.
+	 *
+	 * @param groupId the group ID of this fragment entry
+	 */
 	@Override
 	public void setGroupId(long groupId) {
-		_fragmentEntry.setGroupId(groupId);
+		model.setGroupId(groupId);
 	}
 
 	/**
-	* Sets the html of this fragment entry.
-	*
-	* @param html the html of this fragment entry
-	*/
+	 * Sets the html of this fragment entry.
+	 *
+	 * @param html the html of this fragment entry
+	 */
 	@Override
 	public void setHtml(String html) {
-		_fragmentEntry.setHtml(html);
+		model.setHtml(html);
+	}
+
+	@Override
+	public void setImagePreviewURL(String imagePreviewURL) {
+		model.setImagePreviewURL(imagePreviewURL);
 	}
 
 	/**
-	* Sets the js of this fragment entry.
-	*
-	* @param js the js of this fragment entry
-	*/
+	 * Sets the js of this fragment entry.
+	 *
+	 * @param js the js of this fragment entry
+	 */
 	@Override
 	public void setJs(String js) {
-		_fragmentEntry.setJs(js);
+		model.setJs(js);
 	}
 
 	/**
-	* Sets the last publish date of this fragment entry.
-	*
-	* @param lastPublishDate the last publish date of this fragment entry
-	*/
+	 * Sets the last publish date of this fragment entry.
+	 *
+	 * @param lastPublishDate the last publish date of this fragment entry
+	 */
 	@Override
 	public void setLastPublishDate(Date lastPublishDate) {
-		_fragmentEntry.setLastPublishDate(lastPublishDate);
+		model.setLastPublishDate(lastPublishDate);
 	}
 
 	/**
-	* Sets the modified date of this fragment entry.
-	*
-	* @param modifiedDate the modified date of this fragment entry
-	*/
+	 * Sets the modified date of this fragment entry.
+	 *
+	 * @param modifiedDate the modified date of this fragment entry
+	 */
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
-		_fragmentEntry.setModifiedDate(modifiedDate);
+		model.setModifiedDate(modifiedDate);
 	}
 
 	/**
-	* Sets the name of this fragment entry.
-	*
-	* @param name the name of this fragment entry
-	*/
+	 * Sets the mvcc version of this fragment entry.
+	 *
+	 * @param mvccVersion the mvcc version of this fragment entry
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
+	}
+
+	/**
+	 * Sets the name of this fragment entry.
+	 *
+	 * @param name the name of this fragment entry
+	 */
 	@Override
 	public void setName(String name) {
-		_fragmentEntry.setName(name);
-	}
-
-	@Override
-	public void setNew(boolean n) {
-		_fragmentEntry.setNew(n);
+		model.setName(name);
 	}
 
 	/**
-	* Sets the preview file entry ID of this fragment entry.
-	*
-	* @param previewFileEntryId the preview file entry ID of this fragment entry
-	*/
+	 * Sets the preview file entry ID of this fragment entry.
+	 *
+	 * @param previewFileEntryId the preview file entry ID of this fragment entry
+	 */
 	@Override
 	public void setPreviewFileEntryId(long previewFileEntryId) {
-		_fragmentEntry.setPreviewFileEntryId(previewFileEntryId);
+		model.setPreviewFileEntryId(previewFileEntryId);
 	}
 
 	/**
-	* Sets the primary key of this fragment entry.
-	*
-	* @param primaryKey the primary key of this fragment entry
-	*/
+	 * Sets the primary key of this fragment entry.
+	 *
+	 * @param primaryKey the primary key of this fragment entry
+	 */
 	@Override
 	public void setPrimaryKey(long primaryKey) {
-		_fragmentEntry.setPrimaryKey(primaryKey);
-	}
-
-	@Override
-	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
-		_fragmentEntry.setPrimaryKeyObj(primaryKeyObj);
+		model.setPrimaryKey(primaryKey);
 	}
 
 	/**
-	* Sets the status of this fragment entry.
-	*
-	* @param status the status of this fragment entry
-	*/
+	 * Sets whether this fragment entry is read only.
+	 *
+	 * @param readOnly the read only of this fragment entry
+	 */
+	@Override
+	public void setReadOnly(boolean readOnly) {
+		model.setReadOnly(readOnly);
+	}
+
+	/**
+	 * Sets the status of this fragment entry.
+	 *
+	 * @param status the status of this fragment entry
+	 */
 	@Override
 	public void setStatus(int status) {
-		_fragmentEntry.setStatus(status);
+		model.setStatus(status);
 	}
 
 	/**
-	* Sets the status by user ID of this fragment entry.
-	*
-	* @param statusByUserId the status by user ID of this fragment entry
-	*/
+	 * Sets the status by user ID of this fragment entry.
+	 *
+	 * @param statusByUserId the status by user ID of this fragment entry
+	 */
 	@Override
 	public void setStatusByUserId(long statusByUserId) {
-		_fragmentEntry.setStatusByUserId(statusByUserId);
+		model.setStatusByUserId(statusByUserId);
 	}
 
 	/**
-	* Sets the status by user name of this fragment entry.
-	*
-	* @param statusByUserName the status by user name of this fragment entry
-	*/
+	 * Sets the status by user name of this fragment entry.
+	 *
+	 * @param statusByUserName the status by user name of this fragment entry
+	 */
 	@Override
 	public void setStatusByUserName(String statusByUserName) {
-		_fragmentEntry.setStatusByUserName(statusByUserName);
+		model.setStatusByUserName(statusByUserName);
 	}
 
 	/**
-	* Sets the status by user uuid of this fragment entry.
-	*
-	* @param statusByUserUuid the status by user uuid of this fragment entry
-	*/
+	 * Sets the status by user uuid of this fragment entry.
+	 *
+	 * @param statusByUserUuid the status by user uuid of this fragment entry
+	 */
 	@Override
 	public void setStatusByUserUuid(String statusByUserUuid) {
-		_fragmentEntry.setStatusByUserUuid(statusByUserUuid);
+		model.setStatusByUserUuid(statusByUserUuid);
 	}
 
 	/**
-	* Sets the status date of this fragment entry.
-	*
-	* @param statusDate the status date of this fragment entry
-	*/
+	 * Sets the status date of this fragment entry.
+	 *
+	 * @param statusDate the status date of this fragment entry
+	 */
 	@Override
 	public void setStatusDate(Date statusDate) {
-		_fragmentEntry.setStatusDate(statusDate);
+		model.setStatusDate(statusDate);
 	}
 
 	/**
-	* Sets the user ID of this fragment entry.
-	*
-	* @param userId the user ID of this fragment entry
-	*/
+	 * Sets the type of this fragment entry.
+	 *
+	 * @param type the type of this fragment entry
+	 */
+	@Override
+	public void setType(int type) {
+		model.setType(type);
+	}
+
+	/**
+	 * Sets the user ID of this fragment entry.
+	 *
+	 * @param userId the user ID of this fragment entry
+	 */
 	@Override
 	public void setUserId(long userId) {
-		_fragmentEntry.setUserId(userId);
+		model.setUserId(userId);
 	}
 
 	/**
-	* Sets the user name of this fragment entry.
-	*
-	* @param userName the user name of this fragment entry
-	*/
+	 * Sets the user name of this fragment entry.
+	 *
+	 * @param userName the user name of this fragment entry
+	 */
 	@Override
 	public void setUserName(String userName) {
-		_fragmentEntry.setUserName(userName);
+		model.setUserName(userName);
 	}
 
 	/**
-	* Sets the user uuid of this fragment entry.
-	*
-	* @param userUuid the user uuid of this fragment entry
-	*/
+	 * Sets the user uuid of this fragment entry.
+	 *
+	 * @param userUuid the user uuid of this fragment entry
+	 */
 	@Override
 	public void setUserUuid(String userUuid) {
-		_fragmentEntry.setUserUuid(userUuid);
+		model.setUserUuid(userUuid);
 	}
 
 	/**
-	* Sets the uuid of this fragment entry.
-	*
-	* @param uuid the uuid of this fragment entry
-	*/
+	 * Sets the uuid of this fragment entry.
+	 *
+	 * @param uuid the uuid of this fragment entry
+	 */
 	@Override
 	public void setUuid(String uuid) {
-		_fragmentEntry.setUuid(uuid);
-	}
-
-	@Override
-	public com.liferay.portal.kernel.model.CacheModel<FragmentEntry> toCacheModel() {
-		return _fragmentEntry.toCacheModel();
-	}
-
-	@Override
-	public FragmentEntry toEscapedModel() {
-		return new FragmentEntryWrapper(_fragmentEntry.toEscapedModel());
-	}
-
-	@Override
-	public String toString() {
-		return _fragmentEntry.toString();
-	}
-
-	@Override
-	public FragmentEntry toUnescapedModel() {
-		return new FragmentEntryWrapper(_fragmentEntry.toUnescapedModel());
-	}
-
-	@Override
-	public String toXmlString() {
-		return _fragmentEntry.toXmlString();
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-
-		if (!(obj instanceof FragmentEntryWrapper)) {
-			return false;
-		}
-
-		FragmentEntryWrapper fragmentEntryWrapper = (FragmentEntryWrapper)obj;
-
-		if (Objects.equals(_fragmentEntry, fragmentEntryWrapper._fragmentEntry)) {
-			return true;
-		}
-
-		return false;
+		model.setUuid(uuid);
 	}
 
 	@Override
 	public StagedModelType getStagedModelType() {
-		return _fragmentEntry.getStagedModelType();
+		return model.getStagedModelType();
 	}
 
 	@Override
-	public FragmentEntry getWrappedModel() {
-		return _fragmentEntry;
+	protected FragmentEntryWrapper wrap(FragmentEntry fragmentEntry) {
+		return new FragmentEntryWrapper(fragmentEntry);
 	}
 
-	@Override
-	public boolean isEntityCacheEnabled() {
-		return _fragmentEntry.isEntityCacheEnabled();
-	}
-
-	@Override
-	public boolean isFinderCacheEnabled() {
-		return _fragmentEntry.isFinderCacheEnabled();
-	}
-
-	@Override
-	public void resetOriginalValues() {
-		_fragmentEntry.resetOriginalValues();
-	}
-
-	private final FragmentEntry _fragmentEntry;
 }

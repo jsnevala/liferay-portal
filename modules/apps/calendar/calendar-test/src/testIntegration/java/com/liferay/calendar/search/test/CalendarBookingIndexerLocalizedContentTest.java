@@ -25,13 +25,14 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -56,7 +57,7 @@ public class CalendarBookingIndexerLocalizedContentTest
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE,
+			PermissionCheckerMethodTestRule.INSTANCE,
 			SynchronousDestinationTestRule.INSTANCE);
 
 	@Before
@@ -96,12 +97,11 @@ public class CalendarBookingIndexerLocalizedContentTest
 				}
 			});
 
-		Map<String, String> titleMap = new HashMap<String, String>() {
-			{
-				put("title_en_US", originalName);
-				put("title_ja_JP", japaneseName);
-			}
-		};
+		Map<String, String> titleMap = HashMapBuilder.put(
+			"title_en_US", originalName
+		).put(
+			"title_ja_JP", japaneseName
+		).build();
 
 		String word1 = "新規";
 		String word2 = "作成";
@@ -128,33 +128,29 @@ public class CalendarBookingIndexerLocalizedContentTest
 		Stream.of(
 			full, partial1, partial2
 		).forEach(
-			title -> {
-				addCalendarBooking(
-					new LocalizedValuesMap() {
-						{
-							put(LocaleUtil.JAPAN, title);
-						}
-					},
-					new LocalizedValuesMap() {
-						{
-							put(LocaleUtil.US, description);
-							put(LocaleUtil.HUNGARY, description);
-						}
-					},
-					new LocalizedValuesMap() {
-						{
-							put(LocaleUtil.US, description);
-							put(LocaleUtil.HUNGARY, description);
-						}
-					});
-			}
+			title -> addCalendarBooking(
+				new LocalizedValuesMap() {
+					{
+						put(LocaleUtil.JAPAN, title);
+					}
+				},
+				new LocalizedValuesMap() {
+					{
+						put(LocaleUtil.US, description);
+						put(LocaleUtil.HUNGARY, description);
+					}
+				},
+				new LocalizedValuesMap() {
+					{
+						put(LocaleUtil.US, description);
+						put(LocaleUtil.HUNGARY, description);
+					}
+				})
 		);
 
-		Map<String, String> titleMap = new HashMap<String, String>() {
-			{
-				put("title_ja_JP", "新規作成");
-			}
-		};
+		Map<String, String> titleMap = HashMapBuilder.put(
+			"title_ja_JP", "新規作成"
+		).build();
 
 		String word1 = "新規";
 		String word2 = "作成";
@@ -166,6 +162,9 @@ public class CalendarBookingIndexerLocalizedContentTest
 				"title", LocaleUtil.JAPAN, titleMap, keywords)
 		);
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected CalendarBooking addCalendarBooking(
 		LocalizedValuesMap titleLocalizedValuesMap,
@@ -182,8 +181,8 @@ public class CalendarBookingIndexerLocalizedContentTest
 			return calendarFixture.addCalendarBooking(
 				titleLocalizedValuesMap, calendar, serviceContext);
 		}
-		catch (PortalException pe) {
-			throw new RuntimeException(pe);
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
 		}
 	}
 

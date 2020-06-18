@@ -14,8 +14,6 @@
 
 package com.liferay.asset.entry.rel.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.asset.entry.rel.model.AssetEntryAssetCategoryRel;
 import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalServiceUtil;
 
@@ -31,22 +29,25 @@ import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalServic
  * @see AssetEntryAssetCategoryRel
  * @generated
  */
-@ProviderType
 public abstract class AssetEntryAssetCategoryRelBaseImpl
 	extends AssetEntryAssetCategoryRelModelImpl
 	implements AssetEntryAssetCategoryRel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a asset entry asset category rel model instance should use the {@link AssetEntryAssetCategoryRel} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a asset entry asset category rel model instance should use the <code>AssetEntryAssetCategoryRel</code> interface instead.
 	 */
 	@Override
 	public void persist() {
 		if (this.isNew()) {
-			AssetEntryAssetCategoryRelLocalServiceUtil.addAssetEntryAssetCategoryRel(this);
+			AssetEntryAssetCategoryRelLocalServiceUtil.
+				addAssetEntryAssetCategoryRel(this);
 		}
 		else {
-			AssetEntryAssetCategoryRelLocalServiceUtil.updateAssetEntryAssetCategoryRel(this);
+			AssetEntryAssetCategoryRelLocalServiceUtil.
+				updateAssetEntryAssetCategoryRel(this);
 		}
 	}
+
 }

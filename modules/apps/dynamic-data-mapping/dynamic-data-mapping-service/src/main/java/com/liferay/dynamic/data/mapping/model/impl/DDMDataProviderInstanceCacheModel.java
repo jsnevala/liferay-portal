@@ -14,14 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.dynamic.data.mapping.model.DDMDataProviderInstance;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing DDMDataProviderInstance in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see DDMDataProviderInstance
  * @generated
  */
-@ProviderType
-public class DDMDataProviderInstanceCacheModel implements CacheModel<DDMDataProviderInstance>,
-	Externalizable {
+public class DDMDataProviderInstanceCacheModel
+	implements CacheModel<DDMDataProviderInstance>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,9 +46,13 @@ public class DDMDataProviderInstanceCacheModel implements CacheModel<DDMDataProv
 			return false;
 		}
 
-		DDMDataProviderInstanceCacheModel ddmDataProviderInstanceCacheModel = (DDMDataProviderInstanceCacheModel)obj;
+		DDMDataProviderInstanceCacheModel ddmDataProviderInstanceCacheModel =
+			(DDMDataProviderInstanceCacheModel)obj;
 
-		if (dataProviderInstanceId == ddmDataProviderInstanceCacheModel.dataProviderInstanceId) {
+		if ((dataProviderInstanceId ==
+				ddmDataProviderInstanceCacheModel.dataProviderInstanceId) &&
+			(mvccVersion == ddmDataProviderInstanceCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -61,14 +61,28 @@ public class DDMDataProviderInstanceCacheModel implements CacheModel<DDMDataProv
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, dataProviderInstanceId);
+		int hashCode = HashUtil.hash(0, dataProviderInstanceId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(25);
+		StringBundler sb = new StringBundler(29);
 
-		sb.append("{uuid=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", dataProviderInstanceId=");
 		sb.append(dataProviderInstanceId);
@@ -92,6 +106,8 @@ public class DDMDataProviderInstanceCacheModel implements CacheModel<DDMDataProv
 		sb.append(definition);
 		sb.append(", type=");
 		sb.append(type);
+		sb.append(", lastPublishDate=");
+		sb.append(lastPublishDate);
 		sb.append("}");
 
 		return sb.toString();
@@ -99,7 +115,10 @@ public class DDMDataProviderInstanceCacheModel implements CacheModel<DDMDataProv
 
 	@Override
 	public DDMDataProviderInstance toEntityModel() {
-		DDMDataProviderInstanceImpl ddmDataProviderInstanceImpl = new DDMDataProviderInstanceImpl();
+		DDMDataProviderInstanceImpl ddmDataProviderInstanceImpl =
+			new DDMDataProviderInstanceImpl();
+
+		ddmDataProviderInstanceImpl.setMvccVersion(mvccVersion);
 
 		if (uuid == null) {
 			ddmDataProviderInstanceImpl.setUuid("");
@@ -108,7 +127,8 @@ public class DDMDataProviderInstanceCacheModel implements CacheModel<DDMDataProv
 			ddmDataProviderInstanceImpl.setUuid(uuid);
 		}
 
-		ddmDataProviderInstanceImpl.setDataProviderInstanceId(dataProviderInstanceId);
+		ddmDataProviderInstanceImpl.setDataProviderInstanceId(
+			dataProviderInstanceId);
 		ddmDataProviderInstanceImpl.setGroupId(groupId);
 		ddmDataProviderInstanceImpl.setCompanyId(companyId);
 		ddmDataProviderInstanceImpl.setUserId(userId);
@@ -162,13 +182,24 @@ public class DDMDataProviderInstanceCacheModel implements CacheModel<DDMDataProv
 			ddmDataProviderInstanceImpl.setType(type);
 		}
 
+		if (lastPublishDate == Long.MIN_VALUE) {
+			ddmDataProviderInstanceImpl.setLastPublishDate(null);
+		}
+		else {
+			ddmDataProviderInstanceImpl.setLastPublishDate(
+				new Date(lastPublishDate));
+		}
+
 		ddmDataProviderInstanceImpl.resetOriginalValues();
 
 		return ddmDataProviderInstanceImpl;
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
+		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		dataProviderInstanceId = objectInput.readLong();
@@ -182,14 +213,16 @@ public class DDMDataProviderInstanceCacheModel implements CacheModel<DDMDataProv
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
 		name = objectInput.readUTF();
-		description = objectInput.readUTF();
-		definition = objectInput.readUTF();
+		description = (String)objectInput.readObject();
+		definition = (String)objectInput.readObject();
 		type = objectInput.readUTF();
+		lastPublishDate = objectInput.readLong();
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (uuid == null) {
 			objectOutput.writeUTF("");
 		}
@@ -223,17 +256,17 @@ public class DDMDataProviderInstanceCacheModel implements CacheModel<DDMDataProv
 		}
 
 		if (description == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(description);
+			objectOutput.writeObject(description);
 		}
 
 		if (definition == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(definition);
+			objectOutput.writeObject(definition);
 		}
 
 		if (type == null) {
@@ -242,8 +275,11 @@ public class DDMDataProviderInstanceCacheModel implements CacheModel<DDMDataProv
 		else {
 			objectOutput.writeUTF(type);
 		}
+
+		objectOutput.writeLong(lastPublishDate);
 	}
 
+	public long mvccVersion;
 	public String uuid;
 	public long dataProviderInstanceId;
 	public long groupId;
@@ -256,4 +292,6 @@ public class DDMDataProviderInstanceCacheModel implements CacheModel<DDMDataProv
 	public String description;
 	public String definition;
 	public String type;
+	public long lastPublishDate;
+
 }

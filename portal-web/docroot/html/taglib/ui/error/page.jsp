@@ -27,14 +27,20 @@ String rowBreak = (String)request.getAttribute("liferay-ui:error:rowBreak");
 
 <c:choose>
 	<c:when test="<%= embed %>">
-		<div class="alert alert-<%= alertStyle %>" role="alert">
+		<div class="alert alert-dismissible alert-<%= alertStyle %>" role="alert">
+			<button aria-label="<%= LanguageUtil.get(request, "close") %>" class="close" data-dismiss="liferay-alert" type="button">
+				<aui:icon image="times" markupView="lexicon" />
+
+				<span class="sr-only"><%= LanguageUtil.get(request, "close") %></span>
+			</button>
+
 			<span class="alert-indicator">
 				<svg aria-hidden="true" class="lexicon-icon lexicon-icon-<%= alertIcon %>">
 					<use xlink:href="<%= themeDisplay.getPathThemeImages() %>/lexicon/icons.svg#<%= alertIcon %>"></use>
 				</svg>
 			</span>
 
-			<strong class="lead"><%= alertTitle %>:</strong><%= alertMessage %>
+			<strong class="lead"><%= alertTitle %></strong><%= alertMessage %>
 		</div>
 
 		<%= rowBreak %>

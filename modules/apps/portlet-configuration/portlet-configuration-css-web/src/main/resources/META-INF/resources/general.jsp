@@ -17,20 +17,14 @@
 <%@ include file="/init.jsp" %>
 
 <%
-Map<String, Object> contextUseForAllTitle = new HashMap<>();
-
-contextUseForAllTitle.put("checked", portletConfigurationCSSPortletDisplayContext.isUseCustomTitle());
-contextUseForAllTitle.put("disableOnChecked", false);
-contextUseForAllTitle.put("label", LanguageUtil.get(request, "use-custom-title"));
-contextUseForAllTitle.put("name", renderResponse.getNamespace() + "useCustomTitle");
-contextUseForAllTitle.put("inputSelector", ".custom-title input");
+Map<String, Object> contextUseForAllTitle = HashMapBuilder.<String, Object>put(
+	"disableOnChecked", false
+).put(
+	"inputSelector", ".custom-title input"
+).build();
 %>
 
-<soy:component-renderer
-	context="<%= contextUseForAllTitle %>"
-	module="portlet-configuration-css-web/js/ToggleDisableInputs.es"
-	templateNamespace="com.liferay.portlet.configuration.css.web.ToggleDisableInputs.render"
-/>
+<aui:input checked="<%= portletConfigurationCSSPortletDisplayContext.isUseCustomTitle() %>" data="<%= contextUseForAllTitle %>" label="use-custom-title" name="useCustomTitle" type="toggle-switch" />
 
 <aui:field-wrapper cssClass="custom-title lfr-input-text-container">
 	<liferay-ui:input-localized
@@ -40,24 +34,6 @@ contextUseForAllTitle.put("inputSelector", ".custom-title input");
 		xml="<%= portletConfigurationCSSPortletDisplayContext.getCustomTitleXML() %>"
 	/>
 </aui:field-wrapper>
-
-<c:if test="<%= portletConfigurationCSSPortletDisplayContext.isShowLinkToPage() %>">
-	<aui:select label="link-portlet-urls-to-page" name="linkToLayoutUuid">
-		<aui:option label="current-page" selected="<%= Objects.equals(StringPool.BLANK, portletConfigurationCSSPortletDisplayContext.getLinkToLayoutUuid()) %>" value="" />
-
-		<%
-		for (LayoutDescription layoutDescription : portletConfigurationCSSPortletDisplayContext.getLayoutDescriptions()) {
-			Layout layoutDescriptionLayout = LayoutLocalServiceUtil.fetchLayout(layoutDescription.getPlid());
-		%>
-
-			<aui:option label="<%= layoutDescription.getDisplayName() %>" selected="<%= Objects.equals(layoutDescriptionLayout.getUuid(), portletConfigurationCSSPortletDisplayContext.getLinkToLayoutUuid()) %>" value="<%= layoutDescriptionLayout.getUuid() %>" />
-
-		<%
-		}
-		%>
-
-	</aui:select>
-</c:if>
 
 <aui:select label="portlet-decorators" name="portletDecoratorId">
 

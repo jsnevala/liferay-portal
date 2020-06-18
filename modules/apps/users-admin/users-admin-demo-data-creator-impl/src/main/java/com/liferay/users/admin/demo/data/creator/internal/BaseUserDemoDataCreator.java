@@ -75,7 +75,10 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 		Date birthDate = new Date();
 		byte[] portraitBytes = null;
 
-		try (InputStream is = (new URL(_RANDOM_USER_API)).openStream()) {
+		try (InputStream is = new URL(
+				_RANDOM_USER_API
+			).openStream()) {
+
 			String json = StringUtil.read(is);
 
 			JSONObject rootJSONObject = JSONFactoryUtil.createJSONObject(json);
@@ -96,13 +99,15 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 
 			portraitBytes = _getBytes(new URL(portraitURL));
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioe, ioe);
+				_log.warn(ioException, ioException);
 			}
 
 			if (Validator.isNull(emailAddress)) {
-				emailAddress = StringUtil.randomString().concat("@liferay.com");
+				String randomString = StringUtil.randomString();
+
+				emailAddress = randomString.concat("@liferay.com");
 			}
 		}
 
@@ -135,9 +140,9 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 				userLocalService.deleteUser(userId);
 			}
 		}
-		catch (NoSuchUserException nsue) {
+		catch (NoSuchUserException noSuchUserException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(nsue, nsue);
+				_log.warn(noSuchUserException, noSuchUserException);
 			}
 		}
 	}
@@ -238,9 +243,9 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 
 			birthDate = dateFormat.parse(dob);
 		}
-		catch (ParseException pe) {
+		catch (ParseException parseException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(pe, pe);
+				_log.warn(parseException, parseException);
 			}
 		}
 

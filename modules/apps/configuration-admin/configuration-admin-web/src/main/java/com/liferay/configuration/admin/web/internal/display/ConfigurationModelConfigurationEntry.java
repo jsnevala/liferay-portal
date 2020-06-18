@@ -54,6 +54,10 @@ public class ConfigurationModelConfigurationEntry
 		return _configurationModel.getCategory();
 	}
 
+	public ConfigurationModel getConfigurationModel() {
+		return _configurationModel;
+	}
+
 	@Override
 	public String getEditURL(
 		RenderRequest renderRequest, RenderResponse renderResponse) {
@@ -63,9 +67,7 @@ public class ConfigurationModelConfigurationEntry
 		portletURL.setParameter(
 			"factoryPid", _configurationModel.getFactoryPid());
 
-		if (_configurationModel.isFactory() &&
-			!_configurationModel.isCompanyFactory()) {
-
+		if (_configurationModel.isFactory()) {
 			portletURL.setParameter(
 				"mvcRenderCommandName", "/view_factory_instances");
 		}

@@ -93,9 +93,9 @@ public class ExportImportUserNotificationHandler
 					getExportImportConfiguration(
 						jsonObject.getLong("exportImportConfigurationId"));
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(pe, pe);
+				_log.debug(portalException, portalException);
 			}
 
 			return LanguageUtil.get(
@@ -103,10 +103,10 @@ public class ExportImportUserNotificationHandler
 				"the-process-referenced-by-this-notification-does-not-exist");
 		}
 
-		String message =
-			"x-" +
-				ExportImportConfigurationConstants.getTypeLabel(
-					exportImportConfiguration.getType());
+		String typeLabel = ExportImportConfigurationConstants.getTypeLabel(
+			exportImportConfiguration.getType());
+
+		String message = "x-" + typeLabel;
 
 		int status = jsonObject.getInt("status");
 

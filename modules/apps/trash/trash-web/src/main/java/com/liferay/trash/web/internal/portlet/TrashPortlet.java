@@ -16,9 +16,8 @@ package com.liferay.trash.web.internal.portlet;
 
 import com.liferay.petra.model.adapter.util.ModelAdapterUtil;
 import com.liferay.portal.kernel.exception.TrashPermissionException;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -29,19 +28,17 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.trash.TrashHelper;
+import com.liferay.trash.constants.TrashPortletKeys;
 import com.liferay.trash.kernel.exception.RestoreEntryException;
 import com.liferay.trash.model.TrashEntry;
 import com.liferay.trash.model.TrashEntryConstants;
 import com.liferay.trash.service.TrashEntryLocalService;
 import com.liferay.trash.service.TrashEntryService;
-import com.liferay.trash.web.internal.constants.TrashPortletKeys;
 import com.liferay.trash.web.internal.constants.TrashWebKeys;
 import com.liferay.trash.web.internal.util.TrashUndoUtil;
-import com.liferay.trash.web.internal.util.TrashUtil;
 
 import java.io.IOException;
 
@@ -84,27 +81,11 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + TrashPortletKeys.TRASH,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=administrator"
 	},
 	service = {Portlet.class, TrashPortlet.class}
 )
 public class TrashPortlet extends MVCPortlet {
-
-	public void changeDisplayStyle(
-		ActionRequest actionRequest, ActionResponse actionResponse) {
-
-		hideDefaultSuccessMessage(actionRequest);
-
-		String displayStyle = ParamUtil.getString(
-			actionRequest, "displayStyle");
-
-		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(actionRequest);
-
-		portalPreferences.setValue(
-			TrashPortletKeys.TRASH, "display-style", displayStyle);
-	}
 
 	public void deleteEntries(
 			ActionRequest actionRequest, ActionResponse actionResponse)
@@ -169,6 +150,8 @@ public class TrashPortlet extends MVCPortlet {
 
 		TrashUndoUtil.addRestoreData(actionRequest, className, classPK);
 
+		hideDefaultSuccessMessage(actionRequest);
+
 		sendRedirect(actionRequest, actionResponse);
 	}
 
@@ -178,7 +161,6 @@ public class TrashPortlet extends MVCPortlet {
 		throws IOException, PortletException {
 
 		renderRequest.setAttribute(TrashWebKeys.TRASH_HELPER, _trashHelper);
-		renderRequest.setAttribute(TrashWebKeys.TRASH_UTIL, _trashUtil);
 
 		super.render(renderRequest, renderResponse);
 	}
@@ -187,13 +169,13 @@ public class TrashPortlet extends MVCPortlet {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		checkEntry(actionRequest, actionResponse);
-
 		List<ObjectValuePair<String, Long>> entries = new ArrayList<>();
 
 		long trashEntryId = ParamUtil.getLong(actionRequest, "trashEntryId");
 
 		if (trashEntryId > 0) {
+			checkEntry(actionRequest, actionResponse);
+
 			TrashEntry entry = _trashEntryService.restoreEntry(trashEntryId);
 
 			entries.add(
@@ -201,8 +183,8 @@ public class TrashPortlet extends MVCPortlet {
 					entry.getClassName(), entry.getClassPK()));
 		}
 		else {
-			long[] restoreEntryIds = StringUtil.split(
-				ParamUtil.getString(actionRequest, "restoreTrashEntryIds"), 0L);
+			long[] restoreEntryIds = ParamUtil.getLongValues(
+				actionRequest, "rowIds");
 
 			for (long restoreEntryId : restoreEntryIds) {
 				TrashEntry entry = _trashEntryService.restoreEntry(
@@ -215,6 +197,8 @@ public class TrashPortlet extends MVCPortlet {
 		}
 
 		TrashUndoUtil.addRestoreData(actionRequest, entries);
+
+		hideDefaultSuccessMessage(actionRequest);
 
 		sendRedirect(actionRequest, actionResponse);
 	}
@@ -250,6 +234,8 @@ public class TrashPortlet extends MVCPortlet {
 		TrashUndoUtil.addRestoreData(
 			actionRequest, entry.getClassName(), entry.getClassPK());
 
+		hideDefaultSuccessMessage(actionRequest);
+
 		sendRedirect(actionRequest, actionResponse);
 	}
 
@@ -276,6 +262,8 @@ public class TrashPortlet extends MVCPortlet {
 		TrashUndoUtil.addRestoreData(
 			actionRequest, entry.getClassName(), entry.getClassPK());
 
+		hideDefaultSuccessMessage(actionRequest);
+
 		sendRedirect(actionRequest, actionResponse);
 	}
 
@@ -299,7 +287,7 @@ public class TrashPortlet extends MVCPortlet {
 					com.liferay.trash.kernel.model.TrashEntry.class, entry),
 				TrashEntryConstants.DEFAULT_CONTAINER_ID, newName);
 		}
-		catch (RestoreEntryException ree) {
+		catch (RestoreEntryException restoreEntryException) {
 			String redirect = ParamUtil.getString(actionRequest, "redirect");
 
 			LiferayPortletResponse liferayPortletResponse =
@@ -310,12 +298,16 @@ public class TrashPortlet extends MVCPortlet {
 			renderURL.setParameter("mvcPath", "/restore_entry.jsp");
 			renderURL.setParameter("redirect", redirect);
 			renderURL.setParameter(
-				"trashEntryId", String.valueOf(ree.getTrashEntryId()));
+				"trashEntryId",
+				String.valueOf(restoreEntryException.getTrashEntryId()));
 			renderURL.setParameter(
-				"duplicateEntryId", String.valueOf(ree.getDuplicateEntryId()));
-			renderURL.setParameter("oldName", ree.getOldName());
+				"duplicateEntryId",
+				String.valueOf(restoreEntryException.getDuplicateEntryId()));
 			renderURL.setParameter(
-				"overridable", String.valueOf(ree.isOverridable()));
+				"oldName", restoreEntryException.getOldName());
+			renderURL.setParameter(
+				"overridable",
+				String.valueOf(restoreEntryException.isOverridable()));
 
 			actionRequest.setAttribute(WebKeys.REDIRECT, renderURL.toString());
 
@@ -324,14 +316,15 @@ public class TrashPortlet extends MVCPortlet {
 			sendRedirect(actionRequest, actionResponse);
 
 			throw new com.liferay.trash.exception.RestoreEntryException(
-				ree.getType(), ree.getCause());
+				restoreEntryException.getType(),
+				restoreEntryException.getCause());
 		}
 	}
 
 	@Override
 	protected boolean isSessionErrorException(Throwable cause) {
-		if (cause instanceof com.
-				liferay.trash.exception.RestoreEntryException ||
+		if (cause instanceof
+				com.liferay.trash.exception.RestoreEntryException ||
 			cause instanceof RestoreEntryException ||
 			cause instanceof TrashPermissionException) {
 
@@ -339,6 +332,13 @@ public class TrashPortlet extends MVCPortlet {
 		}
 
 		return false;
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.trash.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
 	}
 
 	@Reference(unbind = "-")
@@ -361,8 +361,5 @@ public class TrashPortlet extends MVCPortlet {
 
 	@Reference
 	private TrashHelper _trashHelper;
-
-	@Reference
-	private TrashUtil _trashUtil;
 
 }

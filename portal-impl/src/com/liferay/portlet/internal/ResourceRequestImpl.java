@@ -21,10 +21,12 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayResourceRequest;
 import com.liferay.portal.kernel.servlet.PortletServlet;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.AsyncPortletServletRequest;
 
 import java.util.Collections;
@@ -72,9 +74,10 @@ public class ResourceRequestImpl
 
 	@Override
 	public DispatcherType getDispatcherType() {
-		if ((_portletAsyncContextImpl != null) &&
-			_portletAsyncContextImpl.isCalledDispatch()) {
+		ThemeDisplay themeDisplay = (ThemeDisplay)getAttribute(
+			WebKeys.THEME_DISPLAY);
 
+		if (themeDisplay.isAsync()) {
 			return DispatcherType.ASYNC;
 		}
 
@@ -104,25 +107,25 @@ public class ResourceRequestImpl
 
 	/**
 	 * @deprecated As of Judson (7.1.x), replaced by {@link
-	 * 	           javax.portlet.RenderState#getRenderParameters()}
+	 *             javax.portlet.RenderState#getRenderParameters()}
 	 */
 	@Deprecated
 	@Override
 	public Map<String, String[]> getPrivateRenderParameterMap() {
 		Map<String, String[]> privateRenderParameters = new HashMap<>();
 
-		RenderParametersImpl liferayRenderParameters =
+		RenderParametersImpl liferayRenderParametersImpl =
 			(RenderParametersImpl)getRenderParameters();
 
 		Map<String, String[]> liferayRenderParametersMap =
-			liferayRenderParameters.getParameterMap();
+			liferayRenderParametersImpl.getParameterMap();
 
-		for (Map.Entry<String, String[]>
-				entry: liferayRenderParametersMap.entrySet()) {
+		for (Map.Entry<String, String[]> entry :
+				liferayRenderParametersMap.entrySet()) {
 
 			String renderParameterName = entry.getKey();
 
-			if (!liferayRenderParameters.isPublic(renderParameterName)) {
+			if (!liferayRenderParametersImpl.isPublic(renderParameterName)) {
 				privateRenderParameters.put(
 					renderParameterName, entry.getValue());
 			}
@@ -151,7 +154,7 @@ public class ResourceRequestImpl
 
 	@Override
 	public void init(
-		HttpServletRequest request, Portlet portlet,
+		HttpServletRequest httpServletRequest, Portlet portlet,
 		InvokerPortlet invokerPortlet, PortletContext portletContext,
 		WindowState windowState, PortletMode portletMode,
 		PortletPreferences preferences, long plid) {
@@ -165,24 +168,26 @@ public class ResourceRequestImpl
 		}
 
 		super.init(
-			request, portlet, invokerPortlet, portletContext, windowState,
-			portletMode, preferences, plid);
+			httpServletRequest, portlet, invokerPortlet, portletContext,
+			windowState, portletMode, preferences, plid);
 
 		_cacheablity = ParamUtil.getString(
-			request, "p_p_cacheability", ResourceURL.PAGE);
+			httpServletRequest, "p_p_cacheability", ResourceURL.PAGE);
 
-		_resourceID = request.getParameter("p_p_resource_id");
+		_portletConfig = invokerPortlet.getPortletConfig();
+
+		_resourceID = httpServletRequest.getParameter("p_p_resource_id");
 
 		if (!PortalUtil.isValidResourceId(_resourceID)) {
 			_resourceID = StringPool.BLANK;
 		}
 
-		String portletNamespace = PortalUtil.getPortletNamespace(
-			getPortletName());
-
 		if (getPortletSpecMajorVersion() >= 3) {
+			String portletNamespace = PortalUtil.getPortletNamespace(
+				getPortletName());
+
 			_resourceParameters = new ResourceParametersImpl(
-				getPortletParameterMap(request, portletNamespace),
+				getPortletParameterMap(httpServletRequest, portletNamespace),
 				portletNamespace);
 		}
 	}
@@ -219,7 +224,7 @@ public class ResourceRequestImpl
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws IllegalStateException {
 
-		if (!isAsyncSupported()) {
+		if (!isAsyncSupported() || isAsyncStarted()) {
 			throw new IllegalStateException();
 		}
 
@@ -257,7 +262,7 @@ public class ResourceRequestImpl
 		}
 
 		_portletAsyncContextImpl.initialize(
-			resourceRequest, resourceResponse, asyncContext,
+			resourceRequest, resourceResponse, _portletConfig, asyncContext,
 			hasOriginalRequestAndResponse);
 
 		// The portletConfig is already set by PortletRequestImpl.defineObjects
@@ -294,6 +299,7 @@ public class ResourceRequestImpl
 
 	private String _cacheablity;
 	private PortletAsyncContextImpl _portletAsyncContextImpl;
+	private PortletConfig _portletConfig;
 	private String _resourceID;
 	private ResourceParameters _resourceParameters;
 	private ResourceResponse _resourceResponse;

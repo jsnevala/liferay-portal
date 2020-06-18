@@ -40,7 +40,6 @@ import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
-import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchPermissionChecker;
 import com.liferay.portal.kernel.search.Summary;
@@ -49,8 +48,7 @@ import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -63,13 +61,9 @@ import java.util.Set;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Leonardo Barros
  */
-@Component(immediate = true, service = Indexer.class)
 public class DDMFormInstanceRecordIndexer
 	extends BaseIndexer<DDMFormInstanceRecord> {
 
@@ -123,12 +117,12 @@ public class DDMFormInstanceRecordIndexer
 			contextBooleanFilter.addRequiredTerm(Field.STATUS, status);
 		}
 
-		long ddmFormInstanceId = GetterUtil.getLong(
-			searchContext.getAttribute("ddmFormInstanceId"));
+		long formInstanceId = GetterUtil.getLong(
+			searchContext.getAttribute("formInstanceId"));
 
-		if (ddmFormInstanceId > 0) {
+		if (formInstanceId > 0) {
 			contextBooleanFilter.addRequiredTerm(
-				"ddmFormInstanceId", ddmFormInstanceId);
+				"formInstanceId", formInstanceId);
 		}
 
 		addSearchClassTypeIds(contextBooleanFilter, searchContext);
@@ -252,10 +246,10 @@ public class DDMFormInstanceRecordIndexer
 		Document document, Locale locale, String snippet,
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		long ddmFormInstanceId = GetterUtil.getLong(
+		long formInstanceId = GetterUtil.getLong(
 			document.get("formInstanceId"));
 
-		String title = getTitle(ddmFormInstanceId, locale);
+		String title = getTitle(formInstanceId, locale);
 
 		Summary summary = createSummary(
 			document, Field.TITLE, Field.DESCRIPTION);
@@ -270,11 +264,9 @@ public class DDMFormInstanceRecordIndexer
 	protected void doReindex(DDMFormInstanceRecord ddmFormInstanceRecord)
 		throws Exception {
 
-		Document document = getDocument(ddmFormInstanceRecord);
-
 		indexWriterHelper.updateDocument(
-			getSearchEngineId(), ddmFormInstanceRecord.getCompanyId(), document,
-			isCommitImmediately());
+			getSearchEngineId(), ddmFormInstanceRecord.getCompanyId(),
+			getDocument(ddmFormInstanceRecord), isCommitImmediately());
 	}
 
 	@Override
@@ -312,25 +304,22 @@ public class DDMFormInstanceRecordIndexer
 	}
 
 	protected ResourceBundle getResourceBundle(Locale defaultLocale) {
-		ResourceBundleLoader portalResourceBundleLoader =
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
-
-		return portalResourceBundleLoader.loadResourceBundle(defaultLocale);
+		return PortalUtil.getResourceBundle(defaultLocale);
 	}
 
-	protected String getTitle(long ddmFormInstanceId, Locale locale) {
+	protected String getTitle(long formInstanceId, Locale locale) {
 		try {
 			DDMFormInstance ddmFormInstance =
-				ddmFormInstanceLocalService.getFormInstance(ddmFormInstanceId);
+				ddmFormInstanceLocalService.getFormInstance(formInstanceId);
 
 			String ddmFormInstanceName = ddmFormInstance.getName(locale);
 
 			return LanguageUtil.format(
-				getResourceBundle(locale), "new-entry-for-form-x",
+				getResourceBundle(locale), "form-record-for-form-x",
 				ddmFormInstanceName, false);
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return StringPool.BLANK;
@@ -343,7 +332,7 @@ public class DDMFormInstanceRecordIndexer
 
 		indexableActionableDynamicQuery.setAddCriteriaMethod(
 			dynamicQuery -> {
-				Property ddmFormInstanceRecordIdProperty =
+				Property formInstanceRecordIdProperty =
 					PropertyFactoryUtil.forName("formInstanceRecordId");
 
 				DynamicQuery ddmFormInstanceRecordVersionDynamicQuery =
@@ -353,10 +342,10 @@ public class DDMFormInstanceRecordIndexer
 					ProjectionFactoryUtil.property("formInstanceRecordId"));
 
 				dynamicQuery.add(
-					ddmFormInstanceRecordIdProperty.in(
+					formInstanceRecordIdProperty.in(
 						ddmFormInstanceRecordVersionDynamicQuery));
 
-				Property ddmFormInstanceProperty = PropertyFactoryUtil.forName(
+				Property formInstanceProperty = PropertyFactoryUtil.forName(
 					"formInstanceId");
 
 				DynamicQuery ddmFormInstanceDynamicQuery =
@@ -366,7 +355,7 @@ public class DDMFormInstanceRecordIndexer
 					ProjectionFactoryUtil.property("formInstanceId"));
 
 				dynamicQuery.add(
-					ddmFormInstanceProperty.in(ddmFormInstanceDynamicQuery));
+					formInstanceProperty.in(ddmFormInstanceDynamicQuery));
 			});
 		indexableActionableDynamicQuery.setCompanyId(companyId);
 		indexableActionableDynamicQuery.setPerformActionMethod(
@@ -378,12 +367,12 @@ public class DDMFormInstanceRecordIndexer
 						indexableActionableDynamicQuery.addDocuments(document);
 					}
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to index form instance record " +
 								ddmFormInstanceRecord.getFormInstanceRecordId(),
-							pe);
+							portalException);
 					}
 				}
 			});
@@ -392,27 +381,14 @@ public class DDMFormInstanceRecordIndexer
 		indexableActionableDynamicQuery.performActions();
 	}
 
-	@Reference
 	protected ClassNameLocalService classNameLocalService;
-
-	@Reference
 	protected DDMFormInstanceLocalService ddmFormInstanceLocalService;
-
-	@Reference
 	protected DDMFormInstanceRecordLocalService
 		ddmFormInstanceRecordLocalService;
-
-	@Reference
 	protected DDMFormInstanceRecordVersionLocalService
 		ddmFormInstanceRecordVersionLocalService;
-
-	@Reference
 	protected DDMIndexer ddmIndexer;
-
-	@Reference
 	protected IndexWriterHelper indexWriterHelper;
-
-	@Reference
 	protected SearchPermissionChecker searchPermissionChecker;
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -14,8 +14,6 @@
 
 package com.liferay.calendar.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,14 +24,14 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.calendar.service.http.CalendarServiceSoap}.
  *
  * @author Eduardo Lundgren
- * @see com.liferay.calendar.service.http.CalendarServiceSoap
  * @generated
  */
-@ProviderType
 public class CalendarSoap implements Serializable {
+
 	public static CalendarSoap toSoapModel(Calendar model) {
 		CalendarSoap soapModel = new CalendarSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setCalendarId(model.getCalendarId());
 		soapModel.setGroupId(model.getGroupId());
@@ -83,7 +81,8 @@ public class CalendarSoap implements Serializable {
 	}
 
 	public static CalendarSoap[] toSoapModels(List<Calendar> models) {
-		List<CalendarSoap> soapModels = new ArrayList<CalendarSoap>(models.size());
+		List<CalendarSoap> soapModels = new ArrayList<CalendarSoap>(
+			models.size());
 
 		for (Calendar model : models) {
 			soapModels.add(toSoapModel(model));
@@ -101,6 +100,14 @@ public class CalendarSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setCalendarId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -251,6 +258,7 @@ public class CalendarSoap implements Serializable {
 		_lastPublishDate = lastPublishDate;
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _calendarId;
 	private long _groupId;
@@ -268,4 +276,5 @@ public class CalendarSoap implements Serializable {
 	private boolean _enableComments;
 	private boolean _enableRatings;
 	private Date _lastPublishDate;
+
 }

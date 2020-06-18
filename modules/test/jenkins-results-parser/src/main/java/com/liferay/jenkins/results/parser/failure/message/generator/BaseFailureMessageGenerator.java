@@ -34,7 +34,19 @@ public abstract class BaseFailureMessageGenerator
 	implements FailureMessageGenerator {
 
 	@Override
-	public abstract Element getMessageElement(Build build);
+	public Element getMessageElement(Build build) {
+		return getMessageElement(build.getConsoleText());
+	}
+
+	@Override
+	public Element getMessageElement(String consoleText) {
+		return null;
+	}
+
+	@Override
+	public boolean isGenericCIFailure() {
+		return false;
+	}
 
 	protected Element getBaseBranchAnchorElement(TopLevelBuild topLevelBuild) {
 		StringBuilder sb = new StringBuilder();
@@ -96,6 +108,13 @@ public abstract class BaseFailureMessageGenerator
 	}
 
 	protected Element getConsoleTextSnippetElement(
+		String consoleText, boolean truncateTop, int start, int end) {
+
+		return Dom4JUtil.toCodeSnippetElement(
+			_getConsoleTextSnippet(consoleText, truncateTop, start, end));
+	}
+
+	protected Element getConsoleTextSnippetElementByEnd(
 		String consoleText, boolean truncateTop, int end) {
 
 		if (end == -1) {
@@ -108,11 +127,12 @@ public abstract class BaseFailureMessageGenerator
 			consoleText, truncateTop, start, end);
 	}
 
-	protected Element getConsoleTextSnippetElement(
-		String consoleText, boolean truncateTop, int start, int end) {
+	protected Element getConsoleTextSnippetElementByStart(
+		String consoleText, int start) {
 
 		return Dom4JUtil.toCodeSnippetElement(
-			_getConsoleTextSnippet(consoleText, truncateTop, start, end));
+			_getConsoleTextSnippet(
+				consoleText, false, start, consoleText.length() - 1));
 	}
 
 	protected Map<String, String> getDetailsMapFromPullRequest(
@@ -160,7 +180,7 @@ public abstract class BaseFailureMessageGenerator
 	protected int getSnippetStart(String consoleText, int end) {
 		int start = 0;
 
-		Matcher matcher = _pattern.matcher(consoleText);
+		Matcher matcher = _targetOutputStartPattern.matcher(consoleText);
 
 		while (matcher.find()) {
 			int x = matcher.start() + 1;
@@ -175,17 +195,19 @@ public abstract class BaseFailureMessageGenerator
 		return start;
 	}
 
+	protected static final int CHARS_CONSOLE_TEXT_SNIPPET_SIZE_MAX = 2500;
+
 	private String _getConsoleTextSnippet(
 		String consoleText, boolean truncateTop, int start, int end) {
 
-		if ((end - start) > 2500) {
+		if ((end - start) > CHARS_CONSOLE_TEXT_SNIPPET_SIZE_MAX) {
 			if (truncateTop) {
-				start = end - 2500;
+				start = end - CHARS_CONSOLE_TEXT_SNIPPET_SIZE_MAX;
 
 				start = consoleText.indexOf("\n", start);
 			}
 			else {
-				end = start + 2500;
+				end = start + CHARS_CONSOLE_TEXT_SNIPPET_SIZE_MAX;
 
 				int newlineEnd = consoleText.lastIndexOf("\n", end);
 
@@ -203,7 +225,7 @@ public abstract class BaseFailureMessageGenerator
 		return consoleText;
 	}
 
-	private static final Pattern _pattern = Pattern.compile(
+	private static final Pattern _targetOutputStartPattern = Pattern.compile(
 		"\\n[a-z\\-\\.]+\\:\\n");
 
 }

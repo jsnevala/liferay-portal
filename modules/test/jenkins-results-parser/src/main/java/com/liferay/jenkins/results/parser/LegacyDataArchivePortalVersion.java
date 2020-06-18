@@ -15,7 +15,6 @@
 package com.liferay.jenkins.results.parser;
 
 import java.io.File;
-import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,23 +24,19 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-
 /**
  * @author Michael Hashimoto
  */
 public class LegacyDataArchivePortalVersion {
 
 	public LegacyDataArchivePortalVersion(
-		LegacyDataArchiveUtil legacyDataArchiveUtil, String portalVersion) {
+		LegacyDataArchiveHelper legacyDataArchiveHelper, String portalVersion) {
 
-		_legacyDataArchiveUtil = legacyDataArchiveUtil;
+		_legacyDataArchiveHelper = legacyDataArchiveHelper;
 		_portalVersion = portalVersion;
 
 		_legacyGitWorkingDirectory =
-			_legacyDataArchiveUtil.getLegacyGitWorkingDirectory();
+			_legacyDataArchiveHelper.getLegacyGitWorkingDirectory();
 
 		_portalVersionDirectory = new File(
 			_legacyGitWorkingDirectory.getWorkingDirectory(), _portalVersion);
@@ -55,7 +50,7 @@ public class LegacyDataArchivePortalVersion {
 
 		_dataArchiveTypes = _getDataArchiveTypes();
 		_databaseNames = _getDatabaseNames();
-		_latestTestCommit = _getLatestTestCommit();
+		_latestTestLocalGitCommit = _getLatestTestLocalGitCommit();
 
 		_legacyDataArchiveGroups = _getLegacyDataArchiveGroups();
 	}
@@ -64,16 +59,16 @@ public class LegacyDataArchivePortalVersion {
 		return _databaseNames;
 	}
 
-	public Commit getLatestTestCommit() {
-		return _latestTestCommit;
+	public LocalGitCommit getLatestTestLocalGitCommit() {
+		return _latestTestLocalGitCommit;
 	}
 
 	public List<LegacyDataArchiveGroup> getLegacyDataArchiveGroups() {
 		return _legacyDataArchiveGroups;
 	}
 
-	public LegacyDataArchiveUtil getLegacyDataArchiveUtil() {
-		return _legacyDataArchiveUtil;
+	public LegacyDataArchiveHelper getLegacyDataArchiveHelper() {
+		return _legacyDataArchiveHelper;
 	}
 
 	public String getPortalVersion() {
@@ -85,25 +80,20 @@ public class LegacyDataArchivePortalVersion {
 	}
 
 	private List<String> _getDataArchiveTypes() {
-		Set<String> dataArchiveTypeSet = new HashSet<>();
+		Properties testProperties = JenkinsResultsParserUtil.getProperties(
+			new File(_portalVersionTestDirectory, "test.properties"));
 
-		try {
-			List<File> testcaseFiles = JenkinsResultsParserUtil.findFiles(
-				_portalVersionTestDirectory, ".*\\.testcase");
+		if (!testProperties.containsKey(
+				"test.case.available.property.values[data.archive.type]")) {
 
-			for (File testcaseFile : testcaseFiles) {
-				Document document = Dom4JUtil.parse(
-					JenkinsResultsParserUtil.read(testcaseFile));
-
-				Element rootElement = document.getRootElement();
-
-				dataArchiveTypeSet.addAll(
-					_getPoshiPropertyValues(rootElement, "data.archive.type"));
-			}
+			return Collections.emptyList();
 		}
-		catch (DocumentException | IOException e) {
-			throw new RuntimeException(e);
-		}
+
+		String dataArchiveTypeString = testProperties.getProperty(
+			"test.case.available.property.values[data.archive.type]");
+
+		Set<String> dataArchiveTypeSet = new HashSet<>(
+			Arrays.asList(dataArchiveTypeString.split(",")));
 
 		List<String> dataArchiveTypes = new ArrayList<>(dataArchiveTypeSet);
 
@@ -114,7 +104,7 @@ public class LegacyDataArchivePortalVersion {
 
 	private List<String> _getDatabaseNames() {
 		Properties buildProperties =
-			_legacyDataArchiveUtil.getBuildProperties();
+			_legacyDataArchiveHelper.getBuildProperties();
 
 		String legacyDataArchiveDatabaseNames = buildProperties.getProperty(
 			"legacy.data.archive.database.names");
@@ -135,16 +125,16 @@ public class LegacyDataArchivePortalVersion {
 		return databaseNames;
 	}
 
-	private Commit _getLatestTestCommit() {
-		List<Commit> commits = _legacyGitWorkingDirectory.log(
+	private LocalGitCommit _getLatestTestLocalGitCommit() {
+		List<LocalGitCommit> localGitCommits = _legacyGitWorkingDirectory.log(
 			50, _portalVersionTestDirectory);
 
-		for (Commit commit : commits) {
-			if (commit.getType() != Commit.Type.MANUAL) {
+		for (LocalGitCommit localGitCommit : localGitCommits) {
+			if (localGitCommit.getType() != LocalGitCommit.Type.MANUAL) {
 				continue;
 			}
 
-			return commit;
+			return localGitCommit;
 		}
 
 		return null;
@@ -161,47 +151,11 @@ public class LegacyDataArchivePortalVersion {
 		return legacyDataArchiveTypes;
 	}
 
-	private Set<String> _getPoshiPropertyValues(
-		Element element, String targetPoshiPropertyName) {
-
-		Set<String> poshiPropertyValues = new HashSet<>();
-
-		List<Element> childElements = new ArrayList<>();
-
-		for (Object elementObject : element.elements()) {
-			if (elementObject instanceof Element) {
-				childElements.add((Element)elementObject);
-			}
-		}
-
-		if (childElements.isEmpty()) {
-			return poshiPropertyValues;
-		}
-
-		for (Element childElement : childElements) {
-			String childElementName = childElement.getName();
-
-			if (childElementName.equals("property")) {
-				String poshiPropertyName = childElement.attributeValue("name");
-
-				if (poshiPropertyName.equals(targetPoshiPropertyName)) {
-					poshiPropertyValues.add(
-						childElement.attributeValue("value"));
-				}
-			}
-
-			poshiPropertyValues.addAll(
-				_getPoshiPropertyValues(childElement, targetPoshiPropertyName));
-		}
-
-		return poshiPropertyValues;
-	}
-
 	private final List<String> _dataArchiveTypes;
 	private final List<String> _databaseNames;
-	private final Commit _latestTestCommit;
+	private final LocalGitCommit _latestTestLocalGitCommit;
 	private final List<LegacyDataArchiveGroup> _legacyDataArchiveGroups;
-	private final LegacyDataArchiveUtil _legacyDataArchiveUtil;
+	private final LegacyDataArchiveHelper _legacyDataArchiveHelper;
 	private final GitWorkingDirectory _legacyGitWorkingDirectory;
 	private final String _portalVersion;
 	private final File _portalVersionDirectory;

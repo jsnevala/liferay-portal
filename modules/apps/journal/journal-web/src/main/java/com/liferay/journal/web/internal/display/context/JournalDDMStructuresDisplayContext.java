@@ -17,18 +17,10 @@ package com.liferay.journal.web.internal.display.context;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureServiceUtil;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.web.configuration.JournalWebConfiguration;
-import com.liferay.journal.web.internal.security.permission.resource.DDMStructurePermission;
-import com.liferay.petra.string.StringPool;
+import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -36,11 +28,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.staging.StagingGroupHelper;
-import com.liferay.staging.StagingGroupHelperUtil;
 
 import java.util.List;
-import java.util.Objects;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -59,53 +48,11 @@ public class JournalDDMStructuresDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_request = PortalUtil.getHttpServletRequest(renderRequest);
+		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 
 		_journalWebConfiguration =
-			(JournalWebConfiguration)_request.getAttribute(
+			(JournalWebConfiguration)_httpServletRequest.getAttribute(
 				JournalWebConfiguration.class.getName());
-	}
-
-	public List<DropdownItem> getActionItemsDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData("action", "deleteDDMStructures");
-						dropdownItem.setIcon("times-circle");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
-			}
-		};
-	}
-
-	public String getClearResultsURL() {
-		PortletURL clearResultsURL = _getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
-	}
-
-	public CreationMenu getCreationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		return new CreationMenu() {
-			{
-				addPrimaryDropdownItem(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							_renderResponse.createRenderURL(), "mvcPath",
-							"/edit_ddm_structure.jsp", "redirect",
-							themeDisplay.getURLCurrent());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "add"));
-					});
-			}
-		};
 	}
 
 	public SearchContainer getDDMStructureSearch() throws Exception {
@@ -113,8 +60,9 @@ public class JournalDDMStructuresDisplayContext {
 			return _ddmStructureSearch;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)_request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		SearchContainer ddmStructureSearch = new SearchContainer(
 			_renderRequest, _getPortletURL(), null, "there-are-no-structures");
@@ -144,47 +92,38 @@ public class JournalDDMStructuresDisplayContext {
 				themeDisplay.getScopeGroupId());
 		}
 
-		int total = DDMStructureServiceUtil.searchCount(
-			themeDisplay.getCompanyId(), groupIds,
-			PortalUtil.getClassNameId(JournalArticle.class.getName()),
-			_getKeywords(), WorkflowConstants.STATUS_ANY);
+		List<DDMStructure> results = null;
+		int total = 0;
 
-		ddmStructureSearch.setTotal(total);
-
-		List<DDMStructure> results = DDMStructureServiceUtil.search(
-			themeDisplay.getCompanyId(), groupIds,
-			PortalUtil.getClassNameId(JournalArticle.class.getName()),
-			_getKeywords(), WorkflowConstants.STATUS_ANY,
-			ddmStructureSearch.getStart(), ddmStructureSearch.getEnd(),
-			ddmStructureSearch.getOrderByComparator());
+		if (Validator.isNotNull(_getKeywords())) {
+			results = DDMStructureServiceUtil.search(
+				themeDisplay.getCompanyId(), groupIds,
+				PortalUtil.getClassNameId(JournalArticle.class.getName()),
+				_getKeywords(), WorkflowConstants.STATUS_ANY,
+				ddmStructureSearch.getStart(), ddmStructureSearch.getEnd(),
+				ddmStructureSearch.getOrderByComparator());
+			total = DDMStructureServiceUtil.searchCount(
+				themeDisplay.getCompanyId(), groupIds,
+				PortalUtil.getClassNameId(JournalArticle.class.getName()),
+				_getKeywords(), WorkflowConstants.STATUS_ANY);
+		}
+		else {
+			results = DDMStructureServiceUtil.getStructures(
+				themeDisplay.getCompanyId(), groupIds,
+				PortalUtil.getClassNameId(JournalArticle.class.getName()),
+				ddmStructureSearch.getStart(), ddmStructureSearch.getEnd(),
+				ddmStructureSearch.getOrderByComparator());
+			total = DDMStructureServiceUtil.getStructuresCount(
+				themeDisplay.getCompanyId(), groupIds,
+				PortalUtil.getClassNameId(JournalArticle.class.getName()));
+		}
 
 		ddmStructureSearch.setResults(results);
+		ddmStructureSearch.setTotal(total);
 
 		_ddmStructureSearch = ddmStructureSearch;
 
 		return ddmStructureSearch;
-	}
-
-	public List<DropdownItem> getFilterItemsDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_request, "order-by"));
-					});
-			}
-		};
 	}
 
 	public String getOrderByCol() {
@@ -209,87 +148,12 @@ public class JournalDDMStructuresDisplayContext {
 		return _orderByType;
 	}
 
-	public String getSearchActionURL() {
-		PortletURL searchActionURL = _getPortletURL();
-
-		return searchActionURL.toString();
-	}
-
-	public String getSortingURL() {
-		PortletURL sortingURL = _getPortletURL();
-
-		sortingURL.setParameter(
-			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL.toString();
-	}
-
-	public int getTotalItems() throws Exception {
-		SearchContainer<?> searchContainer = getDDMStructureSearch();
-
-		return searchContainer.getTotal();
-	}
-
-	public boolean isDisabledManagementBar() throws Exception {
-		if (isSearch()) {
-			return false;
-		}
-
-		if (getTotalItems() > 0) {
-			return false;
-		}
-
-		return true;
-	}
-
 	public boolean isSearch() {
 		if (Validator.isNotNull(_getKeywords())) {
 			return true;
 		}
 
 		return false;
-	}
-
-	public boolean isShowAddButton() throws PortalException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		Group group = themeDisplay.getScopeGroup();
-
-		StagingGroupHelper stagingGroupHelper =
-			StagingGroupHelperUtil.getStagingGroupHelper();
-
-		if (stagingGroupHelper.isLocalLiveGroup(group) ||
-			stagingGroupHelper.isRemoteLiveGroup(group)) {
-
-			return false;
-		}
-
-		if (DDMStructurePermission.containsAddDDMStructurePermission(
-				themeDisplay.getPermissionChecker(),
-				themeDisplay.getScopeGroupId(),
-				PortalUtil.getClassNameId(JournalArticle.class.getName()))) {
-
-			return true;
-		}
-
-		return false;
-	}
-
-	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(
-							_getPortletURL(), "navigation", "all");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "all"));
-					});
-			}
-		};
 	}
 
 	private String _getKeywords() {
@@ -300,31 +164,6 @@ public class JournalDDMStructuresDisplayContext {
 		_keywords = ParamUtil.getString(_renderRequest, "keywords");
 
 		return _keywords;
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "modified-date"));
-						dropdownItem.setHref(
-							_getPortletURL(), "orderByCol", "modified-date");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_request, "modified-date"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getOrderByCol(), "id"));
-						dropdownItem.setHref(
-							_getPortletURL(), "orderByCol", "id");
-						dropdownItem.setLabel(LanguageUtil.get(_request, "id"));
-					});
-			}
-		};
 	}
 
 	private PortletURL _getPortletURL() {
@@ -354,12 +193,12 @@ public class JournalDDMStructuresDisplayContext {
 	}
 
 	private SearchContainer _ddmStructureSearch;
+	private final HttpServletRequest _httpServletRequest;
 	private final JournalWebConfiguration _journalWebConfiguration;
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private final HttpServletRequest _request;
 
 }

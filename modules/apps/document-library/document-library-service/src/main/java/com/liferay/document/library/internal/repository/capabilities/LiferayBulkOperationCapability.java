@@ -25,12 +25,12 @@ import com.liferay.portal.kernel.repository.capabilities.BulkOperationCapability
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.repository.model.RepositoryModelOperation;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.repository.capabilities.util.DLFileEntryServiceAdapter;
 import com.liferay.portal.repository.capabilities.util.DLFolderServiceAdapter;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFolder;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -87,7 +87,7 @@ public class LiferayBulkOperationCapability implements BulkOperationCapability {
 			_dlFolderServiceAdapter.getActionableDynamicQuery();
 
 		actionableDynamicQuery.setAddCriteriaMethod(
-			new RepositoryModelAddCriteriaMethod(filter));
+			new RepositoryModelAddCriteriaMethod(filter, true));
 		actionableDynamicQuery.setPerformActionMethod(
 			new FolderPerformActionMethod(repositoryModelOperation));
 
@@ -95,11 +95,11 @@ public class LiferayBulkOperationCapability implements BulkOperationCapability {
 	}
 
 	private static final Map<Class<? extends Field<?>>, String> _fieldNames =
-		new HashMap<Class<? extends Field<?>>, String>() {
-			{
-				put(Field.CreateDate.class, "createDate");
-			}
-		};
+		HashMapBuilder.<Class<? extends Field<?>>, String>put(
+			Field.CreateDate.class, "createDate"
+		).put(
+			Field.FolderId.class, "folderId"
+		).build();
 
 	private final DLFileEntryServiceAdapter _dlFileEntryServiceAdapter;
 	private final DLFolderServiceAdapter _dlFolderServiceAdapter;
@@ -117,6 +117,10 @@ public class LiferayBulkOperationCapability implements BulkOperationCapability {
 		@Override
 		public void performAction(DLFileEntry dlFileEntry)
 			throws PortalException {
+
+			if (dlFileEntry.isInTrash()) {
+				return;
+			}
 
 			FileEntry fileEntry = new LiferayFileEntry(dlFileEntry);
 
@@ -138,7 +142,7 @@ public class LiferayBulkOperationCapability implements BulkOperationCapability {
 
 		@Override
 		public void performAction(DLFolder dlFolder) throws PortalException {
-			if (dlFolder.isMountPoint()) {
+			if (dlFolder.isMountPoint() || dlFolder.isInTrash()) {
 				return;
 			}
 
@@ -155,7 +159,14 @@ public class LiferayBulkOperationCapability implements BulkOperationCapability {
 		implements ActionableDynamicQuery.AddCriteriaMethod {
 
 		public RepositoryModelAddCriteriaMethod(Filter<?> filter) {
+			this(filter, false);
+		}
+
+		public RepositoryModelAddCriteriaMethod(
+			Filter<?> filter, boolean folder) {
+
 			_filter = filter;
+			_folder = folder;
 		}
 
 		@Override
@@ -177,6 +188,10 @@ public class LiferayBulkOperationCapability implements BulkOperationCapability {
 			if (fieldName == null) {
 				throw new UnsupportedOperationException(
 					"Unsupported field " + field.getName());
+			}
+
+			if (_folder && fieldName.equals("folderId")) {
+				fieldName = "parentFolderId";
 			}
 
 			Operator operator = _filter.getOperator();
@@ -201,6 +216,7 @@ public class LiferayBulkOperationCapability implements BulkOperationCapability {
 		}
 
 		private final Filter<?> _filter;
+		private boolean _folder;
 
 	}
 

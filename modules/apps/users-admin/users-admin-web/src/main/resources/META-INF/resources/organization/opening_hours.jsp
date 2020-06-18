@@ -24,38 +24,33 @@ long organizationId = organizationScreenNavigationDisplayContext.getOrganization
 List<OrgLabor> orgLabors = OrgLaborServiceUtil.getOrgLabors(organizationId);
 %>
 
-<div class="sheet-title">
-	<span class="autofit-row">
+<div class="sheet-header">
+	<h2 class="autofit-row sheet-title">
 		<span class="autofit-col autofit-col-expand">
-			<h2 class="sheet-title">
-				<%= organizationScreenNavigationDisplayContext.getFormLabel() %>
-			</h2>
+			<span class="heading-text"><%= organizationScreenNavigationDisplayContext.getFormLabel() %></span>
 		</span>
 		<span class="autofit-col">
-			<liferay-ui:icon
-				cssClass="modify-opening-hours-link"
-				data="<%=
-					new HashMap<String, Object>() {
-						{
-							put("title", LanguageUtil.get(request, "add-opening-hours"));
-						}
-					}
-				%>"
-				label="<%= true %>"
-				linkCssClass="btn btn-secondary btn-sm"
-				message="add"
-				url="javascript:;"
-			/>
+			<span class="heading-end">
+
+				<%
+				PortletURL editURL = liferayPortletResponse.createRenderURL();
+
+				editURL.setParameter("mvcPath", "/organization/edit_opening_hours.jsp");
+				editURL.setParameter("redirect", currentURL);
+				editURL.setParameter("className", Organization.class.getName());
+				editURL.setParameter("classPK", String.valueOf(organizationId));
+				%>
+
+				<liferay-ui:icon
+					label="<%= true %>"
+					linkCssClass="add-opening-hours-link btn btn-secondary btn-sm"
+					message="add"
+					url="<%= editURL.toString() %>"
+				/>
+			</span>
 		</span>
-	</span>
+	</h2>
 </div>
-
-<liferay-ui:error-marker
-	key="<%= WebKeys.ERROR_SECTION %>"
-	value="services"
-/>
-
-<liferay-ui:error key="<%= NoSuchListTypeException.class.getName() + Organization.class.getName() + ListTypeConstants.ORGANIZATION_SERVICE %>" message="please-select-a-type" />
 
 <c:if test="<%= orgLabors.isEmpty() %>">
 	<div class="contact-information-empty-results-message-wrapper">
@@ -67,12 +62,11 @@ List<OrgLabor> orgLabors = OrgLaborServiceUtil.getOrgLabors(organizationId);
 
 <div
 	class="<%=
-		CSSClassNames.build(
-			builder -> builder.add(
-				"opening-hours-wrapper"
-			).add(
-				"hide", orgLabors.isEmpty()
-			))
+		CSSClassNames.builder(
+			"opening-hours-wrapper"
+		).add(
+			"hide", orgLabors.isEmpty()
+		).build()
 	%>"
 >
 
@@ -124,15 +118,3 @@ List<OrgLabor> orgLabors = OrgLaborServiceUtil.getOrgLabors(organizationId);
 	%>
 
 </div>
-
-<portlet:renderURL var="editOpeningHoursRenderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-	<portlet:param name="mvcPath" value="/organization/edit_opening_hours.jsp" />
-</portlet:renderURL>
-
-<aui:script require="<%= organizationScreenNavigationDisplayContext.getContactInformationJSRequire() %>">
-	ContactInformation.registerContactInformationListener(
-		'.modify-opening-hours-link a',
-		'<%= editOpeningHoursRenderURL.toString() %>',
-		690
-	);
-</aui:script>

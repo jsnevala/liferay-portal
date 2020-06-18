@@ -14,45 +14,52 @@
 
 package com.liferay.friendly.url.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the FriendlyURLEntryLocalization service. Represents a row in the &quot;FriendlyURLEntryLocalization&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see FriendlyURLEntryLocalizationModel
- * @see com.liferay.friendly.url.model.impl.FriendlyURLEntryLocalizationImpl
- * @see com.liferay.friendly.url.model.impl.FriendlyURLEntryLocalizationModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.friendly.url.model.impl.FriendlyURLEntryLocalizationImpl")
+@ImplementationClassName(
+	"com.liferay.friendly.url.model.impl.FriendlyURLEntryLocalizationImpl"
+)
 @ProviderType
 public interface FriendlyURLEntryLocalization
 	extends FriendlyURLEntryLocalizationModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.friendly.url.model.impl.FriendlyURLEntryLocalizationImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.friendly.url.model.impl.FriendlyURLEntryLocalizationImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<FriendlyURLEntryLocalization, Long> FRIENDLY_URL_ENTRY_LOCALIZATION_ID_ACCESSOR =
-		new Accessor<FriendlyURLEntryLocalization, Long>() {
-			@Override
-			public Long get(
-				FriendlyURLEntryLocalization friendlyURLEntryLocalization) {
-				return friendlyURLEntryLocalization.getFriendlyURLEntryLocalizationId();
-			}
+	public static final Accessor<FriendlyURLEntryLocalization, Long>
+		FRIENDLY_URL_ENTRY_LOCALIZATION_ID_ACCESSOR =
+			new Accessor<FriendlyURLEntryLocalization, Long>() {
 
-			@Override
-			public Class<Long> getAttributeClass() {
-				return Long.class;
-			}
+				@Override
+				public Long get(
+					FriendlyURLEntryLocalization friendlyURLEntryLocalization) {
 
-			@Override
-			public Class<FriendlyURLEntryLocalization> getTypeClass() {
-				return FriendlyURLEntryLocalization.class;
-			}
-		};
+					return friendlyURLEntryLocalization.
+						getFriendlyURLEntryLocalizationId();
+				}
+
+				@Override
+				public Class<Long> getAttributeClass() {
+					return Long.class;
+				}
+
+				@Override
+				public Class<FriendlyURLEntryLocalization> getTypeClass() {
+					return FriendlyURLEntryLocalization.class;
+				}
+
+			};
+
 }

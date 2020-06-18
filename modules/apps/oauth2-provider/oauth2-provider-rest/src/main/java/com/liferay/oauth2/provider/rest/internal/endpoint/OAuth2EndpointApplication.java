@@ -14,12 +14,7 @@
 
 package com.liferay.oauth2.provider.rest.internal.endpoint;
 
-import java.util.Collections;
-import java.util.Set;
-
 import javax.ws.rs.core.Application;
-
-import org.apache.cxf.rs.security.oauth2.provider.OAuthJSONProvider;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -29,17 +24,12 @@ import org.osgi.service.component.annotations.Component;
 @Component(
 	immediate = true,
 	property = {
-		"liferay.auth.verifier=false", "liferay.oauth2=false",
-		"osgi.jaxrs.application.base=/oauth2",
+		"liferay.auth.verifier=false", "liferay.cors.annotation=true",
+		"liferay.jackson=false", "liferay.oauth2=false",
+		"oauth2.scope.checker.type=none", "osgi.jaxrs.application.base=/oauth2",
 		"osgi.jaxrs.name=Liferay.OAuth2.Application"
 	},
 	service = Application.class
 )
 public class OAuth2EndpointApplication extends Application {
-
-	@Override
-	public Set<Class<?>> getClasses() {
-		return Collections.singleton(OAuthJSONProvider.class);
-	}
-
 }

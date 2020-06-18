@@ -38,14 +38,19 @@ public class DDMDataProviderInvokeCommand
 		DDMDataProviderRequest ddmDataProviderRequest,
 		DDMRESTDataProviderSettings ddmRESTDataProviderSettings) {
 
+		// Skip JavaParser
+
 		super(
-			Setter.withGroupKey(_hystrixCommandGroupKey).andCommandKey(
+			Setter.withGroupKey(
+				_hystrixCommandGroupKey
+			).andCommandKey(
 				HystrixCommandKey.Factory.asKey(
-					"DDMDataProviderInvokeCommand#" + nameCurrentValue)).
-				andCommandPropertiesDefaults(
-					HystrixCommandProperties.Setter().
-						withExecutionTimeoutInMilliseconds(
-							getTimeout(ddmRESTDataProviderSettings))));
+					"DDMDataProviderInvokeCommand#" + nameCurrentValue)
+			).andCommandPropertiesDefaults(
+				HystrixCommandProperties.Setter().
+					withExecutionTimeoutInMilliseconds(
+						getTimeout(ddmRESTDataProviderSettings))
+			));
 
 		_ddmDataProvider = ddmDataProvider;
 		_ddmDataProviderRequest = ddmDataProviderRequest;

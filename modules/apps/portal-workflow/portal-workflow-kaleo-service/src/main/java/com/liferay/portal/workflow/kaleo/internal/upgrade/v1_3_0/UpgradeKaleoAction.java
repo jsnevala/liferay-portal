@@ -15,6 +15,7 @@
 package com.liferay.portal.workflow.kaleo.internal.upgrade.v1_3_0;
 
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -29,15 +30,15 @@ public class UpgradeKaleoAction extends UpgradeProcess {
 		try (PreparedStatement ps = connection.prepareStatement(
 				"select kaleoActionId, script from KaleoAction where script " +
 					"like '%WorkflowConstants.toStatus(%'");
-			ResultSet rs = ps.executeQuery();) {
+			ResultSet rs = ps.executeQuery()) {
 
 			while (rs.next()) {
 				long kaleoActionId = rs.getLong(1);
 
 				String script = rs.getString(2);
 
-				script = script.replace(
-					"WorkflowConstants.toStatus(",
+				script = StringUtil.replace(
+					script, "WorkflowConstants.toStatus(",
 					"WorkflowConstants.getLabelStatus(");
 
 				updateScript(kaleoActionId, script);

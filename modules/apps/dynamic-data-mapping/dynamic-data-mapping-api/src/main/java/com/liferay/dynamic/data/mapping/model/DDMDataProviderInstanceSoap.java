@@ -14,8 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -26,15 +24,17 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.dynamic.data.mapping.service.http.DDMDataProviderInstanceServiceSoap}.
  *
  * @author Brian Wing Shun Chan
- * @see com.liferay.dynamic.data.mapping.service.http.DDMDataProviderInstanceServiceSoap
  * @generated
  */
-@ProviderType
 public class DDMDataProviderInstanceSoap implements Serializable {
+
 	public static DDMDataProviderInstanceSoap toSoapModel(
 		DDMDataProviderInstance model) {
-		DDMDataProviderInstanceSoap soapModel = new DDMDataProviderInstanceSoap();
 
+		DDMDataProviderInstanceSoap soapModel =
+			new DDMDataProviderInstanceSoap();
+
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setDataProviderInstanceId(model.getDataProviderInstanceId());
 		soapModel.setGroupId(model.getGroupId());
@@ -47,13 +47,16 @@ public class DDMDataProviderInstanceSoap implements Serializable {
 		soapModel.setDescription(model.getDescription());
 		soapModel.setDefinition(model.getDefinition());
 		soapModel.setType(model.getType());
+		soapModel.setLastPublishDate(model.getLastPublishDate());
 
 		return soapModel;
 	}
 
 	public static DDMDataProviderInstanceSoap[] toSoapModels(
 		DDMDataProviderInstance[] models) {
-		DDMDataProviderInstanceSoap[] soapModels = new DDMDataProviderInstanceSoap[models.length];
+
+		DDMDataProviderInstanceSoap[] soapModels =
+			new DDMDataProviderInstanceSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -64,10 +67,13 @@ public class DDMDataProviderInstanceSoap implements Serializable {
 
 	public static DDMDataProviderInstanceSoap[][] toSoapModels(
 		DDMDataProviderInstance[][] models) {
+
 		DDMDataProviderInstanceSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new DDMDataProviderInstanceSoap[models.length][models[0].length];
+			soapModels =
+				new DDMDataProviderInstanceSoap
+					[models.length][models[0].length];
 		}
 		else {
 			soapModels = new DDMDataProviderInstanceSoap[0][0];
@@ -82,13 +88,16 @@ public class DDMDataProviderInstanceSoap implements Serializable {
 
 	public static DDMDataProviderInstanceSoap[] toSoapModels(
 		List<DDMDataProviderInstance> models) {
-		List<DDMDataProviderInstanceSoap> soapModels = new ArrayList<DDMDataProviderInstanceSoap>(models.size());
+
+		List<DDMDataProviderInstanceSoap> soapModels =
+			new ArrayList<DDMDataProviderInstanceSoap>(models.size());
 
 		for (DDMDataProviderInstance model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new DDMDataProviderInstanceSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new DDMDataProviderInstanceSoap[soapModels.size()]);
 	}
 
 	public DDMDataProviderInstanceSoap() {
@@ -100,6 +109,14 @@ public class DDMDataProviderInstanceSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setDataProviderInstanceId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -198,6 +215,15 @@ public class DDMDataProviderInstanceSoap implements Serializable {
 		_type = type;
 	}
 
+	public Date getLastPublishDate() {
+		return _lastPublishDate;
+	}
+
+	public void setLastPublishDate(Date lastPublishDate) {
+		_lastPublishDate = lastPublishDate;
+	}
+
+	private long _mvccVersion;
 	private String _uuid;
 	private long _dataProviderInstanceId;
 	private long _groupId;
@@ -210,4 +236,6 @@ public class DDMDataProviderInstanceSoap implements Serializable {
 	private String _description;
 	private String _definition;
 	private String _type;
+	private Date _lastPublishDate;
+
 }

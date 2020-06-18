@@ -14,6 +14,7 @@
 
 package com.liferay.poshi.runner.elements;
 
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
 import com.liferay.poshi.runner.util.Dom4JUtil;
 
 import java.io.IOException;
@@ -32,6 +33,15 @@ import org.dom4j.Node;
 public class ForPoshiElement extends PoshiElement {
 
 	@Override
+	public Element addAttribute(String name, String value) {
+		if (name.equals("list") || name.equals("table")) {
+			typeAttributeName = name;
+		}
+
+		return super.addAttribute(name, value);
+	}
+
+	@Override
 	public PoshiElement clone(Element element) {
 		if (isElementType(_ELEMENT_NAME, element)) {
 			return new ForPoshiElement(element);
@@ -42,7 +52,8 @@ public class ForPoshiElement extends PoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		if (_isElementType(parentPoshiElement, poshiScript)) {
 			return new ForPoshiElement(parentPoshiElement, poshiScript);
@@ -57,10 +68,11 @@ public class ForPoshiElement extends PoshiElement {
 	}
 
 	@Override
-	public void parsePoshiScript(String poshiScript) {
-		String blockName = getBlockName(poshiScript);
+	public void parsePoshiScript(String poshiScript)
+		throws PoshiScriptParserException {
 
-		String parentheticalContent = getParentheticalContent(blockName);
+		String parentheticalContent = getParentheticalContent(
+			getBlockName(poshiScript));
 
 		Matcher matcher = _blockParameterPattern.matcher(parentheticalContent);
 
@@ -100,7 +112,8 @@ public class ForPoshiElement extends PoshiElement {
 	}
 
 	protected ForPoshiElement(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}
@@ -137,8 +150,9 @@ public class ForPoshiElement extends PoshiElement {
 			throw new IllegalArgumentException(
 				"Invalid 'for' element " + Dom4JUtil.format(element));
 		}
-		catch (IOException ioe) {
-			throw new IllegalArgumentException("Invalid 'for' element", ioe);
+		catch (IOException ioException) {
+			throw new IllegalArgumentException(
+				"Invalid 'for' element", ioException);
 		}
 	}
 

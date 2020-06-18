@@ -244,9 +244,9 @@ public class UpgradeJournalArticles extends BaseUpgradePortletId {
 			updateInstanceablePortletPreferences(
 				oldRootPortletId, newRootPortletId);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(exception, exception);
 			}
 		}
 	}
@@ -258,17 +258,16 @@ public class UpgradeJournalArticles extends BaseUpgradePortletId {
 
 		try (PreparedStatement ps = connection.prepareStatement(
 				"update PortletPreferences set preferences = ?, portletId = " +
-					"? where portletPreferencesId = " +
-						portletPreferencesId)) {
+					"? where portletPreferencesId = " + portletPreferencesId)) {
 
 			ps.setString(1, newPreferences);
 			ps.setString(2, newPortletId);
 
 			ps.executeUpdate();
 		}
-		catch (SQLException sqle) {
+		catch (SQLException sqlException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(sqle, sqle);
+				_log.warn(sqlException, sqlException);
 			}
 		}
 	}

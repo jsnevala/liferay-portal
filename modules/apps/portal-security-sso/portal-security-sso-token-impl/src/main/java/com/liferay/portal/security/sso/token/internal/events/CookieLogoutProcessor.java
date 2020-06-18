@@ -31,16 +31,17 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(
 	immediate = true,
-	property = "logout.processor.service = LogoutProcessor.class, type=" + LogoutProcessorType.COOKIE
+	property = "logout.processor.type=" + LogoutProcessorType.COOKIE,
+	service = LogoutProcessor.class
 )
 public class CookieLogoutProcessor implements LogoutProcessor {
 
 	@Override
 	public void logout(
-		HttpServletRequest request, HttpServletResponse response,
-		String... parameters) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, String... parameters) {
 
-		String domain = CookieKeys.getDomain(request);
+		String domain = CookieKeys.getDomain(httpServletRequest);
 
 		for (String parameter : parameters) {
 			Cookie cookie = new Cookie(parameter, StringPool.BLANK);
@@ -52,7 +53,8 @@ public class CookieLogoutProcessor implements LogoutProcessor {
 			cookie.setMaxAge(0);
 			cookie.setPath(StringPool.SLASH);
 
-			CookieKeys.addCookie(request, response, cookie);
+			CookieKeys.addCookie(
+				httpServletRequest, httpServletResponse, cookie);
 		}
 	}
 

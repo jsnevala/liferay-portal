@@ -22,8 +22,6 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.util.Portal;
 
-import java.util.Objects;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -35,7 +33,7 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 
 	@Override
 	public void onBeforeRemove(Layout layout) throws ModelListenerException {
-		if (!Objects.equals(layout.getType(), "content")) {
+		if (!(layout.isTypeAssetDisplay() || layout.isTypeContent())) {
 			return;
 		}
 

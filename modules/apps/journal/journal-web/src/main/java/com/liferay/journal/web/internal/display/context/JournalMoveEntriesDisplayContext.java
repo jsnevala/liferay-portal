@@ -14,15 +14,11 @@
 
 package com.liferay.journal.web.internal.display.context;
 
-import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
-import com.liferay.asset.kernel.model.AssetRenderer;
-import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.service.JournalFolderServiceUtil;
-import com.liferay.journal.web.asset.JournalArticleAssetRenderer;
 import com.liferay.journal.web.internal.security.permission.resource.JournalArticlePermission;
 import com.liferay.journal.web.internal.security.permission.resource.JournalFolderPermission;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -52,50 +48,19 @@ public class JournalMoveEntriesDisplayContext {
 
 	public JournalMoveEntriesDisplayContext(
 			LiferayPortletRequest liferayPortletRequest,
-			LiferayPortletResponse liferayPortletResponse, String currentURL)
+			LiferayPortletResponse liferayPortletResponse)
 		throws PortalException {
 
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
-		_currentURL = currentURL;
 
-		_servletRequest = PortalUtil.getHttpServletRequest(
+		_httpServletRequest = PortalUtil.getHttpServletRequest(
 			_liferayPortletRequest);
 
 		processFolders(getMoveFolders());
 		processArticles(getMoveArticles());
 
 		setViewAttributes();
-	}
-
-	public String getIconCssClass(JournalArticle article)
-		throws PortalException {
-
-		if (_journalArticleAssetRendererFactory == null) {
-			_journalArticleAssetRendererFactory =
-				AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClass(
-					JournalArticle.class);
-		}
-
-		AssetRenderer<JournalArticle> assetRenderer =
-			_journalArticleAssetRendererFactory.getAssetRenderer(
-				JournalArticleAssetRenderer.getClassPK(article));
-
-		return assetRenderer.getIconCssClass();
-	}
-
-	public String getIconCssClass(JournalFolder folder) throws PortalException {
-		if (_journalFolderAssetRendererFactory == null) {
-			_journalFolderAssetRendererFactory =
-				AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClass(
-					JournalFolder.class);
-		}
-
-		AssetRenderer<JournalFolder> assetRenderer =
-			_journalFolderAssetRendererFactory.getAssetRenderer(
-				folder.getFolderId());
-
-		return assetRenderer.getIconCssClass();
 	}
 
 	public List<JournalArticle> getInvalidMoveArticles() {
@@ -168,7 +133,7 @@ public class JournalMoveEntriesDisplayContext {
 			_newFolderName = folder.getName();
 		}
 		else {
-			_newFolderName = LanguageUtil.get(_servletRequest, "home");
+			_newFolderName = LanguageUtil.get(_httpServletRequest, "home");
 		}
 
 		return _newFolderName;
@@ -245,10 +210,6 @@ public class JournalMoveEntriesDisplayContext {
 	}
 
 	public void setViewAttributes() {
-		PortalUtil.addPortletBreadcrumbEntry(
-			_servletRequest,
-			LanguageUtil.get(_servletRequest, "move-web-content"), _currentURL);
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)_liferayPortletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
@@ -263,22 +224,19 @@ public class JournalMoveEntriesDisplayContext {
 				(RenderResponse)_liferayPortletResponse;
 
 			renderResponse.setTitle(
-				LanguageUtil.get(_servletRequest, "move-web-content"));
+				LanguageUtil.get(_httpServletRequest, "move-web-content"));
 		}
 	}
 
-	private final String _currentURL;
+	private final HttpServletRequest _httpServletRequest;
 	private List<JournalArticle> _invalidMoveArticles;
 	private List<JournalFolder> _invalidMoveFolders;
-	private AssetRendererFactory _journalArticleAssetRendererFactory;
-	private AssetRendererFactory _journalFolderAssetRendererFactory;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private long _newFolderId;
 	private String _newFolderName;
 	private PermissionChecker _permissionChecker;
 	private String _redirect;
-	private final HttpServletRequest _servletRequest;
 	private List<JournalArticle> _validMoveArticles;
 	private List<JournalFolder> _validMoveFolders;
 

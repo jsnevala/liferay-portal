@@ -16,6 +16,7 @@ package com.liferay.portal.search.solr7.internal;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Field;
@@ -34,6 +35,7 @@ import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.solr7.configuration.SolrConfiguration;
 import com.liferay.portal.search.solr7.internal.connection.SolrClientManager;
 import com.liferay.portal.search.solr7.internal.suggest.NGramQueryBuilder;
 
@@ -58,6 +60,7 @@ import org.apache.solr.common.SolrDocumentList;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -69,6 +72,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
  * @author Michael C. Han
  */
 @Component(
+	configurationPid = "com.liferay.portal.search.solr7.configuration.SolrConfiguration",
 	immediate = true,
 	property = {"distance.threshold=0.6f", "search.engine.impl=Solr"},
 	service = QuerySuggester.class
@@ -134,7 +138,8 @@ public class SolrQuerySuggester implements QuerySuggester {
 
 			solrQuery.setRows(max);
 
-			QueryResponse queryResponse = solrClient.query(solrQuery);
+			QueryResponse queryResponse = solrClient.query(
+				_defaultCollection, solrQuery);
 
 			SolrDocumentList solrDocumentList = queryResponse.getResults();
 
@@ -149,9 +154,9 @@ public class SolrQuerySuggester implements QuerySuggester {
 
 			return querySuggestions;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to execute Solr query", e);
+				_log.warn("Unable to execute Solr query", exception);
 			}
 
 			return new String[0];
@@ -159,9 +164,15 @@ public class SolrQuerySuggester implements QuerySuggester {
 	}
 
 	@Activate
+	@Modified
 	protected void activate(Map<String, Object> properties) {
 		_distanceThreshold = MapUtil.getDouble(
 			properties, "distance.threshold", 0.6D);
+
+		_solrConfiguration = ConfigurableUtil.createConfigurable(
+			SolrConfiguration.class, properties);
+
+		_defaultCollection = _solrConfiguration.defaultCollection();
 	}
 
 	protected List<Suggestion> doSuggest(SearchContext searchContext, int max)
@@ -178,8 +189,8 @@ public class SolrQuerySuggester implements QuerySuggester {
 			suggestions.add(
 				new Suggestion() {
 					{
-						term = keyword;
 						options = suggestKeywords(searchContext, max, keyword);
+						term = keyword;
 					}
 				});
 		}
@@ -215,7 +226,7 @@ public class SolrQuerySuggester implements QuerySuggester {
 
 		filterQueries.add(suggestionFilterQuery);
 
-		return filterQueries.toArray(new String[filterQueries.size()]);
+		return filterQueries.toArray(new String[0]);
 	}
 
 	protected String getFilterQuery(String field, long value) {
@@ -245,7 +256,11 @@ public class SolrQuerySuggester implements QuerySuggester {
 	}
 
 	protected String getFilterQuery(String field, String value) {
-		return field.concat(StringPool.COLON).concat(value);
+		return field.concat(
+			StringPool.COLON
+		).concat(
+			value
+		);
 	}
 
 	protected long[] getGroupIdsForSuggestions(SearchContext searchContext) {
@@ -266,8 +281,8 @@ public class SolrQuerySuggester implements QuerySuggester {
 
 		// See LPS-72507 and LPS-76500
 
-		if (localization != null) {
-			return localization;
+		if (_localization != null) {
+			return _localization;
 		}
 
 		return LocalizationUtil.getLocalization();
@@ -279,6 +294,10 @@ public class SolrQuerySuggester implements QuerySuggester {
 		}
 
 		return options.get(0);
+	}
+
+	protected void setLocalization(Localization localization) {
+		_localization = localization;
 	}
 
 	@Reference(unbind = "-")
@@ -345,7 +364,7 @@ public class SolrQuerySuggester implements QuerySuggester {
 			solrQuery.setRows(_MAX_QUERY_RESULTS);
 
 			QueryResponse queryResponse = solrClient.query(
-				solrQuery, SolrRequest.METHOD.POST);
+				_defaultCollection, solrQuery, SolrRequest.METHOD.POST);
 
 			SolrDocumentList solrDocumentList = queryResponse.getResults();
 
@@ -396,16 +415,14 @@ public class SolrQuerySuggester implements QuerySuggester {
 
 			return weightedWordsSet;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("Unable to execute Solr query", e);
+				_log.debug("Unable to execute Solr query", exception);
 			}
 
-			throw new SearchException(e.getMessage(), e);
+			throw new SearchException(exception.getMessage(), exception);
 		}
 	}
-
-	protected Localization localization;
 
 	private static final long _GLOBAL_GROUP_ID = 0;
 
@@ -416,11 +433,14 @@ public class SolrQuerySuggester implements QuerySuggester {
 	private static final Log _log = LogFactoryUtil.getLog(
 		SolrQuerySuggester.class);
 
+	private String _defaultCollection;
 	private final StringDistance _defaultStringDistance =
 		new LevensteinDistance();
 	private double _distanceThreshold;
+	private Localization _localization;
 	private NGramQueryBuilder _nGramQueryBuilder;
 	private SolrClientManager _solrClientManager;
+	private volatile SolrConfiguration _solrConfiguration;
 
 	@Reference(
 		cardinality = ReferenceCardinality.OPTIONAL,

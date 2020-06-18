@@ -33,6 +33,7 @@ public class LoadBalancerUtilTest
 	extends com.liferay.jenkins.results.parser.Test {
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		downloadSample("test-1", null);
 		downloadSample("test-2", null);
@@ -152,7 +153,8 @@ public class LoadBalancerUtilTest
 		JenkinsResultsParserUtil.setBuildProperties(properties);
 
 		List<JenkinsMaster> jenkinsMasters =
-			JenkinsResultsParserUtil.getJenkinsMasters(properties, sampleKey);
+			JenkinsResultsParserUtil.getJenkinsMasters(
+				properties, JenkinsMaster.SLAVE_RAM_DEFAULT, sampleKey);
 
 		File sampleDir = testSample.getSampleDir();
 

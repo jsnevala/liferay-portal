@@ -16,9 +16,10 @@ package com.liferay.portal.workflow.kaleo.runtime.internal.assignment;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -139,7 +140,7 @@ public class GroupAwareRoleTaskAssignmentSelector
 		List<Long> groupIds = new ArrayList<>();
 
 		Organization organization = _organizationLocalService.getOrganization(
-			group.getClassPK());
+			group.getOrganizationId());
 
 		for (Organization ancestorOrganization : organization.getAncestors()) {
 			if (isValidAssignment(group, role)) {
@@ -153,7 +154,12 @@ public class GroupAwareRoleTaskAssignmentSelector
 	protected boolean isValidAssignment(Group group, Role role)
 		throws PortalException {
 
-		if (role.getType() == RoleConstants.TYPE_REGULAR) {
+		if ((group != null) && (group.getType() == GroupConstants.TYPE_DEPOT) &&
+			(role.getType() == RoleConstants.TYPE_DEPOT)) {
+
+			return true;
+		}
+		else if (role.getType() == RoleConstants.TYPE_REGULAR) {
 			return true;
 		}
 		else if ((group != null) && group.isOrganization() &&

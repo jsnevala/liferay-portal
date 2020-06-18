@@ -14,31 +14,29 @@
 
 package com.liferay.petra.json.web.service.client;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.fasterxml.jackson.databind.Module;
 
 import java.security.KeyStore;
 
 import java.util.List;
-import java.util.Map;
+
+import org.apache.http.NameValuePair;
 
 /**
  * @author Ivica Cardic
  * @author Igor Beslic
  */
-@ProviderType
 public interface JSONWebServiceClient {
 
 	public void destroy();
 
-	public String doDelete(String url, Map<String, String> parameters)
+	public String doDelete(String url, List<NameValuePair> parameters)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException;
 
 	public String doDelete(
-			String url, Map<String, String> parameters,
-			Map<String, String> headers)
+			String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException;
 
@@ -46,13 +44,13 @@ public interface JSONWebServiceClient {
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException;
 
-	public String doGet(String url, Map<String, String> parameters)
+	public String doGet(String url, List<NameValuePair> parameters)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException;
 
 	public String doGet(
-			String url, Map<String, String> parameters,
-			Map<String, String> headers)
+			String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException;
 
@@ -61,8 +59,8 @@ public interface JSONWebServiceClient {
 			   JSONWebServiceTransportException;
 
 	public <V, T> List<V> doGetToList(
-			Class<T> clazz, String url, Map<String, String> parameters,
-			Map<String, String> headers)
+			Class<T> clazz, String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceSerializeException,
 			   JSONWebServiceTransportException;
@@ -79,13 +77,13 @@ public interface JSONWebServiceClient {
 			   JSONWebServiceSerializeException,
 			   JSONWebServiceTransportException;
 
-	public String doPost(String url, Map<String, String> parameters)
+	public String doPost(String url, List<NameValuePair> parameters)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException;
 
 	public String doPost(
-			String url, Map<String, String> parameters,
-			Map<String, String> headers)
+			String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException;
 
@@ -103,13 +101,13 @@ public interface JSONWebServiceClient {
 			   JSONWebServiceTransportException;
 
 	public String doPostAsJSON(
-			String url, String json, Map<String, String> headers)
+			String url, String json, List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException;
 
 	public <T> T doPostToObject(
-			Class<T> clazz, String url, Map<String, String> parameters,
-			Map<String, String> headers)
+			Class<T> clazz, String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceSerializeException,
 			   JSONWebServiceTransportException;
@@ -120,13 +118,13 @@ public interface JSONWebServiceClient {
 			   JSONWebServiceSerializeException,
 			   JSONWebServiceTransportException;
 
-	public String doPut(String url, Map<String, String> parameters)
+	public String doPut(String url, List<NameValuePair> parameters)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException;
 
 	public String doPut(
-			String url, Map<String, String> parameters,
-			Map<String, String> headers)
+			String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceTransportException;
 
@@ -135,14 +133,14 @@ public interface JSONWebServiceClient {
 			   JSONWebServiceTransportException;
 
 	public <T> T doPutToObject(
-			Class<T> clazz, String url, Map<String, String> parameters)
+			Class<T> clazz, String url, List<NameValuePair> parameters)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceSerializeException,
 			   JSONWebServiceTransportException;
 
 	public <T> T doPutToObject(
-			Class<T> clazz, String url, Map<String, String> parameters,
-			Map<String, String> headers)
+			Class<T> clazz, String url, List<NameValuePair> parameters,
+			List<NameValuePair> headers)
 		throws JSONWebServiceInvocationException,
 			   JSONWebServiceSerializeException,
 			   JSONWebServiceTransportException;

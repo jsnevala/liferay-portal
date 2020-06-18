@@ -14,8 +14,6 @@
 
 package com.liferay.segments.service;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -25,82 +23,143 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  * @see SegmentsEntryService
  * @generated
  */
-@ProviderType
-public class SegmentsEntryServiceWrapper implements SegmentsEntryService,
-	ServiceWrapper<SegmentsEntryService> {
+public class SegmentsEntryServiceWrapper
+	implements SegmentsEntryService, ServiceWrapper<SegmentsEntryService> {
+
 	public SegmentsEntryServiceWrapper(
 		SegmentsEntryService segmentsEntryService) {
+
 		_segmentsEntryService = segmentsEntryService;
 	}
 
 	@Override
 	public com.liferay.segments.model.SegmentsEntry addSegmentsEntry(
-		java.util.Map<java.util.Locale, String> nameMap,
-		java.util.Map<java.util.Locale, String> descriptionMap, boolean active,
-		String criteria, String key, String type,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+			String segmentsEntryKey,
+			java.util.Map<java.util.Locale, String> nameMap,
+			java.util.Map<java.util.Locale, String> descriptionMap,
+			boolean active, String criteria, String type,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _segmentsEntryService.addSegmentsEntry(nameMap, descriptionMap,
-			active, criteria, key, type, serviceContext);
+
+		return _segmentsEntryService.addSegmentsEntry(
+			segmentsEntryKey, nameMap, descriptionMap, active, criteria, type,
+			serviceContext);
+	}
+
+	@Override
+	public com.liferay.segments.model.SegmentsEntry addSegmentsEntry(
+			String segmentsEntryKey,
+			java.util.Map<java.util.Locale, String> nameMap,
+			java.util.Map<java.util.Locale, String> descriptionMap,
+			boolean active, String criteria, String source, String type,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _segmentsEntryService.addSegmentsEntry(
+			segmentsEntryKey, nameMap, descriptionMap, active, criteria, source,
+			type, serviceContext);
+	}
+
+	@Override
+	public void addSegmentsEntryClassPKs(
+			long segmentsEntryId, long[] classPKs,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_segmentsEntryService.addSegmentsEntryClassPKs(
+			segmentsEntryId, classPKs, serviceContext);
 	}
 
 	@Override
 	public com.liferay.segments.model.SegmentsEntry deleteSegmentsEntry(
-		long segmentsEntryId)
+			long segmentsEntryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _segmentsEntryService.deleteSegmentsEntry(segmentsEntryId);
 	}
 
+	@Override
+	public void deleteSegmentsEntryClassPKs(
+			long segmentsEntryId, long[] classPKs)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_segmentsEntryService.deleteSegmentsEntryClassPKs(
+			segmentsEntryId, classPKs);
+	}
+
 	/**
-	* Returns the OSGi service identifier.
-	*
-	* @return the OSGi service identifier
-	*/
+	 * Returns the OSGi service identifier.
+	 *
+	 * @return the OSGi service identifier
+	 */
 	@Override
 	public String getOSGiServiceIdentifier() {
 		return _segmentsEntryService.getOSGiServiceIdentifier();
 	}
 
 	@Override
-	public java.util.List<com.liferay.segments.model.SegmentsEntry> getSegmentsEntries(
-		long groupId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<com.liferay.segments.model.SegmentsEntry> orderByComparator)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		return _segmentsEntryService.getSegmentsEntries(groupId, start, end,
+	public java.util.List<com.liferay.segments.model.SegmentsEntry>
+		getSegmentsEntries(
+			long groupId, boolean includeAncestorSegmentsEntries) {
+
+		return _segmentsEntryService.getSegmentsEntries(
+			groupId, includeAncestorSegmentsEntries);
+	}
+
+	@Override
+	public java.util.List<com.liferay.segments.model.SegmentsEntry>
+		getSegmentsEntries(
+			long groupId, boolean includeAncestorSegmentsEntries, int start,
+			int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.segments.model.SegmentsEntry> orderByComparator) {
+
+		return _segmentsEntryService.getSegmentsEntries(
+			groupId, includeAncestorSegmentsEntries, start, end,
 			orderByComparator);
 	}
 
 	@Override
-	public int getSegmentsEntriesCount(long groupId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		return _segmentsEntryService.getSegmentsEntriesCount(groupId);
+	public int getSegmentsEntriesCount(
+		long groupId, boolean includeAncestorSegmentsEntries) {
+
+		return _segmentsEntryService.getSegmentsEntriesCount(
+			groupId, includeAncestorSegmentsEntries);
 	}
 
 	@Override
 	public com.liferay.segments.model.SegmentsEntry getSegmentsEntry(
-		long segmentsEntryId)
+			long segmentsEntryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _segmentsEntryService.getSegmentsEntry(segmentsEntryId);
 	}
 
 	@Override
-	public com.liferay.portal.kernel.search.BaseModelSearchResult<com.liferay.segments.model.SegmentsEntry> searchSegmentsEntries(
-		long companyId, long groupId, String keywords, int start, int end,
-		com.liferay.portal.kernel.search.Sort sort)
-		throws com.liferay.portal.kernel.exception.PortalException {
-		return _segmentsEntryService.searchSegmentsEntries(companyId, groupId,
-			keywords, start, end, sort);
+	public com.liferay.portal.kernel.search.BaseModelSearchResult
+		<com.liferay.segments.model.SegmentsEntry> searchSegmentsEntries(
+				long companyId, long groupId, String keywords,
+				boolean includeAncestorSegmentsEntries, int start, int end,
+				com.liferay.portal.kernel.search.Sort sort)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _segmentsEntryService.searchSegmentsEntries(
+			companyId, groupId, keywords, includeAncestorSegmentsEntries, start,
+			end, sort);
 	}
 
 	@Override
 	public com.liferay.segments.model.SegmentsEntry updateSegmentsEntry(
-		long segmentsEntryId, java.util.Map<java.util.Locale, String> nameMap,
-		java.util.Map<java.util.Locale, String> descriptionMap, boolean active,
-		String criteria, String key,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+			long segmentsEntryId, String segmentsEntryKey,
+			java.util.Map<java.util.Locale, String> nameMap,
+			java.util.Map<java.util.Locale, String> descriptionMap,
+			boolean active, String criteria,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return _segmentsEntryService.updateSegmentsEntry(segmentsEntryId,
-			nameMap, descriptionMap, active, criteria, key, serviceContext);
+
+		return _segmentsEntryService.updateSegmentsEntry(
+			segmentsEntryId, segmentsEntryKey, nameMap, descriptionMap, active,
+			criteria, serviceContext);
 	}
 
 	@Override
@@ -114,4 +173,5 @@ public class SegmentsEntryServiceWrapper implements SegmentsEntryService,
 	}
 
 	private SegmentsEntryService _segmentsEntryService;
+
 }

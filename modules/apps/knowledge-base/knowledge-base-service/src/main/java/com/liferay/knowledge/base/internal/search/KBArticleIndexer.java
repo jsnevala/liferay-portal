@@ -132,9 +132,11 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 		document.addText(
 			Field.CONTENT, HtmlUtil.extractText(kbArticle.getContent()));
 		document.addText(Field.DESCRIPTION, kbArticle.getDescription());
+		document.addKeyword(Field.FOLDER_ID, kbArticle.getKbFolderId());
 		document.addText(Field.TITLE, kbArticle.getTitle());
-
 		document.addKeyword("folderNames", getKBFolderNames(kbArticle));
+		document.addKeyword(
+			"parentMessageId", kbArticle.getParentResourcePrimKey());
 		document.addKeyword("titleKeyword", kbArticle.getTitle(), true);
 
 		return document;
@@ -206,7 +208,7 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 			kbFolderId = kbFolder.getParentKBFolderId();
 		}
 
-		return kbFolderNames.toArray(new String[kbFolderNames.size()]);
+		return kbFolderNames.toArray(new String[0]);
 	}
 
 	protected void reindexAttachments(KBArticle kbArticle)
@@ -223,9 +225,6 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 	}
 
 	protected void reindexKBArticles(KBArticle kbArticle) throws Exception {
-
-		// See KBArticlePermission#contains
-
 		List<KBArticle> kbArticles =
 			kbArticleLocalService.getKBArticleAndAllDescendantKBArticles(
 				kbArticle.getResourcePrimKey(),
@@ -257,16 +256,15 @@ public class KBArticleIndexer extends BaseIndexer<KBArticle> {
 		indexableActionableDynamicQuery.setPerformActionMethod(
 			(KBArticle kbArticle) -> {
 				try {
-					Document document = getDocument(kbArticle);
-
-					indexableActionableDynamicQuery.addDocuments(document);
+					indexableActionableDynamicQuery.addDocuments(
+						getDocument(kbArticle));
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to index knowledge base article " +
 								kbArticle.getKbArticleId(),
-							pe);
+							portalException);
 					}
 				}
 			});

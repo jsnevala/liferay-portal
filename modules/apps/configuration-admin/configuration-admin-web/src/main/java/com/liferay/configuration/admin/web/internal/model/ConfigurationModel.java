@@ -14,21 +14,21 @@
 
 package com.liferay.configuration.admin.web.internal.model;
 
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition.Scope;
 import com.liferay.portal.configuration.metatype.definitions.ExtendedAttributeDefinition;
 import com.liferay.portal.configuration.metatype.definitions.ExtendedObjectClassDefinition;
+import com.liferay.portal.kernel.model.CompanyConstants;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.util.ArrayList;
 import java.util.Dictionary;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -46,15 +46,29 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 	public static final String PROPERTY_VALUE_COMPANY_ID_DEFAULT = "0";
 
 	public ConfigurationModel(
+		String bundleLocation, String bundleSymbolicName,
+		ClassLoader classLoader, Configuration configuration,
 		ExtendedObjectClassDefinition extendedObjectClassDefinition,
-		Configuration configuration, String bundleSymbolicName,
-		String bundleLocation, boolean factory) {
+		boolean factory) {
 
-		_extendedObjectClassDefinition = extendedObjectClassDefinition;
-		_configuration = configuration;
-		_bundleSymbolicName = bundleSymbolicName;
 		_bundleLocation = bundleLocation;
+		_bundleSymbolicName = bundleSymbolicName;
+		_classLoader = classLoader;
+		_configuration = configuration;
+		_extendedObjectClassDefinition = extendedObjectClassDefinition;
 		_factory = factory;
+	}
+
+	public ConfigurationModel(
+		String bundleLocation, String bundleSymbolicName,
+		Configuration configuration,
+		ExtendedObjectClassDefinition extendedObjectClassDefinition,
+		boolean factory) {
+
+		this(
+			bundleLocation, bundleSymbolicName,
+			ConfigurationModel.class.getClassLoader(), configuration,
+			extendedObjectClassDefinition, factory);
 	}
 
 	@Override
@@ -66,11 +80,7 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 
 	@Override
 	public ExtendedAttributeDefinition[] getAttributeDefinitions(int filter) {
-		ExtendedAttributeDefinition[] extendedAttributeDefinitions =
-			_extendedObjectClassDefinition.getAttributeDefinitions(filter);
-
-		return removeFactoryInstanceLabelAttribute(
-			extendedAttributeDefinitions);
+		return _extendedObjectClassDefinition.getAttributeDefinitions(filter);
 	}
 
 	public String getBundleLocation() {
@@ -89,6 +99,10 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 
 		return GetterUtil.get(
 			extensionAttributes.get("category"), "third-party");
+	}
+
+	public ClassLoader getClassLoader() {
+		return _classLoader;
 	}
 
 	public Configuration getConfiguration() {
@@ -143,6 +157,13 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 	}
 
 	public String getFactoryPid() {
+		if (_extendedObjectClassDefinition instanceof ConfigurationModel) {
+			ConfigurationModel configurationModel =
+				(ConfigurationModel)_extendedObjectClassDefinition;
+
+			return configurationModel.getFactoryPid();
+		}
+
 		return _extendedObjectClassDefinition.getID();
 	}
 
@@ -223,6 +244,44 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 		return HashUtil.hash(0, getID());
 	}
 
+	public boolean hasScopeConfiguration(Scope scope) {
+		if (!hasConfiguration()) {
+			return false;
+		}
+
+		Dictionary<String, Object> properties = _configuration.getProperties();
+
+		if (properties == null) {
+			return false;
+		}
+
+		long groupId = GetterUtil.getLong(
+			properties.get(Scope.GROUP.getPropertyKey()),
+			GroupConstants.DEFAULT_PARENT_GROUP_ID);
+
+		if ((groupId != GroupConstants.DEFAULT_PARENT_GROUP_ID) &&
+			Scope.GROUP.equals(scope.getValue())) {
+
+			return true;
+		}
+
+		long companyId = GetterUtil.getLong(
+			properties.get(Scope.COMPANY.getPropertyKey()),
+			CompanyConstants.SYSTEM);
+
+		if ((companyId != CompanyConstants.SYSTEM) &&
+			Scope.COMPANY.equals(scope.getValue())) {
+
+			return true;
+		}
+
+		if (Scope.SYSTEM.equals(scope.getValue())) {
+			return true;
+		}
+
+		return false;
+	}
+
 	public boolean isCompanyFactory() {
 		if (!isFactory()) {
 			return false;
@@ -238,7 +297,7 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 	}
 
 	public boolean isCompanyScope() {
-		return Objects.equals(getScope(), Scope.COMPANY);
+		return isScope(Scope.COMPANY);
 	}
 
 	public boolean isFactory() {
@@ -255,15 +314,15 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 	}
 
 	public boolean isGroupScope() {
-		return Objects.equals(getScope(), Scope.GROUP);
+		return isScope(Scope.GROUP);
 	}
 
 	public boolean isPortletInstanceScope() {
-		return Objects.equals(getScope(), Scope.PORTLET_INSTANCE);
+		return isScope(Scope.PORTLET_INSTANCE);
 	}
 
 	public boolean isSystemScope() {
-		return Objects.equals(getScope(), Scope.SYSTEM);
+		return isScope(Scope.SYSTEM);
 	}
 
 	protected String getLabelAttributeValue() {
@@ -289,34 +348,13 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 		return value;
 	}
 
-	protected ExtendedAttributeDefinition[] removeFactoryInstanceLabelAttribute(
-		ExtendedAttributeDefinition[] extendedAttributeDefinitions) {
-
-		if (!isCompanyFactory()) {
-			return extendedAttributeDefinitions;
-		}
-
-		List<ExtendedAttributeDefinition>
-			filteredExtendedAttributeDefinitionsList = new ArrayList<>();
-
-		for (ExtendedAttributeDefinition extendedAttributeDefinition :
-				extendedAttributeDefinitions) {
-
-			String attributeId = extendedAttributeDefinition.getID();
-
-			if (!attributeId.equals(getLabelAttribute())) {
-				filteredExtendedAttributeDefinitionsList.add(
-					extendedAttributeDefinition);
-			}
-		}
-
-		return filteredExtendedAttributeDefinitionsList.toArray(
-			new ExtendedAttributeDefinition[
-				filteredExtendedAttributeDefinitionsList.size()]);
+	protected boolean isScope(Scope scope) {
+		return scope.equals(getScope());
 	}
 
 	private final String _bundleLocation;
 	private final String _bundleSymbolicName;
+	private final ClassLoader _classLoader;
 	private final Configuration _configuration;
 	private final ExtendedObjectClassDefinition _extendedObjectClassDefinition;
 	private final boolean _factory;

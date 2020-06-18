@@ -1,58 +1,101 @@
-<definition>
-	<command name="gotoDrive">
-		<execute function="AssertClick" locator1="Button#SELECT_FILE" value1="Select File" />
+definition {
 
-		<execute function="Pause" locator1="3000" />
+	macro addContent {
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#GOOGLE_DOC");
 
-		<if>
-			<isset var="windowTitle" />
-			<then>
-				<execute function="SelectWindow" locator1="GoogleLogin#PAGE_TITLE" />
+		if (isSet(insertLink)) {
+			Click(locator1 = "GoogleDoc#INSERT_LINK_BUTTON");
 
-				<if>
-					<condition function="IsElementPresent" locator1="GoogleLogin#HEADER" />
-					<then>
-						<execute function="AssertClick" locator1="GoogleLogin#ACCOUNT_MENULIST_USE_ANOTHER_ACCOUNT" value1="Use another account" />
-					</then>
-				</if>
+			Click(locator1 = "GoogleDoc#INSERT_LINK_LINK");
 
-				<execute function="Type" locator1="GoogleLogin#LOGIN_EMAIL_FIELD" value1="${userEmailAddress}" />
+			Type(
+				locator1 = "GoogleDoc#INSERT_LINK_LINK",
+				value1 = "${linkAddress}");
 
-				<execute function="Click" locator1="GoogleLogin#LOGIN_NEXT_BUTTON" />
+			Click(locator1 = "GoogleDoc#INSERT_LINK_TEXT");
 
-				<execute function="AssertElementPresent" locator1="GoogleLogin#LOGIN_NEXT_BUTTON" />
+			Type(
+				locator1 = "GoogleDoc#INSERT_LINK_TEXT",
+				value1 = "${linkText}");
 
-				<execute function="Type" locator1="GoogleLogin#LOGIN_PASSWORD_FIELD" value1="${userPassword}" />
+			Click(locator1 = "GoogleDoc#INSERT_LINK_APPLY_BUTTON");
 
-				<execute function="Click" locator1="GoogleLogin#LOGIN_NEXT_BUTTON" />
+			var key_googleDocContent = "${googleDocContent}";
 
-				<execute function="SelectWindow#selectWindowNoSPARefresh" locator1="title=${windowTitle}" />
+			AssertElementPresent(locator1 = "GoogleDoc#INSERT_LINK_DOCUMENT_CONTENT");
+		}
 
-				<execute function="Pause" locator1="3000" />
-			</then>
-		</if>
+		SelectFrameTop();
+	}
 
-		<if>
-			<condition function="IsElementPresent" locator1="ProductMenu#PRODUCT_MENU_OPENED" />
-			<then>
-				<execute function="Click#clickNoSPARefresh" locator1="ProductMenu#TOGGLE" />
-			</then>
-		</if>
+	macro discardChanges {
+		var key_text = "Discard Changes";
 
-		<execute function="SelectFrame" locator1="GoogleDrive#GOOGLE_DRIVE_IFRAME" />
-	</command>
+		AssertElementPresent(locator1 = "Button#ANY");
 
-	<command name="selectDocument">
-		<var name="key_googleDocName" value="${googleDocName}" />
+		AssertClick(
+			locator1 = "Button#ANY",
+			value1 = "Discard Changes");
+	}
 
-		<execute function="Click#clickAt" locator1="GoogleDrive#LIST_VIEW_DOCUMENT" value1="${googleDocName}" />
+	macro editTitleInGoogleDoc {
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#GOOGLE_DOC");
 
-		<execute function="Click#clickAt" locator1="GoogleDrive#SELECT_BUTTON" value1="Select" />
+		Click(locator1 = "GoogleDoc#TITLE");
 
-		<execute function="SelectFrameTop" />
+		Type(
+			locator1 = "GoogleDoc#TITLE",
+			value1 = "${dmDocumentTitle}");
 
-		<var name="key_dmDocumentTitle" value="${googleDocName}" />
+		KeyPress(
+			locator1 = "GoogleDoc#TITLE",
+			value1 = "\RETURN");
 
-		<execute function="AssertTextEquals" locator1="DocumentsAndMediaEntry#SELECTED_DOCUMENT_TITLE" value1="${googleDocName}" />
-	</command>
-</definition>
+		SelectFrameTop();
+
+		Refresh();
+	}
+
+	macro gotoEdit {
+		var key_dmDocumentTitle = "${dmDocumentTitle}";
+
+		Click(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(menuItem = "Edit in ${dmDocumentTypeName}");
+
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		Pause(locator1 = "5000");
+
+		if (IsElementNotPresent(locator1 = "Button#ANY", key_text = "Save and Return to ${siteName}")) {
+			Refresh();
+
+			Click(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_VERTICAL_ELLIPSIS");
+
+			MenuItem.click(menuItem = "Edit in ${dmDocumentTypeName}");
+		}
+
+		AssertElementPresent(
+			key_text = "Save and Return to ${siteName}",
+			locator1 = "Button#ANY");
+	}
+
+	macro saveAndExit {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		var key_text = "Save and Return to ${siteName}";
+
+		AssertElementPresent(locator1 = "Button#ANY");
+
+		Pause(locator1 = "3000");
+
+		AssertClick(
+			locator1 = "Button#ANY",
+			value1 = "Save and Return to ${siteName}");
+
+		Pause(locator1 = "5000");
+
+		Navigator.openURL();
+	}
+
+}

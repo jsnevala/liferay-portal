@@ -63,6 +63,29 @@ public class AssetEntryAssetCategoryRelAssetEntryLocalServiceWrapper
 	}
 
 	@Override
+	public void deleteEntry(AssetEntry entry) throws PortalException {
+		_assetEntryAssetCategoryRelLocalService.
+			deleteAssetEntryAssetCategoryRelByAssetEntryId(entry.getEntryId());
+
+		super.deleteEntry(entry);
+	}
+
+	@Override
+	public void deleteEntry(String className, long classPK)
+		throws PortalException {
+
+		AssetEntry entry = super.fetchEntry(className, classPK);
+
+		if (entry != null) {
+			_assetEntryAssetCategoryRelLocalService.
+				deleteAssetEntryAssetCategoryRelByAssetEntryId(
+					entry.getEntryId());
+		}
+
+		super.deleteEntry(className, classPK);
+	}
+
+	@Override
 	public AssetEntry updateEntry(
 			long userId, long groupId, Date createDate, Date modifiedDate,
 			String className, long classPK, String classUuid, long classTypeId,
@@ -79,10 +102,13 @@ public class AssetEntryAssetCategoryRelAssetEntryLocalServiceWrapper
 			startDate, endDate, publishDate, expirationDate, mimeType, title,
 			description, summary, url, layoutUuid, height, width, priority);
 
-		_assetEntryAssetCategoryRelLocalService.
-			deleteAssetEntryAssetCategoryRelByAssetEntryId(entry.getEntryId());
+		if ((categoryIds != null) &&
+			(!entry.isNew() || (categoryIds.length > 0))) {
 
-		if (categoryIds != null) {
+			_assetEntryAssetCategoryRelLocalService.
+				deleteAssetEntryAssetCategoryRelByAssetEntryId(
+					entry.getEntryId());
+
 			categoryIds = _assetCategoryLocalService.getViewableCategoryIds(
 				className, classPK, categoryIds);
 

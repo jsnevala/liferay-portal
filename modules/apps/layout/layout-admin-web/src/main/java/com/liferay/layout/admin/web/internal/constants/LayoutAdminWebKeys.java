@@ -19,17 +19,10 @@ package com.liferay.layout.admin.web.internal.constants;
  */
 public class LayoutAdminWebKeys {
 
-	public static final String ASSET_DISPLAY_CONTRIBUTOR_TRACKER =
-		"ASSET_DISPLAY_CONTRIBUTOR_TRACKER";
+	public static final String LAYOUT_PAGE_LAYOUT_ADMIN_DISPLAY_CONTEXT =
+		"LAYOUT_PAGE_LAYOUT_ADMIN_DISPLAY_CONTEXT";
 
-	public static final String ITEM_SELECTOR = "ITEM_SELECTOR";
-
-	public static final String LAYOUT_PAGE_TEMPLATE_COLLECTION_SERVICE =
-		"LAYOUT_PAGE_TEMPLATE_COLLECTION_SERVICE";
-
-	public static final String LAYOUT_PAGE_TEMPLATE_DISPLAY_CONTEXT =
-		"LAYOUT_PAGE_TEMPLATE_DISPLAY_CONTEXT";
-
-	public static final String LAYOUT_PROTOTYPE = "LAYOUT_PROTOTYPE";
+	public static final String MILLER_COLUMNS_DISPLAY_CONTEXT =
+		"MILLER_COLUMNS_DISPLAY_CONTEXT";
 
 }

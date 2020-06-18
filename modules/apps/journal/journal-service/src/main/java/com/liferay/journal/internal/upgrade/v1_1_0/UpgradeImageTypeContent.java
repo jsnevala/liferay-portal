@@ -15,19 +15,22 @@
 package com.liferay.journal.internal.upgrade.v1_1_0;
 
 import com.liferay.journal.constants.JournalConstants;
-import com.liferay.journal.internal.upgrade.util.JournalArticleImageUpgradeUtil;
+import com.liferay.journal.internal.upgrade.util.JournalArticleImageUpgradeHelper;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Image;
-import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ImageLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
+import com.liferay.portal.kernel.util.MimeTypesUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -46,24 +49,27 @@ public class UpgradeImageTypeContent extends UpgradeProcess {
 
 	public UpgradeImageTypeContent(
 		ImageLocalService imageLocalService,
-		JournalArticleImageUpgradeUtil journalArticleImageUpgradeUtil) {
+		JournalArticleImageUpgradeHelper journalArticleImageUpgradeHelper,
+		PortletFileRepository portletFileRepository) {
 
 		_imageLocalService = imageLocalService;
-		_journalArticleImageUpgradeUtil = journalArticleImageUpgradeUtil;
+		_journalArticleImageUpgradeHelper = journalArticleImageUpgradeHelper;
+		_portletFileRepository = portletFileRepository;
 	}
 
 	protected void copyJournalArticleImagesToJournalRepository()
 		throws Exception {
 
-		StringBundler sb = new StringBundler(7);
+		StringBundler sb = new StringBundler(8);
 
 		sb.append("select JournalArticleImage.articleImageId, ");
 		sb.append("JournalArticleImage.groupId, ");
+		sb.append("JournalArticleImage.companyId, ");
 		sb.append("JournalArticle.resourcePrimKey, JournalArticle.userId ");
 		sb.append("from JournalArticleImage inner join JournalArticle on ");
-		sb.append("(JournalArticle.groupId=JournalArticleImage.groupId and ");
-		sb.append("JournalArticle.articleId=JournalArticleImage.articleId ");
-		sb.append("and JournalArticle.version=JournalArticleImage.version)");
+		sb.append("(JournalArticle.groupId = JournalArticleImage.groupId and ");
+		sb.append("JournalArticle.articleId = JournalArticleImage.articleId ");
+		sb.append("and JournalArticle.version = JournalArticleImage.version)");
 
 		List<SaveImageFileEntryCallable> saveImageFileEntryCallables =
 			new ArrayList<>();
@@ -74,12 +80,14 @@ public class UpgradeImageTypeContent extends UpgradeProcess {
 
 			while (rs1.next()) {
 				long articleImageId = rs1.getLong(1);
-
 				long groupId = rs1.getLong(2);
-				long resourcePrimKey = rs1.getLong(3);
-				long userId = rs1.getLong(4);
+				long companyId = rs1.getLong(3);
+				long resourcePrimKey = rs1.getLong(4);
 
-				long folderId = _journalArticleImageUpgradeUtil.getFolderId(
+				long userId = PortalUtil.getValidUserId(
+					companyId, rs1.getLong(5));
+
+				long folderId = _journalArticleImageUpgradeHelper.getFolderId(
 					userId, groupId, resourcePrimKey);
 
 				SaveImageFileEntryCallable saveImageFileEntryCallable =
@@ -112,14 +120,24 @@ public class UpgradeImageTypeContent extends UpgradeProcess {
 	@Override
 	protected void doUpgrade() throws Exception {
 		copyJournalArticleImagesToJournalRepository();
+		dropJournalArticleImageTable();
+	}
+
+	protected void dropJournalArticleImageTable() throws Exception {
+		runSQL(connection, "drop table JournalArticleImage");
+
+		if (_log.isInfoEnabled()) {
+			_log.info("Deleted table JournalArticleImage");
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		UpgradeImageTypeContent.class);
 
 	private final ImageLocalService _imageLocalService;
-	private final JournalArticleImageUpgradeUtil
-		_journalArticleImageUpgradeUtil;
+	private final JournalArticleImageUpgradeHelper
+		_journalArticleImageUpgradeHelper;
+	private final PortletFileRepository _portletFileRepository;
 
 	private class SaveImageFileEntryCallable implements Callable<Boolean> {
 
@@ -136,9 +154,10 @@ public class UpgradeImageTypeContent extends UpgradeProcess {
 
 		@Override
 		public Boolean call() throws Exception {
-			FileEntry fileEntry =
-				PortletFileRepositoryUtil.fetchPortletFileEntry(
-					_groupId, _folderId, String.valueOf(_articleImageId));
+			String fileName = String.valueOf(_articleImageId);
+
+			FileEntry fileEntry = _portletFileRepository.fetchPortletFileEntry(
+				_groupId, _folderId, fileName);
 
 			if (fileEntry != null) {
 				return null;
@@ -151,17 +170,21 @@ public class UpgradeImageTypeContent extends UpgradeProcess {
 					return null;
 				}
 
-				PortletFileRepositoryUtil.addPortletFileEntry(
+				String mimeType = MimeTypesUtil.getContentType(
+					fileName + StringPool.PERIOD + image.getType());
+
+				_portletFileRepository.addPortletFileEntry(
 					_groupId, _userId, JournalArticle.class.getName(),
 					_resourcePrimaryKey, JournalConstants.SERVICE_NAME,
-					_folderId, image.getTextObj(),
-					String.valueOf(_articleImageId), image.getType(), false);
+					_folderId, image.getTextObj(), fileName, mimeType, false);
+
+				_imageLocalService.deleteImage(image.getImageId());
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				_log.error(
-					"Unable to add the journal article image " +
-						_articleImageId + " into the file repository",
-					e);
+					"Unable to add the journal article image " + fileName +
+						" into the file repository",
+					exception);
 
 				return false;
 			}

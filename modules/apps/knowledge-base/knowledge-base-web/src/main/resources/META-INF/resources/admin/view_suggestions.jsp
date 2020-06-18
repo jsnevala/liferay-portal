@@ -53,22 +53,22 @@ kbSuggestionListDisplayContext.populateResultsAndTotal(kbCommentsSearchContainer
 
 kbCommentsSearchContainer.setRowChecker(new KBCommentsChecker(liferayPortletRequest, liferayPortletResponse));
 
-KBSuggestionListManagementToolbarDisplayContext kbSuggestionListManagementToolbarDisplayContext = new KBSuggestionListManagementToolbarDisplayContext(liferayPortletRequest, liferayPortletResponse, request, kbCommentsSearchContainer);
+KBSuggestionListManagementToolbarDisplayContext kbSuggestionListManagementToolbarDisplayContext = new KBSuggestionListManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, kbCommentsSearchContainer);
 
 request.setAttribute("view_suggestions.jsp-kbSuggestionListManagementToolbarDisplayContext", kbSuggestionListManagementToolbarDisplayContext);
 request.setAttribute("view_suggestions.jsp-resultRowSplitter", kbCommentResultRowSplitter);
 request.setAttribute("view_suggestions.jsp-searchContainer", kbCommentsSearchContainer);
-
-List<KBComment> kbComments = kbCommentsSearchContainer.getResults();
 %>
 
 <liferay-util:include page="/admin/common/top_tabs.jsp" servletContext="<%= application %>" />
 
 <clay:management-toolbar
 	actionDropdownItems="<%= kbSuggestionListManagementToolbarDisplayContext.getActionDropdownItems() %>"
+	clearResultsURL="<%= kbSuggestionListManagementToolbarDisplayContext.getClearResultsURL() %>"
 	componentId="kbSuggestionListManagementToolbar"
 	disabled="<%= kbSuggestionListManagementToolbarDisplayContext.isDisabled() %>"
 	filterDropdownItems="<%= kbSuggestionListManagementToolbarDisplayContext.getFilterDropdownItems() %>"
+	filterLabelItems="<%= kbSuggestionListManagementToolbarDisplayContext.getFilterLabelItems() %>"
 	itemsTotal="<%= kbSuggestionListManagementToolbarDisplayContext.getTotal() %>"
 	searchContainerId="kbComments"
 	selectable="<%= true %>"
@@ -90,9 +90,13 @@ List<KBComment> kbComments = kbCommentsSearchContainer.getResults();
 </div>
 
 <aui:script>
-	var deleteKBComments = function() {
-		if (confirm('<liferay-ui:message key="are-you-sure-you-want-to-delete-this" />')) {
-			var form = document.querySelector('#<portlet:namespace />fm');
+	var deleteKBComments = function () {
+		if (
+			confirm(
+				'<liferay-ui:message key="are-you-sure-you-want-to-delete-this" />'
+			)
+		) {
+			var form = document.getElementById('<portlet:namespace />fm');
 
 			if (form) {
 				submitForm(form);
@@ -101,21 +105,18 @@ List<KBComment> kbComments = kbCommentsSearchContainer.getResults();
 	};
 
 	var ACTIONS = {
-		'deleteKBComments': deleteKBComments
+		deleteKBComments: deleteKBComments,
 	};
 
-	Liferay.componentReady('kbSuggestionListManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				'actionItemClicked',
-				function(event) {
-					var itemData = event.data.item.data;
+	Liferay.componentReady('kbSuggestionListManagementToolbar').then(function (
+		managementToolbar
+	) {
+		managementToolbar.on('actionItemClicked', function (event) {
+			var itemData = event.data.item.data;
 
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action]();
-					}
-				}
-			);
-		}
-	);
+			if (itemData && itemData.action && ACTIONS[itemData.action]) {
+				ACTIONS[itemData.action]();
+			}
+		});
+	});
 </aui:script>

@@ -14,19 +14,47 @@
 
 package com.liferay.portal.kernel.dao.orm;
 
+import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+
 import java.io.Serializable;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
- * @author Shuyang Zhou
- * @author Brian Wing Shun Chan
+ * @author     Shuyang Zhou
+ * @author     Brian Wing Shun Chan
+ * @deprecated As of Mueller (7.2.x), with no direct replacement
  */
+@Deprecated
 public class ClassLoaderSession implements Session {
 
 	public ClassLoaderSession(Session session, ClassLoader classLoader) {
 		_session = session;
 		_classLoader = classLoader;
+	}
+
+	@Override
+	public void apply(UnsafeConsumer<Connection, SQLException> unsafeConsumer)
+		throws ORMException {
+
+		Thread currentThread = Thread.currentThread();
+
+		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
+
+		try {
+			if (contextClassLoader != _classLoader) {
+				currentThread.setContextClassLoader(_classLoader);
+			}
+
+			_session.apply(unsafeConsumer);
+		}
+		finally {
+			if (contextClassLoader != _classLoader) {
+				currentThread.setContextClassLoader(contextClassLoader);
+			}
+		}
 	}
 
 	@Override
@@ -174,6 +202,28 @@ public class ClassLoaderSession implements Session {
 	}
 
 	@Override
+	public SQLQuery createSynchronizedSQLQuery(DSLQuery dslQuery)
+		throws ORMException {
+
+		Thread currentThread = Thread.currentThread();
+
+		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
+
+		try {
+			if (contextClassLoader != _classLoader) {
+				currentThread.setContextClassLoader(_classLoader);
+			}
+
+			return _session.createSynchronizedSQLQuery(dslQuery);
+		}
+		finally {
+			if (contextClassLoader != _classLoader) {
+				currentThread.setContextClassLoader(contextClassLoader);
+			}
+		}
+	}
+
+	@Override
 	public SQLQuery createSynchronizedSQLQuery(String queryString)
 		throws ORMException {
 
@@ -210,6 +260,30 @@ public class ClassLoaderSession implements Session {
 			}
 
 			return _session.createSynchronizedSQLQuery(queryString, strictName);
+		}
+		finally {
+			if (contextClassLoader != _classLoader) {
+				currentThread.setContextClassLoader(contextClassLoader);
+			}
+		}
+	}
+
+	@Override
+	public SQLQuery createSynchronizedSQLQuery(
+			String queryString, boolean strictName, String[] tableNames)
+		throws ORMException {
+
+		Thread currentThread = Thread.currentThread();
+
+		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
+
+		try {
+			if (contextClassLoader != _classLoader) {
+				currentThread.setContextClassLoader(_classLoader);
+			}
+
+			return _session.createSynchronizedSQLQuery(
+				queryString, strictName, tableNames);
 		}
 		finally {
 			if (contextClassLoader != _classLoader) {

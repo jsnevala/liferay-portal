@@ -115,9 +115,9 @@ if (filterManageableOrganizations) {
 					<liferay-portlet:renderURL varImpl="rowURL">
 						<portlet:param name="mvcRenderCommandName" value="/users_admin/view" />
 						<portlet:param name="toolbarItem" value="view-all-organizations" />
+						<portlet:param name="usersListView" value="<%= UserConstants.LIST_VIEW_TREE %>" />
 						<portlet:param name="redirect" value="<%= organizationSearchContainer.getIteratorURL().toString() %>" />
 						<portlet:param name="organizationId" value="<%= String.valueOf(organization.getOrganizationId()) %>" />
-						<portlet:param name="usersListView" value="<%= UserConstants.LIST_VIEW_TREE %>" />
 					</liferay-portlet:renderURL>
 
 					<%
@@ -137,8 +137,10 @@ if (filterManageableOrganizations) {
 		</aui:form>
 	</c:when>
 	<c:otherwise>
-		<div class="alert alert-info">
-			<liferay-ui:message key="you-do-not-belong-to-an-organization-and-are-not-allowed-to-view-other-organizations" />
-		</div>
+		<clay:alert
+			message='<%= LanguageUtil.get(request, "you-do-not-belong-to-an-organization-and-are-not-allowed-to-view-other-organizations") %>'
+			style="info"
+			title='<%= LanguageUtil.get(request, "info") + ":" %>'
+		/>
 	</c:otherwise>
 </c:choose>

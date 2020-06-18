@@ -35,7 +35,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author Shuyang Zhou
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
+@Deprecated
 public class RemoteSPIProxy implements SPI {
 
 	public static final int SIGINT = 130;
@@ -81,11 +83,11 @@ public class RemoteSPIProxy implements SPI {
 			_cancelHandlerFuture.get(
 				_spiConfiguration.getShutdownTimeout(), TimeUnit.MILLISECONDS);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			boolean forceDestroy = true;
 
-			if (e instanceof ExecutionException) {
-				Throwable throwable = e.getCause();
+			if (exception instanceof ExecutionException) {
+				Throwable throwable = exception.getCause();
 
 				if (throwable instanceof TerminationProcessException) {
 					TerminationProcessException terminationProcessException =
@@ -101,7 +103,9 @@ public class RemoteSPIProxy implements SPI {
 				_cancelHandlerFuture.cancel(true);
 
 				if (_log.isWarnEnabled()) {
-					_log.warn("Forcibly destroyed SPI " + _spiConfiguration, e);
+					_log.warn(
+						"Forcibly destroyed SPI " + _spiConfiguration,
+						exception);
 				}
 			}
 		}
@@ -144,8 +148,9 @@ public class RemoteSPIProxy implements SPI {
 		try {
 			_spiAgent.init(this);
 		}
-		catch (PortalResiliencyException pre) {
-			throw new RemoteException("Unable to initialize SPI agent", pre);
+		catch (PortalResiliencyException portalResiliencyException) {
+			throw new RemoteException(
+				"Unable to initialize SPI agent", portalResiliencyException);
 		}
 	}
 
@@ -154,13 +159,13 @@ public class RemoteSPIProxy implements SPI {
 		try {
 			return _spi.isAlive();
 		}
-		catch (RemoteException re) {
+		catch (RemoteException remoteException) {
 			try {
 				_cancelHandlerFuture.get();
 			}
-			catch (Exception e) {
+			catch (Exception exception) {
 				throw new RemoteException(
-					"SPI " + toString() + " died unexpectedly", e);
+					"SPI " + toString() + " died unexpectedly", exception);
 			}
 
 			return false;
@@ -179,8 +184,11 @@ public class RemoteSPIProxy implements SPI {
 
 	@Override
 	public String toString() {
-		return _spiProviderName.concat(StringPool.POUND).concat(
-			_spiConfiguration.toString());
+		return _spiProviderName.concat(
+			StringPool.POUND
+		).concat(
+			_spiConfiguration.toString()
+		);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(RemoteSPIProxy.class);

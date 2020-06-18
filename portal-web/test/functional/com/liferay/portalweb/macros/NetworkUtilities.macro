@@ -1,13 +1,19 @@
-<definition>
-	<command name="searchPG">
-		<execute function="Type#typeAceEditor" locator1="NetworkUtilities#DNS_LOOKUP_FIELD" value1="${dnsDomain}" />
+definition {
 
-		<execute function="AssertClick" locator1="Button#ANY" value1="Search">
-			<var name="key_text" value="Search" />
-		</execute>
+	macro searchPG {
+		Type(
+			locator1 = "NetworkUtilities#DNS_LOOKUP_FIELD",
+			value1 = "${dnsDomain}");
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="NetworkUtilities#NETWORK_DOMAIN" value1="${networkDomain}">
-			<var name="key_networkDomain" value="${networkDomain}" />
-		</execute>
-	</command>
-</definition>
+		AssertClick(
+			key_text = "Search",
+			locator1 = "Button#ANY",
+			value1 = "Search");
+
+		AssertTextEquals.assertPartialText(
+			key_networkDomain = "${networkDomain}",
+			locator1 = "NetworkUtilities#NETWORK_DOMAIN",
+			value1 = "${networkDomain}");
+	}
+
+}

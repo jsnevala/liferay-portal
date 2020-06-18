@@ -23,9 +23,9 @@ String eventName = ParamUtil.getString(request, "eventName", liferayPortletRespo
 long selOrganizationId = ParamUtil.getLong(request, "organizationId");
 User selUser = PortalUtil.getSelectedUser(request);
 
-SelectOrganizationManagementToolbarDisplayContext SelectOrganizationManagementToolbarDisplayContext = new SelectOrganizationManagementToolbarDisplayContext(request, renderRequest, renderResponse);
+SelectOrganizationManagementToolbarDisplayContext selectOrganizationManagementToolbarDisplayContext = new SelectOrganizationManagementToolbarDisplayContext(request, renderRequest, renderResponse);
 
-PortletURL portletURL = SelectOrganizationManagementToolbarDisplayContext.getPortletURL();
+PortletURL portletURL = selectOrganizationManagementToolbarDisplayContext.getPortletURL();
 
 LinkedHashMap<String, Object> organizationParams = new LinkedHashMap<String, Object>();
 
@@ -33,23 +33,21 @@ if (filterManageableOrganizations) {
 	organizationParams.put("organizationsTree", user.getOrganizations());
 }
 
-SearchContainer searchContainer = SelectOrganizationManagementToolbarDisplayContext.getSearchContainer(organizationParams);
+SearchContainer searchContainer = selectOrganizationManagementToolbarDisplayContext.getSearchContainer(organizationParams);
 
 renderResponse.setTitle(LanguageUtil.get(request, "organizations"));
 %>
 
-<clay:navigation-bar
-	navigationItems='<%= userDisplayContext.getNavigationItems("organizations") %>'
-/>
-
 <clay:management-toolbar
-	clearResultsURL="<%= SelectOrganizationManagementToolbarDisplayContext.getClearResultsURL() %>"
+	clearResultsURL="<%= selectOrganizationManagementToolbarDisplayContext.getClearResultsURL() %>"
+	filterDropdownItems="<%= selectOrganizationManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	itemsTotal="<%= searchContainer.getTotal() %>"
-	searchActionURL="<%= SelectOrganizationManagementToolbarDisplayContext.getSearchActionURL() %>"
+	searchActionURL="<%= selectOrganizationManagementToolbarDisplayContext.getSearchActionURL() %>"
 	searchFormName="searchFm"
 	selectable="<%= false %>"
 	showSearch="<%= true %>"
-	viewTypeItems="<%= SelectOrganizationManagementToolbarDisplayContext.getViewTypeItems() %>"
+	sortingOrder="<%= searchContainer.getOrderByType() %>"
+	sortingURL="<%= selectOrganizationManagementToolbarDisplayContext.getSortingURL() %>"
 />
 
 <aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid-1280" method="post" name="selectOrganizationFm">
@@ -101,12 +99,15 @@ renderResponse.setTitle(LanguageUtil.get(request, "organizations"));
 				<c:if test="<%= Validator.isNull(p_u_i_d) || OrganizationMembershipPolicyUtil.isMembershipAllowed((selUser != null) ? selUser.getUserId() : 0, organization.getOrganizationId()) %>">
 
 					<%
-					Map<String, Object> data = new HashMap<String, Object>();
-
-					data.put("entityid", organization.getOrganizationId());
-					data.put("entityname", organization.getName());
-					data.put("groupid", organization.getGroupId());
-					data.put("type", LanguageUtil.get(request, organization.getType()));
+					Map<String, Object> data = HashMapBuilder.<String, Object>put(
+						"entityid", organization.getOrganizationId()
+					).put(
+						"entityname", organization.getName()
+					).put(
+						"groupid", organization.getGroupId()
+					).put(
+						"type", LanguageUtil.get(request, organization.getType())
+					).build();
 
 					boolean disabled = false;
 
@@ -141,12 +142,13 @@ renderResponse.setTitle(LanguageUtil.get(request, "organizations"));
 
 	var openingLiferay = Util.getOpener().Liferay;
 
-	openingLiferay.fire(
-		'<portlet:namespace />enableRemovedOrganizations',
-		{
-			selectors: A.all('.selector-button:disabled')
-		}
-	);
+	openingLiferay.fire('<portlet:namespace />enableRemovedOrganizations', {
+		selectors: A.all('.selector-button:disabled'),
+	});
 
-	Util.selectEntityHandler('#<portlet:namespace />selectOrganizationFm', '<%= HtmlUtil.escapeJS(eventName) %>', <%= selUser != null %>);
+	Util.selectEntityHandler(
+		'#<portlet:namespace />selectOrganizationFm',
+		'<%= HtmlUtil.escapeJS(eventName) %>',
+		<%= selUser != null %>
+	);
 </aui:script>

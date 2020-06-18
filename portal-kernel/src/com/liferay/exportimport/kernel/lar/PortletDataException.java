@@ -14,8 +14,6 @@
 
 package com.liferay.exportimport.kernel.lar;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.StagedModel;
@@ -24,10 +22,9 @@ import com.liferay.portal.kernel.util.Validator;
 /**
  * @author Raymond Augé
  */
-@ProviderType
 public class PortletDataException extends PortalException {
 
-	public static final int COMPANY_BEING_DELETED = 14;
+	public static final int COMPANY_BEING_DELETED = 25;
 
 	public static final int DEFAULT = 1;
 

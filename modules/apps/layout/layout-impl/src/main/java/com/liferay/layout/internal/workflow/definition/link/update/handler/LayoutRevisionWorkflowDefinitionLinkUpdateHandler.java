@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 @Component(
 	immediate = true,
@@ -70,13 +70,13 @@ public class LayoutRevisionWorkflowDefinitionLinkUpdateHandler
 							layoutRevision.getModelClassName(),
 							layoutRevision.getLayoutRevisionId());
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to delete workflow instance links for " +
 								"layout revision " +
 									layoutRevision.getLayoutRevisionId(),
-							pe);
+							portalException);
 					}
 				}
 			});

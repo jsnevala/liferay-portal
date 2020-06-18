@@ -14,48 +14,53 @@
 
 package com.liferay.dynamic.data.mapping.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the DDMTemplateVersion service. Represents a row in the &quot;DDMTemplateVersion&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see DDMTemplateVersionModel
- * @see com.liferay.dynamic.data.mapping.model.impl.DDMTemplateVersionImpl
- * @see com.liferay.dynamic.data.mapping.model.impl.DDMTemplateVersionModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.dynamic.data.mapping.model.impl.DDMTemplateVersionImpl")
+@ImplementationClassName(
+	"com.liferay.dynamic.data.mapping.model.impl.DDMTemplateVersionImpl"
+)
 @ProviderType
-public interface DDMTemplateVersion extends DDMTemplateVersionModel,
-	PersistedModel {
+public interface DDMTemplateVersion
+	extends DDMTemplateVersionModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.dynamic.data.mapping.model.impl.DDMTemplateVersionImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.dynamic.data.mapping.model.impl.DDMTemplateVersionImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<DDMTemplateVersion, Long> TEMPLATE_VERSION_ID_ACCESSOR =
-		new Accessor<DDMTemplateVersion, Long>() {
-			@Override
-			public Long get(DDMTemplateVersion ddmTemplateVersion) {
-				return ddmTemplateVersion.getTemplateVersionId();
-			}
+	public static final Accessor<DDMTemplateVersion, Long>
+		TEMPLATE_VERSION_ID_ACCESSOR =
+			new Accessor<DDMTemplateVersion, Long>() {
 
-			@Override
-			public Class<Long> getAttributeClass() {
-				return Long.class;
-			}
+				@Override
+				public Long get(DDMTemplateVersion ddmTemplateVersion) {
+					return ddmTemplateVersion.getTemplateVersionId();
+				}
 
-			@Override
-			public Class<DDMTemplateVersion> getTypeClass() {
-				return DDMTemplateVersion.class;
-			}
-		};
+				@Override
+				public Class<Long> getAttributeClass() {
+					return Long.class;
+				}
+
+				@Override
+				public Class<DDMTemplateVersion> getTypeClass() {
+					return DDMTemplateVersion.class;
+				}
+
+			};
 
 	public DDMTemplate getTemplate()
 		throws com.liferay.portal.kernel.exception.PortalException;
+
 }

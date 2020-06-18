@@ -20,30 +20,22 @@ import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.NoSuchRepositoryException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.repository.InvalidRepositoryIdException;
-import com.liferay.portal.kernel.repository.RepositoryConfiguration;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionHelper;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.portal.repository.registry.RepositoryClassDefinition;
 import com.liferay.portal.repository.registry.RepositoryClassDefinitionCatalog;
 import com.liferay.portal.service.base.RepositoryServiceBaseImpl;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * @author Alexander Chow
@@ -55,7 +47,7 @@ public class RepositoryServiceImpl extends RepositoryServiceBaseImpl {
 	public Repository addRepository(
 			long groupId, long classNameId, long parentFolderId, String name,
 			String description, String portletId,
-			UnicodeProperties typeSettingsProperties,
+			UnicodeProperties typeSettingsUnicodeProperties,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -64,7 +56,7 @@ public class RepositoryServiceImpl extends RepositoryServiceBaseImpl {
 
 		return repositoryLocalService.addRepository(
 			getUserId(), groupId, classNameId, parentFolderId, name,
-			description, portletId, typeSettingsProperties, false,
+			description, portletId, typeSettingsUnicodeProperties, false,
 			serviceContext);
 	}
 
@@ -78,7 +70,7 @@ public class RepositoryServiceImpl extends RepositoryServiceBaseImpl {
 		Repository repository = repositoryPersistence.findByPrimaryKey(
 			repositoryId);
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_folderModelResourcePermission, getPermissionChecker(),
 			repository.getGroupId(), repository.getDlFolderId(),
 			ActionKeys.DELETE);
@@ -91,7 +83,7 @@ public class RepositoryServiceImpl extends RepositoryServiceBaseImpl {
 		Repository repository = repositoryPersistence.findByPrimaryKey(
 			repositoryId);
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_folderModelResourcePermission, getPermissionChecker(),
 			repository.getGroupId(), repository.getDlFolderId(),
 			ActionKeys.VIEW);
@@ -99,80 +91,19 @@ public class RepositoryServiceImpl extends RepositoryServiceBaseImpl {
 		return repository;
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
 	@Override
-	public String[] getSupportedConfigurations(long classNameId) {
-		return _SUPPORTED_CONFIGURATIONS;
-	}
+	public Repository getRepository(long groupId, String portletId)
+		throws PortalException {
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public String[] getSupportedParameters(
-		long classNameId, String configuration) {
+		Repository repository = repositoryPersistence.findByG_N_P(
+			groupId, portletId, portletId);
 
-		try {
-			ClassName className = classNameLocalService.getClassName(
-				classNameId);
+		ModelResourcePermissionUtil.check(
+			_folderModelResourcePermission, getPermissionChecker(),
+			repository.getGroupId(), repository.getDlFolderId(),
+			ActionKeys.VIEW);
 
-			String repositoryImplClassName = className.getValue();
-
-			return getSupportedParameters(
-				repositoryImplClassName, configuration);
-		}
-		catch (PortalException pe) {
-			throw new SystemException(pe);
-		}
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public String[] getSupportedParameters(
-		String className, String configuration) {
-
-		try {
-			if (!configuration.equals(_CONFIGURATION)) {
-				throw new IllegalArgumentException(
-					StringBundler.concat(
-						"Specified ", configuration, " does not match ",
-						"supported configuration ", _CONFIGURATION));
-			}
-
-			Collection<String> supportedParameters = new ArrayList<>();
-
-			RepositoryClassDefinition repositoryClassDefinition =
-				_repositoryClassDefinitionCatalog.getRepositoryClassDefinition(
-					className);
-
-			RepositoryConfiguration repositoryConfiguration =
-				repositoryClassDefinition.getRepositoryConfiguration();
-
-			Collection<RepositoryConfiguration.Parameter>
-				repositoryConfigurationParameters =
-					repositoryConfiguration.getParameters();
-
-			for (RepositoryConfiguration.Parameter
-					repositoryConfigurationParameter :
-						repositoryConfigurationParameters) {
-
-				supportedParameters.add(
-					repositoryConfigurationParameter.getName());
-			}
-
-			return supportedParameters.toArray(
-				new String[repositoryConfigurationParameters.size()]);
-		}
-		catch (Exception e) {
-			throw new SystemException(e);
-		}
+		return repository;
 	}
 
 	@Override
@@ -192,7 +123,7 @@ public class RepositoryServiceImpl extends RepositoryServiceBaseImpl {
 		Repository repository = repositoryPersistence.findByPrimaryKey(
 			repositoryId);
 
-		ModelResourcePermissionHelper.check(
+		ModelResourcePermissionUtil.check(
 			_folderModelResourcePermission, getPermissionChecker(),
 			repository.getGroupId(), repository.getDlFolderId(),
 			ActionKeys.UPDATE);
@@ -252,22 +183,17 @@ public class RepositoryServiceImpl extends RepositoryServiceBaseImpl {
 				repositoryId);
 
 			if (repository != null) {
-				ModelResourcePermissionHelper.check(
+				ModelResourcePermissionUtil.check(
 					_folderModelResourcePermission, getPermissionChecker(),
 					repository.getGroupId(), repository.getDlFolderId(),
 					ActionKeys.VIEW);
-
-				return;
 			}
 		}
-		catch (NoSuchRepositoryException nsre) {
-			throw new InvalidRepositoryIdException(nsre.getMessage());
+		catch (NoSuchRepositoryException noSuchRepositoryException) {
+			throw new InvalidRepositoryIdException(
+				noSuchRepositoryException.getMessage());
 		}
 	}
-
-	private static final String _CONFIGURATION = "DEFAULT";
-
-	private static final String[] _SUPPORTED_CONFIGURATIONS = {_CONFIGURATION};
 
 	private static volatile ModelResourcePermission<FileEntry>
 		_fileEntryModelResourcePermission =

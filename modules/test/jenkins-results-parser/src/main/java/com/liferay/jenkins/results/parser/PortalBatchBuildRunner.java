@@ -15,16 +15,13 @@
 package com.liferay.jenkins.results.parser;
 
 import java.io.File;
-import java.io.IOException;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Michael Hashimoto
  */
 public abstract class PortalBatchBuildRunner
-	extends BatchBuildRunner<PortalBatchBuildData> {
+	<T extends PortalBatchBuildData, S extends PortalWorkspace>
+		extends BatchBuildRunner<T, S> {
 
 	@Override
 	public void run() {
@@ -34,12 +31,12 @@ public abstract class PortalBatchBuildRunner
 
 		runTestBatch();
 
-		publishTestResults();
+		publishArtifacts();
+
+		updateBuildDescription();
 	}
 
-	protected PortalBatchBuildRunner(
-		PortalBatchBuildData portalBatchBuildData) {
-
+	protected PortalBatchBuildRunner(T portalBatchBuildData) {
 		super(portalBatchBuildData);
 	}
 
@@ -47,71 +44,34 @@ public abstract class PortalBatchBuildRunner
 	protected void initWorkspace() {
 		PortalBatchBuildData portalBatchBuildData = getBuildData();
 
-		workspace = WorkspaceFactory.newBatchWorkspace(
+		Workspace batchWorkspace = WorkspaceFactory.newBatchWorkspace(
 			portalBatchBuildData.getPortalGitHubURL(),
 			portalBatchBuildData.getPortalUpstreamBranchName(),
 			portalBatchBuildData.getBatchName(),
 			portalBatchBuildData.getPortalBranchSHA());
 
-		if (!(workspace instanceof BatchPortalWorkspace)) {
+		if (!(batchWorkspace instanceof PortalWorkspace)) {
 			throw new RuntimeException("Invalid workspace");
 		}
 
-		_batchPortalWorkspace = (BatchPortalWorkspace)workspace;
+		setWorkspace((S)batchWorkspace);
 	}
 
-	protected void publishTestResults() {
-		AntUtil.callTarget(
-			_getPrimaryPortalDirectory(), "build-test.xml",
-			"merge-test-results");
-
-		File source = new File(
-			_getPrimaryPortalDirectory(), "test-results/TESTS-TestSuites.xml");
-
-		if (!source.exists()) {
-			return;
-		}
-
+	protected void publishArtifacts() {
 		PortalBatchBuildData portalBatchBuildData = getBuildData();
 
-		File target = new File(
-			portalBatchBuildData.getWorkspaceDir(),
-			"test-results/TESTS-TestSuites.xml");
+		File artifactDir = portalBatchBuildData.getArtifactDir();
 
-		try {
-			JenkinsResultsParserUtil.copy(source, target);
-		}
-		catch (IOException ioe) {
-			throw new RuntimeException(
-				JenkinsResultsParserUtil.combine(
-					"Unable to copy test results file from ", source.getPath(),
-					" to ", target.getPath()),
-				ioe);
+		if (artifactDir.exists()) {
+			publishToUserContentDir(artifactDir);
 		}
 	}
 
 	protected void runTestBatch() {
-		Map<String, String> parameters = new HashMap<>();
+		TestBatch testBatch = TestBatchFactory.newTestBatch(
+			getBuildData(), getWorkspace());
 
-		PortalBatchBuildData portalBatchBuildData = getBuildData();
-
-		parameters.put(
-			"axis.variable",
-			JenkinsResultsParserUtil.join(
-				",", portalBatchBuildData.getTestList()));
-
-		AntUtil.callTarget(
-			_getPrimaryPortalDirectory(), "build-test-batch.xml",
-			portalBatchBuildData.getBatchName(), parameters);
+		testBatch.run();
 	}
-
-	private File _getPrimaryPortalDirectory() {
-		WorkspaceGitRepository workspaceGitRepository =
-			_batchPortalWorkspace.getPrimaryPortalWorkspaceGitRepository();
-
-		return workspaceGitRepository.getDirectory();
-	}
-
-	private BatchPortalWorkspace _batchPortalWorkspace;
 
 }

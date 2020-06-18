@@ -17,10 +17,24 @@ package com.liferay.message.boards.internal.upgrade;
 import com.liferay.message.boards.internal.upgrade.v1_0_0.UpgradeClassNames;
 import com.liferay.message.boards.internal.upgrade.v1_0_1.UpgradeUnsupportedGuestPermissions;
 import com.liferay.message.boards.internal.upgrade.v1_1_0.UpgradeMBThread;
+import com.liferay.message.boards.internal.upgrade.v2_0_0.util.MBBanTable;
+import com.liferay.message.boards.internal.upgrade.v2_0_0.util.MBCategoryTable;
+import com.liferay.message.boards.internal.upgrade.v2_0_0.util.MBDiscussionTable;
+import com.liferay.message.boards.internal.upgrade.v2_0_0.util.MBMailingListTable;
+import com.liferay.message.boards.internal.upgrade.v2_0_0.util.MBMessageTable;
+import com.liferay.message.boards.internal.upgrade.v2_0_0.util.MBStatsUserTable;
+import com.liferay.message.boards.internal.upgrade.v2_0_0.util.MBThreadFlagTable;
+import com.liferay.message.boards.internal.upgrade.v2_0_0.util.MBThreadTable;
+import com.liferay.message.boards.internal.upgrade.v3_0_0.UpgradeMBMessageTreePath;
+import com.liferay.message.boards.internal.upgrade.v3_1_0.UpgradeUrlSubject;
+import com.liferay.message.boards.model.MBThread;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.upgrade.BaseUpgradeSQLServerDatetime;
+import com.liferay.portal.kernel.upgrade.UpgradeViewCount;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
+import com.liferay.view.count.service.ViewCountEntryLocalService;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -41,9 +55,25 @@ public class MBServiceUpgrade implements UpgradeStepRegistrator {
 				_resourceActionLocalService, _resourcePermissionLocalService,
 				_roleLocalService));
 
+		registry.register("1.0.1", "1.1.0", new UpgradeMBThread());
+
 		registry.register(
-			"com.liferay.message.boards.service", "1.0.1", "1.1.0",
-			new UpgradeMBThread());
+			"1.1.0", "2.0.0",
+			new BaseUpgradeSQLServerDatetime(
+				new Class<?>[] {
+					MBBanTable.class, MBCategoryTable.class,
+					MBDiscussionTable.class, MBMailingListTable.class,
+					MBMessageTable.class, MBStatsUserTable.class,
+					MBThreadFlagTable.class, MBThreadTable.class
+				}));
+
+		registry.register(
+			"2.0.0", "3.0.0",
+			new UpgradeViewCount(
+				"MBThread", MBThread.class, "threadId", "viewCount"),
+			new UpgradeMBMessageTreePath());
+
+		registry.register("3.0.0", "3.1.0", new UpgradeUrlSubject());
 	}
 
 	@Reference
@@ -54,5 +84,11 @@ public class MBServiceUpgrade implements UpgradeStepRegistrator {
 
 	@Reference
 	private RoleLocalService _roleLocalService;
+
+	/**
+	 * See LPS-101086. The ViewCount table needs to exist.
+	 */
+	@Reference
+	private ViewCountEntryLocalService _viewCountEntryLocalService;
 
 }

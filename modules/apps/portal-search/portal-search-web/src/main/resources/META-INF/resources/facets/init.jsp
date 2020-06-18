@@ -32,6 +32,7 @@ page import="com.liferay.portal.search.web.internal.facet.display.context.AssetT
 page import="com.liferay.portal.search.web.internal.facet.display.context.AssetTagsSearchFacetTermDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.facet.display.context.FolderSearchFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.facet.display.context.FolderSearchFacetTermDisplayContext" %><%@
+page import="com.liferay.portal.search.web.internal.facet.display.context.FolderSearcher" %><%@
 page import="com.liferay.portal.search.web.internal.facet.display.context.FolderTitleLookupImpl" %><%@
 page import="com.liferay.portal.search.web.internal.facet.display.context.ScopeSearchFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.facet.display.context.ScopeSearchFacetTermDisplayContext" %><%@
@@ -51,19 +52,9 @@ JSONObject dataJSONObject = facetConfiguration.getData();
 
 FacetCollector facetCollector = facet.getFacetCollector();
 
-String cssClass = "search-facet search-".concat(HtmlUtil.escapeAttribute(facetConfiguration.getDisplayStyle()));
+String cssClass = "search-facet search-";
 %>
 
 <%!
 private static final String _RANDOM_KEY_INPUT = "portlet_search_facets_" + StringUtil.randomString();
 %>
-
-<style>
-	.facet-term-selected {
-		font-weight: 600;
-	}
-
-	.facet-term-unselected {
-		font-weight: 400;
-	}
-</style>

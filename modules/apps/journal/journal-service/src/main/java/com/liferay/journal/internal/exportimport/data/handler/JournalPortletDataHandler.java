@@ -34,7 +34,6 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.exportimport.kernel.staging.StagingConstants;
-import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.journal.configuration.JournalServiceConfiguration;
 import com.liferay.journal.constants.JournalConstants;
 import com.liferay.journal.constants.JournalPortletKeys;
@@ -71,6 +70,7 @@ import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -105,18 +105,23 @@ import org.osgi.service.component.annotations.Reference;
  * @author Hugo Huijser
  * @author Daniel Kocsis
  * @author László Csontos
- * @author Mate Thurzo
+ * @author Máté Thurzó
  * @see    com.liferay.journal.internal.exportimport.creation.strategy.JournalCreationStrategy
  * @see    PortletDataHandler
  */
 @Component(
-	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+	configurationPid = "com.liferay.journal.configuration.JournalServiceConfiguration",
+	property = {
+		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+		"schema.version=" + JournalPortletDataHandler.SCHEMA_VERSION
+	},
 	service = PortletDataHandler.class
 )
 public class JournalPortletDataHandler extends BasePortletDataHandler {
 
-	public static final String[] CLASS_NAMES =
-		{JournalArticle.class.getName(), JournalFolder.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		JournalArticle.class.getName(), JournalFolder.class.getName()
+	};
 
 	public static final String NAMESPACE = "journal";
 
@@ -130,6 +135,11 @@ public class JournalPortletDataHandler extends BasePortletDataHandler {
 	@Override
 	public String getNamespace() {
 		return NAMESPACE;
+	}
+
+	@Override
+	public String getResourceName() {
+		return JournalConstants.RESOURCE_NAME;
 	}
 
 	@Override
@@ -152,8 +162,8 @@ public class JournalPortletDataHandler extends BasePortletDataHandler {
 
 			return journalServiceConfiguration.publishToLiveByDefaultEnabled();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return true;
@@ -165,6 +175,7 @@ public class JournalPortletDataHandler extends BasePortletDataHandler {
 	}
 
 	@Activate
+	@Modified
 	protected void activate() {
 		setDataLocalized(true);
 		setDeletionSystemEventStagedModelTypes(
@@ -276,11 +287,11 @@ public class JournalPortletDataHandler extends BasePortletDataHandler {
 			// Export DDM structure default values
 
 			ActionableDynamicQuery
-				ddmStructureDefaultValueActionableDynamicQuery =
+				ddmStructureDefaultValuesActionableDynamicQuery =
 					getDDMStructureDefaultValuesActionableDynamicQuery(
 						portletDataContext);
 
-			ddmStructureDefaultValueActionableDynamicQuery.performActions();
+			ddmStructureDefaultValuesActionableDynamicQuery.performActions();
 		}
 
 		if (portletDataContext.getBooleanParameter(NAMESPACE, "templates")) {
@@ -355,7 +366,8 @@ public class JournalPortletDataHandler extends BasePortletDataHandler {
 			// Importing DDM structure default values
 
 			for (Element articleElement : articleElements) {
-				String className = articleElement.attributeValue("class-name");
+				String className = articleElement.attributeValue(
+					"attached-class-name");
 
 				if (Validator.isNotNull(className) &&
 					className.equals(DDMStructure.class.getName())) {
@@ -385,20 +397,6 @@ public class JournalPortletDataHandler extends BasePortletDataHandler {
 			}
 
 			_journalContent.clearCache();
-
-			// Friendy URLs
-
-			Element friendlyURLEntriesElement =
-				portletDataContext.getImportDataGroupElement(
-					FriendlyURLEntry.class);
-
-			List<Element> friendlyURLEntryElements =
-				friendlyURLEntriesElement.elements();
-
-			for (Element friendlyURLEntryElement : friendlyURLEntryElements) {
-				StagedModelDataHandlerUtil.importStagedModel(
-					portletDataContext, friendlyURLEntryElement);
-			}
 		}
 
 		return portletPreferences;
@@ -682,8 +680,8 @@ public class JournalPortletDataHandler extends BasePortletDataHandler {
 
 			return journalServiceConfiguration.versionHistoryByDefaultEnabled();
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return true;

@@ -14,23 +14,27 @@
 
 package com.liferay.knowledge.base.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.util.comparator.RepositoryModelTitleComparator;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
+import com.liferay.knowledge.base.constants.KBConstants;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.knowledge.base.service.KBArticleLocalServiceUtil;
 import com.liferay.knowledge.base.service.KBArticleServiceUtil;
 import com.liferay.knowledge.base.service.KBFolderServiceUtil;
-import com.liferay.knowledge.base.service.util.KBArticleAttachmentsUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.view.count.ViewCountManagerUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.ArrayList;
@@ -41,7 +45,6 @@ import java.util.Locale;
  * @author Peter Shin
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class KBArticleImpl extends KBArticleBaseImpl {
 
 	public KBArticleImpl() {
@@ -82,8 +85,21 @@ public class KBArticleImpl extends KBArticleBaseImpl {
 			return _attachmentsFolderId;
 		}
 
-		_attachmentsFolderId = KBArticleAttachmentsUtil.getFolderId(
-			getGroupId(), getUserId(), getResourcePrimKey());
+		ServiceContext serviceContext = new ServiceContext();
+
+		serviceContext.setAddGroupPermissions(true);
+		serviceContext.setAddGuestPermissions(true);
+
+		Repository repository = PortletFileRepositoryUtil.addPortletRepository(
+			getGroupId(), KBConstants.SERVICE_NAME, serviceContext);
+
+		Folder folder = PortletFileRepositoryUtil.addPortletFolder(
+			PortalUtil.getValidUserId(getCompanyId(), getUserId()),
+			repository.getRepositoryId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			String.valueOf(getResourcePrimKey()), serviceContext);
+
+		_attachmentsFolderId = folder.getFolderId();
 
 		return _attachmentsFolderId;
 	}
@@ -140,6 +156,14 @@ public class KBArticleImpl extends KBArticleBaseImpl {
 			getParentResourcePrimKey());
 
 		return kbFolder.getName();
+	}
+
+	@Override
+	public long getViewCount() {
+		return ViewCountManagerUtil.getViewCount(
+			getCompanyId(),
+			ClassNameLocalServiceUtil.getClassNameId(KBArticle.class),
+			getPrimaryKey());
 	}
 
 	@Override

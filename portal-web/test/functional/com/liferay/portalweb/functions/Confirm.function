@@ -1,11 +1,15 @@
-<definition default="confirm" summary="Execute the confirmation of a confirmation window">
-	<command name="confirm">
-		<execute selenium="getConfirmation" />
+@default = "confirm"
+@summary = "Execute the confirmation of a confirmation window"
+definition {
 
-		<execute selenium="assertJavaScriptErrors" />
+	function confirm {
+		selenium.getConfirmation();
 
-		<execute selenium="assertLiferayErrors" />
+		selenium.assertJavaScriptErrors();
 
-		<execute function="WaitForSPARefresh" />
-	</command>
-</definition>
+		selenium.assertLiferayErrors();
+
+		WaitForSPARefresh();
+	}
+
+}

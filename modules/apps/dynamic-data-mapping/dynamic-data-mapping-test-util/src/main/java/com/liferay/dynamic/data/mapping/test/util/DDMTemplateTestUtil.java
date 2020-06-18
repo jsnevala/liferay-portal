@@ -21,13 +21,13 @@ import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -113,9 +113,20 @@ public class DDMTemplateTestUtil {
 			Locale defaultLocale)
 		throws Exception {
 
-		Map<Locale, String> nameMap = new HashMap<>();
+		return addTemplate(
+			groupId, classNameId, classPK, resourceClassNameId, null, language,
+			script, defaultLocale);
+	}
 
-		nameMap.put(defaultLocale, "Test Template");
+	public static DDMTemplate addTemplate(
+			long groupId, long classNameId, long classPK,
+			long resourceClassNameId, String templateKey, String language,
+			String script, Locale defaultLocale)
+		throws Exception {
+
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			defaultLocale, "Test Template"
+		).build();
 
 		ServiceContext serviceContext = new ServiceContext();
 
@@ -124,9 +135,9 @@ public class DDMTemplateTestUtil {
 
 		return DDMTemplateLocalServiceUtil.addTemplate(
 			TestPropsValues.getUserId(), groupId, classNameId, classPK,
-			resourceClassNameId, nameMap, null,
+			resourceClassNameId, templateKey, nameMap, null,
 			DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, null, language, script,
-			serviceContext);
+			false, false, null, null, serviceContext);
 	}
 
 	public static DDMTemplate addTemplate(

@@ -14,9 +14,7 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
-import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
@@ -33,24 +31,26 @@ public class LineBreakBeforeGenericStartCheck extends BaseCheck {
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		if (_isAtLineStart(detailAST)) {
+		if (isAtLineStart(
+				detailAST, getLine(getStartLineNumber(detailAST) - 1))) {
+
 			return;
 		}
 
-		DetailAST nextSiblingAST = detailAST.getNextSibling();
+		DetailAST nextSiblingDetailAST = detailAST.getNextSibling();
 
 		while (true) {
-			if (nextSiblingAST == null) {
+			if (nextSiblingDetailAST == null) {
 				return;
 			}
 
-			if (nextSiblingAST.getType() != TokenTypes.GENERIC_END) {
-				nextSiblingAST = nextSiblingAST.getNextSibling();
+			if (nextSiblingDetailAST.getType() != TokenTypes.GENERIC_END) {
+				nextSiblingDetailAST = nextSiblingDetailAST.getNextSibling();
 
 				continue;
 			}
 
-			if (detailAST.getLineNo() == nextSiblingAST.getLineNo()) {
+			if (detailAST.getLineNo() == nextSiblingDetailAST.getLineNo()) {
 				return;
 			}
 
@@ -63,20 +63,6 @@ public class LineBreakBeforeGenericStartCheck extends BaseCheck {
 
 			return;
 		}
-	}
-
-	private boolean _isAtLineStart(DetailAST detailAST) {
-		String line = getLine(DetailASTUtil.getStartLineNumber(detailAST) - 1);
-
-		for (int i = 0; i < detailAST.getColumnNo(); i++) {
-			char c = line.charAt(i);
-
-			if ((c != CharPool.SPACE) && (c != CharPool.TAB)) {
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	private static final String _MSG_INCORRECT_LINE_BREAK =

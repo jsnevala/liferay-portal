@@ -129,9 +129,9 @@ public abstract class BaseDDLExporter implements DDLExporter {
 
 	protected DDMFormFieldRenderedValue getDDMFormFieldRenderedValue(
 		int scope, DDMFormField ddmFormField,
-		Map<String, List<DDMFormFieldValue>> ddmFormFieldValueMap) {
+		Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap) {
 
-		List<DDMFormFieldValue> ddmForFieldValues = ddmFormFieldValueMap.get(
+		List<DDMFormFieldValue> ddmForFieldValues = ddmFormFieldValuesMap.get(
 			ddmFormField.getName());
 
 		String valueString = StringPool.BLANK;
@@ -154,8 +154,7 @@ public abstract class BaseDDLExporter implements DDLExporter {
 			com.liferay.dynamic.data.mapping.render.DDMFormFieldValueRenderer
 				ddmFormFieldValueRenderer =
 					ddmFormFieldValueRendererRegistry.
-						getDDMFormFieldValueRenderer(
-							ddmFormFieldValue.getType());
+						getDDMFormFieldValueRenderer(ddmFormField.getType());
 
 			String ddmFormFieldType =
 				ddmFormFieldValueRenderer.getSupportedDDMFormFieldType();
@@ -177,8 +176,8 @@ public abstract class BaseDDLExporter implements DDLExporter {
 			ddmFormField.getName(), ddmFormField.getLabel(), valueString);
 	}
 
-	protected abstract
-		DDMFormFieldTypeServicesTracker getDDMFormFieldTypeServicesTracker();
+	protected abstract DDMFormFieldTypeServicesTracker
+		getDDMFormFieldTypeServicesTracker();
 
 	protected abstract DDMFormFieldValueRendererRegistry
 		getDDMFormFieldValueRendererRegistry();
@@ -205,38 +204,36 @@ public abstract class BaseDDLExporter implements DDLExporter {
 			DDMFormValues ddmFormValues)
 		throws Exception {
 
-		Map<String, List<DDMFormFieldValue>> ddmFormFieldValueMap =
+		Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap =
 			ddmFormValues.getDDMFormFieldValuesMap();
 
 		Stream<DDMFormField> ddmFormFieldStream = ddmFormFields.stream();
 
-		ddmFormFieldStream = ddmFormFieldStream.filter(
-			ddmFormField -> ddmFormFieldValueMap.containsKey(
-				ddmFormField.getName()));
-
-		Stream<DDMFormFieldRenderedValue> valueStream = ddmFormFieldStream.map(
+		return ddmFormFieldStream.filter(
+			ddmFormField -> ddmFormFieldValuesMap.containsKey(
+				ddmFormField.getName())
+		).map(
 			ddmFormField -> getDDMFormFieldRenderedValue(
-				scope, ddmFormField, ddmFormFieldValueMap));
-
-		return valueStream.collect(
+				scope, ddmFormField, ddmFormFieldValuesMap)
+		).collect(
 			Collectors.toMap(
-				DDMFormFieldRenderedValue::getFieldName, value -> value));
+				DDMFormFieldRenderedValue::getFieldName, value -> value)
+		);
 	}
 
 	protected String getStatusMessage(int status) {
-		String statusLabel = WorkflowConstants.getStatusLabel(status);
-
-		return LanguageUtil.get(_locale, statusLabel);
+		return LanguageUtil.get(
+			_locale, WorkflowConstants.getStatusLabel(status));
 	}
 
 	protected List<DDMStructureVersion> getStructureVersions(long recordSetId)
 		throws Exception {
 
-		DDLRecordSetVersionService recordSetVersionService =
+		DDLRecordSetVersionService ddlRecordSetVersionService =
 			getDDLRecordSetVersionService();
 
 		List<DDLRecordSetVersion> recordSetVersions =
-			recordSetVersionService.getRecordSetVersions(
+			ddlRecordSetVersionService.getRecordSetVersions(
 				recordSetId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
 		List<DDMStructureVersion> ddmStructureVersions = new ArrayList<>();

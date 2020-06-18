@@ -16,10 +16,18 @@ package com.liferay.portal.configuration.metatype.definitions.annotations.intern
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.configuration.metatype.definitions.ExtendedAttributeDefinition;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
 import java.io.InputStream;
+
+import java.net.URL;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,7 +43,8 @@ import org.osgi.service.metatype.ObjectClassDefinition;
  * @author Iván Zaera
  */
 public class AnnotationsExtendedObjectClassDefinition
-	implements com.liferay.portal.configuration.metatype.definitions.ExtendedObjectClassDefinition {
+	implements com.liferay.portal.configuration.metatype.definitions.
+				   ExtendedObjectClassDefinition {
 
 	public AnnotationsExtendedObjectClassDefinition(
 		Bundle bundle, ObjectClassDefinition objectClassDefinition) {
@@ -45,7 +54,10 @@ public class AnnotationsExtendedObjectClassDefinition
 		_loadConfigurationBeanClass(bundle);
 
 		if (_configurationBeanClass != null) {
-			_processExtendedMetatypeFields();
+			_processExtendedMetatypeFields(_configurationBeanClass);
+		}
+		else {
+			_processExtendedMetatypeFields(bundle);
 		}
 	}
 
@@ -111,6 +123,22 @@ public class AnnotationsExtendedObjectClassDefinition
 		return _objectClassDefinition.getName();
 	}
 
+	private JSONObject _createJSONObject(Bundle bundle, String resourcePath) {
+		URL url = bundle.getResource(resourcePath);
+
+		if (url != null) {
+			try (InputStream is = url.openStream()) {
+				return JSONFactoryUtil.createJSONObject(StringUtil.read(is));
+			}
+			catch (Exception exception) {
+				_log.error(
+					"Unable to process resource " + resourcePath, exception);
+			}
+		}
+
+		return null;
+	}
+
 	private void _loadConfigurationBeanClass(Bundle bundle) {
 		try {
 			BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
@@ -120,43 +148,76 @@ public class AnnotationsExtendedObjectClassDefinition
 			_configurationBeanClass = classLoader.loadClass(
 				_objectClassDefinition.getID());
 		}
-		catch (ClassNotFoundException cnfe) {
+		catch (ClassNotFoundException classNotFoundException) {
 		}
 	}
 
-	private void _processExtendedMetatypeFields() {
-		ExtendedObjectClassDefinition extendedObjectClassDefinition =
-			_configurationBeanClass.getAnnotation(
-				ExtendedObjectClassDefinition.class);
+	private void _processExtendedMetatypeFields(Bundle bundle) {
+		JSONObject metatypeJSONObject = _createJSONObject(
+			bundle, "features/metatype.json");
 
-		if (extendedObjectClassDefinition != null) {
-			Map<String, String> map = new HashMap<>();
+		if (metatypeJSONObject != null) {
+			Map<String, String> attributes = new HashMap<>();
 
-			map.put("category", extendedObjectClassDefinition.category());
-			map.put(
-				"description-arguments",
-				StringUtil.merge(
-					extendedObjectClassDefinition.descriptionArguments()));
-			map.put(
-				"factoryInstanceLabelAttribute",
-				extendedObjectClassDefinition.factoryInstanceLabelAttribute());
-			map.put(
-				"generateUI",
-				Boolean.toString(extendedObjectClassDefinition.generateUI()));
-			map.put(
-				"name-arguments",
-				StringUtil.merge(
-					extendedObjectClassDefinition.nameArguments()));
+			String category = metatypeJSONObject.getString("category");
 
-			ExtendedObjectClassDefinition.Scope scope =
-				extendedObjectClassDefinition.scope();
+			if (Validator.isNotNull(category)) {
+				attributes.put("category", category);
+			}
+			else {
+				JSONObject packageJSONObject = _createJSONObject(
+					bundle, "META-INF/resources/package.json");
 
-			map.put("scope", scope.toString());
+				if (packageJSONObject != null) {
+					attributes.put(
+						"category", packageJSONObject.getString("name"));
+				}
+			}
 
 			_extensionAttributes.put(
-				ExtendedObjectClassDefinition.XML_NAMESPACE, map);
+				ExtendedObjectClassDefinition.XML_NAMESPACE, attributes);
 		}
 	}
+
+	private void _processExtendedMetatypeFields(
+		Class<?> configurationBeanClass) {
+
+		ExtendedObjectClassDefinition extendedObjectClassDefinition =
+			configurationBeanClass.getAnnotation(
+				ExtendedObjectClassDefinition.class);
+
+		if (extendedObjectClassDefinition == null) {
+			return;
+		}
+
+		Map<String, String> attributes = HashMapBuilder.put(
+			"category", extendedObjectClassDefinition.category()
+		).put(
+			"description-arguments",
+			StringUtil.merge(
+				extendedObjectClassDefinition.descriptionArguments())
+		).put(
+			"factoryInstanceLabelAttribute",
+			extendedObjectClassDefinition.factoryInstanceLabelAttribute()
+		).put(
+			"generateUI",
+			Boolean.toString(extendedObjectClassDefinition.generateUI())
+		).put(
+			"name-arguments",
+			StringUtil.merge(extendedObjectClassDefinition.nameArguments())
+		).build();
+
+		ExtendedObjectClassDefinition.Scope scope =
+			extendedObjectClassDefinition.scope();
+
+		attributes.put("scope", scope.toString());
+
+		_extensionAttributes.put(
+			ExtendedObjectClassDefinition.XML_NAMESPACE, attributes);
+	}
+
+	private static Log _log = LogFactoryUtil.getLog(
+		AnnotationsExtendedObjectClassDefinition.class);
 
 	private Class<?> _configurationBeanClass;
 	private final Map<Integer, ExtendedAttributeDefinition[]>

@@ -14,9 +14,8 @@
 
 package com.liferay.portal.workflow.kaleo.service.base;
 
-import aQute.bnd.annotation.ProviderType;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
@@ -34,13 +33,11 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
-import com.liferay.portal.kernel.service.persistence.ClassNamePersistence;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.workflow.kaleo.model.KaleoNotification;
 import com.liferay.portal.workflow.kaleo.service.KaleoNotificationLocalService;
 import com.liferay.portal.workflow.kaleo.service.persistence.KaleoActionPersistence;
@@ -70,6 +67,8 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * Provides the base implementation for the kaleo notification local service.
  *
@@ -79,17 +78,17 @@ import javax.sql.DataSource;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.portal.workflow.kaleo.service.impl.KaleoNotificationLocalServiceImpl
- * @see com.liferay.portal.workflow.kaleo.service.KaleoNotificationLocalServiceUtil
  * @generated
  */
-@ProviderType
 public abstract class KaleoNotificationLocalServiceBaseImpl
-	extends BaseLocalServiceImpl implements KaleoNotificationLocalService,
-		IdentifiableOSGiService {
+	extends BaseLocalServiceImpl
+	implements AopService, IdentifiableOSGiService,
+			   KaleoNotificationLocalService {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Always use {@link com.liferay.portal.workflow.kaleo.service.KaleoNotificationLocalServiceUtil} to access the kaleo notification local service.
+	 * Never modify or reference this class directly. Use <code>KaleoNotificationLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.workflow.kaleo.service.KaleoNotificationLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -102,6 +101,7 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	@Override
 	public KaleoNotification addKaleoNotification(
 		KaleoNotification kaleoNotification) {
+
 		kaleoNotification.setNew(true);
 
 		return kaleoNotificationPersistence.update(kaleoNotification);
@@ -130,6 +130,7 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	@Override
 	public KaleoNotification deleteKaleoNotification(long kaleoNotificationId)
 		throws PortalException {
+
 		return kaleoNotificationPersistence.remove(kaleoNotificationId);
 	}
 
@@ -143,15 +144,21 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	@Override
 	public KaleoNotification deleteKaleoNotification(
 		KaleoNotification kaleoNotification) {
+
 		return kaleoNotificationPersistence.remove(kaleoNotification);
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return kaleoNotificationPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
 	public DynamicQuery dynamicQuery() {
 		Class<?> clazz = getClass();
 
-		return DynamicQueryFactoryUtil.forClass(KaleoNotification.class,
-			clazz.getClassLoader());
+		return DynamicQueryFactoryUtil.forClass(
+			KaleoNotification.class, clazz.getClassLoader());
 	}
 
 	/**
@@ -169,7 +176,7 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	 * Performs a dynamic query on the database and returns a range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.workflow.kaleo.model.impl.KaleoNotificationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoNotificationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -178,17 +185,18 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	 * @return the range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end) {
-		return kaleoNotificationPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
+
+		return kaleoNotificationPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end);
 	}
 
 	/**
 	 * Performs a dynamic query on the database and returns an ordered range of the matching rows.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.workflow.kaleo.model.impl.KaleoNotificationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoNotificationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param dynamicQuery the dynamic query
@@ -198,10 +206,12 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	 * @return the ordered range of matching rows
 	 */
 	@Override
-	public <T> List<T> dynamicQuery(DynamicQuery dynamicQuery, int start,
-		int end, OrderByComparator<T> orderByComparator) {
-		return kaleoNotificationPersistence.findWithDynamicQuery(dynamicQuery,
-			start, end, orderByComparator);
+	public <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
+
+		return kaleoNotificationPersistence.findWithDynamicQuery(
+			dynamicQuery, start, end, orderByComparator);
 	}
 
 	/**
@@ -223,15 +233,17 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	 * @return the number of rows matching the dynamic query
 	 */
 	@Override
-	public long dynamicQueryCount(DynamicQuery dynamicQuery,
-		Projection projection) {
-		return kaleoNotificationPersistence.countWithDynamicQuery(dynamicQuery,
-			projection);
+	public long dynamicQueryCount(
+		DynamicQuery dynamicQuery, Projection projection) {
+
+		return kaleoNotificationPersistence.countWithDynamicQuery(
+			dynamicQuery, projection);
 	}
 
 	@Override
 	public KaleoNotification fetchKaleoNotification(long kaleoNotificationId) {
-		return kaleoNotificationPersistence.fetchByPrimaryKey(kaleoNotificationId);
+		return kaleoNotificationPersistence.fetchByPrimaryKey(
+			kaleoNotificationId);
 	}
 
 	/**
@@ -244,14 +256,18 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	@Override
 	public KaleoNotification getKaleoNotification(long kaleoNotificationId)
 		throws PortalException {
-		return kaleoNotificationPersistence.findByPrimaryKey(kaleoNotificationId);
+
+		return kaleoNotificationPersistence.findByPrimaryKey(
+			kaleoNotificationId);
 	}
 
 	@Override
 	public ActionableDynamicQuery getActionableDynamicQuery() {
-		ActionableDynamicQuery actionableDynamicQuery = new DefaultActionableDynamicQuery();
+		ActionableDynamicQuery actionableDynamicQuery =
+			new DefaultActionableDynamicQuery();
 
-		actionableDynamicQuery.setBaseLocalService(kaleoNotificationLocalService);
+		actionableDynamicQuery.setBaseLocalService(
+			kaleoNotificationLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(KaleoNotification.class);
 
@@ -261,10 +277,14 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	}
 
 	@Override
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery() {
-		IndexableActionableDynamicQuery indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
+	public IndexableActionableDynamicQuery
+		getIndexableActionableDynamicQuery() {
 
-		indexableActionableDynamicQuery.setBaseLocalService(kaleoNotificationLocalService);
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			new IndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setBaseLocalService(
+			kaleoNotificationLocalService);
 		indexableActionableDynamicQuery.setClassLoader(getClassLoader());
 		indexableActionableDynamicQuery.setModelClass(KaleoNotification.class);
 
@@ -276,7 +296,9 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 
 	protected void initActionableDynamicQuery(
 		ActionableDynamicQuery actionableDynamicQuery) {
-		actionableDynamicQuery.setBaseLocalService(kaleoNotificationLocalService);
+
+		actionableDynamicQuery.setBaseLocalService(
+			kaleoNotificationLocalService);
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(KaleoNotification.class);
 
@@ -286,15 +308,35 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return kaleoNotificationPersistence.create(
+			((Long)primaryKeyObj).longValue());
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
-		return kaleoNotificationLocalService.deleteKaleoNotification((KaleoNotification)persistedModel);
+
+		return kaleoNotificationLocalService.deleteKaleoNotification(
+			(KaleoNotification)persistedModel);
 	}
 
+	public BasePersistence<KaleoNotification> getBasePersistence() {
+		return kaleoNotificationPersistence;
+	}
+
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
+
 		return kaleoNotificationPersistence.findByPrimaryKey(primaryKeyObj);
 	}
 
@@ -302,7 +344,7 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	 * Returns a range of all the kaleo notifications.
 	 *
 	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent and pagination is required (<code>start</code> and <code>end</code> are not {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS}), then the query will include the default ORDER BY logic from {@link com.liferay.portal.workflow.kaleo.model.impl.KaleoNotificationModelImpl}. If both <code>orderByComparator</code> and pagination are absent, for performance reasons, the query will not have an ORDER BY clause and the returned result set will be sorted on by the primary key in an ascending order.
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoNotificationModelImpl</code>.
 	 * </p>
 	 *
 	 * @param start the lower bound of the range of kaleo notifications
@@ -334,870 +376,21 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	@Override
 	public KaleoNotification updateKaleoNotification(
 		KaleoNotification kaleoNotification) {
+
 		return kaleoNotificationPersistence.update(kaleoNotification);
 	}
 
-	/**
-	 * Returns the kaleo action local service.
-	 *
-	 * @return the kaleo action local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoActionLocalService getKaleoActionLocalService() {
-		return kaleoActionLocalService;
-	}
-
-	/**
-	 * Sets the kaleo action local service.
-	 *
-	 * @param kaleoActionLocalService the kaleo action local service
-	 */
-	public void setKaleoActionLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoActionLocalService kaleoActionLocalService) {
-		this.kaleoActionLocalService = kaleoActionLocalService;
-	}
-
-	/**
-	 * Returns the kaleo action persistence.
-	 *
-	 * @return the kaleo action persistence
-	 */
-	public KaleoActionPersistence getKaleoActionPersistence() {
-		return kaleoActionPersistence;
-	}
-
-	/**
-	 * Sets the kaleo action persistence.
-	 *
-	 * @param kaleoActionPersistence the kaleo action persistence
-	 */
-	public void setKaleoActionPersistence(
-		KaleoActionPersistence kaleoActionPersistence) {
-		this.kaleoActionPersistence = kaleoActionPersistence;
-	}
-
-	/**
-	 * Returns the kaleo condition local service.
-	 *
-	 * @return the kaleo condition local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoConditionLocalService getKaleoConditionLocalService() {
-		return kaleoConditionLocalService;
-	}
-
-	/**
-	 * Sets the kaleo condition local service.
-	 *
-	 * @param kaleoConditionLocalService the kaleo condition local service
-	 */
-	public void setKaleoConditionLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoConditionLocalService kaleoConditionLocalService) {
-		this.kaleoConditionLocalService = kaleoConditionLocalService;
-	}
-
-	/**
-	 * Returns the kaleo condition persistence.
-	 *
-	 * @return the kaleo condition persistence
-	 */
-	public KaleoConditionPersistence getKaleoConditionPersistence() {
-		return kaleoConditionPersistence;
-	}
-
-	/**
-	 * Sets the kaleo condition persistence.
-	 *
-	 * @param kaleoConditionPersistence the kaleo condition persistence
-	 */
-	public void setKaleoConditionPersistence(
-		KaleoConditionPersistence kaleoConditionPersistence) {
-		this.kaleoConditionPersistence = kaleoConditionPersistence;
-	}
-
-	/**
-	 * Returns the kaleo definition local service.
-	 *
-	 * @return the kaleo definition local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoDefinitionLocalService getKaleoDefinitionLocalService() {
-		return kaleoDefinitionLocalService;
-	}
-
-	/**
-	 * Sets the kaleo definition local service.
-	 *
-	 * @param kaleoDefinitionLocalService the kaleo definition local service
-	 */
-	public void setKaleoDefinitionLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoDefinitionLocalService kaleoDefinitionLocalService) {
-		this.kaleoDefinitionLocalService = kaleoDefinitionLocalService;
-	}
-
-	/**
-	 * Returns the kaleo definition persistence.
-	 *
-	 * @return the kaleo definition persistence
-	 */
-	public KaleoDefinitionPersistence getKaleoDefinitionPersistence() {
-		return kaleoDefinitionPersistence;
-	}
-
-	/**
-	 * Sets the kaleo definition persistence.
-	 *
-	 * @param kaleoDefinitionPersistence the kaleo definition persistence
-	 */
-	public void setKaleoDefinitionPersistence(
-		KaleoDefinitionPersistence kaleoDefinitionPersistence) {
-		this.kaleoDefinitionPersistence = kaleoDefinitionPersistence;
-	}
-
-	/**
-	 * Returns the kaleo definition version local service.
-	 *
-	 * @return the kaleo definition version local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalService getKaleoDefinitionVersionLocalService() {
-		return kaleoDefinitionVersionLocalService;
-	}
-
-	/**
-	 * Sets the kaleo definition version local service.
-	 *
-	 * @param kaleoDefinitionVersionLocalService the kaleo definition version local service
-	 */
-	public void setKaleoDefinitionVersionLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalService kaleoDefinitionVersionLocalService) {
-		this.kaleoDefinitionVersionLocalService = kaleoDefinitionVersionLocalService;
-	}
-
-	/**
-	 * Returns the kaleo definition version persistence.
-	 *
-	 * @return the kaleo definition version persistence
-	 */
-	public KaleoDefinitionVersionPersistence getKaleoDefinitionVersionPersistence() {
-		return kaleoDefinitionVersionPersistence;
-	}
-
-	/**
-	 * Sets the kaleo definition version persistence.
-	 *
-	 * @param kaleoDefinitionVersionPersistence the kaleo definition version persistence
-	 */
-	public void setKaleoDefinitionVersionPersistence(
-		KaleoDefinitionVersionPersistence kaleoDefinitionVersionPersistence) {
-		this.kaleoDefinitionVersionPersistence = kaleoDefinitionVersionPersistence;
-	}
-
-	/**
-	 * Returns the kaleo instance local service.
-	 *
-	 * @return the kaleo instance local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoInstanceLocalService getKaleoInstanceLocalService() {
-		return kaleoInstanceLocalService;
-	}
-
-	/**
-	 * Sets the kaleo instance local service.
-	 *
-	 * @param kaleoInstanceLocalService the kaleo instance local service
-	 */
-	public void setKaleoInstanceLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoInstanceLocalService kaleoInstanceLocalService) {
-		this.kaleoInstanceLocalService = kaleoInstanceLocalService;
-	}
-
-	/**
-	 * Returns the kaleo instance persistence.
-	 *
-	 * @return the kaleo instance persistence
-	 */
-	public KaleoInstancePersistence getKaleoInstancePersistence() {
-		return kaleoInstancePersistence;
-	}
-
-	/**
-	 * Sets the kaleo instance persistence.
-	 *
-	 * @param kaleoInstancePersistence the kaleo instance persistence
-	 */
-	public void setKaleoInstancePersistence(
-		KaleoInstancePersistence kaleoInstancePersistence) {
-		this.kaleoInstancePersistence = kaleoInstancePersistence;
-	}
-
-	/**
-	 * Returns the kaleo instance token local service.
-	 *
-	 * @return the kaleo instance token local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoInstanceTokenLocalService getKaleoInstanceTokenLocalService() {
-		return kaleoInstanceTokenLocalService;
-	}
-
-	/**
-	 * Sets the kaleo instance token local service.
-	 *
-	 * @param kaleoInstanceTokenLocalService the kaleo instance token local service
-	 */
-	public void setKaleoInstanceTokenLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoInstanceTokenLocalService kaleoInstanceTokenLocalService) {
-		this.kaleoInstanceTokenLocalService = kaleoInstanceTokenLocalService;
-	}
-
-	/**
-	 * Returns the kaleo instance token persistence.
-	 *
-	 * @return the kaleo instance token persistence
-	 */
-	public KaleoInstanceTokenPersistence getKaleoInstanceTokenPersistence() {
-		return kaleoInstanceTokenPersistence;
-	}
-
-	/**
-	 * Sets the kaleo instance token persistence.
-	 *
-	 * @param kaleoInstanceTokenPersistence the kaleo instance token persistence
-	 */
-	public void setKaleoInstanceTokenPersistence(
-		KaleoInstanceTokenPersistence kaleoInstanceTokenPersistence) {
-		this.kaleoInstanceTokenPersistence = kaleoInstanceTokenPersistence;
-	}
-
-	/**
-	 * Returns the kaleo log local service.
-	 *
-	 * @return the kaleo log local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoLogLocalService getKaleoLogLocalService() {
-		return kaleoLogLocalService;
-	}
-
-	/**
-	 * Sets the kaleo log local service.
-	 *
-	 * @param kaleoLogLocalService the kaleo log local service
-	 */
-	public void setKaleoLogLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoLogLocalService kaleoLogLocalService) {
-		this.kaleoLogLocalService = kaleoLogLocalService;
-	}
-
-	/**
-	 * Returns the kaleo log persistence.
-	 *
-	 * @return the kaleo log persistence
-	 */
-	public KaleoLogPersistence getKaleoLogPersistence() {
-		return kaleoLogPersistence;
-	}
-
-	/**
-	 * Sets the kaleo log persistence.
-	 *
-	 * @param kaleoLogPersistence the kaleo log persistence
-	 */
-	public void setKaleoLogPersistence(KaleoLogPersistence kaleoLogPersistence) {
-		this.kaleoLogPersistence = kaleoLogPersistence;
-	}
-
-	/**
-	 * Returns the kaleo node local service.
-	 *
-	 * @return the kaleo node local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoNodeLocalService getKaleoNodeLocalService() {
-		return kaleoNodeLocalService;
-	}
-
-	/**
-	 * Sets the kaleo node local service.
-	 *
-	 * @param kaleoNodeLocalService the kaleo node local service
-	 */
-	public void setKaleoNodeLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoNodeLocalService kaleoNodeLocalService) {
-		this.kaleoNodeLocalService = kaleoNodeLocalService;
-	}
-
-	/**
-	 * Returns the kaleo node persistence.
-	 *
-	 * @return the kaleo node persistence
-	 */
-	public KaleoNodePersistence getKaleoNodePersistence() {
-		return kaleoNodePersistence;
-	}
-
-	/**
-	 * Sets the kaleo node persistence.
-	 *
-	 * @param kaleoNodePersistence the kaleo node persistence
-	 */
-	public void setKaleoNodePersistence(
-		KaleoNodePersistence kaleoNodePersistence) {
-		this.kaleoNodePersistence = kaleoNodePersistence;
-	}
-
-	/**
-	 * Returns the kaleo notification local service.
-	 *
-	 * @return the kaleo notification local service
-	 */
-	public KaleoNotificationLocalService getKaleoNotificationLocalService() {
-		return kaleoNotificationLocalService;
-	}
-
-	/**
-	 * Sets the kaleo notification local service.
-	 *
-	 * @param kaleoNotificationLocalService the kaleo notification local service
-	 */
-	public void setKaleoNotificationLocalService(
-		KaleoNotificationLocalService kaleoNotificationLocalService) {
-		this.kaleoNotificationLocalService = kaleoNotificationLocalService;
-	}
-
-	/**
-	 * Returns the kaleo notification persistence.
-	 *
-	 * @return the kaleo notification persistence
-	 */
-	public KaleoNotificationPersistence getKaleoNotificationPersistence() {
-		return kaleoNotificationPersistence;
-	}
-
-	/**
-	 * Sets the kaleo notification persistence.
-	 *
-	 * @param kaleoNotificationPersistence the kaleo notification persistence
-	 */
-	public void setKaleoNotificationPersistence(
-		KaleoNotificationPersistence kaleoNotificationPersistence) {
-		this.kaleoNotificationPersistence = kaleoNotificationPersistence;
-	}
-
-	/**
-	 * Returns the kaleo notification recipient local service.
-	 *
-	 * @return the kaleo notification recipient local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoNotificationRecipientLocalService getKaleoNotificationRecipientLocalService() {
-		return kaleoNotificationRecipientLocalService;
-	}
-
-	/**
-	 * Sets the kaleo notification recipient local service.
-	 *
-	 * @param kaleoNotificationRecipientLocalService the kaleo notification recipient local service
-	 */
-	public void setKaleoNotificationRecipientLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoNotificationRecipientLocalService kaleoNotificationRecipientLocalService) {
-		this.kaleoNotificationRecipientLocalService = kaleoNotificationRecipientLocalService;
-	}
-
-	/**
-	 * Returns the kaleo notification recipient persistence.
-	 *
-	 * @return the kaleo notification recipient persistence
-	 */
-	public KaleoNotificationRecipientPersistence getKaleoNotificationRecipientPersistence() {
-		return kaleoNotificationRecipientPersistence;
-	}
-
-	/**
-	 * Sets the kaleo notification recipient persistence.
-	 *
-	 * @param kaleoNotificationRecipientPersistence the kaleo notification recipient persistence
-	 */
-	public void setKaleoNotificationRecipientPersistence(
-		KaleoNotificationRecipientPersistence kaleoNotificationRecipientPersistence) {
-		this.kaleoNotificationRecipientPersistence = kaleoNotificationRecipientPersistence;
-	}
-
-	/**
-	 * Returns the kaleo task local service.
-	 *
-	 * @return the kaleo task local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoTaskLocalService getKaleoTaskLocalService() {
-		return kaleoTaskLocalService;
-	}
-
-	/**
-	 * Sets the kaleo task local service.
-	 *
-	 * @param kaleoTaskLocalService the kaleo task local service
-	 */
-	public void setKaleoTaskLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoTaskLocalService kaleoTaskLocalService) {
-		this.kaleoTaskLocalService = kaleoTaskLocalService;
-	}
-
-	/**
-	 * Returns the kaleo task persistence.
-	 *
-	 * @return the kaleo task persistence
-	 */
-	public KaleoTaskPersistence getKaleoTaskPersistence() {
-		return kaleoTaskPersistence;
-	}
-
-	/**
-	 * Sets the kaleo task persistence.
-	 *
-	 * @param kaleoTaskPersistence the kaleo task persistence
-	 */
-	public void setKaleoTaskPersistence(
-		KaleoTaskPersistence kaleoTaskPersistence) {
-		this.kaleoTaskPersistence = kaleoTaskPersistence;
-	}
-
-	/**
-	 * Returns the kaleo task assignment local service.
-	 *
-	 * @return the kaleo task assignment local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentLocalService getKaleoTaskAssignmentLocalService() {
-		return kaleoTaskAssignmentLocalService;
-	}
-
-	/**
-	 * Sets the kaleo task assignment local service.
-	 *
-	 * @param kaleoTaskAssignmentLocalService the kaleo task assignment local service
-	 */
-	public void setKaleoTaskAssignmentLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentLocalService kaleoTaskAssignmentLocalService) {
-		this.kaleoTaskAssignmentLocalService = kaleoTaskAssignmentLocalService;
-	}
-
-	/**
-	 * Returns the kaleo task assignment persistence.
-	 *
-	 * @return the kaleo task assignment persistence
-	 */
-	public KaleoTaskAssignmentPersistence getKaleoTaskAssignmentPersistence() {
-		return kaleoTaskAssignmentPersistence;
-	}
-
-	/**
-	 * Sets the kaleo task assignment persistence.
-	 *
-	 * @param kaleoTaskAssignmentPersistence the kaleo task assignment persistence
-	 */
-	public void setKaleoTaskAssignmentPersistence(
-		KaleoTaskAssignmentPersistence kaleoTaskAssignmentPersistence) {
-		this.kaleoTaskAssignmentPersistence = kaleoTaskAssignmentPersistence;
-	}
-
-	/**
-	 * Returns the kaleo task assignment instance local service.
-	 *
-	 * @return the kaleo task assignment instance local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentInstanceLocalService getKaleoTaskAssignmentInstanceLocalService() {
-		return kaleoTaskAssignmentInstanceLocalService;
-	}
-
-	/**
-	 * Sets the kaleo task assignment instance local service.
-	 *
-	 * @param kaleoTaskAssignmentInstanceLocalService the kaleo task assignment instance local service
-	 */
-	public void setKaleoTaskAssignmentInstanceLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentInstanceLocalService kaleoTaskAssignmentInstanceLocalService) {
-		this.kaleoTaskAssignmentInstanceLocalService = kaleoTaskAssignmentInstanceLocalService;
-	}
-
-	/**
-	 * Returns the kaleo task assignment instance persistence.
-	 *
-	 * @return the kaleo task assignment instance persistence
-	 */
-	public KaleoTaskAssignmentInstancePersistence getKaleoTaskAssignmentInstancePersistence() {
-		return kaleoTaskAssignmentInstancePersistence;
-	}
-
-	/**
-	 * Sets the kaleo task assignment instance persistence.
-	 *
-	 * @param kaleoTaskAssignmentInstancePersistence the kaleo task assignment instance persistence
-	 */
-	public void setKaleoTaskAssignmentInstancePersistence(
-		KaleoTaskAssignmentInstancePersistence kaleoTaskAssignmentInstancePersistence) {
-		this.kaleoTaskAssignmentInstancePersistence = kaleoTaskAssignmentInstancePersistence;
-	}
-
-	/**
-	 * Returns the kaleo task form local service.
-	 *
-	 * @return the kaleo task form local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoTaskFormLocalService getKaleoTaskFormLocalService() {
-		return kaleoTaskFormLocalService;
-	}
-
-	/**
-	 * Sets the kaleo task form local service.
-	 *
-	 * @param kaleoTaskFormLocalService the kaleo task form local service
-	 */
-	public void setKaleoTaskFormLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoTaskFormLocalService kaleoTaskFormLocalService) {
-		this.kaleoTaskFormLocalService = kaleoTaskFormLocalService;
-	}
-
-	/**
-	 * Returns the kaleo task form persistence.
-	 *
-	 * @return the kaleo task form persistence
-	 */
-	public KaleoTaskFormPersistence getKaleoTaskFormPersistence() {
-		return kaleoTaskFormPersistence;
-	}
-
-	/**
-	 * Sets the kaleo task form persistence.
-	 *
-	 * @param kaleoTaskFormPersistence the kaleo task form persistence
-	 */
-	public void setKaleoTaskFormPersistence(
-		KaleoTaskFormPersistence kaleoTaskFormPersistence) {
-		this.kaleoTaskFormPersistence = kaleoTaskFormPersistence;
-	}
-
-	/**
-	 * Returns the kaleo task form instance local service.
-	 *
-	 * @return the kaleo task form instance local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoTaskFormInstanceLocalService getKaleoTaskFormInstanceLocalService() {
-		return kaleoTaskFormInstanceLocalService;
-	}
-
-	/**
-	 * Sets the kaleo task form instance local service.
-	 *
-	 * @param kaleoTaskFormInstanceLocalService the kaleo task form instance local service
-	 */
-	public void setKaleoTaskFormInstanceLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoTaskFormInstanceLocalService kaleoTaskFormInstanceLocalService) {
-		this.kaleoTaskFormInstanceLocalService = kaleoTaskFormInstanceLocalService;
-	}
-
-	/**
-	 * Returns the kaleo task form instance persistence.
-	 *
-	 * @return the kaleo task form instance persistence
-	 */
-	public KaleoTaskFormInstancePersistence getKaleoTaskFormInstancePersistence() {
-		return kaleoTaskFormInstancePersistence;
-	}
-
-	/**
-	 * Sets the kaleo task form instance persistence.
-	 *
-	 * @param kaleoTaskFormInstancePersistence the kaleo task form instance persistence
-	 */
-	public void setKaleoTaskFormInstancePersistence(
-		KaleoTaskFormInstancePersistence kaleoTaskFormInstancePersistence) {
-		this.kaleoTaskFormInstancePersistence = kaleoTaskFormInstancePersistence;
-	}
-
-	/**
-	 * Returns the kaleo task instance token local service.
-	 *
-	 * @return the kaleo task instance token local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoTaskInstanceTokenLocalService getKaleoTaskInstanceTokenLocalService() {
-		return kaleoTaskInstanceTokenLocalService;
-	}
-
-	/**
-	 * Sets the kaleo task instance token local service.
-	 *
-	 * @param kaleoTaskInstanceTokenLocalService the kaleo task instance token local service
-	 */
-	public void setKaleoTaskInstanceTokenLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoTaskInstanceTokenLocalService kaleoTaskInstanceTokenLocalService) {
-		this.kaleoTaskInstanceTokenLocalService = kaleoTaskInstanceTokenLocalService;
-	}
-
-	/**
-	 * Returns the kaleo task instance token persistence.
-	 *
-	 * @return the kaleo task instance token persistence
-	 */
-	public KaleoTaskInstanceTokenPersistence getKaleoTaskInstanceTokenPersistence() {
-		return kaleoTaskInstanceTokenPersistence;
-	}
-
-	/**
-	 * Sets the kaleo task instance token persistence.
-	 *
-	 * @param kaleoTaskInstanceTokenPersistence the kaleo task instance token persistence
-	 */
-	public void setKaleoTaskInstanceTokenPersistence(
-		KaleoTaskInstanceTokenPersistence kaleoTaskInstanceTokenPersistence) {
-		this.kaleoTaskInstanceTokenPersistence = kaleoTaskInstanceTokenPersistence;
-	}
-
-	/**
-	 * Returns the kaleo task instance token finder.
-	 *
-	 * @return the kaleo task instance token finder
-	 */
-	public KaleoTaskInstanceTokenFinder getKaleoTaskInstanceTokenFinder() {
-		return kaleoTaskInstanceTokenFinder;
-	}
-
-	/**
-	 * Sets the kaleo task instance token finder.
-	 *
-	 * @param kaleoTaskInstanceTokenFinder the kaleo task instance token finder
-	 */
-	public void setKaleoTaskInstanceTokenFinder(
-		KaleoTaskInstanceTokenFinder kaleoTaskInstanceTokenFinder) {
-		this.kaleoTaskInstanceTokenFinder = kaleoTaskInstanceTokenFinder;
-	}
-
-	/**
-	 * Returns the kaleo timer local service.
-	 *
-	 * @return the kaleo timer local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoTimerLocalService getKaleoTimerLocalService() {
-		return kaleoTimerLocalService;
-	}
-
-	/**
-	 * Sets the kaleo timer local service.
-	 *
-	 * @param kaleoTimerLocalService the kaleo timer local service
-	 */
-	public void setKaleoTimerLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoTimerLocalService kaleoTimerLocalService) {
-		this.kaleoTimerLocalService = kaleoTimerLocalService;
-	}
-
-	/**
-	 * Returns the kaleo timer persistence.
-	 *
-	 * @return the kaleo timer persistence
-	 */
-	public KaleoTimerPersistence getKaleoTimerPersistence() {
-		return kaleoTimerPersistence;
-	}
-
-	/**
-	 * Sets the kaleo timer persistence.
-	 *
-	 * @param kaleoTimerPersistence the kaleo timer persistence
-	 */
-	public void setKaleoTimerPersistence(
-		KaleoTimerPersistence kaleoTimerPersistence) {
-		this.kaleoTimerPersistence = kaleoTimerPersistence;
-	}
-
-	/**
-	 * Returns the kaleo timer instance token local service.
-	 *
-	 * @return the kaleo timer instance token local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoTimerInstanceTokenLocalService getKaleoTimerInstanceTokenLocalService() {
-		return kaleoTimerInstanceTokenLocalService;
-	}
-
-	/**
-	 * Sets the kaleo timer instance token local service.
-	 *
-	 * @param kaleoTimerInstanceTokenLocalService the kaleo timer instance token local service
-	 */
-	public void setKaleoTimerInstanceTokenLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoTimerInstanceTokenLocalService kaleoTimerInstanceTokenLocalService) {
-		this.kaleoTimerInstanceTokenLocalService = kaleoTimerInstanceTokenLocalService;
-	}
-
-	/**
-	 * Returns the kaleo timer instance token persistence.
-	 *
-	 * @return the kaleo timer instance token persistence
-	 */
-	public KaleoTimerInstanceTokenPersistence getKaleoTimerInstanceTokenPersistence() {
-		return kaleoTimerInstanceTokenPersistence;
-	}
-
-	/**
-	 * Sets the kaleo timer instance token persistence.
-	 *
-	 * @param kaleoTimerInstanceTokenPersistence the kaleo timer instance token persistence
-	 */
-	public void setKaleoTimerInstanceTokenPersistence(
-		KaleoTimerInstanceTokenPersistence kaleoTimerInstanceTokenPersistence) {
-		this.kaleoTimerInstanceTokenPersistence = kaleoTimerInstanceTokenPersistence;
-	}
-
-	/**
-	 * Returns the kaleo transition local service.
-	 *
-	 * @return the kaleo transition local service
-	 */
-	public com.liferay.portal.workflow.kaleo.service.KaleoTransitionLocalService getKaleoTransitionLocalService() {
-		return kaleoTransitionLocalService;
-	}
-
-	/**
-	 * Sets the kaleo transition local service.
-	 *
-	 * @param kaleoTransitionLocalService the kaleo transition local service
-	 */
-	public void setKaleoTransitionLocalService(
-		com.liferay.portal.workflow.kaleo.service.KaleoTransitionLocalService kaleoTransitionLocalService) {
-		this.kaleoTransitionLocalService = kaleoTransitionLocalService;
-	}
-
-	/**
-	 * Returns the kaleo transition persistence.
-	 *
-	 * @return the kaleo transition persistence
-	 */
-	public KaleoTransitionPersistence getKaleoTransitionPersistence() {
-		return kaleoTransitionPersistence;
-	}
-
-	/**
-	 * Sets the kaleo transition persistence.
-	 *
-	 * @param kaleoTransitionPersistence the kaleo transition persistence
-	 */
-	public void setKaleoTransitionPersistence(
-		KaleoTransitionPersistence kaleoTransitionPersistence) {
-		this.kaleoTransitionPersistence = kaleoTransitionPersistence;
-	}
-
-	/**
-	 * Returns the counter local service.
-	 *
-	 * @return the counter local service
-	 */
-	public com.liferay.counter.kernel.service.CounterLocalService getCounterLocalService() {
-		return counterLocalService;
-	}
-
-	/**
-	 * Sets the counter local service.
-	 *
-	 * @param counterLocalService the counter local service
-	 */
-	public void setCounterLocalService(
-		com.liferay.counter.kernel.service.CounterLocalService counterLocalService) {
-		this.counterLocalService = counterLocalService;
-	}
-
-	/**
-	 * Returns the class name local service.
-	 *
-	 * @return the class name local service
-	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService getClassNameLocalService() {
-		return classNameLocalService;
-	}
-
-	/**
-	 * Sets the class name local service.
-	 *
-	 * @param classNameLocalService the class name local service
-	 */
-	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService) {
-		this.classNameLocalService = classNameLocalService;
-	}
-
-	/**
-	 * Returns the class name persistence.
-	 *
-	 * @return the class name persistence
-	 */
-	public ClassNamePersistence getClassNamePersistence() {
-		return classNamePersistence;
-	}
-
-	/**
-	 * Sets the class name persistence.
-	 *
-	 * @param classNamePersistence the class name persistence
-	 */
-	public void setClassNamePersistence(
-		ClassNamePersistence classNamePersistence) {
-		this.classNamePersistence = classNamePersistence;
-	}
-
-	/**
-	 * Returns the resource local service.
-	 *
-	 * @return the resource local service
-	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService getResourceLocalService() {
-		return resourceLocalService;
-	}
-
-	/**
-	 * Sets the resource local service.
-	 *
-	 * @param resourceLocalService the resource local service
-	 */
-	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService) {
-		this.resourceLocalService = resourceLocalService;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService getUserLocalService() {
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	public void afterPropertiesSet() {
-		persistedModelLocalServiceRegistry.register("com.liferay.portal.workflow.kaleo.model.KaleoNotification",
-			kaleoNotificationLocalService);
-	}
-
-	public void destroy() {
-		persistedModelLocalServiceRegistry.unregister(
-			"com.liferay.portal.workflow.kaleo.model.KaleoNotification");
+	@Override
+	public Class<?>[] getAopInterfaces() {
+		return new Class<?>[] {
+			KaleoNotificationLocalService.class, IdentifiableOSGiService.class,
+			PersistedModelLocalService.class
+		};
+	}
+
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		kaleoNotificationLocalService = (KaleoNotificationLocalService)aopProxy;
 	}
 
 	/**
@@ -1225,113 +418,105 @@ public abstract class KaleoNotificationLocalServiceBaseImpl
 	 */
 	protected void runSQL(String sql) {
 		try {
-			DataSource dataSource = kaleoNotificationPersistence.getDataSource();
+			DataSource dataSource =
+				kaleoNotificationPersistence.getDataSource();
 
 			DB db = DBManagerUtil.getDB();
 
 			sql = db.buildSQL(sql);
 			sql = PortalUtil.transformSQL(sql);
 
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(dataSource,
-					sql);
+			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
+				dataSource, sql);
 
 			sqlUpdate.update();
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 	}
 
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoActionLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoActionLocalService kaleoActionLocalService;
-	@BeanReference(type = KaleoActionPersistence.class)
+	@Reference
 	protected KaleoActionPersistence kaleoActionPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoConditionLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoConditionLocalService kaleoConditionLocalService;
-	@BeanReference(type = KaleoConditionPersistence.class)
+
+	@Reference
 	protected KaleoConditionPersistence kaleoConditionPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoDefinitionLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoDefinitionLocalService kaleoDefinitionLocalService;
-	@BeanReference(type = KaleoDefinitionPersistence.class)
+
+	@Reference
 	protected KaleoDefinitionPersistence kaleoDefinitionPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalService kaleoDefinitionVersionLocalService;
-	@BeanReference(type = KaleoDefinitionVersionPersistence.class)
-	protected KaleoDefinitionVersionPersistence kaleoDefinitionVersionPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoInstanceLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoInstanceLocalService kaleoInstanceLocalService;
-	@BeanReference(type = KaleoInstancePersistence.class)
+
+	@Reference
+	protected KaleoDefinitionVersionPersistence
+		kaleoDefinitionVersionPersistence;
+
+	@Reference
 	protected KaleoInstancePersistence kaleoInstancePersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoInstanceTokenLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoInstanceTokenLocalService kaleoInstanceTokenLocalService;
-	@BeanReference(type = KaleoInstanceTokenPersistence.class)
+
+	@Reference
 	protected KaleoInstanceTokenPersistence kaleoInstanceTokenPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoLogLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoLogLocalService kaleoLogLocalService;
-	@BeanReference(type = KaleoLogPersistence.class)
+
+	@Reference
 	protected KaleoLogPersistence kaleoLogPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoNodeLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoNodeLocalService kaleoNodeLocalService;
-	@BeanReference(type = KaleoNodePersistence.class)
+
+	@Reference
 	protected KaleoNodePersistence kaleoNodePersistence;
-	@BeanReference(type = KaleoNotificationLocalService.class)
+
 	protected KaleoNotificationLocalService kaleoNotificationLocalService;
-	@BeanReference(type = KaleoNotificationPersistence.class)
+
+	@Reference
 	protected KaleoNotificationPersistence kaleoNotificationPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoNotificationRecipientLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoNotificationRecipientLocalService kaleoNotificationRecipientLocalService;
-	@BeanReference(type = KaleoNotificationRecipientPersistence.class)
-	protected KaleoNotificationRecipientPersistence kaleoNotificationRecipientPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoTaskLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoTaskLocalService kaleoTaskLocalService;
-	@BeanReference(type = KaleoTaskPersistence.class)
+
+	@Reference
+	protected KaleoNotificationRecipientPersistence
+		kaleoNotificationRecipientPersistence;
+
+	@Reference
 	protected KaleoTaskPersistence kaleoTaskPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentLocalService kaleoTaskAssignmentLocalService;
-	@BeanReference(type = KaleoTaskAssignmentPersistence.class)
+
+	@Reference
 	protected KaleoTaskAssignmentPersistence kaleoTaskAssignmentPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentInstanceLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentInstanceLocalService kaleoTaskAssignmentInstanceLocalService;
-	@BeanReference(type = KaleoTaskAssignmentInstancePersistence.class)
-	protected KaleoTaskAssignmentInstancePersistence kaleoTaskAssignmentInstancePersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoTaskFormLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoTaskFormLocalService kaleoTaskFormLocalService;
-	@BeanReference(type = KaleoTaskFormPersistence.class)
+
+	@Reference
+	protected KaleoTaskAssignmentInstancePersistence
+		kaleoTaskAssignmentInstancePersistence;
+
+	@Reference
 	protected KaleoTaskFormPersistence kaleoTaskFormPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoTaskFormInstanceLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoTaskFormInstanceLocalService kaleoTaskFormInstanceLocalService;
-	@BeanReference(type = KaleoTaskFormInstancePersistence.class)
+
+	@Reference
 	protected KaleoTaskFormInstancePersistence kaleoTaskFormInstancePersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoTaskInstanceTokenLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoTaskInstanceTokenLocalService kaleoTaskInstanceTokenLocalService;
-	@BeanReference(type = KaleoTaskInstanceTokenPersistence.class)
-	protected KaleoTaskInstanceTokenPersistence kaleoTaskInstanceTokenPersistence;
-	@BeanReference(type = KaleoTaskInstanceTokenFinder.class)
+
+	@Reference
+	protected KaleoTaskInstanceTokenPersistence
+		kaleoTaskInstanceTokenPersistence;
+
+	@Reference
 	protected KaleoTaskInstanceTokenFinder kaleoTaskInstanceTokenFinder;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoTimerLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoTimerLocalService kaleoTimerLocalService;
-	@BeanReference(type = KaleoTimerPersistence.class)
+
+	@Reference
 	protected KaleoTimerPersistence kaleoTimerPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoTimerInstanceTokenLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoTimerInstanceTokenLocalService kaleoTimerInstanceTokenLocalService;
-	@BeanReference(type = KaleoTimerInstanceTokenPersistence.class)
-	protected KaleoTimerInstanceTokenPersistence kaleoTimerInstanceTokenPersistence;
-	@BeanReference(type = com.liferay.portal.workflow.kaleo.service.KaleoTransitionLocalService.class)
-	protected com.liferay.portal.workflow.kaleo.service.KaleoTransitionLocalService kaleoTransitionLocalService;
-	@BeanReference(type = KaleoTransitionPersistence.class)
+
+	@Reference
+	protected KaleoTimerInstanceTokenPersistence
+		kaleoTimerInstanceTokenPersistence;
+
+	@Reference
 	protected KaleoTransitionPersistence kaleoTransitionPersistence;
-	@ServiceReference(type = com.liferay.counter.kernel.service.CounterLocalService.class)
-	protected com.liferay.counter.kernel.service.CounterLocalService counterLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ClassNameLocalService.class)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService classNameLocalService;
-	@ServiceReference(type = ClassNamePersistence.class)
-	protected ClassNamePersistence classNamePersistence;
-	@ServiceReference(type = com.liferay.portal.kernel.service.ResourceLocalService.class)
-	protected com.liferay.portal.kernel.service.ResourceLocalService resourceLocalService;
-	@ServiceReference(type = com.liferay.portal.kernel.service.UserLocalService.class)
-	protected com.liferay.portal.kernel.service.UserLocalService userLocalService;
-	@ServiceReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
-	protected PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry;
+
+	@Reference
+	protected com.liferay.counter.kernel.service.CounterLocalService
+		counterLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.ClassNameLocalService
+		classNameLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.ResourceLocalService
+		resourceLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.UserLocalService
+		userLocalService;
+
 }

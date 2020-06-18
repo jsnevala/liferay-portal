@@ -34,10 +34,21 @@ public class AntUtil {
 	public static void callMacrodef(
 		Project project, String name, Map<String, String> attributes) {
 
+		callMacrodef(project, name, attributes, null);
+	}
+
+	public static void callMacrodef(
+		Project project, String name, Map<String, String> attributes,
+		String text) {
+
 		Task task = project.createTask(name);
 
 		RuntimeConfigurable runtimeConfigurable =
 			task.getRuntimeConfigurableWrapper();
+
+		if (text != null) {
+			runtimeConfigurable.addText(text);
+		}
 
 		for (Map.Entry<String, String> attribute : attributes.entrySet()) {
 			runtimeConfigurable.setAttribute(
@@ -50,14 +61,24 @@ public class AntUtil {
 	}
 
 	public static void callTarget(
-		File baseDir, String buildFileName, String targetName) {
+			File baseDir, String buildFileName, String targetName)
+		throws AntException {
 
 		callTarget(baseDir, buildFileName, targetName, null);
 	}
 
 	public static void callTarget(
-		File baseDir, String buildFileName, String targetName,
-		Map<String, String> parameters) {
+			File baseDir, String buildFileName, String targetName,
+			Map<String, String> parameters)
+		throws AntException {
+
+		callTarget(baseDir, buildFileName, targetName, parameters, null);
+	}
+
+	public static void callTarget(
+			File baseDir, String buildFileName, String targetName,
+			Map<String, String> parameters, Map<String, String> envVariables)
+		throws AntException {
 
 		String[] bashCommands = new String[3];
 
@@ -71,6 +92,28 @@ public class AntUtil {
 		}
 
 		StringBuilder sb = new StringBuilder();
+
+		if (envVariables != null) {
+			for (Map.Entry<String, String> envVariable :
+					envVariables.entrySet()) {
+
+				sb.append("export ");
+				sb.append(envVariable.getKey());
+				sb.append("=");
+
+				String value = envVariable.getValue();
+
+				value = value.trim();
+
+				value = value.replaceAll("\"", "\\\\\"");
+
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+
+				sb.append(" ; ");
+			}
+		}
 
 		sb.append("ant");
 
@@ -88,11 +131,21 @@ public class AntUtil {
 			for (Map.Entry<String, String> parameter : parameters.entrySet()) {
 				sb.append(" -D");
 				sb.append(parameter.getKey());
-				sb.append("=\"");
-				sb.append(parameter.getValue());
+				sb.append("=");
+
+				String value = parameter.getValue();
+
+				value = value.trim();
+
+				value = value.replaceAll("\"", "\\\\\"");
+
+				sb.append("\"");
+				sb.append(value);
 				sb.append("\"");
 			}
 		}
+
+		System.out.println(sb.toString());
 
 		bashCommands[2] = sb.toString();
 
@@ -122,8 +175,8 @@ public class AntUtil {
 							line = bufferedReader.readLine();
 						}
 					}
-					catch (IOException ioe) {
-						ioe.printStackTrace();
+					catch (IOException ioException) {
+						ioException.printStackTrace();
 					}
 				}
 
@@ -140,13 +193,13 @@ public class AntUtil {
 					JenkinsResultsParserUtil.readInputStream(
 						process.getErrorStream(), true));
 
-				throw new RuntimeException();
+				throw new AntException();
 			}
 		}
-		catch (InterruptedException | IOException e) {
-			e.printStackTrace();
+		catch (InterruptedException | IOException exception) {
+			exception.printStackTrace();
 
-			throw new RuntimeException(e);
+			throw new AntException(exception);
 		}
 	}
 

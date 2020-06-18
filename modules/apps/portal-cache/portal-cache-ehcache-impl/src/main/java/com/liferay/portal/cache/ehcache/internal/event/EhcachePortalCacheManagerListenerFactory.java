@@ -17,7 +17,6 @@ package com.liferay.portal.cache.ehcache.internal.event;
 import com.liferay.portal.cache.PortalCacheManagerListenerFactory;
 import com.liferay.portal.cache.ehcache.internal.EhcacheConstants;
 import com.liferay.portal.cache.ehcache.internal.EhcachePortalCacheManager;
-import com.liferay.portal.cache.ehcache.spi.event.EhcachePortalCacheManagerListenerAdapter;
 import com.liferay.portal.kernel.cache.PortalCacheManagerListener;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.util.InstanceFactory;
@@ -42,7 +41,7 @@ public class EhcachePortalCacheManagerListenerFactory
 		EhcachePortalCacheManager<?, ?> ehcachePortalCacheManager,
 		Properties properties) {
 
-		String className = properties.getProperty(
+		String className = (String)properties.remove(
 			EhcacheConstants.
 				CACHE_MANAGER_LISTENER_PROPERTIES_KEY_FACTORY_CLASS_NAME);
 
@@ -50,10 +49,18 @@ public class EhcachePortalCacheManagerListenerFactory
 			return null;
 		}
 
+		ClassLoader classLoader = (ClassLoader)properties.remove(
+			EhcacheConstants.
+				CACHE_MANAGER_LISTENER_PROPERTIES_KEY_FACTORY_CLASS_LOADER);
+
+		if (classLoader == null) {
+			return null;
+		}
+
 		try {
 			CacheManagerEventListenerFactory cacheManagerEventListenerFactory =
-				(CacheManagerEventListenerFactory)
-					InstanceFactory.newInstance(getClassLoader(), className);
+				(CacheManagerEventListenerFactory)InstanceFactory.newInstance(
+					classLoader, className);
 
 			return new EhcachePortalCacheManagerListenerAdapter(
 				cacheManagerEventListenerFactory.
@@ -61,18 +68,12 @@ public class EhcachePortalCacheManagerListenerFactory
 						ehcachePortalCacheManager.getEhcacheManager(),
 						properties));
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			throw new SystemException(
 				"Unable to instantiate cache manager event listener " +
 					className,
-				e);
+				exception);
 		}
-	}
-
-	protected ClassLoader getClassLoader() {
-		Class<?> clazz = getClass();
-
-		return clazz.getClassLoader();
 	}
 
 }

@@ -14,14 +14,11 @@
 
 package com.liferay.asset.display.page.exception;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 
 /**
  * @author Brian Wing Shun Chan
  */
-@ProviderType
 public class NoSuchDisplayPageEntryException extends NoSuchModelException {
 
 	public NoSuchDisplayPageEntryException() {

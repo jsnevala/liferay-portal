@@ -89,12 +89,13 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 	creationMenu="<%= wikiPagesManagementToolbarDisplayContext.getCreationMenu() %>"
 	disabled="<%= wikiPagesManagementToolbarDisplayContext.isDisabled() %>"
 	filterDropdownItems="<%= wikiPagesManagementToolbarDisplayContext.getFilterDropdownItems() %>"
+	filterLabelItems="<%= wikiPagesManagementToolbarDisplayContext.getFilterLabelItems() %>"
 	infoPanelId="infoPanelId"
 	itemsTotal="<%= wikiPagesManagementToolbarDisplayContext.getTotalItems() %>"
 	searchActionURL="<%= String.valueOf(wikiPagesManagementToolbarDisplayContext.getSearchActionURL()) %>"
 	searchContainerId="wikiPages"
 	selectable="<%= wikiPagesManagementToolbarDisplayContext.isSelectable() %>"
-	showInfoButton="<%= true %>"
+	showInfoButton="<%= wikiPagesManagementToolbarDisplayContext.isShowInfoButton() %>"
 	showSearch="<%= wikiPagesManagementToolbarDisplayContext.isShowSearch() %>"
 	sortingOrder="<%= wikiPagesManagementToolbarDisplayContext.getSortingOrder() %>"
 	sortingURL="<%= String.valueOf(wikiPagesManagementToolbarDisplayContext.getSortingURL()) %>"
@@ -171,9 +172,9 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 				>
 
 					<%
-					Map<String, Object> rowData = new HashMap<>();
-
-					rowData.put("actions", String.join(StringPool.COMMA, wikiPagesManagementToolbarDisplayContext.getAvailableActionDropdownItems(curPage)));
+					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(wikiPagesManagementToolbarDisplayContext.getAvailableActions(curPage))
+					).build();
 
 					row.setData(rowData);
 
@@ -203,6 +204,11 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 							<liferay-ui:search-container-column-text
 								colspan="<%= 2 %>"
 							>
+								<h2 class="h5">
+									<aui:a href="<%= rowURL.toString() %>">
+										<%= curPage.getTitle() %>
+									</aui:a>
+								</h2>
 
 								<%
 								Date modifiedDate = curPage.getModifiedDate();
@@ -210,7 +216,7 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 								String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true);
 								%>
 
-								<h5 class="text-default">
+								<span class="text-default">
 									<c:choose>
 										<c:when test="<%= Validator.isNotNull(curPage.getUserName()) %>">
 											<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(curPage.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
@@ -219,17 +225,10 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 											<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription} %>" key="modified-x-ago" />
 										</c:otherwise>
 									</c:choose>
-								</h5>
-
-								<h4>
-									<aui:a href="<%= rowURL.toString() %>">
-										<%= curPage.getTitle() %>
-									</aui:a>
-								</h4>
-
-								<h5 class="text-default">
+								</span>
+								<span class="text-default">
 									<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= curPage.getStatus() %>" />
-								</h5>
+								</span>
 							</liferay-ui:search-container-column-text>
 
 							<liferay-ui:search-container-column-jsp
@@ -292,34 +291,39 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 	</div>
 </div>
 
-<aui:script>
-	var deletePages = function() {
-		if (<%= trashHelper.isTrashEnabled(scopeGroupId) %> || confirm(' <%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-the-selected-entries") %>')) {
-			var form = AUI.$(document.<portlet:namespace />fm);
+<script>
+	var deletePages = function () {
+		if (
+			<%= trashHelper.isTrashEnabled(scopeGroupId) %> ||
+			confirm(
+				' <%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-the-selected-entries") %>'
+			)
+		) {
+			var form = document.<portlet:namespace />fm;
 
-			form.attr('method', 'post');
-			form.fm('<%= Constants.CMD %>').val('<%= trashHelper.isTrashEnabled(scopeGroupId) ? Constants.MOVE_TO_TRASH : Constants.DELETE %>');
-
-			submitForm(form, '<portlet:actionURL name="/wiki/edit_page" />');
+			Liferay.Util.postForm(form, {
+				data: {
+					<%= Constants.CMD %>:
+						'<%= trashHelper.isTrashEnabled(scopeGroupId) ? Constants.MOVE_TO_TRASH : Constants.DELETE %>',
+				},
+				url: '<portlet:actionURL name="/wiki/edit_page" />',
+			});
 		}
 	};
 
 	var ACTIONS = {
-		'deletePages': deletePages
+		deletePages: deletePages,
 	};
 
-	Liferay.componentReady('wikiPagesManagementToolbar').then(
-		function(managementToolbar) {
-			managementToolbar.on(
-				'actionItemClicked',
-				function(event) {
-					var itemData = event.data.item.data;
+	Liferay.componentReady('wikiPagesManagementToolbar').then(function (
+		managementToolbar
+	) {
+		managementToolbar.on('actionItemClicked', function (event) {
+			var itemData = event.data.item.data;
 
-					if (itemData && itemData.action && ACTIONS[itemData.action]) {
-						ACTIONS[itemData.action]();
-					}
-				}
-			);
-		}
-	);
-</aui:script>
+			if (itemData && itemData.action && ACTIONS[itemData.action]) {
+				ACTIONS[itemData.action]();
+			}
+		});
+	});
+</script>

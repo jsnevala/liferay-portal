@@ -81,10 +81,10 @@ public class URLTemplateResource implements TemplateResource {
 		try {
 			return URLUtil.getLastModifiedTime(_templateURL);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			_log.error(
 				"Unable to get last modified time for template " + _templateId,
-				ioe);
+				ioException);
 
 			return 0;
 		}
@@ -112,6 +112,7 @@ public class URLTemplateResource implements TemplateResource {
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		_templateId = objectInput.readUTF();
+
 		_templateURLExternalForm = objectInput.readUTF();
 
 		_templateURL = new URL(_templateURLExternalForm);

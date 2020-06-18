@@ -24,7 +24,7 @@ import com.liferay.portal.security.sso.facebook.connect.constants.FacebookConnec
 import com.liferay.portal.security.sso.facebook.connect.constants.FacebookConnectConstants;
 import com.liferay.portal.security.sso.facebook.connect.constants.LegacyFacebookConnectPropsKeys;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.verify.test.BaseCompanySettingsVerifyProcessTestCase;
+import com.liferay.portal.verify.test.util.BaseCompanySettingsVerifyProcessTestCase;
 
 import javax.portlet.PortletPreferences;
 
@@ -107,23 +107,27 @@ public class FacebookConnectCompanySettingsVerifyProcessTest
 	}
 
 	@Override
-	protected void populateLegacyProperties(UnicodeProperties properties) {
-		properties.put(LegacyFacebookConnectPropsKeys.AUTH_ENABLED, "true");
-		properties.put(LegacyFacebookConnectPropsKeys.APP_ID, "test_app_id");
-		properties.put(
+	protected void populateLegacyProperties(
+		UnicodeProperties unicodeProperties) {
+
+		unicodeProperties.put(
+			LegacyFacebookConnectPropsKeys.AUTH_ENABLED, "true");
+		unicodeProperties.put(
+			LegacyFacebookConnectPropsKeys.APP_ID, "test_app_id");
+		unicodeProperties.put(
 			LegacyFacebookConnectPropsKeys.APP_SECRET, "test_app_secret");
-		properties.put(
+		unicodeProperties.put(
 			LegacyFacebookConnectPropsKeys.GRAPH_URL, "test_graph_url");
-		properties.put(
+		unicodeProperties.put(
 			LegacyFacebookConnectPropsKeys.OAUTH_AUTH_URL,
 			"test_oauth_auth_url");
-		properties.put(
+		unicodeProperties.put(
 			LegacyFacebookConnectPropsKeys.OAUTH_REDIRECT_URL,
 			"http://localhost:8080/c/login/facebook_connect_oauth");
-		properties.put(
+		unicodeProperties.put(
 			LegacyFacebookConnectPropsKeys.OAUTH_TOKEN_URL,
 			"test_oauth_token_url");
-		properties.put(
+		unicodeProperties.put(
 			LegacyFacebookConnectPropsKeys.VERIFIED_ACCOUNT_REQUIRED, "true");
 	}
 

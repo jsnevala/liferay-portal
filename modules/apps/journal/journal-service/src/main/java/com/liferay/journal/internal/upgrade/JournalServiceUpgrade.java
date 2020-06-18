@@ -14,14 +14,18 @@
 
 package com.liferay.journal.internal.upgrade;
 
+import com.liferay.asset.display.page.service.AssetDisplayPageEntryLocalService;
+import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalService;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.comment.upgrade.UpgradeDiscussionSubscriptionClassName;
+import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLinkLocalService;
 import com.liferay.dynamic.data.mapping.util.DefaultDDMStructureHelper;
-import com.liferay.journal.internal.upgrade.util.JournalArticleImageUpgradeUtil;
+import com.liferay.journal.internal.upgrade.util.JournalArticleImageUpgradeHelper;
 import com.liferay.journal.internal.upgrade.v0_0_2.UpgradeClassNames;
 import com.liferay.journal.internal.upgrade.v0_0_3.UpgradeJournalArticleType;
 import com.liferay.journal.internal.upgrade.v0_0_4.UpgradeSchema;
@@ -47,14 +51,25 @@ import com.liferay.journal.internal.upgrade.v1_1_2.UpgradeCheckIntervalConfigura
 import com.liferay.journal.internal.upgrade.v1_1_3.UpgradeResourcePermissions;
 import com.liferay.journal.internal.upgrade.v1_1_4.UpgradeUrlTitle;
 import com.liferay.journal.internal.upgrade.v1_1_5.UpgradeContentImages;
+import com.liferay.journal.internal.upgrade.v1_1_6.UpgradeAssetDisplayPageEntry;
+import com.liferay.journal.internal.upgrade.v1_1_8.UpgradeJournalArticle;
+import com.liferay.journal.internal.upgrade.v2_0_0.util.JournalArticleTable;
+import com.liferay.journal.internal.upgrade.v2_0_0.util.JournalFeedTable;
+import com.liferay.journal.internal.upgrade.v2_0_0.util.JournalFolderTable;
+import com.liferay.journal.internal.upgrade.v3_2_1.UpgradeJournalArticleLocalization;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.portal.change.tracking.store.CTStoreFactory;
 import com.liferay.portal.configuration.upgrade.PrefsPropsToConfigurationUpgradeHelper;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBProcessContext;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.capabilities.PortalCapabilityLocator;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ImageLocalService;
@@ -64,10 +79,13 @@ import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.SystemEventLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.settings.SettingsFactory;
+import com.liferay.portal.kernel.upgrade.BaseUpgradeSQLServerDatetime;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
-import com.liferay.portal.kernel.upgrade.UpgradeException;
+import com.liferay.portal.kernel.upgrade.UpgradeCTModel;
+import com.liferay.portal.kernel.upgrade.UpgradeMVCCVersion;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
+import com.liferay.subscription.service.SubscriptionLocalService;
 
 import java.io.PrintWriter;
 
@@ -76,9 +94,12 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
-@Component(immediate = true, service = UpgradeStepRegistrator.class)
+@Component(
+	immediate = true,
+	service = {JournalServiceUpgrade.class, UpgradeStepRegistrator.class}
+)
 public class JournalServiceUpgrade implements UpgradeStepRegistrator {
 
 	@Override
@@ -88,9 +109,10 @@ public class JournalServiceUpgrade implements UpgradeStepRegistrator {
 		registry.register(
 			"0.0.2", "0.0.3",
 			new UpgradeJournalArticleType(
-				_assetCategoryLocalService, _assetEntryLocalService,
-				_assetVocabularyLocalService, _companyLocalService,
-				_userLocalService));
+				_assetCategoryLocalService,
+				_assetEntryAssetCategoryRelLocalService,
+				_assetEntryLocalService, _assetVocabularyLocalService,
+				_companyLocalService, _userLocalService));
 
 		registry.register("0.0.3", "0.0.4", new UpgradeSchema());
 
@@ -111,14 +133,12 @@ public class JournalServiceUpgrade implements UpgradeStepRegistrator {
 			new UpgradeStep() {
 
 				@Override
-				public void upgrade(DBProcessContext dbProcessContext)
-					throws UpgradeException {
-
+				public void upgrade(DBProcessContext dbProcessContext) {
 					try {
 						deleteTempImages();
 					}
-					catch (Exception e) {
-						e.printStackTrace(
+					catch (Exception exception) {
+						exception.printStackTrace(
 							new PrintWriter(
 								dbProcessContext.getOutputStream(), true));
 					}
@@ -149,10 +169,11 @@ public class JournalServiceUpgrade implements UpgradeStepRegistrator {
 		registry.register(
 			"1.0.2", "1.1.0",
 			new UpgradeDocumentLibraryTypeContent(
-				_journalArticleImageUpgradeUtil),
+				_journalArticleImageUpgradeHelper),
 			new UpgradeImageTypeContent(
-				_imageLocalService, _journalArticleImageUpgradeUtil),
-			new UpgradeJournalArticleLocalizedValues());
+				_imageLocalService, _journalArticleImageUpgradeHelper,
+				_portletFileRepository),
+			new UpgradeJournalArticleLocalizedValues(_counterLocalService));
 
 		registry.register(
 			"1.1.0", "1.1.1",
@@ -170,7 +191,67 @@ public class JournalServiceUpgrade implements UpgradeStepRegistrator {
 
 		registry.register(
 			"1.1.4", "1.1.5",
-			new UpgradeContentImages(_journalArticleImageUpgradeUtil));
+			new UpgradeContentImages(_journalArticleImageUpgradeHelper));
+
+		registry.register(
+			"1.1.5", "1.1.6",
+			new UpgradeAssetDisplayPageEntry(
+				_assetDisplayPageEntryLocalService, _companyLocalService));
+
+		registry.register(
+			"1.1.6", "1.1.7",
+			new UpgradeDiscussionSubscriptionClassName(
+				_classNameLocalService, _subscriptionLocalService,
+				JournalArticle.class.getName(),
+				UpgradeDiscussionSubscriptionClassName.DeletionMode.UPDATE));
+
+		registry.register("1.1.7", "1.1.8", new UpgradeJournalArticle());
+
+		registry.register(
+			"1.1.8", "2.0.0",
+			new BaseUpgradeSQLServerDatetime(
+				new Class<?>[] {
+					JournalArticleTable.class, JournalFeedTable.class,
+					JournalFolderTable.class
+				}));
+
+		registry.register(
+			"2.0.0", "3.0.0",
+			new com.liferay.journal.internal.upgrade.v3_0_0.
+				UpgradeJournalArticleImage(_imageLocalService));
+
+		registry.register("3.0.0", "3.0.1", new DummyUpgradeStep());
+
+		registry.register("3.0.1", "3.0.2", new DummyUpgradeStep());
+
+		registry.register(
+			"3.0.2", "3.1.0",
+			new UpgradeMVCCVersion() {
+
+				@Override
+				protected String[] getModuleTableNames() {
+					return new String[] {
+						"JournalArticle", "JournalArticleLocalization",
+						"JournalArticleResource", "JournalContentSearch",
+						"JournalFeed", "JournalFolder"
+					};
+				}
+
+			});
+
+		registry.register(
+			"3.1.0", "3.2.0",
+			new UpgradeCTModel(
+				"JournalArticleLocalization", "JournalArticleResource",
+				"JournalArticle", "JournalFolder"));
+
+		registry.register(
+			"3.2.0", "3.2.1", new UpgradeJournalArticleLocalization());
+
+		registry.register(
+			"3.2.1", "3.2.2",
+			new com.liferay.journal.internal.upgrade.v3_2_2.
+				UpgradeJournalArticleLocalization());
 	}
 
 	protected void deleteTempImages() throws Exception {
@@ -188,86 +269,6 @@ public class JournalServiceUpgrade implements UpgradeStepRegistrator {
 	}
 
 	@Reference(unbind = "-")
-	protected void setAssetCategoryLocalService(
-		AssetCategoryLocalService assetCategoryLocalService) {
-
-		_assetCategoryLocalService = assetCategoryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setAssetEntryLocalService(
-		AssetEntryLocalService assetEntryLocalService) {
-
-		_assetEntryLocalService = assetEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setAssetVocabularyLocalService(
-		AssetVocabularyLocalService assetVocabularyLocalService) {
-
-		_assetVocabularyLocalService = assetVocabularyLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setCompanyLocalService(
-		CompanyLocalService companyLocalService) {
-
-		_companyLocalService = companyLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setConfigurationAdmin(
-		ConfigurationAdmin configurationAdmin) {
-
-		_configurationAdmin = configurationAdmin;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMStorageLinkLocalService(
-		DDMStorageLinkLocalService ddmStorageLinkLocalService) {
-
-		_ddmStorageLinkLocalService = ddmStorageLinkLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMStructureLocalService(
-		DDMStructureLocalService ddmStructureLocalService) {
-
-		_ddmStructureLocalService = ddmStructureLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMTemplateLinkLocalService(
-		DDMTemplateLinkLocalService ddmTemplateLinkLocalService) {
-
-		_ddmTemplateLinkLocalService = ddmTemplateLinkLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDefaultDDMStructureHelper(
-		DefaultDDMStructureHelper defaultDDMStructureHelper) {
-
-		_defaultDDMStructureHelper = defaultDDMStructureHelper;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setImageLocalService(ImageLocalService imageLocalService) {
-		_imageLocalService = imageLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutLocalService(
-		LayoutLocalService layoutLocalService) {
-
-		_layoutLocalService = layoutLocalService;
-	}
-
-	@Reference(unbind = "-")
 	protected void setPortalCapabilityLocator(
 		PortalCapabilityLocator portalCapabilityLocator) {
 
@@ -275,67 +276,94 @@ public class JournalServiceUpgrade implements UpgradeStepRegistrator {
 
 	}
 
-	@Reference(unbind = "-")
-	protected void setResourceActionLocalService(
-		ResourceActionLocalService resourceActionLocalService) {
-
-		_resourceActionLocalService = resourceActionLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setResourceActions(ResourceActions resourceActions) {
-		_resourceActions = resourceActions;
-	}
-
-	@Reference(unbind = "-")
-	protected void setResourceLocalService(
-		ResourceLocalService resourceLocalService) {
-
-		_resourceLocalService = resourceLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setSettingsFactory(SettingsFactory settingsFactory) {
-		_settingsFactory = settingsFactory;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalServiceUpgrade.class);
 
+	@Reference
 	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Reference
+	private AssetDisplayPageEntryLocalService
+		_assetDisplayPageEntryLocalService;
+
+	@Reference
+	private AssetEntryAssetCategoryRelLocalService
+		_assetEntryAssetCategoryRelLocalService;
+
+	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference
 	private ConfigurationAdmin _configurationAdmin;
+
+	@Reference
+	private CounterLocalService _counterLocalService;
+
+	@Reference
+	private CTStoreFactory _ctStoreFactory;
+
+	@Reference
 	private DDMStorageLinkLocalService _ddmStorageLinkLocalService;
+
+	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
 	private DDMTemplateLinkLocalService _ddmTemplateLinkLocalService;
+
+	@Reference
 	private DefaultDDMStructureHelper _defaultDDMStructureHelper;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
 	private ImageLocalService _imageLocalService;
 
 	@Reference
-	private JournalArticleImageUpgradeUtil _journalArticleImageUpgradeUtil;
+	private JournalArticleImageUpgradeHelper _journalArticleImageUpgradeHelper;
 
+	@Reference
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
+
+	@Reference
+	private PortletFileRepository _portletFileRepository;
 
 	@Reference
 	private PrefsPropsToConfigurationUpgradeHelper
 		_prefsPropsToConfigurationUpgradeHelper;
 
+	@Reference
 	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Reference
 	private ResourceActions _resourceActions;
+
+	@Reference
 	private ResourceLocalService _resourceLocalService;
+
+	@Reference
 	private SettingsFactory _settingsFactory;
+
+	@Reference
+	private SubscriptionLocalService _subscriptionLocalService;
 
 	@Reference
 	private SystemEventLocalService _systemEventLocalService;
 
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

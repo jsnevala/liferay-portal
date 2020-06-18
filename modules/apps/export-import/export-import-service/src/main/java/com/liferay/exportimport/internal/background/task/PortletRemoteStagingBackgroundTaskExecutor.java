@@ -31,9 +31,9 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
-import com.liferay.portal.kernel.util.ClassLoaderUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portlet.exportimport.service.http.StagingServiceHttp;
 
 import java.io.File;
@@ -85,7 +85,7 @@ public class PortletRemoteStagingBackgroundTaskExecutor
 
 		try {
 			currentThread.setContextClassLoader(
-				ClassLoaderUtil.getPortalClassLoader());
+				PortalClassLoaderUtil.getClassLoader());
 
 			ExportImportThreadLocal.setPortletStagingInProcess(true);
 
@@ -108,10 +108,8 @@ public class PortletRemoteStagingBackgroundTaskExecutor
 
 			httpPrincipal = (HttpPrincipal)taskContextMap.get("httpPrincipal");
 
-			Map<String, Serializable> settingsMap =
-				exportImportConfiguration.getSettingsMap();
-
-			long targetGroupId = MapUtil.getLong(settingsMap, "targetGroupId");
+			long targetGroupId = MapUtil.getLong(
+				exportImportConfiguration.getSettingsMap(), "targetGroupId");
 
 			stagingRequestId = StagingServiceHttp.createStagingRequest(
 				httpPrincipal, targetGroupId, checksum);
@@ -162,10 +160,11 @@ public class PortletRemoteStagingBackgroundTaskExecutor
 					StagingServiceHttp.cleanUpStagingRequest(
 						httpPrincipal, stagingRequestId);
 				}
-				catch (PortalException pe) {
+				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
-							"Unable to clean up the remote live site", pe);
+							"Unable to clean up the remote live site",
+							portalException);
 					}
 				}
 			}

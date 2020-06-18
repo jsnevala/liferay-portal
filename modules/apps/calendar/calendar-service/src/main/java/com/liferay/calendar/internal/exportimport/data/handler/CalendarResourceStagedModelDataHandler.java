@@ -34,12 +34,13 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.xml.Element;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -60,8 +61,9 @@ import org.osgi.service.component.annotations.Reference;
 public class CalendarResourceStagedModelDataHandler
 	extends BaseStagedModelDataHandler<CalendarResource> {
 
-	public static final String[] CLASS_NAMES =
-		{CalendarResource.class.getName()};
+	public static final String[] CLASS_NAMES = {
+		CalendarResource.class.getName()
+	};
 
 	@Override
 	public void deleteStagedModel(CalendarResource calendarResource)
@@ -116,8 +118,8 @@ public class CalendarResourceStagedModelDataHandler
 		PortletDataContext portletDataContext,
 		CalendarResource calendarResource) {
 
-		if (calendarResource.getClassNameId() ==
-				_portal.getClassNameId(CalendarResource.class)) {
+		if (calendarResource.getClassNameId() == _portal.getClassNameId(
+				CalendarResource.class)) {
 
 			return true;
 		}
@@ -140,8 +142,8 @@ public class CalendarResourceStagedModelDataHandler
 				PortletDataContext.REFERENCE_TYPE_STRONG);
 		}
 
-		if (calendarResource.getClassNameId() ==
-				_portal.getClassNameId(User.class)) {
+		if (calendarResource.getClassNameId() == _portal.getClassNameId(
+				User.class)) {
 
 			User user = _userLocalService.getUser(
 				calendarResource.getClassPK());
@@ -152,7 +154,7 @@ public class CalendarResourceStagedModelDataHandler
 		}
 
 		String calendarResourceName = calendarResource.getName(
-			LocaleUtil.getDefault());
+			LocaleUtil.getSiteDefault());
 
 		Group group = _groupLocalService.getGroup(
 			calendarResource.getGroupId());
@@ -237,7 +239,8 @@ public class CalendarResourceStagedModelDataHandler
 						calendarResource.getDescriptionMap(),
 						calendarResource.isActive(), serviceContext);
 			}
-			catch (DuplicateCalendarResourceException dcre) {
+			catch (DuplicateCalendarResourceException
+						duplicateCalendarResourceException) {
 
 				// The calendar resource for the site's default calendar is
 				// always generated beforehand, so we only want to add it once
@@ -270,15 +273,17 @@ public class CalendarResourceStagedModelDataHandler
 			return calendarResource.getNameMap();
 		}
 
-		Map<Locale, String> calendarResourceNameMap = new HashMap<>();
-
 		Group scopeGroup = _groupLocalService.getGroup(
 			portletDataContext.getScopeGroupId());
 
-		calendarResourceNameMap.put(
-			LocaleUtil.getDefault(), scopeGroup.getDescriptiveName());
+		Map<Locale, String> calendarResourceNameMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), scopeGroup.getDescriptiveName()
+		).build();
 
-		return calendarResourceNameMap;
+		return LocalizationUtil.populateLocalizationMap(
+			calendarResourceNameMap,
+			LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()),
+			scopeGroup.getGroupId());
 	}
 
 	protected long getClassPK(
@@ -287,13 +292,13 @@ public class CalendarResourceStagedModelDataHandler
 
 		long classPK = 0;
 
-		if (calendarResource.getClassNameId() ==
-				_portal.getClassNameId(Group.class)) {
+		if (calendarResource.getClassNameId() == _portal.getClassNameId(
+				Group.class)) {
 
 			classPK = portletDataContext.getScopeGroupId();
 		}
-		else if (calendarResource.getClassNameId() ==
-					_portal.getClassNameId(User.class)) {
+		else if (calendarResource.getClassNameId() == _portal.getClassNameId(
+					User.class)) {
 
 			classPK = userId;
 		}
@@ -321,30 +326,6 @@ public class CalendarResourceStagedModelDataHandler
 		}
 
 		return code;
-	}
-
-	@Reference(unbind = "-")
-	protected void setCalendarLocalService(
-		CalendarLocalService calendarLocalService) {
-
-		_calendarLocalService = calendarLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setCalendarResourceLocalService(
-		CalendarResourceLocalService calendarResourceLocalService) {
-
-		_calendarResourceLocalService = calendarResourceLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
 	}
 
 	protected void updateCalendars(
@@ -376,13 +357,19 @@ public class CalendarResourceStagedModelDataHandler
 		}
 	}
 
+	@Reference
 	private CalendarLocalService _calendarLocalService;
+
+	@Reference
 	private CalendarResourceLocalService _calendarResourceLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

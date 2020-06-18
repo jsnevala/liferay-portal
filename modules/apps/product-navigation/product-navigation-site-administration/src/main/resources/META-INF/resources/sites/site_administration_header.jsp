@@ -19,8 +19,71 @@
 <%
 SiteAdministrationPanelCategoryDisplayContext siteAdministrationPanelCategoryDisplayContext = new SiteAdministrationPanelCategoryDisplayContext(liferayPortletRequest, liferayPortletResponse, null);
 
+Group group = siteAdministrationPanelCategoryDisplayContext.getGroup();
 PanelCategory panelCategory = siteAdministrationPanelCategoryDisplayContext.getPanelCategory();
+
+PortletURL portletURL = PortletURLFactoryUtil.create(request, ProductNavigationProductMenuPortletKeys.PRODUCT_NAVIGATION_PRODUCT_MENU, RenderRequest.RENDER_PHASE);
+
+portletURL.setParameter("mvcPath", "/portlet/pages_tree.jsp");
+portletURL.setParameter("selPpid", portletDisplay.getId());
+portletURL.setWindowState(LiferayWindowState.EXCLUSIVE);
 %>
+
+<c:if test="<%= (group != null) && (group.getType() != GroupConstants.TYPE_DEPOT) && !group.isCompany() %>">
+	<div class="icon-pages-tree">
+		<liferay-ui:icon
+			icon="pages-tree"
+			id="pagesTreeSidenavToggleId"
+			label="<%= false %>"
+			linkCssClass="icon-monospaced"
+			markupView="lexicon"
+			message="find-a-page"
+			url="javascript:;"
+		/>
+	</div>
+
+	<aui:script sandbox="<%= true %>">
+		var pagesTreeToggle = document.getElementById(
+			'<portlet:namespace />pagesTreeSidenavToggleId'
+		);
+
+		pagesTreeToggle.addEventListener('click', function (event) {
+			Liferay.Util.Session.set(
+				'com.liferay.product.navigation.product.menu.web_pagesTreeState',
+				'open'
+			).then(function () {
+				Liferay.Util.fetch('<%= portletURL.toString() %>')
+					.then(function (response) {
+						if (!response.ok) {
+							throw new Error(
+								'<liferay-ui:message key="an-unexpected-error-occurred" />'
+							);
+						}
+
+						return response.text();
+					})
+					.then(function (response) {
+						var sidebar = document.querySelector(
+							'.lfr-product-menu-sidebar .sidebar-body'
+						);
+
+						sidebar.innerHTML = '';
+
+						var range = document.createRange();
+						range.selectNode(sidebar);
+
+						var fragment = range.createContextualFragment(response);
+
+						var pagesTree = document.createElement('div');
+						pagesTree.setAttribute('class', 'pages-tree');
+						pagesTree.appendChild(fragment);
+
+						sidebar.appendChild(pagesTree);
+					});
+			});
+		});
+	</aui:script>
+</c:if>
 
 <c:if test="<%= siteAdministrationPanelCategoryDisplayContext.isShowSiteSelector() %>">
 	<div class="icon-sites">
@@ -30,7 +93,7 @@ PanelCategory panelCategory = siteAdministrationPanelCategoryDisplayContext.getP
 			label="<%= false %>"
 			linkCssClass="icon-monospaced"
 			markupView="lexicon"
-			message="go-to-other-site"
+			message="go-to-other-site-or-library"
 			url="javascript:;"
 		/>
 	</div>
@@ -40,66 +103,79 @@ PanelCategory panelCategory = siteAdministrationPanelCategoryDisplayContext.getP
 
 	ItemSelector itemSelector = (ItemSelector)request.getAttribute(SiteAdministrationWebKeys.ITEM_SELECTOR);
 
-	SiteItemSelectorCriterion siteItemSelectorCriterion = new SiteItemSelectorCriterion();
+	GroupItemSelectorCriterion groupItemSelectorCriterion = new GroupItemSelectorCriterion();
 
-	List<ItemSelectorReturnType> desiredItemSelectorReturnTypes = new ArrayList<ItemSelectorReturnType>();
+	groupItemSelectorCriterion.setDesiredItemSelectorReturnTypes(new URLItemSelectorReturnType());
+	groupItemSelectorCriterion.setIncludeAllVisibleGroups(true);
 
-	desiredItemSelectorReturnTypes.add(new URLItemSelectorReturnType());
-
-	siteItemSelectorCriterion.setDesiredItemSelectorReturnTypes(desiredItemSelectorReturnTypes);
-
-	PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(liferayPortletRequest), eventName, siteItemSelectorCriterion);
+	PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(liferayPortletRequest), eventName, groupItemSelectorCriterion);
 	%>
 
-	<aui:script sandbox="<%= true %>">
-		$('#<portlet:namespace />manageSitesLink').on(
-			'click',
-			function(event) {
-				Liferay.Util.selectEntity(
-					{
-						dialog: {
-							constrain: true,
-							destroyOnHide: true,
-							modal: true
+	<script>
+		(function () {
+			var manageSitesLink = document.getElementById(
+				'<portlet:namespace />manageSitesLink'
+			);
+
+			if (manageSitesLink) {
+				manageSitesLink.addEventListener('click', function (event) {
+					Liferay.Util.selectEntity(
+						{
+							dialog: {
+								constrain: true,
+								destroyOnHide: true,
+								modal: true,
+							},
+							eventName: '<%= eventName %>',
+							id: '<portlet:namespace />selectSite',
+							title:
+								'<liferay-ui:message key="select-site-or-asset-library" />',
+							uri: '<%= itemSelectorURL.toString() %>',
 						},
-						eventName: '<%= eventName %>',
-						id: '<portlet:namespace />selectSite',
-						title: '<liferay-ui:message key="select-site" />',
-						uri: '<%= itemSelectorURL.toString() %>'
-					},
-					function(event) {
-						location.href = event.url;
-					}
-				);
+						function (event) {
+							location.href = event.url;
+						}
+					);
+				});
 			}
-		);
-	</aui:script>
+		})();
+	</script>
 </c:if>
 
 <c:choose>
-	<c:when test="<%= siteAdministrationPanelCategoryDisplayContext.getGroup() != null %>">
-		<a aria-controls="<portlet:namespace /><%= AUIUtil.normalizeId(panelCategory.getKey()) %>Collapse" aria-expanded="<%= siteAdministrationPanelCategoryDisplayContext.isCollapsedPanel() %>" class="panel-toggler <%= (siteAdministrationPanelCategoryDisplayContext.getGroup() != null) ? "collapse-icon collapse-icon-middle " : StringPool.BLANK %> <%= siteAdministrationPanelCategoryDisplayContext.isCollapsedPanel() ? StringPool.BLANK : "collapsed" %> site-administration-toggler" data-parent="#<portlet:namespace />Accordion" data-qa-id="productMenuSiteAdministrationPanelCategory" data-toggle="collapse" href="#<portlet:namespace /><%= AUIUtil.normalizeId(panelCategory.getKey()) %>Collapse" id="<portlet:namespace /><%= AUIUtil.normalizeId(panelCategory.getKey()) %>Toggler" <%= (siteAdministrationPanelCategoryDisplayContext.getGroup() != null) ? "role=\"button\"" : StringPool.BLANK %>>
-			<c:choose>
-				<c:when test="<%= Validator.isNotNull(siteAdministrationPanelCategoryDisplayContext.getLogoURL()) %>">
-					<div class="aspect-ratio-bg-cover sticker" style="background-image: url(<%= siteAdministrationPanelCategoryDisplayContext.getLogoURL() %>);"></div>
-				</c:when>
-				<c:otherwise>
-					<div class="sticker sticker-default">
-						<aui:icon image="sites" markupView="lexicon" />
+	<c:when test="<%= group != null %>">
+		<a aria-controls="<portlet:namespace /><%= AUIUtil.normalizeId(panelCategory.getKey()) %>Collapse" aria-expanded="<%= siteAdministrationPanelCategoryDisplayContext.isCollapsedPanel() %>" class="panel-toggler <%= (group != null) ? "collapse-icon collapse-icon-middle " : StringPool.BLANK %> <%= siteAdministrationPanelCategoryDisplayContext.isCollapsedPanel() ? StringPool.BLANK : "collapsed" %> site-administration-toggler" data-parent="#<portlet:namespace />Accordion" data-qa-id="productMenuSiteAdministrationPanelCategory" data-toggle="liferay-collapse" href="#<portlet:namespace /><%= AUIUtil.normalizeId(panelCategory.getKey()) %>Collapse" id="<portlet:namespace /><%= AUIUtil.normalizeId(panelCategory.getKey()) %>Toggler" <%= (group != null) ? "role=\"button\"" : StringPool.BLANK %>>
+			<div class="autofit-row autofit-row-center">
+				<div class="autofit-col">
+					<c:choose>
+						<c:when test="<%= Validator.isNotNull(siteAdministrationPanelCategoryDisplayContext.getLogoURL()) %>">
+							<div class="aspect-ratio-bg-cover sticker" style="background-image: url(<%= siteAdministrationPanelCategoryDisplayContext.getLogoURL() %>);"></div>
+						</c:when>
+						<c:otherwise>
+							<div class="sticker sticker-secondary">
+								<aui:icon image="<%= group.getIconCssClass() %>" markupView="lexicon" />
+							</div>
+						</c:otherwise>
+					</c:choose>
+				</div>
+
+				<div class="autofit-col autofit-col-expand mr-4">
+					<div class="depot-type">
+						<liferay-ui:message key='<%= (group.getType() == GroupConstants.TYPE_DEPOT) ? "asset-library" : "site" %>' />
 					</div>
-				</c:otherwise>
-			</c:choose>
 
-			<span class="site-name truncate-text">
-				<%= HtmlUtil.escape(siteAdministrationPanelCategoryDisplayContext.getGroupName()) %>
+					<div class="lfr-portal-tooltip site-name text-truncate" title="<%= HtmlUtil.escape(siteAdministrationPanelCategoryDisplayContext.getGroupName()) %>">
+						<%= HtmlUtil.escape(siteAdministrationPanelCategoryDisplayContext.getGroupName()) %>
 
-				<c:if test="<%= siteAdministrationPanelCategoryDisplayContext.isShowStagingInfo() %>">
-					<span class="site-sub-name"> - <liferay-ui:message key="<%= siteAdministrationPanelCategoryDisplayContext.getStagingLabel() %>" /></span>
-				</c:if>
-			</span>
+						<c:if test="<%= siteAdministrationPanelCategoryDisplayContext.isShowStagingInfo() && !group.isStagedRemotely() %>">
+							<span class="site-sub-name"> - <liferay-ui:message key="<%= siteAdministrationPanelCategoryDisplayContext.getStagingLabel() %>" /></span>
+						</c:if>
+					</div>
+				</div>
+			</div>
 
 			<c:if test="<%= siteAdministrationPanelCategoryDisplayContext.getNotificationsCount() > 0 %>">
-				<span class="panel-notifications-count sticker sticker-right sticker-rounded sticker-sm sticker-warning"><%= siteAdministrationPanelCategoryDisplayContext.getNotificationsCount() %></span>
+				<span class="panel-notifications-count sticker sticker-rounded sticker-sm sticker-top-right sticker-warning"><%= siteAdministrationPanelCategoryDisplayContext.getNotificationsCount() %></span>
 			</c:if>
 
 			<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />

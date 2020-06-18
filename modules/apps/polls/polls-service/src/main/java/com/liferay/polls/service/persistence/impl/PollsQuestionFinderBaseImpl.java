@@ -16,70 +16,83 @@ package com.liferay.polls.service.persistence.impl;
 
 import com.liferay.polls.model.PollsQuestion;
 import com.liferay.polls.service.persistence.PollsQuestionPersistence;
-
-import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.polls.service.persistence.impl.constants.PollsPersistenceConstants;
+import com.liferay.portal.kernel.configuration.Configuration;
+import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-
-import java.lang.reflect.Field;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Brian Wing Shun Chan
  * @generated
  */
-public class PollsQuestionFinderBaseImpl extends BasePersistenceImpl<PollsQuestion> {
+public abstract class PollsQuestionFinderBaseImpl
+	extends BasePersistenceImpl<PollsQuestion> {
+
 	public PollsQuestionFinderBaseImpl() {
 		setModelClass(PollsQuestion.class);
 
-		try {
-			Field field = BasePersistenceImpl.class.getDeclaredField(
-					"_dbColumnNames");
+		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
-			field.setAccessible(true);
+		dbColumnNames.put("uuid", "uuid_");
 
-			Map<String, String> dbColumnNames = new HashMap<String, String>();
-
-			dbColumnNames.put("uuid", "uuid_");
-
-			field.set(this, dbColumnNames);
-		}
-		catch (Exception e) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(e, e);
-			}
-		}
+		setDBColumnNames(dbColumnNames);
 	}
 
 	@Override
 	public Set<String> getBadColumnNames() {
-		return getPollsQuestionPersistence().getBadColumnNames();
+		return pollsQuestionPersistence.getBadColumnNames();
 	}
 
-	/**
-	 * Returns the polls question persistence.
-	 *
-	 * @return the polls question persistence
-	 */
-	public PollsQuestionPersistence getPollsQuestionPersistence() {
-		return pollsQuestionPersistence;
+	@Override
+	@Reference(
+		target = PollsPersistenceConstants.SERVICE_CONFIGURATION_FILTER,
+		unbind = "-"
+	)
+	public void setConfiguration(Configuration configuration) {
+		super.setConfiguration(configuration);
 	}
 
-	/**
-	 * Sets the polls question persistence.
-	 *
-	 * @param pollsQuestionPersistence the polls question persistence
-	 */
-	public void setPollsQuestionPersistence(
-		PollsQuestionPersistence pollsQuestionPersistence) {
-		this.pollsQuestionPersistence = pollsQuestionPersistence;
+	@Override
+	@Reference(
+		target = PollsPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
 	}
 
-	@BeanReference(type = PollsQuestionPersistence.class)
+	@Override
+	@Reference(
+		target = PollsPersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		super.setSessionFactory(sessionFactory);
+	}
+
+	@Reference
 	protected PollsQuestionPersistence pollsQuestionPersistence;
-	private static final Log _log = LogFactoryUtil.getLog(PollsQuestionFinderBaseImpl.class);
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		PollsQuestionFinderBaseImpl.class);
+
+	static {
+		try {
+			Class.forName(PollsPersistenceConstants.class.getName());
+		}
+		catch (ClassNotFoundException classNotFoundException) {
+			throw new ExceptionInInitializerError(classNotFoundException);
+		}
+	}
+
 }

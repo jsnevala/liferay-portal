@@ -14,14 +14,11 @@
 
 package com.liferay.document.library.content.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.document.library.content.model.DLContent;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
-import com.liferay.portal.kernel.util.HashUtil;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -32,12 +29,11 @@ import java.io.ObjectOutput;
  * The cache model class for representing DLContent in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see DLContent
  * @generated
  */
-@ProviderType
-public class DLContentCacheModel implements CacheModel<DLContent>,
-	Externalizable {
+public class DLContentCacheModel
+	implements CacheModel<DLContent>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -50,7 +46,9 @@ public class DLContentCacheModel implements CacheModel<DLContent>,
 
 		DLContentCacheModel dlContentCacheModel = (DLContentCacheModel)obj;
 
-		if (contentId == dlContentCacheModel.contentId) {
+		if ((contentId == dlContentCacheModel.contentId) &&
+			(mvccVersion == dlContentCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -59,14 +57,30 @@ public class DLContentCacheModel implements CacheModel<DLContent>,
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, contentId);
+		int hashCode = HashUtil.hash(0, contentId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(15);
+		StringBundler sb = new StringBundler(19);
 
-		sb.append("{contentId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
+		sb.append(", contentId=");
 		sb.append(contentId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -89,6 +103,8 @@ public class DLContentCacheModel implements CacheModel<DLContent>,
 	public DLContent toEntityModel() {
 		DLContentImpl dlContentImpl = new DLContentImpl();
 
+		dlContentImpl.setMvccVersion(mvccVersion);
+		dlContentImpl.setCtCollectionId(ctCollectionId);
 		dlContentImpl.setContentId(contentId);
 		dlContentImpl.setGroupId(groupId);
 		dlContentImpl.setCompanyId(companyId);
@@ -117,6 +133,10 @@ public class DLContentCacheModel implements CacheModel<DLContent>,
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
+
 		contentId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -131,8 +151,11 @@ public class DLContentCacheModel implements CacheModel<DLContent>,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
+
 		objectOutput.writeLong(contentId);
 
 		objectOutput.writeLong(groupId);
@@ -158,6 +181,8 @@ public class DLContentCacheModel implements CacheModel<DLContent>,
 		objectOutput.writeLong(size);
 	}
 
+	public long mvccVersion;
+	public long ctCollectionId;
 	public long contentId;
 	public long groupId;
 	public long companyId;
@@ -165,4 +190,5 @@ public class DLContentCacheModel implements CacheModel<DLContent>,
 	public String path;
 	public String version;
 	public long size;
+
 }

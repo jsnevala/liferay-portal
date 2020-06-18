@@ -1,25 +1,33 @@
-<definition>
-	<command name="click">
-		<execute function="Click" locator1="MenuItem#ANY_MENU_ITEM">
-			<var name="key_menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+definition {
 
-	<command name="clickNoError">
-		<execute function="ClickNoError" locator1="MenuItem#ANY_MENU_ITEM">
-			<var name="key_menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+	macro click {
+		Click(
+			key_menuItem = "${menuItem}",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
 
-	<command name="viewNotPresent">
-		<execute function="AssertElementNotPresent" locator1="MenuItem#ANY_MENU_ITEM">
-			<var name="key_menuItem" value="${menuItem}" />
-		</execute>
-	</command>
+	macro clickNoError {
+		ClickNoError(
+			key_menuItem = "${menuItem}",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
 
-	<command name="viewPresent">
-		<execute function="AssertElementPresent" locator1="MenuItem#ANY_MENU_ITEM">
-			<var name="key_menuItem" value="${menuItem}" />
-		</execute>
-	</command>
-</definition>
+	macro viewNotPresent {
+		AssertElementNotPresent(
+			key_menuItem = "${menuItem}",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
+	macro viewPresent {
+		AssertElementPresent(
+			key_menuItem = "${menuItem}",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
+	macro viewVisible {
+		AssertVisible(
+			key_menuItem = "${menuItem}",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
+}

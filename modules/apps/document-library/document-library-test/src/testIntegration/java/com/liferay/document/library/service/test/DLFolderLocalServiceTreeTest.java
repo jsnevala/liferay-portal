@@ -27,9 +27,9 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.service.test.BaseLocalServiceTreeTestCase;
+import com.liferay.portal.local.service.tree.test.util.BaseLocalServiceTreeTestCase;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +51,7 @@ public class DLFolderLocalServiceTreeTest extends BaseLocalServiceTreeTestCase {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Test
 	public void testFolderTreePathWhenMovingFolderWithSubfolder()
@@ -117,7 +117,7 @@ public class DLFolderLocalServiceTreeTest extends BaseLocalServiceTreeTestCase {
 		DLFolder dlFolder = DLFolderLocalServiceUtil.getFolder(
 			folder.getFolderId());
 
-		dlFolder.setTreePath(null);
+		dlFolder.setTreePath("/0/");
 
 		return DLFolderLocalServiceUtil.updateDLFolder(dlFolder);
 	}

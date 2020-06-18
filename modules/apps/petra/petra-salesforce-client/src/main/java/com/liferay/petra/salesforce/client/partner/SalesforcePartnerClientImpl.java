@@ -21,6 +21,7 @@ import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.GetDeletedResult;
 import com.sforce.soap.partner.GetUpdatedResult;
+import com.sforce.soap.partner.GetUserInfoResult;
 import com.sforce.soap.partner.LoginResult;
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.soap.partner.QueryResult;
@@ -37,6 +38,7 @@ import java.util.List;
 /**
  * @author Brian Wing Shun Chan
  * @author Peter Shin
+ * @author Rachael Koestartyo
  */
 public class SalesforcePartnerClientImpl
 	extends BaseSalesforceClientImpl implements SalesforcePartnerClient {
@@ -72,8 +74,9 @@ public class SalesforcePartnerClientImpl
 
 			return partnerConnection.describeGlobal();
 		}
-		catch (ConnectionException ce) {
-			return describeGlobal(getRetryCount(retryCount, ce));
+		catch (ConnectionException connectionException) {
+			return describeGlobal(
+				getRetryCount(retryCount, connectionException));
 		}
 	}
 
@@ -90,8 +93,9 @@ public class SalesforcePartnerClientImpl
 
 			return _toList(describeSObjectResults);
 		}
-		catch (ConnectionException ce) {
-			return describeSObjects(typeNames, getRetryCount(retryCount, ce));
+		catch (ConnectionException connectionException) {
+			return describeSObjects(
+				typeNames, getRetryCount(retryCount, connectionException));
 		}
 	}
 
@@ -107,10 +111,10 @@ public class SalesforcePartnerClientImpl
 			return partnerConnection.getDeleted(
 				typeName, startCalendar, endCalendar);
 		}
-		catch (ConnectionException ce) {
+		catch (ConnectionException connectionException) {
 			return getDeleted(
 				typeName, startCalendar, endCalendar,
-				getRetryCount(retryCount, ce));
+				getRetryCount(retryCount, connectionException));
 		}
 	}
 
@@ -126,11 +130,18 @@ public class SalesforcePartnerClientImpl
 			return partnerConnection.getUpdated(
 				typeName, startCalendar, endCalendar);
 		}
-		catch (ConnectionException ce) {
+		catch (ConnectionException connectionException) {
 			return getUpdated(
 				typeName, startCalendar, endCalendar,
-				getRetryCount(retryCount, ce));
+				getRetryCount(retryCount, connectionException));
 		}
+	}
+
+	@Override
+	public GetUserInfoResult getUserInfo() throws ConnectionException {
+		PartnerConnection partnerConnection = getPartnerConnection();
+
+		return partnerConnection.getUserInfo();
 	}
 
 	@Override
@@ -142,8 +153,10 @@ public class SalesforcePartnerClientImpl
 
 			return partnerConnection.login(username, password);
 		}
-		catch (ConnectionException ce) {
-			return login(username, password, getRetryCount(retryCount, ce));
+		catch (ConnectionException connectionException) {
+			return login(
+				username, password,
+				getRetryCount(retryCount, connectionException));
 		}
 	}
 
@@ -156,8 +169,9 @@ public class SalesforcePartnerClientImpl
 
 			return partnerConnection.query(queryString);
 		}
-		catch (ConnectionException ce) {
-			return query(queryString, getRetryCount(retryCount, ce));
+		catch (ConnectionException connectionException) {
+			return query(
+				queryString, getRetryCount(retryCount, connectionException));
 		}
 	}
 
@@ -170,8 +184,9 @@ public class SalesforcePartnerClientImpl
 
 			return partnerConnection.queryAll(queryString);
 		}
-		catch (ConnectionException ce) {
-			return queryAll(queryString, getRetryCount(retryCount, ce));
+		catch (ConnectionException connectionException) {
+			return queryAll(
+				queryString, getRetryCount(retryCount, connectionException));
 		}
 	}
 
@@ -184,8 +199,9 @@ public class SalesforcePartnerClientImpl
 
 			return partnerConnection.queryMore(queryLocator);
 		}
-		catch (ConnectionException ce) {
-			return queryMore(queryLocator, getRetryCount(retryCount, ce));
+		catch (ConnectionException connectionException) {
+			return queryMore(
+				queryLocator, getRetryCount(retryCount, connectionException));
 		}
 	}
 
@@ -203,10 +219,10 @@ public class SalesforcePartnerClientImpl
 
 			return _toList(sObjects);
 		}
-		catch (ConnectionException ce) {
+		catch (ConnectionException connectionException) {
 			return retrieve(
 				fieldNames, typeName, salesforceKeys,
-				getRetryCount(retryCount, ce));
+				getRetryCount(retryCount, connectionException));
 		}
 	}
 

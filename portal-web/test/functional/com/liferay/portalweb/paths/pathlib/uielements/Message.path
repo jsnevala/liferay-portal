@@ -20,7 +20,12 @@
 </tr>
 <tr>
 	<td>CHECKOUT_SUCCESS</td>
-	<td>//div[contains(@class,'sidenav-content')]/div[contains(@class,'alert-success')]</td>
+	<td>//div[contains(@class,'content')]/div[contains(@class,'alert-info')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CONVERSION_ALERT_MESSAGE</td>
+	<td>//div[contains(@class,'conversion-messages')]/div[contains(@class,'alert-${key_type}')][contains(.,'${key_alertMessage}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -41,6 +46,26 @@
 <tr>
 	<td>EMPTY_INFO_2</td>
 	<td>//div[contains(@class,'panel-default')][2]//div[contains(@class,'empty-result-message')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EMPTY_INFO_DEPOT</td>
+	<td>//p[contains(@class,'text-muted')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EMPTY_INFO_TAGLIB</td>
+	<td>//div[contains(@class,'taglib-empty-result-message')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EMPTY_INFO_TAGLIB_TITLE</td>
+	<td>//div/h1[contains(@class,'taglib-empty-result-message-title')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EMPTY_INFO_TAGLIB_DESCRIPTION</td>
+	<td>//div/p[contains(@class,'taglib-empty-result-message-description')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -124,6 +149,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ERROR_ENTER_A_VALID_VALUE</td>
+	<td>//div[@role='alert' and contains(.,'${key_alertMessage}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ERROR_ENTER_A_UNIQUE_FOLDER</td>
 	<td>//div[contains(@class,'alert-danger') and contains(.,'Please enter a unique folder name')]</td>
 	<td></td>
@@ -140,7 +170,7 @@
 </tr>
 <tr>
 	<td>ERROR_FORM_FIELD_REQUIRED</td>
-	<td>//div[contains(@class,'has-error')]//div[contains(@class,'help-block')] | //div[contains(@class,'has-error')]//div[contains(@class,'form-feedback-indicator')]</td>
+	<td>//div[contains(@class,'has-error')]//div[contains(@class,'form-feedback-item')] | //div[contains(@class,'has-error')]//div[contains(@class,'form-feedback-indicator')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -154,18 +184,28 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ERROR_REQUEST_FAILED</td>
+	<td>//div[contains(@class,'alert-danger')][contains(@class,'alert-dismissible')][contains(@class,'show')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ERROR_SPECIFIC_FORM_FIELD_REQUIRED</td>
-	<td>//div[contains(@data-fieldname,'${key_fieldName}')]/../../div[contains(@class,'has-error')]//div[contains(@class,'help-block')] | //div[contains(@data-fieldname,'${key_fieldName}')]/../../div[contains(@class,'has-error')]//div[contains(@class,'form-feedback-indicator')]</td>
+	<td>//div[contains(@data-field-name,'${key_fieldName}')]//div[contains(@class,'form-feedback-item')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ERROR_MODAL_CONTENT</td>
-	<td>//div[contains(@class,'modal-content')]//form[contains(@class,'form-feedback')]</td>
+	<td>//div[contains(@class,'modal-content')]//div[contains(@class,'form-feedback')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ERROR_MOVE_DUPLICATE_CONTENT</td>
 	<td>//div[contains(@class,'alert-danger') and contains(.,'The folder you selected already has an entry with this name. Please select a different folder')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ERROR_SELECT_VALID_DATE_RANGE</td>
+	<td>//div[@role='alert' and contains(.,'Please select a valid date range.')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -176,6 +216,16 @@
 <tr>
 	<td>INFO</td>
 	<td>//div[contains(@class,'alert alert-info') and not(contains(@class,'hide'))]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>INFO_SPECIFIC</td>
+	<td>//div[contains(@class,'alert alert-info') and not(contains(@class,'hide'))][contains(.,'${key_infoMessage}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>INFO_SPECIFIC_WIDGET</td>
+	<td>//section[contains(.,'${key_widgetName}')]//div[contains(@class,'alert alert-info') and not(contains(@class,'hide'))]</td>
 	<td></td>
 </tr>
 <tr>
@@ -206,6 +256,11 @@
 <tr>
 	<td>INFO_EXPLANATION_POST</td>
 	<td>//div[contains(@id,'explanationPost')]/div[@class='alert alert-info']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>INFO_MAIN_CONTENT</td>
+	<td>//*[@id="main-content"]//div[contains(@class,'alert alert-info') and not(contains(@class,'hide'))]</td>
 	<td></td>
 </tr>
 <tr>
@@ -244,11 +299,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>RECYCLE_BIN_INFO</td>
-	<td>//div[contains(@class,'tooltip-content')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>REQUIRED_INFO</td>
 	<td>//div[contains(@class,'required') and contains(@role,'alert')]</td>
 	<td></td>
@@ -279,11 +329,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SUCCESS_3</td>
-	<td>//div[contains(@class,'alert') and contains(@class,'alert-success')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>SUCCESS_CONTENT</td>
 	<td>//div[@class='portlet-body']/div[contains(.,'${key_assetType}')]</td>
 	<td></td>
@@ -300,7 +345,7 @@
 </tr>
 <tr>
 	<td>TOOLTIP</td>
-	<td>//div[contains(@class,'tooltip-content')]</td>
+	<td>//div[contains(@class,'tooltip') and contains(@class,'show')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -319,8 +364,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>WEB_CONTENT_STATUS</td>
-	<td>//span[contains(@class,'workflow-status')]/span[3]</td>
+	<td>WARNING_SPECIFIC</td>
+	<td>//div[contains(@class,'alert') and (contains(@class,'alert-warning'))][contains(.,'${key_warningMessage}')]</td>
 	<td></td>
 </tr>
 <tr>

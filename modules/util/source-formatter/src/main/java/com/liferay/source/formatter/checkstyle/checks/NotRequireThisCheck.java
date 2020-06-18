@@ -14,8 +14,6 @@
 
 package com.liferay.source.formatter.checkstyle.checks;
 
-import com.liferay.source.formatter.checkstyle.util.DetailASTUtil;
-
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
@@ -33,57 +31,58 @@ public class NotRequireThisCheck extends BaseCheck {
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		List<DetailAST> thisASTList = DetailASTUtil.getAllChildTokens(
+		List<DetailAST> thisDetailASTList = getAllChildTokens(
 			detailAST, true, TokenTypes.LITERAL_THIS);
 
 		outerLoop:
-		for (DetailAST thisAST : thisASTList) {
-			if (_isMethodCall(thisAST) ||
-				(thisAST.getPreviousSibling() != null)) {
+		for (DetailAST thisDetailAST : thisDetailASTList) {
+			if (_isMethodCall(thisDetailAST) ||
+				(thisDetailAST.getPreviousSibling() != null)) {
 
 				continue;
 			}
 
-			DetailAST parentAST = thisAST.getParent();
+			DetailAST parentDetailAST = thisDetailAST.getParent();
 
-			if (parentAST.getType() != TokenTypes.DOT) {
+			if (parentDetailAST.getType() != TokenTypes.DOT) {
 				continue;
 			}
 
-			DetailAST nameAST = parentAST.findFirstToken(TokenTypes.IDENT);
+			DetailAST nameDetailAST = parentDetailAST.findFirstToken(
+				TokenTypes.IDENT);
 
-			String name = nameAST.getText();
+			String name = nameDetailAST.getText();
 
-			List<DetailAST> definitionASTList = DetailASTUtil.getAllChildTokens(
+			List<DetailAST> definitionDetailASTList = getAllChildTokens(
 				detailAST, true, TokenTypes.PARAMETER_DEF,
 				TokenTypes.VARIABLE_DEF);
 
-			for (DetailAST definitionAST : definitionASTList) {
-				DetailAST definitionNameAST = definitionAST.findFirstToken(
-					TokenTypes.IDENT);
+			for (DetailAST definitionDetailAST : definitionDetailASTList) {
+				DetailAST definitionNameDetailAST =
+					definitionDetailAST.findFirstToken(TokenTypes.IDENT);
 
-				if (name.equals(definitionNameAST.getText())) {
+				if (name.equals(definitionNameDetailAST.getText())) {
 					continue outerLoop;
 				}
 			}
 
-			log(thisAST, _MSG_VARIABLE_THIS_NOT_REQUIRED, name);
+			log(thisDetailAST, _MSG_VARIABLE_THIS_NOT_REQUIRED, name);
 		}
 	}
 
 	private boolean _isMethodCall(DetailAST detailAST) {
-		DetailAST parentAST = detailAST.getParent();
+		DetailAST parentDetailAST = detailAST.getParent();
 
 		while (true) {
-			if (parentAST.getType() == TokenTypes.METHOD_CALL) {
+			if (parentDetailAST.getType() == TokenTypes.METHOD_CALL) {
 				return true;
 			}
 
-			if (parentAST.getType() != TokenTypes.DOT) {
+			if (parentDetailAST.getType() != TokenTypes.DOT) {
 				return false;
 			}
 
-			parentAST = parentAST.getParent();
+			parentDetailAST = parentDetailAST.getParent();
 		}
 	}
 

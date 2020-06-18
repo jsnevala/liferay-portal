@@ -14,8 +14,6 @@
 
 package com.liferay.journal.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -27,12 +25,15 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class JournalArticleResourceSoap implements Serializable {
+
 	public static JournalArticleResourceSoap toSoapModel(
 		JournalArticleResource model) {
+
 		JournalArticleResourceSoap soapModel = new JournalArticleResourceSoap();
 
+		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setResourcePrimKey(model.getResourcePrimKey());
 		soapModel.setGroupId(model.getGroupId());
@@ -44,7 +45,9 @@ public class JournalArticleResourceSoap implements Serializable {
 
 	public static JournalArticleResourceSoap[] toSoapModels(
 		JournalArticleResource[] models) {
-		JournalArticleResourceSoap[] soapModels = new JournalArticleResourceSoap[models.length];
+
+		JournalArticleResourceSoap[] soapModels =
+			new JournalArticleResourceSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -55,10 +58,12 @@ public class JournalArticleResourceSoap implements Serializable {
 
 	public static JournalArticleResourceSoap[][] toSoapModels(
 		JournalArticleResource[][] models) {
+
 		JournalArticleResourceSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new JournalArticleResourceSoap[models.length][models[0].length];
+			soapModels =
+				new JournalArticleResourceSoap[models.length][models[0].length];
 		}
 		else {
 			soapModels = new JournalArticleResourceSoap[0][0];
@@ -73,13 +78,16 @@ public class JournalArticleResourceSoap implements Serializable {
 
 	public static JournalArticleResourceSoap[] toSoapModels(
 		List<JournalArticleResource> models) {
-		List<JournalArticleResourceSoap> soapModels = new ArrayList<JournalArticleResourceSoap>(models.size());
+
+		List<JournalArticleResourceSoap> soapModels =
+			new ArrayList<JournalArticleResourceSoap>(models.size());
 
 		for (JournalArticleResource model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new JournalArticleResourceSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new JournalArticleResourceSoap[soapModels.size()]);
 	}
 
 	public JournalArticleResourceSoap() {
@@ -91,6 +99,22 @@ public class JournalArticleResourceSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setResourcePrimKey(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public String getUuid() {
@@ -133,9 +157,12 @@ public class JournalArticleResourceSoap implements Serializable {
 		_articleId = articleId;
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _resourcePrimKey;
 	private long _groupId;
 	private long _companyId;
 	private String _articleId;
+
 }

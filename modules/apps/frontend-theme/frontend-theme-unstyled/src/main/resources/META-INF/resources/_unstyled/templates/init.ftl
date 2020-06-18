@@ -141,7 +141,6 @@
 	the_title = ""
 	selectable = theme_display.isTilesSelectable()
 	is_maximized = layoutTypePortlet.hasStateMax()
-	is_freeform = themeDisplay.isFreeformLayout()
 
 	page_javascript_1 = ""
 	page_javascript_2 = ""
@@ -259,8 +258,24 @@
 	<#assign the_title = htmlUtil.escape(the_title) />
 </#if>
 
+<#assign
+	layout_friendly_url = layout.getFriendlyURL()
+
+	portlet_id = paramUtil.getString(request, "p_p_id")
+/>
+
+<#if validator.isNotNull(portlet_id) && layout.isSystem() && !layout.isTypeControlPanel() && stringUtil.equals(layout_friendly_url, "/manage")>
+	<#assign the_title = portalUtil.getPortletTitle(portlet_id, locale) />
+</#if>
+
 <#if the_title ?has_content && !stringUtil.equals(company_name, site_name) && !page_group.isLayoutPrototype()>
 	<#assign the_title = the_title + " - " + site_name />
+</#if>
+
+<#if htmlTitle??>
+	<#assign html_title = htmlUtil.escape(htmlTitle) />
+<#else>
+	<#assign html_title = the_title + " - " + company_name />
 </#if>
 
 <#if layouts??>

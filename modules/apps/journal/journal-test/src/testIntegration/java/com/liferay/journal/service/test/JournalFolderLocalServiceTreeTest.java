@@ -25,7 +25,7 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.service.test.BaseLocalServiceTreeTestCase;
+import com.liferay.portal.local.service.tree.test.util.BaseLocalServiceTreeTestCase;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.ArrayList;
@@ -101,7 +101,7 @@ public class JournalFolderLocalServiceTreeTest
 		JournalFolder folder = JournalTestUtil.addFolder(
 			group.getGroupId(), parentFolderId, RandomTestUtil.randomString());
 
-		folder.setTreePath(null);
+		folder.setTreePath("/0/");
 
 		return JournalFolderLocalServiceUtil.updateJournalFolder(folder);
 	}

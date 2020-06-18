@@ -14,48 +14,56 @@
 
 package com.liferay.portal.workflow.kaleo.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * The extended model interface for the KaleoDefinitionVersion service. Represents a row in the &quot;KaleoDefinitionVersion&quot; database table, with each column mapped to a property of this class.
  *
  * @author Brian Wing Shun Chan
  * @see KaleoDefinitionVersionModel
- * @see com.liferay.portal.workflow.kaleo.model.impl.KaleoDefinitionVersionImpl
- * @see com.liferay.portal.workflow.kaleo.model.impl.KaleoDefinitionVersionModelImpl
  * @generated
  */
-@ImplementationClassName("com.liferay.portal.workflow.kaleo.model.impl.KaleoDefinitionVersionImpl")
+@ImplementationClassName(
+	"com.liferay.portal.workflow.kaleo.model.impl.KaleoDefinitionVersionImpl"
+)
 @ProviderType
-public interface KaleoDefinitionVersion extends KaleoDefinitionVersionModel,
-	PersistedModel {
+public interface KaleoDefinitionVersion
+	extends KaleoDefinitionVersionModel, PersistedModel {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify this interface directly. Add methods to {@link com.liferay.portal.workflow.kaleo.model.impl.KaleoDefinitionVersionImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add methods to <code>com.liferay.portal.workflow.kaleo.model.impl.KaleoDefinitionVersionImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
-	public static final Accessor<KaleoDefinitionVersion, Long> KALEO_DEFINITION_VERSION_ID_ACCESSOR =
-		new Accessor<KaleoDefinitionVersion, Long>() {
-			@Override
-			public Long get(KaleoDefinitionVersion kaleoDefinitionVersion) {
-				return kaleoDefinitionVersion.getKaleoDefinitionVersionId();
-			}
+	public static final Accessor<KaleoDefinitionVersion, Long>
+		KALEO_DEFINITION_VERSION_ID_ACCESSOR =
+			new Accessor<KaleoDefinitionVersion, Long>() {
 
-			@Override
-			public Class<Long> getAttributeClass() {
-				return Long.class;
-			}
+				@Override
+				public Long get(KaleoDefinitionVersion kaleoDefinitionVersion) {
+					return kaleoDefinitionVersion.getKaleoDefinitionVersionId();
+				}
 
-			@Override
-			public Class<KaleoDefinitionVersion> getTypeClass() {
-				return KaleoDefinitionVersion.class;
-			}
-		};
+				@Override
+				public Class<Long> getAttributeClass() {
+					return Long.class;
+				}
 
+				@Override
+				public Class<KaleoDefinitionVersion> getTypeClass() {
+					return KaleoDefinitionVersion.class;
+				}
+
+			};
+
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public KaleoDefinition fetchKaleoDefinition();
 
 	public KaleoDefinition getKaleoDefinition()
@@ -64,5 +72,10 @@ public interface KaleoDefinitionVersion extends KaleoDefinitionVersionModel,
 	public KaleoNode getKaleoStartNode()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), with no direct replacement
+	 */
+	@Deprecated
 	public boolean hasIncompleteKaleoInstances();
+
 }

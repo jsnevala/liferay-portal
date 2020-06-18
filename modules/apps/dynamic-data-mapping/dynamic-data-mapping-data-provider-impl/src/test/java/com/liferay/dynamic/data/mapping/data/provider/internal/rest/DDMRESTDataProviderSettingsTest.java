@@ -18,13 +18,17 @@ import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidation;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidationExpression;
 import com.liferay.dynamic.data.mapping.util.DDMFormFactory;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -48,6 +52,7 @@ public class DDMRESTDataProviderSettingsTest {
 	@Before
 	public void setUp() {
 		setUpLanguageUtil();
+		setUpPortalUtil();
 		setUpResourceBundleUtil();
 	}
 
@@ -172,12 +177,12 @@ public class DDMRESTDataProviderSettingsTest {
 		DDMFormFieldOptions ddmFormFieldOptions =
 			inputParameterTypeDDMFormField.getDDMFormFieldOptions();
 
-		Set<String> optionValues = ddmFormFieldOptions.getOptionsValues();
+		Set<String> optionsValues = ddmFormFieldOptions.getOptionsValues();
 
 		Assert.assertTrue(
-			optionValues.toString(), optionValues.contains("text"));
+			optionsValues.toString(), optionsValues.contains("text"));
 		Assert.assertTrue(
-			optionValues.toString(), optionValues.contains("number"));
+			optionsValues.toString(), optionsValues.contains("number"));
 
 		// Required
 
@@ -202,7 +207,7 @@ public class DDMRESTDataProviderSettingsTest {
 			ddmFormField.getNestedDDMFormFieldsMap();
 
 		Assert.assertEquals(
-			nestedDDMFormFieldsMap.toString(), 3,
+			nestedDDMFormFieldsMap.toString(), 4,
 			nestedDDMFormFieldsMap.size());
 
 		// Name
@@ -259,12 +264,12 @@ public class DDMRESTDataProviderSettingsTest {
 		DDMFormFieldOptions ddmFormFieldOptions =
 			outputParameterTypeDDMFormField.getDDMFormFieldOptions();
 
-		Set<String> optionValues = ddmFormFieldOptions.getOptionsValues();
+		Set<String> optionsValues = ddmFormFieldOptions.getOptionsValues();
 
 		Assert.assertTrue(
-			optionValues.toString(), optionValues.contains("text"));
+			optionsValues.toString(), optionsValues.contains("text"));
 		Assert.assertTrue(
-			optionValues.toString(), optionValues.contains("number"));
+			optionsValues.toString(), optionsValues.contains("number"));
 	}
 
 	protected void assertPagination(DDMFormField ddmFormField) {
@@ -318,9 +323,12 @@ public class DDMRESTDataProviderSettingsTest {
 		DDMFormFieldValidation ddmFormFieldValidation =
 			ddmFormField.getDDMFormFieldValidation();
 
+		DDMFormFieldValidationExpression ddmFormFieldValidationExpression =
+			ddmFormFieldValidation.getDDMFormFieldValidationExpression();
+
 		Assert.assertEquals(
 			"(timeout >= 1000) && (timeout <= 30000)",
-			ddmFormFieldValidation.getExpression());
+			ddmFormFieldValidationExpression.getValue());
 
 		Assert.assertEquals("numeric", ddmFormField.getType());
 	}
@@ -373,6 +381,21 @@ public class DDMRESTDataProviderSettingsTest {
 		Language language = PowerMockito.mock(Language.class);
 
 		languageUtil.setLanguage(language);
+	}
+
+	protected void setUpPortalUtil() {
+		PortalUtil portalUtil = new PortalUtil();
+
+		Portal portal = PowerMockito.mock(Portal.class);
+		ResourceBundle resourceBundle = PowerMockito.mock(ResourceBundle.class);
+
+		PowerMockito.when(
+			portal.getResourceBundle(Matchers.any(Locale.class))
+		).thenReturn(
+			resourceBundle
+		);
+
+		portalUtil.setPortal(portal);
 	}
 
 	protected void setUpResourceBundleUtil() {

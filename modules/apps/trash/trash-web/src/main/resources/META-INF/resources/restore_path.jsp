@@ -48,13 +48,13 @@
 					<liferay-util:buffer
 						var="entityLink"
 					>
-						<em class="restore-entry-title"><aui:a href="<%= restoreEntryLinks.get(i) %>" label="<%= HtmlUtil.escape(restoreEntryMessages.get(i)) %>" /></em>
+						<em class="restore-entry-title"><aui:a cssClass="alert-link" href="<%= restoreEntryLinks.get(i) %>" label="<%= HtmlUtil.escape(restoreEntryMessages.get(i)) %>" /></em>
 					</liferay-util:buffer>
 
 					<liferay-util:buffer
 						var="link"
 					>
-						<em class="restore-entry-title"><aui:a href="<%= restoreLinks.get(i) %>" label="<%= HtmlUtil.escape(restoreMessages.get(i)) %>" /></em>
+						<em class="restore-entry-title"><aui:a cssClass="alert-link" href="<%= restoreLinks.get(i) %>" label="<%= HtmlUtil.escape(restoreMessages.get(i)) %>" /></em>
 					</liferay-util:buffer>
 
 					<liferay-ui:message arguments="<%= new Object[] {type, entityLink.trim(), link.trim()} %>" key="the-x-x-was-restored-to-x" translateArguments="<%= false %>" />
@@ -70,12 +70,7 @@
 		</c:choose>
 	</liferay-util:buffer>
 
-	<liferay-ui:alert
-		icon="check"
-		message="<%= alertMessage %>"
-		timeout="<%= 0 %>"
-		type="success"
-	/>
+	<liferay-ui:success key="<%= portletDisplay.getId() + SessionMessages.KEY_SUFFIX_DELETE_SUCCESS_DATA %>" message="<%= alertMessage %>" />
 </c:if>
 
 <portlet:actionURL name="moveEntry" var="selectContainerURL" />
@@ -86,53 +81,3 @@
 	<aui:input name="classPK" type="hidden" value="" />
 	<aui:input name="containerModelId" type="hidden" value="" />
 </aui:form>
-
-<aui:script>
-	function <portlet:namespace />restoreDialog(uri) {
-		Liferay.Util.selectEntity(
-			{
-				dialog: {
-					constrain: true,
-					destroyOnHide: true,
-					modal: true,
-					width: 1024
-				},
-				eventName: '<portlet:namespace />selectContainer',
-				id: '<portlet:namespace />selectContainer',
-				title: '<liferay-ui:message key="warning" />',
-				uri: uri
-			},
-			function(event) {
-				var selectContainerForm = document.getElementById('<portlet:namespace />selectContainerForm');
-
-				if (selectContainerForm) {
-					var className = selectContainerForm.querySelector('#<portlet:namespace />className');
-
-					if (className) {
-						className.setAttribute('value', event.classname);
-					}
-
-					var classPK = selectContainerForm.querySelector('#<portlet:namespace />classPK');
-
-					if (classPK) {
-						classPK.setAttribute('value', event.classpk);
-					}
-
-					var containerModelId = selectContainerForm.querySelector('#<portlet:namespace />containerModelId');
-
-					if (containerModelId) {
-						containerModelId.setAttribute('value', event.containermodelid);
-					}
-
-					var redirect = selectContainerForm.querySelector('#<portlet:namespace />redirect');
-
-					if (redirect) {
-						redirect.setAttribute('value', event.redirect);
-					}
-
-					submitForm(selectContainerForm);
-				}
-			}
-		);
-	}
-</aui:script>

@@ -35,6 +35,8 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -87,7 +89,7 @@ import org.junit.runner.RunWith;
 	@Deprecated
 </#if>
 
-<#if osgiModule>
+<#if osgiModule || serviceBuilder.isVersionGTE_7_2_0()>
 	@RunWith(Arquillian.class)
 </#if>
 public class ${entity.name}PersistenceTest {
@@ -112,7 +114,7 @@ public class ${entity.name}PersistenceTest {
 
 	@After
 	public void tearDown() throws Exception {
-		Iterator<${entity.name}> iterator = _${entity.varNames}.iterator();
+		Iterator<${entity.name}> iterator = _${entity.pluralVarName}.iterator();
 
 		while (iterator.hasNext()) {
 			_persistence.remove(iterator.next());
@@ -130,7 +132,11 @@ public class ${entity.name}PersistenceTest {
 				<#if stringUtil.equals(entityColumn.type, "int")>
 					RandomTestUtil.nextInt()
 				<#elseif stringUtil.equals(entityColumn.type, "long")>
-					RandomTestUtil.nextLong()
+					<#if stringUtil.equals(entityColumn.name, "companyId")>
+						CompanyThreadLocal.getCompanyId()
+					<#else>
+						RandomTestUtil.nextLong()
+					</#if>
 				<#elseif stringUtil.equals(entityColumn.type, "String")>
 					<#assign maxLength = serviceBuilder.getMaxLength(entity.getName(), entityColumn.getName()) />
 
@@ -242,6 +248,8 @@ public class ${entity.name}PersistenceTest {
 
 		${entity.name} new${entity.name} = _persistence.create(pk);
 
+		<#assign hasEagerBlob = false />
+
 		<#list entity.regularEntityColumns as entityColumn>
 			<#if !entityColumn.primary && (validator.isNull(parentPKColumn) || (parentPKColumn.name != entityColumn.name))>
 				<#if stringUtil.equals(entityColumn.type, "Blob")>
@@ -250,6 +258,10 @@ public class ${entity.name}PersistenceTest {
 					byte[] new${entityColumn.methodName}Bytes = new${entityColumn.methodName}String.getBytes("UTF-8");
 
 					Blob new${entityColumn.methodName}Blob = new OutputBlob(new ByteArrayInputStream(new${entityColumn.methodName}Bytes), new${entityColumn.methodName}Bytes.length);
+
+					<#if !entityColumn.isLazy()>
+						<#assign hasEagerBlob = true />
+					</#if>
 				</#if>
 
 				new${entity.name}.set${entityColumn.methodName}(
@@ -284,7 +296,15 @@ public class ${entity.name}PersistenceTest {
 			</#if>
 		</#list>
 
-		_${entity.varNames}.add(_persistence.update(new${entity.name}));
+		_${entity.pluralVarName}.add(_persistence.update(new${entity.name}));
+
+		<#if hasEagerBlob>
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		</#if>
 
 		${entity.name} existing${entity.name} = _persistence.findByPrimaryKey(new${entity.name}.getPrimaryKey());
 
@@ -632,11 +652,11 @@ public class ${entity.name}PersistenceTest {
 		primaryKeys.add(new${entity.name}1.getPrimaryKey());
 		primaryKeys.add(new${entity.name}2.getPrimaryKey());
 
-		Map<Serializable, ${entity.name}> ${entity.varNames} = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, ${entity.name}> ${entity.pluralVarName} = _persistence.fetchByPrimaryKeys(primaryKeys);
 
-		Assert.assertEquals(2, ${entity.varNames}.size());
-		Assert.assertEquals(new${entity.name}1, ${entity.varNames}.get(new${entity.name}1.getPrimaryKey()));
-		Assert.assertEquals(new${entity.name}2, ${entity.varNames}.get(new${entity.name}2.getPrimaryKey()));
+		Assert.assertEquals(2, ${entity.pluralVarName}.size());
+		Assert.assertEquals(new${entity.name}1, ${entity.pluralVarName}.get(new${entity.name}1.getPrimaryKey()));
+		Assert.assertEquals(new${entity.name}2, ${entity.pluralVarName}.get(new${entity.name}2.getPrimaryKey()));
 	}
 
 	@Test
@@ -734,9 +754,9 @@ public class ${entity.name}PersistenceTest {
 		primaryKeys.add(pk1);
 		primaryKeys.add(pk2);
 
-		Map<Serializable, ${entity.name}> ${entity.varNames} = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, ${entity.name}> ${entity.pluralVarName} = _persistence.fetchByPrimaryKeys(primaryKeys);
 
-		Assert.assertTrue(${entity.varNames}.isEmpty());
+		Assert.assertTrue(${entity.pluralVarName}.isEmpty());
 	}
 
 	@Test
@@ -792,19 +812,19 @@ public class ${entity.name}PersistenceTest {
 		primaryKeys.add(new${entity.name}.getPrimaryKey());
 		primaryKeys.add(pk);
 
-		Map<Serializable, ${entity.name}> ${entity.varNames} = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, ${entity.name}> ${entity.pluralVarName} = _persistence.fetchByPrimaryKeys(primaryKeys);
 
-		Assert.assertEquals(1, ${entity.varNames}.size());
-		Assert.assertEquals(new${entity.name}, ${entity.varNames}.get(new${entity.name}.getPrimaryKey()));
+		Assert.assertEquals(1, ${entity.pluralVarName}.size());
+		Assert.assertEquals(new${entity.name}, ${entity.pluralVarName}.get(new${entity.name}.getPrimaryKey()));
 	}
 
 	@Test
 	public void testFetchByPrimaryKeysWithNoPrimaryKeys() throws Exception {
 		Set<Serializable> primaryKeys = new HashSet<Serializable>();
 
-		Map<Serializable, ${entity.name}> ${entity.varNames} = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, ${entity.name}> ${entity.pluralVarName} = _persistence.fetchByPrimaryKeys(primaryKeys);
 
-		Assert.assertTrue(${entity.varNames}.isEmpty());
+		Assert.assertTrue(${entity.pluralVarName}.isEmpty());
 	}
 
 	@Test
@@ -815,10 +835,10 @@ public class ${entity.name}PersistenceTest {
 
 		primaryKeys.add(new${entity.name}.getPrimaryKey());
 
-		Map<Serializable, ${entity.name}> ${entity.varNames} = _persistence.fetchByPrimaryKeys(primaryKeys);
+		Map<Serializable, ${entity.name}> ${entity.pluralVarName} = _persistence.fetchByPrimaryKeys(primaryKeys);
 
-		Assert.assertEquals(1, ${entity.varNames}.size());
-		Assert.assertEquals(new${entity.name}, ${entity.varNames}.get(new${entity.name}.getPrimaryKey()));
+		Assert.assertEquals(1, ${entity.pluralVarName}.size());
+		Assert.assertEquals(new${entity.name}, ${entity.pluralVarName}.get(new${entity.name}.getPrimaryKey()));
 	}
 
 	<#if entity.hasActionableDynamicQuery()>
@@ -1001,12 +1021,14 @@ public class ${entity.name}PersistenceTest {
 				<#assign entityColumns = uniqueEntityFinder.entityColumns />
 
 				<#list entityColumns as entityColumn>
-					<#if stringUtil.equals(entityColumn.type, "double")>
-						AssertUtils.assertEquals(existing${entity.name}.get${entityColumn.methodName}(), ReflectionTestUtil.<Double>invoke(existing${entity.name}, "getOriginal${entityColumn.methodName}", new Class<?>[0]));
-					<#elseif entityColumn.isPrimitiveType()>
-						Assert.assertEquals(${serviceBuilder.getPrimitiveObj(entityColumn.type)}.valueOf(existing${entity.name}.get${entityColumn.methodName}()), ReflectionTestUtil.<${serviceBuilder.getPrimitiveObj(entityColumn.type)}>invoke(existing${entity.name}, "getOriginal${entityColumn.methodName}", new Class<?>[0]));
-					<#else>
-						Assert.assertTrue(Objects.equals(existing${entity.name}.get${entityColumn.methodName}(), ReflectionTestUtil.invoke(existing${entity.name}, "getOriginal${entityColumn.methodName}", new Class<?>[0])));
+					<#if entityColumn.isInterfaceColumn()>
+						<#if stringUtil.equals(entityColumn.type, "double")>
+							AssertUtils.assertEquals(existing${entity.name}.get${entityColumn.methodName}(), ReflectionTestUtil.<Double>invoke(existing${entity.name}, "getOriginal${entityColumn.methodName}", new Class<?>[0]));
+						<#elseif entityColumn.isPrimitiveType()>
+							Assert.assertEquals(${serviceBuilder.getPrimitiveObj(entityColumn.type)}.valueOf(existing${entity.name}.get${entityColumn.methodName}()), ReflectionTestUtil.<${serviceBuilder.getPrimitiveObj(entityColumn.type)}>invoke(existing${entity.name}, "getOriginal${entityColumn.methodName}", new Class<?>[0]));
+						<#else>
+							Assert.assertTrue(Objects.equals(existing${entity.name}.get${entityColumn.methodName}(), ReflectionTestUtil.invoke(existing${entity.name}, "getOriginal${entityColumn.methodName}", new Class<?>[0])));
+						</#if>
 					</#if>
 				</#list>
 			</#list>
@@ -1104,7 +1126,7 @@ public class ${entity.name}PersistenceTest {
 			</#if>
 		</#list>
 
-		_${entity.varNames}.add(_persistence.update(${entity.varName}));
+		_${entity.pluralVarName}.add(_persistence.update(${entity.varName}));
 
 		return ${entity.varName};
 	}
@@ -1374,13 +1396,13 @@ public class ${entity.name}PersistenceTest {
 				${entity.varName}.setParent${pkEntityColumn.methodName}(parent${pkEntityColumn.methodName});
 			}
 
-			_persistence.update(${entity.varName});
+			_${entity.pluralVarName}.add(_persistence.update(${entity.varName}));
 
 			return ${entity.varName};
 		}
 	</#if>
 
-	private List<${entity.name}> _${entity.varNames} = new ArrayList<${entity.name}>();
+	private List<${entity.name}> _${entity.pluralVarName} = new ArrayList<${entity.name}>();
 	private ${entity.name}Persistence _persistence;
 	private ClassLoader _dynamicQueryClassLoader;
 

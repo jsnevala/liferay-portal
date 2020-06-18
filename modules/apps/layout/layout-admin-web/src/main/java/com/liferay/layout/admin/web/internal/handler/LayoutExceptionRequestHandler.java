@@ -14,11 +14,14 @@
 
 package com.liferay.layout.admin.web.internal.handler;
 
+import com.liferay.asset.kernel.exception.AssetCategoryException;
+import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.LayoutNameException;
 import com.liferay.portal.kernel.exception.LayoutTypeException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTypeController;
@@ -46,20 +49,50 @@ public class LayoutExceptionRequestHandler {
 
 	public void handlePortalException(
 			ActionRequest actionRequest, ActionResponse actionResponse,
-			PortalException pe)
+			PortalException portalException)
 		throws Exception {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
 		String errorMessage = null;
 
-		if (pe instanceof LayoutNameException) {
-			LayoutNameException lne = (LayoutNameException)pe;
+		if (portalException instanceof AssetCategoryException) {
+			AssetCategoryException assetCategoryException =
+				(AssetCategoryException)portalException;
 
-			if (lne.getType() == LayoutNameException.TOO_LONG) {
+			AssetVocabulary assetVocabulary =
+				assetCategoryException.getVocabulary();
+
+			String assetVocabularyTitle = StringPool.BLANK;
+
+			if (assetVocabulary != null) {
+				assetVocabularyTitle = assetVocabulary.getTitle(
+					themeDisplay.getLocale());
+			}
+
+			if (assetCategoryException.getType() ==
+					AssetCategoryException.AT_LEAST_ONE_CATEGORY) {
+
+				errorMessage = LanguageUtil.format(
+					themeDisplay.getRequest(),
+					"please-select-at-least-one-category-for-x",
+					assetVocabularyTitle);
+			}
+			else if (assetCategoryException.getType() ==
+						AssetCategoryException.TOO_MANY_CATEGORIES) {
+
+				errorMessage = LanguageUtil.format(
+					themeDisplay.getRequest(),
+					"you-cannot-select-more-than-one-category-for-x",
+					assetVocabularyTitle);
+			}
+		}
+		else if (portalException instanceof LayoutNameException) {
+			LayoutNameException layoutNameException =
+				(LayoutNameException)portalException;
+
+			if (layoutNameException.getType() == LayoutNameException.TOO_LONG) {
 				errorMessage = LanguageUtil.format(
 					themeDisplay.getRequest(),
 					"page-name-cannot-exceed-x-characters",
@@ -72,14 +105,17 @@ public class LayoutExceptionRequestHandler {
 					"please-enter-a-valid-name-for-the-page");
 			}
 		}
-		else if (pe instanceof LayoutTypeException) {
-			LayoutTypeException lte = (LayoutTypeException)pe;
+		else if (portalException instanceof LayoutTypeException) {
+			LayoutTypeException layoutTypeException =
+				(LayoutTypeException)portalException;
 
-			if ((lte.getType() == LayoutTypeException.FIRST_LAYOUT) ||
-				(lte.getType() == LayoutTypeException.NOT_INSTANCEABLE)) {
+			if ((layoutTypeException.getType() ==
+					LayoutTypeException.FIRST_LAYOUT) ||
+				(layoutTypeException.getType() ==
+					LayoutTypeException.NOT_INSTANCEABLE)) {
 
 				errorMessage = _handleLayoutTypeException(
-					actionRequest, lte.getType());
+					actionRequest, layoutTypeException.getType());
 			}
 		}
 
@@ -88,7 +124,7 @@ public class LayoutExceptionRequestHandler {
 				themeDisplay.getRequest(), "an-unexpected-error-occurred");
 		}
 
-		jsonObject.put("error", errorMessage);
+		JSONObject jsonObject = JSONUtil.put("errorMessage", errorMessage);
 
 		JSONPortletResponseUtil.writeJSON(
 			actionRequest, actionResponse, jsonObject);

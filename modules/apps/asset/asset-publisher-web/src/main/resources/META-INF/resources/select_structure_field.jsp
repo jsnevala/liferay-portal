@@ -36,6 +36,7 @@ portletURL.setParameter("mvcPath", "/select_structure_field.jsp");
 portletURL.setParameter("portletResource", portletResource);
 portletURL.setParameter("className", className);
 portletURL.setParameter("classTypeId", String.valueOf(classTypeId));
+portletURL.setParameter("eventName", eventName);
 %>
 
 <div class="alert alert-danger hide" id="<portlet:namespace />message">
@@ -107,12 +108,15 @@ portletURL.setParameter("classTypeId", String.valueOf(classTypeId));
 			<liferay-ui:search-container-column-text>
 
 				<%
-				Map<String, Object> data = new HashMap<String, Object>();
-
-				data.put("fieldsnamespace", fieldsNamespace);
-				data.put("form", renderResponse.getNamespace() + name + "fieldForm");
-				data.put("label", label);
-				data.put("name", name);
+				Map<String, Object> data = HashMapBuilder.<String, Object>put(
+					"fieldsnamespace", fieldsNamespace
+				).put(
+					"form", renderResponse.getNamespace() + name + "fieldForm"
+				).put(
+					"label", label
+				).put(
+					"name", name
+				).build();
 				%>
 
 				<aui:button cssClass="selector-button" data="<%= data %>" disabled="<%= name.equals(ddmStructureFieldName) ? false : true %>" id='<%= "applyButton" + name %>' value="apply" />
@@ -125,64 +129,66 @@ portletURL.setParameter("classTypeId", String.valueOf(classTypeId));
 	</liferay-ui:search-container>
 </div>
 
-<aui:script use="aui-base,aui-io">
+<aui:script use="aui-base">
 	var Util = Liferay.Util;
 
-	var structureFormContainer = A.one('#<portlet:namespace />selectDDMStructureFieldForm');
+	var structureFormContainer = A.one(
+		'#<portlet:namespace />selectDDMStructureFieldForm'
+	);
 
 	var fieldSubtypeForms = structureFormContainer.all('form');
 
-	var toggleDisabledFormFields = function(form, state) {
+	var toggleDisabledFormFields = function (form, state) {
 		Util.toggleDisabled(form.all('input, select, textarea'), state);
 	};
 
-	var submitForm = function(applyButton) {
+	var submitForm = function (applyButton) {
 		var result = Util.getAttributes(applyButton, 'data-');
 
 		var fieldsnamespace = result.fieldsnamespace;
 
-		var ddmForm = Liferay.component('<portlet:namespace />' + fieldsnamespace + 'ddmForm');
+		var ddmForm = Liferay.component(
+			'<portlet:namespace />' + fieldsnamespace + 'ddmForm'
+		);
 
 		ddmForm.updateDDMFormInputValue();
 
-		var form = A.one('#' + result.form);
+		var form = document.getElementById(result.form);
 
-		A.io.request(
-			form.attr('action'),
-			{
-				dataType: 'JSON',
-				form: {
-					id: form
-				},
-				on: {
-					success: function(event, id, obj) {
-						var respondData = this.get('responseData');
+		Liferay.Util.fetch(form.action, {
+			body: new FormData(form),
+			method: 'POST',
+		})
+			.then(function (response) {
+				return response.json();
+			})
+			.then(function (response) {
+				var message = A.one('#<portlet:namespace />message');
 
-						var message = A.one('#<portlet:namespace />message');
+				if (response.success) {
+					result.className =
+						'<%= assetPublisherWebHelper.getClassName(assetRendererFactory) %>';
+					result.displayValue = response.displayValue;
+					result.value = response.value;
 
-						if (respondData.success) {
-							result.className = '<%= assetPublisherWebUtil.getClassName(assetRendererFactory) %>';
-							result.displayValue = respondData.displayValue;
-							result.value = respondData.value;
+					message.hide();
 
-							message.hide();
+					Util.getOpener().Liferay.fire(
+						'<%= HtmlUtil.escapeJS(eventName) %>',
+						result
+					);
 
-							Util.getOpener().Liferay.fire('<%= HtmlUtil.escapeJS(eventName) %>', result);
-
-							Util.getWindow().destroy();
-						}
-						else {
-							message.show();
-						}
-					}
+					Util.getWindow().destroy();
 				}
-			}
-		);
+				else {
+					message.show();
+				}
+			});
 	};
 
 	structureFormContainer.delegate(
 		'click',
-		function(event) {
+		function (event) {
 			submitForm(event.currentTarget);
 		},
 		'.selector-button'
@@ -190,8 +196,10 @@ portletURL.setParameter("classTypeId", String.valueOf(classTypeId));
 
 	structureFormContainer.delegate(
 		'submit',
-		function(event) {
-			var buttonId = event.currentTarget.one('#<portlet:namespace />buttonId').attr('value');
+		function (event) {
+			var buttonId = event.currentTarget
+				.one('#<portlet:namespace />buttonId')
+				.attr('value');
 
 			submitForm(structureFormContainer.one('#' + buttonId));
 		},
@@ -200,13 +208,16 @@ portletURL.setParameter("classTypeId", String.valueOf(classTypeId));
 
 	A.one('#<portlet:namespace />classTypeFieldsSearchContainer').delegate(
 		'click',
-		function(event) {
+		function (event) {
 			var target = event.currentTarget;
 
 			var buttonId = target.attr('data-button-id');
 			var formId = target.attr('data-form-id');
 
-			Util.toggleDisabled(structureFormContainer.all('.selector-button'), true);
+			Util.toggleDisabled(
+				structureFormContainer.all('.selector-button'),
+				true
+			);
 
 			Util.toggleDisabled('#' + buttonId, false);
 

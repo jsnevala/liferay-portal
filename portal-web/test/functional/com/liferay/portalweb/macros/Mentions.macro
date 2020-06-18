@@ -1,119 +1,140 @@
-<definition>
-	<command name="addMentionViaBlogsEntry">
-		<var name="key_entryContent" value="${entryContent}" />
-		<var name="key_mentionsUserScreenName" value="${mentionsUserScreenName}" />
+definition {
 
-		<execute macro="BlogsNavigator#gotoAddEntry" />
+	macro addMentionViaBlogsEntry {
+		var key_entryContent = "${entryContent}";
+		var key_mentionsUserScreenName = "${mentionsUserScreenName}";
 
-		<execute macro="BlogsEntry#addTitle">
-			<var name="entryTitle" value="${entryTitle}" />
-		</execute>
+		BlogsNavigator.gotoAddEntry();
 
-		<execute function="Type#sendKeys" locator1="AlloyEditor#EDITOR" value1="${entryContent} @${mentionsUserScreenName}">
-			<var name="key_editor" value="content" />
-		</execute>
+		BlogsEntry.addTitle(entryTitle = "${entryTitle}");
 
-		<execute function="Click#clickNoMouseOver" locator1="Mentions#MENTIONS_USER_DISPLAY_OPTION" />
+		Type.sendKeys(
+			key_editor = "content",
+			locator1 = "AlloyEditor#EDITOR",
+			value1 = "${entryContent} @${mentionsUserScreenName}");
 
-		<execute macro="PortletEntry#publish" />
-	</command>
+		Click.clickNoMouseOver(locator1 = "Mentions#MENTIONS_USER_DISPLAY_OPTION");
 
-	<command name="addMentionViaComments">
-		<var name="key_entryComment" value="${entryComment}" />
-		<var name="key_mentionsUserScreenName" value="${mentionsUserScreenName}" />
+		PortletEntry.publish();
+	}
 
-		<execute function="Type#sendKeys" locator1="Comments#COMMENT_FIELD" value1="${entryComment} @${mentionsUserScreenName}" />
+	macro addMentionViaComments {
+		var key_entryComment = "${entryComment}";
+		var key_mentionsUserScreenName = "${mentionsUserScreenName}";
 
-		<execute function="Click#clickNoMouseOver" locator1="Mentions#MENTIONS_USER_DISPLAY_OPTION" />
+		Type.sendKeys(
+			locator1 = "Comments#COMMENT_FIELD",
+			value1 = "${entryComment} @${mentionsUserScreenName}");
 
-		<execute function="AssertClick" locator1="Button#REPLY" value1="Reply" />
+		Click.clickNoMouseOver(locator1 = "Mentions#MENTIONS_USER_DISPLAY_OPTION");
 
-		<execute macro="Alert#viewSuccessMessage" />
-	</command>
+		AssertClick(
+			locator1 = "Button#REPLY",
+			value1 = "Reply");
 
-	<command name="addMentionViaMessageBoardsReply">
-		<var name="key_mentionsUserScreenName" value="${mentionsUserScreenName}" />
-		<var name="key_threadSubject" value="${threadSubject}" />
+		Alert.viewSuccessMessage();
+	}
 
-		<execute function="AssertClick" locator1="MessageBoards#THREAD_LIST_THREAD" value1="${threadSubject}" />
+	macro addMentionViaMessageBoardsReply {
+		var key_mentionsUserScreenName = "${mentionsUserScreenName}";
+		var key_threadSubject = "${threadSubject}";
 
-		<execute function="AssertElementPresent" locator1="MessageBoardsThread#THREAD_REPLY_BUTTON" />
+		AssertClick(
+			locator1 = "MessageBoards#THREAD_LIST_THREAD",
+			value1 = "${threadSubject}");
 
-		<execute function="AssertClick" locator1="MessageBoardsThread#THREAD_REPLY_BUTTON" value1="Reply" />
+		AssertElementPresent(locator1 = "MessageBoardsThread#THREAD_REPLY_BUTTON");
 
-		<execute function="Type#sendKeys" locator1="MessageBoardsThread#THREAD_REPLY_EDITOR" value1="${threadBody} @${mentionsUserScreenName}" />
+		AssertClick(
+			locator1 = "MessageBoardsThread#THREAD_REPLY_BUTTON",
+			value1 = "Reply");
 
-		<execute function="SelectFrame#selectFrameTop" />
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
-		<execute function="Click#clickNoMouseOver" locator1="Mentions#MENTIONS_USER_DISPLAY_OPTION" />
+		Type.sendKeys(
+			locator1 = "CKEditor#BODY",
+			value1 = "${threadBody} @${mentionsUserScreenName}");
 
-		<execute macro="PortletEntry#publish" />
-	</command>
+		SelectFrame.selectFrameTop();
 
-	<command name="addMentionViaMessageBoardThread">
-		<execute macro="LexiconEntry#gotoAdd" />
+		Click.clickNoMouseOver(locator1 = "Mentions#MENTIONS_USER_DISPLAY_OPTION");
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="Thread" />
-		</execute>
+		PortletEntry.publish();
+	}
 
-		<var name="key_mentionsUserScreenName" value="${mentionsUserScreenName}" />
+	macro addMentionViaMessageBoardThread {
+		LexiconEntry.gotoAdd();
 
-		<execute function="Type#typeWaitForCKEditorScript" locator1="TextInput#SUBJECT" value1="${threadSubject}" />
+		MenuItem.click(menuItem = "Thread");
 
-		<execute function="Type#sendKeys" locator1="AlloyEditor#EDITOR" value1="@${mentionsUserScreenName}">
-			<var name="key_editor" value="body" />
-		</execute>
+		var key_mentionsUserScreenName = "${mentionsUserScreenName}";
 
-		<execute function="Click#clickNoMouseOver" locator1="Mentions#MENTIONS_USER_DISPLAY_OPTION" />
+		Type.typeWaitForCKEditorScript(
+			locator1 = "TextInput#SUBJECT",
+			value1 = "${threadSubject}");
 
-		<execute macro="PortletEntry#publish" />
-	</command>
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
-	<command name="addMentionViaMessageBoardThreadEdit">
-		<execute function="Click" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
+		Type.sendKeys(
+			locator1 = "CKEditor#BODY",
+			value1 = "@${mentionsUserScreenName}");
 
-		<execute macro="MenuItem#click">
-			<var name="menuItem" value="Edit" />
-		</execute>
+		SelectFrame.selectFrameTop();
 
-		<execute function="Type" locator1="TextInput#SUBJECT" value1="${threadSubject}" />
+		Click.clickNoMouseOver(locator1 = "Mentions#MENTIONS_USER_DISPLAY_OPTION");
 
-		<execute function="Click" locator1="AlloyEditor#EDITOR">
-			<var name="key_editor" value="body" />
-		</execute>
+		PortletEntry.publish();
+	}
 
-		<var name="key_mentionsUserScreenName" value="${mentionsUserScreenName}" />
+	macro addMentionViaMessageBoardThreadEdit {
+		Click(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
-		<execute function="Type#sendKeys" locator1="AlloyEditor#EDITOR" value1=" @${mentionsUserScreenName}">
-			<var name="key_editor" value="body" />
-		</execute>
+		MenuItem.click(menuItem = "Edit");
 
-		<execute function="Click#clickNoMouseOver" locator1="Mentions#MENTIONS_USER_DISPLAY_OPTION" />
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
-		<execute macro="PortletEntry#publish" />
-	</command>
+		Type(
+			locator1 = "CKEditor#BODY",
+			value1 = "${threadBody} @${mentionsUserScreenName}");
 
-	<command name="viewCommentMentionTagLink">
-		<var name="key_mentionsUserFullName" value="${mentionsUserFullName}" />
-		<var name="key_mentionsUserScreenName" value="${mentionsUserScreenName}" />
-		<var name="key_siteName" value="${mentionsUserFullName}" />
+		SelectFrame(value1 = "relative=top");
 
-		<execute function="AssertClick" locator1="Mentions#MENTIONS_COMMENT_TAG_LINK" value1="@${mentionsUserScreenName}" />
+		var key_mentionsUserScreenName = "${mentionsUserScreenName}";
 
-		<execute macro="ProductMenuHelper#openProductMenu" />
+		Click.clickNoMouseOver(locator1 = "Mentions#MENTIONS_USER_DISPLAY_OPTION");
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="ProductMenu#PRODUCT_MENU_PANEL_SITE_ADMINISTRATION_SITE_NAME" value1="${mentionsUserFullName}" />
-	</command>
+		PortletEntry.publish();
+	}
 
-	<command name="viewMentionTagLink">
-		<var name="key_mentionsUserScreenName" value="${mentionsUserScreenName}" />
-		<var name="key_siteName" value="${mentionsUserFullName}" />
+	macro viewCommentMentionTagLink {
+		var key_mentionsUserFullName = "${mentionsUserFullName}";
+		var key_mentionsUserScreenName = "${mentionsUserScreenName}";
+		var key_siteName = "${mentionsUserFullName}";
 
-		<execute function="AssertClick" locator1="Mentions#MENTIONS_TAG_LINK" value1="@${mentionsUserScreenName}" />
+		AssertClick(
+			locator1 = "Mentions#MENTIONS_COMMENT_TAG_LINK",
+			value1 = "@${mentionsUserScreenName}");
 
-		<execute macro="ProductMenuHelper#openProductMenu" />
+		ProductMenuHelper.openProductMenu();
 
-		<execute function="AssertTextEquals#assertPartialText" locator1="ProductMenu#PRODUCT_MENU_PANEL_SITE_ADMINISTRATION_SITE_NAME" value1="${mentionsUserFullName}" />
-	</command>
-</definition>
+		AssertTextEquals.assertPartialText(
+			locator1 = "ProductMenu#PRODUCT_MENU_PANEL_SITE_ADMINISTRATION_SITE_NAME",
+			value1 = "${mentionsUserFullName}");
+	}
+
+	macro viewMentionTagLink {
+		var key_mentionsUserScreenName = "${mentionsUserScreenName}";
+		var key_siteName = "${mentionsUserFullName}";
+
+		AssertClick(
+			locator1 = "Mentions#MENTIONS_TAG_LINK",
+			value1 = "@${mentionsUserScreenName}");
+
+		ProductMenuHelper.openProductMenu();
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "ProductMenu#PRODUCT_MENU_PANEL_SITE_ADMINISTRATION_SITE_NAME",
+			value1 = "${mentionsUserFullName}");
+	}
+
+}

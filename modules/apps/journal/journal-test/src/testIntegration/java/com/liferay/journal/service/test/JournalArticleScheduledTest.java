@@ -37,17 +37,18 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.service.test.ServiceTestUtil;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -73,7 +74,7 @@ public class JournalArticleScheduledTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
-		ServiceTestUtil.setUser(TestPropsValues.getUser());
+		UserTestUtil.setUser(TestPropsValues.getUser());
 	}
 
 	@Test
@@ -96,18 +97,20 @@ public class JournalArticleScheduledTest {
 		testScheduleArticle(false, _WHEN_PAST);
 	}
 
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
 	protected JournalArticle addArticle(
 			long groupId, Date displayDate, int when, boolean approved)
 		throws Exception {
 
-		Map<Locale, String> titleMap = new HashMap<>();
+		Map<Locale, String> titleMap = HashMapBuilder.put(
+			LocaleUtil.getDefault(), RandomTestUtil.randomString()
+		).build();
 
-		titleMap.put(LocaleUtil.getDefault(), RandomTestUtil.randomString());
-
-		Map<Locale, String> descriptionMap = new HashMap<>();
-
-		descriptionMap.put(
-			LocaleUtil.getDefault(), RandomTestUtil.randomString());
+		Map<Locale, String> descriptionMap = HashMapBuilder.put(
+			LocaleUtil.getDefault(), RandomTestUtil.randomString()
+		).build();
 
 		String content = DDMStructureTestUtil.getSampleStructuredContent();
 

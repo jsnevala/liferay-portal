@@ -17,6 +17,7 @@ package com.liferay.document.library.kernel.util;
 import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.image.ImageBag;
@@ -34,7 +35,6 @@ import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Element;
@@ -227,16 +227,12 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 			long companyId, String dirName, String filePath, File srcFile)
 		throws PortalException {
 
-		DLStoreUtil.addDirectory(companyId, REPOSITORY_ID, dirName);
-
 		DLStoreUtil.addFile(companyId, REPOSITORY_ID, filePath, false, srcFile);
 	}
 
 	protected void addFileToStore(
 			long companyId, String dirName, String filePath, InputStream is)
 		throws PortalException {
-
-		DLStoreUtil.addDirectory(companyId, REPOSITORY_ID, dirName);
 
 		DLStoreUtil.addFile(companyId, REPOSITORY_ID, filePath, false, is);
 	}
@@ -263,8 +259,8 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 				}
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -289,8 +285,8 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 					thumbnailFilePath, is);
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 	}
 
@@ -338,7 +334,7 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 
 			DLStoreUtil.deleteFile(companyId, REPOSITORY_ID, thumbnailFilePath);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 	}
 
@@ -400,7 +396,7 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 
 			return fileNames.length;
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return 0;
@@ -576,9 +572,9 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 				portletDataContext, fileEntryElement, fileVersion, is, binPath,
 				binPathName);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioe, ioe);
+				_log.warn(ioException, ioException);
 			}
 		}
 	}
@@ -588,9 +584,7 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 			Element fileEntryElement, String binPathSuffix)
 		throws PortalException {
 
-		FileVersion fileVersion = fileEntry.getFileVersion();
-
-		if (!isSupported(fileVersion)) {
+		if (!isSupported(fileEntry.getFileVersion())) {
 			return;
 		}
 
@@ -767,8 +761,7 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 			for (File file : files) {
 				_log.debug(
 					StringBundler.concat(
-						"Preview page for ", tempFileId, " ",
-						String.valueOf(file)));
+						"Preview page for ", tempFileId, " ", file));
 			}
 		}
 
@@ -943,8 +936,8 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 				fileVersion.getCompanyId(), REPOSITORY_ID,
 				getThumbnailFilePath(fileVersion, imageType, index));
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return false;
@@ -1044,8 +1037,8 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 
 		String binPath = fileEntryElement.attributeValue(binPathName);
 
-		try (InputStream is =
-				portletDataContext.getZipEntryAsInputStream(binPath)) {
+		try (InputStream is = portletDataContext.getZipEntryAsInputStream(
+				binPath)) {
 
 			if (is == null) {
 				return;
@@ -1113,8 +1106,8 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 
 		String binPath = fileEntryElement.attributeValue(binPathName);
 
-		try (InputStream is =
-				portletDataContext.getZipEntryAsInputStream(binPath)) {
+		try (InputStream is = portletDataContext.getZipEntryAsInputStream(
+				binPath)) {
 
 			if (is == null) {
 				return;
@@ -1156,25 +1149,25 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 
 			return true;
 		}
-		else if ((index == THUMBNAIL_INDEX_CUSTOM_1) &&
-				 ((PrefsPropsUtil.getInteger(
-					 PropsKeys.
-						 DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_HEIGHT) > 0) ||
-				  (PrefsPropsUtil.getInteger(
-					  PropsKeys.
-						  DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_WIDTH) > 0))) {
+		else if (index == THUMBNAIL_INDEX_CUSTOM_1) {
+			int maxHeight = PrefsPropsUtil.getInteger(
+				PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_HEIGHT);
+			int maxWidth = PrefsPropsUtil.getInteger(
+				PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_WIDTH);
 
-			return true;
+			if ((maxHeight > 0) || (maxWidth > 0)) {
+				return true;
+			}
 		}
-		else if ((index == THUMBNAIL_INDEX_CUSTOM_2) &&
-				 ((PrefsPropsUtil.getInteger(
-					 PropsKeys.
-						 DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_HEIGHT) > 0) ||
-				  (PrefsPropsUtil.getInteger(
-					  PropsKeys.
-						  DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_WIDTH) > 0))) {
+		else if (index == THUMBNAIL_INDEX_CUSTOM_2) {
+			int maxHeight = PrefsPropsUtil.getInteger(
+				PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_HEIGHT);
+			int maxWidth = PrefsPropsUtil.getInteger(
+				PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_WIDTH);
 
-			return true;
+			if ((maxHeight > 0) || (maxWidth > 0)) {
+				return true;
+			}
 		}
 
 		return false;
@@ -1240,9 +1233,7 @@ public abstract class DLPreviewableProcessor implements DLProcessor {
 
 		ImageBag imageBag = ImageToolUtil.read(file);
 
-		RenderedImage renderedImage = imageBag.getRenderedImage();
-
-		storeThumbnailImages(fileVersion, renderedImage);
+		storeThumbnailImages(fileVersion, imageBag.getRenderedImage());
 	}
 
 	protected void storeThumbnailImages(

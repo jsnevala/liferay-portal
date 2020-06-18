@@ -24,7 +24,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.messaging.MessageBusUtil;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.messaging.MessageListener;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -36,10 +36,12 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.xml.Element;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
@@ -73,7 +75,7 @@ public class PDFProcessorTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -419,29 +421,6 @@ public class PDFProcessorTest {
 		Assert.assertEquals(2, count.get());
 	}
 
-	protected static AtomicInteger registerPDFProcessorMessageListener(
-		final EventType eventType) {
-
-		final AtomicInteger count = new AtomicInteger();
-
-		MessageBusUtil.registerMessageListener(
-			DestinationNames.DOCUMENT_LIBRARY_PDF_PROCESSOR,
-			new MessageListener() {
-
-				@Override
-				public void receive(Message message) {
-					Object[] payload = (Object[])message.getPayload();
-
-					if (eventType.isMatch(payload[0])) {
-						count.incrementAndGet();
-					}
-				}
-
-			});
-
-		return count;
-	}
-
 	protected AtomicBoolean registerCleanUpDLProcessor() {
 		final AtomicBoolean cleanUp = new AtomicBoolean(false);
 
@@ -506,14 +485,39 @@ public class PDFProcessorTest {
 
 		Registry registry = RegistryUtil.getRegistry();
 
-		HashMap<String, Object> properties = new HashMap<>();
-
-		properties.put("service.ranking", 1000);
+		HashMap<String, Object> properties = HashMapBuilder.<String, Object>put(
+			"service.ranking", 1000
+		).put(
+			"type", DLProcessorConstants.PDF_PROCESSOR
+		).build();
 
 		_dlProcessorServiceRegistration = registry.registerService(
 			DLProcessor.class, cleanUpDLProcessor, properties);
 
 		return cleanUp;
+	}
+
+	protected AtomicInteger registerPDFProcessorMessageListener(
+		final EventType eventType) {
+
+		final AtomicInteger count = new AtomicInteger();
+
+		_messageBus.registerMessageListener(
+			DestinationNames.DOCUMENT_LIBRARY_PDF_PROCESSOR,
+			new MessageListener() {
+
+				@Override
+				public void receive(Message message) {
+					Object[] payload = (Object[])message.getPayload();
+
+					if (eventType.isMatch(payload[0])) {
+						count.incrementAndGet();
+					}
+				}
+
+			});
+
+		return count;
 	}
 
 	protected enum EventType {
@@ -548,6 +552,9 @@ public class PDFProcessorTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private MessageBus _messageBus;
 
 	private ServiceContext _serviceContext;
 

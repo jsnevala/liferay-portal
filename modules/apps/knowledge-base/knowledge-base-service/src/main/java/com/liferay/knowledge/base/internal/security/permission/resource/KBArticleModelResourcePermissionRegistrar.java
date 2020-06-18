@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 public class KBArticleModelResourcePermissionRegistrar {
 
 	@Activate
-	public void activate(BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		Dictionary<String, Object> properties = new HashMapDictionary<>();
 
 		properties.put("model.class.name", KBArticle.class.getName());
@@ -72,7 +72,7 @@ public class KBArticleModelResourcePermissionRegistrar {
 				(modelResourcePermission, consumer) -> {
 					if (PropsValues.PERMISSIONS_VIEW_DYNAMIC_INHERITANCE) {
 						consumer.accept(
-							new KBArticleDynamicInheritancePermissionLogic(
+							new KBArticleDynamicInheritanceModelResourcePermissionLogic(
 								modelResourcePermission));
 					}
 				}),
@@ -80,7 +80,7 @@ public class KBArticleModelResourcePermissionRegistrar {
 	}
 
 	@Deactivate
-	public void deactivate() {
+	protected void deactivate() {
 		_serviceRegistration.unregister();
 	}
 
@@ -99,7 +99,7 @@ public class KBArticleModelResourcePermissionRegistrar {
 
 	private ServiceRegistration<ModelResourcePermission> _serviceRegistration;
 
-	private class KBArticleDynamicInheritancePermissionLogic
+	private class KBArticleDynamicInheritanceModelResourcePermissionLogic
 		implements ModelResourcePermissionLogic<KBArticle> {
 
 		@Override
@@ -148,10 +148,12 @@ public class KBArticleModelResourcePermissionRegistrar {
 			return null;
 		}
 
-		private KBArticleDynamicInheritancePermissionLogic(
-			ModelResourcePermission<KBArticle> modelResourcePermission) {
+		private KBArticleDynamicInheritanceModelResourcePermissionLogic(
+			ModelResourcePermission<KBArticle>
+				kbArticleModelResourcePermission) {
 
-			_kbArticleModelResourcePermission = modelResourcePermission;
+			_kbArticleModelResourcePermission =
+				kbArticleModelResourcePermission;
 		}
 
 		private final ModelResourcePermission<KBArticle>

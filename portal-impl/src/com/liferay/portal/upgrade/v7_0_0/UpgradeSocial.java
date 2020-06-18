@@ -15,9 +15,9 @@
 package com.liferay.portal.upgrade.v7_0_0;
 
 import com.liferay.counter.kernel.model.Counter;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -86,14 +86,6 @@ public class UpgradeSocial extends UpgradeProcess {
 		}
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	protected int getCounterIncrement() throws Exception {
-		return (int)_getCounterIncrement();
-	}
-
 	protected long getDelta(long increment) throws Exception {
 		try (Statement s = connection.createStatement()) {
 			try (ResultSet rs = s.executeQuery(
@@ -126,7 +118,8 @@ public class UpgradeSocial extends UpgradeProcess {
 
 	protected void updateSocialActivities(long delta) throws Exception {
 		try (PreparedStatement ps = connection.prepareStatement(
-				"update SocialActivity set activitySetId = (activityId + ?)")) {
+				"update SocialActivity set activitySetId = (activityId + ?) " +
+					"where mirrorActivityId = 0")) {
 
 			ps.setLong(1, delta);
 

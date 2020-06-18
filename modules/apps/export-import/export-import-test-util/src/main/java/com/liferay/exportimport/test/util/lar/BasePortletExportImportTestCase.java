@@ -32,6 +32,7 @@ import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalServiceUtil;
 import com.liferay.exportimport.kernel.service.ExportImportLocalServiceUtil;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -48,11 +49,12 @@ import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Time;
-import com.liferay.portal.util.test.LayoutTestUtil;
 import com.liferay.portlet.dynamicdatamapping.util.test.DDMTemplateTestUtil;
 
 import java.io.Serializable;
@@ -128,17 +130,15 @@ public abstract class BasePortletExportImportTestCase
 
 		Assert.assertNotNull(importedStagedModel);
 
-		Map<String, String[]> exportParameterMap = new LinkedHashMap<>();
-
-		exportParameterMap.put(
+		Map<String, String[]> exportParameterMap = LinkedHashMapBuilder.put(
 			PortletDataHandlerKeys.DELETIONS,
-			new String[] {Boolean.TRUE.toString()});
+			new String[] {Boolean.TRUE.toString()}
+		).build();
 
-		Map<String, String[]> importParameterMap = new LinkedHashMap<>();
-
-		importParameterMap.put(
+		Map<String, String[]> importParameterMap = LinkedHashMapBuilder.put(
 			PortletDataHandlerKeys.DELETIONS,
-			new String[] {Boolean.TRUE.toString()});
+			new String[] {Boolean.TRUE.toString()}
+		).build();
 
 		exportImportPortlet(
 			getPortletId(), exportParameterMap, importParameterMap);
@@ -149,7 +149,7 @@ public abstract class BasePortletExportImportTestCase
 
 			Assert.assertNull(importedStagedModel);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 	}
 
@@ -529,7 +529,7 @@ public abstract class BasePortletExportImportTestCase
 
 			Assert.assertFalse(expectFailure);
 		}
-		catch (LocaleException le) {
+		catch (LocaleException localeException) {
 			Assert.assertTrue(expectFailure);
 		}
 	}
@@ -561,25 +561,24 @@ public abstract class BasePortletExportImportTestCase
 			return;
 		}
 
-		String className = templateHandler.getClassName();
 		long resourceClassNameId = PortalUtil.getClassNameId(
 			"com.liferay.portlet.display.template.PortletDisplayTemplate");
 
 		DDMTemplate ddmTemplate = DDMTemplateTestUtil.addTemplate(
-			displayStyleGroupId, PortalUtil.getClassNameId(className), 0,
+			displayStyleGroupId,
+			PortalUtil.getClassNameId(templateHandler.getClassName()), 0,
 			resourceClassNameId);
-
-		Map<String, String[]> preferenceMap = new HashMap<>();
 
 		String displayStyle =
 			PortletDisplayTemplateManager.DISPLAY_STYLE_PREFIX +
 				ddmTemplate.getTemplateKey();
 
-		preferenceMap.put("displayStyle", new String[] {displayStyle});
-
-		preferenceMap.put(
+		Map<String, String[]> preferenceMap = HashMapBuilder.put(
+			"displayStyle", new String[] {displayStyle}
+		).put(
 			"displayStyleGroupId",
-			new String[] {String.valueOf(ddmTemplate.getGroupId())});
+			new String[] {String.valueOf(ddmTemplate.getGroupId())}
+		).build();
 
 		if (scopeType.equals("layout")) {
 			preferenceMap.put(

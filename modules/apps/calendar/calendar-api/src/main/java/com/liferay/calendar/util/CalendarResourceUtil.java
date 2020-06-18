@@ -21,13 +21,15 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.util.HashMap;
@@ -86,15 +88,19 @@ public class CalendarResourceUtil {
 			userId = userIds[0];
 		}
 
-		Map<Locale, String> nameMap = new HashMap<>();
-
-		nameMap.put(LocaleUtil.getDefault(), group.getDescriptiveName());
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), group.getDescriptiveName()
+		).build();
 
 		Map<Locale, String> descriptionMap = new HashMap<>();
 
 		return CalendarResourceLocalServiceUtil.addCalendarResource(
 			userId, groupId, PortalUtil.getClassNameId(Group.class), groupId,
-			null, null, nameMap, descriptionMap, true, serviceContext);
+			null, null,
+			LocalizationUtil.populateLocalizationMap(
+				nameMap, LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()),
+				groupId),
+			descriptionMap, true, serviceContext);
 	}
 
 	public static CalendarResource getUserCalendarResource(
@@ -128,15 +134,18 @@ public class CalendarResourceUtil {
 				serviceContext.getCompanyId(), userId);
 		}
 
-		Map<Locale, String> nameMap = new HashMap<>();
-
-		nameMap.put(LocaleUtil.getDefault(), userName);
+		Map<Locale, String> nameMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), userName
+		).build();
 
 		Map<Locale, String> descriptionMap = new HashMap<>();
 
 		return CalendarResourceLocalServiceUtil.addCalendarResource(
 			userId, userGroup.getGroupId(),
-			PortalUtil.getClassNameId(User.class), userId, null, null, nameMap,
+			PortalUtil.getClassNameId(User.class), userId, null, null,
+			LocalizationUtil.populateLocalizationMap(
+				nameMap, LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()),
+				userGroup.getGroupId()),
 			descriptionMap, true, serviceContext);
 	}
 

@@ -26,14 +26,14 @@ import com.liferay.petra.io.delta.DeltaUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.lock.Lock;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.SecureRandom;
@@ -58,12 +58,12 @@ import com.liferay.sync.SyncSiteUnavailableException;
 import com.liferay.sync.constants.SyncConstants;
 import com.liferay.sync.constants.SyncDLObjectConstants;
 import com.liferay.sync.constants.SyncPermissionsConstants;
+import com.liferay.sync.internal.configuration.SyncServiceConfigurationValues;
 import com.liferay.sync.model.SyncDLObject;
 import com.liferay.sync.model.SyncDevice;
 import com.liferay.sync.model.impl.SyncDLObjectImpl;
 import com.liferay.sync.service.SyncDLObjectLocalService;
 import com.liferay.sync.service.configuration.SyncServiceConfigurationKeys;
-import com.liferay.sync.service.internal.configuration.SyncServiceConfigurationValues;
 import com.liferay.sync.util.SyncHelper;
 
 import java.io.File;
@@ -179,10 +179,11 @@ public class SyncHelperImpl implements SyncHelper {
 		sb.append(StringPool.COMMA_AND_SPACE);
 		sb.append("\"error\": ");
 
-		JSONObject errorJSONObject = JSONFactoryUtil.createJSONObject();
-
-		errorJSONObject.put("message", throwableMessage);
-		errorJSONObject.put("type", ClassUtil.getClassName(throwable));
+		JSONObject errorJSONObject = JSONUtil.put(
+			"message", throwableMessage
+		).put(
+			"type", ClassUtil.getClassName(throwable)
+		);
 
 		sb.append(errorJSONObject.toString());
 
@@ -204,18 +205,17 @@ public class SyncHelperImpl implements SyncHelper {
 			rootCauseThrowable = rootCauseThrowable.getCause();
 		}
 
-		JSONObject rootCauseJSONObject = JSONFactoryUtil.createJSONObject();
-
 		throwableMessage = rootCauseThrowable.getMessage();
 
 		if (Validator.isNull(throwableMessage)) {
 			throwableMessage = rootCauseThrowable.toString();
 		}
 
-		rootCauseJSONObject.put("message", throwableMessage);
-
-		rootCauseJSONObject.put(
-			"type", ClassUtil.getClassName(rootCauseThrowable));
+		JSONObject rootCauseJSONObject = JSONUtil.put(
+			"message", throwableMessage
+		).put(
+			"type", ClassUtil.getClassName(rootCauseThrowable)
+		);
 
 		sb.append(rootCauseJSONObject);
 
@@ -311,7 +311,7 @@ public class SyncHelperImpl implements SyncHelper {
 			return DigesterUtil.digestBase64(
 				Digester.SHA_1, dlFileVersion.getContentStream(false));
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return StringPool.BLANK;
 		}
 	}
@@ -328,7 +328,7 @@ public class SyncHelperImpl implements SyncHelper {
 		try (FileInputStream fileInputStream = new FileInputStream(file)) {
 			return DigesterUtil.digestBase64(Digester.SHA_1, fileInputStream);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			return StringPool.BLANK;
 		}
 	}
@@ -343,8 +343,6 @@ public class SyncHelperImpl implements SyncHelper {
 	@Override
 	public File getFileDelta(File sourceFile, File targetFile)
 		throws PortalException {
-
-		File deltaFile = null;
 
 		File checksumsFile = FileUtil.createTempFile();
 
@@ -363,11 +361,11 @@ public class SyncHelperImpl implements SyncHelper {
 
 			checksumsByteChannelWriter.finish();
 		}
-		catch (Exception e) {
-			throw new PortalException(e);
+		catch (Exception exception) {
+			throw new PortalException(exception);
 		}
 
-		deltaFile = FileUtil.createTempFile();
+		File deltaFile = FileUtil.createTempFile();
 
 		try (FileInputStream targetFileInputStream = new FileInputStream(
 				targetFile);
@@ -379,7 +377,7 @@ public class SyncHelperImpl implements SyncHelper {
 				Channels.newChannel(checksumsInputStream);
 			OutputStream deltaOutputStream = new FileOutputStream(deltaFile);
 			WritableByteChannel deltaOutputStreamWritableByteChannel =
-				Channels.newChannel(deltaOutputStream);) {
+				Channels.newChannel(deltaOutputStream)) {
 
 			ByteChannelReader checksumsByteChannelReader =
 				new ByteChannelReader(checksumsReadableByteChannel);
@@ -393,8 +391,8 @@ public class SyncHelperImpl implements SyncHelper {
 
 			deltaByteChannelWriter.finish();
 		}
-		catch (Exception e) {
-			throw new PortalException(e);
+		catch (Exception exception) {
+			throw new PortalException(exception);
 		}
 		finally {
 			FileUtil.delete(checksumsFile);
@@ -473,8 +471,8 @@ public class SyncHelperImpl implements SyncHelper {
 			WritableByteChannel patchedWritableByteChannel =
 				Channels.newChannel(patchedFileOutputStream);
 			FileInputStream deltaInputStream = new FileInputStream(deltaFile);
-			ReadableByteChannel deltaReadableByteChannel =
-				Channels.newChannel(deltaInputStream)) {
+			ReadableByteChannel deltaReadableByteChannel = Channels.newChannel(
+				deltaInputStream)) {
 
 			ByteChannelReader deltaByteChannelReader = new ByteChannelReader(
 				deltaReadableByteChannel);
@@ -483,8 +481,8 @@ public class SyncHelperImpl implements SyncHelper {
 				originalFileChannel, patchedWritableByteChannel,
 				deltaByteChannelReader);
 		}
-		catch (Exception e) {
-			throw new PortalException(e);
+		catch (Exception exception) {
+			throw new PortalException(exception);
 		}
 	}
 
@@ -567,12 +565,13 @@ public class SyncHelperImpl implements SyncHelper {
 				lockUserName = lock.getUserName();
 				type = SyncDLObjectConstants.TYPE_PRIVATE_WORKING_COPY;
 			}
-			catch (NoSuchFileVersionException nsfve) {
+			catch (NoSuchFileVersionException noSuchFileVersionException) {
 
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(nsfve, nsfve);
+					_log.debug(
+						noSuchFileVersionException, noSuchFileVersionException);
 				}
 
 				// Publishing a checked out file entry on a staged site will

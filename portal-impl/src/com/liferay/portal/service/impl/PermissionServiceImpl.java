@@ -31,7 +31,7 @@ import com.liferay.portal.kernel.security.permission.BaseModelPermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionHelper;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.service.permission.TeamPermissionUtil;
@@ -110,13 +110,12 @@ public class PermissionServiceImpl extends PermissionServiceBaseImpl {
 
 				return true;
 			}
-			else {
-				ModelResourcePermissionHelper.check(
-					modelResourcePermission, permissionChecker, groupId,
-					classPK, actionId);
 
-				return true;
-			}
+			ModelResourcePermissionUtil.check(
+				modelResourcePermission, permissionChecker, groupId, classPK,
+				actionId);
+
+			return true;
 		}
 
 		BaseModelPermissionChecker baseModelPermissionChecker =
@@ -174,7 +173,7 @@ public class PermissionServiceImpl extends PermissionServiceBaseImpl {
 						return;
 					}
 				}
-				catch (Exception e) {
+				catch (Exception exception) {
 				}
 			}
 
@@ -184,11 +183,9 @@ public class PermissionServiceImpl extends PermissionServiceBaseImpl {
 					ResourceConstants.SCOPE_INDIVIDUAL, primKey,
 					permissionChecker.getOwnerRoleId());
 
-			long ownerId = resourcePermission.getOwnerId();
-
 			if (permissionChecker.hasOwnerPermission(
-					permissionChecker.getCompanyId(), name, primKey, ownerId,
-					ActionKeys.PERMISSIONS)) {
+					permissionChecker.getCompanyId(), name, primKey,
+					resourcePermission.getOwnerId(), ActionKeys.PERMISSIONS)) {
 
 				return;
 			}

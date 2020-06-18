@@ -14,13 +14,17 @@
 
 package com.liferay.jenkins.results.parser;
 
+import com.google.common.collect.Lists;
+
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil.HttpRequestMethod;
 
 import java.io.IOException;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.JSONArray;
@@ -45,18 +49,18 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 			jsonObject.put("description", description);
 		}
 
-		String labelsRequestURL = _getLabelRequestURL();
+		String labelRequestURL = getLabelRequestURL();
 
 		try {
 			JenkinsResultsParserUtil.toString(
-				labelsRequestURL, jsonObject.toString());
+				labelRequestURL, jsonObject.toString());
 
-			_labelsLists.remove(labelsRequestURL);
+			_labelsLists.remove(labelRequestURL);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			System.out.println("Unable to add label " + name);
 
-			ioe.printStackTrace();
+			ioException.printStackTrace();
 
 			return false;
 		}
@@ -79,7 +83,7 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 	}
 
 	public List<Label> getLabels() {
-		String labelRequestURL = _getLabelRequestURL();
+		String labelRequestURL = getLabelRequestURL();
 
 		if (_labelsLists.containsKey(labelRequestURL)) {
 			return _labelsLists.get(labelRequestURL);
@@ -87,23 +91,23 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 
 		JSONArray labelsJSONArray;
 
-		List<Label> labels = new ArrayList<>();
+		Set<Label> labels = new HashSet<>();
 
 		int page = 1;
 
-		while (true) {
+		while (page <= _PAGES_LABEL_PAGES_SIZE_MAX) {
 			try {
 				labelsJSONArray = JenkinsResultsParserUtil.toJSONArray(
 					JenkinsResultsParserUtil.combine(
 						labelRequestURL, "?page=", String.valueOf(page)),
 					false);
 			}
-			catch (IOException ioe) {
+			catch (IOException ioException) {
 				throw new RuntimeException(
 					JenkinsResultsParserUtil.combine(
 						"Unable to get labels for ", getName(),
 						" Git repository"),
-					ioe);
+					ioException);
 			}
 
 			if (labelsJSONArray.length() == 0) {
@@ -117,9 +121,9 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 			page++;
 		}
 
-		_labelsLists.put(labelRequestURL, labels);
+		_labelsLists.put(labelRequestURL, Lists.newArrayList(labels));
 
-		return labels;
+		return Lists.newArrayList(labels);
 	}
 
 	public boolean hasLabel(String name) {
@@ -155,7 +159,7 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 		}
 
 		String labelRequestURL = JenkinsResultsParserUtil.combine(
-			_getLabelRequestURL(), "/", oldLabel.getName());
+			getLabelRequestURL(), "/", oldLabel.getName());
 
 		try {
 			if (jsonObject == null) {
@@ -168,9 +172,9 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 					jsonObject.toString());
 			}
 
-			_labelsLists.remove(_getLabelRequestURL());
+			_labelsLists.remove(getLabelRequestURL());
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			if (jsonObject == null) {
 				System.out.println(
 					"Unable to delete label " + oldLabel.getName());
@@ -180,7 +184,7 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 					"Unable to update label " + oldLabel.getName());
 			}
 
-			ioe.printStackTrace();
+			ioException.printStackTrace();
 		}
 	}
 
@@ -195,22 +199,19 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if (o == null) {
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+
+			if (!(obj instanceof Label)) {
 				return false;
 			}
 
-			if (!(o instanceof Label)) {
-				return false;
-			}
+			Label label = (Label)obj;
 
-			Label label = (Label)o;
-
-			String color = getColor();
-			String name = getName();
-
-			if (color.equals(label.getColor()) &&
-				name.equals(label.getName())) {
+			if (Objects.equals(getColor(), label.getColor()) &&
+				Objects.equals(getName(), label.getName())) {
 
 				return true;
 			}
@@ -268,12 +269,26 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 		super("github.com", gitHubRemoteGitRepositoryName, username);
 	}
 
-	private String _getLabelRequestURL() {
-		return JenkinsResultsParserUtil.getGitHubApiUrl(
+	protected String getLabelRequestURL() {
+		if (_labelRequestURL != null) {
+			return _labelRequestURL;
+		}
+
+		_labelRequestURL = JenkinsResultsParserUtil.getGitHubApiUrl(
 			getName(), getUsername(), "/labels");
+
+		return _labelRequestURL;
 	}
+
+	protected void setLabelRequestURL(String labelRequestURL) {
+		_labelRequestURL = labelRequestURL;
+	}
+
+	private static final int _PAGES_LABEL_PAGES_SIZE_MAX = 10;
 
 	private static final Map<String, List<Label>> _labelsLists =
 		new ConcurrentHashMap<>();
+
+	private String _labelRequestURL;
 
 }

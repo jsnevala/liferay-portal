@@ -14,8 +14,6 @@
 
 package com.liferay.document.library.opener.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.document.library.opener.model.DLOpenerFileEntryReference;
 import com.liferay.document.library.opener.service.DLOpenerFileEntryReferenceLocalServiceUtil;
 
@@ -31,22 +29,25 @@ import com.liferay.document.library.opener.service.DLOpenerFileEntryReferenceLoc
  * @see DLOpenerFileEntryReference
  * @generated
  */
-@ProviderType
 public abstract class DLOpenerFileEntryReferenceBaseImpl
 	extends DLOpenerFileEntryReferenceModelImpl
 	implements DLOpenerFileEntryReference {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a dl opener file entry reference model instance should use the {@link DLOpenerFileEntryReference} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a dl opener file entry reference model instance should use the <code>DLOpenerFileEntryReference</code> interface instead.
 	 */
 	@Override
 	public void persist() {
 		if (this.isNew()) {
-			DLOpenerFileEntryReferenceLocalServiceUtil.addDLOpenerFileEntryReference(this);
+			DLOpenerFileEntryReferenceLocalServiceUtil.
+				addDLOpenerFileEntryReference(this);
 		}
 		else {
-			DLOpenerFileEntryReferenceLocalServiceUtil.updateDLOpenerFileEntryReference(this);
+			DLOpenerFileEntryReferenceLocalServiceUtil.
+				updateDLOpenerFileEntryReference(this);
 		}
 	}
+
 }

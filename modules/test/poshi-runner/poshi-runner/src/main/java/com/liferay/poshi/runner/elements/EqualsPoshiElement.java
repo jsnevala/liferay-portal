@@ -14,6 +14,8 @@
 
 package com.liferay.poshi.runner.elements;
 
+import com.liferay.poshi.runner.script.PoshiScriptParserException;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -37,7 +39,8 @@ public class EqualsPoshiElement extends PoshiElement {
 
 	@Override
 	public PoshiElement clone(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		if (_isElementType(parentPoshiElement, poshiScript)) {
 			return new EqualsPoshiElement(parentPoshiElement, poshiScript);
@@ -47,7 +50,9 @@ public class EqualsPoshiElement extends PoshiElement {
 	}
 
 	@Override
-	public void parsePoshiScript(String poshiScript) {
+	public void parsePoshiScript(String poshiScript)
+		throws PoshiScriptParserException {
+
 		String[] equalsContentArray = poshiScript.split("==");
 
 		String arg1 = equalsContentArray[0].trim();
@@ -88,7 +93,8 @@ public class EqualsPoshiElement extends PoshiElement {
 	}
 
 	protected EqualsPoshiElement(
-		PoshiElement parentPoshiElement, String poshiScript) {
+			PoshiElement parentPoshiElement, String poshiScript)
+		throws PoshiScriptParserException {
 
 		super(_ELEMENT_NAME, parentPoshiElement, poshiScript);
 	}
@@ -106,12 +112,29 @@ public class EqualsPoshiElement extends PoshiElement {
 	private boolean _isElementType(
 		PoshiElement parentPoshiElement, String poshiScript) {
 
-		return isConditionElementType(parentPoshiElement, poshiScript);
+		if (isConditionElementType(parentPoshiElement, poshiScript)) {
+			List<String> nestedConditions = getNestedConditions(
+				poshiScript, "||");
+
+			if (nestedConditions.size() > 1) {
+				return false;
+			}
+
+			nestedConditions = getNestedConditions(poshiScript, "&&");
+
+			if (nestedConditions.size() > 1) {
+				return false;
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private static final String _ELEMENT_NAME = "equals";
 
 	private static final Pattern _conditionPattern = Pattern.compile(
-		"^\"[\\s\\S]*\"[\\s]*==[\\s]*\"[\\s\\S]*\"$");
+		"^[\\(]*\"[\\s\\S]*\"[\\s]*==[\\s]*\"[\\s\\S]*\"[\\)]*$");
 
 }

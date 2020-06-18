@@ -14,7 +14,7 @@
 
 package com.liferay.portal.workflow.kaleo.service.persistence;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -22,9 +22,13 @@ import aQute.bnd.annotation.ProviderType;
  */
 @ProviderType
 public interface KaleoTaskInstanceTokenFinder {
+
 	public int countKaleoTaskInstanceTokens(
 		KaleoTaskInstanceTokenQuery kaleoTaskInstanceTokenQuery);
 
-	public java.util.List<com.liferay.portal.workflow.kaleo.model.KaleoTaskInstanceToken> findKaleoTaskInstanceTokens(
-		KaleoTaskInstanceTokenQuery kaleoTaskInstanceTokenQuery);
+	public java.util.List
+		<com.liferay.portal.workflow.kaleo.model.KaleoTaskInstanceToken>
+			findKaleoTaskInstanceTokens(
+				KaleoTaskInstanceTokenQuery kaleoTaskInstanceTokenQuery);
+
 }

@@ -14,7 +14,9 @@
 
 package com.liferay.oauth2.provider.web.internal.portlet.action;
 
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.oauth2.provider.configuration.OAuth2ProviderConfiguration;
+import com.liferay.oauth2.provider.service.OAuth2ApplicationScopeAliasesLocalService;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationService;
 import com.liferay.oauth2.provider.web.internal.constants.OAuth2ProviderPortletKeys;
 import com.liferay.oauth2.provider.web.internal.constants.OAuth2ProviderWebKeys;
@@ -32,6 +34,7 @@ import javax.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -39,6 +42,8 @@ import org.osgi.service.component.annotations.Reference;
  * @author Stian Sigvartsen
  */
 @Component(
+	configurationPid = "com.liferay.oauth2.provider.configuration.OAuth2ProviderConfiguration",
+	configurationPolicy = ConfigurationPolicy.OPTIONAL,
 	property = {
 		"javax.portlet.name=" + OAuth2ProviderPortletKeys.OAUTH2_ADMIN,
 		"mvc.command.name=/", "mvc.command.name=/admin/view_oauth2_applications"
@@ -54,6 +59,7 @@ public class ViewOAuth2ApplicationsMVCRenderCommand
 
 		OAuth2AdminPortletDisplayContext oAuth2AdminPortletDisplayContext =
 			new OAuth2AdminPortletDisplayContext(
+				_dlurlHelper, _oAuth2ApplicationScopeAliasesLocalService,
 				_oAuth2ApplicationService, _oAuth2ProviderConfiguration,
 				renderRequest, getThemeDisplay(renderRequest));
 
@@ -73,6 +79,13 @@ public class ViewOAuth2ApplicationsMVCRenderCommand
 	protected ThemeDisplay getThemeDisplay(PortletRequest portletRequest) {
 		return (ThemeDisplay)portletRequest.getAttribute(WebKeys.THEME_DISPLAY);
 	}
+
+	@Reference
+	private DLURLHelper _dlurlHelper;
+
+	@Reference
+	private OAuth2ApplicationScopeAliasesLocalService
+		_oAuth2ApplicationScopeAliasesLocalService;
 
 	@Reference
 	private OAuth2ApplicationService _oAuth2ApplicationService;

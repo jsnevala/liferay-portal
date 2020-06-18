@@ -15,17 +15,15 @@
 package com.liferay.asset.browser.web.internal.portlet;
 
 import com.liferay.asset.browser.web.internal.constants.AssetBrowserPortletKeys;
+import com.liferay.asset.browser.web.internal.display.context.AssetBrowserDisplayContext;
 import com.liferay.asset.constants.AssetWebKeys;
 import com.liferay.asset.util.AssetHelper;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 
 import java.io.IOException;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
@@ -52,33 +50,23 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + AssetBrowserPortletKeys.ASSET_BROWSER,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=guest,power-user,user"
 	},
 	service = Portlet.class
 )
 public class AssetBrowserPortlet extends MVCPortlet {
 
-	public void changeDisplayStyle(
-		ActionRequest actionRequest, ActionResponse actionResponse) {
-
-		hideDefaultSuccessMessage(actionRequest);
-
-		String displayStyle = ParamUtil.getString(
-			actionRequest, "displayStyle");
-
-		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(actionRequest);
-
-		portalPreferences.setValue(
-			AssetBrowserPortletKeys.ASSET_BROWSER, "display-style",
-			displayStyle);
-	}
-
 	@Override
 	protected void doDispatch(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
+
+		renderRequest.setAttribute(
+			AssetBrowserDisplayContext.class.getName(),
+			new AssetBrowserDisplayContext(
+				_assetHelper, _portal.getHttpServletRequest(renderRequest),
+				renderResponse.createRenderURL(), renderRequest,
+				renderResponse));
 
 		renderRequest.setAttribute(AssetWebKeys.ASSET_HELPER, _assetHelper);
 
@@ -87,5 +75,13 @@ public class AssetBrowserPortlet extends MVCPortlet {
 
 	@Reference
 	private AssetHelper _assetHelper;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.asset.browser.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
+	)
+	private Release _release;
 
 }

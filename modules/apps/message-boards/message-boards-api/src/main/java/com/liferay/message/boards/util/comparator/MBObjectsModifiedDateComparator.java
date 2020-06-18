@@ -22,8 +22,11 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.util.Date;
 
 /**
- * @author Adolfo Pérez
+ * @author     Adolfo Pérez
+ * @deprecated As of Mueller (7.2.x), replaced by {@link MBObjectsComparator}
+ * @review
  */
+@Deprecated
 public class MBObjectsModifiedDateComparator<T> extends OrderByComparator<T> {
 
 	public static final String ORDER_BY_ASC =
@@ -34,8 +37,9 @@ public class MBObjectsModifiedDateComparator<T> extends OrderByComparator<T> {
 		"modelCategory ASC, priority DESC, modifiedDate DESC, name ASC, " +
 			"modelId ASC";
 
-	public static final String[] ORDER_BY_FIELDS =
-		{"modelCategory", "priority", "modifiedDate", "name", "modelId"};
+	public static final String[] ORDER_BY_FIELDS = {
+		"modelCategory", "priority", "modifiedDate", "name", "modelId"
+	};
 
 	public MBObjectsModifiedDateComparator() {
 		this(false);

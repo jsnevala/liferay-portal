@@ -23,15 +23,7 @@ SearchContainer<DDMStructure> ddmStructureSearch = journalSelectDDMStructureDisp
 %>
 
 <clay:management-toolbar
-	clearResultsURL="<%= journalSelectDDMStructureDisplayContext.getClearResultsURL() %>"
-	disabled="<%= journalSelectDDMStructureDisplayContext.isDisabledManagementBar() %>"
-	filterDropdownItems="<%= journalSelectDDMStructureDisplayContext.getFilterItemsDropdownItems() %>"
-	itemsTotal="<%= journalSelectDDMStructureDisplayContext.getTotalItems() %>"
-	searchActionURL="<%= journalSelectDDMStructureDisplayContext.getSearchActionURL() %>"
-	searchFormName="searchForm"
-	selectable="<%= false %>"
-	sortingOrder="<%= journalSelectDDMStructureDisplayContext.getOrderByType() %>"
-	sortingURL="<%= journalSelectDDMStructureDisplayContext.getSortingURL() %>"
+	displayContext="<%= new JournalSelectDDMStructureManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalSelectDDMStructureDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid-1280" method="post" name="selectDDMStructureFm">
@@ -56,11 +48,13 @@ SearchContainer<DDMStructure> ddmStructureSearch = journalSelectDDMStructureDisp
 					<c:when test="<%= ddmStructure.getStructureId() != journalSelectDDMStructureDisplayContext.getClassPK() %>">
 
 						<%
-						Map<String, Object> data = new HashMap<>();
-
-						data.put("ddmstructureid", ddmStructure.getStructureId());
-						data.put("ddmstructurekey", ddmStructure.getStructureKey());
-						data.put("name", ddmStructure.getName(locale));
+						Map<String, Object> data = HashMapBuilder.<String, Object>put(
+							"ddmstructureid", ddmStructure.getStructureId()
+						).put(
+							"ddmstructurekey", ddmStructure.getStructureKey()
+						).put(
+							"name", ddmStructure.getName(locale)
+						).build();
 						%>
 
 						<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
@@ -76,7 +70,7 @@ SearchContainer<DDMStructure> ddmStructureSearch = journalSelectDDMStructureDisp
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-content"
 				name="description"
-				truncate="<% true %>"
+				truncate="<%= true %>"
 				value="<%= HtmlUtil.escape(ddmStructure.getDescription(locale)) %>"
 			/>
 
@@ -94,5 +88,10 @@ SearchContainer<DDMStructure> ddmStructureSearch = journalSelectDDMStructureDisp
 </aui:form>
 
 <aui:script>
-	Liferay.Util.selectEntityHandler('#<portlet:namespace />selectDDMStructureFm', '<%= HtmlUtil.escapeJS(journalSelectDDMStructureDisplayContext.getEventName()) %>');
+	document.addEventListener('DOMContentLoaded', function () {
+		Liferay.Util.selectEntityHandler(
+			'#<portlet:namespace />selectDDMStructureFm',
+			'<%= HtmlUtil.escapeJS(journalSelectDDMStructureDisplayContext.getEventName()) %>'
+		);
+	});
 </aui:script>

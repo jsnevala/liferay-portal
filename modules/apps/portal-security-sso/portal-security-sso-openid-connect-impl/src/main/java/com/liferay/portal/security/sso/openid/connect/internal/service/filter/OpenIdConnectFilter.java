@@ -14,9 +14,11 @@
 
 package com.liferay.portal.security.sso.openid.connect.internal.service.filter;
 
+import com.liferay.portal.kernel.exception.UserEmailAddressException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.BaseFilter;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnect;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectFlowState;
@@ -25,6 +27,7 @@ import com.liferay.portal.security.sso.openid.connect.OpenIdConnectServiceHandle
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectSession;
 import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectConstants;
 import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectWebKeys;
+import com.liferay.portal.security.sso.openid.connect.internal.exception.StrangersNotAllowedException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -52,11 +55,11 @@ public class OpenIdConnectFilter extends BaseFilter {
 
 	@Override
 	public boolean isFilterEnabled(
-		HttpServletRequest request, HttpServletResponse response) {
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
 
-		long companyId = _portal.getCompanyId(request);
-
-		return _openIdConnect.isEnabled(companyId);
+		return _openIdConnect.isEnabled(
+			_portal.getCompanyId(httpServletRequest));
 	}
 
 	@Override
@@ -69,13 +72,13 @@ public class OpenIdConnectFilter extends BaseFilter {
 			HttpServletResponse httpServletResponse)
 		throws Exception {
 
+		HttpSession httpSession = httpServletRequest.getSession(false);
+
+		if (httpSession == null) {
+			return;
+		}
+
 		try {
-			HttpSession httpSession = httpServletRequest.getSession(false);
-
-			if (httpSession == null) {
-				return;
-			}
-
 			OpenIdConnectSession openIdConnectSession =
 				(OpenIdConnectSession)httpSession.getAttribute(
 					OpenIdConnectWebKeys.OPEN_ID_CONNECT_SESSION);
@@ -105,30 +108,81 @@ public class OpenIdConnectFilter extends BaseFilter {
 			else {
 				_openIdConnectServiceHandler.processAuthenticationResponse(
 					httpServletRequest, httpServletResponse);
+
+				String actionURL = (String)httpSession.getAttribute(
+					OpenIdConnectWebKeys.OPEN_ID_CONNECT_ACTION_URL);
+
+				if (actionURL != null) {
+					httpServletResponse.sendRedirect(actionURL);
+				}
 			}
 		}
-		catch (Exception e) {
-			_log.error("Unable to process the OpenID login", e);
+		catch (StrangersNotAllowedException |
+			   UserEmailAddressException.MustNotUseCompanyMx exception) {
 
-			_portal.sendError(e, httpServletRequest, httpServletResponse);
+			Class<?> clazz = exception.getClass();
+
+			httpSession.removeAttribute(
+				OpenIdConnectWebKeys.OPEN_ID_CONNECT_SESSION);
+
+			sendError(
+				clazz.getSimpleName(), httpServletRequest, httpServletResponse);
+		}
+		catch (Exception exception) {
+			_log.error(
+				"Unable to process OpenID Connect authentication response: " +
+					exception.getMessage(),
+				exception);
+
+			httpSession.removeAttribute(
+				OpenIdConnectWebKeys.OPEN_ID_CONNECT_SESSION);
+
+			_portal.sendError(
+				exception, httpServletRequest, httpServletResponse);
 		}
 	}
 
 	@Override
 	protected void processFilter(
-			HttpServletRequest request, HttpServletResponse response,
-			FilterChain filterChain)
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
-		processAuthenticationResponse(request, response);
+		processAuthenticationResponse(httpServletRequest, httpServletResponse);
 
 		processFilter(
-			OpenIdConnectFilter.class.getName(), request, response,
-			filterChain);
+			OpenIdConnectFilter.class.getName(), httpServletRequest,
+			httpServletResponse, filterChain);
+	}
+
+	protected void sendError(
+			String error, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
+		throws Exception {
+
+		HttpSession session = httpServletRequest.getSession(false);
+
+		if (session == null) {
+			return;
+		}
+
+		String actionURL = (String)session.getAttribute(
+			OpenIdConnectWebKeys.OPEN_ID_CONNECT_ACTION_URL);
+
+		if (actionURL == null) {
+			return;
+		}
+
+		actionURL = _http.addParameter(actionURL, "error", error);
+
+		httpServletResponse.sendRedirect(actionURL);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		OpenIdConnectFilter.class);
+
+	@Reference
+	private Http _http;
 
 	@Reference
 	private OpenIdConnect _openIdConnect;

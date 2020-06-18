@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.spring.context.PortalContextLoaderListener;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -36,31 +37,31 @@ import javax.servlet.http.HttpServletRequestWrapper;
 public class AsyncPortletServletRequest extends HttpServletRequestWrapper {
 
 	public static AsyncPortletServletRequest getAsyncPortletServletRequest(
-		HttpServletRequest request) {
+		HttpServletRequest httpServletRequest) {
 
-		while (request instanceof HttpServletRequestWrapper) {
-			if (request instanceof AsyncPortletServletRequest) {
-				return (AsyncPortletServletRequest)request;
+		while (httpServletRequest instanceof HttpServletRequestWrapper) {
+			if (httpServletRequest instanceof AsyncPortletServletRequest) {
+				return (AsyncPortletServletRequest)httpServletRequest;
 			}
 
 			HttpServletRequestWrapper httpServletRequestWrapper =
-				(HttpServletRequestWrapper)request;
+				(HttpServletRequestWrapper)httpServletRequest;
 
-			request =
+			httpServletRequest =
 				(HttpServletRequest)httpServletRequestWrapper.getRequest();
 		}
 
 		return null;
 	}
 
-	public AsyncPortletServletRequest(HttpServletRequest request) {
-		super(request);
+	public AsyncPortletServletRequest(HttpServletRequest httpServletRequest) {
+		super(httpServletRequest);
 
-		_contextPath = request.getContextPath();
-		_pathInfo = request.getPathInfo();
-		_queryString = request.getQueryString();
-		_requestURI = request.getRequestURI();
-		_servletPath = request.getServletPath();
+		_contextPath = httpServletRequest.getContextPath();
+		_pathInfo = httpServletRequest.getPathInfo();
+		_queryString = httpServletRequest.getQueryString();
+		_requestURI = httpServletRequest.getRequestURI();
+		_servletPath = httpServletRequest.getServletPath();
 	}
 
 	@Override
@@ -191,7 +192,14 @@ public class AsyncPortletServletRequest extends HttpServletRequestWrapper {
 				for (ServletRegistration servletRegistration :
 						servletRegistrations.values()) {
 
-					addAll(servletRegistration.getMappings());
+					Collection<String> mappings =
+						servletRegistration.getMappings();
+
+					// LPS-86502
+
+					if (mappings != null) {
+						addAll(mappings);
+					}
 				}
 			}
 		};

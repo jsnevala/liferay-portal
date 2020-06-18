@@ -25,11 +25,11 @@ import com.liferay.portal.kernel.model.OrgLabor;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Phone;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.model.Website;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
@@ -63,7 +63,6 @@ import com.liferay.portal.kernel.service.permission.RolePermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserGroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserGroupRolePermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
-import com.liferay.portal.kernel.service.persistence.UserGroupRolePK;
 import com.liferay.portal.kernel.util.Accessor;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -117,7 +116,7 @@ public class UsersAdminImpl implements UsersAdmin {
 
 	@Override
 	public void addPortletBreadcrumbEntries(
-			Organization organization, HttpServletRequest request,
+			Organization organization, HttpServletRequest httpServletRequest,
 			RenderResponse renderResponse)
 		throws Exception {
 
@@ -137,7 +136,8 @@ public class UsersAdminImpl implements UsersAdmin {
 				String.valueOf(ancestorOrganization.getOrganizationId()));
 
 			PortalUtil.addPortletBreadcrumbEntry(
-				request, ancestorOrganization.getName(), portletURL.toString());
+				httpServletRequest, ancestorOrganization.getName(),
+				portletURL.toString());
 		}
 
 		Organization unescapedOrganization = organization.toUnescapedModel();
@@ -147,16 +147,15 @@ public class UsersAdminImpl implements UsersAdmin {
 			String.valueOf(unescapedOrganization.getOrganizationId()));
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			request, unescapedOrganization.getName(), portletURL.toString());
+			httpServletRequest, unescapedOrganization.getName(),
+			portletURL.toString());
 	}
 
 	@Override
 	public long[] addRequiredRoles(long userId, long[] roleIds)
 		throws PortalException {
 
-		User user = UserLocalServiceUtil.getUser(userId);
-
-		return addRequiredRoles(user, roleIds);
+		return addRequiredRoles(UserLocalServiceUtil.getUser(userId), roleIds);
 	}
 
 	@Override
@@ -1213,9 +1212,8 @@ public class UsersAdminImpl implements UsersAdmin {
 	public long[] removeRequiredRoles(long userId, long[] roleIds)
 		throws PortalException {
 
-		User user = UserLocalServiceUtil.getUser(userId);
-
-		return removeRequiredRoles(user, roleIds);
+		return removeRequiredRoles(
+			UserLocalServiceUtil.getUser(userId), roleIds);
 	}
 
 	@Override
@@ -1225,9 +1223,7 @@ public class UsersAdminImpl implements UsersAdmin {
 		Role role = RoleLocalServiceUtil.getRole(
 			user.getCompanyId(), RoleConstants.USER);
 
-		roleIds = ArrayUtil.remove(roleIds, role.getRoleId());
-
-		return roleIds;
+		return ArrayUtil.remove(roleIds, role.getRoleId());
 	}
 
 	@Override
@@ -1493,12 +1489,12 @@ public class UsersAdminImpl implements UsersAdmin {
 				continue;
 			}
 
-			UserGroupRolePK userGroupRolePK = new UserGroupRolePK(
-				userId, groupRolesGroupIds[i], groupRolesRoleIds[i]);
-
 			UserGroupRole userGroupRole =
-				UserGroupRoleLocalServiceUtil.createUserGroupRole(
-					userGroupRolePK);
+				UserGroupRoleLocalServiceUtil.createUserGroupRole(0);
+
+			userGroupRole.setUserId(userId);
+			userGroupRole.setGroupId(groupRolesGroupIds[i]);
+			userGroupRole.setRoleId(groupRolesRoleIds[i]);
 
 			userGroupRoles.add(userGroupRole);
 		}

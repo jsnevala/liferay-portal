@@ -14,14 +14,12 @@
 
 package com.liferay.portal.kernel.search;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.geolocation.GeoLocationPoint;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.Serializable;
 
@@ -38,7 +36,6 @@ import java.util.Map;
  * @author Allen Chiang
  * @author Alex Wallace
  */
-@ProviderType
 public class Field implements Serializable {
 
 	public static final String ANY = StringPool.STAR;
@@ -124,24 +121,11 @@ public class Field implements Serializable {
 
 	public static final String ORGANIZATION_ID = "organizationId";
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             #ENTRY_CLASS_NAME}
-	 */
-	@Deprecated
-	public static final String PORTLET_ID = "portletId";
-
 	public static final String PRIORITY = "priority";
 
 	public static final String PROPERTIES = "properties";
 
 	public static final String PUBLISH_DATE = "publishDate";
-
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final String RATINGS = "ratings";
 
 	public static final String RELATED_ENTRY = "relatedEntry";
 
@@ -150,6 +134,8 @@ public class Field implements Serializable {
 	public static final String REMOVED_DATE = "removedDate";
 
 	public static final String ROLE_ID = "roleId";
+
+	public static final String ROLE_IDS = "roleIds";
 
 	public static final String ROOT_ENTRY_CLASS_NAME = "rootEntryClassName";
 
@@ -195,12 +181,6 @@ public class Field implements Serializable {
 
 	public static final String VIEW_ACTION_ID = "viewActionId";
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final String VIEW_COUNT = "viewCount";
-
 	public static String getLocalizedName(Locale locale, String name) {
 		if (locale == null) {
 			return name;
@@ -216,7 +196,11 @@ public class Field implements Serializable {
 	}
 
 	public static String getSortableFieldName(String name) {
-		return name.concat(StringPool.UNDERLINE).concat(SORTABLE_FIELD_SUFFIX);
+		return name.concat(
+			StringPool.UNDERLINE
+		).concat(
+			SORTABLE_FIELD_SUFFIX
+		);
 	}
 
 	public static String getSortFieldName(Sort sort, String scoreFieldName) {
@@ -321,14 +305,6 @@ public class Field implements Serializable {
 		_fields.add(field);
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link Query#getBoost}
-	 */
-	@Deprecated
-	public float getBoost() {
-		return _boost;
-	}
-
 	public Date[] getDates() {
 		return _dates;
 	}
@@ -413,15 +389,6 @@ public class Field implements Serializable {
 		return _tokenized;
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x), replaced by {@link
-	 *             Query#setBoost(float)}
-	 */
-	@Deprecated
-	public void setBoost(float boost) {
-		_boost = boost;
-	}
-
 	public void setDates(Date[] dates) {
 		_dates = dates;
 	}
@@ -435,9 +402,8 @@ public class Field implements Serializable {
 		else {
 			setValue(
 				StringBundler.concat(
-					"lat: ", String.valueOf(geoLocationPoint.getLatitude()),
-					", lon: ",
-					String.valueOf(geoLocationPoint.getLongitude())));
+					"lat: ", geoLocationPoint.getLatitude(), ", lon: ",
+					geoLocationPoint.getLongitude()));
 		}
 	}
 
@@ -593,7 +559,6 @@ public class Field implements Serializable {
 
 	private static final String _UID_PORTLET = "_PORTLET_";
 
-	private float _boost = 1;
 	private Date[] _dates;
 	private final List<Field> _fields = new ArrayList<>();
 	private GeoLocationPoint _geoLocationPoint;

@@ -16,9 +16,12 @@ package com.liferay.message.boards.web.internal.portlet.action;
 
 import com.liferay.message.boards.exception.NoSuchMessageException;
 import com.liferay.message.boards.model.MBMessage;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.PortletException;
@@ -38,21 +41,34 @@ public abstract class GetMessageMVCRenderCommand implements MVCRenderCommand {
 		try {
 			MBMessage message = ActionUtil.getMessage(renderRequest);
 
+			if (message != null) {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)renderRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				checkPermissions(themeDisplay.getPermissionChecker(), message);
+			}
+
 			renderRequest.setAttribute(WebKeys.MESSAGE_BOARDS_MESSAGE, message);
 		}
-		catch (NoSuchMessageException | PrincipalException e) {
-			SessionErrors.add(renderRequest, e.getClass());
+		catch (NoSuchMessageException | PrincipalException exception) {
+			SessionErrors.add(renderRequest, exception.getClass());
 
 			return "/message_boards/error.jsp";
 		}
-		catch (RuntimeException re) {
-			throw re;
+		catch (RuntimeException runtimeException) {
+			throw runtimeException;
 		}
-		catch (Exception e) {
-			throw new PortletException(e);
+		catch (Exception exception) {
+			throw new PortletException(exception);
 		}
 
 		return getPath();
+	}
+
+	protected void checkPermissions(
+			PermissionChecker permissionChecker, MBMessage message)
+		throws PortalException {
 	}
 
 	protected abstract String getPath();

@@ -17,81 +17,60 @@
 <%@ include file="/asset_tags_selector/init.jsp" %>
 
 <%
-String addCallback = GetterUtil.getString((String)request.getAttribute("liferay-asset:asset-tags-selector:addCallback"));
-boolean allowAddEntry = GetterUtil.getBoolean((String)request.getAttribute("liferay-asset:asset-tags-selector:allowAddEntry"));
-boolean autoFocus = GetterUtil.getBoolean((String)request.getAttribute("liferay-asset:asset-tags-selector:autoFocus"));
-String eventName = (String)request.getAttribute("liferay-asset:asset-tags-selector:eventName");
-long[] groupIds = (long[])request.getAttribute("liferay-asset:asset-tags-selector:groupIds");
-String hiddenInput = (String)request.getAttribute("liferay-asset:asset-tags-selector:hiddenInput");
-String id = GetterUtil.getString((String)request.getAttribute("liferay-asset:asset-tags-selector:id"));
-PortletURL portletURL = (PortletURL)request.getAttribute("liferay-asset:asset-tags-selector:portletURL");
-String removeCallback = GetterUtil.getString((String)request.getAttribute("liferay-asset:asset-tags-selector:removeCallback"));
-String tagNames = GetterUtil.getString((String)request.getAttribute("liferay-asset:asset-tags-selector:tagNames"));
+Map<String, Object> data = (Map<String, Object>)request.getAttribute("liferay-asset:asset-tags-selector:data");
+
+String inputName = (String)data.get("inputName");
+List<Map<String, String>> selectedItems = (List<Map<String, String>>)data.get("selectedItems");
 %>
 
-<h4>
-	<liferay-ui:message key="tags" />
-</h4>
+<div>
+	<div class="lfr-tags-selector-content">
 
-<div class="lfr-tags-selector-content" id="<portlet:namespace /><%= id %>assetTagsSelector">
-	<aui:input name="<%= hiddenInput %>" type="hidden" />
+		<%
+		for (Map<String, String> selectedItem : selectedItems) {
+		%>
 
-	<c:if test="<%= allowAddEntry %>">
-		<input class="form-control lfr-tag-selector-input" id="<%= id %>assetTagNames" size="15" title="<liferay-ui:message key="add-tags" />" type="text" />
-	</c:if>
-</div>
+			<input name="<%= inputName %>" type="hidden" value="<%= selectedItem.get("value") %>" />
 
-<aui:script use="liferay-asset-taglib-tags-selector">
-	var assetTaglibTagsSelector = new Liferay.AssetTaglibTagsSelector(
-		{
-			allowAddEntry: <%= allowAddEntry %>,
-			contentBox: '#<portlet:namespace /><%= id %>assetTagsSelector',
-
-			<c:if test="<%= groupIds != null %>">
-				groupIds: '<%= StringUtil.merge(groupIds) %>',
-			</c:if>
-
-			hiddenInput: '#<portlet:namespace /><%= hiddenInput %>',
-
-			<c:if test="<%= allowAddEntry %>">
-				input: '#<%= id %>assetTagNames',
-			</c:if>
-
-			<c:if test="<%= Validator.isNotNull(eventName) %>">
-				eventName: '<%= eventName %>',
-			</c:if>
-
-			maxLength: <%= ModelHintsConstants.TEXT_MAX_LENGTH %>,
-
-			<c:if test="<%= portletURL != null %>">
-				portletURL: '<%= portletURL.toString() %>',
-			</c:if>
-
-			tagNames: '<%= HtmlUtil.escapeJS(tagNames) %>'
+		<%
 		}
-	).render();
+		%>
 
-	Liferay.component('<portlet:namespace />tagsSelector', assetTaglibTagsSelector);
+		<div class="form-group">
+			<label>
+				<liferay-ui:message key="tags" />
+			</label>
 
-	<c:if test="<%= Validator.isNotNull(addCallback) %>">
-		assetTaglibTagsSelector.entries.on(
-			'add',
-			function(event) {
-				window['<portlet:namespace /><%= addCallback %>'](event.item);
-			}
-		);
-	</c:if>
+			<div class="input-group input-group-stacked-sm-down">
+				<div class="input-group-item">
+					<div class="form-control form-control-tag-group">
 
-	<c:if test="<%= Validator.isNotNull(removeCallback) %>">
-		assetTaglibTagsSelector.entries.on(
-			'remove',
-			function(event) {
-				window['<portlet:namespace /><%= removeCallback %>'](event.item);
-			}
-		);
-	</c:if>
+						<%
+						for (Map<String, String> selectedItem : selectedItems) {
+						%>
 
-	<c:if test="<%= autoFocus %>">
-		Liferay.Util.focusFormField('#<%= id %>assetTagNames');
-	</c:if>
-</aui:script>
+							<clay:label
+								closeable="<%= true %>"
+								label='<%= selectedItem.get("label") %>'
+							/>
+
+						<%
+						}
+						%>
+
+						<input class="form-control-inset" type="text" value="" />
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<button class="btn btn-secondary" type="button">
+			<liferay-ui:message key="select" />
+		</button>
+	</div>
+
+	<react:component
+		data="<%= data %>"
+		module="asset_tags_selector/AssetTagsSelectorTag.es"
+	/>
+</div>

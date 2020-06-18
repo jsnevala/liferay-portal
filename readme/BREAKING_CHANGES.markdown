@@ -1,4 +1,4 @@
-# What are the Breaking Changes for Liferay 7.1?
+# What are the Breaking Changes for Liferay 7.3?
 
 This document presents a chronological list of changes that break existing
 functionality, APIs, or contracts with third party Liferay developers or users.
@@ -20,7 +20,7 @@ Here are some of the types of changes documented in this file:
   replaces an old API, in spite of the old API being kept in Liferay Portal for
   backwards compatibility.
 
-*This document has been reviewed through commit `ef156169d4fa`.*
+*This document has been reviewed through commit ``.*
 
 ## Breaking Changes Contribution Guidelines
 
@@ -31,8 +31,8 @@ information:
   the capitalization rules from
   <http://en.wikibooks.org/wiki/Basic_Book_Design/Capitalizing_Words_in_Titles>.
 * **Date:** Specify the date you submitted the change. Format the date as
-  *YYYY-MMM* (e.g., 2014-Mar) or *YYYY-MMM-DD* (e.g., 2014-Feb-25).
-* **JIRA Ticket:** Reference the related JIRA ticket (e.g., LPS-123456)
+  *YYYY-MMM-DD* (e.g., 2014-Feb-25).
+* **JIRA Ticket:** Reference the related JIRA ticket (e.g., LPS-12345)
   (Optional).
 * **What changed?** Identify the affected component and the type of change that
   was made.
@@ -60,8 +60,8 @@ horizontal rule):
 #### Why was this change made?
 
 ---------------------------------------
-```
 
+```
 **80 Columns Rule:** Text should not exceed 80 columns. Keeping text within 80
 columns makes it easier to see the changes made between different versions of
 the document. Titles, links, and tables are exempt from this rule. Code samples
@@ -73,978 +73,495 @@ in ascending chronological order.
 
 ## Breaking Changes List
 
-### Standardized Data Attribute Names Passed into Selectors
-- **Date:** 2016-Oct-26
-- **JIRA Ticket:** LPS-66646
+### Removed Portal Property user.groups.copy.layouts.to.user.personal.site
+- **Date:** 2019-Dec-26
+- **JIRA Ticket:** [LPS-106339](https://issues.liferay.com/browse/LPS-106339)
 
 #### What changed?
 
-The data attributes passed into the event when someone uses a selector (e.g.,
-asset selector, document selector, file selector, role selector, site selector,
-user group selector, etc.) have been standardized from being selector specific
-(e.g., `groupid`, `groupdescriptivename`, `teamid`, `teamname`, etc.) to being
-more generic (e.g., `entityid` and `entityname`).
+The portal property `user.groups.copy.layouts.to.user.personal.site` and the
+behavior associated with it have been removed.
 
 #### Who is affected?
 
-This affects anyone passing selector specific data attributes to a selector.
+This affects any one who set the property to `true` to copy user group pages to
+user personal sites.
 
 #### How should I update my code?
 
-Instead of using selector specific data attributes, you should change your data
-attributes to use `entityid` and `entityname`.
-
-**Example**
-
-Old way:
-
-    <portlet:namespace />selectFileEntryType(event.fileentrytypeid, event.fileentrytypename);
-
-New way:
-
-    <portlet:namespace />selectFileEntryType(event.entityid, event.entityname);
-
-Old way:
-
-    data.put("roleid", role.getRoleId());
-    data.put("roletitle", role.getTitle(locale));
-
-New way:
-
-    data.put("entityid", role.getRoleId());
-    data.put("entityname", role.getTitle(locale));
+There's no direct replacement for this property. If you have anything that
+depends on the behavior, you can copy the old implementations of
+`UserGroupLocalServiceImpl#copyUserGroupLayouts` to your own project.
 
 #### Why was this change made?
 
-This change was made to standardize the data attribute names and allow utility
-methods to accept standardized event parameters.
+The behavior associated with this property has been deprecated since 6.2.
 
 ---------------------------------------
 
-### Removed URL Parameters p_p_col_id, p_p_col_pos, and p_p_col_count from Every Portlet URL.
-- **Date:** 2016-Dec-12
-- **JIRA Ticket:** LPS-69482
+### Liferay FontAwesome Is No Longer Included by Default
+- **Date:** 2019-Aug-21
+- **JIRA Ticket:** [LPS-100021](https://issues.liferay.com/browse/LPS-100021)
 
 #### What changed?
 
-The parameters `p_p_col_count`, `p_p_col_id`, and `p_p_col_pos` are no longer
-present in every portlet URL.
+Previously, Liferay FontAwesome that included icon fonts for Font Awesome,
+Glyphicon and custom Liferay icons was included by default. These icon fonts are
+no longer included out of the box.
 
 #### Who is affected?
 
-This affects developers who are reading these parameters in their custom code.
+This affects any content or code that relies on such icon fonts in pages or
+sites where a theme that does not include the fonts is applied.
 
 #### How should I update my code?
 
-You can no longer obtain these parameters from the portlet URL. If you need to
-read them, you should do it from `PortletDisplay`.
+Depending on how you're using icon fonts, you might need to take different
+approaches:
 
-- The parameter `p_p_col_count` can be obtained via the
-  `portletDisplay.getColumnCount()` method.
-- The parameter `p_p_col_id` can be obtained via the
-  `portletDisplay.getColumnId()` method.
-- The parameter `p_p_col_pos` can be obtained via the
-  `portletDisplay.getColumnPos()` method.
+##### For liferay-ui:icon usage
+
+Replace `<liferay-ui:icon iconCssClass="icon-user">` with
+`<liferay-ui:icon icon="user" markupView="lexicon" />`
+
+##### For JS generated icons
+
+Those manually generating fontawesome icon html, can use the
+`Liferay.Util.getLexiconIconTpl('user')` API. For example the previous call
+would return the html code for a user svg icon
+
+##### For direct html within jsps
+
+Developers directly using icons in jsps, can either use the `liferay-ui:icon`
+tag as explained above or the `clay:icon` one to generate svg-based icons
+instead.
+
+##### For non-controlled code
+
+People who don't have access to the content that uses icon fonts or if that
+don't want to update those occurrences can reintroduce the icon fonts in their
+themes.
+
+During the 7.2 upgrade process, the theme upgrade assistant prompted developers
+to keep fontawesome as part of the theme. Themes that already include the icon
+fonts won't be affected and will continue to work in 7.3.
 
 #### Why was this change made?
 
-This change simplifies portlet URLs so they only contain the required
-parameters. This was done as a preliminary step of a bigger story to create
-portlet URLs without passing the request as a necessary parameter.
+This change was made to avoid serving unnecessary files saving bandwidth and
+increasing performance of your sites by default.
 
 ---------------------------------------
 
-### Moved Users File Uploads Portlet Properties to OSGi Configuration
-- **Date:** 2017-Feb-06
-- **JIRA Ticket:** LPS-69211
+### Removed com.liferay.asset.taglib.servlet.taglib.soy.AssetTagsSelectorTag
+- **Date:** 2019-Oct-15
+- **JIRA Ticket:** [LPS-100144](https://issues.liferay.com/browse/LPS-100144)
 
 #### What changed?
 
-The Users File Uploads portlet properties have been moved from Server
-Administration to an OSGi configuration named
-`UserFileUploadsConfiguration.java` in the `users-admin-api` module.
+The Java class
+`com.liferay.asset.taglib.servlet.taglib.soy.AssetTagsSelectorTag` has been
+removed.
 
 #### Who is affected?
 
-This affects anyone using the following portlet properties:
-
-- `users.image.check.token`
-- `users.image.max.size`
-- `users.image.max.height`
-- `users.image.max.width`
+This affects any code that directly instantiates or extends this class.
 
 #### How should I update my code?
 
-Instead of overriding the `portal.properties` file, you can manage the
-properties from Portal's configuration administrator. This can be accessed by
-navigating to Liferay Portal's *Control Panel* &rarr; *Configuration* &rarr;
-*System Settings* &rarr; *Foundation* &rarr; *User Images* and editing the
-settings there.
-
-If you would like to include the new configuration in your application, follow
-the instructions for
-[making your applications configurable in Liferay 7.0](https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/making-your-applications-configurable).
+There's no direct replacement for the removed class. If you have code that
+depends on it, you would need to copy over the old implementation to your own
+project and change the dependency to rely on your local version.
 
 #### Why was this change made?
 
-This change was made as part of the modularization efforts to ease portal
-configuration changes.
+The `asset:asset-tags-selector` and its components have been migrated to React,
+making the old tag and its soy infrastructure unnecessary.
 
 ---------------------------------------
 
-### Moved CAPTCHA Portal Properties to OSGi Configuration
-- **Date:** 2017-Feb-13
-- **JIRA Ticket:** LPS-67830
+### Removed liferay.frontend.Slider
+- **Date:** 2019-Oct-10
+- **JIRA Ticket:** [LPS-100124](https://issues.liferay.com/browse/LPS-100124)
 
 #### What changed?
 
-The CAPTCHA properties have been moved from `portal.properties` and Server
-Administration to an OSGi configuration named `CaptchaConfiguration.java` in the
-`captcha-api` module.
+The legacy metal+soy `liferay.frontend.Slider` component has been removed.
 
 #### Who is affected?
 
-This affects anyone using the following portal properties:
-
-- `captcha.max.challenges`
-- `captcha.check.portal.create_account`
-- `captcha.check.portal.send_password`
-- `captcha.check.portlet.message_boards.edit_category`
-- `captcha.check.portlet.message_boards.edit_message`
-- `captcha.engine.impl`
-- `captcha.engine.recaptcha.key.private`
-- `captcha.engine.recaptcha.key.public`
-- `captcha.engine.recaptcha.url.script`
-- `captcha.engine.recaptcha.url.noscript`
-- `captcha.engine.recaptcha.url.verify`
-- `captcha.engine.simplecaptcha.height`
-- `captcha.engine.simplecaptcha.width`
-- `captcha.engine.simplecaptcha.background.producers`
-- `captcha.engine.simplecaptcha.gimpy.renderers`
-- `captcha.engine.simplecaptcha.noise.producers`
-- `captcha.engine.simplecaptcha.text.producers`
-- `captcha.engine.simplecaptcha.word.renderers`
+This affects any code that relies on such component, which is usually done via
+`soy` as `{call liferay.frontend.Slider /}`
 
 #### How should I update my code?
 
-Instead of overriding the `portal.properties` file, you can manage the
-properties from Portal's configuration administrator. This can be accessed by
-navigating to Liferay Portal's *Control Panel* &rarr; *Configuration* &rarr;
-*System Settings* &rarr; *Captcha* and editing the settings there.
+There's no direct replacement for `liferay.frontend.Slider` component which was
+simply being used as a temporary bridge for legacy behaviour.
 
-If you would like to include the new configuration in your application, follow
-the instructions for
-[making your applications configurable in Liferay 7.0](https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/making-your-applications-configurable).
+If you have a component that relies on it, you can choose to co-locate a copy of
+the old implementation and use it locally within your module.
 
 #### Why was this change made?
 
-This change was made as part of the modularization efforts to ease portal
-configuration changes.
+The compatibility `liferay.frontend.Slider` component is no longer used and was
+already deprecated in `7.2`.
 
 ---------------------------------------
 
-### Moved OpenOffice Properties to OSGi Configuration
-- **Date:** 2017-Mar-24
-- **JIRA Ticket:** LPS-71382
+### Removed liferay.frontend.ProgressBar
+- **Date:** 2019-Aug-28
+- **JIRA Ticket:** [LPS-100122](https://issues.liferay.com/browse/LPS-100122)
 
 #### What changed?
 
-The OpenOffice properties have been moved from Server Administration to an OSGi
-configuration named `OpenOfficeConfiguration.java` in the
-`document-library-document-conversion` module.
+The legacy metal+soy `liferay.frontend.ProgressBar` component has been removed.
 
 #### Who is affected?
 
-This affects anyone using the following portal properties:
-
-- `openoffice.cache.enabled`
-- `openoffice.server.enabled`
-- `openoffice.server.host`
-- `openoffice.server.port`
+This affects any code that relies on such component, which is usually done via
+`soy` as `{call liferay.frontend.ProgressBar /}`
 
 #### How should I update my code?
 
-Instead of overriding the `portal.properties` file, you can manage the
-properties from Portal's configuration administrator. This can be accessed by
-navigating to Liferay Portal's *Control Panel* &rarr; *Configuration* &rarr;
-*System Settings* &rarr; *Other* &rarr; *OpenOffice Integration* and editing the
-settings there.
+There's no direct replacement for `liferay.frontend.ProgressBar` component
+which was simply being used as a temporary bridge for legacy behaviour.
 
-If you would like to include the new configuration in your application, follow
-the instructions for
-[making your applications configurable in Liferay 7.0](https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/making-your-applications-configurable).
+If you have a component that relies on it, you can choose to co-locate a copy of
+the old implementation and use it locally within your module.
 
 #### Why was this change made?
 
-This change was made as part of the modularization efforts to ease portal
-configuration changes.
+The compatibility `liferay.frontend.ProgessBar` component is no longer used and
+was already deprecated in `7.2`.
 
 ---------------------------------------
 
-### Removed Indexation of Fields ratings and viewCount
-- **Date:** 2017-May-16
-- **JIRA Ticket:** LPS-70724
+### Removed cache bootstrap feature
+- **Date:** 2020-Jan-8
+- **JIRA Ticket:** [LPS-96563](https://issues.liferay.com/browse/LPS-96563)
 
 #### What changed?
 
-The fields `ratings` and `viewCount` are no longer indexed in the `BaseIndexer`
-class for `AssetEntry` objects.
+The cache bootstrap feature has been removed, which means you can not use the
+following properties to enable/configure cache bootstrap:
+`ehcache.bootstrap.cache.loader.enabled`,
+`ehcache.bootstrap.cache.loader.properties.default`,
+`ehcache.bootstrap.cache.loader.properties.${specific.cache.name}`.
 
 #### Who is affected?
 
-This affects any search-related custom code where the `ratings` and `viewCount`
-fields are used in queries.
+This affects who is using the properties listed above.
 
 #### How should I update my code?
 
-To adapt to these changes, consider several alternatives:
-
- - Use the Highest Rated Assets and Most Viewed Assets Liferay portlets.
- - Replace the index query with a database query.
- - Implement an `IndexerPostProcessor` to index these fields in certain
-   documents.
+There's no direct replacement for the removed feature. If you have code that
+depends on it, you would need to implement it by yourself.
 
 #### Why was this change made?
 
-Keeping the Ratings and View Count options in the search index in sync with the
-database has a negative impact on normal operations due to the significantly
-increased number of index Write requests causing throughput issues and,
-therefore, performance degradation.
-
-In addition, the view count is not always up-to-date in the database. This
-behavior is controlled by the *Buffered Increment* mechanism. You can find
-more information about this in the `portal.properties` file.
+This change was made to avoid security issues.
 
 ---------------------------------------
 
-### Moved Upload Servlet Request Portal Properties to OSGi Configuration
-- **Date:** 2017-May-30
-- **JIRA Ticket:** LPS-69102
+### Removed support for auto deploying EXT plugins
+- **Date:** 2019-Dec-31
+- **JIRA Ticket:** [LPS-106008](https://issues.liferay.com/browse/LPS-106008)
 
 #### What changed?
 
-The Upload Servlet Request properties have been moved from the
-`portal.properties` file and Server Administration to an OSGi configuration
-named `UploadServletRequestConfiguration.java` in the `portal-upload` module.
+The support for deploying EXT plugins using Auto Deployer (via
+liferay-home/deploy folder) has been removed. EXT plugins copied to the deploy
+folder will not be recognized any more.
 
 #### Who is affected?
 
-This affects anyone using the following portal properties:
-
-- `com.liferay.portal.upload.UploadServletRequestImpl.max.size`
-- `com.liferay.portal.upload.UploadServletRequestImpl.temp.dir`
+This affects who is deploying EXT plugins via the Auto Deployer.
 
 #### How should I update my code?
 
-Instead of overriding the `portal.properties` file, you can manage the
-properties from Portal's configuration administrator. This can be accessed by
-navigating to Liferay Portal's *Control Panel* &rarr; *Configuration* &rarr;
-*System Settings* &rarr; *Upload Servlet Request* and editing the settings
-there.
-
-If you would like to include the new configuration in your application, follow
-the instructions for
-[making your applications configurable in Liferay 7.0](https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/making-your-applications-configurable).
+There's no direct replacement for the removed feature. If you have EXT plugin,
+you would need to deploy it manually or using [`ant direct-deploy`](https://github.com/liferay/liferay-plugins-ee/blob/7.0.x/ext/build-common-ext.xml#L211).
 
 #### Why was this change made?
 
-This change was made as part of the modularization efforts to ease portal
-configuration changes.
+This feature has been deprecated since 7.1.
 
 ---------------------------------------
 
-### Moved Three DL File Properties to OSGi Configuration
-- **Date:** 2017-Aug-01
-- **JIRA Ticket:** LPS-69208
+### Removed liferay-frontend:cards-treeview tag
+- **Date:** 2020-Jan-10
+- **JIRA Ticket:** [LPS-106899](https://issues.liferay.com/browse/LPS-106899)
 
 #### What changed?
 
-Two DL File properties have been moved from Server Administration to the OSGi
-configuration `DLConfiguration`, and one to `DLFileEntryConfiguration`. Both
-configurations are located in the `document-library-api` module.
+The liferay-frontend:cards-treeview tag has been removed.
 
 #### Who is affected?
 
-This affects anyone who is using the following portal properties:
-
-- `dl.file.entry.previewable.processor.max.size`
-- `dl.file.extensions`
-- `dl.file.max.size`
+This affects anyone using the tag from a jsp or some of its components inside
+a SOY (Closure Templates) template.
 
 #### How should I update my code?
 
-Instead of overriding the `portal.properties` file, you can manage the
-properties from Portal's configuration administrator. This can be accessed by
-navigating to Portal's *Control Panel* &rarr; *Configuration* &rarr; *System
-Settings* &rarr; *Collaboration* &rarr; *Documents & Media Service* or
-*Documents & Media File Entries* and editing the settings there.
-
-If you would like to include the new configuration in your application, follow
-the instructions for
-[making your applications configurable](https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/making-your-applications-configurable).
+There's no direct replacement for the removed feature. If you have code that
+depends on it, you would need to implement it by yourself.
 
 #### Why was this change made?
 
-This change was made as part of the modularization efforts to ease portal
-configuration changes.
+This change was made because the UI tag was mostly internal and very specific
+and local usage did not grant keeping it around
 
 ---------------------------------------
 
-### Removed the soyutils Module
-- **Date:** 2017-Aug-28
-- **JIRA Ticket:** LPS-69102
+### Removed liferay-frontend:contextual-sidebar tag
+- **Date:** 2020-Jan-10
+- **JIRA Ticket:** [LPS-100146](https://issues.liferay.com/browse/LPS-100146)
 
 #### What changed?
 
-The module `frontend-js-soyutils-web` is no longer available.
+The liferay-frontend:contextual-sidebar tag has been removed.
 
 #### Who is affected?
 
-This affects anyone using the `soyutils` module.
+This affects anyone using the tag from a jsp or some of its components inside
+a SOY (Closure Templates) template.
 
 #### How should I update my code?
 
-In the rare case that a component is affected, it is recommended that the code
-is migrated to use the `metal-soy` module instead. You can do this by extending
-the `Metal.js` provided `Component` classes.
+There's no direct replacement for the removed feature. If you have code that
+depends on it, you would need to implement it by yourself.
 
 #### Why was this change made?
 
-The removed module exposed a legacy version of `soyutils`. This caused
-interoperability issues between applications using different versions of the
-Closure Template library.
+This change was made because the UI tag was mostly internal and very specific
+and local usage did not grant keeping it around
 
 ---------------------------------------
 
-### Changed Default Value for Browser Cache Properties
-- **Date:** 2017-Sep-05
-- **JIRA Ticket:** LPS-74452
+### Replace OSGi configuration autoUpgrade by portal property
+### upgrade.database.auto.run
+- **Date:** 2020-Jan-03
+- **JIRA Ticket:** [LPS-102842](https://issues.liferay.com/browse/LPS-102842)
 
 #### What changed?
 
-The default values for the portal properties `browser.cache.disabled` and
-`browser.cache.signed.in.disabled` were changed to `true`.
+The OSGi property `autoUpgrade` defined in
+`com.liferay.portal.upgrade.internal.configuration.ReleaseManagerConfiguration.config`
+has been replaced by the portal property `upgrade.database.auto.run`.
+
+Unlike the old property, which only controlled the upgrade processes in
+modules, the new one also affects to Core upgrade processes. The default value
+is now false so upgrade processes won't run on startup or module deployment.
+Remember that you can execute module upgrade processes anytime via Gogo
+console.
 
 #### Who is affected?
 
-This affects anyone relying on proxies and load balancers to cache HTML content.
+This only affects development environments where we don't want to run the
+upgrade anytime we deploy a new process. Setting this property as true in
+production environments is not supported. In these cases the use of the
+upgrade tool to execute minor and major schema version changes is mandatory.
 
 #### How should I update my code?
 
-You should set both properties `browser.cache.disabled` and
-`browser.cache.signed.in.disabled` to `false`, as documented in
-`portal-legacy-7.0.properties`.
+It does not impact your code.
 
 #### Why was this change made?
 
-The load balancer and web proxy's behavior when Cache-Control headers are
-missing is not defined. In the past, many preferred to not cache the content for
-correctness; however, it is now common to cache the content for performance.
-
-When an aggressive caching load balancer or web proxy appears in the network
-architecture, the default value may result in security problems such as
-personalized content being mistakenly shared, including names or other
-personally identifiable information. As Liferay shifts towards use cases
-providing personalized experiences, this is becoming a serious problem.
-
-While this is ultimately a load balancer or web proxy configuration issue, it is
-perceived as a Liferay issue because it is Liferay content being cached, and is
-viewed negatively because leaking sensitive information in a production
-environment is a very serious security issue.
-
-A value of `true` will improve a portal administrator's experience, and a value
-of `false` can be considered during performance tuning, if needed.
+To unify the auto-upgrade feature between the Core and modules. The default
+value has also changed to avoid the execution of new upgrade processes on
+startup in production environments.
 
 ---------------------------------------
 
-### Users Can Have Numeric Screen Names with No Limitations, and Sites Can No Longer Have Numeric Friendly URLs
-- **Date:** 2017-Oct-10
-- **JIRA Ticket:** LPS-66460
+### Changed Control Menu and Product Menu positioning
+- **Date:** 2020-Feb-04
+- **JIRA Ticket:** [LPS-107487](https://issues.liferay.com/browse/LPS-107487)
 
 #### What changed?
 
-- The portal property `users.screen.name.allow.numeric` now defaults to `true`.
-- Numeric screen names are no longer limited by whether they correspond to an
-  existing group ID.
-- Sites can no longer set their group ID as their friendly URL.
-- Sites can no longer be implicitly accessed by using their group ID in the URL
-  (this used to be available automatically, even if it wasn't set that way).
-- If the friendly URL of a site is already set to the group ID, it will continue
-  to work as normal, but you will be forced to change it if you update the site
-  in the Site Settings portlet.
-- If a site is updated and no friendly URL is provided, it will default to
-  `/group-<groupId>`. If that duplicates another friendly URL, the friendly URL
-  will be incremented until a unique friendly URL is found (e.g.,
-  `/group-<groupId>-1`).
-- The default friendly URL for new sites has **not** changed.
+The placement and structure of the Control and Product Menus has changed to
+address several accessibility concerns and common visual glitches.
+
+In particular, the changes that have been applied can be summarized as:
+- The Product Menu has been moved outside of the Control Menu
+- The Control Menu now uses position:sticky to control its behaviour
+- Styles of the different menus inside the Control Menu have been updated to
+account for the new sticky behaviour
 
 #### Who is affected?
 
-This affects anyone who
-
-- has set the friendly URL of their site to the group ID.
-- uses a group ID to navigate or direct to a site.
+This could affect developers that have a custom Control Panel Theme and have
+customized the `portlet.ftl` template or those that have developed a custom menu
+that behaves as a sticky bar and is included using the `*ControlMenuEntry` API.
 
 #### How should I update my code?
 
-No code updates should be required, but if you fall under one of the scenarios
-in the previous section, you should consider the following changes:
+##### Control Panel Themes
 
-- If you have set the friendly URL of a site to its group ID, you should
-  update the friendly URL of that site to something else. A site administrator
-  can do this through the Site Settings portlet.
-- If you have hard-coded the group ID in any links, you must change them to
-  match the updated friendly URL.
+Developers with custom Control Panel themes should move the call (if any) to the
+`@liferay.control_menu` macro above the portlet section in their `portlet.ftl`.
+
+**Before:**
+
+```
+<section class="portlet" id="portlet_${htmlUtil.escapeAttribute(portletDisplay.getId())}">
+	${portletDisplay.writeContent(writer)}
+</section>
+
+<#if portletDisplay.isStateMax()>
+	<@liferay.control_menu />
+</#if>
+```
+
+**After:**
+
+```
+<#if portletDisplay.isStateMax()>
+	<@liferay.control_menu />
+</#if>
+
+<section class="portlet" id="portlet_${htmlUtil.escapeAttribute(portletDisplay.getId())}">
+	${portletDisplay.writeContent(writer)}
+</section>
+```
+
+##### Custom Sticky Bars
+
+Developers with custom Sticky Bars included using the `*ControlMenuEntry` API
+can use the newly included extension points in the Control Menu to inject their
+components.
+
+Developers should move the code that injects their menu to a `DynamicInclude`
+component and registered depending on the positioning of their bar:
+- Use `com.liferay.product.navigation.taglib#/page.jsp#pre` for bars positioned
+on top of the Control Menu
+- Use `com.liferay.product.navigation.taglib#/page.jsp#post` to position menu
+bars after the Control Menu
 
 #### Why was this change made?
 
-There were common complaints from customers who used LDAP to import users
-&mdash; if users were given a numeric screen name during import, some imports
-would fail because those screen names conflicted with an existing group ID.
-
-This was because a site's group ID could be used as its friendly URL, while a
-user's screen name is used as the friendly URL to their personal site. This
-could introduce a routing conflict, so numeric screen names were disallowed if
-they conflicted with an existing group ID.
-
-By removing sites' ability to use their group ID as their friendly URL, the
-possible conflict with numeric screen names is expunged, allowing users to have
-any number as their screen name. This makes it much less likely for LDAP imports
-to fail when using numeric screen names for imported users.
-
-Since LDAP import is more commonly used than a site using the group ID as its
-friendly URL, the less useful feature was removed to stabilize the more common
-one.
+This change was necessary for several reasons:
+- Improves accessibility by providing a more correct and expected markup
+- Simplifies the positioning and control of top-positioned menus avoiding common
+visual glitches
 
 ---------------------------------------
 
-### Removed Support for Velocity in Themes
-- **Date:** 2017-Oct-19
-- **JIRA Ticket:** LPS-74379
+### jQuery is no longer included by default
+- **Date:** 2020-Feb-04
+- **JIRA Ticket:** [LPS-95726](https://issues.liferay.com/browse/LPS-95726)
 
 #### What changed?
 
-- Themes can no longer use Velocity for templates.
-- Some helper methods have been removed from the public APIs
-`com.liferay.portal.kernel.util.ThemeHelper` and
-`com.liferay.taglib.util.ThemeUtil`.
+Previously, `jQuery` was being included in every page by default and made
+available through the global `window.$` and the scoped `AUI.$` variables. After
+this change, `jQuery` is no longer included by default and those variables will
+be `undefined`.
 
 #### Who is affected?
 
-This affects anyone who has themes using Velocity templates or is using the
-removed methods.
+This affects any developer who used `AUI.$` or `window.$` in their custom
+scripts.
 
 #### How should I update my code?
 
-If you have a theme using Velocity, consider migrating it to FreeMarker for
-better maintenance and improved security.
+You should provide your own version `jQuery` to be used by your custom
+developments following any of the possible strategies to add third party
+libraries.
 
-If you are using the removed methods, consider using the
-`com.liferay.portal.kernel.template.Template` functionality directly to process
-templates.
+Additionally, as a temporary measure, you can bring back the old behaviour by
+setting the `Enable jQuery` property in `System Settings > Third Party > jQuery`
+to `true`.
 
 #### Why was this change made?
 
-Velocity was deprecated in Liferay Portal 7.0 and the recommendation was to
-migrate to FreeMarker. Also, Velocity has had no new releases for a long time.
-
-The removal of Velocity support for Liferay Portal 7.1 themes allows for an
-increased focus on existing and new template engines.
+This change was made to avoid bundling and serving additional library code on
+every page that was mostly unused and redundant.
 
 ---------------------------------------
 
-### Moved Organization Type Properties to OSGi Configuration
-- **Date:** 2018-Jan-19
-- **JIRA Ticket:** LPS-77183
+### Server-side parallel rendering is no longer supported
+- **Date:** 2020-Mar-16
+- **JIRA Ticket:** [LPS-110359](https://issues.liferay.com/browse/LPS-110359)
 
 #### What changed?
 
-The organization type properties have been moved from `portal.properties` to an
-OSGi configuration named `OrganizationsTypesConfiguration.java` in the
-`users-admin-api` module.
+Properties with `layout.parallel.render` as prefix are removed, which means
+parallel rendering is only supported when ajax rendering is enabled.
 
 #### Who is affected?
 
-This affects anyone using the following portal properties:
-
-- `organizations.types`
-- `organizations.rootable`
-- `organizations.children.types`
-- `organizations.country.enabled`
-- `organizations.country.required`
+This affects anyone used the removed properties.
 
 #### How should I update my code?
 
-Instead of overriding the `portal.properties` file, you can manage the
-properties from Portal's configuration administrator. This can be accessed by
-navigating to Liferay Portal's *Control Panel* &rarr; *Configuration* &rarr;
-*System Settings* &rarr; *Foundation* &rarr; *Organization Type* and editing
-the settings there.
-
-If you would like to include the new configuration in your application, follow
-the instructions for
-[making your applications configurable](https://dev.liferay.com/develop/tutorials/-/knowledge_base/7-0/making-your-applications-configurable).
+Remove those properties from your properties file.
 
 #### Why was this change made?
 
-This change was made as part of the modularization efforts to ease portal
-configuration changes.
+This feature has been deprecated.
 
 ---------------------------------------
 
-### Updated jQuery and Lodash Bundled Versions
-- **Date:** 2018-Feb-07
-- **JIRA Ticket:** LPS-66645, LPS-66646
+### Simple Editor is no longer bundled by default
+- **Date:** 2020-Mar-27
+- **JIRA Ticket:** [LPS-110734](https://issues.liferay.com/browse/LPS-110734)
 
-#### What changed?
+### What changed?
 
-The bundled jQuery version has been updated from 2.1.4 to 3.3.1. The bundled
-Lodash version has been updated from 3.10.1 to 4.17.4.
+As of 7.3, CKEditor is the default and only supported WYSIWYG editor.
 
-#### Who is affected?
+### Who is affected
 
-This affects anyone using the previous API versions in their code.
+This affects anyone who uses the Liferay Frontend Editor Simple Web module.
 
-#### How should I update my code?
+### How should I update my code?
 
-Follow the changelogs on the [jQuery](http://jquery.com/upgrade-guide/3.0/) and
-[Lodash](https://github.com/lodash/lodash/wiki/Changelog#v400) sites to update
-any affected code.
+If you have configured liferay-portal to use the Simple Editor, you can remove these configurations.
+
+It's still possible to use the Simple Editor. For that you need to:
+
+- Keep your configurations.
+- Open https://repository.liferay.com/nexus/index.html in your browser.
+- Search for `com.liferay.frontend.editor.simple.web`.
+- Download a .jar file for the `com.liferay.frontend.editor.simple.web` module.
+- Deploy the .jar file you downloaded in your liferay-portal instalation.
 
 #### Why was this change made?
 
-This change provides the latest jQuery and Lodash versions available.
+To consolidate all our UX for writing Rich Text Content
+around a single Editor to provide a more cohesive and comprehensive experience.
 
 ---------------------------------------
 
-### Removed JavaScript Minification Properties minifier.javascript.impl and yui.compressor.* from portal.properties
-- **Date:** 2018-Feb-28
-- **JIRA Ticket:** LPS-74375
+### TinyMCE editor is no longer bundled by default
+- **Date:** 2020-Mar-27
+- **JIRA Ticket:** [LPS-110733](https://issues.liferay.com/browse/LPS-110733)
 
-#### What changed?
+### What changed?
 
-The JavaScript minifiers have been extracted from `portal-kernel` and moved to
-their own OSGi module. Thus, they are not configured in `portal.properties` any
-more, but rather, through OSGi configuration.
+As of 7.3, CKEditor is the default and only supported WYSIWYG editor.
 
-#### Who is affected?
+### Who is affected
 
-This affects anyone who had the Yahoo JavaScript minifier active and configured
-to override its default settings.
+This affects anyone who uses TinyMCE.
 
-#### How should I update my code?
+### How should I update my code?
 
-If you are implementing your own JavaScript minifier, you should extract it to
-its own OSGi module. See module
-[frontend-js-minifier](https://github.com/liferay/liferay-portal/tree/master/modules/apps/frontend-js/frontend-js-minifier)
-for an example of how to do this.
+If you have configured liferay-portal to use TinyMCE, you can remove these configurations.
 
-#### Why was this change made?
+It's still possible to use TinyMCE. For that you need to:
 
-The JavaScript minifiers were not easy to customize. For example, the Google
-minifier used an old version of the closure-compiler, which was difficult to
-upgrade because it required `portal-kernel` dependency changes. This could
-create conflicts.
-
-Having JavaScript minifiers in their own OSGi modules requires less dependency
-management and makes it easier to provide new implementations of JavaScript
-minifiers. Also, configuration can now be done using OSGi standards.
-
----------------------------------------
-
-### Changed Behavior of liferay-ui:input-date Taglib's showDisableCheckbox Argument
-- **Date:** 2018-Mar-06
-- **JIRA Ticket:** LPS-78475
-
-#### What changed?
-
-Previously, when the `liferay-ui:input-date` taglib's `showDisableCheckbox`
-argument was set to `true`, the disable checkbox was hidden. Now, the value
-`true` displays it, and `false` hides it.
-
-#### Who is affected?
-
-This affects anyone trying to hide the `liferay-ui:input-date` taglib's disable
-checkbox.
-
-#### How should I update my code?
-
-If you are setting the `showDisableCheckbox` argument to `true` to hide the
-`liferay-ui:input-date` taglib's disable checkbox, you should now set it to
-`false`, and vice versa.
+- Keep your configurations.
+- Open https://repository.liferay.com/nexus/index.html in your browser.
+- Search for `com.liferay.frontend.editor.tinymce.web`.
+- Download a .jar file for the `com.liferay.frontend.editor.tinymce.web` module.
+- Deploy the .jar file you downloaded in your liferay-portal instalation.
 
 #### Why was this change made?
 
-The behavior did not match with the name of the argument and was
-counter-intuitive.
-
----------------------------------------
-
-### Updated Liferay Portal's Portlet API Implementation
-- **Date:** 2018-May-10
-- **JIRA Ticket:** LPS-73282
-
-#### What changed?
-
-Liferay Portal 7.1 CE GA1 provides the Portlet 3.0 API dependency in the runtime
-classpath. Previous versions provided the Portlet 2.0 API.
-
-Full support for Portlet 3.0 will not be available until Liferay Portal 7.1 CE
-GA2 is released.
-
-#### Who is affected?
-
-This affects developers planning to upgrade custom portlets from earlier
-versions of Liferay Portal.
-
-#### How should I update my code?
-
-There are three development use-cases to plan for:
-
-##### JSP Considerations
-
-Portlet 3.0 is a binary-backward-compatible upgrade. This means that Java source
-that was built against `portlet-api-2.0.0.jar` is compatible at runtime. Since
-JSP files are typically not compiled until the first request, however, they do
-not fall under the category of pre-compiled source.
-
-Specifically, if a JSP contains a Java scriptlet that calls
-[`MimeResponse.createActionURL()`](https://docs.liferay.com/portlet-api/3.0/javadocs/javax/portlet/MimeResponse.html#createActionURL())
-and
-[`MimeResponse.createRenderURL()`](https://docs.liferay.com/portlet-api/3.0/javadocs/javax/portlet/MimeResponse.html#createRenderURL()),
-then there is a possibility that the JSP will fail to compile or throw a
-`ClassCastException` at runtime. This is because the return type of these
-methods has changed.
-
-For example, a Liferay Portal sample portlet's `view.jsp` had to be changed
-from
-
-    <aui:form action="<%= renderResponse.createActionURL() %>" method="post" name="fm">
-
-to
-
-    <aui:form action="<%= (PortletURL)renderResponse.createActionURL() %>" method="post" name="fm">
-
-##### Upgrade Considerations
-
-To take advantage of new features in Portlet 3.0, you must rebuild portlet
-projects against the `portlet-api-3.0.0.jar` dependency and *opt-in* by
-specifying version 3.0 in one of two ways:
-
-1. Add the following tag in your portlet's `portlet.xml` file:
-
-        <portlet-app version="3.0">
-
-2. Add the following property in your portlet's `@Component` tag:
-
-        @Component(
-            property = {
-                "javax.portlet.version=3.0"
-            },
-            service = Portlet.class
-        )
-
-In addition, you must opt-in to new JSP features by specifying the Portlet 3.0
-tag library in your JSP views. For example,
-
-    <%@ taglib uri="http://xmlns.jcp.org/portlet_3_0" prefix="portlet" %>
-
-JSPs that opt-in with the new tag library may encounter JSP compilation problems
-related to the `<portlet:defineObjects>` tag. Specifically, if JSPs reference
-variables with the following names in Java scriptlets, then a JSP compilation
-will occur:
-
-- `actionParams`
-- `clientDataRequest`
-- `cookies`
-- `contextPath`
-- `locale`
-- `locales`
-- `mutableRenderParams`
-- `namespace`
-- `portletContext`
-- `portletMode`
-- `portletRequest`
-- `portletResponse`
-- `resourceParams`
-- `windowId`
-- `windowState`
-- `stateAwareResponse`
-
-With the Portlet API 3.0 implementation, these variables are already added to
-this context by default, so attempting to initialize them in the JSP would
-duplicate them. Therefore, your JSP scriptlets adding them should be removed.
-
-For example, JSP scriptlets like the following had to be removed from
-several of Liferay Portal's out-of-the-box portlets' `view.jsp`:
-
-    <%=
-    PortletRequest portletRequest = (PortletRequest)request.getAttribute(JavaConstants.JAVAX_PORTLET_REQUEST);
-
-    PortletResponse portletResponse = (PortletResponse)request.getAttribute(JavaConstants.JAVAX_PORTLET_RESPONSE);
-
-    String namespace = AUIUtil.getNamespace(portletRequest, portletResponse);
-
-    if (Validator.isNull(namespace)) {
-        namespace = AUIUtil.getNamespace(request);
-    }
-    %>
-
-##### JSF Considerations
-
-JSF Portlets must be upgraded to the latest version of Liferay Faces Bridge,
-which is planned for release in Q4, 2018. Download and upgrade instructions will
-be made available at
-[https://www.liferayfaces.org](https://www.liferayfaces.org) at that time.
-
-#### Why was this change made?
-
-This change provides the latest features offered by the Portlet 3.0
-Specification, which was released in early 2017.
-
----------------------------------------
-
-### Changed the Dependency for the liferay-util:html-top JSP tag
-- **Date:** 2018-Jun-07
-- **JIRA Ticket:** LPS-81983
-
-#### What changed?
-
-The usage of `portal-kernel`'s `StringBundler` has been deprecated in favor of
-Liferay's Petra `StringBundler`.
-
-#### Who is affected?
-
-This affects anyone using the `<liferay-util:html-top>` JSP tag.
-
-#### How should I update my code?
-
-You must add the following dependency in your build file for your JSPs to
-compile successfully:
-
-**build.gradle**:
-
-    dependencies {
-        ...
-        compileOnly group: "com.liferay", name: "com.liferay.petra.string", version: "1.2.0"
-        ...
-    }
-
-**pom.xml**:
-
-    <dependency>
-        <groupId>com.liferay</groupId>
-        <artifactId>com.liferay.petra.string</artifactId>
-        <version>1.2.0</version>
-        <scope>provided</scope>
-    </dependency>
-
-#### Why was this change made?
-
-This change helps stabilize the foundation of Liferay Portal's utilities.
-
----------------------------------------
-
-### Changed the From Last Publish Date Option in Staging
-- **Date:** 2018-Jun-06
-- **JIRA Ticket:** LPS-81695
-
-#### What changed?
-
-The *From Last Publish Date* option used in the publication process has
-programmatically changed.
-
-#### Who is affected?
-
-This affects anyone who implemented Staging support for their custom entities.
-
-#### How should I update my code?
-
-You must create a `*StagingModelListener` class for your custom entity, which
-extends the
-[`com.liferay.portal.kernel.model.BaseModelListener`](https://docs.liferay.com/ce/portal/7.1-latest/javadocs/portal-kernel/com/liferay/portal/kernel/model/BaseModelListener.html).
-You can examine the
-[`BlogsEntryStagingModelListener`](https://github.com/liferay/liferay-portal/blob/7.1.0-ga1/modules/apps/blogs/blogs-service/src/main/java/com/liferay/blogs/internal/model/listener/BlogsEntryStagingModelListener.java)
-class as an example.
-
-You must also update the `doPrepareManifestSummary` method in your custom
-`*PortletDataHandler` to use the `populateLastPublishDateCounts` method from the
-[`com.liferay.exportimport.internal.staging.StagingImpl`](https://docs.liferay.com/ce/apps/web-experience/latest/javadocs/com/liferay/exportimport/staging/StagingImpl.html),
-in case of a *From Last Publish Date* publication. See the
-[`BlogsPortletDataHandler`](https://github.com/liferay/liferay-portal/blob/7.1.0-ga1/modules/apps/blogs/blogs-web/src/main/java/com/liferay/blogs/web/internal/exportimport/data/handler/BlogsPortletDataHandler.java)
-as an example.
-
-#### Why was this change made?
-
-It was hard to collect which entities should be published to the live site.
-Instead of running queries to find the contents that were modified since the
-last publication, now changesets are used to track this information.
-
----------------------------------------
-
-### Decoupled Several Classes from PortletURLImpl
-- **Date:** 2018-Jun-08
-- **JIRA Ticket:** LPS-82119
-
-#### What changed?
-
-All classes implementing `javax.portlet.BaseURL` have had their inheritance
-hierarchy change. These classes include
-
-- `PortletURLImplWrapper`
-- `LiferayStrutsPortletURLImpl`
-- `StrutsActionPortletURL`
-
-#### Who is affected?
-
-This affects code that attempts to subclass or create a new instance of the
-classes listed previously.
-
-#### How should I update my code?
-
-You must refactor the constructors of your affected classes to receive
-`com.liferay.portal.kernel.portlet.LiferayPortletResponse` instead of
-`com.liferay.portlet.PortletResponseImpl`.
-
-In addition, their class hierarchies must be changed. For example, the
-`com.liferay.portal.struts.StrutsActionPortletURL` class hierarchy was changed
-from
-
-- `com.liferay.portlet.PortletURLImpl`
-    - `com.liferay.portlet.PortletURLImplWrapper`
-        - `com.liferay.portal.struts.StrutsActionPortletURL`
-
-to
-
-- `javax.portlet.filter.RenderStateWrapper`
-    - `javax.portlet.filter.BaseURLWrapper`
-        - `javax.portlet.filter.PortletURLWrapper`
-            - `com.liferay.portal.kernel.portlet.LiferayPortletURLWrapper`
-                - `com.liferay.portlet.PortletURLImplWrapper`
-                    - `com.liferay.portal.struts.StrutsActionPortletURL`
-
-#### Why was this change made?
-
-This change corrects a best practice violation regarding
-implementation-specific details being included within an API.
-
----------------------------------------
-
-### Changed the Request Object in Web Content Templates
-- **Date:** 2018-Jun-12
-- **JIRA Ticket:** LPS-77766
-
-#### What changed?
-
-The request object is no longer accessible as a map, but rather, as an object of
-type `javax.servlet.http.HttpServletRequest`.
-
-#### Who is affected?
-
-This affects users with Web Content templates that access request parameters
-as a map like this:
-
-    <#assign containerId = request["theme-display"]["portlet-display"]["instance-id"] >
-
-#### How should I update my code?
-
-To keep retrieving the request parameter values as a map, `requestMap` must be
-used instead:
-
-    <#assign containerId = requestMap["theme-display"]["portlet-display"]["instance-id"] >
-
-#### Why was this change made?
-
-This was done to allow template context contributors to work in Web Content
-templates.
-
----------------------------------------
-
-### Disabled Access to Gogo Shell Using Telnet
-- **Date:** 2018-Jun-25
-- **JIRA Ticket:** LPS-82849
-
-#### What changed?
-
-The ability to access and interact with Liferay Portal's OSGi framework using
-the Gogo shell via your system's telnet client has been disabled.
-
-#### Who is affected?
-
-This affects anyone who used their system's telnet client to access the Gogo
-shell, or leveraged the Gogo shell in external plugins/tooling using the telnet
-client.
-
-#### How should I update my code?
-
-Liferay Portal now offers the Gogo Shell portlet, which you can access in the
-Control Panel &rarr; *Configuration* &rarr; *Gogo Shell*.
-
-If you prefer using your telnet client to access the Gogo shell, you must enable
-Developer Mode. You can do this by creating a `portal-ext.properties` file in
-your Liferay home folder and adding the following property:
-
-    include-and-override=portal-developer.properties
-
-Developer Mode is enabled upon starting your app server.
-
-#### Why was this change made?
-
-This was done to strengthen Liferay Portal's security due to potential XXE/SSRF
-vulnerabilities.
-
----------------------------------------
-
-### Removed Description HTML Escaping in PortletDisplay
-- **Date:** 2018-Jul-17
-- **JIRA Ticket:** LPS-83185
-
-#### What changed?
-
-The portlet description stored in `PortletDisplay.java` is no longer escaped
-automatically.
-
-#### Who is affected?
-
-This affects anyone who relied on the portlet description's value already being
-escaped and used it to generate HTML. In that case, a small UI change might be
-observed as some characters could become unescaped.
-
-#### How should I update my code?
-
-If you were using the `portletDescription` value to generate HTML, you
-should escape it using the proper escape sequence using `HtmlUtil.escape`.
-
-#### Why was this change made?
-
-This change corrects a best practice violation regarding content escaping.
-
----------------------------------------
-
-### Mandatory modelName attribute in liferay-ui:input-permissions taglib
-- **Date:** 2018-Oct-4
-- **JIRA Ticket:** LPS-85998
-
-#### What changed?
-
-Previously the talib `liferay-ui:input-permissions` could be used
-without providing the attribute `modelName`. Now the attribute
-`modelName` is mandatory.
-
-#### Who is affected?
-
-This affects any developer who was using the taglib
-`liferay-ui:input-permissions` in their own portlets and was not setting
-the `modelName` attribute of the taglib.
-
-#### How should I update my code?
-
-You should invoke the taglib providing the model name you are assigning
-the permissions to.
-
-#### Why was this change made?
-
-This change was done to remove some old logic that is not used anywhere
-in Liferay.
+To consolidate all our UX for writing Rich Text Content
+around a single Editor to provide a more cohesive and comprehensive experience.
 
 ---------------------------------------

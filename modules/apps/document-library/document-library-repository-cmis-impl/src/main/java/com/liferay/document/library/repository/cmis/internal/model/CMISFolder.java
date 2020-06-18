@@ -17,6 +17,7 @@ package com.liferay.document.library.repository.cmis.internal.model;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.repository.cmis.internal.CMISRepository;
+import com.liferay.document.library.repository.cmis.internal.CMISRepositoryDetector;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
@@ -41,8 +42,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
+import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.Session;
 
 /**
@@ -72,7 +75,7 @@ public class CMISFolder extends CMISModel implements Folder {
 		try {
 			cmisFolder.setParentFolder(getParentFolder());
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		cmisFolder.setPrimaryKey(getPrimaryKey());
@@ -84,6 +87,18 @@ public class CMISFolder extends CMISModel implements Folder {
 	public boolean containsPermission(
 		PermissionChecker permissionChecker, String actionId) {
 
+		CMISRepositoryDetector cmisRepositoryDetector =
+			_cmisRepository.getCMISRepositoryDetector();
+
+		ObjectType objectType = _cmisFolder.getType();
+
+		if (cmisRepositoryDetector.isNuxeo() &&
+			!Objects.equals("Workspace", objectType.getId()) &&
+			Objects.equals(ActionKeys.ADD_DOCUMENT, actionId)) {
+
+			return false;
+		}
+
 		if (_cmisFolder.isRootFolder() &&
 			(actionId.equals(ActionKeys.DELETE) ||
 			 actionId.equals(ActionKeys.UPDATE))) {
@@ -94,8 +109,8 @@ public class CMISFolder extends CMISModel implements Folder {
 
 				return folder.containsPermission(permissionChecker, actionId);
 			}
-			catch (PortalException pe) {
-				throw new SystemException(pe);
+			catch (PortalException portalException) {
+				throw new SystemException(portalException);
 			}
 		}
 		else {
@@ -216,8 +231,8 @@ public class CMISFolder extends CMISModel implements Folder {
 
 				return folder.getName();
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 
@@ -235,7 +250,7 @@ public class CMISFolder extends CMISModel implements Folder {
 				return parentFolder;
 			}
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		if (_cmisFolder.isRootFolder()) {
@@ -276,8 +291,8 @@ public class CMISFolder extends CMISModel implements Folder {
 				return parentFolder.getFolderId();
 			}
 		}
-		catch (Exception e) {
-			_log.error(e, e);
+		catch (Exception exception) {
+			_log.error(exception, exception);
 		}
 
 		return DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
@@ -341,7 +356,7 @@ public class CMISFolder extends CMISModel implements Folder {
 		try {
 			return user.getUserUuid();
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return StringPool.BLANK;
@@ -462,7 +477,9 @@ public class CMISFolder extends CMISModel implements Folder {
 
 	@Override
 	public void setPrimaryKeyObj(Serializable primaryKeyObj) {
-		setPrimaryKey(((Long)primaryKeyObj).longValue());
+		Long primaryKeyLong = (Long)primaryKeyObj;
+
+		setPrimaryKey(primaryKeyLong.longValue());
 	}
 
 	@Override
@@ -500,9 +517,10 @@ public class CMISFolder extends CMISModel implements Folder {
 		try {
 			return RepositoryProviderUtil.getRepository(getRepositoryId());
 		}
-		catch (PortalException pe) {
+		catch (PortalException portalException) {
 			throw new SystemException(
-				"Unable to get repository for folder " + getFolderId(), pe);
+				"Unable to get repository for folder " + getFolderId(),
+				portalException);
 		}
 	}
 

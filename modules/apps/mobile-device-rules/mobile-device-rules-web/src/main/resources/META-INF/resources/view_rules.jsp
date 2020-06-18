@@ -74,22 +74,6 @@ portletDisplay.setURLBack(backURL);
 renderResponse.setTitle(ruleGroup.getName(locale));
 %>
 
-<clay:navigation-bar
-	inverted="<%= true %>"
-	navigationItems="<%=
-		new JSPNavigationItemList(pageContext) {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(true);
-						navigationItem.setHref(renderResponse.createRenderURL());
-						navigationItem.setLabel(LanguageUtil.get(request, "classification-rules"));
-					});
-			}
-		}
-	%>"
-/>
-
 <liferay-frontend:management-bar
 	disabled="<%= rulesCount <= 0 %>"
 >
@@ -168,21 +152,20 @@ renderResponse.setTitle(ruleGroup.getName(locale));
 					<liferay-ui:search-container-column-text
 						colspan="<%= 2 %>"
 					>
-						<h6 class="text-default">
+						<span class="text-default">
 							<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - rule.getCreateDate().getTime(), true) %>" key="x-ago" translateArguments="<%= false %>" />
-						</h6>
+						</span>
 
-						<h5>
+						<h2 class="h5">
 							<aui:a href="<%= rowURL.toString() %>"><%= rule.getName(locale) %></aui:a>
-						</h5>
+						</h2>
 
-						<h6 class="text-default">
+						<span class="text-default">
 							<%= rule.getDescription(locale) %>
-						</h6>
-
-						<h6 class="text-default">
+						</span>
+						<span class="text-default">
 							<strong><liferay-ui:message key="type" /></strong>: <%= rule.getType() %>
-						</h6>
+						</span>
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-jsp

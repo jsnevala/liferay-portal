@@ -26,6 +26,7 @@ import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleListener;
 import com.liferay.exportimport.test.util.constants.DummyFolderPortletKeys;
 import com.liferay.exportimport.test.util.exportimport.data.handler.DummyFolderWithMissingDummyPortletDataHandler;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.xml.Attribute;
@@ -103,21 +104,23 @@ public class ExportedMissingReferenceBackwardCompatbilityExportImportTest
 		try {
 			exportImportLayouts(layoutIds, getExportParameterMap());
 		}
-		catch (PortletDataException pde) {
-			Throwable cause = pde.getCause();
+		catch (PortletDataException portletDataException) {
+			Throwable cause = portletDataException.getCause();
 
 			if (!(cause instanceof NullPointerException)) {
-				throw pde;
+				throw portletDataException;
 			}
 
 			StackTraceElement[] stackTrace = cause.getStackTrace();
 
-			if (stackTrace[0].getClassName().equals(
+			if (Objects.equals(
+					stackTrace[0].getClassName(),
 					StagedModelDataHandlerUtil.class.getName()) &&
-				stackTrace[0].getMethodName().equals(
+				Objects.equals(
+					stackTrace[0].getMethodName(),
 					"doImportReferenceStagedModel")) {
 
-				throw pde;
+				throw portletDataException;
 			}
 		}
 
@@ -190,9 +193,10 @@ public class ExportedMissingReferenceBackwardCompatbilityExportImportTest
 			int lastIndexOfPeriod = larFileName.lastIndexOf(CharPool.PERIOD);
 
 			File file = new File(
-				FileUtil.getPath(larFilePath) + File.separator +
-					larFileName.substring(0, lastIndexOfPeriod) + "-original" +
-						larFileName.substring(lastIndexOfPeriod));
+				StringBundler.concat(
+					FileUtil.getPath(larFilePath), File.separator,
+					larFileName.substring(0, lastIndexOfPeriod), "-original",
+					larFileName.substring(lastIndexOfPeriod)));
 
 			FileUtil.move(larFile, file);
 
@@ -246,8 +250,8 @@ public class ExportedMissingReferenceBackwardCompatbilityExportImportTest
 								zipReader.getEntryAsInputStream(zipEntry));
 						}
 					}
-					catch (Exception e) {
-						throw new RuntimeException(e);
+					catch (Exception exception) {
+						throw new RuntimeException(exception);
 					}
 				});
 

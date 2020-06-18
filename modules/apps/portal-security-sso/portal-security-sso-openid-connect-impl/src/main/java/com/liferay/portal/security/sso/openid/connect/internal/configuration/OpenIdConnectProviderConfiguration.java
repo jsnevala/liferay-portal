@@ -52,7 +52,7 @@ public interface OpenIdConnectProviderConfiguration {
 
 	@Meta.AD(
 		deflt = "openid email profile", description = "scopes-help",
-		name = "scopes", required = true
+		name = "scopes"
 	)
 	public String scopes();
 
@@ -85,6 +85,12 @@ public interface OpenIdConnectProviderConfiguration {
 		required = false
 	)
 	public String jwksURI();
+
+	@Meta.AD(
+		deflt = "RS256", description = "id-token-signing-alg-values-help",
+		name = "id-token-signing-alg-values", required = false
+	)
+	public String[] idTokenSigningAlgValues();
 
 	@Meta.AD(
 		deflt = "", description = "subject-types-help", name = "subject-types",

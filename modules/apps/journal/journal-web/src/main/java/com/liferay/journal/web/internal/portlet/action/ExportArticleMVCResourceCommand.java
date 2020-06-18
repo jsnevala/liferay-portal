@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Bruno Farache
- * @author Eduardo Garcia
+ * @author Eduardo García
  */
 @Component(
 	immediate = true,
@@ -97,11 +97,11 @@ public class ExportArticleMVCResourceCommand extends BaseMVCResourceCommand {
 					"Target extension " + targetExtension + " is not allowed");
 			}
 		}
-		catch (Exception e) {
-			_log.error("Unable to export article", e);
+		catch (Exception exception) {
+			_log.error("Unable to export article", exception);
 
 			_portal.sendError(
-				e, _portal.getHttpServletRequest(resourceRequest),
+				exception, _portal.getHttpServletRequest(resourceRequest),
 				_portal.getHttpServletResponse(resourceResponse));
 		}
 	}

@@ -18,19 +18,32 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.RoleConstants;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.SortFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserGroupLocalServiceUtil;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.UserGroupTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.service.persistence.constants.UserGroupFinderConstants;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.test.rule.PermissionCheckerTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.users.admin.kernel.util.UsersAdminUtil;
 
 import java.util.LinkedHashMap;
@@ -54,7 +67,7 @@ public class UserGroupLocalServiceTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
-			PermissionCheckerTestRule.INSTANCE);
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -73,16 +86,42 @@ public class UserGroupLocalServiceTest {
 	}
 
 	@Test
+	public void testDatabaseSearchNoPermissionCheck() throws Exception {
+		User user = UserTestUtil.addUser();
+
+		try {
+			_userGroupLocalService.addUserUserGroup(
+				user.getUserId(), _userGroup1);
+
+			PermissionThreadLocal.setPermissionChecker(
+				_permissionCheckerFactory.create(user));
+
+			LinkedHashMap<String, Object> userGroupParams =
+				LinkedHashMapBuilder.<String, Object>put(
+					UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_USERS,
+					Long.valueOf(user.getUserId())
+				).build();
+
+			List<UserGroup> userGroups = _search(null, userGroupParams);
+
+			Assert.assertEquals(userGroups.toString(), 1, userGroups.size());
+		}
+		finally {
+			_userLocalService.deleteUser(user);
+		}
+	}
+
+	@Test
 	public void testDatabaseSearchWithInvalidParamKey() {
 		String keywords = null;
 
-		LinkedHashMap<String, Object> userGroupParams = new LinkedHashMap<>();
-
-		userGroupParams.put(
-			UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_ROLES,
-			Long.valueOf(_role.getRoleId()));
-
-		userGroupParams.put("invalidParamKey", "invalidParamValue");
+		LinkedHashMap<String, Object> userGroupParams =
+			LinkedHashMapBuilder.<String, Object>put(
+				UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_ROLES,
+				Long.valueOf(_role.getRoleId())
+			).put(
+				"invalidParamKey", "invalidParamValue"
+			).build();
 
 		List<UserGroup> userGroups = _search(keywords, userGroupParams);
 
@@ -93,11 +132,11 @@ public class UserGroupLocalServiceTest {
 	public void testSearchRoleUserGroups() {
 		String keywords = null;
 
-		LinkedHashMap<String, Object> userGroupParams = new LinkedHashMap<>();
-
-		userGroupParams.put(
-			UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_ROLES,
-			Long.valueOf(_role.getRoleId()));
+		LinkedHashMap<String, Object> userGroupParams =
+			LinkedHashMapBuilder.<String, Object>put(
+				UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_ROLES,
+				Long.valueOf(_role.getRoleId())
+			).build();
 
 		List<UserGroup> userGroups = _search(keywords, userGroupParams);
 
@@ -108,11 +147,11 @@ public class UserGroupLocalServiceTest {
 	public void testSearchRoleUserGroupsWithKeywords() {
 		String keywords = _userGroup2.getName();
 
-		LinkedHashMap<String, Object> userGroupParams = new LinkedHashMap<>();
-
-		userGroupParams.put(
-			UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_ROLES,
-			Long.valueOf(_role.getRoleId()));
+		LinkedHashMap<String, Object> userGroupParams =
+			LinkedHashMapBuilder.<String, Object>put(
+				UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_ROLES,
+				Long.valueOf(_role.getRoleId())
+			).build();
 
 		List<UserGroup> userGroups = _search(keywords, userGroupParams);
 
@@ -143,6 +182,29 @@ public class UserGroupLocalServiceTest {
 	}
 
 	@Test
+	public void testSearchUserGroupsWithNullParamsAndIndexerDisabled()
+		throws Exception {
+
+		Object value = ReflectionTestUtil.getAndSetFieldValue(
+			PropsValues.class, "USER_GROUPS_SEARCH_WITH_INDEX", Boolean.FALSE);
+
+		try {
+			LinkedHashMap<String, Object> nullParams = null;
+
+			String keywords = null;
+
+			List<UserGroup> userGroups = _search(keywords, nullParams);
+
+			Assert.assertEquals(
+				userGroups.toString(), _count + 2, userGroups.size());
+		}
+		finally {
+			ReflectionTestUtil.setFieldValue(
+				PropsValues.class, "USER_GROUPS_SEARCH_WITH_INDEX", value);
+		}
+	}
+
+	@Test
 	public void testSearchUserGroupWithDescendingOrder()
 		throws PortalException {
 
@@ -160,6 +222,9 @@ public class UserGroupLocalServiceTest {
 
 		Assert.assertEquals(expectedUserGroups, userGroups);
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	private List<UserGroup> _search(
 		String keywords, LinkedHashMap<String, Object> params) {
@@ -180,5 +245,20 @@ public class UserGroupLocalServiceTest {
 
 	@DeleteAfterTestRun
 	private static UserGroup _userGroup2;
+
+	@Inject
+	private PermissionCheckerFactory _permissionCheckerFactory;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private UserGroupLocalService _userGroupLocalService;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 }

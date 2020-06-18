@@ -27,18 +27,22 @@ import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Brian Wing Shun Chan
  */
+@Component(service = BlogsStatsUserFinder.class)
 public class BlogsStatsUserFinderImpl
 	extends BlogsStatsUserFinderBaseImpl implements BlogsStatsUserFinder {
 
@@ -53,11 +57,7 @@ public class BlogsStatsUserFinderImpl
 
 	@Override
 	public int countByOrganizationId(long organizationId) {
-		List<Long> organizationIds = new ArrayList<>();
-
-		organizationIds.add(organizationId);
-
-		return countByOrganizationIds(organizationIds);
+		return countByOrganizationIds(ListUtil.fromArray(organizationId));
 	}
 
 	@Override
@@ -73,17 +73,17 @@ public class BlogsStatsUserFinderImpl
 				sql, "[$ORGANIZATION_ID$]",
 				getOrganizationIds(organizationIds));
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			for (Long organizationId : organizationIds) {
-				qPos.add(organizationId);
+				queryPos.add(organizationId);
 			}
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -95,8 +95,8 @@ public class BlogsStatsUserFinderImpl
 
 			return 0;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -114,22 +114,22 @@ public class BlogsStatsUserFinderImpl
 
 			String sql = _customSQL.get(getClass(), FIND_BY_GROUP_IDS);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar("userId", Type.LONG);
-			q.addScalar("lastPostDate", Type.TIMESTAMP);
+			sqlQuery.addScalar("userId", Type.LONG);
+			sqlQuery.addScalar("lastPostDate", Type.TIMESTAMP);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
-			qPos.add(groupId);
-			qPos.add(groupId);
-			qPos.add(groupId);
+			queryPos.add(companyId);
+			queryPos.add(groupId);
+			queryPos.add(groupId);
+			queryPos.add(groupId);
 
 			List<BlogsStatsUser> statsUsers = new ArrayList<>();
 
 			Iterator<Object[]> itr = (Iterator<Object[]>)QueryUtil.iterate(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 
 			while (itr.hasNext()) {
 				Object[] array = itr.next();
@@ -149,8 +149,8 @@ public class BlogsStatsUserFinderImpl
 
 			return statsUsers;
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -162,11 +162,8 @@ public class BlogsStatsUserFinderImpl
 		long organizationId, int start, int end,
 		OrderByComparator<BlogsStatsUser> obc) {
 
-		List<Long> organizationIds = new ArrayList<>();
-
-		organizationIds.add(organizationId);
-
-		return findByOrganizationIds(organizationIds, start, end, obc);
+		return findByOrganizationIds(
+			ListUtil.fromArray(organizationId), start, end, obc);
 	}
 
 	@Override
@@ -186,21 +183,21 @@ public class BlogsStatsUserFinderImpl
 				getOrganizationIds(organizationIds));
 			sql = _customSQL.replaceOrderBy(sql, obc);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("BlogsStatsUser", BlogsStatsUserImpl.class);
+			sqlQuery.addEntity("BlogsStatsUser", BlogsStatsUserImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			for (Long organizationId : organizationIds) {
-				qPos.add(organizationId);
+				queryPos.add(organizationId);
 			}
 
 			return (List<BlogsStatsUser>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
-		catch (Exception e) {
-			throw new SystemException(e);
+		catch (Exception exception) {
+			throw new SystemException(exception);
 		}
 		finally {
 			closeSession(session);
@@ -225,7 +222,7 @@ public class BlogsStatsUserFinderImpl
 		return sb.toString();
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

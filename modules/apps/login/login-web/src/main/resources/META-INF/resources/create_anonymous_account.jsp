@@ -16,6 +16,10 @@
 
 <%@ include file="/init.jsp" %>
 
+<%
+renderResponse.setTitle(LanguageUtil.get(request, "anonymous-account"));
+%>
+
 <portlet:actionURL name="/login/create_anonymous_account" var="createAnonymousAccountURL">
 	<portlet:param name="mvcRenderCommandName" value="/login/create_anonymous_account" />
 </portlet:actionURL>
@@ -26,6 +30,7 @@
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.ADD %>" />
 
 		<liferay-ui:error exception="<%= CaptchaConfigurationException.class %>" message="a-captcha-error-occurred-please-contact-an-administrator" />
+		<liferay-ui:error exception="<%= CaptchaException.class %>" message="captcha-verification-failed" />
 		<liferay-ui:error exception="<%= CaptchaTextException.class %>" message="text-verification-failed" />
 		<liferay-ui:error exception="<%= CompanyMaxUsersException.class %>" message="unable-to-create-user-account-because-the-maximum-number-of-users-has-been-reached" />
 		<liferay-ui:error exception="<%= ContactNameException.MustHaveFirstName.class %>" message="please-enter-a-valid-first-name" />
@@ -53,7 +58,9 @@
 		<liferay-ui:error exception="<%= UserEmailAddressException.MustValidate.class %>" message="please-enter-a-valid-email-address" />
 
 		<aui:fieldset column="<%= true %>">
-			<aui:col width="<%= 50 %>">
+			<clay:col
+				md="6"
+			>
 				<aui:input model="<%= User.class %>" name="firstName" />
 
 				<%
@@ -71,17 +78,15 @@
 						<aui:validator name="required" />
 					</c:if>
 				</aui:input>
-			</aui:col>
+			</clay:col>
 
-			<aui:col width="<%= 50 %>">
+			<clay:col
+				md="6"
+			>
 				<c:if test="<%= captchaConfiguration.createAccountCaptchaEnabled() %>">
-					<portlet:resourceURL id="/login/captcha" var="captchaURL" />
-
-					<liferay-captcha:captcha
-						url="<%= captchaURL %>"
-					/>
+					<liferay-captcha:captcha />
 				</c:if>
-			</aui:col>
+			</clay:col>
 		</aui:fieldset>
 
 		<aui:button-row>

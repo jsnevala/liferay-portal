@@ -14,14 +14,11 @@
 
 package com.liferay.portal.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
-
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.util.HashUtil;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -34,12 +31,11 @@ import java.util.Date;
  * The cache model class for representing Role in entity cache.
  *
  * @author Brian Wing Shun Chan
- * @see Role
  * @generated
  */
-@ProviderType
-public class RoleCacheModel implements CacheModel<Role>, Externalizable,
-	MVCCModel {
+public class RoleCacheModel
+	implements CacheModel<Role>, Externalizable, MVCCModel {
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -53,7 +49,8 @@ public class RoleCacheModel implements CacheModel<Role>, Externalizable,
 		RoleCacheModel roleCacheModel = (RoleCacheModel)obj;
 
 		if ((roleId == roleCacheModel.roleId) &&
-				(mvccVersion == roleCacheModel.mvccVersion)) {
+			(mvccVersion == roleCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -79,10 +76,12 @@ public class RoleCacheModel implements CacheModel<Role>, Externalizable,
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(31);
+		StringBundler sb = new StringBundler(33);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", roleId=");
@@ -121,6 +120,7 @@ public class RoleCacheModel implements CacheModel<Role>, Externalizable,
 		RoleImpl roleImpl = new RoleImpl();
 
 		roleImpl.setMvccVersion(mvccVersion);
+		roleImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			roleImpl.setUuid("");
@@ -195,6 +195,8 @@ public class RoleCacheModel implements CacheModel<Role>, Externalizable,
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		roleId = objectInput.readLong();
@@ -218,9 +220,10 @@ public class RoleCacheModel implements CacheModel<Role>, Externalizable,
 	}
 
 	@Override
-	public void writeExternal(ObjectOutput objectOutput)
-		throws IOException {
+	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		if (uuid == null) {
 			objectOutput.writeUTF("");
@@ -281,6 +284,7 @@ public class RoleCacheModel implements CacheModel<Role>, Externalizable,
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long roleId;
 	public long companyId;
@@ -295,4 +299,5 @@ public class RoleCacheModel implements CacheModel<Role>, Externalizable,
 	public String description;
 	public int type;
 	public String subtype;
+
 }

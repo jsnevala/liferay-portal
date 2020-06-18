@@ -22,6 +22,7 @@ import com.liferay.exportimport.web.internal.search.ExportImportConfigurationDis
 import com.liferay.exportimport.web.internal.search.ExportImportConfigurationSearchTerms;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.BaseManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -31,6 +32,7 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portlet.layoutsadmin.display.context.GroupDisplayContextHelper;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.portlet.PortletURL;
 
@@ -44,17 +46,19 @@ public class ExportTemplatesToolbarDisplayContext
 	extends BaseManagementToolbarDisplayContext {
 
 	public ExportTemplatesToolbarDisplayContext(
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		HttpServletRequest request, long liveGroupId, Company company,
-		PortletURL iteratorURL) {
+		LiferayPortletResponse liferayPortletResponse, long liveGroupId,
+		Company company, PortletURL iteratorURL) {
 
-		super(liferayPortletRequest, liferayPortletResponse, request);
+		super(
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse);
 
 		searchContainer = _createSearchContainer(
 			liveGroupId, company, iteratorURL);
 	}
 
+	@Override
 	public String getClearResultsURL() {
 		PortletURL clearResultsURL = getRenderURL();
 
@@ -66,25 +70,21 @@ public class ExportTemplatesToolbarDisplayContext
 
 	@Override
 	public CreationMenu getCreationMenu() {
-		return new CreationMenu() {
-			{
+		return CreationMenuBuilder.addPrimaryDropdownItem(
+			dropdownItem -> {
 				GroupDisplayContextHelper groupDisplayContextHelper =
 					new GroupDisplayContextHelper(request);
 
-				addPrimaryDropdownItem(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							getRenderURL(), "mvcRenderCommandName",
-							"editExportConfiguration", Constants.CMD,
-							Constants.ADD, "groupId",
-							groupDisplayContextHelper.getGroupId(),
-							"liveGroupId",
-							groupDisplayContextHelper.getLiveGroupId(),
-							"privateLayout", Boolean.FALSE.toString());
-						dropdownItem.setLabel(LanguageUtil.get(request, "new"));
-					});
+				dropdownItem.setHref(
+					getRenderURL(), "mvcRenderCommandName",
+					"editExportConfiguration", Constants.CMD, Constants.ADD,
+					"groupId", groupDisplayContextHelper.getGroupId(),
+					"liveGroupId", groupDisplayContextHelper.getLiveGroupId(),
+					"privateLayout", Boolean.FALSE.toString());
+
+				dropdownItem.setLabel(LanguageUtil.get(request, "new"));
 			}
-		};
+		).build();
 	}
 
 	@Override
@@ -129,7 +129,7 @@ public class ExportTemplatesToolbarDisplayContext
 		searchContainer.setOrderByCol("name");
 		searchContainer.setOrderByComparator(
 			new ExportImportConfigurationNameComparator(
-				"asc".equals(getOrderByType())));
+				Objects.equals(getOrderByType(), "asc")));
 		searchContainer.setOrderByType(getOrderByType());
 
 		int exportImportConfigurationType =

@@ -16,20 +16,20 @@ package com.liferay.staging.bar.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.staging.bar.web.internal.portlet.constants.StagingBarPortletKeys;
 
 import java.io.IOException;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 
 /**
- * @author Mate Thurzo
+ * @author Máté Thurzó
  */
 public class ActionUtil {
 
@@ -44,9 +44,9 @@ public class ActionUtil {
 					SessionMessages.KEY_SUFFIX_REFRESH_PORTLET,
 				StagingBarPortletKeys.STAGING_BAR);
 
-			Map<String, String> data = new HashMap<>();
-
-			data.put("preventNotification", Boolean.TRUE.toString());
+			Map<String, String> data = HashMapBuilder.put(
+				"preventNotification", Boolean.TRUE.toString()
+			).build();
 
 			SessionMessages.add(
 				actionRequest,

@@ -19,6 +19,7 @@ import com.liferay.oauth2.provider.model.OAuth2Authorization;
 import com.liferay.oauth2.provider.model.OAuth2ScopeGrant;
 import com.liferay.oauth2.provider.scope.liferay.LiferayOAuth2Scope;
 import com.liferay.oauth2.provider.service.base.OAuth2ScopeGrantLocalServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
@@ -29,10 +30,15 @@ import java.util.List;
 import java.util.Objects;
 
 import org.osgi.framework.Bundle;
+import org.osgi.service.component.annotations.Component;
 
 /**
  * @author Brian Wing Shun Chan
  */
+@Component(
+	property = "model.class.name=com.liferay.oauth2.provider.model.OAuth2ScopeGrant",
+	service = AopService.class
+)
 public class OAuth2ScopeGrantLocalServiceImpl
 	extends OAuth2ScopeGrantLocalServiceBaseImpl {
 
@@ -40,6 +46,16 @@ public class OAuth2ScopeGrantLocalServiceImpl
 	public OAuth2ScopeGrant createOAuth2ScopeGrant(
 			long companyId, long oAuth2ApplicationScopeAliasesId,
 			String applicationName, String bundleSymbolicName, String scope)
+		throws DuplicateOAuth2ScopeGrantException {
+
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public OAuth2ScopeGrant createOAuth2ScopeGrant(
+			long companyId, long oAuth2ApplicationScopeAliasesId,
+			String applicationName, String bundleSymbolicName, String scope,
+			List<String> scopeAliases)
 		throws DuplicateOAuth2ScopeGrantException {
 
 		OAuth2ScopeGrant oAuth2ScopeGrant =
@@ -64,9 +80,12 @@ public class OAuth2ScopeGrantLocalServiceImpl
 		oAuth2ScopeGrant.setBundleSymbolicName(bundleSymbolicName);
 		oAuth2ScopeGrant.setScope(scope);
 
+		oAuth2ScopeGrant.setScopeAliasesList(scopeAliases);
+
 		return oAuth2ScopeGrantPersistence.update(oAuth2ScopeGrant);
 	}
 
+	@Override
 	public Collection<LiferayOAuth2Scope> getFilteredLiferayOAuth2Scopes(
 		long oAuth2ApplicationScopeAliasesId,
 		Collection<LiferayOAuth2Scope> liferayOAuth2Scopes) {
@@ -91,6 +110,7 @@ public class OAuth2ScopeGrantLocalServiceImpl
 		return filteredLiferayOAuth2Scopes;
 	}
 
+	@Override
 	public Collection<OAuth2ScopeGrant> getOAuth2ScopeGrants(
 		long oAuth2ApplicationScopeAliasesId, int start, int end,
 		OrderByComparator<OAuth2ScopeGrant> orderByComparator) {
@@ -120,7 +140,7 @@ public class OAuth2ScopeGrantLocalServiceImpl
 		}
 
 		OAuth2Authorization oAuth2Authorization =
-			oAuth2AuthorizationLocalService.getOAuth2Authorization(
+			oAuth2AuthorizationPersistence.findByPrimaryKey(
 				oAuth2AuthorizationId);
 
 		List<OAuth2ScopeGrant> oAuth2ScopeGrants =

@@ -17,9 +17,6 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String viewUserGroupsRedirect = ParamUtil.getString(request, "viewUserGroupsRedirect");
-String backURL = ParamUtil.getString(request, "backURL", viewUserGroupsRedirect);
-
 String displayStyle = ParamUtil.getString(request, "displayStyle");
 
 if (Validator.isNull(displayStyle)) {
@@ -96,89 +93,112 @@ PortletURL portletURL = viewUserGroupsManagementToolbarDisplayContext.getPortlet
 </aui:form>
 
 <aui:script>
-	function <portlet:namespace />deleteUserGroups() {
+	window.<portlet:namespace />deleteUserGroups = function () {
 		<portlet:namespace />doDeleteUserGroup(
 			'<%= UserGroup.class.getName() %>',
-			Liferay.Util.listCheckedExcept(document.<portlet:namespace />fm, '<portlet:namespace />allRowIds')
+			Liferay.Util.listCheckedExcept(
+				document.<portlet:namespace />fm,
+				'<portlet:namespace />allRowIds'
+			)
 		);
-	}
+	};
 
-	function <portlet:namespace />doDeleteUserGroup(className, ids) {
+	window.<portlet:namespace />doDeleteUserGroup = function (className, ids) {
 		var status = <%= WorkflowConstants.STATUS_INACTIVE %>;
 
-		<portlet:namespace />getUsersCount(
-			className,
-			ids,
-			status,
-			function(responseData) {
-				var count = parseInt(responseData, 10);
+		<portlet:namespace />getUsersCount(className, ids, status, function (
+			responseData
+		) {
+			var count = parseInt(responseData, 10);
 
-				if (count > 0) {
-					status = <%= WorkflowConstants.STATUS_APPROVED %>;
+			if (count > 0) {
+				status = <%= WorkflowConstants.STATUS_APPROVED %>;
 
-					<portlet:namespace />getUsersCount(
-						className,
-						ids,
-						status,
-						function(responseData) {
-							count = parseInt(responseData, 10);
+				<portlet:namespace />getUsersCount(
+					className,
+					ids,
+					status,
+					function (responseData) {
+						count = parseInt(responseData, 10);
 
-							if (count > 0) {
-								if (confirm('<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>')) {
-									<portlet:namespace />doDeleteUserGroups(ids);
-								}
-							}
-							else {
-								var message;
-
-								if (ids && (ids.toString().split(',').length > 1)) {
-									message = '<%= UnicodeLanguageUtil.get(request, "one-or-more-user-groups-are-associated-with-deactivated-users.-do-you-want-to-proceed-with-deleting-the-selected-user-groups-by-automatically-unassociating-the-deactivated-users") %>';
-								}
-								else {
-									message = '<%= UnicodeLanguageUtil.get(request, "the-selected-user-group-is-associated-with-deactivated-users.-do-you-want-to-proceed-with-deleting-the-selected-user-group-by-automatically-unassociating-the-deactivated-users") %>';
-								}
-
-								if (confirm(message)) {
-									<portlet:namespace />doDeleteUserGroups(ids);
-								}
+						if (count > 0) {
+							if (
+								confirm(
+									'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
+								)
+							) {
+								<portlet:namespace />doDeleteUserGroups(ids);
 							}
 						}
-					);
-				}
-				else if (confirm('<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>')) {
-					<portlet:namespace />doDeleteUserGroups(ids);
-				}
+						else {
+							var message;
+
+							if (ids && ids.toString().split(',').length > 1) {
+								message =
+									'<%= UnicodeLanguageUtil.get(request, "one-or-more-user-groups-are-associated-with-deactivated-users.-do-you-want-to-proceed-with-deleting-the-selected-user-groups-by-automatically-unassociating-the-deactivated-users") %>';
+							}
+							else {
+								message =
+									'<%= UnicodeLanguageUtil.get(request, "the-selected-user-group-is-associated-with-deactivated-users.-do-you-want-to-proceed-with-deleting-the-selected-user-group-by-automatically-unassociating-the-deactivated-users") %>';
+							}
+
+							if (confirm(message)) {
+								<portlet:namespace />doDeleteUserGroups(ids);
+							}
+						}
+					}
+				);
 			}
-		);
-	}
+			else if (
+				confirm(
+					'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
+				)
+			) {
+				<portlet:namespace />doDeleteUserGroups(ids);
+			}
+		});
+	};
 
 	function <portlet:namespace />doDeleteUserGroups(userGroupIds) {
-		var form = AUI.$(document.<portlet:namespace />fm);
+		var form = document.<portlet:namespace />fm;
 
-		form.attr('method', 'post');
-		form.fm('deleteUserGroupIds').val(userGroupIds);
-		form.fm('redirect').val('<portlet:renderURL><portlet:param name="mvcPath" value="/view.jsp" /></portlet:renderURL>');
-
-		var p_p_lifecycle = document.<portlet:namespace />fm.p_p_lifecycle;
+		var p_p_lifecycle = form.p_p_lifecycle;
 
 		if (p_p_lifecycle) {
 			p_p_lifecycle.value = '1';
 		}
 
-		submitForm(form, '<portlet:actionURL name="deleteUserGroups" />');
+		<portlet:renderURL var="userGroupsRenderURL">
+			<portlet:param name="mvcPath" value="/view.jsp" />
+		</portlet:renderURL>
+
+		Liferay.Util.postForm(form, {
+			data: {
+				deleteUserGroupIds: userGroupIds,
+				redirect: '<%= userGroupsRenderURL %>',
+			},
+			url: '<portlet:actionURL name="deleteUserGroups" />',
+		});
 	}
 
+	<liferay-portlet:resourceURL id="/users_admin/get_users_count" portletName="<%= UsersAdminPortletKeys.USERS_ADMIN %>" var="getUsersCountResourceURL" />
+
 	function <portlet:namespace />getUsersCount(className, ids, status, callback) {
-		AUI.$.ajax(
-			'<%= themeDisplay.getPathMain() %>/user_groups_admin/get_users_count',
-			{
-				data: {
-					className: className,
-					ids: ids,
-					status: status
-				},
-				success: callback
-			}
+		var url = new URL(
+			'<%= getUsersCountResourceURL %>',
+			window.location.origin
 		);
+
+		url.searchParams.set('className', className);
+		url.searchParams.set('ids', ids);
+		url.searchParams.set('status', status);
+
+		Liferay.Util.fetch(url.toString())
+			.then(function (response) {
+				return response.text();
+			})
+			.then(function (response) {
+				callback(response);
+			});
 	}
 </aui:script>

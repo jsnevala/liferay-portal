@@ -14,7 +14,7 @@
 
 package com.liferay.asset.web.internal.portlet;
 
-import com.liferay.asset.web.internal.constants.AssetPortletKeys;
+import com.liferay.asset.constants.AssetPortletKeys;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 
 import javax.portlet.Portlet;
@@ -38,8 +38,7 @@ import org.osgi.service.component.annotations.Component;
 		"javax.portlet.display-name=Asset", "javax.portlet.expiration-cache=0",
 		"javax.portlet.name=" + AssetPortletKeys.ASSET,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user",
-		"javax.portlet.supports.mime-type=text/html"
+		"javax.portlet.security-role-ref=power-user,user"
 	},
 	service = Portlet.class
 )

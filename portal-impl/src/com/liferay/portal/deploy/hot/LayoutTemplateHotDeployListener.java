@@ -14,6 +14,8 @@
 
 package com.liferay.portal.deploy.hot;
 
+import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.deploy.hot.BaseHotDeployListener;
 import com.liferay.portal.kernel.deploy.hot.HotDeployEvent;
 import com.liferay.portal.kernel.deploy.hot.HotDeployException;
@@ -21,8 +23,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.LayoutTemplate;
 import com.liferay.portal.kernel.service.LayoutTemplateLocalServiceUtil;
-import com.liferay.portal.kernel.util.HttpUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.HashMap;
@@ -76,8 +76,8 @@ public class LayoutTemplateHotDeployListener extends BaseHotDeployListener {
 		}
 
 		String[] xmls = {
-			HttpUtil.URLtoString(
-				servletContext.getResource(
+			StreamUtil.toString(
+				servletContext.getResourceAsStream(
 					"/WEB-INF/liferay-layout-templates.xml"))
 		};
 
@@ -109,9 +109,8 @@ public class LayoutTemplateHotDeployListener extends BaseHotDeployListener {
 			else {
 				_log.info(
 					StringBundler.concat(
-						String.valueOf(layoutTemplates.size()),
-						" layout templates for ", servletContextName,
-						" are available for use"));
+						layoutTemplates.size(), " layout templates for ",
+						servletContextName, " are available for use"));
 			}
 		}
 	}
@@ -127,7 +126,7 @@ public class LayoutTemplateHotDeployListener extends BaseHotDeployListener {
 			_log.debug("Invoking undeploy for " + servletContextName);
 		}
 
-		List<LayoutTemplate> layoutTemplates = _layoutTemplates.get(
+		List<LayoutTemplate> layoutTemplates = _layoutTemplates.remove(
 			servletContextName);
 
 		if (layoutTemplates == null) {
@@ -145,8 +144,8 @@ public class LayoutTemplateHotDeployListener extends BaseHotDeployListener {
 					layoutTemplate.getLayoutTemplateId(),
 					layoutTemplate.isStandard());
 			}
-			catch (Exception e) {
-				_log.error(e, e);
+			catch (Exception exception) {
+				_log.error(exception, exception);
 			}
 		}
 
@@ -159,9 +158,8 @@ public class LayoutTemplateHotDeployListener extends BaseHotDeployListener {
 			else {
 				_log.info(
 					StringBundler.concat(
-						String.valueOf(layoutTemplates.size()),
-						" layout templates for ", servletContextName,
-						" were unregistered"));
+						layoutTemplates.size(), " layout templates for ",
+						servletContextName, " were unregistered"));
 			}
 		}
 	}

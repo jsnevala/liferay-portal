@@ -14,8 +14,6 @@
 
 package com.liferay.layout.page.template.model.impl;
 
-import aQute.bnd.annotation.ProviderType;
-
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalServiceUtil;
 
@@ -31,22 +29,25 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocal
  * @see LayoutPageTemplateStructure
  * @generated
  */
-@ProviderType
 public abstract class LayoutPageTemplateStructureBaseImpl
 	extends LayoutPageTemplateStructureModelImpl
 	implements LayoutPageTemplateStructure {
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. All methods that expect a layout page template structure model instance should use the {@link LayoutPageTemplateStructure} interface instead.
+	 * Never modify or reference this class directly. All methods that expect a layout page template structure model instance should use the <code>LayoutPageTemplateStructure</code> interface instead.
 	 */
 	@Override
 	public void persist() {
 		if (this.isNew()) {
-			LayoutPageTemplateStructureLocalServiceUtil.addLayoutPageTemplateStructure(this);
+			LayoutPageTemplateStructureLocalServiceUtil.
+				addLayoutPageTemplateStructure(this);
 		}
 		else {
-			LayoutPageTemplateStructureLocalServiceUtil.updateLayoutPageTemplateStructure(this);
+			LayoutPageTemplateStructureLocalServiceUtil.
+				updateLayoutPageTemplateStructure(this);
 		}
 	}
+
 }

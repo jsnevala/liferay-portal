@@ -22,8 +22,7 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
  * @author Alejandro Tardín
  */
 @ExtendedObjectClassDefinition(
-	category = "assets", generateUI = false,
-	scope = ExtendedObjectClassDefinition.Scope.COMPANY
+	category = "assets", scope = ExtendedObjectClassDefinition.Scope.COMPANY
 )
 @Meta.OCD(
 	id = "com.liferay.asset.auto.tagger.internal.configuration.AssetAutoTaggerCompanyConfiguration",
@@ -35,17 +34,14 @@ public interface AssetAutoTaggerCompanyConfiguration {
 	/**
 	 * Enables asset auto tagging.
 	 */
-	@Meta.AD(
-		deflt = "true", description = "enabled-description", name = "enabled",
-		required = false
-	)
+	@Meta.AD(deflt = "true", name = "enabled", required = false)
 	public boolean enabled();
 
 	/**
 	 * Specifies the maximum number of tags that can be added for a given asset.
 	 */
 	@Meta.AD(
-		description = "maximum-number-of-tags-per-asset-description",
+		description = "company-maximum-number-of-tags-per-asset-description",
 		name = "maximum-number-of-tags-per-asset", required = false
 	)
 	public int maximumNumberOfTagsPerAsset();

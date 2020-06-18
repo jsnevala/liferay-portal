@@ -14,6 +14,7 @@
 
 package com.liferay.portal.scheduler.multiple.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cluster.ClusterEventListener;
 import com.liferay.portal.kernel.cluster.ClusterExecutor;
@@ -45,6 +46,7 @@ import com.liferay.portal.kernel.test.CaptureHandler;
 import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.NewEnv;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.MethodKey;
 import com.liferay.portal.kernel.util.ObjectValuePair;
@@ -69,7 +71,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
@@ -1414,7 +1418,9 @@ public class ClusterSchedulerEngineTest {
 				_MEMORY_CLUSTER_TEST_GROUP_NAME, StorageType.MEMORY_CLUSTERED);
 
 		for (SchedulerResponse curSchedulerResponse : schedulerResponses) {
-			if (curSchedulerResponse.getJobName().equals(_TEST_JOB_NAME_0)) {
+			if (Objects.equals(
+					curSchedulerResponse.getJobName(), _TEST_JOB_NAME_0)) {
+
 				assertTriggerState(
 					curSchedulerResponse, TriggerState.UNSCHEDULED);
 			}
@@ -1477,7 +1483,9 @@ public class ClusterSchedulerEngineTest {
 			_PERSISTENT_TEST_GROUP_NAME, StorageType.PERSISTED);
 
 		for (SchedulerResponse curSchedulerResponse : schedulerResponses) {
-			if (curSchedulerResponse.getJobName().equals(_TEST_JOB_NAME_0)) {
+			if (Objects.equals(
+					curSchedulerResponse.getJobName(), _TEST_JOB_NAME_0)) {
+
 				assertTriggerState(
 					curSchedulerResponse, TriggerState.UNSCHEDULED);
 			}
@@ -1702,10 +1710,10 @@ public class ClusterSchedulerEngineTest {
 
 			Assert.fail();
 		}
-		catch (SchedulerException se) {
+		catch (SchedulerException schedulerException) {
 			Assert.assertEquals(
 				"Unable to update trigger for memory clustered job",
-				se.getMessage());
+				schedulerException.getMessage());
 		}
 
 		// Test 3, with not existed job name
@@ -1720,10 +1728,10 @@ public class ClusterSchedulerEngineTest {
 
 			Assert.fail();
 		}
-		catch (SchedulerException se) {
+		catch (SchedulerException schedulerException) {
 			Assert.assertEquals(
 				"Unable to update trigger for memory clustered job",
-				se.getMessage());
+				schedulerException.getMessage());
 		}
 	}
 
@@ -1797,7 +1805,11 @@ public class ClusterSchedulerEngineTest {
 
 		ObjectValuePair<SchedulerResponse, TriggerState> objectValuePair =
 			_memoryClusteredJobs.get(
-				groupName.concat(StringPool.PERIOD).concat(jobName));
+				groupName.concat(
+					StringPool.PERIOD
+				).concat(
+					jobName
+				));
 
 		if (objectValuePair == null) {
 			return null;
@@ -1860,13 +1872,8 @@ public class ClusterSchedulerEngineTest {
 	}
 
 	protected void setUpProps() {
-		_props = Mockito.mock(Props.class);
-
-		Mockito.when(
-			_props.get(PropsKeys.CLUSTERABLE_ADVICE_CALL_MASTER_TIMEOUT)
-		).thenReturn(
-			"100"
-		);
+		_props = PropsTestUtil.setProps(
+			PropsKeys.CLUSTERABLE_ADVICE_CALL_MASTER_TIMEOUT, "100");
 	}
 
 	protected void setUpSchedulerEngineHelperUtil() {
@@ -2357,7 +2364,8 @@ public class ClusterSchedulerEngineTest {
 		private String _getFullName(
 			String jobName, String groupName, StorageType storageType) {
 
-			return groupName + StringPool.PERIOD + jobName + storageType;
+			return StringBundler.concat(
+				groupName, StringPool.PERIOD, jobName, storageType);
 		}
 
 		private final Map<String, SchedulerResponse> _defaultJobs =
@@ -2458,6 +2466,14 @@ public class ClusterSchedulerEngineTest {
 		public Trigger createTrigger(
 			String jobName, String groupName, Date startDate, Date endDate,
 			String cronExpression) {
+
+			return null;
+		}
+
+		@Override
+		public Trigger createTrigger(
+			String jobName, String groupName, Date startDate, Date endDate,
+			String cronExpression, TimeZone timeZone) {
 
 			return null;
 		}

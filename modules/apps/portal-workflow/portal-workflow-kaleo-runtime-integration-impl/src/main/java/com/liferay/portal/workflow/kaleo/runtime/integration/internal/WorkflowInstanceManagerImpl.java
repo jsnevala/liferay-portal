@@ -14,13 +14,17 @@
 
 package com.liferay.portal.workflow.kaleo.runtime.integration.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManager;
+import com.liferay.portal.lock.service.LockLocalService;
 import com.liferay.portal.workflow.kaleo.runtime.WorkflowEngine;
+import com.liferay.portal.workflow.kaleo.runtime.integration.internal.util.WorkflowLockUtil;
 
 import java.io.Serializable;
 
@@ -66,8 +70,8 @@ public class WorkflowInstanceManagerImpl implements WorkflowInstanceManager {
 			return _workflowEngine.getNextTransitionNames(
 				workflowInstanceId, serviceContext);
 		}
-		catch (Exception e) {
-			throw new WorkflowException(e);
+		catch (Exception exception) {
+			throw new WorkflowException(exception);
 		}
 	}
 
@@ -175,9 +179,28 @@ public class WorkflowInstanceManagerImpl implements WorkflowInstanceManager {
 			end, orderByComparator, serviceContext);
 	}
 
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link #search(long, Long,
+	 *             String, String, String, String, String, Boolean, int, int,
+	 *             OrderByComparator)}
+	 */
+	@Deprecated
 	@Override
 	public List<WorkflowInstance> search(
 			long companyId, Long userId, String assetType, String nodeName,
+			String kaleoDefinitionName, Boolean completed, int start, int end,
+			OrderByComparator<WorkflowInstance> orderByComparator)
+		throws WorkflowException {
+
+		return search(
+			companyId, userId, assetType, null, null, nodeName,
+			kaleoDefinitionName, completed, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<WorkflowInstance> search(
+			long companyId, Long userId, String assetClassName,
+			String assetTitle, String assetDescription, String nodeName,
 			String kaleoDefinitionName, Boolean completed, int start, int end,
 			OrderByComparator<WorkflowInstance> orderByComparator)
 		throws WorkflowException {
@@ -187,13 +210,31 @@ public class WorkflowInstanceManagerImpl implements WorkflowInstanceManager {
 		serviceContext.setCompanyId(companyId);
 
 		return _workflowEngine.search(
-			userId, assetType, nodeName, kaleoDefinitionName, completed, start,
-			end, orderByComparator, serviceContext);
+			userId, assetClassName, assetTitle, assetDescription, nodeName,
+			kaleoDefinitionName, completed, start, end, orderByComparator,
+			serviceContext);
+	}
+
+	/**
+	 * @deprecated As of Mueller (7.2.x), replaced by {@link #searchCount(long,
+	 *             Long, String, String, String, String, String, Boolean)}
+	 */
+	@Deprecated
+	@Override
+	public int searchCount(
+			long companyId, Long userId, String assetType, String nodeName,
+			String kaleoDefinitionName, Boolean completed)
+		throws WorkflowException {
+
+		return searchCount(
+			companyId, userId, assetType, null, null, nodeName,
+			kaleoDefinitionName, completed);
 	}
 
 	@Override
 	public int searchCount(
-			long companyId, Long userId, String assetType, String nodeName,
+			long companyId, Long userId, String assetClassName,
+			String assetTitle, String assetDescription, String nodeName,
 			String kaleoDefinitionName, Boolean completed)
 		throws WorkflowException {
 
@@ -202,8 +243,8 @@ public class WorkflowInstanceManagerImpl implements WorkflowInstanceManager {
 		serviceContext.setCompanyId(companyId);
 
 		return _workflowEngine.searchCount(
-			userId, assetType, nodeName, kaleoDefinitionName, completed,
-			serviceContext);
+			userId, assetClassName, assetTitle, assetDescription, nodeName,
+			kaleoDefinitionName, completed, serviceContext);
 	}
 
 	@Override
@@ -228,6 +269,18 @@ public class WorkflowInstanceManagerImpl implements WorkflowInstanceManager {
 			String workflowDefinitionName, Integer workflowDefinitionVersion,
 			String transitionName, Map<String, Serializable> workflowContext)
 		throws WorkflowException {
+
+		String className = WorkflowDefinition.class.getName();
+		String key = WorkflowLockUtil.encodeKey(
+			workflowDefinitionName, workflowDefinitionVersion);
+
+		if (_lockLocalService.isLocked(className, key)) {
+			throw new WorkflowException(
+				StringBundler.concat(
+					"Workflow definition name ", workflowDefinitionName,
+					" and version ", workflowDefinitionVersion,
+					" is being undeployed"));
+		}
 
 		ServiceContext serviceContext = (ServiceContext)workflowContext.get(
 			WorkflowConstants.CONTEXT_SERVICE_CONTEXT);
@@ -254,6 +307,9 @@ public class WorkflowInstanceManagerImpl implements WorkflowInstanceManager {
 		return _workflowEngine.updateContext(
 			workflowInstanceId, workflowContext, serviceContext);
 	}
+
+	@Reference
+	private LockLocalService _lockLocalService;
 
 	@Reference
 	private WorkflowEngine _workflowEngine;

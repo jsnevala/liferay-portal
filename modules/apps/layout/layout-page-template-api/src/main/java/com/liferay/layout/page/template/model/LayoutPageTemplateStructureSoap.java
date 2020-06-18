@@ -14,8 +14,6 @@
 
 package com.liferay.layout.page.template.model;
 
-import aQute.bnd.annotation.ProviderType;
-
 import java.io.Serializable;
 
 import java.util.ArrayList;
@@ -23,19 +21,23 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * This class is used by SOAP remote services.
+ * This class is used by SOAP remote services, specifically {@link com.liferay.layout.page.template.service.http.LayoutPageTemplateStructureServiceSoap}.
  *
  * @author Brian Wing Shun Chan
  * @generated
  */
-@ProviderType
 public class LayoutPageTemplateStructureSoap implements Serializable {
+
 	public static LayoutPageTemplateStructureSoap toSoapModel(
 		LayoutPageTemplateStructure model) {
-		LayoutPageTemplateStructureSoap soapModel = new LayoutPageTemplateStructureSoap();
 
+		LayoutPageTemplateStructureSoap soapModel =
+			new LayoutPageTemplateStructureSoap();
+
+		soapModel.setMvccVersion(model.getMvccVersion());
 		soapModel.setUuid(model.getUuid());
-		soapModel.setLayoutPageTemplateStructureId(model.getLayoutPageTemplateStructureId());
+		soapModel.setLayoutPageTemplateStructureId(
+			model.getLayoutPageTemplateStructureId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setUserId(model.getUserId());
@@ -44,14 +46,15 @@ public class LayoutPageTemplateStructureSoap implements Serializable {
 		soapModel.setModifiedDate(model.getModifiedDate());
 		soapModel.setClassNameId(model.getClassNameId());
 		soapModel.setClassPK(model.getClassPK());
-		soapModel.setData(model.getData());
 
 		return soapModel;
 	}
 
 	public static LayoutPageTemplateStructureSoap[] toSoapModels(
 		LayoutPageTemplateStructure[] models) {
-		LayoutPageTemplateStructureSoap[] soapModels = new LayoutPageTemplateStructureSoap[models.length];
+
+		LayoutPageTemplateStructureSoap[] soapModels =
+			new LayoutPageTemplateStructureSoap[models.length];
 
 		for (int i = 0; i < models.length; i++) {
 			soapModels[i] = toSoapModel(models[i]);
@@ -62,10 +65,12 @@ public class LayoutPageTemplateStructureSoap implements Serializable {
 
 	public static LayoutPageTemplateStructureSoap[][] toSoapModels(
 		LayoutPageTemplateStructure[][] models) {
+
 		LayoutPageTemplateStructureSoap[][] soapModels = null;
 
 		if (models.length > 0) {
-			soapModels = new LayoutPageTemplateStructureSoap[models.length][models[0].length];
+			soapModels = new LayoutPageTemplateStructureSoap
+				[models.length][models[0].length];
 		}
 		else {
 			soapModels = new LayoutPageTemplateStructureSoap[0][0];
@@ -80,13 +85,16 @@ public class LayoutPageTemplateStructureSoap implements Serializable {
 
 	public static LayoutPageTemplateStructureSoap[] toSoapModels(
 		List<LayoutPageTemplateStructure> models) {
-		List<LayoutPageTemplateStructureSoap> soapModels = new ArrayList<LayoutPageTemplateStructureSoap>(models.size());
+
+		List<LayoutPageTemplateStructureSoap> soapModels =
+			new ArrayList<LayoutPageTemplateStructureSoap>(models.size());
 
 		for (LayoutPageTemplateStructure model : models) {
 			soapModels.add(toSoapModel(model));
 		}
 
-		return soapModels.toArray(new LayoutPageTemplateStructureSoap[soapModels.size()]);
+		return soapModels.toArray(
+			new LayoutPageTemplateStructureSoap[soapModels.size()]);
 	}
 
 	public LayoutPageTemplateStructureSoap() {
@@ -98,6 +106,14 @@ public class LayoutPageTemplateStructureSoap implements Serializable {
 
 	public void setPrimaryKey(long pk) {
 		setLayoutPageTemplateStructureId(pk);
+	}
+
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	public void setMvccVersion(long mvccVersion) {
+		_mvccVersion = mvccVersion;
 	}
 
 	public String getUuid() {
@@ -114,6 +130,7 @@ public class LayoutPageTemplateStructureSoap implements Serializable {
 
 	public void setLayoutPageTemplateStructureId(
 		long layoutPageTemplateStructureId) {
+
 		_layoutPageTemplateStructureId = layoutPageTemplateStructureId;
 	}
 
@@ -181,14 +198,7 @@ public class LayoutPageTemplateStructureSoap implements Serializable {
 		_classPK = classPK;
 	}
 
-	public String getData() {
-		return _data;
-	}
-
-	public void setData(String data) {
-		_data = data;
-	}
-
+	private long _mvccVersion;
 	private String _uuid;
 	private long _layoutPageTemplateStructureId;
 	private long _groupId;
@@ -199,5 +209,5 @@ public class LayoutPageTemplateStructureSoap implements Serializable {
 	private Date _modifiedDate;
 	private long _classNameId;
 	private long _classPK;
-	private String _data;
+
 }

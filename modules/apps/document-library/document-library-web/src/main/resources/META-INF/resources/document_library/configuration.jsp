@@ -49,8 +49,6 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 			>
 				<aui:input id="showActions" label="show-actions" name="preferences--showActions--" type="checkbox" value="<%= dlPortletInstanceSettings.isShowActions() %>" />
 
-				<aui:input label="show-navigation-links" name="preferences--showTabs--" type="checkbox" value="<%= dlPortletInstanceSettings.isShowTabs() %>" />
-
 				<aui:input label="show-search" name="preferences--showFoldersSearch--" type="checkbox" value="<%= dlPortletInstanceSettings.isShowFoldersSearch() %>" />
 
 				<aui:input label="show-related-assets" name="preferences--enableRelatedAssets--" type="checkbox" value="<%= dlPortletInstanceSettings.isEnableRelatedAssets() %>" />
@@ -103,7 +101,7 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 			<liferay-frontend:fieldset
 				collapsible="<%= true %>"
 				id="documentLibraryEntriesListingPanel"
-				label="entries-listing-for-list-display-style"
+				label="entries-listing-for-table-display-style"
 			>
 				<liferay-frontend:fieldset>
 					<aui:field-wrapper label="show-columns">
@@ -129,61 +127,78 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 				<aui:input label="enable-ratings-for-comments" name="preferences--enableCommentRatings--" type="checkbox" value="<%= dlPortletInstanceSettings.isEnableCommentRatings() %>" />
 			</liferay-frontend:fieldset>
 
-			<aui:script>
-				AUI.$('#<portlet:namespace />selectFolderButton').on(
-					'click',
-					function(event) {
+			<aui:script require="metal-dom/src/dom as dom">
+				var selectFolderButton = document.getElementById(
+					'<portlet:namespace />selectFolderButton'
+				);
+
+				if (selectFolderButton) {
+					selectFolderButton.addEventListener('click', function (event) {
 						Liferay.Util.selectEntity(
 							{
 								dialog: {
 									constrain: true,
 									destroyOnHide: true,
 									modal: true,
-									width: 600
+									width: 600,
 								},
-								id: '_<%= HtmlUtil.escapeJS(portletResource) %>_selectFolder',
-								title: '<liferay-ui:message arguments="folder" key="select-x" />',
+								id:
+									'_<%= HtmlUtil.escapeJS(dlRequestHelper.getPortletResource()) %>_selectFolder',
+								title:
+									'<liferay-ui:message arguments="folder" key="select-x" />',
 
-								<liferay-portlet:renderURL portletName="<%= portletResource %>" var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+								<liferay-portlet:renderURL portletName="<%= dlRequestHelper.getPortletResource() %>" var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
 									<portlet:param name="mvcRenderCommandName" value="/document_library/select_folder" />
 									<portlet:param name="folderId" value="<%= String.valueOf(rootFolderId) %>" />
 									<portlet:param name="ignoreRootFolder" value="<%= Boolean.TRUE.toString() %>" />
 									<portlet:param name="showMountFolder" value="<%= Boolean.FALSE.toString() %>" />
 								</liferay-portlet:renderURL>
 
-								uri: '<%= HtmlUtil.escapeJS(selectFolderURL.toString()) %>'
+								uri: '<%= HtmlUtil.escapeJS(selectFolderURL.toString()) %>',
 							},
-							function(event) {
+							function (event) {
 								var folderData = {
 									idString: 'rootFolderId',
 									idValue: event.folderid,
 									nameString: 'rootFolderName',
-									nameValue: event.foldername
+									nameValue: event.foldername,
 								};
 
 								Liferay.Util.selectFolder(folderData, '<portlet:namespace />');
 							}
 						);
-					}
+					});
+				}
+
+				var showActionsInput = document.getElementById(
+					'<portlet:namespace />showActions'
 				);
 
-				var showActionsInput = $('#<portlet:namespace />showActions');
+				if (showActionsInput) {
+					showActionsInput.addEventListener('change', function (event) {
+						var currentColumnsElement = document.getElementById(
+							'<portlet:namespace />currentEntryColumns'
+						);
 
-				showActionsInput.on(
-					'change',
-					function(event) {
-						var currentColumns = $('#<portlet:namespace />currentEntryColumns');
+						if (currentColumnsElement) {
+							if (showActionsInput.checked) {
+								dom.append(
+									currentColumnsElement,
+									'<option value="action"><%= UnicodeLanguageUtil.get(request, "action") %></option>'
+								);
+							}
+							else {
+								var options = document.querySelectorAll(
+									'#<portlet:namespace />currentEntryColumns option[value="action"], #<portlet:namespace />availableEntryColumns option[value="action"]'
+								);
 
-						if (showActionsInput.prop('checked')) {
-							currentColumns.append('<option value="action"><%= UnicodeLanguageUtil.get(request, "action") %></option>');
+								Array.prototype.forEach.call(options, function (option) {
+									dom.exitDocument(option);
+								});
+							}
 						}
-						else {
-							var allColumns = currentColumns.add('#<portlet:namespace />availableEntryColumns');
-
-							allColumns.find('option[value="action"]').remove();
-						}
-					}
-				);
+					});
+				}
 			</aui:script>
 		</liferay-frontend:fieldset-group>
 	</liferay-frontend:edit-form-body>
@@ -195,15 +210,21 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<aui:script>
+<script>
 	function <portlet:namespace />saveConfiguration() {
+		var form = document.<portlet:namespace />fm;
+
 		var Util = Liferay.Util;
 
-		var form = $(document.<portlet:namespace />fm);
-
-		form.fm('displayViews').val(Util.listSelect(form.fm('currentDisplayViews')));
-		form.fm('entryColumns').val(Util.listSelect(form.fm('currentEntryColumns')));
-
-		submitForm(form);
+		Util.postForm(form, {
+			data: {
+				displayViews: Util.listSelect(
+					Util.getFormElement(form, 'currentDisplayViews')
+				),
+				entryColumns: Util.listSelect(
+					Util.getFormElement(form, 'currentEntryColumns')
+				),
+			},
+		});
 	}
-</aui:script>
+</script>
